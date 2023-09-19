@@ -1,27 +1,17 @@
-import React from "react";
-import { Counter } from "./components/Counter";
-import logo from "./logo.svg";
-import "./App.css";
-
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Footer } from "./components/shared/footer/footer";
+import { Header } from "./components/shared/header/header";
 
 const queryClient = new QueryClient();
 
-function App() {
+const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>Hello world!</p>
-
-          <section>
-            <Counter />
-          </section>
-        </header>
-      </div>
+      <Header />
+      <section style={{ height: "800px" }}></section>
+      <Footer />
     </QueryClientProvider>
   );
-}
+};
 
 export default App;
