@@ -1,47 +1,45 @@
-import { Anchor } from "../anchor/anchor";
+import { useState } from "react";
+import { LoginModal, SignupModal } from "../../modals";
 import { AuthHeader } from "./auth-header";
-import StyledHeader, {
-  HeaderImage,
-  HeaderList,
-  HeaderListItem,
-  NavHeader,
-} from "./header.styled";
-
-const NAV_ROUTES: Array<{ name: string }> = [
-  { name: "About" },
-  { name: "Download" },
-  { name: "Sheep" },
-  { name: "FAQ" },
-  { name: "Gear" },
-  { name: "Blog" },
-  { name: "Forum" },
-];
-
-const MenuHeader: React.FC = () => {
-  return (
-    <HeaderList>
-      {NAV_ROUTES.map((route) => (
-        <HeaderListItem key={route.name}>
-          <Anchor>{route.name}</Anchor>
-        </HeaderListItem>
-      ))}
-    </HeaderList>
-  );
-};
+import StyledHeader, { HeaderImage, NavHeader } from "./header.styled";
+import { MenuHeader } from "./menu-header";
 
 export const Header: React.FC = () => {
+  const [isShownLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [isShownSignupModal, setShowSignupModal] = useState<boolean>(false);
+
+  const showLoginModal = () => setShowLoginModal(true);
+  const hideLoginModal = () => setShowLoginModal(false);
+  const showSignupModal = () => setShowSignupModal(true);
+  const hideSignupModal = () => setShowSignupModal(false);
+
   return (
-    <StyledHeader>
-      <HeaderImage
-        src="/images/es-logo.svg"
-        className="img-responsive"
-        alt="Electric Sheep"
+    <>
+      <LoginModal
+        isOpen={isShownLoginModal}
+        showModal={showLoginModal}
+        hideModal={hideLoginModal}
       />
-      <NavHeader>
-        <AuthHeader></AuthHeader>
-        <MenuHeader></MenuHeader>
-      </NavHeader>
-    </StyledHeader>
+      <SignupModal
+        isOpen={isShownSignupModal}
+        showModal={showSignupModal}
+        hideModal={hideSignupModal}
+      />
+      <StyledHeader>
+        <HeaderImage
+          src="/images/es-logo.svg"
+          className="img-responsive"
+          alt="Electric Sheep"
+        />
+        <NavHeader>
+          <AuthHeader
+            showLoginModal={showLoginModal}
+            showSignupModal={showSignupModal}
+          />
+          <MenuHeader />
+        </NavHeader>
+      </StyledHeader>
+    </>
   );
 };
 

@@ -8,7 +8,7 @@ const StyledHeader = styled.header`
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 99;
+  z-index: 2;
   padding: 20px 0 32px;
   background: rgba(255, 255, 255, 0.02);
   -webkit-backface-visibility: hidden;

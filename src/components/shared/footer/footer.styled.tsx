@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const StyledFooter = styled.footer`
-  z-index: 10;
+  z-index: 2;
   width: 100%;
   overflow: hidden;
   position: fixed;

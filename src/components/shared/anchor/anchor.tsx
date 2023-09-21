@@ -16,3 +16,5 @@ export const Anchor = styled.a`
     color: #fff;
   }
 `;
+
+export default Anchor;
