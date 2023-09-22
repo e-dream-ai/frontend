@@ -1,4 +1,4 @@
-import { Anchor } from "../anchor/anchor";
+import { Anchor } from "components/shared";
 import { FooterCol, FooterRow, StyledFooter } from "./footer.styled";
 
 const FooterIcons: React.FC = () => {

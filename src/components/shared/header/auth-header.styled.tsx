@@ -15,3 +15,8 @@ export const StyledAuthHeader = styled.div`
   display: inline-flex;
   align-self: flex-end;
 `;
+
+export const HelloMessageHeader = styled.span`
+  margin-right: 0.2rem;
+  color: #fff;
+`;

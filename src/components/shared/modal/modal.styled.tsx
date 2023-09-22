@@ -26,6 +26,12 @@ export const ModalBody = styled.div`
   display: flex;
   flex-flow: column;
   padding: 10px 30px;
+
+  form {
+    width: auto;
+    display: flex;
+    flex-flow: column;
+  }
 `;
 
 export const ModalTitle = styled.h2`

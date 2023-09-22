@@ -1,5 +1,5 @@
+import { LoginModal, SignupModal } from "components/modals";
 import { useState } from "react";
-import { LoginModal, SignupModal } from "../../modals";
 import { AuthHeader } from "./auth-header";
 import StyledHeader, { HeaderImage, NavHeader } from "./header.styled";
 import { MenuHeader } from "./menu-header";

@@ -1,15 +1,25 @@
 import StyledButton, { ButtonAfter, ButtonBefore } from "./button.styled";
 
-export const Button: React.FC<{
-  children?: React.ReactNode;
+type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   before?: React.ReactNode;
   after?: React.ReactNode;
-}> = ({ children, before, after }) => {
-  return (
-    <StyledButton>
-      {before && <ButtonBefore>{before}</ButtonBefore>}
-      {children}
-      {after && <ButtonAfter>{after}</ButtonAfter>}
-    </StyledButton>
-  );
+  isLoading?: boolean;
 };
+
+export const Button: React.FC<ButtonProps> = ({
+  children,
+  before,
+  after,
+  isLoading,
+}) => (
+  <StyledButton>
+    {before && <ButtonBefore>{before}</ButtonBefore>}
+    {children}
+    {after && !isLoading && <ButtonAfter>{after}</ButtonAfter>}
+    {isLoading && (
+      <ButtonAfter>
+        <i className="fa fa-spinner fa-spin" />
+      </ButtonAfter>
+    )}
+  </StyledButton>
+);

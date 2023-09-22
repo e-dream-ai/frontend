@@ -37,4 +37,8 @@ export const InputAfter = styled.span`
   text-align: center;
 `;
 
+export const InputError = styled.span`
+  color: #ff0000;
+`;
+
 export default StyledInput;

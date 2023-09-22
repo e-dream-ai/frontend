@@ -1,6 +1,7 @@
+import AuthProvider from "providers/auth.provider";
+import ModalProvider from "providers/modal.provider";
+import QueryClientProvider from "providers/query-client.provider";
 import React from "react";
-import ModalProvider from "./modal.provider";
-import QueryClientProvider from "./query-client.provider";
 
 export const withProviders = (
   ...providers: Array<React.FC<{ children?: React.ReactNode }>>
@@ -15,6 +16,6 @@ export const withProviders = (
       );
 };
 
-export const Providers = [ModalProvider, QueryClientProvider];
+export const Providers = [ModalProvider, QueryClientProvider, AuthProvider];
 
 export default Providers;

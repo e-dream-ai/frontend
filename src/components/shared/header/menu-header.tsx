@@ -1,4 +1,4 @@
-import { Anchor } from "../anchor/anchor";
+import { Anchor } from "components/shared";
 import { HeaderList, HeaderListItem } from "./header.styled";
 
 const NAV_ROUTES: Array<{ name: string }> = [

@@ -1,5 +1,12 @@
-import { Anchor } from "../anchor/anchor";
-import { AnchorIcon, Divider, StyledAuthHeader } from "./auth-header.styled";
+import { Anchor } from "components/shared";
+import { useAuth } from "hooks/useAuth";
+import {
+  AnchorIcon,
+  Divider,
+  HelloMessageHeader,
+  StyledAuthHeader,
+} from "./auth-header.styled";
+import StyledHeader from "./header.styled";
 
 type AuthHeaderProps = {
   showLoginModal?: () => void;
@@ -23,15 +30,34 @@ export const AuthHeader: React.FC<AuthHeaderProps> = ({
   showLoginModal,
   showSignupModal,
 }) => {
+  const { user, logout, isLoading } = useAuth();
+
+  if (isLoading) return <StyledHeader />;
+
   return (
     <StyledAuthHeader>
-      <AuthAnchor
-        text="Sign up"
-        faClass="fa fa-pencil"
-        onClick={showSignupModal}
-      />
+      {user ? (
+        <>
+          <HelloMessageHeader>Hello </HelloMessageHeader>
+          <Anchor>{user.email}</Anchor>
+        </>
+      ) : (
+        <AuthAnchor
+          text="Sign up"
+          faClass="fa fa-pencil"
+          onClick={showSignupModal}
+        />
+      )}
       <Divider>/</Divider>
-      <AuthAnchor text="Login" faClass="fa fa-lock" onClick={showLoginModal} />
+      {user ? (
+        <Anchor onClick={logout}>Logout</Anchor>
+      ) : (
+        <AuthAnchor
+          text="Login"
+          faClass="fa fa-lock"
+          onClick={showLoginModal}
+        />
+      )}
     </StyledAuthHeader>
   );
 };
