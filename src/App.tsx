@@ -1,27 +1,20 @@
-import React from "react";
-import { Counter } from "./components/Counter";
-import logo from "./logo.svg";
-import "./App.css";
+import { Footer, Header } from "components/shared";
+import Providers, { withProviders } from "providers/providers";
+import { RouterProvider } from "react-router-dom";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
+import { router } from "routes/router";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-const queryClient = new QueryClient();
-
-function App() {
+const App = () => {
   return (
-    <QueryClientProvider client={queryClient}>
-      <div className="App">
-        <header className="App-header">
-          <img src={logo} className="App-logo" alt="logo" />
-          <p>Hello world!</p>
-
-          <section>
-            <Counter />
-          </section>
-        </header>
-      </div>
-    </QueryClientProvider>
+    <>
+      <ToastContainer theme="colored" position="bottom-right" />
+      <Header />
+      <section style={{ paddingTop: "150px", color: "#fff" }}></section>
+      <RouterProvider router={router} />
+      <Footer />
+    </>
   );
-}
+};
 
-export default App;
+export default withProviders(...Providers)(App);
