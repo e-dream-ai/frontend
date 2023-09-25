@@ -1,6 +1,5 @@
-import React from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { URL } from "../constants/api.constants";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { URL } from "constants/api.constants";
 
 export const Counter = () => {
   const { isLoading, data, refetch } = useQuery({
@@ -17,7 +16,6 @@ export const Counter = () => {
     },
   });
 
-  console.log({ isLoading, data });
   return (
     <div>
       <div>
