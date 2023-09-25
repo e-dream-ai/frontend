@@ -3,11 +3,15 @@ import useVerifyEmail from "api/auth/useVerifyEmail";
 import { Button, Input, Row } from "components/shared";
 import Container from "components/shared/container/container";
 import { useForm } from "react-hook-form";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 import VerifyEmailSchema, {
   VerifyEmailFormValues,
 } from "schemas/verify-email.schema";
 
 export const VerifyEmailPage: React.FC = () => {
+  const navigate = useNavigate();
+
   const {
     register,
     handleSubmit,
@@ -19,7 +23,18 @@ export const VerifyEmailPage: React.FC = () => {
   const { mutate, isLoading } = useVerifyEmail();
 
   const onSubmit = (data: VerifyEmailFormValues) => {
-    mutate({ username: data.email ?? "", code: data.code });
+    mutate(
+      { username: data.email ?? "", code: data.code },
+      {
+        onSuccess: () => {
+          toast.success("User verified successfully, please log in.");
+          navigate("/");
+        },
+        onError: () => {
+          toast.error("Error verifying user.");
+        },
+      },
+    );
   };
 
   return (
@@ -30,12 +45,12 @@ export const VerifyEmailPage: React.FC = () => {
           type="email"
           before={<i className="fa fa-envelope" />}
           error={errors.email?.message}
-          {...register("code")}
+          {...register("email")}
         />
         <Input
           placeholder="Code"
           type="text"
-          before={<i className="fa fa-envelope" />}
+          before={<i className="fa fa-key" />}
           error={errors.code?.message}
           {...register("code")}
         />

@@ -18,6 +18,7 @@ export const LoginModal: React.FC<{
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<LoginFormValues>({
     resolver: yupResolver(LoginSchema),
   });
@@ -31,8 +32,12 @@ export const LoginModal: React.FC<{
         onSuccess: (data) => {
           const user: User = data.data as User;
           login(user);
-          toast.success(`User logged in successfully. Welcome ${user.email}`);
+          toast.success(`User logged in successfully. Welcome ${user.email} .`);
+          reset();
           hideModal?.();
+        },
+        onError: () => {
+          toast.error("Error logging in.");
         },
       },
     );

@@ -1,5 +1,7 @@
+import useLogout from "api/auth/useLogout";
 import { Anchor } from "components/shared";
 import { useAuth } from "hooks/useAuth";
+import { toast } from "react-toastify";
 import {
   AnchorIcon,
   Divider,
@@ -31,6 +33,22 @@ export const AuthHeader: React.FC<AuthHeaderProps> = ({
   showSignupModal,
 }) => {
   const { user, logout, isLoading } = useAuth();
+  const { mutate } = useLogout();
+
+  const logoutSession = () => {
+    mutate(
+      { refreshToken: user?.token?.RefreshToken ?? "" },
+      {
+        onSuccess: () => {
+          toast.success("User logged out successfully.");
+          logout();
+        },
+        onError: () => {
+          toast.error("Error logging out user.");
+        },
+      },
+    );
+  };
 
   if (isLoading) return <StyledHeader />;
 
@@ -39,7 +57,7 @@ export const AuthHeader: React.FC<AuthHeaderProps> = ({
       {user ? (
         <>
           <HelloMessageHeader>Hello </HelloMessageHeader>
-          <Anchor>{user.email}</Anchor>
+          <Anchor>{user.username || user.email}</Anchor>
         </>
       ) : (
         <AuthAnchor
@@ -50,7 +68,7 @@ export const AuthHeader: React.FC<AuthHeaderProps> = ({
       )}
       <Divider>/</Divider>
       {user ? (
-        <Anchor onClick={logout}>Logout</Anchor>
+        <Anchor onClick={logoutSession}>Logout</Anchor>
       ) : (
         <AuthAnchor
           text="Login"

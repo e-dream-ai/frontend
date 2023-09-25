@@ -14,6 +14,7 @@ export const SignupModal: React.FC<{
     register,
     handleSubmit,
     formState: { errors },
+    reset,
   } = useForm<SignupFormValues>({
     resolver: yupResolver(SignupSchema),
   });
@@ -30,9 +31,13 @@ export const SignupModal: React.FC<{
       {
         onSuccess: () => {
           toast.success(
-            `User signup successfull. Check your email to verify user.`,
+            "User signup successfull. Check your email to verify user.",
           );
+          reset();
           hideModal?.();
+        },
+        onError: () => {
+          toast.error("Error signing up user.");
         },
       },
     );
