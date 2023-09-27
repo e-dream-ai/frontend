@@ -4,6 +4,7 @@ export type SignupFormValues = {
   username: string;
   password: string;
   confirmPassword: string;
+  terms?: boolean;
 };
 
 export type SignupRequestValues = {
@@ -30,6 +31,7 @@ export const SignupSchema = yup
       .matches(/[A-Z]/, getCharacterValidationError("uppercase"))
       .required()
       .oneOf([yup.ref("password"), ""], "Passwords must match"),
+    terms: yup.boolean().oneOf([true], "You have to accept Terms of Service"),
   })
   .required();
 

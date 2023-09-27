@@ -18,14 +18,14 @@ export const ModalHeader = styled.div`
   background-color: #252525;
   border: 0;
   color: #fff;
-  padding: 10px 30px;
+  padding: 0.625rem 1.875rem;
 `;
 
 export const ModalBody = styled.div`
   width: auto;
   display: flex;
   flex-flow: column;
-  padding: 10px 30px;
+  padding: 1rem 1.875rem;
 
   form {
     width: auto;
@@ -39,4 +39,9 @@ export const ModalTitle = styled.h2`
   text-transform: uppercase;
   color: #fff;
   margin: 0;
+  line-height: 1.5rem;
+`;
+
+export const ModalCloseIcon = styled.i`
+  font-size: 1.5rem;
 `;

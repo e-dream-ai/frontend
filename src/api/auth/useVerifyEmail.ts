@@ -12,9 +12,6 @@ const verifyEmail = async (params: VerifyEmailRequestValues) => {
     body: JSON.stringify(params),
     headers: { "Content-type": "application/json; charset=UTF-8" },
   }).then((res) => {
-    if (!res.ok) {
-      throw new Error();
-    }
     return res.json();
   });
 };

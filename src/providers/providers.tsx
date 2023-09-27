@@ -16,6 +16,6 @@ export const withProviders = (
       );
 };
 
-export const Providers = [ModalProvider, QueryClientProvider, AuthProvider];
+export const Providers = [QueryClientProvider, AuthProvider, ModalProvider];
 
 export default Providers;

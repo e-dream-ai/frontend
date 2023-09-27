@@ -1,6 +1,8 @@
 import useLogout from "api/auth/useLogout";
 import { Anchor } from "components/shared";
+import { ModalsKeys } from "constants/modal.constants";
 import { useAuth } from "hooks/useAuth";
+import useModal from "hooks/useModal";
 import { toast } from "react-toastify";
 import {
   AnchorIcon,
@@ -9,11 +11,6 @@ import {
   StyledAuthHeader,
 } from "./auth-header.styled";
 import StyledHeader from "./header.styled";
-
-type AuthHeaderProps = {
-  showLoginModal?: () => void;
-  showSignupModal?: () => void;
-};
 
 const AuthAnchor: React.FC<{
   text: string;
@@ -28,20 +25,24 @@ const AuthAnchor: React.FC<{
   );
 };
 
-export const AuthHeader: React.FC<AuthHeaderProps> = ({
-  showLoginModal,
-  showSignupModal,
-}) => {
+export const AuthHeader: React.FC = () => {
   const { user, logout, isLoading } = useAuth();
   const { mutate } = useLogout();
+  const { showModal } = useModal();
+  const handleShowLoginModal = () => showModal(ModalsKeys.LOGIN_MODAL);
+  const handleShowSignupModal = () => showModal(ModalsKeys.SIGNUP_MODAL);
 
   const logoutSession = () => {
     mutate(
       { refreshToken: user?.token?.RefreshToken ?? "" },
       {
-        onSuccess: () => {
-          toast.success("User logged out successfully.");
-          logout();
+        onSuccess: (data) => {
+          if (data.success) {
+            toast.success("User logged out successfully.");
+            logout();
+          } else {
+            toast.error(`Error logging out user. ${data.message}`);
+          }
         },
         onError: () => {
           toast.error("Error logging out user.");
@@ -63,7 +64,7 @@ export const AuthHeader: React.FC<AuthHeaderProps> = ({
         <AuthAnchor
           text="Sign up"
           faClass="fa fa-pencil"
-          onClick={showSignupModal}
+          onClick={handleShowSignupModal}
         />
       )}
       <Divider>/</Divider>
@@ -73,7 +74,7 @@ export const AuthHeader: React.FC<AuthHeaderProps> = ({
         <AuthAnchor
           text="Login"
           faClass="fa fa-lock"
-          onClick={showLoginModal}
+          onClick={handleShowLoginModal}
         />
       )}
     </StyledAuthHeader>

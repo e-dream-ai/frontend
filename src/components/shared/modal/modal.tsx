@@ -1,6 +1,7 @@
 import { Anchor } from "components/shared";
 import {
   ModalBody,
+  ModalCloseIcon,
   ModalHeader,
   ModalTitle,
   StyledReactModal,
@@ -17,7 +18,7 @@ type ModalProps = {
 const ModalClose: React.FC<{ onClick?: () => void }> = ({ onClick }) => {
   return (
     <Anchor onClick={onClick}>
-      <i className="fa fa-close" />
+      <ModalCloseIcon className="fa fa-close" />
     </Anchor>
   );
 };

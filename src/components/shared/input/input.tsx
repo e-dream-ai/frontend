@@ -4,6 +4,7 @@ import StyledInput, {
   InputBefore,
   InputError,
   InputGroup,
+  InputRow,
 } from "./input.styled";
 
 type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
@@ -17,16 +18,14 @@ export const Input: React.FC<InputProps> = React.forwardRef<
   HTMLInputElement,
   InputProps
 >(({ before, after, error, ...props }, ref) => (
-  <>
-    <InputGroup>
+  <InputGroup>
+    <InputRow>
       {before && <InputBefore>{before}</InputBefore>}
       <StyledInput ref={ref} {...props}></StyledInput>
       {after && <InputAfter>{after}</InputAfter>}
-    </InputGroup>
-    <InputGroup>
-      <InputError>{error}</InputError>
-    </InputGroup>
-  </>
+    </InputRow>
+    {error && <InputError>{error}</InputError>}
+  </InputGroup>
 ));
 
 export default Input;
