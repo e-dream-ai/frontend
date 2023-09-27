@@ -26,9 +26,13 @@ export const VerifyEmailPage: React.FC = () => {
     mutate(
       { username: data.email ?? "", code: data.code },
       {
-        onSuccess: () => {
-          toast.success("User verified successfully, please log in.");
-          navigate("/");
+        onSuccess: (data) => {
+          if (data.success) {
+            toast.success("User verified successfully, please log in.");
+            navigate("/");
+          } else {
+            toast.error(`Error verifying user. ${data.message}`);
+          }
         },
         onError: () => {
           toast.error("Error verifying user.");

@@ -1,3 +1,10 @@
+import {
+  ForgotPasswordModal,
+  LoginModal,
+  SignupModal,
+} from "components/modals";
+import { ModalProvider as StateModalProvider } from "context/modal.context";
+import useModal from "hooks/useModal";
 import styled from "styled-components";
 import { ModalProvider as StyledReactModalProvider } from "styled-react-modal";
 
@@ -18,9 +25,23 @@ export const styledBackgroundComponent = styled.div`
 
 export const ModalProvider: React.FC<{
   children?: React.ReactNode;
+}> = ({ children }) => (
+  <StateModalProvider>
+    <StyledModalProviderWrapper>{children}</StyledModalProviderWrapper>
+  </StateModalProvider>
+);
+
+export const StyledModalProviderWrapper: React.FC<{
+  children?: React.ReactNode;
 }> = ({ children }) => {
+  const { state } = useModal();
   return (
     <StyledReactModalProvider backgroundComponent={styledBackgroundComponent}>
+      <>
+        <LoginModal isOpen={state.loginModal} />
+        <SignupModal isOpen={state.signupModal} />
+        <ForgotPasswordModal isOpen={state.forgotPasswordModal} />
+      </>
       {children}
     </StyledReactModalProvider>
   );

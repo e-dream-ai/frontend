@@ -1,17 +1,31 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import useLogin from "api/auth/useLogin";
 import { Anchor, Button, Input, Modal, Row } from "components/shared";
+import { ModalsKeys } from "constants/modal.constants";
 import { useAuth } from "hooks/useAuth";
+import useModal from "hooks/useModal";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import LoginSchema, { LoginFormValues } from "schemas/login.schema";
 import { User } from "types/auth.types";
+import { ModalComponent } from "types/modal.types";
 
-export const LoginModal: React.FC<{
-  isOpen?: boolean;
-  showModal?: () => void;
-  hideModal?: () => void;
-}> = ({ isOpen = false, showModal, hideModal }) => {
+export const LoginModal: React.FC<
+  ModalComponent<{
+    isOpen?: boolean;
+  }>
+> = ({ isOpen = false }) => {
+  const { showModal, hideModal } = useModal();
+  const handleHideModal = () => hideModal(ModalsKeys.LOGIN_MODAL);
+  const handleSignupModal = () => {
+    hideModal(ModalsKeys.LOGIN_MODAL);
+    showModal(ModalsKeys.SIGNUP_MODAL);
+  };
+  const handleOpenForgotPasswordModal = () => {
+    hideModal(ModalsKeys.LOGIN_MODAL);
+    showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
+  };
+
   const { login } = useAuth();
 
   const {
@@ -30,11 +44,17 @@ export const LoginModal: React.FC<{
       { username: data.username, password: data.password },
       {
         onSuccess: (data) => {
-          const user: User = data.data as User;
-          login(user);
-          toast.success(`User logged in successfully. Welcome ${user.email} .`);
-          reset();
-          hideModal?.();
+          if (data.success) {
+            const user: User = data.data as User;
+            login(user);
+            toast.success(
+              `User logged in successfully. Welcome ${user.email} .`,
+            );
+            reset();
+            handleHideModal();
+          } else {
+            toast.error(`Error logging in. ${data.message}`);
+          }
         },
         onError: () => {
           toast.error("Error logging in.");
@@ -44,7 +64,7 @@ export const LoginModal: React.FC<{
   };
 
   return (
-    <Modal title="Login" isOpen={isOpen} hideModal={hideModal}>
+    <Modal title="Login" isOpen={isOpen} hideModal={handleHideModal}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Input
           placeholder="Email"
@@ -71,8 +91,16 @@ export const LoginModal: React.FC<{
           </Button>
         </Row>
 
-        <Anchor>Don&apos;t have an account?</Anchor>
-        <Anchor>Forgot your password?</Anchor>
+        <Row>
+          <Anchor onClick={handleSignupModal}>
+            Don&apos;t have an account?
+          </Anchor>
+        </Row>
+        <Row>
+          <Anchor onClick={handleOpenForgotPasswordModal}>
+            Forgot your password?
+          </Anchor>
+        </Row>
       </form>
     </Modal>
   );

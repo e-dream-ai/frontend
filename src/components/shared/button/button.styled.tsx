@@ -2,6 +2,7 @@ import styled from "styled-components";
 
 export const StyledButton = styled.button`
   display: inline-flex;
+  height: fit-content;
   align-items: center;
   font-size: 1.2rem;
   text-transform: uppercase;

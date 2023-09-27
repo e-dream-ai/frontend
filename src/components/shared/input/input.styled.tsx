@@ -11,12 +11,20 @@ export const StyledInput = styled.input`
   border-radius: 0;
   border: 0;
   color: #ccc;
+  font-size: 1rem;
 `;
 
 export const InputGroup = styled.div`
-  display: inline-flex;
-  margin-bottom: 15px;
+  display: flex;
+  flex-flow: column;
+  margin-bottom: 1rem;
   border-collapse: separate;
+`;
+
+export const InputRow = styled.div`
+  display: inline-flex;
+  border-collapse: separate;
+  align-items: center;
 `;
 
 export const InputBefore = styled.span`
@@ -38,7 +46,8 @@ export const InputAfter = styled.span`
 `;
 
 export const InputError = styled.span`
-  color: #ff0000;
+  font-size: 0.875rem;
+  color: #009ba2;
 `;
 
 export default StyledInput;

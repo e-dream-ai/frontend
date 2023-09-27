@@ -1,15 +1,29 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import useSignup from "api/auth/useSignup";
-import { Anchor, Button, Input, Modal, Row } from "components/shared";
+import { Anchor, Button, Checkbox, Input, Modal, Row } from "components/shared";
+import { ModalsKeys } from "constants/modal.constants";
+import useModal from "hooks/useModal";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
 import SignupSchema, { SignupFormValues } from "schemas/signup.schema";
+import { ModalComponent } from "types/modal.types";
 
-export const SignupModal: React.FC<{
-  isOpen?: boolean;
-  showModal?: () => void;
-  hideModal?: () => void;
-}> = ({ isOpen = false, showModal, hideModal }) => {
+export const SignupModal: React.FC<
+  ModalComponent<{
+    isOpen?: boolean;
+  }>
+> = ({ isOpen = false }) => {
+  const { showModal, hideModal } = useModal();
+  const handleHideModal = () => hideModal(ModalsKeys.SIGNUP_MODAL);
+  const handleOpenLoginModal = () => {
+    hideModal(ModalsKeys.SIGNUP_MODAL);
+    showModal(ModalsKeys.LOGIN_MODAL);
+  };
+  const handleOpenForgotPasswordModal = () => {
+    hideModal(ModalsKeys.SIGNUP_MODAL);
+    showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
+  };
+
   const {
     register,
     handleSubmit,
@@ -29,12 +43,16 @@ export const SignupModal: React.FC<{
         password: data.password,
       },
       {
-        onSuccess: () => {
-          toast.success(
-            "User signup successfull. Check your email to verify user.",
-          );
-          reset();
-          hideModal?.();
+        onSuccess: (data) => {
+          if (data.success) {
+            toast.success(
+              "User signup successfull. Check your email to verify user.",
+            );
+            reset();
+            handleHideModal();
+          } else {
+            toast.error(`Error signing up user. ${data.message}`);
+          }
         },
         onError: () => {
           toast.error("Error signing up user.");
@@ -44,12 +62,7 @@ export const SignupModal: React.FC<{
   };
 
   return (
-    <Modal
-      title="Sign up for gold"
-      isOpen={isOpen}
-      showModal={showModal}
-      hideModal={hideModal}
-    >
+    <Modal title="Sign up for gold" isOpen={isOpen} hideModal={handleHideModal}>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Input
           placeholder="Email"
@@ -73,7 +86,12 @@ export const SignupModal: React.FC<{
           {...register("confirmPassword")}
         />
 
-        <Row justifyContent="flex-end">
+        <Row justifyContent="space-between">
+          <Row>
+            <Checkbox {...register("terms")} error={errors.terms?.message}>
+              I agree to the <Anchor>Terms of Service</Anchor>
+            </Checkbox>
+          </Row>
           <Button
             type="submit"
             after={<i className="fa fa-angle-right" />}
@@ -83,8 +101,14 @@ export const SignupModal: React.FC<{
           </Button>
         </Row>
 
-        <Anchor>Don&apos;t have an account?</Anchor>
-        <Anchor>Forgot your password?</Anchor>
+        <Row justifyContent="space-between">
+          <Anchor onClick={handleOpenLoginModal}>
+            Already have an account?
+          </Anchor>
+          <Anchor onClick={handleOpenForgotPasswordModal}>
+            Forgot your password?
+          </Anchor>
+        </Row>
       </form>
     </Modal>
   );

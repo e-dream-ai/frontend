@@ -9,21 +9,30 @@ const StyledHeader = styled.header`
   left: 0;
   width: 100%;
   z-index: 2;
-  padding: 20px 0 32px;
+  padding: 1rem 1rem;
   background: rgba(255, 255, 255, 0.02);
   -webkit-backface-visibility: hidden;
-  padding-right: 15px;
-  padding-left: 15px;
   margin-right: auto;
   margin-left: auto;
+`;
+
+export const HeaderLogo = styled.div`
+  display: inline-flex;
+  align-items: center;
+`;
+
+export const HeaderTitle = styled.h1`
+  color: #fff;
+  margin-left: 0.5rem;
 `;
 
 export const HeaderImage = styled.img`
   float: left;
   margin: 9px 0 0 0;
-  width: 240px;
+  width: auto;
+  height: 5rem;
   max-width: 100%;
-  height: auto;
+  cursor: pointer;
 `;
 
 export const NavHeader = styled.nav`
