@@ -2,9 +2,11 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import useForgotPassword from "api/auth/useForgotPassword";
 import { Button, Input, Modal, Row } from "components/shared";
 import { ModalsKeys } from "constants/modal.constants";
+import { ROUTES } from "constants/routes.constants";
 import useModal from "hooks/useModal";
 import { useForm } from "react-hook-form";
 import { toast } from "react-toastify";
+import { router } from "routes/router";
 import ForgotPasswordSchema, {
   ForgotPasswordFormValues,
 } from "schemas/forgot-password.schema";
@@ -28,15 +30,18 @@ export const ForgotPasswordModal: React.FC<
     resolver: yupResolver(ForgotPasswordSchema),
   });
 
-  const onSubmit = (data: ForgotPasswordFormValues) => {
+  const onSubmit = (formData: ForgotPasswordFormValues) => {
     mutate(
-      { username: data.username },
+      { username: formData.username },
       {
         onSuccess: (data) => {
           if (data.success) {
             toast.success("Successfully sent instructions.");
             reset();
             handleHideModal();
+            router.navigate(ROUTES.CONFIRM_FORGOT_PASSWORD, {
+              state: { username: formData.username },
+            });
           } else {
             toast.error(`Error sending instructions. ${data.message}`);
           }
