@@ -76,7 +76,7 @@ export const ConfirmForgotPassword: React.FC = () => {
             isLoading={isLoading}
             after={<i className="fa fa-angle-right" />}
           >
-            Verify account
+            Change password
           </Button>
         </Row>
       </form>
