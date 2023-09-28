@@ -23,7 +23,7 @@ export const Header: React.FC = () => {
             className="img-responsive"
             alt="Electric Sheep"
           />
-          <HeaderTitle>e-dream.ai</HeaderTitle>
+          <HeaderTitle>e-dream</HeaderTitle>
         </HeaderLogo>
         <NavHeader>
           <AuthHeader />
