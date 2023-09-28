@@ -4,7 +4,7 @@ import { ForgotPasswordFormValues } from "schemas/forgot-password.schema";
 import { MutationResponse } from "types/api.types";
 import { User } from "types/auth.types";
 
-export const LOGIN_MUTATION_KEY = "login";
+export const FORGOT_PASSWORD_MUTATION_KEY = "forgotPassword";
 
 const forgotPassowrd = async (params: ForgotPasswordFormValues) => {
   return fetch(`${URL}/auth/forgot-password`, {
@@ -20,7 +20,7 @@ export const useForgotPassword = () => {
   return useMutation<MutationResponse<User>, Error, ForgotPasswordFormValues>(
     forgotPassowrd,
     {
-      mutationKey: [LOGIN_MUTATION_KEY],
+      mutationKey: [FORGOT_PASSWORD_MUTATION_KEY],
     },
   );
 };

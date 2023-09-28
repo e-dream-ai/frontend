@@ -1,6 +1,8 @@
 import styled from "styled-components";
 
-export const VerifyEmailText = styled.div`
+export const Text = styled.span`
   margin: 1rem 0;
   color: #999;
 `;
+
+export default Text;

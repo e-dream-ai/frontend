@@ -1,10 +1,13 @@
-import VerifyEmailPage from "components/pages/verify-email/verify-email.page";
+import ConfirmForgotPassword from "components/pages/confirm-forgot-password/confirm-forgot-password.page";
+import ErrorPage from "components/pages/error/error.page";
 import Container from "components/shared/container/container";
+import { ROUTES } from "constants/routes.constants";
 import { createBrowserRouter } from "react-router-dom";
 
 export const router = createBrowserRouter([
   {
-    path: "/",
+    path: ROUTES.ROOT,
+    errorElement: <ErrorPage />,
     element: (
       <Container>
         <div>Home</div>
@@ -12,7 +15,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: "/verify-email/",
-    element: <VerifyEmailPage />,
+    path: ROUTES.CONFIRM_FORGOT_PASSWORD,
+    element: <ConfirmForgotPassword />,
   },
 ]);
