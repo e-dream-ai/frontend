@@ -10,7 +10,7 @@ export const StyledFooter = styled.footer`
   color: #999;
   padding: 0 15px 15px;
   line-height: 1.4;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 0, 0, 0.8);
 
   @media only screen and (max-width: 1200px) {
     position: static;

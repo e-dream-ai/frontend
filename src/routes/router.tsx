@@ -4,6 +4,7 @@ import ViewDreamPage from "components/pages/view-dream/view-dream.page";
 import Container from "components/shared/container/container";
 import { ROUTES } from "constants/routes.constants";
 import { createBrowserRouter } from "react-router-dom";
+import ProtectedRoute from "./protected-route";
 
 export const router = createBrowserRouter([
   {
@@ -21,6 +22,10 @@ export const router = createBrowserRouter([
   },
   {
     path: ROUTES.VIEW_DREAM,
-    element: <ViewDreamPage />,
+    element: (
+      <ProtectedRoute>
+        <ViewDreamPage />
+      </ProtectedRoute>
+    ),
   },
 ]);

@@ -1,7 +1,8 @@
 import styled from "styled-components";
+import { JustifyContentProperty } from "types/css.types";
 
 type RowProps = {
-  justifyContent?: string;
+  justifyContent?: JustifyContentProperty;
 };
 
 export const Row = styled.div<RowProps>`

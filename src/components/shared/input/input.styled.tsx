@@ -12,6 +12,11 @@ export const StyledInput = styled.input`
   border: 0;
   color: #ccc;
   font-size: 1rem;
+
+  &:disabled {
+    background-color: #555;
+    cursor: not-allowed;
+  }
 `;
 
 export const InputGroup = styled.div`
@@ -43,6 +48,7 @@ export const InputAfter = styled.span`
   background: #252525;
   color: #555;
   text-align: center;
+  cursor: pointer;
 `;
 
 export const InputError = styled.span`

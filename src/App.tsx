@@ -10,7 +10,7 @@ const App = () => {
     <>
       <ToastContainer theme="colored" position="bottom-right" />
       <Header />
-      <section style={{ paddingTop: "150px", color: "#fff" }}></section>
+      <section style={{ paddingTop: "150px" }}></section>
       <RouterProvider router={router} />
       <Footer />
     </>

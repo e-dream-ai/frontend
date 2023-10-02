@@ -1,6 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import useLogin from "api/auth/useLogin";
 import { Anchor, Button, Input, Modal, Row } from "components/shared";
+import InputPassword from "components/shared/input-password/input-password";
 import { ModalsKeys } from "constants/modal.constants";
 import { useAuth } from "hooks/useAuth";
 import useModal from "hooks/useModal";
@@ -73,9 +74,8 @@ export const LoginModal: React.FC<
           error={errors.username?.message}
           {...register("username")}
         />
-        <Input
+        <InputPassword
           placeholder="Password"
-          type="password"
           before={<i className="fa fa-lock" />}
           error={errors.password?.message}
           {...register("password")}

@@ -10,7 +10,7 @@ const StyledHeader = styled.header`
   width: 100%;
   z-index: 2;
   padding: 1rem 1rem;
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 0, 0, 0.8);
   -webkit-backface-visibility: hidden;
   margin-right: auto;
   margin-left: auto;
