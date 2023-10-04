@@ -6,6 +6,7 @@ import { ModalsKeys } from "constants/modal.constants";
 import { useAuth } from "hooks/useAuth";
 import useModal from "hooks/useModal";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import LoginSchema, { LoginFormValues } from "schemas/login.schema";
 import { User } from "types/auth.types";
@@ -16,6 +17,7 @@ export const LoginModal: React.FC<
     isOpen?: boolean;
   }>
 > = ({ isOpen = false }) => {
+  const { t } = useTranslation();
   const { showModal, hideModal } = useModal();
   const handleHideModal = () => hideModal(ModalsKeys.LOGIN_MODAL);
   const handleSignupModal = () => {
@@ -49,33 +51,40 @@ export const LoginModal: React.FC<
             const user: User = data.data as User;
             login(user);
             toast.success(
-              `User logged in successfully. Welcome ${user.email} .`,
+              `${t("modal.login.user_logged_successfully")} ${t(
+                "modal.login.welcome_user",
+                { username: user.email },
+              )}`,
             );
             reset();
             handleHideModal();
           } else {
-            toast.error(`Error logging in. ${data.message}`);
+            toast.error(`${t("modal.login.error_logging_in")} ${data.message}`);
           }
         },
         onError: () => {
-          toast.error("Error logging in.");
+          toast.error(t("modal.login.error_logging_in"));
         },
       },
     );
   };
 
   return (
-    <Modal title="Login" isOpen={isOpen} hideModal={handleHideModal}>
+    <Modal
+      title={t("modal.login.title")}
+      isOpen={isOpen}
+      hideModal={handleHideModal}
+    >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Input
-          placeholder="Email"
+          placeholder={t("modal.login.email")}
           type="email"
           before={<i className="fa fa-envelope" />}
           error={errors.username?.message}
           {...register("username")}
         />
         <InputPassword
-          placeholder="Password"
+          placeholder={t("modal.login.password")}
           before={<i className="fa fa-lock" />}
           error={errors.password?.message}
           {...register("password")}
@@ -87,18 +96,18 @@ export const LoginModal: React.FC<
             after={<i className="fa fa-angle-right" />}
             isLoading={isLoading}
           >
-            Login
+            {t("modal.login.login")}
           </Button>
         </Row>
 
         <Row>
           <Anchor onClick={handleSignupModal}>
-            Don&apos;t have an account?
+            {t("modal.login.dont_have_account")}
           </Anchor>
         </Row>
         <Row>
           <Anchor onClick={handleOpenForgotPasswordModal}>
-            Forgot your password?
+            {t("modal.login.forgot_your_password")}
           </Anchor>
         </Row>
       </form>

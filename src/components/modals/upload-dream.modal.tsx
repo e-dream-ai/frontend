@@ -3,16 +3,18 @@ import { ModalsKeys } from "constants/modal.constants";
 import { ROUTES } from "constants/routes.constants";
 import useModal from "hooks/useModal";
 import { FileUploader } from "react-drag-drop-files";
+import { useTranslation } from "react-i18next";
 import { router } from "routes/router";
 import { ModalComponent } from "types/modal.types";
 
-const fileTypes = ["JPG", "JPEG", "MP4"];
+const fileTypes = ["MP4"];
 
 export const UploadDreamModal: React.FC<
   ModalComponent<{
     isOpen?: boolean;
   }>
 > = ({ isOpen = false }) => {
+  const { t } = useTranslation();
   const { hideModal } = useModal();
   const handleHideModal = () => hideModal(ModalsKeys.UPLOAD_DREAM_MODAL);
   const handleChange = () => {
@@ -21,7 +23,11 @@ export const UploadDreamModal: React.FC<
   };
 
   return (
-    <Modal title="Upload dream" isOpen={isOpen} hideModal={handleHideModal}>
+    <Modal
+      title={t("modal.upload_dream.title")}
+      isOpen={isOpen}
+      hideModal={handleHideModal}
+    >
       <FileUploader handleChange={handleChange} name="file" types={fileTypes} />
     </Modal>
   );

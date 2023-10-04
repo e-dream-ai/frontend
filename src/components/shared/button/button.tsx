@@ -2,12 +2,13 @@ import { Sizes } from "types/sizes.types";
 import StyledButton, { ButtonAfter, ButtonBefore } from "./button.styled";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  before?: React.ReactNode;
-  after?: React.ReactNode;
+  children?: React.ReactNode;
   isLoading?: boolean;
   size?: Sizes;
   marginLeft?: boolean;
   marginRight?: boolean;
+  before?: React.ReactNode;
+  after?: React.ReactNode;
 };
 
 export const Button: React.FC<ButtonProps> = ({

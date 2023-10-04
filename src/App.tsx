@@ -12,6 +12,7 @@ const App = () => {
       <Header />
       <section style={{ paddingTop: "150px" }}></section>
       <RouterProvider router={router} />
+      <section style={{ paddingTop: "150px" }}></section>
       <Footer />
     </>
   );

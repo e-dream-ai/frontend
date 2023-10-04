@@ -1,4 +1,5 @@
 import { ForgotPasswordModal } from "components/modals";
+import { useTranslation } from "react-i18next";
 import { router } from "routes/router";
 import { AuthHeader } from "./auth-header";
 import StyledHeader, {
@@ -11,6 +12,7 @@ import { MenuHeader } from "./menu-header";
 
 export const Header: React.FC = () => {
   const navigateHome = () => router.navigate("/#");
+  const { t } = useTranslation();
 
   return (
     <>
@@ -21,9 +23,9 @@ export const Header: React.FC = () => {
             onClick={navigateHome}
             src="/images/edream-logo-512x512.png"
             className="img-responsive"
-            alt="Electric Sheep"
+            alt={t("header.e_dream")}
           />
-          <HeaderTitle>e-dream</HeaderTitle>
+          <HeaderTitle>{t("header.e_dream")}</HeaderTitle>
         </HeaderLogo>
         <NavHeader>
           <AuthHeader />

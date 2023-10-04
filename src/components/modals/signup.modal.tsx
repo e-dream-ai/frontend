@@ -4,6 +4,7 @@ import { Anchor, Button, Checkbox, Input, Modal, Row } from "components/shared";
 import { ModalsKeys } from "constants/modal.constants";
 import useModal from "hooks/useModal";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import SignupSchema, { SignupFormValues } from "schemas/signup.schema";
 import { ModalComponent } from "types/modal.types";
@@ -13,6 +14,7 @@ export const SignupModal: React.FC<
     isOpen?: boolean;
   }>
 > = ({ isOpen = false }) => {
+  const { t } = useTranslation();
   const { showModal, hideModal } = useModal();
   const handleHideModal = () => hideModal(ModalsKeys.SIGNUP_MODAL);
   const handleOpenLoginModal = () => {
@@ -45,41 +47,45 @@ export const SignupModal: React.FC<
       {
         onSuccess: (data) => {
           if (data.success) {
-            toast.success(
-              "User signup successfull. Check your email to verify user.",
-            );
+            toast.success(t("modal.signup.user_signup_successfully"));
             reset();
             handleHideModal();
           } else {
-            toast.error(`Error signing up user. ${data.message}`);
+            toast.error(
+              `${t("modal.signup.error_signinup_user")} ${data.message}`,
+            );
           }
         },
         onError: () => {
-          toast.error("Error signing up user.");
+          toast.error(t("modal.signup.error_signinup_user"));
         },
       },
     );
   };
 
   return (
-    <Modal title="Sign up for gold" isOpen={isOpen} hideModal={handleHideModal}>
+    <Modal
+      title={t("modal.signup.title")}
+      isOpen={isOpen}
+      hideModal={handleHideModal}
+    >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Input
-          placeholder="Email"
+          placeholder={t("modal.signup.email")}
           type="email"
           before={<i className="fa fa-envelope" />}
           error={errors.username?.message}
           {...register("username")}
         />
         <Input
-          placeholder="Password"
+          placeholder={t("modal.signup.password")}
           type="password"
           before={<i className="fa fa-lock" />}
           error={errors.password?.message}
           {...register("password")}
         />
         <Input
-          placeholder="Confirm Password"
+          placeholder={t("modal.signup.confirm_password")}
           type="password"
           before={<i className="fa fa-lock" />}
           error={errors.confirmPassword?.message}
@@ -89,7 +95,8 @@ export const SignupModal: React.FC<
         <Row justifyContent="space-between">
           <Row>
             <Checkbox {...register("terms")} error={errors.terms?.message}>
-              I agree to the <Anchor>Terms of Service</Anchor>
+              {t("modal.signup.agree_to")}{" "}
+              <Anchor>{t("modal.signup.terms_of_service")}</Anchor>
             </Checkbox>
           </Row>
           <Button
@@ -97,16 +104,16 @@ export const SignupModal: React.FC<
             after={<i className="fa fa-angle-right" />}
             isLoading={isLoading}
           >
-            Next
+            {t("modal.signup.next")}
           </Button>
         </Row>
 
         <Row justifyContent="space-between">
           <Anchor onClick={handleOpenLoginModal}>
-            Already have an account?
+            {t("modal.signup.already_have_account")}
           </Anchor>
           <Anchor onClick={handleOpenForgotPasswordModal}>
-            Forgot your password?
+            {t("modal.signup.forgot_your_password")}
           </Anchor>
         </Row>
       </form>

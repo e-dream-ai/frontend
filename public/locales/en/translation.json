@@ -1,0 +1,84 @@
+{
+  "header":{
+    "e_dream": "e-dream",
+    "hello": "Hello",
+    "signup": "Signup",
+    "login": "Login",
+    "about": "About",
+    "install": "Install",
+    "forum": "Forum",
+    "create": "Create",
+    "feed": "Feed",
+    "my_dreams": "My dreams"
+  },
+  "footer": {
+    "license": "License / Re-use policy",
+    "terms_of_service": "Terms of Service"
+  },
+  "page": {
+    "error": {
+      "404_not_found": "404 not found",
+      "page_not_found": "Page not found",
+      "go_home": "go home"
+    },
+    "confirm_forgot_password": {
+      "code": "Code",
+      "new_password":"New Password",
+      "confirm_new_password": "Confirm New Password",
+      "change_password": "Change Password",
+      "password_change_successfully": "Password changed successfully.",
+      "error_changing_password": "Error changing user password."
+    },
+    "view_dream": {
+      "view_dream": "View Dream",
+      "edit": "Edit",
+      "save": "Save",
+      "upvote": "Upvote",
+      "downvote": "Downvote",
+      "name": "Name",
+      "owner": "Owner",
+      "created": "Created",
+      "votes": "votes",
+      "downvotes": "downvotes",
+      "video": "Video",
+      "tumbnail": "Tumbnail"
+    }
+  },
+  "modal": {
+    "login":{
+      "title": "Login",
+      "email": "Email",
+      "password": "Password",
+      "login": "Login",
+      "dont_have_account": "Don't have an account?",
+      "forgot_your_password": "Forgot your password?",
+      "user_logged_successfully": "User logged in successfully.",
+      "welcome_user": "Welcome {{username}}",
+      "error_logging_in": "Error logging in."
+
+    },
+    "signup": {
+      "title": "Sign up for gold",
+      "email": "Email",
+      "password": "Password",
+      "confirm_password": "Confirm Password",
+      "agree_to": "I agree to the",
+      "terms_of_service": "Terms of Service",
+      "next": "Next",
+      "already_have_account": "Already have an account?",
+      "forgot_your_password": "Forgot your password?",
+      "user_signup_successfully": "User signup successfully. Check your email to verify user.",
+      "error_signinup_user": "Error signing up user."
+    },
+    "forgot_password": {
+      "title": "Forgot your password?",
+      "email": "Email",
+      "send": "Send",
+      "sent_instructions_successfully": "Successfully sent instructions.",
+      "error_sending_instructions": "Error sending instructions."
+    },
+    "upload_dream": {
+      "title": "Upload Dream"
+    }
+  }
+}
