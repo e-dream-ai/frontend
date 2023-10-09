@@ -16,7 +16,7 @@ const ViewDreamPage: React.FC = () => {
   const save = () => setEdit(false);
 
   const [hasVideo, setHasVideo] = useState(true);
-  const [hasTumbnail, setHasTumbnail] = useState(true);
+  const [hasThumbnail, setHasThumbnail] = useState(true);
 
   return (
     <Section id={SectionID}>
@@ -104,21 +104,21 @@ const ViewDreamPage: React.FC = () => {
           alignItems="center"
           style={{ marginTop: "5rem" }}
         >
-          <h3>{t("page.view_dream.tumbnail")}</h3>
-          {edit && hasTumbnail && (
-            <Button size="sm" onClick={() => setHasTumbnail(false)}>
+          <h3>{t("page.view_dream.thumbnail")}</h3>
+          {edit && hasThumbnail && (
+            <Button size="sm" onClick={() => setHasThumbnail(false)}>
               <i className="fa fa-trash" />
             </Button>
           )}
         </Row>
         <Row>
-          {hasTumbnail ? (
-            <TumbnailPlaceholder>
+          {hasThumbnail ? (
+            <ThumbnailPlaceholder>
               <i className="fa fa-picture-o" />
-            </TumbnailPlaceholder>
+            </ThumbnailPlaceholder>
           ) : (
             <FileUploader
-              handleChange={() => setHasTumbnail(true)}
+              handleChange={() => setHasThumbnail(true)}
               name="file"
               types={["JPEG", "JPG"]}
             />
@@ -138,7 +138,7 @@ const VideoPlaceholder = styled.div`
   align-items: center;
   font-size: 6rem;
 `;
-const TumbnailPlaceholder = styled.div`
+const ThumbnailPlaceholder = styled.div`
   width: 640px;
   height: 480px;
   background-color: rgba(10, 10, 10, 1);

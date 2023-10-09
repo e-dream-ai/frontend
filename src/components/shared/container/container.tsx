@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const Container = styled.div`
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: ${(props) => props.theme.background4};
   padding: 1.875rem;
   margin-right: auto;
   margin-left: auto;
@@ -10,8 +10,8 @@ export const Container = styled.div`
     font-size: 1.25rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: #fff;
-    border-bottom: 2px solid #ce4d1b;
+    color: ${(props) => props.theme.text1};
+    border-bottom: 2px solid ${(props) => props.theme.primary2};
     padding-bottom: 1.25rem;
     margin: 0;
     margin-bottom: 1rem;

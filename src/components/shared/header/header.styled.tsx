@@ -10,7 +10,7 @@ const StyledHeader = styled.header`
   width: 100%;
   z-index: 2;
   padding: 1rem 1rem;
-  background: rgba(0, 0, 0, 0.8);
+  background: ${(props) => props.theme.background4};
   -webkit-backface-visibility: hidden;
   margin-right: auto;
   margin-left: auto;
@@ -22,7 +22,7 @@ export const HeaderLogo = styled.div`
 `;
 
 export const HeaderTitle = styled.h1`
-  color: #fff;
+  color: ${(props) => props.theme.text1};
   margin-left: 0.5rem;
 `;
 
@@ -53,7 +53,7 @@ export const HeaderListItem = styled.li`
 
   &::after {
     content: "/";
-    color: #fff;
+    color: ${(props) => props.theme.text1};
     margin: 0 12px;
   }
 

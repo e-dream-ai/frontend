@@ -44,8 +44,8 @@ export const StyledButton = styled.button<{
   height: fit-content;
   align-items: center;
   text-transform: uppercase;
-  color: #fff;
-  background-color: #ff5d20;
+  color: ${(props) => props.theme.text1};
+  background-color: ${(props) => props.theme.primary};
   padding: 6px 12px;
   margin-bottom: 0;
   border: 1px solid transparent;

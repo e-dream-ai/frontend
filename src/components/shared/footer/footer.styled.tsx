@@ -7,17 +7,17 @@ export const StyledFooter = styled.footer`
   position: fixed;
   bottom: 0;
   font-size: 1rem;
-  color: #999;
+  color: ${(props) => props.theme.text1};
   padding: 0 15px 15px;
   line-height: 1.4;
-  background: rgba(0, 0, 0, 0.8);
+  background: ${(props) => props.theme.background4};
 
   @media only screen and (max-width: 1200px) {
     position: static;
   }
 
   .reverse {
-    color: #000;
+    color: ${(props) => props.theme.text3};
   }
 `;
 

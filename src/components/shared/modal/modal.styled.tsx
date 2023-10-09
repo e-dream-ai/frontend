@@ -15,9 +15,9 @@ export const ModalHeader = styled.div`
   flex-flow: row;
   align-items: center;
   justify-content: space-between;
-  background-color: #252525;
+  background-color: ${(props) => props.theme.background3};
   border: 0;
-  color: #fff;
+  color: ${(props) => props.theme.text1};
   padding: 0.625rem 1.875rem;
 `;
 
@@ -37,7 +37,7 @@ export const ModalBody = styled.div`
 export const ModalTitle = styled.h2`
   font-size: 1rem;
   text-transform: uppercase;
-  color: #fff;
+  color: ${(props) => props.theme.text1};
   margin: 0;
   line-height: 1.5rem;
 `;
