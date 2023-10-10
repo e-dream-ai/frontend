@@ -2,7 +2,7 @@ import styled from "styled-components";
 import ReactModal from "styled-react-modal";
 
 export const StyledReactModal = ReactModal.styled`
-  width: 420px;
+  width: auto;
   height: auto;
   display: flex;
   flex-flow: column;

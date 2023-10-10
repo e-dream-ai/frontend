@@ -5,12 +5,16 @@ import Text from "components/shared/text/text";
 import { useState } from "react";
 import { FileUploader } from "react-drag-drop-files";
 import { useTranslation } from "react-i18next";
+import { useParams } from "react-router-dom";
 import styled from "styled-components";
 
+type Params = { dreamUUID: string };
 const SectionID = "view-dream";
 
 const ViewDreamPage: React.FC = () => {
   const { t } = useTranslation();
+  const { dreamUUID } = useParams<Params>();
+  console.log({ dreamUUID });
   const [edit, setEdit] = useState(false);
   const handleEdit = () => setEdit(true);
   const save = () => setEdit(false);

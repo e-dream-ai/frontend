@@ -3,7 +3,7 @@ import {
   LoginModal,
   SignupModal,
 } from "components/modals";
-import { UploadDreamModal } from "components/modals/upload-dream.modal";
+import { UploadDreamModal } from "components/modals/upload-dream/upload-dream.modal";
 import { ModalProvider as StateModalProvider } from "context/modal.context";
 import useModal from "hooks/useModal";
 import styled from "styled-components";

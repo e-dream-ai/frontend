@@ -21,7 +21,7 @@ export const router = createBrowserRouter([
     element: <ConfirmForgotPassword />,
   },
   {
-    path: ROUTES.VIEW_DREAM,
+    path: `${ROUTES.VIEW_DREAM}/:dreamUUID`,
     element: (
       <ProtectedRoute>
         <ViewDreamPage />
@@ -29,3 +29,5 @@ export const router = createBrowserRouter([
     ),
   },
 ]);
+
+export default router;

@@ -40,14 +40,16 @@ export const AuthHeader: React.FC = () => {
       {
         onSuccess: (data) => {
           if (data.success) {
-            toast.success("User logged out successfully.");
+            toast.success(t("modal.logout.user_logged_out_successfully"));
             logout();
           } else {
-            toast.error(`Error logging out user. ${data.message}`);
+            toast.error(
+              `${t("modal.logout.error_signingout_user")} ${data.message}`,
+            );
           }
         },
         onError: () => {
-          toast.error("Error logging out user.");
+          toast.error(t("modal.logout.error_signingout_user"));
         },
       },
     );

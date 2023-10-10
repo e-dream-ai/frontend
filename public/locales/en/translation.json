@@ -57,6 +57,10 @@
       "error_logging_in": "Error logging in."
 
     },
+    "logout": {
+      "user_logged_out_successfully": "User logged out successfully.",
+      "error_signingout_user": "Error signing out user."
+    },
     "signup": {
       "title": "Sign up for gold",
       "email": "Email",
@@ -68,7 +72,7 @@
       "already_have_account": "Already have an account?",
       "forgot_your_password": "Forgot your password?",
       "user_signup_successfully": "User signup successfully. Check your email to verify user.",
-      "error_signinup_user": "Error signing up user."
+      "error_signingup_user": "Error signing up user."
     },
     "forgot_password": {
       "title": "Forgot your password?",
@@ -78,7 +82,12 @@
       "error_sending_instructions": "Error sending instructions."
     },
     "upload_dream": {
-      "title": "Upload Dream"
+      "title": "Upload Dream",
+      "dream_preview": "Dream Preview",
+      "dream_instructions": "Upload or drop your dream here.",
+      "upload": "Upload",
+      "dream_successfully_created": "Dream successfully created.",
+      "error_creating_dream": "Error creating dream."
     }
   }
 }

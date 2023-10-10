@@ -5,9 +5,7 @@ import Input, { InputProps } from "../input/input";
 export const InputPassword = React.forwardRef<HTMLInputElement, InputProps>(
   ({ after, ...props }, ref) => {
     const [show, setShow] = useState(false);
-
     const handleShow = () => setShow((val) => !val);
-    console.log({ props }, { ref });
 
     return (
       <Input

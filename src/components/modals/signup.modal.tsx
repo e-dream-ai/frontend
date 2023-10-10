@@ -52,12 +52,12 @@ export const SignupModal: React.FC<
             handleHideModal();
           } else {
             toast.error(
-              `${t("modal.signup.error_signinup_user")} ${data.message}`,
+              `${t("modal.signup.error_signingup_user")} ${data.message}`,
             );
           }
         },
         onError: () => {
-          toast.error(t("modal.signup.error_signinup_user"));
+          toast.error(t("modal.signup.error_signingup_user"));
         },
       },
     );
