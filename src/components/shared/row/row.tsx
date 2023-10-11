@@ -14,4 +14,11 @@ export const Row = styled.div<RowProps>`
   margin-bottom: 1rem;
 `;
 
+export const Column = styled.div<RowProps>`
+  display: flex;
+  flex-flow: column;
+  justify-content: ${(props) => props.justifyContent};
+  align-items: ${(props) => props.alignItems};
+`;
+
 export default Row;

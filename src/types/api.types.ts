@@ -1,4 +1,4 @@
-export type MutationResponse<T> = {
+export type ApiResponse<T> = {
   success?: boolean;
   message?: string;
   data?: T;

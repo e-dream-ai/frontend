@@ -1,4 +1,4 @@
-import { useCreateDream } from "api/dream/useCreateDream";
+import { useCreateDream } from "api/dream/mutation/useCreateDream";
 import { Button, Modal } from "components/shared";
 import Text from "components/shared/text/text";
 import { ModalsKeys } from "constants/modal.constants";
@@ -37,7 +37,6 @@ export const UploadDreamModal: React.FC<
   };
 
   const handleChange = (file: Blob) => {
-    console.log(file);
     setFile(file);
     setVideoLocalUrl(URL.createObjectURL(file));
   };
@@ -74,7 +73,7 @@ export const UploadDreamModal: React.FC<
       {file ? (
         <>
           <Text>{t("modal.upload_dream.dream_preview")}</Text>
-          <Video ref={videoRef} id="dream" controls src={videoLocalUrl || ""} />
+          <Video ref={videoRef} id="dream" controls src={videoLocalUrl ?? ""} />
           <UploadRow justifyContent="flex-end">
             <Button
               after={<i className="fa fa-upload" />}

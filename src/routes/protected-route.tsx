@@ -4,9 +4,9 @@ import { Navigate } from "react-router-dom";
 export const ProtectedRoute: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (!user) {
+  if (!user && !isLoading) {
     return <Navigate to="/" replace />;
   }
 

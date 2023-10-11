@@ -1,10 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
 import { URL } from "constants/api.constants";
-import { getRequestHeaders } from "constants/auth.constants";
+import { ContentType, getRequestHeaders } from "constants/auth.constants";
 import { CREATE_DREAM_FORM } from "constants/dreams.constants";
 import useAuth from "hooks/useAuth";
 import { CreateDreamFormValues } from "schemas/create-dream.schema";
-import { MutationResponse } from "types/api.types";
+import { ApiResponse } from "types/api.types";
 import { Dream } from "types/dream.types";
 
 export const CREATE_DREAM_MUTATION_KEY = "createDream";
@@ -18,7 +18,10 @@ const createDream = ({ accessToken }: { accessToken?: string }) => {
     return fetch(`${URL}/dream`, {
       method: "post",
       body: formData,
-      headers: getRequestHeaders({ accessToken, removeContentType: true }),
+      headers: getRequestHeaders({
+        accessToken,
+        contentType: ContentType.json,
+      }),
     }).then((res) => {
       return res.json();
     });
@@ -27,11 +30,13 @@ const createDream = ({ accessToken }: { accessToken?: string }) => {
 
 export const useCreateDream = () => {
   const { user } = useAuth();
+  const accessToken = user?.token.AccessToken;
+
   return useMutation<
-    MutationResponse<{ dream: Dream }>,
+    ApiResponse<{ dream: Dream }>,
     Error,
     CreateDreamFormValues
-  >(createDream({ accessToken: user?.token.AccessToken }), {
+  >(createDream({ accessToken }), {
     mutationKey: [CREATE_DREAM_MUTATION_KEY],
   });
 };
