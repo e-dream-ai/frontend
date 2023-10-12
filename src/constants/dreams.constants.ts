@@ -1,3 +1,3 @@
-export const CREATE_DREAM_FORM = {
+export const FILE_DREAM_FORM = {
   FILE: "file",
 };

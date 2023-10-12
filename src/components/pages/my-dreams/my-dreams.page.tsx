@@ -1,33 +1,36 @@
 import { useMyDreams } from "api/dream/query/useMyDreams";
-import { Anchor } from "components/shared";
 import Container from "components/shared/container/container";
-import { ROUTES } from "constants/routes.constants";
+import {
+  DreamCard,
+  DreamCardList,
+} from "components/shared/dream-card/dream-card";
+import { Section } from "components/shared/section/section";
+import { Spinner } from "components/shared/spinner/spinner";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+
+const SECTION_ID = "my-dreams";
 
 export const MyDreamsPage: React.FC = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { data } = useMyDreams();
+  const { data, isLoading } = useMyDreams();
   const dreams = data?.data?.dreams;
-
-  const navigateToDream = (uuid: string) => () =>
-    navigate(`${ROUTES.VIEW_DREAM}/${uuid}`);
 
   return (
     <Container>
       <h2>{t("page.my_dreams.title")}</h2>
-      <section>
-        <ul>
-          {dreams?.map(({ uuid, name }) => (
-            <li key={uuid}>
-              <Anchor onClick={navigateToDream(uuid)}>
-                {name || "Unnamed dream"} - {uuid}
-              </Anchor>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <Section id={SECTION_ID}>
+        {isLoading ? (
+          <>
+            <Spinner />
+          </>
+        ) : (
+          <DreamCardList>
+            {dreams?.map((dream) => (
+              <DreamCard dream={dream} key={dream.uuid} />
+            ))}
+          </DreamCardList>
+        )}
+      </Section>
     </Container>
   );
 };

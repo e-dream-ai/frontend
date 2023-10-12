@@ -1,6 +1,7 @@
 export const COLORS = {
   WHITE: "#fff",
   BLACK: "#000",
+  LIGHT_BLACK: "#111111",
   TRANSPARENT_BLACK: "rgba(0, 0, 0, 0.8)",
   GRAY_1: "#999",
   GRAY_2: "#555",
@@ -21,6 +22,7 @@ export const DEFAULT_THEME = {
   background2: COLORS.GRAY_3,
   background3: COLORS.GRAY_4,
   background4: COLORS.TRANSPARENT_BLACK,
+  background5: COLORS.LIGHT_BLACK,
   danger: COLORS.LIGHT_BLUE,
   text1: COLORS.WHITE,
   text2: COLORS.GRAY_1,

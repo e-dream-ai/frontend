@@ -47,7 +47,7 @@ export const UploadDreamModal: React.FC<
 
   const handleUpload = async () => {
     mutate(
-      { video: video?.fileBlob },
+      { file: video?.fileBlob },
       {
         onSuccess: (data) => {
           const dream = data?.data?.dream;

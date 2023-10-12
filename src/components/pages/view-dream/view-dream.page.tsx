@@ -1,5 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useUpdateDream } from "api/dream/mutation/useUpdateDream";
+import { useUpdateThumbnailDream } from "api/dream/mutation/useUpdateThumbnailDream";
+import { useUpdateVideoDream } from "api/dream/mutation/useUpdateVideoDream";
 import { DREAM_QUERY_KEY, useDream } from "api/dream/query/useDream";
 import queryClient from "api/query-client";
 import { Button, Row } from "components/shared";
@@ -7,6 +9,8 @@ import Container from "components/shared/container/container";
 import { Column } from "components/shared/row/row";
 import { Section } from "components/shared/section/section";
 import Text from "components/shared/text/text";
+import { FORMAT } from "constants/moment.constants";
+import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -38,7 +42,19 @@ const ViewDreamPage: React.FC = () => {
   const [isVideoRemoved, setIsVideoRemoved] = useState(false);
   const [isThumbnailRemoved, setIsThumbnailRemoved] = useState(false);
 
-  const { mutate, isLoading } = useUpdateDream(uuid);
+  const { mutate: mutateDream, isLoading: isLoadingDreamMutation } =
+    useUpdateDream(uuid);
+  const { mutate: mutateVideoDream, isLoading: isLoadingVideoDreamMutation } =
+    useUpdateVideoDream(uuid);
+  const {
+    mutate: mutateThumbnailDream,
+    isLoading: isLoadingThumbnailDreamMutation,
+  } = useUpdateThumbnailDream(uuid);
+
+  const isLoading =
+    isLoadingDreamMutation ||
+    isLoadingVideoDreamMutation ||
+    isLoadingThumbnailDreamMutation;
 
   const {
     register,
@@ -50,8 +66,44 @@ const ViewDreamPage: React.FC = () => {
     defaultValues: { name: "" },
   });
 
-  const onSubmit = (data: UpdateDreamFormValues) => {
-    mutate(
+  const handleMutateVideoDream = (data: UpdateDreamFormValues) => {
+    if (isVideoRemoved || video?.fileBlob) {
+      mutateVideoDream(
+        { file: video?.fileBlob },
+        {
+          onSuccess: () => {
+            handleMutateThumbnailDream(data);
+          },
+          onError: () => {
+            toast.error(t("page.view_dream.error_updating_dream"));
+          },
+        },
+      );
+    } else {
+      handleMutateThumbnailDream(data);
+    }
+  };
+
+  const handleMutateThumbnailDream = (data: UpdateDreamFormValues) => {
+    if (isThumbnailRemoved || thumbnail?.fileBlob) {
+      mutateThumbnailDream(
+        { file: thumbnail?.fileBlob },
+        {
+          onSuccess: () => {
+            handleMutateDream(data);
+          },
+          onError: () => {
+            toast.error(t("page.view_dream.error_updating_dream"));
+          },
+        },
+      );
+    } else {
+      handleMutateDream(data);
+    }
+  };
+
+  const handleMutateDream = (data: UpdateDreamFormValues) => {
+    mutateDream(
       { name: data.name },
       {
         onSuccess: (data) => {
@@ -76,6 +128,10 @@ const ViewDreamPage: React.FC = () => {
     );
   };
 
+  const onSubmit = (data: UpdateDreamFormValues) => {
+    handleMutateVideoDream(data);
+  };
+
   const handleEdit = (event: React.MouseEvent) => {
     event.preventDefault();
     setEditMode(true);
@@ -95,7 +151,7 @@ const ViewDreamPage: React.FC = () => {
     reset({
       name: dream?.name,
       owner: dream?.user.email,
-      created_at: dream?.created_at,
+      created_at: moment(dream?.created_at).format(FORMAT),
     });
   }, [reset, dream]);
 
@@ -182,8 +238,8 @@ const ViewDreamPage: React.FC = () => {
               editMode={editMode}
             />
             <Row justifyContent="space-between">
-              <Text>5 {t("page.view_dream.votes")}</Text>
-              <Text>2 {t("page.view_dream.downvotes")}</Text>
+              <Text>0 {t("page.view_dream.votes")}</Text>
+              <Text>0 {t("page.view_dream.downvotes")}</Text>
             </Row>
           </Column>
 

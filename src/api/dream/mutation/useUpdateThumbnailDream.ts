@@ -7,16 +7,21 @@ import { FileDreamFormValues } from "schemas/file-dream.schema";
 import { ApiResponse } from "types/api.types";
 import { Dream } from "types/dream.types";
 
-export const CREATE_DREAM_MUTATION_KEY = "createDream";
+type MutateFunctionParams = {
+  accessToken?: string;
+  uuid?: string;
+};
 
-const createDream = ({ accessToken }: { accessToken?: string }) => {
+export const UPDATE_THUMBNAIL_DREAM_MUTATION_KEY = "updateThumbnailDream";
+
+const updateThumbnailDream = ({ accessToken, uuid }: MutateFunctionParams) => {
   return async (params: FileDreamFormValues) => {
     const formData = new FormData();
 
     formData.append(FILE_DREAM_FORM.FILE, params?.file ?? "");
 
-    return fetch(`${URL}/dream`, {
-      method: "post",
+    return fetch(`${URL}/dream/${uuid}/thumbnail`, {
+      method: "put",
       body: formData,
       headers: getRequestHeaders({
         accessToken,
@@ -28,14 +33,14 @@ const createDream = ({ accessToken }: { accessToken?: string }) => {
   };
 };
 
-export const useCreateDream = () => {
+export const useUpdateThumbnailDream = (uuid?: string) => {
   const { user } = useAuth();
   const accessToken = user?.token.AccessToken;
 
   return useMutation<ApiResponse<{ dream: Dream }>, Error, FileDreamFormValues>(
-    createDream({ accessToken }),
+    updateThumbnailDream({ accessToken, uuid }),
     {
-      mutationKey: [CREATE_DREAM_MUTATION_KEY],
+      mutationKey: [UPDATE_THUMBNAIL_DREAM_MUTATION_KEY],
     },
   );
 };
