@@ -10,10 +10,12 @@ export const COLORS = {
   LIGHT_BLUE: "#009ba2",
   ORANGE: "#ff5d20",
   DARK_ORANGE: "#ff5d20",
+  LIGHT_ORANGE: "#ff7845",
 };
 
 export const DEFAULT_THEME = {
   primary: COLORS.ORANGE,
+  lightPrimary: COLORS.LIGHT_ORANGE,
   primary2: COLORS.DARK_ORANGE,
   background: COLORS.BLACK,
   background2: COLORS.GRAY_3,

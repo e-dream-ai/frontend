@@ -4,6 +4,7 @@ import { Sizes } from "types/sizes.types";
 const ButtonSizes = {
   sm: css`
     font-size: 1rem;
+    height: 2rem;
 
     .button-before {
       font-size: 1.2rem;
@@ -15,6 +16,7 @@ const ButtonSizes = {
   `,
   md: css`
     font-size: 1.2rem;
+    height: 2.625rem;
     .button-before {
       font-size: 1.6rem;
     }
@@ -25,6 +27,7 @@ const ButtonSizes = {
   `,
   lg: css`
     font-size: 1.6;
+    height: 3rem;
     .button-before {
       font-size: 2rem;
     }
@@ -54,6 +57,11 @@ export const StyledButton = styled.button<{
   ${(props) => ButtonSizes[props.size]}
   margin-left: ${(props) => (props.marginLeft ? "0.6rem" : 0)};
   margin-right: ${(props) => (props.marginRight ? "0.6rem" : 0)};
+
+  &:disabled {
+    background-color: ${(props) => props.theme.lightPrimary};
+    cursor: not-allowed;
+  }
 `;
 
 export const ButtonBefore = styled.span`

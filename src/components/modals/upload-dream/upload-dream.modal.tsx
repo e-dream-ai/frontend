@@ -12,6 +12,13 @@ import router from "routes/router";
 import { ModalComponent } from "types/modal.types";
 import { UploadRow, Video } from "./upload-dream.styled";
 
+type VideoState =
+  | {
+      fileBlob: Blob;
+      url: string;
+    }
+  | undefined;
+
 const fileTypes = ["MP4"];
 
 export const UploadDreamModal: React.FC<
@@ -21,8 +28,7 @@ export const UploadDreamModal: React.FC<
 > = ({ isOpen = false }) => {
   const { t } = useTranslation();
   const { hideModal } = useModal();
-  const [file, setFile] = useState<Blob | null>(null);
-  const [videoLocalUrl, setVideoLocalUrl] = useState<string | null>(null);
+  const [video, setVideo] = useState<VideoState>();
   const videoRef = useRef(null);
 
   const { mutate, isLoading } = useCreateDream();
@@ -31,19 +37,17 @@ export const UploadDreamModal: React.FC<
     if (isLoading) {
       return;
     }
-    setFile(null);
-    setVideoLocalUrl(null);
+    setVideo(undefined);
     hideModal(ModalsKeys.UPLOAD_DREAM_MODAL);
   };
 
   const handleChange = (file: Blob) => {
-    setFile(file);
-    setVideoLocalUrl(URL.createObjectURL(file));
+    setVideo({ fileBlob: file, url: URL.createObjectURL(file) });
   };
 
   const handleUpload = async () => {
     mutate(
-      { video: file! },
+      { video: video?.fileBlob },
       {
         onSuccess: (data) => {
           const dream = data?.data?.dream;
@@ -70,17 +74,19 @@ export const UploadDreamModal: React.FC<
       isOpen={isOpen}
       hideModal={handleHideModal}
     >
-      {file ? (
+      {video ? (
         <>
           <Text>{t("modal.upload_dream.dream_preview")}</Text>
-          <Video ref={videoRef} id="dream" controls src={videoLocalUrl ?? ""} />
+          <Video ref={videoRef} id="dream" controls src={video?.url ?? ""} />
           <UploadRow justifyContent="flex-end">
             <Button
               after={<i className="fa fa-upload" />}
               onClick={handleUpload}
               isLoading={isLoading}
             >
-              {t("modal.upload_dream.upload")}
+              {isLoading
+                ? t("modal.upload_dream.uploading")
+                : t("modal.upload_dream.upload")}
             </Button>
           </UploadRow>
         </>

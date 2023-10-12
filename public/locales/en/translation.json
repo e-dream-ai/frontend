@@ -33,6 +33,7 @@
       "view_dream": "View Dream",
       "edit": "Edit",
       "save": "Save",
+      "cancel": "Cancel",
       "upvote": "Upvote",
       "downvote": "Downvote",
       "name": "Name",
@@ -41,7 +42,12 @@
       "votes": "votes",
       "downvotes": "downvotes",
       "video": "Video",
-      "thumbnail": "Thumbnail"
+      "thumbnail": "Thumbnail",
+      "dream_updated_successfully": "Dream updated successfully.",
+      "error_updating_dream": "Error updating dream."
+    },
+    "my_dreams": {
+      "title": "My dreams"
     }
   },
   "modal": {
@@ -86,6 +92,7 @@
       "dream_preview": "Dream Preview",
       "dream_instructions": "Upload or drop your dream here.",
       "upload": "Upload",
+      "uploading": "Uploading",
       "dream_successfully_created": "Dream successfully created.",
       "error_creating_dream": "Error creating dream."
     }

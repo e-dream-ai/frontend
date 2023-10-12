@@ -13,14 +13,14 @@ const createDream = ({ accessToken }: { accessToken?: string }) => {
   return async (params: CreateDreamFormValues) => {
     const formData = new FormData();
 
-    formData.append(CREATE_DREAM_FORM.FILE, params.video);
+    formData.append(CREATE_DREAM_FORM.FILE, params?.video ?? "");
 
     return fetch(`${URL}/dream`, {
       method: "post",
       body: formData,
       headers: getRequestHeaders({
         accessToken,
-        contentType: ContentType.json,
+        contentType: ContentType.none,
       }),
     }).then((res) => {
       return res.json();

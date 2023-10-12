@@ -25,6 +25,7 @@ export const Button: React.FC<ButtonProps> = ({
     size={size}
     marginLeft={marginLeft}
     marginRight={marginRight}
+    disabled={isLoading}
     {...props}
   >
     {before && <ButtonBefore className="button-before">{before}</ButtonBefore>}

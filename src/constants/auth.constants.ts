@@ -17,8 +17,13 @@ export const getRequestHeaders = ({
   accessToken?: string;
   contentType?: ContentType;
 }) => {
+  let contentTypeHeader = {};
+
+  if (contentType !== ContentType.none) {
+    contentTypeHeader = { "Content-type": CONTENT_TYPES[contentType] };
+  }
   return {
-    "Content-type": CONTENT_TYPES[contentType],
+    ...contentTypeHeader,
     Authorization: accessToken ? `Bearer ${accessToken}` : "",
     "Access-Control-Allow-Origin": "*",
   };

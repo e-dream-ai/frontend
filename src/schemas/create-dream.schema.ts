@@ -1,3 +1,3 @@
 export type CreateDreamFormValues = {
-  video: Blob;
+  video?: Blob;
 };

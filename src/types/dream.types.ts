@@ -10,3 +10,10 @@ export type Dream = {
   video: string;
   created_at: string;
 };
+
+export type DreamMediaState =
+  | {
+      fileBlob: Blob;
+      url: string;
+    }
+  | undefined;

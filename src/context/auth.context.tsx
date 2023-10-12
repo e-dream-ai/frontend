@@ -1,6 +1,12 @@
 import { AUTH_LOCAL_STORAGE_KEY } from "constants/auth.constants";
 import { useLocalStorage } from "hooks/useLocalStorage";
-import React, { createContext, useCallback, useEffect, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { User } from "types/auth.types";
 
 type AuthContextType = {
@@ -51,22 +57,15 @@ export const AuthProvider: React.FC<{
     setItem("");
   }, [setItem]);
 
-  // const memoedValue = useMemo(
-  //   () => ({
-  //     user,
-  //     login,
-  //     logout,
-  //     isLoading,
-  //   }),
-  //   [user, login, logout, isLoading],
-  // );
-
-  const memoedValue = {
-    user,
-    login,
-    logout,
-    isLoading,
-  };
+  const memoedValue = useMemo(
+    () => ({
+      user,
+      login,
+      logout,
+      isLoading,
+    }),
+    [user, login, logout, isLoading],
+  );
 
   return (
     <AuthContext.Provider value={memoedValue}>{children}</AuthContext.Provider>

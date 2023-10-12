@@ -1,8 +1,10 @@
 import { Anchor } from "components/shared";
 import { ModalsKeys } from "constants/modal.constants";
+import { ROUTES } from "constants/routes.constants";
 import useAuth from "hooks/useAuth";
 import useModal from "hooks/useModal";
 import { useTranslation } from "react-i18next";
+import router from "routes/router";
 import { HeaderList, HeaderListItem } from "./header.styled";
 
 export const MenuHeader: React.FC = () => {
@@ -18,7 +20,10 @@ export const MenuHeader: React.FC = () => {
       action: () => showModal(ModalsKeys.UPLOAD_DREAM_MODAL),
     },
     { name: t("header.feed") },
-    { name: t("header.my_dreams") },
+    {
+      name: t("header.my_dreams"),
+      action: () => router.navigate(ROUTES.MY_DREAMS),
+    },
     { name: t("header.forum") },
   ];
 

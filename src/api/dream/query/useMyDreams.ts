@@ -9,25 +9,23 @@ export const DREAM_QUERY_KEY = "getDream";
 
 type QueryFunctionParams = {
   accessToken?: string;
-  uuid?: string;
 };
 
-const getDream = ({ accessToken, uuid }: QueryFunctionParams) => {
+const getMyDreams = ({ accessToken }: QueryFunctionParams) => {
   return async () =>
-    fetch(`${URL}/dream/${uuid ?? ""}`, {
+    fetch(`${URL}/dream/my-dreams`, {
       headers: getRequestHeaders({ accessToken }),
     }).then((res) => res.json());
 };
 
-export const useDream = (uuid?: string) => {
+export const useMyDreams = (uuid?: string) => {
   const { user } = useAuth();
   const accessToken = user?.token.AccessToken;
-  return useQuery<ApiResponse<{ dream: Dream }>, Error>(
+  return useQuery<ApiResponse<{ dreams: Dream[] }>, Error>(
     [DREAM_QUERY_KEY, { uuid }],
-    getDream({ accessToken, uuid }),
+    getMyDreams({ accessToken }),
     {
-      refetchOnWindowFocus: false,
-      enabled: Boolean(user) && Boolean(uuid),
+      enabled: Boolean(user),
     },
   );
 };
