@@ -11,6 +11,7 @@ const initialState: ModalState = {
   loginModal: false,
   signupModal: false,
   forgotPasswordModal: false,
+  uploadDreamModal: false,
 };
 
 export const ModalContext = createContext<ModalContextType>({
@@ -18,7 +19,6 @@ export const ModalContext = createContext<ModalContextType>({
 } as ModalContextType);
 
 const reducer = (state: ModalState, action: ModalAction): ModalState => {
-  console.log({ state, action });
   if (action.type === ModalActionKind.SHOW) {
     return { ...state, [action.target]: true };
   }
@@ -38,8 +38,6 @@ export const ModalProvider: React.FC<{
     initialState,
     (initialState) => initialState,
   );
-
-  console.log({ state });
 
   const showModal = useCallback((modal: ModalsKeys) => {
     dispatch({ type: ModalActionKind.SHOW, target: modal });

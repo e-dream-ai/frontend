@@ -1,9 +1,14 @@
+import { Sizes } from "types/sizes.types";
 import StyledButton, { ButtonAfter, ButtonBefore } from "./button.styled";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  children?: React.ReactNode;
+  isLoading?: boolean;
+  size?: Sizes;
+  marginLeft?: boolean;
+  marginRight?: boolean;
   before?: React.ReactNode;
   after?: React.ReactNode;
-  isLoading?: boolean;
 };
 
 export const Button: React.FC<ButtonProps> = ({
@@ -11,11 +16,23 @@ export const Button: React.FC<ButtonProps> = ({
   before,
   after,
   isLoading,
+  size = "md",
+  marginLeft,
+  marginRight,
+  ...props
 }) => (
-  <StyledButton>
-    {before && <ButtonBefore>{before}</ButtonBefore>}
+  <StyledButton
+    size={size}
+    marginLeft={marginLeft}
+    marginRight={marginRight}
+    disabled={isLoading}
+    {...props}
+  >
+    {before && <ButtonBefore className="button-before">{before}</ButtonBefore>}
     {children}
-    {after && !isLoading && <ButtonAfter>{after}</ButtonAfter>}
+    {after && !isLoading && (
+      <ButtonAfter className="button-after">{after}</ButtonAfter>
+    )}
     {isLoading && (
       <ButtonAfter>
         <i className="fa fa-spinner fa-spin" />

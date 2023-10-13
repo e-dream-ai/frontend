@@ -3,6 +3,7 @@ import { Anchor } from "components/shared";
 import { ModalsKeys } from "constants/modal.constants";
 import { useAuth } from "hooks/useAuth";
 import useModal from "hooks/useModal";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import {
   AnchorIcon,
@@ -26,6 +27,7 @@ const AuthAnchor: React.FC<{
 };
 
 export const AuthHeader: React.FC = () => {
+  const { t } = useTranslation();
   const { user, logout, isLoading } = useAuth();
   const { mutate } = useLogout();
   const { showModal } = useModal();
@@ -38,14 +40,16 @@ export const AuthHeader: React.FC = () => {
       {
         onSuccess: (data) => {
           if (data.success) {
-            toast.success("User logged out successfully.");
+            toast.success(t("modal.logout.user_logged_out_successfully"));
             logout();
           } else {
-            toast.error(`Error logging out user. ${data.message}`);
+            toast.error(
+              `${t("modal.logout.error_signingout_user")} ${data.message}`,
+            );
           }
         },
         onError: () => {
-          toast.error("Error logging out user.");
+          toast.error(t("modal.logout.error_signingout_user"));
         },
       },
     );
@@ -57,12 +61,12 @@ export const AuthHeader: React.FC = () => {
     <StyledAuthHeader>
       {user ? (
         <>
-          <HelloMessageHeader>Hello </HelloMessageHeader>
+          <HelloMessageHeader>{t("header.hello")} </HelloMessageHeader>
           <Anchor>{user.username || user.email}</Anchor>
         </>
       ) : (
         <AuthAnchor
-          text="Sign up"
+          text={t("header.signup")}
           faClass="fa fa-pencil"
           onClick={handleShowSignupModal}
         />
@@ -72,7 +76,7 @@ export const AuthHeader: React.FC = () => {
         <Anchor onClick={logoutSession}>Logout</Anchor>
       ) : (
         <AuthAnchor
-          text="Login"
+          text={t("header.login")}
           faClass="fa fa-lock"
           onClick={handleShowLoginModal}
         />

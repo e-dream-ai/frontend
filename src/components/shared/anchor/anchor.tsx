@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const Anchor = styled.a`
-  color: #ff5d20;
+  color: ${(props) => props.theme.primary};
   cursor: pointer;
   -webkit-transition:
     color linear 0.4s,
@@ -13,7 +13,7 @@ export const Anchor = styled.a`
     border-color linear 0.4s;
 
   &:hover {
-    color: #fff;
+    color: ${(props) => props.theme.text1};
   }
 `;
 
