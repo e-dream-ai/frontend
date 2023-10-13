@@ -6,7 +6,7 @@ export const StyledCheckbox = styled.input`
 `;
 
 export const CheckboxLabel = styled.span`
-  color: #999;
+  color: ${(props) => props.theme.text2};
 `;
 
 export default StyledCheckbox;

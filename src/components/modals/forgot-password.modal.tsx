@@ -5,6 +5,7 @@ import { ModalsKeys } from "constants/modal.constants";
 import { ROUTES } from "constants/routes.constants";
 import useModal from "hooks/useModal";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { router } from "routes/router";
 import ForgotPasswordSchema, {
@@ -17,6 +18,7 @@ export const ForgotPasswordModal: React.FC<
     isOpen?: boolean;
   }>
 > = ({ isOpen = false }) => {
+  const { t } = useTranslation();
   const { hideModal } = useModal();
   const handleHideModal = () => hideModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
   const { mutate, isLoading } = useForgotPassword();
@@ -36,18 +38,24 @@ export const ForgotPasswordModal: React.FC<
       {
         onSuccess: (data) => {
           if (data.success) {
-            toast.success("Successfully sent instructions.");
+            toast.success(
+              t("modal.forgot_password.sent_instructions_successfully"),
+            );
             reset();
             handleHideModal();
             router.navigate(ROUTES.CONFIRM_FORGOT_PASSWORD, {
               state: { username: formData.username },
             });
           } else {
-            toast.error(`Error sending instructions. ${data.message}`);
+            toast.error(
+              `${t("modal.forgot_password.error_sending_instructions")} ${
+                data.message
+              }`,
+            );
           }
         },
         onError: () => {
-          toast.error("Error sending instructions.");
+          toast.error(t("modal.forgot_password.error_sending_instructions"));
         },
       },
     );
@@ -55,13 +63,13 @@ export const ForgotPasswordModal: React.FC<
 
   return (
     <Modal
-      title="Forgot your password?"
+      title={t("modal.forgot_password.title")}
       isOpen={isOpen}
       hideModal={handleHideModal}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
         <Input
-          placeholder="Email"
+          placeholder={t("modal.forgot_password.email")}
           type="email"
           before={<i className="fa fa-envelope" />}
           error={errors.username?.message}
@@ -74,7 +82,7 @@ export const ForgotPasswordModal: React.FC<
             after={<i className="fa fa-angle-right" />}
             isLoading={isLoading}
           >
-            Send Instructions
+            {t("modal.forgot_password.send")}
           </Button>
         </Row>
       </form>
