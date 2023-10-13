@@ -82,25 +82,35 @@ const refreshAccessToken = async ({
   handleRefreshUser: (user: User | null) => void;
 }) => {
   const refreshToken = user?.token?.RefreshToken;
-  const params = { refreshToken };
-  const response = await axios
-    .post<ApiResponse<Token>>(`${URL}/auth/refresh`, JSON.stringify(params), {
-      transformRequest: (data, headers) => {
-        delete headers["Authorization"];
-        return data;
-      },
-      headers: getRequestHeaders({
-        contentType: ContentType.json,
-      }),
-    })
-    .then((res) => {
-      return res.data;
-    });
+  const values = { refreshToken };
+  try {
+    const response = await axios
+      .post<ApiResponse<Token>>(`${URL}/auth/refresh`, values, {
+        transformRequest: (data, headers) => {
+          delete headers["Authorization"];
+          return JSON.stringify(data);
+        },
+        headers: getRequestHeaders({
+          contentType: ContentType.json,
+        }),
+      })
+      .then((res) => {
+        if (!res) {
+          throw new Error("Refresh token failed.");
+        }
+        return res.data;
+      });
 
-  const token = response.data;
-  user.token = token;
-  handleRefreshUser(user);
-  return token?.AccessToken ?? "";
+    const token = response?.data;
+    if (token) {
+      token.RefreshToken = refreshToken ?? "";
+    }
+    user.token = token;
+    handleRefreshUser(user);
+    return token?.AccessToken ?? "";
+  } catch (error) {
+    handleRefreshUser(null);
+  }
 };
 
 type UseHttpInterceptorsProps = {
