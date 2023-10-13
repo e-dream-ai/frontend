@@ -1,0 +1,30 @@
+export type JustifyContentProperty =
+  | "flex-start"
+  | "flex-end"
+  | "center"
+  | "space-between"
+  | "space-around"
+  | "initial"
+  | "inherit";
+
+export type AlignItemsProperty =
+  | "normal"
+  | "stretch"
+  | "center"
+  | "start"
+  | "start"
+  | "end"
+  | "flex-start"
+  | "flex-end"
+  | "self-start"
+  | "self-end"
+  | "baseline"
+  | "first baseline"
+  | "last baseline"
+  | "safe center"
+  | "unsafe center"
+  | "inherit"
+  | "initial"
+  | "revert"
+  | "revert-layer"
+  | "unset";

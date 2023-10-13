@@ -4,6 +4,7 @@ import { Button, Input, Row } from "components/shared";
 import Container from "components/shared/container/container";
 import { ROUTES } from "constants/routes.constants";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import ConfirmForgotPasswordSchema, {
@@ -11,6 +12,7 @@ import ConfirmForgotPasswordSchema, {
 } from "schemas/confirm-forgot-password.schema";
 
 export const ConfirmForgotPassword: React.FC = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
   const { username }: { username: string } = location.state;
@@ -31,14 +33,22 @@ export const ConfirmForgotPassword: React.FC = () => {
       {
         onSuccess: (data) => {
           if (data.success) {
-            toast.success("Password changed successfully");
+            toast.success(
+              t("page.confirm_forgot_password.password_change_successfully"),
+            );
             navigate(ROUTES.ROOT);
           } else {
-            toast.error(`Error changing user password. ${data.message}`);
+            toast.error(
+              `${t("page.confirm_forgot_password.error_changing_password")} ${
+                data.message
+              }`,
+            );
           }
         },
         onError: () => {
-          toast.error("Error changing user password.");
+          toast.error(
+            t("page.confirm_forgot_password.error_changing_password"),
+          );
         },
       },
     );
@@ -48,7 +58,7 @@ export const ConfirmForgotPassword: React.FC = () => {
     <Container>
       <form onSubmit={handleSubmit(onSubmit)}>
         <Input
-          placeholder="Code"
+          placeholder={t("page.confirm_forgot_password.codes")}
           type="text"
           before={<i className="fa fa-key" />}
           error={errors.code?.message}
@@ -56,14 +66,14 @@ export const ConfirmForgotPassword: React.FC = () => {
         />
 
         <Input
-          placeholder="New Password"
+          placeholder={t("page.confirm_forgot_password.new_password")}
           type="password"
           before={<i className="fa fa-lock" />}
           error={errors.password?.message}
           {...register("password")}
         />
         <Input
-          placeholder="Confirm New Password"
+          placeholder={t("page.confirm_forgot_password.confirm_new_password")}
           type="password"
           before={<i className="fa fa-lock" />}
           error={errors.confirmPassword?.message}
@@ -76,7 +86,7 @@ export const ConfirmForgotPassword: React.FC = () => {
             isLoading={isLoading}
             after={<i className="fa fa-angle-right" />}
           >
-            Change password
+            {t("page.confirm_forgot_password.change_password")}
           </Button>
         </Row>
       </form>

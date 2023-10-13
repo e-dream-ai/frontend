@@ -2,11 +2,27 @@ import styled from "styled-components";
 import ReactModal from "styled-react-modal";
 
 export const StyledReactModal = ReactModal.styled`
-  width: 420px;
+  width: auto;
+  min-width: 320px;
   height: auto;
   display: flex;
   flex-flow: column;
   background-color: rgba(0, 0, 0, 0.8);
+
+    /*Devices smaller than 767px*/
+  @media (max-width: 767px) {
+    min-width: 320px;
+  }
+
+  /*Devices between 768px and 1024px*/
+  @media (min-width: 768px) and (max-width: 1024px) {
+    min-width: 380px;
+  }
+
+  /*Devices larger than 1024px*/
+  @media (min-width: 1024px) {
+    min-width: 420px;
+  }
 `;
 
 export const ModalHeader = styled.div`
@@ -15,9 +31,9 @@ export const ModalHeader = styled.div`
   flex-flow: row;
   align-items: center;
   justify-content: space-between;
-  background-color: #252525;
+  background-color: ${(props) => props.theme.background3};
   border: 0;
-  color: #fff;
+  color: ${(props) => props.theme.text1};
   padding: 0.625rem 1.875rem;
 `;
 
@@ -37,7 +53,7 @@ export const ModalBody = styled.div`
 export const ModalTitle = styled.h2`
   font-size: 1rem;
   text-transform: uppercase;
-  color: #fff;
+  color: ${(props) => props.theme.text1};
   margin: 0;
   line-height: 1.5rem;
 `;

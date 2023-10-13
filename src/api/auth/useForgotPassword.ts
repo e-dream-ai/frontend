@@ -1,23 +1,27 @@
 import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
 import { URL } from "constants/api.constants";
+import { ContentType, getRequestHeaders } from "constants/auth.constants";
 import { ForgotPasswordFormValues } from "schemas/forgot-password.schema";
-import { MutationResponse } from "types/api.types";
+import { ApiResponse } from "types/api.types";
 import { User } from "types/auth.types";
 
 export const FORGOT_PASSWORD_MUTATION_KEY = "forgotPassword";
 
-const forgotPassowrd = async (params: ForgotPasswordFormValues) => {
-  return fetch(`${URL}/auth/forgot-password`, {
-    method: "post",
-    body: JSON.stringify(params),
-    headers: { "Content-type": "application/json; charset=UTF-8" },
-  }).then((res) => {
-    return res.json();
-  });
+const forgotPassowrd = async (values: ForgotPasswordFormValues) => {
+  return axios
+    .post(`${URL}/auth/forgot-password`, values, {
+      headers: getRequestHeaders({
+        contentType: ContentType.json,
+      }),
+    })
+    .then((res) => {
+      return res.data;
+    });
 };
 
 export const useForgotPassword = () => {
-  return useMutation<MutationResponse<User>, Error, ForgotPasswordFormValues>(
+  return useMutation<ApiResponse<User>, Error, ForgotPasswordFormValues>(
     forgotPassowrd,
     {
       mutationKey: [FORGOT_PASSWORD_MUTATION_KEY],
