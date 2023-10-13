@@ -5,7 +5,7 @@ export enum ContentType {
   none = "none",
 }
 
-const CONTENT_TYPES = {
+export const CONTENT_TYPES = {
   [ContentType.json]: "application/json; charset=UTF-8",
   [ContentType.none]: "",
 };
@@ -22,5 +22,6 @@ export const getRequestHeaders = ({
   }
   return {
     ...contentTypeHeader,
+    "Access-Control-Allow-Origin": "*",
   };
 };
