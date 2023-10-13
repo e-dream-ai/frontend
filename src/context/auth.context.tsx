@@ -1,4 +1,5 @@
 import { AUTH_LOCAL_STORAGE_KEY } from "constants/auth.constants";
+import { useHttpInterceptors } from "hooks/useHttpInterceptors";
 import { useLocalStorage } from "hooks/useLocalStorage";
 import React, {
   createContext,
@@ -24,8 +25,24 @@ export const AuthProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const { setItem, getItem } = useLocalStorage(AUTH_LOCAL_STORAGE_KEY);
+  const { setItem, getItem, removeItem } = useLocalStorage(
+    AUTH_LOCAL_STORAGE_KEY,
+  );
   const [user, setUser] = useState<User | null>(null);
+
+  const setLoggedUser = useCallback(
+    (user: User | null) => {
+      setUser(user);
+      if (user) {
+        setItem(JSON.stringify(user));
+      } else {
+        removeItem();
+      }
+    },
+    [setUser, setItem, removeItem],
+  );
+
+  useHttpInterceptors({ handleRefreshUser: setLoggedUser }, [user]);
 
   const verifySession = useCallback(() => {
     const storagedUser = getItem();
@@ -36,9 +53,9 @@ export const AuthProvider: React.FC<{
     }
 
     const user: User = JSON.parse(storagedUser);
-    setUser(user);
+    setLoggedUser(user);
     setIsLoading(false);
-  }, [getItem]);
+  }, [getItem, setLoggedUser]);
 
   useEffect(() => {
     verifySession();
@@ -46,16 +63,14 @@ export const AuthProvider: React.FC<{
 
   const login: (user: User) => void = useCallback(
     (user: User) => {
-      setUser(user);
-      setItem(JSON.stringify(user));
+      setLoggedUser(user);
     },
-    [setItem],
+    [setLoggedUser],
   );
 
   const logout = useCallback(() => {
-    setUser(null);
-    setItem("");
-  }, [setItem]);
+    setLoggedUser(null);
+  }, [setLoggedUser]);
 
   const memoedValue = useMemo(
     () => ({

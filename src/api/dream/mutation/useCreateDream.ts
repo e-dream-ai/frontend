@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
 import { URL } from "constants/api.constants";
 import { ContentType, getRequestHeaders } from "constants/auth.constants";
 import { FILE_DREAM_FORM } from "constants/dreams.constants";
@@ -15,22 +16,22 @@ const createDream = ({ accessToken }: { accessToken?: string }) => {
 
     formData.append(FILE_DREAM_FORM.FILE, params?.file ?? "");
 
-    return fetch(`${URL}/dream`, {
-      method: "post",
-      body: formData,
-      headers: getRequestHeaders({
-        accessToken,
-        contentType: ContentType.none,
-      }),
-    }).then((res) => {
-      return res.json();
-    });
+    return axios
+      .post(`${URL}/dream`, formData, {
+        method: "post",
+        headers: getRequestHeaders({
+          contentType: ContentType.none,
+        }),
+      })
+      .then((res) => {
+        return res.data;
+      });
   };
 };
 
 export const useCreateDream = () => {
   const { user } = useAuth();
-  const accessToken = user?.token.AccessToken;
+  const accessToken = user?.token?.AccessToken;
 
   return useMutation<ApiResponse<{ dream: Dream }>, Error, FileDreamFormValues>(
     createDream({ accessToken }),

@@ -194,7 +194,11 @@ const ViewDreamPage: React.FC = () => {
             <div>
               {editMode ? (
                 <>
-                  <Button type="button" onClick={handleCancel}>
+                  <Button
+                    type="button"
+                    onClick={handleCancel}
+                    disabled={isLoading}
+                  >
                     {t("page.view_dream.cancel")}
                   </Button>
                   <Button
@@ -203,7 +207,9 @@ const ViewDreamPage: React.FC = () => {
                     isLoading={isLoading}
                     marginLeft
                   >
-                    {t("page.view_dream.save")}
+                    {isLoading
+                      ? t("page.view_dream.saving")
+                      : t("page.view_dream.save")}
                   </Button>
                 </>
               ) : (

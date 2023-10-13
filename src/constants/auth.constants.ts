@@ -11,10 +11,8 @@ const CONTENT_TYPES = {
 };
 
 export const getRequestHeaders = ({
-  accessToken,
   contentType = ContentType.none,
 }: {
-  accessToken?: string;
   contentType?: ContentType;
 }) => {
   let contentTypeHeader = {};
@@ -24,7 +22,5 @@ export const getRequestHeaders = ({
   }
   return {
     ...contentTypeHeader,
-    Authorization: accessToken ? `Bearer ${accessToken}` : "",
-    "Access-Control-Allow-Origin": "*",
   };
 };

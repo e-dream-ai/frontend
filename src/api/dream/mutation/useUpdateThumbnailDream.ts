@@ -1,4 +1,5 @@
 import { useMutation } from "@tanstack/react-query";
+import axios from "axios";
 import { URL } from "constants/api.constants";
 import { ContentType, getRequestHeaders } from "constants/auth.constants";
 import { FILE_DREAM_FORM } from "constants/dreams.constants";
@@ -20,22 +21,21 @@ const updateThumbnailDream = ({ accessToken, uuid }: MutateFunctionParams) => {
 
     formData.append(FILE_DREAM_FORM.FILE, params?.file ?? "");
 
-    return fetch(`${URL}/dream/${uuid}/thumbnail`, {
-      method: "put",
-      body: formData,
-      headers: getRequestHeaders({
-        accessToken,
-        contentType: ContentType.none,
-      }),
-    }).then((res) => {
-      return res.json();
-    });
+    return axios
+      .put(`${URL}/dream/${uuid}/thumbnail`, formData, {
+        headers: getRequestHeaders({
+          contentType: ContentType.none,
+        }),
+      })
+      .then((res) => {
+        return res.data;
+      });
   };
 };
 
 export const useUpdateThumbnailDream = (uuid?: string) => {
   const { user } = useAuth();
-  const accessToken = user?.token.AccessToken;
+  const accessToken = user?.token?.AccessToken;
 
   return useMutation<ApiResponse<{ dream: Dream }>, Error, FileDreamFormValues>(
     updateThumbnailDream({ accessToken, uuid }),

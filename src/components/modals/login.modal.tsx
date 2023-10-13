@@ -62,7 +62,7 @@ export const LoginModal: React.FC<
             toast.error(`${t("modal.login.error_logging_in")} ${data.message}`);
           }
         },
-        onError: () => {
+        onError: (error) => {
           toast.error(t("modal.login.error_logging_in"));
         },
       },
