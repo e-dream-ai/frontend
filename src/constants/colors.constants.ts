@@ -1,5 +1,6 @@
 export const COLORS = {
   WHITE: "#fff",
+  PRINCIPAL_WHITE: "#fcd9b7",
   BLACK: "#000",
   LIGHT_BLACK: "#111111",
   TRANSPARENT_BLACK: "rgba(0, 0, 0, 0.8)",
@@ -9,7 +10,7 @@ export const COLORS = {
   GRAY_4: "#252525",
   GRAY_5: "#ccc",
   LIGHT_BLUE: "#009ba2",
-  ORANGE: "#ff5d20",
+  ORANGE: "#e4683a",
   DARK_ORANGE: "#ff5d20",
   LIGHT_ORANGE: "#ff7845",
 };
@@ -24,7 +25,7 @@ export const DEFAULT_THEME = {
   background4: COLORS.TRANSPARENT_BLACK,
   background5: COLORS.LIGHT_BLACK,
   danger: COLORS.LIGHT_BLUE,
-  text1: COLORS.WHITE,
+  text1: COLORS.PRINCIPAL_WHITE,
   text2: COLORS.GRAY_1,
   text3: COLORS.BLACK,
   inputText: COLORS.GRAY_5,

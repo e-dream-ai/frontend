@@ -22,6 +22,8 @@ export const HeaderLogo = styled.div`
 `;
 
 export const HeaderTitle = styled.h1`
+  font-family: "Comfortaa", sans-serif;
+  font-size: 2.5rem;
   color: ${(props) => props.theme.text1};
   margin-left: 0.5rem;
 `;
@@ -30,7 +32,7 @@ export const HeaderImage = styled.img`
   float: left;
   margin: 9px 0 0 0;
   width: auto;
-  height: 5rem;
+  height: 8rem;
   max-width: 100%;
   cursor: pointer;
 `;
