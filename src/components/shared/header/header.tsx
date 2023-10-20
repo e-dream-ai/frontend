@@ -22,7 +22,6 @@ export const Header: React.FC = () => {
           <HeaderImage
             onClick={navigateHome}
             src="/images/edream-logo-512x512.png"
-            className="img-responsive"
             alt={t("header.e_dream")}
           />
           <HeaderTitle>{t("header.e_dream")}</HeaderTitle>

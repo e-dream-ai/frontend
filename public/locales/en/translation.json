@@ -97,5 +97,11 @@
       "dream_successfully_created": "Dream successfully created.",
       "error_creating_dream": "Error creating dream."
     }
+  },
+  "components": {
+    "dream_card": {
+      "created_at": "Created At",
+      "owner": "Owner"
+    }
   }
 }
