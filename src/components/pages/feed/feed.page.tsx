@@ -1,4 +1,4 @@
-import { useMyDreams } from "api/dream/query/useMyDreams";
+import { useDreams } from "api/dream/query/useDreams";
 import { Row } from "components/shared";
 import Container from "components/shared/container/container";
 import {
@@ -12,12 +12,12 @@ import { PAGINATION } from "constants/pagination.constants";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
-const SECTION_ID = "my-dreams";
+const SECTION_ID = "feed";
 
-export const MyDreamsPage: React.FC = () => {
+export const FeedPage: React.FC = () => {
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(1);
-  const { data, isLoading, isRefetching, refetch } = useMyDreams({
+  const { data, isLoading, isRefetching, refetch } = useDreams({
     skip: (page - 1) * PAGINATION.TAKE,
     take: PAGINATION.TAKE,
   });
@@ -31,7 +31,7 @@ export const MyDreamsPage: React.FC = () => {
 
   return (
     <Container>
-      <h2>{t("page.my_dreams.title")}</h2>
+      <h2>{t("page.feed.title")}</h2>
       <Section id={SECTION_ID}>
         {isLoading || isRefetching ? (
           <Row justifyContent="center">
@@ -61,4 +61,4 @@ export const MyDreamsPage: React.FC = () => {
   );
 };
 
-export default MyDreamsPage;
+export default FeedPage;

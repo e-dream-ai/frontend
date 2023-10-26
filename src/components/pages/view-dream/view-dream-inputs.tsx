@@ -1,7 +1,9 @@
 import { Input } from "components/shared";
+import { MAX_FILE_SIZE_MB } from "constants/file.constants";
 import { FileUploader } from "react-drag-drop-files";
 import { FieldErrors, UseFormRegister } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
 import { UpdateDreamFormValues } from "schemas/update-dream.schema";
 import { Dream, DreamMediaState } from "types/dream.types";
 import {
@@ -68,7 +70,12 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
   isRemoved,
   handleChange,
 }) => {
+  const { t } = useTranslation();
   const hasVideo = Boolean(dream?.video) || video;
+
+  const handleSizeError = () => {
+    toast.error(t("components.file_uploader.size_error"));
+  };
 
   if (!hasVideo && (!editMode || isLoading)) {
     return (
@@ -83,7 +90,13 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
       {hasVideo && !isRemoved ? (
         <Video controls src={video?.url || dream?.video} />
       ) : (
-        <FileUploader handleChange={handleChange} name="file" types={["MP4"]} />
+        <FileUploader
+          maxSize={MAX_FILE_SIZE_MB}
+          handleChange={handleChange}
+          onSizeError={handleSizeError}
+          name="file"
+          types={["MP4"]}
+        />
       )}
     </>
   );
@@ -106,7 +119,13 @@ export const ThumbnailDreamInput: React.FC<ThumbnailDreamInputProps> = ({
   isRemoved,
   handleChange,
 }) => {
+  const { t } = useTranslation();
   const hasThumbnail = Boolean(dream?.thumbnail) || thumbnail;
+
+  const handleSizeError = () => {
+    toast.error(t("components.file_uploader.size_error"));
+  };
+
   if (!hasThumbnail && (!editMode || isLoading)) {
     return (
       <ThumbnailPlaceholder>
@@ -121,7 +140,9 @@ export const ThumbnailDreamInput: React.FC<ThumbnailDreamInputProps> = ({
         <Thumbnail src={thumbnail?.url || dream?.thumbnail} />
       ) : (
         <FileUploader
+          maxSize={MAX_FILE_SIZE_MB}
           handleChange={handleChange}
+          onSizeError={handleSizeError}
           name="file"
           types={["JPG", "JPEG"]}
         />

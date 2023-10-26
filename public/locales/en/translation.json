@@ -49,6 +49,9 @@
     },
     "my_dreams": {
       "title": "My dreams"
+    },
+    "feed": {
+      "title": "Feed"
     }
   },
   "modal": {
@@ -102,6 +105,13 @@
     "dream_card": {
       "created_at": "Created At",
       "owner": "Owner"
+    },
+    "paginate": {
+      "previous": "previous",
+      "next": "next"
+    },
+    "file_uploader": {
+      "size_error": "File size exceed limits allowed"
     }
   }
 }

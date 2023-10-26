@@ -1,6 +1,7 @@
 import { useCreateDream } from "api/dream/mutation/useCreateDream";
 import { Button, Modal } from "components/shared";
 import Text from "components/shared/text/text";
+import { MAX_FILE_SIZE_MB } from "constants/file.constants";
 import { ModalsKeys } from "constants/modal.constants";
 import { ROUTES } from "constants/routes.constants";
 import useModal from "hooks/useModal";
@@ -68,6 +69,10 @@ export const UploadDreamModal: React.FC<
     );
   };
 
+  const handleSizeError = () => {
+    toast.error(t("components.file_uploader.size_error"));
+  };
+
   return (
     <Modal
       title={t("modal.upload_dream.title")}
@@ -94,7 +99,9 @@ export const UploadDreamModal: React.FC<
         <>
           <Text>{t("modal.upload_dream.dream_instructions")}</Text>
           <FileUploader
+            maxSize={MAX_FILE_SIZE_MB}
             handleChange={handleChange}
+            onSizeError={handleSizeError}
             name="file"
             types={fileTypes}
           />
