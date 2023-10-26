@@ -18,7 +18,7 @@ export const DreamCardImage = styled.img`
   // 480p / 2
   width: 320px;
   height: 240px;
-  object-fit: scale-down;
+  object-fit: cover;
 `;
 
 export const DreamCardBody = styled.div`
