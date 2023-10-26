@@ -111,7 +111,8 @@
       "next": "next"
     },
     "file_uploader": {
-      "size_error": "File size exceed limits allowed"
+      "size_error": "File size exceed limits allowed",
+      "type_error": "File type is not allowed"
     }
   }
 }

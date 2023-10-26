@@ -11,6 +11,10 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import router from "routes/router";
 import { ModalComponent } from "types/modal.types";
+import {
+  handleFileUploaderSizeError,
+  handleFileUploaderTypeError,
+} from "utils/file-uploader.util";
 import { UploadRow, Video } from "./upload-dream.styled";
 
 type VideoState =
@@ -69,10 +73,6 @@ export const UploadDreamModal: React.FC<
     );
   };
 
-  const handleSizeError = () => {
-    toast.error(t("components.file_uploader.size_error"));
-  };
-
   return (
     <Modal
       title={t("modal.upload_dream.title")}
@@ -101,7 +101,8 @@ export const UploadDreamModal: React.FC<
           <FileUploader
             maxSize={MAX_FILE_SIZE_MB}
             handleChange={handleChange}
-            onSizeError={handleSizeError}
+            onSizeError={handleFileUploaderSizeError(t)}
+            onTypeError={handleFileUploaderTypeError(t)}
             name="file"
             types={fileTypes}
           />

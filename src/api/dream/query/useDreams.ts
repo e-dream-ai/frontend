@@ -14,7 +14,6 @@ type QueryFunctionParams = {
 } & HookParams;
 
 const getDreams = ({ accessToken, take, skip }: QueryFunctionParams) => {
-  console.log({ take, skip });
   return async () =>
     axios
       .get(`${URL}/dream`, {

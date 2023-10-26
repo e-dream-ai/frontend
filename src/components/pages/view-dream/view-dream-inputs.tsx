@@ -3,9 +3,12 @@ import { MAX_FILE_SIZE_MB } from "constants/file.constants";
 import { FileUploader } from "react-drag-drop-files";
 import { FieldErrors, UseFormRegister } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 import { UpdateDreamFormValues } from "schemas/update-dream.schema";
 import { Dream, DreamMediaState } from "types/dream.types";
+import {
+  handleFileUploaderSizeError,
+  handleFileUploaderTypeError,
+} from "utils/file-uploader.util";
 import {
   Thumbnail,
   ThumbnailPlaceholder,
@@ -73,10 +76,6 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
   const { t } = useTranslation();
   const hasVideo = Boolean(dream?.video) || video;
 
-  const handleSizeError = () => {
-    toast.error(t("components.file_uploader.size_error"));
-  };
-
   if (!hasVideo && (!editMode || isLoading)) {
     return (
       <VideoPlaceholder>
@@ -93,7 +92,8 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
         <FileUploader
           maxSize={MAX_FILE_SIZE_MB}
           handleChange={handleChange}
-          onSizeError={handleSizeError}
+          onSizeError={handleFileUploaderSizeError(t)}
+          onTypeError={handleFileUploaderTypeError(t)}
           name="file"
           types={["MP4"]}
         />
@@ -122,10 +122,6 @@ export const ThumbnailDreamInput: React.FC<ThumbnailDreamInputProps> = ({
   const { t } = useTranslation();
   const hasThumbnail = Boolean(dream?.thumbnail) || thumbnail;
 
-  const handleSizeError = () => {
-    toast.error(t("components.file_uploader.size_error"));
-  };
-
   if (!hasThumbnail && (!editMode || isLoading)) {
     return (
       <ThumbnailPlaceholder>
@@ -142,7 +138,8 @@ export const ThumbnailDreamInput: React.FC<ThumbnailDreamInputProps> = ({
         <FileUploader
           maxSize={MAX_FILE_SIZE_MB}
           handleChange={handleChange}
-          onSizeError={handleSizeError}
+          onSizeError={handleFileUploaderSizeError(t)}
+          onTypeError={handleFileUploaderTypeError(t)}
           name="file"
           types={["JPG", "JPEG"]}
         />
