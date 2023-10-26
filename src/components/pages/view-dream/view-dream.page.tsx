@@ -71,8 +71,16 @@ const ViewDreamPage: React.FC = () => {
       mutateVideoDream(
         { file: video?.fileBlob },
         {
-          onSuccess: () => {
-            handleMutateThumbnailDream(data);
+          onSuccess: (response) => {
+            if (response.success) {
+              handleMutateThumbnailDream(data);
+            } else {
+              toast.error(
+                `${t("page.view_dream.error_updating_dream")} ${
+                  response.message
+                }`,
+              );
+            }
           },
           onError: () => {
             toast.error(t("page.view_dream.error_updating_dream"));
@@ -89,8 +97,16 @@ const ViewDreamPage: React.FC = () => {
       mutateThumbnailDream(
         { file: thumbnail?.fileBlob },
         {
-          onSuccess: () => {
-            handleMutateDream(data);
+          onSuccess: (response) => {
+            if (response.success) {
+              handleMutateDream(data);
+            } else {
+              toast.error(
+                `${t("page.view_dream.error_updating_dream")} ${
+                  response.message
+                }`,
+              );
+            }
           },
           onError: () => {
             toast.error(t("page.view_dream.error_updating_dream"));

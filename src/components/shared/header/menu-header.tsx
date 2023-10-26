@@ -19,7 +19,7 @@ export const MenuHeader: React.FC = () => {
       name: t("header.create"),
       action: () => showModal(ModalsKeys.UPLOAD_DREAM_MODAL),
     },
-    { name: t("header.feed") },
+    { name: t("header.feed"), action: () => router.navigate(ROUTES.FEED) },
     {
       name: t("header.my_dreams"),
       action: () => router.navigate(ROUTES.MY_DREAMS),

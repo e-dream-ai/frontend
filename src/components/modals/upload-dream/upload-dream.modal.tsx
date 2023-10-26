@@ -1,6 +1,7 @@
 import { useCreateDream } from "api/dream/mutation/useCreateDream";
 import { Button, Modal } from "components/shared";
 import Text from "components/shared/text/text";
+import { MAX_FILE_SIZE_MB } from "constants/file.constants";
 import { ModalsKeys } from "constants/modal.constants";
 import { ROUTES } from "constants/routes.constants";
 import useModal from "hooks/useModal";
@@ -10,6 +11,10 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import router from "routes/router";
 import { ModalComponent } from "types/modal.types";
+import {
+  handleFileUploaderSizeError,
+  handleFileUploaderTypeError,
+} from "utils/file-uploader.util";
 import { UploadRow, Video } from "./upload-dream.styled";
 
 type VideoState =
@@ -94,7 +99,10 @@ export const UploadDreamModal: React.FC<
         <>
           <Text>{t("modal.upload_dream.dream_instructions")}</Text>
           <FileUploader
+            maxSize={MAX_FILE_SIZE_MB}
             handleChange={handleChange}
+            onSizeError={handleFileUploaderSizeError(t)}
+            onTypeError={handleFileUploaderTypeError(t)}
             name="file"
             types={fileTypes}
           />

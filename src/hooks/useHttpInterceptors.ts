@@ -70,6 +70,8 @@ const generateResponseInterceptor = async ({
         const user: User = JSON.parse(storagedUser);
         refreshAccessToken({ user, handleRefreshUser });
       }
+
+      return error.response;
     },
   );
 };
