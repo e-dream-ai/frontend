@@ -9,16 +9,16 @@ import { Paginate } from "components/shared/paginate/paginate";
 import { Section } from "components/shared/section/section";
 import { Spinner } from "components/shared/spinner/spinner";
 import { PAGINATION } from "constants/pagination.constants";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "my-dreams";
 
 export const MyDreamsPage: React.FC = () => {
   const { t } = useTranslation();
-  const [page, setPage] = useState<number>(1);
+  const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching, refetch } = useMyDreams({
-    skip: (page - 1) * PAGINATION.TAKE,
+    skip: page * PAGINATION.TAKE,
     take: PAGINATION.TAKE,
   });
   const dreams = data?.data?.dreams;
@@ -26,8 +26,11 @@ export const MyDreamsPage: React.FC = () => {
 
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);
-    refetch();
   };
+
+  useEffect(() => {
+    refetch();
+  }, [refetch, page]);
 
   return (
     <Container>
