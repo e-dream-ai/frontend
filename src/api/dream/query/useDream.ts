@@ -9,11 +9,10 @@ import { Dream } from "types/dream.types";
 export const DREAM_QUERY_KEY = "getDream";
 
 type QueryFunctionParams = {
-  accessToken?: string;
   uuid?: string;
 };
 
-const getDream = ({ accessToken, uuid }: QueryFunctionParams) => {
+const getDream = ({ uuid }: QueryFunctionParams) => {
   return async () =>
     axios
       .get(`${URL}/dream/${uuid ?? ""}`, {
@@ -26,10 +25,9 @@ const getDream = ({ accessToken, uuid }: QueryFunctionParams) => {
 
 export const useDream = (uuid?: string) => {
   const { user } = useAuth();
-  const accessToken = user?.token?.AccessToken;
   return useQuery<ApiResponse<{ dream: Dream }>, Error>(
     [DREAM_QUERY_KEY, { uuid }],
-    getDream({ accessToken, uuid }),
+    getDream({ uuid }),
     {
       refetchOnWindowFocus: false,
       enabled: Boolean(user) && Boolean(uuid),
