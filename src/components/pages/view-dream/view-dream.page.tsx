@@ -1,21 +1,26 @@
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useDeleteDream } from "api/dream/mutation/useDeleteDream";
 import { useUpdateDream } from "api/dream/mutation/useUpdateDream";
 import { useUpdateThumbnailDream } from "api/dream/mutation/useUpdateThumbnailDream";
 import { useUpdateVideoDream } from "api/dream/mutation/useUpdateVideoDream";
 import { DREAM_QUERY_KEY, useDream } from "api/dream/query/useDream";
 import queryClient from "api/query-client";
+import { ConfirmModal } from "components/modals/confirm.modal";
 import { Button, Row } from "components/shared";
 import Container from "components/shared/container/container";
 import { Column } from "components/shared/row/row";
 import { Section } from "components/shared/section/section";
 import Text from "components/shared/text/text";
 import { FORMAT } from "constants/moment.constants";
+import { ROUTES } from "constants/routes.constants";
+import useAuth from "hooks/useAuth";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
+import router from "routes/router";
 import UpdateDreamSchema, {
   UpdateDreamFormValues,
 } from "schemas/update-dream.schema";
@@ -33,14 +38,18 @@ const SectionID = "dream";
 const ViewDreamPage: React.FC = () => {
   const { t } = useTranslation();
   const { uuid } = useParams<Params>();
+  const { user } = useAuth();
   const { data } = useDream(uuid);
   const dream = data?.data?.dream;
+  const isOwner = user?.id === dream?.user?.cognitoId;
 
-  const [editMode, setEditMode] = useState(false);
+  const [editMode, setEditMode] = useState<boolean>(false);
   const [video, setVideo] = useState<DreamMediaState>();
   const [thumbnail, setTumbnail] = useState<DreamMediaState>();
-  const [isVideoRemoved, setIsVideoRemoved] = useState(false);
-  const [isThumbnailRemoved, setIsThumbnailRemoved] = useState(false);
+  const [isVideoRemoved, setIsVideoRemoved] = useState<boolean>(false);
+  const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
+    useState<boolean>(false);
 
   const { mutate: mutateDream, isLoading: isLoadingDreamMutation } =
     useUpdateDream(uuid);
@@ -50,6 +59,8 @@ const ViewDreamPage: React.FC = () => {
     mutate: mutateThumbnailDream,
     isLoading: isLoadingThumbnailDreamMutation,
   } = useUpdateThumbnailDream(uuid);
+  const { mutate: mutateDeleteDream, isLoading: isLoadingDeleteDream } =
+    useDeleteDream(uuid);
 
   const isLoading =
     isLoadingDreamMutation ||
@@ -163,6 +174,9 @@ const ViewDreamPage: React.FC = () => {
     setEditMode(false);
   };
 
+  const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
+  const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
+
   const resetRemoteDreamForm = useCallback(() => {
     reset({
       name: dream?.name,
@@ -189,6 +203,25 @@ const ViewDreamPage: React.FC = () => {
     setIsThumbnailRemoved(false);
   };
 
+  const onConfirmDeleteDream = () => {
+    mutateDeleteDream(null, {
+      onSuccess: (response) => {
+        if (response.success) {
+          toast.success(`${t("page.view_dream.dream_deleted_successfully")}`);
+          onHideConfirmDeleteModal();
+          router.navigate(ROUTES.MY_DREAMS);
+        } else {
+          toast.error(
+            `${t("page.view_dream.error_deleting_dream")} ${response.message}`,
+          );
+        }
+      },
+      onError: () => {
+        toast.error(t("page.view_dream.error_deleting_dream"));
+      },
+    });
+  };
+
   /**
    * Setting api values to form
    */
@@ -201,112 +234,144 @@ const ViewDreamPage: React.FC = () => {
   }
 
   return (
-    <Section id={SectionID}>
-      <Container>
-        <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
-          <h2>{t("page.view_dream.view_dream")}</h2>
-          <Row justifyContent="space-between">
-            <span />
-            <div>
-              {editMode ? (
-                <>
-                  <Button
-                    type="button"
-                    onClick={handleCancel}
-                    disabled={isLoading}
-                  >
-                    {t("page.view_dream.cancel")}
-                  </Button>
-                  <Button
-                    type="submit"
-                    after={<i className="fa fa-save" />}
-                    isLoading={isLoading}
-                    marginLeft
-                  >
-                    {isLoading
-                      ? t("page.view_dream.saving")
-                      : t("page.view_dream.save")}
-                  </Button>
-                </>
-              ) : (
+    <>
+      <ConfirmModal
+        isOpen={showConfirmDeleteModal}
+        onCancel={onHideConfirmDeleteModal}
+        onConfirm={onConfirmDeleteDream}
+        isConfirming={isLoadingDeleteDream}
+        title={t("page.view_dream.confirm_delete_modal_title")}
+        text={
+          <Text>
+            {t("page.view_dream.confirm_delete_modal_body")}{" "}
+            <em>
+              <strong>{dream?.name}</strong>
+            </em>
+          </Text>
+        }
+      />
+      <Section id={SectionID}>
+        <Container>
+          <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
+            <h2>{t("page.view_dream.view_dream")}</h2>
+            <Row justifyContent="space-between">
+              <span />
+              <div>
+                {isOwner ? (
+                  editMode ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={isLoading}
+                      >
+                        {t("page.view_dream.cancel")}
+                      </Button>
+                      <Button
+                        type="submit"
+                        after={<i className="fa fa-save" />}
+                        isLoading={isLoading}
+                        marginLeft
+                      >
+                        {isLoading
+                          ? t("page.view_dream.saving")
+                          : t("page.view_dream.save")}
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      type="button"
+                      after={<i className="fa fa-pencil" />}
+                      onClick={handleEdit}
+                    >
+                      {t("page.view_dream.edit")}
+                    </Button>
+                  )
+                ) : (
+                  <></>
+                )}
                 <Button
                   type="button"
-                  after={<i className="fa fa-pencil" />}
-                  onClick={handleEdit}
+                  after={<i className="fa fa-thumbs-up" />}
+                  marginLeft
                 >
-                  {t("page.view_dream.edit")}
+                  {t("page.view_dream.upvote")}
+                </Button>
+                <Button
+                  type="button"
+                  after={<i className="fa fa-thumbs-down" />}
+                  marginLeft
+                >
+                  {t("page.view_dream.downvote")}
+                </Button>
+                {isOwner ? (
+                  <Button
+                    type="button"
+                    marginLeft
+                    onClick={onShowConfirmDeleteModal}
+                  >
+                    <i className="fa fa-trash" />
+                  </Button>
+                ) : (
+                  <></>
+                )}
+              </div>
+            </Row>
+            <Column>
+              <ViewDreamInputs
+                register={register}
+                errors={errors}
+                editMode={editMode}
+              />
+              <Row justifyContent="space-between">
+                <Text>0 {t("page.view_dream.votes")}</Text>
+                <Text>0 {t("page.view_dream.downvotes")}</Text>
+              </Row>
+            </Column>
+
+            <Row justifyContent="space-between" alignItems="center">
+              <h3>{t("page.view_dream.video")}</h3>
+              {editMode && (
+                <Button type="button" size="sm" onClick={handleRemoveVideo}>
+                  <i className="fa fa-trash" />
                 </Button>
               )}
-              <Button
-                type="button"
-                after={<i className="fa fa-thumbs-up" />}
-                marginLeft
-              >
-                {t("page.view_dream.upvote")}
-              </Button>
-              <Button
-                type="button"
-                after={<i className="fa fa-thumbs-down" />}
-                marginLeft
-              >
-                {t("page.view_dream.downvote")}
-              </Button>
-            </div>
-          </Row>
-          <Column>
-            <ViewDreamInputs
-              register={register}
-              errors={errors}
-              editMode={editMode}
-            />
-            <Row justifyContent="space-between">
-              <Text>0 {t("page.view_dream.votes")}</Text>
-              <Text>0 {t("page.view_dream.downvotes")}</Text>
             </Row>
-          </Column>
+            <Row>
+              <DreamVideoInput
+                dream={dream}
+                editMode={editMode}
+                video={video}
+                isRemoved={isVideoRemoved}
+                handleChange={handleVideoChange}
+              />
+            </Row>
 
-          <Row justifyContent="space-between" alignItems="center">
-            <h3>{t("page.view_dream.video")}</h3>
-            {editMode && (
-              <Button type="button" size="sm" onClick={handleRemoveVideo}>
-                <i className="fa fa-trash" />
-              </Button>
-            )}
-          </Row>
-          <Row>
-            <DreamVideoInput
-              dream={dream}
-              editMode={editMode}
-              video={video}
-              isRemoved={isVideoRemoved}
-              handleChange={handleVideoChange}
-            />
-          </Row>
-
-          <Row
-            justifyContent="space-between"
-            alignItems="center"
-            style={{ marginTop: "5rem" }}
-          >
-            <h3>{t("page.view_dream.thumbnail")}</h3>
-            {editMode && (
-              <Button type="button" size="sm" onClick={handleRemoveThumbnail}>
-                <i className="fa fa-trash" />
-              </Button>
-            )}
-          </Row>
-          <Row>
-            <ThumbnailDreamInput
-              dream={dream}
-              editMode={editMode}
-              thumbnail={thumbnail}
-              isRemoved={isThumbnailRemoved}
-              handleChange={handleThumbnailChange}
-            />
-          </Row>
-        </form>
-      </Container>
-    </Section>
+            <Row
+              justifyContent="space-between"
+              alignItems="center"
+              style={{ marginTop: "5rem" }}
+            >
+              <h3>{t("page.view_dream.thumbnail")}</h3>
+              {editMode && (
+                <Button type="button" size="sm" onClick={handleRemoveThumbnail}>
+                  <i className="fa fa-trash" />
+                </Button>
+              )}
+            </Row>
+            <Row>
+              <ThumbnailDreamInput
+                dream={dream}
+                editMode={editMode}
+                thumbnail={thumbnail}
+                isRemoved={isThumbnailRemoved}
+                handleChange={handleThumbnailChange}
+              />
+            </Row>
+          </form>
+        </Container>
+      </Section>
+    </>
   );
 };
 

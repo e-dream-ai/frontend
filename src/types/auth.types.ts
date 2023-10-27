@@ -11,4 +11,5 @@ export type User = {
   email: string;
   username: string;
   token?: Token;
+  cognitoId?: string;
 };

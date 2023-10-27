@@ -2,6 +2,8 @@ import i18n from "i18next";
 import Backend, { HttpBackendOptions } from "i18next-http-backend";
 import { initReactI18next } from "react-i18next";
 
+const env = process.env.REACT_APP_ENV;
+
 i18n
   .use(Backend)
   .use(initReactI18next) // passes i18n down to react-i18next
@@ -13,7 +15,7 @@ i18n
     // you can use the i18n.changeLanguage function to change the language manually: https://www.i18next.com/overview/api#changelanguage
     // if you're using a language detector, do not define the lng option
     returnEmptyString: false,
-    debug: true,
+    debug: env === "development",
     fallbackLng: "en",
     interpolation: {
       escapeValue: false, // react already safes from xss
