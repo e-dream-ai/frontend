@@ -69,6 +69,7 @@ const generateResponseInterceptor = async ({
       if (error.response.status === 401 && storagedUser) {
         const user: User = JSON.parse(storagedUser);
         refreshAccessToken({ user, handleRefreshUser });
+        return;
       }
 
       return error.response;

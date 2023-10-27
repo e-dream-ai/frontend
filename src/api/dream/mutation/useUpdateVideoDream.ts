@@ -3,19 +3,17 @@ import axios from "axios";
 import { URL } from "constants/api.constants";
 import { ContentType, getRequestHeaders } from "constants/auth.constants";
 import { FILE_DREAM_FORM } from "constants/dreams.constants";
-import useAuth from "hooks/useAuth";
 import { FileDreamFormValues } from "schemas/file-dream.schema";
 import { ApiResponse } from "types/api.types";
 import { Dream } from "types/dream.types";
 
 type MutateFunctionParams = {
-  accessToken?: string;
   uuid?: string;
 };
 
 export const UPDATE_VIDEO_DREAM_MUTATION_KEY = "updateVideoDream";
 
-const updateVideoDream = ({ accessToken, uuid }: MutateFunctionParams) => {
+const updateVideoDream = ({ uuid }: MutateFunctionParams) => {
   return async (params: FileDreamFormValues) => {
     const formData = new FormData();
 
@@ -35,11 +33,8 @@ const updateVideoDream = ({ accessToken, uuid }: MutateFunctionParams) => {
 };
 
 export const useUpdateVideoDream = (uuid?: string) => {
-  const { user } = useAuth();
-  const accessToken = user?.token?.AccessToken;
-
   return useMutation<ApiResponse<{ dream: Dream }>, Error, FileDreamFormValues>(
-    updateVideoDream({ accessToken, uuid }),
+    updateVideoDream({ uuid }),
     {
       mutationKey: [UPDATE_VIDEO_DREAM_MUTATION_KEY],
     },
