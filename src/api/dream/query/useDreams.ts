@@ -10,10 +10,11 @@ import { Dream } from "types/dream.types";
 export const DREAMS_QUERY_KEY = "getDreams";
 
 type QueryFunctionParams = {
-  accessToken?: string;
-} & HookParams;
+  take: number;
+  skip: number;
+};
 
-const getDreams = ({ accessToken, take, skip }: QueryFunctionParams) => {
+const getDreams = ({ take, skip }: QueryFunctionParams) => {
   return async () =>
     axios
       .get(`${URL}/dream`, {
@@ -29,18 +30,16 @@ const getDreams = ({ accessToken, take, skip }: QueryFunctionParams) => {
 };
 
 type HookParams = {
-  take?: number;
-  skip?: number;
+  page?: number;
 };
 
-export const useDreams = (
-  { take, skip }: HookParams = { take: PAGINATION.TAKE, skip: 0 },
-) => {
+export const useDreams = ({ page = 0 }: HookParams) => {
+  const take = PAGINATION.TAKE;
+  const skip = page * take;
   const { user } = useAuth();
-  const accessToken = user?.token?.AccessToken;
   return useQuery<ApiResponse<{ dreams: Dream[]; count: number }>, Error>(
-    [DREAMS_QUERY_KEY],
-    getDreams({ accessToken, take, skip }),
+    [DREAMS_QUERY_KEY, page],
+    getDreams({ take, skip }),
     {
       refetchOnWindowFocus: false,
       enabled: Boolean(user),

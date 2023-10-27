@@ -9,7 +9,7 @@ import { Paginate } from "components/shared/paginate/paginate";
 import { Section } from "components/shared/section/section";
 import { Spinner } from "components/shared/spinner/spinner";
 import { PAGINATION } from "constants/pagination.constants";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "my-dreams";
@@ -17,9 +17,8 @@ const SECTION_ID = "my-dreams";
 export const MyDreamsPage: React.FC = () => {
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(0);
-  const { data, isLoading, isRefetching, refetch } = useMyDreams({
-    skip: page * PAGINATION.TAKE,
-    take: PAGINATION.TAKE,
+  const { data, isLoading, isRefetching } = useMyDreams({
+    page,
   });
   const dreams = data?.data?.dreams;
   const pageCount = (data?.data?.count ?? 0) / PAGINATION.TAKE;
@@ -27,10 +26,6 @@ export const MyDreamsPage: React.FC = () => {
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);
   };
-
-  useEffect(() => {
-    refetch();
-  }, [refetch, page]);
 
   return (
     <Container>
@@ -53,7 +48,6 @@ export const MyDreamsPage: React.FC = () => {
             breakLabel="..."
             nextLabel={`${t("components.paginate.next")} >`}
             onPageChange={handleonPageChange}
-            pageRangeDisplayed={5}
             pageCount={pageCount}
             previousLabel={`< ${t("components.paginate.previous")}`}
             renderOnZeroPageCount={null}
