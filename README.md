@@ -1,7 +1,3 @@
-# Getting Started with Create React App
-
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-
 ## Available Scripts
 
 In the project directory, you can run:
@@ -59,8 +55,14 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 └── index.ts        # Index App
 ```
 
-## Learn More
+## Deployment process
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+### Stage
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+- When you merge a change from a branch feat/name or fix/name to stage, or push changes directly to stage a deploy review on netlify. Only owners might deploy directly without permissions.
+- To trigger a deploy on netlify, go to netlify dashboard and find stage app > **deploys** on sidemenu, find **trigger deploy** > **deploy site**
+- Deploy will be trigger, wait for the build and deploy should be done.
+
+### Production
+
+- You can follow the same steps used in stage.
