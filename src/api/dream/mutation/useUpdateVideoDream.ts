@@ -21,7 +21,6 @@ const updateVideoDream = ({ uuid }: MutateFunctionParams) => {
 
     return axios
       .put(`${URL}/dream/${uuid}/video`, formData, {
-        method: "put",
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

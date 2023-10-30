@@ -16,7 +16,6 @@ const updateDream = ({ uuid }: MutateFunctionParams) => {
   return async (values: UpdateDreamFormValues) => {
     return axios
       .put(`${URL}/dream/${uuid ?? ""}`, values, {
-        method: "put",
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),
