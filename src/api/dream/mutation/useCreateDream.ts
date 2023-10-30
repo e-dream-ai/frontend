@@ -17,7 +17,6 @@ const createDream = () => {
 
     return axios
       .post(`${URL}/dream`, formData, {
-        method: "post",
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

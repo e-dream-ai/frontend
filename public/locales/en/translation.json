@@ -44,8 +44,12 @@
       "downvotes": "downvotes",
       "video": "Video",
       "thumbnail": "Thumbnail",
+      "confirm_delete_modal_title": "Confirm delete dream",
+      "confirm_delete_modal_body": "Are you sure to delete this dream?",
       "dream_updated_successfully": "Dream updated successfully.",
-      "error_updating_dream": "Error updating dream."
+      "error_updating_dream": "Error updating dream.",
+      "dream_deleted_successfully": "Dream deleted successfully.",
+      "error_deleting_dream": "Error deleting dream."
     },
     "my_dreams": {
       "title": "My dreams"
@@ -99,6 +103,11 @@
       "uploading": "Uploading",
       "dream_successfully_created": "Dream successfully created.",
       "error_creating_dream": "Error creating dream."
+    },
+    "confirm": {
+      "title": "Confirm",
+      "cancel": "Cancel",
+      "confirm": "Confirm"
     }
   },
   "components": {
