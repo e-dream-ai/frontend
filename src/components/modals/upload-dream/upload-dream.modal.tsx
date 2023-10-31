@@ -1,5 +1,6 @@
 import { useCreateDream } from "api/dream/mutation/useCreateDream";
 import { Button, Modal } from "components/shared";
+import { TabList } from "components/shared/tabs/tabs";
 import Text from "components/shared/text/text";
 import { MAX_FILE_SIZE_MB } from "constants/file.constants";
 import { ModalsKeys } from "constants/modal.constants";
@@ -8,6 +9,7 @@ import useModal from "hooks/useModal";
 import { useRef, useState } from "react";
 import { FileUploader } from "react-drag-drop-files";
 import { useTranslation } from "react-i18next";
+import { Tab, TabPanel, Tabs } from "react-tabs";
 import { toast } from "react-toastify";
 import router from "routes/router";
 import { ModalComponent } from "types/modal.types";
@@ -26,6 +28,21 @@ type VideoState =
 
 const fileTypes = ["MP4"];
 
+enum MODAL_TYPE {
+  DREAM = 0,
+  PLAYLIST = 1,
+}
+
+const MODAL_VALUES = {
+  [MODAL_TYPE.DREAM]: {
+    TITLE: "modal.upload_dream.title",
+  },
+  [MODAL_TYPE.PLAYLIST]: {
+    TITLE: "modal.create_playlist.title",
+    TAB_TITLE: "modal.create_playlist.tab_title",
+  },
+};
+
 export const UploadDreamModal: React.FC<
   ModalComponent<{
     isOpen?: boolean;
@@ -35,6 +52,7 @@ export const UploadDreamModal: React.FC<
   const { hideModal } = useModal();
   const [video, setVideo] = useState<VideoState>();
   const videoRef = useRef(null);
+  const [tabIndex, setTabIndex] = useState<MODAL_TYPE>(MODAL_TYPE.DREAM);
 
   const { mutate, isLoading } = useCreateDream();
 
@@ -75,39 +93,53 @@ export const UploadDreamModal: React.FC<
 
   return (
     <Modal
-      title={t("modal.upload_dream.title")}
+      title={t(MODAL_VALUES[tabIndex].TITLE)}
       isOpen={isOpen}
       hideModal={handleHideModal}
     >
-      {video ? (
-        <>
-          <Text>{t("modal.upload_dream.dream_preview")}</Text>
-          <Video ref={videoRef} id="dream" controls src={video?.url ?? ""} />
-          <UploadRow justifyContent="flex-end">
-            <Button
-              after={<i className="fa fa-upload" />}
-              onClick={handleUpload}
-              isLoading={isLoading}
-            >
-              {isLoading
-                ? t("modal.upload_dream.uploading")
-                : t("modal.upload_dream.upload")}
-            </Button>
-          </UploadRow>
-        </>
-      ) : (
-        <>
-          <Text>{t("modal.upload_dream.dream_instructions")}</Text>
-          <FileUploader
-            maxSize={MAX_FILE_SIZE_MB}
-            handleChange={handleChange}
-            onSizeError={handleFileUploaderSizeError(t)}
-            onTypeError={handleFileUploaderTypeError(t)}
-            name="file"
-            types={fileTypes}
-          />
-        </>
-      )}
+      <Tabs selectedIndex={tabIndex} onSelect={(index) => setTabIndex(index)}>
+        <TabList>
+          <Tab>{t("modal.upload_dream.tab_title")}</Tab>
+          <Tab>{t("modal.create_playlist.tab_title")}</Tab>
+        </TabList>
+        <TabPanel>
+          {video ? (
+            <>
+              <Text>{t("modal.upload_dream.dream_preview")}</Text>
+              <Video
+                ref={videoRef}
+                id="dream"
+                controls
+                src={video?.url ?? ""}
+              />
+              <UploadRow justifyContent="flex-end">
+                <Button
+                  after={<i className="fa fa-upload" />}
+                  onClick={handleUpload}
+                  isLoading={isLoading}
+                >
+                  {isLoading
+                    ? t("modal.upload_dream.uploading")
+                    : t("modal.upload_dream.upload")}
+                </Button>
+              </UploadRow>
+            </>
+          ) : (
+            <>
+              <Text>{t("modal.upload_dream.dream_instructions")}</Text>
+              <FileUploader
+                maxSize={MAX_FILE_SIZE_MB}
+                handleChange={handleChange}
+                onSizeError={handleFileUploaderSizeError(t)}
+                onTypeError={handleFileUploaderTypeError(t)}
+                name="file"
+                types={fileTypes}
+              />
+            </>
+          )}
+        </TabPanel>
+        <TabPanel></TabPanel>
+      </Tabs>
     </Modal>
   );
 };
