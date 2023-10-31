@@ -13,7 +13,6 @@ import { Section } from "components/shared/section/section";
 import Text from "components/shared/text/text";
 import { FORMAT } from "constants/moment.constants";
 import { ROUTES } from "constants/routes.constants";
-import useAuth from "hooks/useAuth";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -38,10 +37,8 @@ const SectionID = "dream";
 const ViewDreamPage: React.FC = () => {
   const { t } = useTranslation();
   const { uuid } = useParams<Params>();
-  const { user } = useAuth();
   const { data } = useDream(uuid);
   const dream = data?.data?.dream;
-  const isOwner = user?.id === dream?.user?.cognitoId;
 
   const [editMode, setEditMode] = useState<boolean>(false);
   const [video, setVideo] = useState<DreamMediaState>();
@@ -257,38 +254,34 @@ const ViewDreamPage: React.FC = () => {
             <Row justifyContent="space-between">
               <span />
               <div>
-                {isOwner ? (
-                  editMode ? (
-                    <>
-                      <Button
-                        type="button"
-                        onClick={handleCancel}
-                        disabled={isLoading}
-                      >
-                        {t("page.view_dream.cancel")}
-                      </Button>
-                      <Button
-                        type="submit"
-                        after={<i className="fa fa-save" />}
-                        isLoading={isLoading}
-                        marginLeft
-                      >
-                        {isLoading
-                          ? t("page.view_dream.saving")
-                          : t("page.view_dream.save")}
-                      </Button>
-                    </>
-                  ) : (
+                {editMode ? (
+                  <>
                     <Button
                       type="button"
-                      after={<i className="fa fa-pencil" />}
-                      onClick={handleEdit}
+                      onClick={handleCancel}
+                      disabled={isLoading}
                     >
-                      {t("page.view_dream.edit")}
+                      {t("page.view_dream.cancel")}
                     </Button>
-                  )
+                    <Button
+                      type="submit"
+                      after={<i className="fa fa-save" />}
+                      isLoading={isLoading}
+                      marginLeft
+                    >
+                      {isLoading
+                        ? t("page.view_dream.saving")
+                        : t("page.view_dream.save")}
+                    </Button>
+                  </>
                 ) : (
-                  <></>
+                  <Button
+                    type="button"
+                    after={<i className="fa fa-pencil" />}
+                    onClick={handleEdit}
+                  >
+                    {t("page.view_dream.edit")}
+                  </Button>
                 )}
                 <Button
                   type="button"
@@ -304,17 +297,13 @@ const ViewDreamPage: React.FC = () => {
                 >
                   {t("page.view_dream.downvote")}
                 </Button>
-                {isOwner ? (
-                  <Button
-                    type="button"
-                    marginLeft
-                    onClick={onShowConfirmDeleteModal}
-                  >
-                    <i className="fa fa-trash" />
-                  </Button>
-                ) : (
-                  <></>
-                )}
+                <Button
+                  type="button"
+                  marginLeft
+                  onClick={onShowConfirmDeleteModal}
+                >
+                  <i className="fa fa-trash" />
+                </Button>
               </div>
             </Row>
             <Column>
