@@ -2,7 +2,9 @@ import ConfirmForgotPassword from "components/pages/confirm-forgot-password/conf
 import ErrorPage from "components/pages/error/error.page";
 import FeedPage from "components/pages/feed/feed.page";
 import MyDreamsPage from "components/pages/my-dreams/my-dreams.page";
+import PlaylistsPage from "components/pages/playlists/playlists.page";
 import ViewDreamPage from "components/pages/view-dream/view-dream.page";
+import { ViewPlaylistPage } from "components/pages/view-playlist/view-playlist.page";
 import Container from "components/shared/container/container";
 import { ROUTES } from "constants/routes.constants";
 import { createBrowserRouter } from "react-router-dom";
@@ -43,6 +45,22 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute>
         <FeedPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.PLAYLIST,
+    element: (
+      <ProtectedRoute>
+        <PlaylistsPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: `${ROUTES.PLAYLIST}/:id`,
+    element: (
+      <ProtectedRoute>
+        <ViewPlaylistPage />
       </ProtectedRoute>
     ),
   },

@@ -4,4 +4,5 @@ export const ROUTES = {
   VIEW_DREAM: "/dream",
   MY_DREAMS: "/my-dreams",
   FEED: "/feed",
+  PLAYLIST: "/playlist",
 };
