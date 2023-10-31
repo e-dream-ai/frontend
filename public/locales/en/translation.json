@@ -56,6 +56,9 @@
     },
     "feed": {
       "title": "Feed"
+    },
+    "playlists": {
+      "title": "Playlists"
     }
   },
   "modal": {
@@ -97,6 +100,7 @@
     },
     "upload_dream": {
       "title": "Upload Dream",
+      "tab_title": "Create dream",
       "dream_preview": "Dream Preview",
       "dream_instructions": "Upload or drop your dream here.",
       "upload": "Upload",
@@ -108,12 +112,21 @@
       "title": "Confirm",
       "cancel": "Cancel",
       "confirm": "Confirm"
+    },
+    "create_playlist": {
+      "title": "Create playlist",
+      "tab_title": "Create playlist"
     }
   },
   "components": {
     "dream_card": {
       "created_at": "Created At",
       "owner": "Owner"
+    },
+    "playlist_card": {
+      "created_at": "Created At",
+      "owner": "Owner",
+      "videos": "Videos"
     },
     "paginate": {
       "previous": "previous",
