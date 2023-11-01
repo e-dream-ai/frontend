@@ -1,7 +1,22 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
+import { Types } from "types/style-types.types";
 
-export const Anchor = styled.a`
-  color: ${(props) => props.theme.primary};
+const AnchorType = {
+  primary: css`
+    color: ${(props) => props.theme.primary};
+  `,
+  secondary: css`
+    color: ${(props) => props.theme.danger};
+  `,
+  tertiary: css`
+    color: ${(props) => props.theme.danger};
+  `,
+};
+
+export const Anchor = styled.a<{
+  type?: Types;
+}>`
+  ${(props) => AnchorType[props.type || "primary"]}
   cursor: pointer;
   -webkit-transition:
     color linear 0.4s,

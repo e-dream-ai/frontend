@@ -3,7 +3,7 @@ import {
   LoginModal,
   SignupModal,
 } from "components/modals";
-import { UploadDreamModal } from "components/modals/upload-dream/upload-dream.modal";
+import { CreateModal } from "components/modals/create/create.modal";
 import { ModalProvider as StateModalProvider } from "context/modal.context";
 import useModal from "hooks/useModal";
 import styled from "styled-components";
@@ -42,7 +42,7 @@ export const StyledModalProviderWrapper: React.FC<{
         <LoginModal isOpen={state.loginModal} />
         <SignupModal isOpen={state.signupModal} />
         <ForgotPasswordModal isOpen={state.forgotPasswordModal} />
-        <UploadDreamModal isOpen={state.uploadDreamModal} />
+        <CreateModal isOpen={state.createModal} />
       </>
       {children}
     </StyledReactModalProvider>
