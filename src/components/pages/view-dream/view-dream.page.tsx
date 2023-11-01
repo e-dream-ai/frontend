@@ -250,7 +250,7 @@ const ViewDreamPage: React.FC = () => {
       <Section id={SectionID}>
         <Container>
           <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
-            <h2>{t("page.view_dream.view_dream")}</h2>
+            <h2>{t("page.view_dream.title")}</h2>
             <Row justifyContent="space-between">
               <span />
               <div>

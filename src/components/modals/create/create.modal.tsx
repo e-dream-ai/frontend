@@ -1,5 +1,6 @@
 import { useCreateDream } from "api/dream/mutation/useCreateDream";
-import { Button, Modal } from "components/shared";
+import { Button, Input, Modal, Row } from "components/shared";
+import { Column } from "components/shared/row/row";
 import { TabList } from "components/shared/tabs/tabs";
 import Text from "components/shared/text/text";
 import { MAX_FILE_SIZE_MB } from "constants/file.constants";
@@ -17,7 +18,7 @@ import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
 } from "utils/file-uploader.util";
-import { UploadRow, Video } from "./upload-dream.styled";
+import { Video } from "./create.styled";
 
 type VideoState =
   | {
@@ -35,15 +36,14 @@ enum MODAL_TYPE {
 
 const MODAL_VALUES = {
   [MODAL_TYPE.DREAM]: {
-    TITLE: "modal.upload_dream.title",
+    TITLE: "modal.create.title",
   },
   [MODAL_TYPE.PLAYLIST]: {
-    TITLE: "modal.create_playlist.title",
-    TAB_TITLE: "modal.create_playlist.tab_title",
+    TITLE: "modal.create.title",
   },
 };
 
-export const UploadDreamModal: React.FC<
+export const CreateModal: React.FC<
   ModalComponent<{
     isOpen?: boolean;
   }>
@@ -61,7 +61,7 @@ export const UploadDreamModal: React.FC<
       return;
     }
     setVideo(undefined);
-    hideModal(ModalsKeys.UPLOAD_DREAM_MODAL);
+    hideModal(ModalsKeys.CREATE_MODAL);
   };
 
   const handleChange = (file: Blob) => {
@@ -96,6 +96,7 @@ export const UploadDreamModal: React.FC<
       title={t(MODAL_VALUES[tabIndex].TITLE)}
       isOpen={isOpen}
       hideModal={handleHideModal}
+      size="md"
     >
       <Tabs selectedIndex={tabIndex} onSelect={(index) => setTabIndex(index)}>
         <TabList>
@@ -104,7 +105,7 @@ export const UploadDreamModal: React.FC<
         </TabList>
         <TabPanel>
           {video ? (
-            <>
+            <Column>
               <Text>{t("modal.upload_dream.dream_preview")}</Text>
               <Video
                 ref={videoRef}
@@ -112,7 +113,7 @@ export const UploadDreamModal: React.FC<
                 controls
                 src={video?.url ?? ""}
               />
-              <UploadRow justifyContent="flex-end">
+              <Row mt="1rem" justifyContent="flex-end">
                 <Button
                   after={<i className="fa fa-upload" />}
                   onClick={handleUpload}
@@ -122,23 +123,49 @@ export const UploadDreamModal: React.FC<
                     ? t("modal.upload_dream.uploading")
                     : t("modal.upload_dream.upload")}
                 </Button>
-              </UploadRow>
-            </>
+              </Row>
+            </Column>
           ) : (
-            <>
+            <Column>
               <Text>{t("modal.upload_dream.dream_instructions")}</Text>
-              <FileUploader
-                maxSize={MAX_FILE_SIZE_MB}
-                handleChange={handleChange}
-                onSizeError={handleFileUploaderSizeError(t)}
-                onTypeError={handleFileUploaderTypeError(t)}
-                name="file"
-                types={fileTypes}
-              />
-            </>
+              <Row mt="10rem" justifyContent="center">
+                <FileUploader
+                  maxSize={MAX_FILE_SIZE_MB}
+                  handleChange={handleChange}
+                  onSizeError={handleFileUploaderSizeError(t)}
+                  onTypeError={handleFileUploaderTypeError(t)}
+                  name="file"
+                  types={fileTypes}
+                />
+              </Row>
+            </Column>
           )}
         </TabPanel>
-        <TabPanel></TabPanel>
+        <TabPanel>
+          <Column>
+            <Text>{t("modal.create_playlist.instructions")}</Text>
+            <Input
+              placeholder={t("modal.create_playlist.name")}
+              type="text"
+              before={<i className="fa fa-list" />}
+              // error={errors.name?.message}
+              // {...register("name")}
+            />
+            <Row mt="1rem" justifyContent="flex-end">
+              <Button
+                onClick={() => {
+                  router.navigate(`${ROUTES.PLAYLIST}/1`);
+                  handleHideModal();
+                }}
+                // isLoading={isLoading}
+              >
+                {isLoading
+                  ? t("modal.create_playlist.creating")
+                  : t("modal.create_playlist.create")}
+              </Button>
+            </Row>
+          </Column>
+        </TabPanel>
       </Tabs>
     </Modal>
   );
