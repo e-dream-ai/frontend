@@ -1,27 +1,43 @@
-import styled from "styled-components";
-import ReactModal from "styled-react-modal";
+import styled, { css } from "styled-components";
+import Modal from "styled-react-modal";
+import { Sizes } from "types/sizes.types";
 
-export const StyledReactModal = ReactModal.styled`
+const ModalSizes = {
+  sm: css`
+    min-width: 320px;
+    min-height: 320px;
+  `,
+  md: css`
+    min-width: 480px;
+    min-height: 320px;
+  `,
+  lg: css`
+    min-width: 720px;
+    min-height: 320px;
+  `,
+};
+
+export const StyledReactModal = styled(Modal.styled``)<{ size?: Sizes }>`
+  ${(props) => ModalSizes[props.size || "sm"]}
   width: auto;
-  min-width: 320px;
   height: auto;
   display: flex;
   flex-flow: column;
   background-color: rgba(0, 0, 0, 0.8);
 
-    /*Devices smaller than 767px*/
+  /*Devices smaller than 767px*/
   @media (max-width: 767px) {
-    min-width: 320px;
+    /* min-width: 320px; */
   }
 
   /*Devices between 768px and 1024px*/
   @media (min-width: 768px) and (max-width: 1024px) {
-    min-width: 380px;
+    /* min-width: 380px; */
   }
 
   /*Devices larger than 1024px*/
   @media (min-width: 1024px) {
-    min-width: 420px;
+    /* min-width: 420px; */
   }
 `;
 

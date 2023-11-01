@@ -8,6 +8,7 @@ import {
 import { Paginate } from "components/shared/paginate/paginate";
 import { Section } from "components/shared/section/section";
 import { Spinner } from "components/shared/spinner/spinner";
+import Text from "components/shared/text/text";
 import { PAGINATION } from "constants/pagination.constants";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -35,12 +36,14 @@ export const MyDreamsPage: React.FC = () => {
           <Row justifyContent="center">
             <Spinner />
           </Row>
-        ) : (
+        ) : dreams?.length ? (
           <DreamCardList>
             {dreams?.map((dream) => (
               <DreamCard dream={dream} key={dream.uuid} />
             ))}
           </DreamCardList>
+        ) : (
+          <Text>{t("page.my_dreams.empty")}</Text>
         )}
 
         <Row justifyContent="center">

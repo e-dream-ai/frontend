@@ -1,4 +1,4 @@
-import { Input, Row } from "components/shared";
+import { Button, Input, Row } from "components/shared";
 import Container from "components/shared/container/container";
 import { Column } from "components/shared/row/row";
 import { Section } from "components/shared/section/section";
@@ -13,34 +13,43 @@ export const ViewPlaylistPage = () => {
     <Section id={SectionID}>
       <Container>
         <form style={{ minWidth: "320px" }}>
-          <h2>{t("page.view_dream.view_dream")}</h2>
+          <h2>{t("page.view_playlist.title")}</h2>
 
           <Row justifyContent="space-between">
-            <Column>
-              <Input
-                //   disabled={!editMode}
-                placeholder={t("page.view_dream.name")}
-                type="text"
-                before={<i className="fa fa-file-video-o" />}
-                //   error={errors.name?.message}
-                //   {...register("name")}
-              />
-              <Input
-                disabled
-                placeholder={t("page.view_dream.owner")}
-                type="text"
-                before={<i className="fa fa-user" />}
-                //   {...register("owner")}
-              />
-              <Input
-                disabled
-                placeholder={t("page.view_dream.created")}
-                type="text"
-                before={<i className="fa fa-calendar" />}
-                //   {...register("created_at")}
-              />
-            </Column>
+            <span />
+            <Button
+              type="button"
+              after={<i className="fa fa-pencil" />}
+              // onClick={handleEdit}
+            >
+              {t("page.view_dream.edit")}
+            </Button>
           </Row>
+
+          <Column>
+            <Input
+              //   disabled={!editMode}
+              placeholder={t("page.view_dream.name")}
+              type="text"
+              before={<i className="fa fa-file-video-o" />}
+              //   error={errors.name?.message}
+              //   {...register("name")}
+            />
+            <Input
+              disabled
+              placeholder={t("page.view_dream.owner")}
+              type="text"
+              before={<i className="fa fa-user" />}
+              //   {...register("owner")}
+            />
+            <Input
+              disabled
+              placeholder={t("page.view_dream.created")}
+              type="text"
+              before={<i className="fa fa-calendar" />}
+              //   {...register("created_at")}
+            />
+          </Column>
           <Row
             justifyContent="space-between"
             alignItems="center"

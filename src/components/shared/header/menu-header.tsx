@@ -17,7 +17,7 @@ export const MenuHeader: React.FC = () => {
     { name: t("header.install") },
     {
       name: t("header.create"),
-      action: () => showModal(ModalsKeys.UPLOAD_DREAM_MODAL),
+      action: () => showModal(ModalsKeys.CREATE_MODAL),
     },
     { name: t("header.feed"), action: () => router.navigate(ROUTES.FEED) },
     {
