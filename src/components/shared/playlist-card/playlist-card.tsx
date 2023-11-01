@@ -34,7 +34,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({ playlist }) => {
         </ThumbnailPlaceholder>
       )}
       <PlaylistCardBody>
-        <Anchor onClick={navigateToPlaylist(id)}>
+        <Anchor type="secondary" onClick={navigateToPlaylist(id)}>
           {name || "Unnamed Playlist"}
         </Anchor>
         <Text>{t("components.playlist_card.videos")}: 0</Text>

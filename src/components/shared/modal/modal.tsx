@@ -1,4 +1,5 @@
 import { Anchor } from "components/shared";
+import { Sizes } from "types/sizes.types";
 import {
   ModalBody,
   ModalCloseIcon,
@@ -10,6 +11,7 @@ import {
 type ModalProps = {
   isOpen?: boolean;
   title: string;
+  size?: Sizes;
   children?: React.ReactNode;
   showModal?: () => void;
   hideModal?: () => void;
@@ -26,12 +28,13 @@ const ModalClose: React.FC<{ onClick?: () => void }> = ({ onClick }) => {
 export const Modal: React.FC<ModalProps> = ({
   isOpen = false,
   title,
+  size = "sm",
   children,
   showModal,
   hideModal,
 }) => {
   return (
-    <StyledReactModal isOpen={isOpen} onBackgroundClick={hideModal}>
+    <StyledReactModal size={size} isOpen={isOpen} onBackgroundClick={hideModal}>
       <ModalHeader>
         <ModalTitle>{title}</ModalTitle>
         <ModalClose onClick={hideModal} />

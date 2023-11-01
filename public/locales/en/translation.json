@@ -30,7 +30,7 @@
       "error_changing_password": "Error changing user password."
     },
     "view_dream": {
-      "view_dream": "View Dream",
+      "title": "View Dream",
       "edit": "Edit",
       "save": "Save",
       "saving": "Saving",
@@ -51,8 +51,12 @@
       "dream_deleted_successfully": "Dream deleted successfully.",
       "error_deleting_dream": "Error deleting dream."
     },
+    "view_playlist": {
+      "title": "View Playlist"
+    },
     "my_dreams": {
-      "title": "My dreams"
+      "title": "My dreams",
+      "empty": "You don't have dreams crated."
     },
     "feed": {
       "title": "Feed"
@@ -98,6 +102,9 @@
       "sent_instructions_successfully": "Successfully sent instructions.",
       "error_sending_instructions": "Error sending instructions."
     },
+    "create": {
+      "title": "Create"
+    },
     "upload_dream": {
       "title": "Upload Dream",
       "tab_title": "Create dream",
@@ -115,7 +122,11 @@
     },
     "create_playlist": {
       "title": "Create playlist",
-      "tab_title": "Create playlist"
+      "tab_title": "Create playlist",
+      "name": "Name",
+      "create": "Create",
+      "creating": "Creating",
+      "instructions": "Create your playlist here."
     }
   },
   "components": {
