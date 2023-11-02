@@ -1,3 +1,4 @@
+import { useMyPlaylists } from "api/playlist/query/useMyPlaylists";
 import { Row } from "components/shared";
 import Container from "components/shared/container/container";
 import { Paginate } from "components/shared/paginate/paginate";
@@ -7,7 +8,6 @@ import {
 } from "components/shared/playlist-card/playlist-card";
 import { Section } from "components/shared/section/section";
 import { Spinner } from "components/shared/spinner/spinner";
-import useAuth from "hooks/useAuth";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Playlist } from "types/playlist.types";
@@ -15,28 +15,10 @@ import { Playlist } from "types/playlist.types";
 const SECTION_ID = "playlists";
 
 export const PlaylistsPage: React.FC = () => {
-  const { user } = useAuth();
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(0);
-
-  const playlists: Playlist[] = [
-    {
-      id: 1,
-      name: "Playlist 1",
-      created_at: Date().toString(),
-      updated_at: Date().toString(),
-      thumbnail: "",
-      user: user!,
-    },
-    {
-      id: 2,
-      name: "My Favorites",
-      created_at: Date().toString(),
-      updated_at: Date().toString(),
-      thumbnail: "",
-      user: user!,
-    },
-  ];
+  const { data } = useMyPlaylists({ page });
+  const playlists: Playlist[] = data?.data?.playlists ?? [];
 
   const isLoading = false,
     isRefetching = false;
