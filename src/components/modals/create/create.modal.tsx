@@ -1,4 +1,6 @@
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useCreateDream } from "api/dream/mutation/useCreateDream";
+import { useCreatePlaylist } from "api/playlist/mutation/useCreatePlaylist";
 import { Button, Input, Modal, Row } from "components/shared";
 import { Column } from "components/shared/row/row";
 import { TabList } from "components/shared/tabs/tabs";
@@ -9,10 +11,14 @@ import { ROUTES } from "constants/routes.constants";
 import useModal from "hooks/useModal";
 import { useRef, useState } from "react";
 import { FileUploader } from "react-drag-drop-files";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Tab, TabPanel, Tabs } from "react-tabs";
 import { toast } from "react-toastify";
 import router from "routes/router";
+import CreatePlaylistSchema, {
+  CreatePlaylistFormValues,
+} from "schemas/create-playlist.schema";
 import { ModalComponent } from "types/modal.types";
 import {
   handleFileUploaderSizeError,
@@ -53,14 +59,24 @@ export const CreateModal: React.FC<
   const [video, setVideo] = useState<VideoState>();
   const videoRef = useRef(null);
   const [tabIndex, setTabIndex] = useState<MODAL_TYPE>(MODAL_TYPE.DREAM);
-
   const { mutate, isLoading } = useCreateDream();
+  const { mutate: mutateCreatePlaylist, isLoading: isLoadingCreatePlaylist } =
+    useCreatePlaylist();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<CreatePlaylistFormValues>({
+    resolver: yupResolver(CreatePlaylistSchema),
+  });
 
   const handleHideModal = () => {
-    if (isLoading) {
+    if (isLoading || isLoadingCreatePlaylist) {
       return;
     }
     setVideo(undefined);
+    reset();
     hideModal(ModalsKeys.CREATE_MODAL);
   };
 
@@ -89,6 +105,30 @@ export const CreateModal: React.FC<
         },
       },
     );
+  };
+
+  const onSubmit = (data: CreatePlaylistFormValues) => {
+    mutateCreatePlaylist(data, {
+      onSuccess: (data) => {
+        const playlist = data?.data?.playlist;
+        if (data.success) {
+          toast.success(
+            t("modal.create_playlist.playlist_successfully_created"),
+          );
+          handleHideModal();
+          router.navigate(`${ROUTES.PLAYLIST}/${playlist?.id}`);
+        } else {
+          toast.error(
+            `${t("modal.create_playlist.error_creating_playlist")} ${
+              data.message
+            }`,
+          );
+        }
+      },
+      onError: () => {
+        toast.error(t("modal.create_playlist.error_creating_playlist"));
+      },
+    });
   };
 
   return (
@@ -142,29 +182,25 @@ export const CreateModal: React.FC<
           )}
         </TabPanel>
         <TabPanel>
-          <Column>
-            <Text>{t("modal.create_playlist.instructions")}</Text>
-            <Input
-              placeholder={t("modal.create_playlist.name")}
-              type="text"
-              before={<i className="fa fa-list" />}
-              // error={errors.name?.message}
-              // {...register("name")}
-            />
-            <Row mt="1rem" justifyContent="flex-end">
-              <Button
-                onClick={() => {
-                  router.navigate(`${ROUTES.PLAYLIST}/1`);
-                  handleHideModal();
-                }}
-                // isLoading={isLoading}
-              >
-                {isLoading
-                  ? t("modal.create_playlist.creating")
-                  : t("modal.create_playlist.create")}
-              </Button>
-            </Row>
-          </Column>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Column>
+              <Text>{t("modal.create_playlist.instructions")}</Text>
+              <Input
+                placeholder={t("modal.create_playlist.name")}
+                type="text"
+                before={<i className="fa fa-list" />}
+                error={errors.name?.message}
+                {...register("name")}
+              />
+              <Row mt="1rem" justifyContent="flex-end">
+                <Button isLoading={isLoadingCreatePlaylist}>
+                  {isLoadingCreatePlaylist
+                    ? t("modal.create_playlist.creating")
+                    : t("modal.create_playlist.create")}
+                </Button>
+              </Row>
+            </Column>
+          </form>
         </TabPanel>
       </Tabs>
     </Modal>

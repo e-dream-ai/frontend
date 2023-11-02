@@ -52,7 +52,16 @@
       "error_deleting_dream": "Error deleting dream."
     },
     "view_playlist": {
-      "title": "View Playlist"
+      "title": "View Playlist",
+      "edit": "Edit",
+      "save": "Save",
+      "saving": "Saving",
+      "cancel": "Cancel",
+      "name": "Name",
+      "owner": "Owner",
+      "created": "Created",
+      "video": "Video",
+      "thumbnail": "Thumbnail"
     },
     "my_dreams": {
       "title": "My dreams",
@@ -126,7 +135,9 @@
       "name": "Name",
       "create": "Create",
       "creating": "Creating",
-      "instructions": "Create your playlist here."
+      "instructions": "Create your playlist here.",
+      "playlist_successfully_created": "Playlist successfully created.",
+      "error_creating_playlist": "Error creating playlist."
     }
   },
   "components": {
