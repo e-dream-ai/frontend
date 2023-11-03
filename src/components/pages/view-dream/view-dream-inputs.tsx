@@ -1,20 +1,16 @@
-import { Input } from "components/shared";
+import { Input, Thumbnail, ThumbnailPlaceholder } from "components/shared";
 import { MAX_FILE_SIZE_MB } from "constants/file.constants";
 import { FileUploader } from "react-drag-drop-files";
 import { FieldErrors, UseFormRegister } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { UpdateDreamFormValues } from "schemas/update-dream.schema";
-import { Dream, DreamMediaState } from "types/dream.types";
+import { Dream } from "types/dream.types";
+import { MediaState } from "types/media.types";
 import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
 } from "utils/file-uploader.util";
-import {
-  Thumbnail,
-  ThumbnailPlaceholder,
-  Video,
-  VideoPlaceholder,
-} from "./view-dream.styled";
+import { Video, VideoPlaceholder } from "./view-dream.styled";
 
 type ViewDreamInputsProps = {
   register: UseFormRegister<UpdateDreamFormValues>;
@@ -59,7 +55,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
 type DreamVideoInputProps = {
   isLoading?: boolean;
   dream?: Dream;
-  video: DreamMediaState;
+  video: MediaState;
   editMode: boolean;
   isRemoved: boolean;
   handleChange: (file: Blob) => void;
@@ -105,7 +101,7 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
 type ThumbnailDreamInputProps = {
   isLoading?: boolean;
   dream?: Dream;
-  thumbnail: DreamMediaState;
+  thumbnail: MediaState;
   editMode: boolean;
   isRemoved: boolean;
   handleChange: (file: Blob) => void;

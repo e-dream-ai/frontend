@@ -29,6 +29,7 @@ export const ConfirmModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({
 
   return (
     <Modal
+      size="sm"
       title={title ?? t("modal.confirm.title")}
       isOpen={isOpen}
       hideModal={isConfirming ? VoidFunction : onCancel}

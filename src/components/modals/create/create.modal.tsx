@@ -168,7 +168,7 @@ export const CreateModal: React.FC<
           ) : (
             <Column>
               <Text>{t("modal.upload_dream.dream_instructions")}</Text>
-              <Row mt="10rem" justifyContent="center">
+              <Row mt="1rem" justifyContent="center">
                 <FileUploader
                   maxSize={MAX_FILE_SIZE_MB}
                   handleChange={handleChange}
