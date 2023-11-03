@@ -61,7 +61,14 @@
       "owner": "Owner",
       "created": "Created",
       "video": "Video",
-      "thumbnail": "Thumbnail"
+      "thumbnail": "Thumbnail",
+      "dreams": "Dreams",
+      "confirm_delete_modal_title": "Confirm delete playlist",
+      "confirm_delete_modal_body": "Are you sure to delete this playlist?",
+      "playlist_updated_successfully": "Playlist updated successfully.",
+      "error_updating_playlist": "Error updating playlist.",
+      "playlist_deleted_successfully": "Playlist deleted successfully.",
+      "error_deleting_playlist": "Error deleting playlist."
     },
     "my_dreams": {
       "title": "My dreams",

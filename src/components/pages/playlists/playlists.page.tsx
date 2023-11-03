@@ -8,6 +8,7 @@ import {
 } from "components/shared/playlist-card/playlist-card";
 import { Section } from "components/shared/section/section";
 import { Spinner } from "components/shared/spinner/spinner";
+import { PAGINATION } from "constants/pagination.constants";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Playlist } from "types/playlist.types";
@@ -17,12 +18,9 @@ const SECTION_ID = "playlists";
 export const PlaylistsPage: React.FC = () => {
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(0);
-  const { data } = useMyPlaylists({ page });
+  const { data, isLoading, isRefetching } = useMyPlaylists({ page });
   const playlists: Playlist[] = data?.data?.playlists ?? [];
-
-  const isLoading = false,
-    isRefetching = false;
-  const pageCount = 0;
+  const pageCount = (data?.data?.count ?? 0) / PAGINATION.TAKE;
 
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);

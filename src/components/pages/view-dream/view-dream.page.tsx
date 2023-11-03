@@ -10,6 +10,7 @@ import { Button, Row } from "components/shared";
 import Container from "components/shared/container/container";
 import { Column } from "components/shared/row/row";
 import { Section } from "components/shared/section/section";
+import { Spinner } from "components/shared/spinner/spinner";
 import Text from "components/shared/text/text";
 import { FORMAT } from "constants/moment.constants";
 import { ROUTES } from "constants/routes.constants";
@@ -23,7 +24,7 @@ import router from "routes/router";
 import UpdateDreamSchema, {
   UpdateDreamFormValues,
 } from "schemas/update-dream.schema";
-import { DreamMediaState } from "types/dream.types";
+import { MediaState } from "types/media.types";
 import {
   DreamVideoInput,
   ThumbnailDreamInput,
@@ -37,12 +38,12 @@ const SectionID = "dream";
 const ViewDreamPage: React.FC = () => {
   const { t } = useTranslation();
   const { uuid } = useParams<Params>();
-  const { data } = useDream(uuid);
+  const { data, isLoading: isDreamLoading } = useDream(uuid);
   const dream = data?.data?.dream;
 
   const [editMode, setEditMode] = useState<boolean>(false);
-  const [video, setVideo] = useState<DreamMediaState>();
-  const [thumbnail, setTumbnail] = useState<DreamMediaState>();
+  const [video, setVideo] = useState<MediaState>();
+  const [thumbnail, setTumbnail] = useState<MediaState>();
   const [isVideoRemoved, setIsVideoRemoved] = useState<boolean>(false);
   const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
@@ -230,6 +231,14 @@ const ViewDreamPage: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
+  if (isDreamLoading) {
+    return (
+      <Row justifyContent="center">
+        <Spinner />
+      </Row>
+    );
+  }
+
   return (
     <>
       <ConfirmModal
@@ -249,8 +258,35 @@ const ViewDreamPage: React.FC = () => {
       />
       <Section id={SectionID}>
         <Container>
-          <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
+          <Row justifyContent="space-between">
             <h2>{t("page.view_dream.title")}</h2>
+            {!editMode && (
+              <Row>
+                <Button
+                  type="button"
+                  after={<i className="fa fa-thumbs-up" />}
+                  marginLeft
+                >
+                  {t("page.view_dream.upvote")}
+                </Button>
+                <Button
+                  type="button"
+                  after={<i className="fa fa-thumbs-down" />}
+                  marginLeft
+                >
+                  {t("page.view_dream.downvote")}
+                </Button>
+                <Button
+                  type="button"
+                  marginLeft
+                  onClick={onShowConfirmDeleteModal}
+                >
+                  <i className="fa fa-trash" />
+                </Button>
+              </Row>
+            )}
+          </Row>
+          <form onSubmit={handleSubmit(onSubmit)}>
             <Row justifyContent="space-between">
               <span />
               <div>
@@ -283,40 +319,30 @@ const ViewDreamPage: React.FC = () => {
                     {t("page.view_dream.edit")}
                   </Button>
                 )}
-                <Button
-                  type="button"
-                  after={<i className="fa fa-thumbs-up" />}
-                  marginLeft
-                >
-                  {t("page.view_dream.upvote")}
-                </Button>
-                <Button
-                  type="button"
-                  after={<i className="fa fa-thumbs-down" />}
-                  marginLeft
-                >
-                  {t("page.view_dream.downvote")}
-                </Button>
-                <Button
-                  type="button"
-                  marginLeft
-                  onClick={onShowConfirmDeleteModal}
-                >
-                  <i className="fa fa-trash" />
-                </Button>
               </div>
             </Row>
-            <Column>
-              <ViewDreamInputs
-                register={register}
-                errors={errors}
-                editMode={editMode}
-              />
-              <Row justifyContent="space-between">
-                <Text>0 {t("page.view_dream.votes")}</Text>
-                <Text>0 {t("page.view_dream.downvotes")}</Text>
-              </Row>
-            </Column>
+            <Row>
+              <Column flex="1 1 auto" mr="0.5rem">
+                <ThumbnailDreamInput
+                  dream={dream}
+                  editMode={editMode}
+                  thumbnail={thumbnail}
+                  isRemoved={isThumbnailRemoved}
+                  handleChange={handleThumbnailChange}
+                />
+              </Column>
+              <Column flex="1 1 auto" ml="0.5rem">
+                <ViewDreamInputs
+                  register={register}
+                  errors={errors}
+                  editMode={editMode}
+                />
+              </Column>
+            </Row>
+            <Row justifyContent="space-between">
+              <Text>0 {t("page.view_dream.votes")}</Text>
+              <Text>0 {t("page.view_dream.downvotes")}</Text>
+            </Row>
 
             <Row justifyContent="space-between" alignItems="center">
               <h3>{t("page.view_dream.video")}</h3>
@@ -347,15 +373,6 @@ const ViewDreamPage: React.FC = () => {
                   <i className="fa fa-trash" />
                 </Button>
               )}
-            </Row>
-            <Row>
-              <ThumbnailDreamInput
-                dream={dream}
-                editMode={editMode}
-                thumbnail={thumbnail}
-                isRemoved={isThumbnailRemoved}
-                handleChange={handleThumbnailChange}
-              />
             </Row>
           </form>
         </Container>
