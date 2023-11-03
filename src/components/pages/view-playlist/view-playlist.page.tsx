@@ -1,6 +1,10 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useUpdatePlaylist } from "api/playlist/mutation/useUpdatePlaylist";
-import { usePlaylist } from "api/playlist/query/usePlaylist";
+import {
+  PLAYLIST_QUERY_KEY,
+  usePlaylist,
+} from "api/playlist/query/usePlaylist";
+import queryClient from "api/query-client";
 import { Button, Input, Row } from "components/shared";
 import Container from "components/shared/container/container";
 import { Column } from "components/shared/row/row";
@@ -11,10 +15,19 @@ import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
+import { toast } from "react-toastify";
 import UpdatePlaylistSchema, {
   UpdatePlaylistFormValues,
 } from "schemas/update-playlist.schema";
-import { ThumbnailPlaceholder } from "../view-dream/view-dream.styled";
+import { MediaState } from "types/media.types";
+
+import { useDeletePlaylist } from "api/playlist/mutation/useDeletePlaylist";
+import { ConfirmModal } from "components/modals/confirm.modal";
+import { Spinner } from "components/shared/spinner/spinner";
+import Text from "components/shared/text/text";
+import { ROUTES } from "constants/routes.constants";
+import router from "routes/router";
+import { ThumbnailPlaylistInput } from "./view-playlist-inputs";
 
 type Params = { id: string };
 
@@ -24,11 +37,18 @@ export const ViewPlaylistPage = () => {
   const { t } = useTranslation();
   const { id } = useParams<Params>();
   const playlistId = Number(id) ?? 0;
-  const { data } = usePlaylist(playlistId);
+  const { data, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
   const playlist = data?.data?.playlist;
 
   const [editMode, setEditMode] = useState<boolean>(false);
-  const { isLoading } = useUpdatePlaylist(playlistId);
+  const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
+  const [thumbnail, setTumbnail] = useState<MediaState>();
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
+    useState<boolean>(false);
+
+  const { mutate, isLoading } = useUpdatePlaylist(playlistId);
+  const { mutate: mutateDeletePlaylist, isLoading: isLoadingDeleteDream } =
+    useDeletePlaylist(playlistId);
   const {
     register,
     handleSubmit,
@@ -47,6 +67,70 @@ export const ViewPlaylistPage = () => {
   const handleCancel = (event: React.MouseEvent) => {
     event.preventDefault();
     setEditMode(false);
+    setIsThumbnailRemoved(false);
+    setTumbnail(undefined);
+  };
+
+  const handleRemoveThumbnail = () => {
+    setIsThumbnailRemoved(true);
+  };
+
+  const handleThumbnailChange = (file: Blob) => {
+    setTumbnail({ fileBlob: file, url: URL.createObjectURL(file) });
+    setIsThumbnailRemoved(false);
+  };
+
+  const onSubmit = (data: UpdatePlaylistFormValues) => {
+    mutate(
+      { name: data.name },
+      {
+        onSuccess: (response) => {
+          if (response.success) {
+            queryClient.setQueryData([PLAYLIST_QUERY_KEY, playlist?.id], data);
+            reset({ name: response?.data?.playlist.name });
+            toast.success(
+              `${t("page.view_playlist.playlist_updated_successfully")}`,
+            );
+            setEditMode(false);
+          } else {
+            toast.error(
+              `${t("page.view_playlist.error_updating_playlist")} ${
+                response.message
+              }`,
+            );
+          }
+        },
+        onError: () => {
+          toast.error(t("page.view_playlist.error_updating_playlist"));
+        },
+      },
+    );
+  };
+
+  const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
+  const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
+
+  const onConfirmDeletePlaylist = () => {
+    mutateDeletePlaylist(null, {
+      onSuccess: (response) => {
+        if (response.success) {
+          toast.success(
+            `${t("page.view_playlist.playlist_deleted_successfully")}`,
+          );
+          onHideConfirmDeleteModal();
+          router.navigate(ROUTES.PLAYLIST);
+        } else {
+          toast.error(
+            `${t("page.view_playlist.error_deleting_playlist")} ${
+              response.message
+            }`,
+          );
+        }
+      },
+      onError: () => {
+        toast.error(t("page.view_playlist.error_deleting_playlist"));
+      },
+    });
   };
 
   const resetRemotePlaylistForm = useCallback(() => {
@@ -68,86 +152,121 @@ export const ViewPlaylistPage = () => {
     return <Navigate to="/" replace />;
   }
 
+  if (isPlaylistLoading) {
+    return (
+      <Row justifyContent="center">
+        <Spinner />
+      </Row>
+    );
+  }
+
   return (
-    <Section id={SectionID}>
-      <Container>
-        <form style={{ minWidth: "320px" }}>
-          <h2>{t("page.view_playlist.title")}</h2>
+    <>
+      <ConfirmModal
+        isOpen={showConfirmDeleteModal}
+        onCancel={onHideConfirmDeleteModal}
+        onConfirm={onConfirmDeletePlaylist}
+        isConfirming={isLoadingDeleteDream}
+        title={t("page.view_playlist.confirm_delete_modal_title")}
+        text={
+          <Text>
+            {t("page.view_playlist.confirm_delete_modal_body")}{" "}
+            <em>
+              <strong>{playlist?.name}</strong>
+            </em>
+          </Text>
+        }
+      />
+      <Section id={SectionID}>
+        <Container>
+          <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
+            <h2>{t("page.view_playlist.title")}</h2>
+            <Row justifyContent="space-between">
+              <span />
+              <div>
+                {editMode ? (
+                  <>
+                    <Button
+                      type="button"
+                      onClick={handleCancel}
+                      disabled={isLoading}
+                    >
+                      {t("page.view_playlist.cancel")}
+                    </Button>
 
-          <Row justifyContent="space-between">
-            <span />
-            <div>
-              {editMode ? (
-                <>
-                  <Button
-                    type="button"
-                    onClick={handleCancel}
-                    // disabled={isLoading}
-                  >
-                    {t("page.view_dream.cancel")}
-                  </Button>
-
-                  <Button
-                    type="submit"
-                    after={<i className="fa fa-save" />}
-                    // isLoading={isLoading}
-                    marginLeft
-                  >
-                    {isLoading
-                      ? t("page.view_dream.saving")
-                      : t("page.view_dream.save")}
-                  </Button>
-                </>
-              ) : (
-                <Button
-                  type="button"
-                  after={<i className="fa fa-pencil" />}
-                  onClick={handleEdit}
-                >
-                  {t("page.view_playlist.edit")}
-                </Button>
-              )}
-            </div>
-          </Row>
-
-          <Column>
-            <Input
-              disabled={!editMode}
-              placeholder={t("page.view_playlist.name")}
-              type="text"
-              before={<i className="fa fa-file-video-o" />}
-              error={errors.name?.message}
-              {...register("name")}
-            />
-            <Input
-              disabled
-              placeholder={t("page.view_playlist.owner")}
-              type="text"
-              before={<i className="fa fa-user" />}
-              {...register("owner")}
-            />
-            <Input
-              disabled
-              placeholder={t("page.view_playlist.created")}
-              type="text"
-              before={<i className="fa fa-calendar" />}
-              {...register("created_at")}
-            />
-          </Column>
-          <Row
-            justifyContent="space-between"
-            alignItems="center"
-            style={{ marginTop: "5rem" }}
-          >
-            <h3>{t("page.view_playlist.thumbnail")}</h3>
-          </Row>
-          <Row>
-            <ThumbnailPlaceholder>
-              <i className="fa fa-picture-o" />
-            </ThumbnailPlaceholder>
-          </Row>
-        </form>
-      </Container>
-    </Section>
+                    <Button
+                      type="submit"
+                      after={<i className="fa fa-save" />}
+                      isLoading={isLoading}
+                      marginLeft
+                    >
+                      {isLoading
+                        ? t("page.view_playlist.saving")
+                        : t("page.view_playlist.save")}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      type="button"
+                      after={<i className="fa fa-pencil" />}
+                      onClick={handleEdit}
+                    >
+                      {t("page.view_playlist.edit")}
+                    </Button>
+                    <Button
+                      type="button"
+                      marginLeft
+                      onClick={onShowConfirmDeleteModal}
+                    >
+                      <i className="fa fa-trash" />
+                    </Button>
+                  </>
+                )}
+              </div>
+            </Row>
+            <Row justifyContent="space-between">
+              <Column flex="1 1 auto" ml="0.5rem">
+                <ThumbnailPlaylistInput
+                  playlist={playlist}
+                  editMode={editMode}
+                  thumbnail={thumbnail}
+                  isRemoved={isThumbnailRemoved}
+                  handleChange={handleThumbnailChange}
+                  handleRemove={handleRemoveThumbnail}
+                />
+              </Column>
+              <Column flex="1 1 auto" mr="0.5rem">
+                <Input
+                  disabled={!editMode}
+                  placeholder={t("page.view_playlist.name")}
+                  type="text"
+                  before={<i className="fa fa-file-video-o" />}
+                  error={errors.name?.message}
+                  {...register("name")}
+                />
+                <Input
+                  disabled
+                  placeholder={t("page.view_playlist.owner")}
+                  type="text"
+                  before={<i className="fa fa-user" />}
+                  {...register("owner")}
+                />
+                <Input
+                  disabled
+                  placeholder={t("page.view_playlist.created")}
+                  type="text"
+                  before={<i className="fa fa-calendar" />}
+                  {...register("created_at")}
+                />
+              </Column>
+            </Row>
+            <Row justifyContent="space-between" alignItems="center">
+              <h3>{t("page.view_playlist.dreams")}</h3>
+            </Row>
+          </form>
+        </Container>
+      </Section>
+    </>
   );
 };
