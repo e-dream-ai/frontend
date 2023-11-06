@@ -19,15 +19,15 @@ import { toast } from "react-toastify";
 import UpdatePlaylistSchema, {
   UpdatePlaylistFormValues,
 } from "schemas/update-playlist.schema";
-import { MediaState } from "types/media.types";
 
 import { useDeletePlaylist } from "api/playlist/mutation/useDeletePlaylist";
 import { ConfirmModal } from "components/modals/confirm.modal";
 import { Spinner } from "components/shared/spinner/spinner";
 import Text from "components/shared/text/text";
+import { ThumbnailInput } from "components/shared/thumbnail-input/thumbnail-input";
 import { ROUTES } from "constants/routes.constants";
 import router from "routes/router";
-import { ThumbnailPlaylistInput } from "./view-playlist-inputs";
+import { MultiMediaState } from "types/media.types";
 
 type Params = { id: string };
 
@@ -42,7 +42,7 @@ export const ViewPlaylistPage = () => {
 
   const [editMode, setEditMode] = useState<boolean>(false);
   const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
-  const [thumbnail, setTumbnail] = useState<MediaState>();
+  const [thumbnail, setTumbnail] = useState<MultiMediaState>();
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
     useState<boolean>(false);
 
@@ -179,8 +179,22 @@ export const ViewPlaylistPage = () => {
       />
       <Section id={SectionID}>
         <Container>
-          <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
+          <Row justifyContent="space-between" separator>
             <h2>{t("page.view_playlist.title")}</h2>
+            {!editMode && (
+              <Row>
+                <Button
+                  type="button"
+                  buttonType="tertiary"
+                  marginLeft
+                  onClick={onShowConfirmDeleteModal}
+                >
+                  <i className="fa fa-trash" />
+                </Button>
+              </Row>
+            )}
+          </Row>
+          <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
             <Row justifyContent="space-between">
               <span />
               <div>
@@ -214,29 +228,23 @@ export const ViewPlaylistPage = () => {
                     >
                       {t("page.view_playlist.edit")}
                     </Button>
-                    <Button
-                      type="button"
-                      marginLeft
-                      onClick={onShowConfirmDeleteModal}
-                    >
-                      <i className="fa fa-trash" />
-                    </Button>
                   </>
                 )}
               </div>
             </Row>
             <Row justifyContent="space-between">
-              <Column flex="1 1 auto" ml="0.5rem">
-                <ThumbnailPlaylistInput
-                  playlist={playlist}
+              <Column flex="1 1 auto" mr="1rem">
+                <ThumbnailInput
+                  thumbnail={playlist?.thumbnail}
+                  localMultimedia={thumbnail}
                   editMode={editMode}
-                  thumbnail={thumbnail}
                   isRemoved={isThumbnailRemoved}
                   handleChange={handleThumbnailChange}
                   handleRemove={handleRemoveThumbnail}
+                  types={["JPG", "JPEG"]}
                 />
               </Column>
-              <Column flex="1 1 auto" mr="0.5rem">
+              <Column flex="1 1 auto" ml="1rem">
                 <Input
                   disabled={!editMode}
                   placeholder={t("page.view_playlist.name")}

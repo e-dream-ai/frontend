@@ -7,34 +7,35 @@ import {
 import { MAX_FILE_SIZE_MB } from "constants/file.constants";
 import { FileUploader } from "react-drag-drop-files";
 import { useTranslation } from "react-i18next";
-import { MediaState } from "types/media.types";
-import { Playlist } from "types/playlist.types";
+import { MultiMediaState } from "types/media.types";
 import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
 } from "utils/file-uploader.util";
 
-type ThumbnailPlaylistInputProps = {
+type ThumbnailInputProps = {
   isLoading?: boolean;
-  playlist?: Playlist;
-  thumbnail: MediaState;
+  thumbnail?: string;
+  localMultimedia: MultiMediaState;
   editMode: boolean;
   isRemoved: boolean;
   handleChange: (file: Blob) => void;
   handleRemove?: () => void;
+  types: string[];
 };
 
-export const ThumbnailPlaylistInput: React.FC<ThumbnailPlaylistInputProps> = ({
+export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   isLoading,
-  playlist,
   thumbnail,
+  localMultimedia,
   editMode,
   isRemoved,
   handleChange,
   handleRemove,
+  types,
 }) => {
   const { t } = useTranslation();
-  const hasThumbnail = Boolean(playlist?.thumbnail) || thumbnail;
+  const hasThumbnail = Boolean(thumbnail) || localMultimedia;
 
   if (!hasThumbnail && (!editMode || isLoading)) {
     return (
@@ -48,15 +49,18 @@ export const ThumbnailPlaylistInput: React.FC<ThumbnailPlaylistInputProps> = ({
     <>
       {hasThumbnail && !isRemoved ? (
         <ThumbnailContainer editMode={editMode}>
-          {Boolean(handleRemove) && (
+          {Boolean(handleRemove) && editMode && (
             <ThumbnailButtons>
               <Button type="button" onClick={handleRemove}>
                 <i className="fa fa-trash" />
               </Button>
             </ThumbnailButtons>
           )}
-          <ThumbnailOverlay />
-          <Thumbnail url={thumbnail?.url || playlist?.thumbnail} />
+          {editMode && <ThumbnailOverlay />}
+          <Thumbnail
+            url={localMultimedia?.url || thumbnail}
+            src="/images/blank.gif"
+          />
         </ThumbnailContainer>
       ) : (
         <FileUploader
@@ -65,7 +69,7 @@ export const ThumbnailPlaylistInput: React.FC<ThumbnailPlaylistInputProps> = ({
           onSizeError={handleFileUploaderSizeError(t)}
           onTypeError={handleFileUploaderTypeError(t)}
           name="file"
-          types={["JPG", "JPEG"]}
+          types={types}
         />
       )}
     </>
