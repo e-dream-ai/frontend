@@ -1,4 +1,4 @@
-export type MediaState =
+export type MultiMediaState =
   | {
       fileBlob: Blob;
       url: string;

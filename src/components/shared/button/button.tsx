@@ -1,4 +1,5 @@
 import { Sizes } from "types/sizes.types";
+import { Types } from "types/style-types.types";
 import StyledButton, { ButtonAfter, ButtonBefore } from "./button.styled";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -9,6 +10,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   marginRight?: boolean;
   before?: React.ReactNode;
   after?: React.ReactNode;
+  buttonType?: Types;
 };
 
 export const Button: React.FC<ButtonProps> = ({
@@ -19,6 +21,7 @@ export const Button: React.FC<ButtonProps> = ({
   size = "md",
   marginLeft,
   marginRight,
+  buttonType = "primary",
   ...props
 }) => (
   <StyledButton
@@ -26,6 +29,7 @@ export const Button: React.FC<ButtonProps> = ({
     marginLeft={marginLeft}
     marginRight={marginRight}
     disabled={isLoading}
+    buttonType={buttonType}
     {...props}
   >
     {before && <ButtonBefore className="button-before">{before}</ButtonBefore>}

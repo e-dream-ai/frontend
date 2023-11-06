@@ -6,7 +6,7 @@ export const COLORS = {
   TRANSPARENT_BLACK: "rgba(0, 0, 0, 0.8)",
   GRAY_1: "#999",
   GRAY_2: "#555",
-  GRAY_3: "#333",
+  GRAY_3: "#555",
   GRAY_4: "#252525",
   GRAY_5: "#ccc",
   LIGHT_BLUE: "#009ba2",

@@ -3,6 +3,7 @@ import { AlignItemsProperty, JustifyContentProperty } from "types/css.types";
 import { SpacerType, spacer } from "../spacer/spacer";
 
 type RowProps = {
+  separator?: boolean;
   flex?: string;
   justifyContent?: JustifyContentProperty;
   alignItems?: AlignItemsProperty;
@@ -10,6 +11,8 @@ type RowProps = {
 
 export const Row = styled.div<RowProps>`
   ${(props) => spacer(props)}
+  border-bottom:  ${(props) =>
+    props.separator ? `1px solid ${props.theme.primary}` : "0"};
   flex: ${(props) => (props.flex ? props.flex : "initial")};
   display: flex;
   flex-flow: row;
