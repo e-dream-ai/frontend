@@ -2,18 +2,18 @@ import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
 import { URL } from "constants/api.constants";
 import { ContentType, getRequestHeaders } from "constants/auth.constants";
-import { FILE_DREAM_FORM } from "constants/dreams.constants";
-import { FileDreamFormValues } from "schemas/file-dream.schema";
+import { FILE_FORM } from "constants/file.constants";
+import { FileFormValues } from "schemas/file.schema";
 import { ApiResponse } from "types/api.types";
 import { Dream } from "types/dream.types";
 
 export const CREATE_DREAM_MUTATION_KEY = "createDream";
 
 const createDream = () => {
-  return async (params: FileDreamFormValues) => {
+  return async (params: FileFormValues) => {
     const formData = new FormData();
 
-    formData.append(FILE_DREAM_FORM.FILE, params?.file ?? "");
+    formData.append(FILE_FORM.FILE, params?.file ?? "");
 
     return axios
       .post(`${URL}/dream`, formData, {
@@ -28,7 +28,7 @@ const createDream = () => {
 };
 
 export const useCreateDream = () => {
-  return useMutation<ApiResponse<{ dream: Dream }>, Error, FileDreamFormValues>(
+  return useMutation<ApiResponse<{ dream: Dream }>, Error, FileFormValues>(
     createDream(),
     {
       mutationKey: [CREATE_DREAM_MUTATION_KEY],

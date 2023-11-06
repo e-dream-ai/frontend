@@ -21,6 +21,7 @@ import UpdatePlaylistSchema, {
 } from "schemas/update-playlist.schema";
 
 import { useDeletePlaylist } from "api/playlist/mutation/useDeletePlaylist";
+import { useUpdateThumbnailPlaylist } from "api/playlist/mutation/useUpdateThumbnailPlaylist";
 import { ConfirmModal } from "components/modals/confirm.modal";
 import { Spinner } from "components/shared/spinner/spinner";
 import Text from "components/shared/text/text";
@@ -46,9 +47,20 @@ export const ViewPlaylistPage = () => {
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
     useState<boolean>(false);
 
-  const { mutate, isLoading } = useUpdatePlaylist(playlistId);
-  const { mutate: mutateDeletePlaylist, isLoading: isLoadingDeleteDream } =
-    useDeletePlaylist(playlistId);
+  const { mutate, isLoading: isLoadingPlaylistMutation } =
+    useUpdatePlaylist(playlistId);
+  const {
+    mutate: mutateThumbnailPlaylist,
+    isLoading: isLoadingThumbnailPlaylistMutation,
+  } = useUpdateThumbnailPlaylist(playlistId);
+  const {
+    mutate: mutateDeletePlaylist,
+    isLoading: isLoadingDeletePlaylistMutation,
+  } = useDeletePlaylist(playlistId);
+
+  const isLoading =
+    isLoadingPlaylistMutation || isLoadingThumbnailPlaylistMutation;
+
   const {
     register,
     handleSubmit,
@@ -59,28 +71,33 @@ export const ViewPlaylistPage = () => {
     defaultValues: { name: "" },
   });
 
-  const handleEdit = (event: React.MouseEvent) => {
-    event.preventDefault();
-    setEditMode(true);
+  const handleMutateThumbnailPlaylist = (data: UpdatePlaylistFormValues) => {
+    if (isThumbnailRemoved || thumbnail?.fileBlob) {
+      mutateThumbnailPlaylist(
+        { file: thumbnail?.fileBlob },
+        {
+          onSuccess: (response) => {
+            if (response.success) {
+              handleMutatePlaylist(data);
+            } else {
+              toast.error(
+                `${t("page.view_playlist.error_updating_playlist")} ${
+                  response.message
+                }`,
+              );
+            }
+          },
+          onError: () => {
+            toast.error(t("page.view_playlist.error_updating_playlist"));
+          },
+        },
+      );
+    } else {
+      handleMutatePlaylist(data);
+    }
   };
 
-  const handleCancel = (event: React.MouseEvent) => {
-    event.preventDefault();
-    setEditMode(false);
-    setIsThumbnailRemoved(false);
-    setTumbnail(undefined);
-  };
-
-  const handleRemoveThumbnail = () => {
-    setIsThumbnailRemoved(true);
-  };
-
-  const handleThumbnailChange = (file: Blob) => {
-    setTumbnail({ fileBlob: file, url: URL.createObjectURL(file) });
-    setIsThumbnailRemoved(false);
-  };
-
-  const onSubmit = (data: UpdatePlaylistFormValues) => {
+  const handleMutatePlaylist = (data: UpdatePlaylistFormValues) => {
     mutate(
       { name: data.name },
       {
@@ -105,6 +122,31 @@ export const ViewPlaylistPage = () => {
         },
       },
     );
+  };
+
+  const handleEdit = (event: React.MouseEvent) => {
+    event.preventDefault();
+    setEditMode(true);
+  };
+
+  const handleCancel = (event: React.MouseEvent) => {
+    event.preventDefault();
+    setEditMode(false);
+    setIsThumbnailRemoved(false);
+    setTumbnail(undefined);
+  };
+
+  const handleRemoveThumbnail = () => {
+    setIsThumbnailRemoved(true);
+  };
+
+  const handleThumbnailChange = (file: Blob) => {
+    setTumbnail({ fileBlob: file, url: URL.createObjectURL(file) });
+    setIsThumbnailRemoved(false);
+  };
+
+  const onSubmit = (data: UpdatePlaylistFormValues) => {
+    handleMutateThumbnailPlaylist(data);
   };
 
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
@@ -166,7 +208,7 @@ export const ViewPlaylistPage = () => {
         isOpen={showConfirmDeleteModal}
         onCancel={onHideConfirmDeleteModal}
         onConfirm={onConfirmDeletePlaylist}
-        isConfirming={isLoadingDeleteDream}
+        isConfirming={isLoadingDeletePlaylistMutation}
         title={t("page.view_playlist.confirm_delete_modal_title")}
         text={
           <Text>
