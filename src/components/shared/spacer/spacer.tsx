@@ -18,7 +18,7 @@ export const spacer = (props: SpacerType) => css`
   margin-top: ${props.mt};
   margin-right: ${props.mr};
   margin-bottom: ${props.mb};
-  margin-right: ${props.ml};
+  margin-left: ${props.ml};
   padding: ${props.padding};
   padding-top: ${props.pt};
   padding-right: ${props.pr};

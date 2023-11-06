@@ -1,5 +1,6 @@
 import styled, { css } from "styled-components";
 import { Sizes } from "types/sizes.types";
+import { Types } from "types/style-types.types";
 
 const ButtonSizes = {
   sm: css`
@@ -38,8 +39,37 @@ const ButtonSizes = {
   `,
 };
 
+const ButtonTypes = {
+  primary: css`
+    background-color: ${(props) => props.theme.primary};
+    color: ${(props) => props.theme.text1};
+    &:hover {
+      background: ${(props) => props.theme.lightPrimary};
+    }
+  `,
+  secondary: css``,
+  tertiary: css`
+    background-color: transparent;
+    color: ${(props) => props.theme.primary};
+
+    -webkit-transition:
+      color linear 0.4s,
+      background-color linear 0.4s,
+      border-color linear 0.4s;
+    transition:
+      color linear 0.4s,
+      background-color linear 0.4s,
+      border-color linear 0.4s;
+
+    &:hover {
+      color: ${(props) => props.theme.text1};
+    }
+  `,
+};
+
 export const StyledButton = styled.button<{
   size: Sizes;
+  buttonType: Types;
   marginLeft?: boolean;
   marginRight?: boolean;
 }>`
@@ -47,16 +77,15 @@ export const StyledButton = styled.button<{
   height: fit-content;
   align-items: center;
   text-transform: uppercase;
-  color: ${(props) => props.theme.text1};
-  background-color: ${(props) => props.theme.primary};
   padding: 6px 12px;
   margin-bottom: 0;
   border: 1px solid transparent;
   border-radius: 4px;
   cursor: pointer;
-  ${(props) => ButtonSizes[props.size]}
   margin-left: ${(props) => (props.marginLeft ? "0.6rem" : 0)};
   margin-right: ${(props) => (props.marginRight ? "0.6rem" : 0)};
+  ${(props) => ButtonTypes[props.buttonType]}
+  ${(props) => ButtonSizes[props.size]}
 
   &:disabled {
     background-color: ${(props) => props.theme.lightPrimary};

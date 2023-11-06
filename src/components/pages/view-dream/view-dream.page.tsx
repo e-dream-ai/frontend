@@ -12,6 +12,7 @@ import { Column } from "components/shared/row/row";
 import { Section } from "components/shared/section/section";
 import { Spinner } from "components/shared/spinner/spinner";
 import Text from "components/shared/text/text";
+import { ThumbnailInput } from "components/shared/thumbnail-input/thumbnail-input";
 import { FORMAT } from "constants/moment.constants";
 import { ROUTES } from "constants/routes.constants";
 import moment from "moment";
@@ -24,12 +25,8 @@ import router from "routes/router";
 import UpdateDreamSchema, {
   UpdateDreamFormValues,
 } from "schemas/update-dream.schema";
-import { MediaState } from "types/media.types";
-import {
-  DreamVideoInput,
-  ThumbnailDreamInput,
-  ViewDreamInputs,
-} from "./view-dream-inputs";
+import { MultiMediaState } from "types/media.types";
+import { DreamVideoInput, ViewDreamInputs } from "./view-dream-inputs";
 
 type Params = { uuid: string };
 
@@ -42,8 +39,8 @@ const ViewDreamPage: React.FC = () => {
   const dream = data?.data?.dream;
 
   const [editMode, setEditMode] = useState<boolean>(false);
-  const [video, setVideo] = useState<MediaState>();
-  const [thumbnail, setTumbnail] = useState<MediaState>();
+  const [video, setVideo] = useState<MultiMediaState>();
+  const [thumbnail, setTumbnail] = useState<MultiMediaState>();
   const [isVideoRemoved, setIsVideoRemoved] = useState<boolean>(false);
   const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
@@ -258,26 +255,25 @@ const ViewDreamPage: React.FC = () => {
       />
       <Section id={SectionID}>
         <Container>
-          <Row justifyContent="space-between">
+          <Row justifyContent="space-between" separator>
             <h2>{t("page.view_dream.title")}</h2>
             {!editMode && (
               <Row>
                 <Button
                   type="button"
+                  buttonType="tertiary"
                   after={<i className="fa fa-thumbs-up" />}
                   marginLeft
-                >
-                  {t("page.view_dream.upvote")}
-                </Button>
+                />
                 <Button
                   type="button"
+                  buttonType="tertiary"
                   after={<i className="fa fa-thumbs-down" />}
                   marginLeft
-                >
-                  {t("page.view_dream.downvote")}
-                </Button>
+                />
                 <Button
                   type="button"
+                  buttonType="tertiary"
                   marginLeft
                   onClick={onShowConfirmDeleteModal}
                 >
@@ -322,16 +318,18 @@ const ViewDreamPage: React.FC = () => {
               </div>
             </Row>
             <Row>
-              <Column flex="1 1 auto" mr="0.5rem">
-                <ThumbnailDreamInput
-                  dream={dream}
+              <Column flex="1 1 auto" mr="1rem">
+                <ThumbnailInput
+                  localMultimedia={thumbnail}
+                  thumbnail={dream?.thumbnail}
                   editMode={editMode}
-                  thumbnail={thumbnail}
                   isRemoved={isThumbnailRemoved}
                   handleChange={handleThumbnailChange}
+                  handleRemove={handleRemoveThumbnail}
+                  types={["JPG", "JPEG"]}
                 />
               </Column>
-              <Column flex="1 1 auto" ml="0.5rem">
+              <Column flex="1 1 auto" ml="1rem">
                 <ViewDreamInputs
                   register={register}
                   errors={errors}
@@ -360,19 +358,6 @@ const ViewDreamPage: React.FC = () => {
                 isRemoved={isVideoRemoved}
                 handleChange={handleVideoChange}
               />
-            </Row>
-
-            <Row
-              justifyContent="space-between"
-              alignItems="center"
-              style={{ marginTop: "5rem" }}
-            >
-              <h3>{t("page.view_dream.thumbnail")}</h3>
-              {editMode && (
-                <Button type="button" size="sm" onClick={handleRemoveThumbnail}>
-                  <i className="fa fa-trash" />
-                </Button>
-              )}
             </Row>
           </form>
         </Container>
