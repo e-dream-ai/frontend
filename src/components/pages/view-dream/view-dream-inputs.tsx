@@ -1,11 +1,11 @@
-import { Input, Thumbnail, ThumbnailPlaceholder } from "components/shared";
+import { Input } from "components/shared";
 import { MAX_FILE_SIZE_MB } from "constants/file.constants";
 import { FileUploader } from "react-drag-drop-files";
 import { FieldErrors, UseFormRegister } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { UpdateDreamFormValues } from "schemas/update-dream.schema";
 import { Dream } from "types/dream.types";
-import { MediaState } from "types/media.types";
+import { type MultiMediaState } from "types/media.types";
 import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
@@ -55,7 +55,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
 type DreamVideoInputProps = {
   isLoading?: boolean;
   dream?: Dream;
-  video: MediaState;
+  video: MultiMediaState;
   editMode: boolean;
   isRemoved: boolean;
   handleChange: (file: Blob) => void;
@@ -92,52 +92,6 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
           onTypeError={handleFileUploaderTypeError(t)}
           name="file"
           types={["MP4"]}
-        />
-      )}
-    </>
-  );
-};
-
-type ThumbnailDreamInputProps = {
-  isLoading?: boolean;
-  dream?: Dream;
-  thumbnail: MediaState;
-  editMode: boolean;
-  isRemoved: boolean;
-  handleChange: (file: Blob) => void;
-};
-
-export const ThumbnailDreamInput: React.FC<ThumbnailDreamInputProps> = ({
-  isLoading,
-  dream,
-  thumbnail,
-  editMode,
-  isRemoved,
-  handleChange,
-}) => {
-  const { t } = useTranslation();
-  const hasThumbnail = Boolean(dream?.thumbnail) || thumbnail;
-
-  if (!hasThumbnail && (!editMode || isLoading)) {
-    return (
-      <ThumbnailPlaceholder>
-        <i className="fa fa-picture-o" />
-      </ThumbnailPlaceholder>
-    );
-  }
-
-  return (
-    <>
-      {hasThumbnail && !isRemoved ? (
-        <Thumbnail src={thumbnail?.url || dream?.thumbnail} />
-      ) : (
-        <FileUploader
-          maxSize={MAX_FILE_SIZE_MB}
-          handleChange={handleChange}
-          onSizeError={handleFileUploaderSizeError(t)}
-          onTypeError={handleFileUploaderTypeError(t)}
-          name="file"
-          types={["JPG", "JPEG"]}
         />
       )}
     </>
