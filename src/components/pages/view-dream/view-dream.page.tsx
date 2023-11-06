@@ -54,7 +54,7 @@ const ViewDreamPage: React.FC = () => {
     mutate: mutateThumbnailDream,
     isLoading: isLoadingThumbnailDreamMutation,
   } = useUpdateThumbnailDream(uuid);
-  const { mutate: mutateDeleteDream, isLoading: isLoadingDeleteDream } =
+  const { mutate: mutateDeleteDream, isLoading: isLoadingDeleteDreamMutation } =
     useDeleteDream(uuid);
 
   const isLoading =
@@ -242,7 +242,7 @@ const ViewDreamPage: React.FC = () => {
         isOpen={showConfirmDeleteModal}
         onCancel={onHideConfirmDeleteModal}
         onConfirm={onConfirmDeleteDream}
-        isConfirming={isLoadingDeleteDream}
+        isConfirming={isLoadingDeleteDreamMutation}
         title={t("page.view_dream.confirm_delete_modal_title")}
         text={
           <Text>
