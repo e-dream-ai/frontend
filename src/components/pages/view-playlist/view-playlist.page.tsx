@@ -5,7 +5,7 @@ import {
   usePlaylist,
 } from "api/playlist/query/usePlaylist";
 import queryClient from "api/query-client";
-import { Button, Input, Row } from "components/shared";
+import { Button, Input, PlaylistDropzone, Row } from "components/shared";
 import Container from "components/shared/container/container";
 import { Column } from "components/shared/row/row";
 import { Section } from "components/shared/section/section";
@@ -23,6 +23,14 @@ import UpdatePlaylistSchema, {
 import { useDeletePlaylist } from "api/playlist/mutation/useDeletePlaylist";
 import { useUpdateThumbnailPlaylist } from "api/playlist/mutation/useUpdateThumbnailPlaylist";
 import { ConfirmModal } from "components/modals/confirm.modal";
+import {
+  DreamCard,
+  DreamCardList,
+} from "components/shared/dream-card/dream-card";
+import {
+  PlaylistCard,
+  PlaylistCardList,
+} from "components/shared/playlist-card/playlist-card";
 import { Spinner } from "components/shared/spinner/spinner";
 import Text from "components/shared/text/text";
 import { ThumbnailInput } from "components/shared/thumbnail-input/thumbnail-input";
@@ -40,6 +48,7 @@ export const ViewPlaylistPage = () => {
   const playlistId = Number(id) ?? 0;
   const { data, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
   const playlist = data?.data?.playlist;
+  const items = playlist?.items ?? [];
 
   const [editMode, setEditMode] = useState<boolean>(false);
   const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
@@ -103,7 +112,10 @@ export const ViewPlaylistPage = () => {
       {
         onSuccess: (response) => {
           if (response.success) {
-            queryClient.setQueryData([PLAYLIST_QUERY_KEY, playlist?.id], data);
+            queryClient.setQueryData(
+              [PLAYLIST_QUERY_KEY, playlist?.id],
+              response,
+            );
             reset({ name: response?.data?.playlist.name });
             toast.success(
               `${t("page.view_playlist.playlist_updated_successfully")}`,
@@ -312,7 +324,40 @@ export const ViewPlaylistPage = () => {
               </Column>
             </Row>
             <Row justifyContent="space-between" alignItems="center">
-              <h3>{t("page.view_playlist.dreams")}</h3>
+              <h3>{t("page.view_playlist.items")}</h3>
+            </Row>
+            <Row>
+              <Column>
+                <DreamCardList>
+                  {items
+                    ?.filter((i) => i.type === "dream")
+                    .map((i) =>
+                      i.dreamItem ? (
+                        <DreamCard size="sm" key={i.id} dream={i.dreamItem} />
+                      ) : (
+                        <></>
+                      ),
+                    )}
+                </DreamCardList>
+                <PlaylistCardList>
+                  {items
+                    ?.filter((i) => i.type === "playlist")
+                    .map((i) =>
+                      i.playlistItem ? (
+                        <PlaylistCard
+                          size="sm"
+                          key={i.id}
+                          playlist={i.playlistItem}
+                        />
+                      ) : (
+                        <></>
+                      ),
+                    )}
+                </PlaylistCardList>
+              </Column>
+            </Row>
+            <Row>
+              <PlaylistDropzone show playlistId={playlist?.id} />
             </Row>
           </form>
         </Container>
