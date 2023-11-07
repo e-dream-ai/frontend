@@ -62,7 +62,7 @@
       "created": "Created",
       "video": "Video",
       "thumbnail": "Thumbnail",
-      "dreams": "Dreams",
+      "items": "Playlist items",
       "confirm_delete_modal_title": "Confirm delete playlist",
       "confirm_delete_modal_body": "Are you sure to delete this playlist?",
       "playlist_updated_successfully": "Playlist updated successfully.",
@@ -164,6 +164,11 @@
     "file_uploader": {
       "size_error": "File size exceed limits allowed",
       "type_error": "File type is not allowed"
+    },
+    "playlist_dropzone": {
+      "adding_playlist_item": "Adding playlist item.",
+      "playlist_item_successfully_added": "Playlist successfully created.",
+      "error_adding_playlist_item": "Error creating playlist."
     }
   }
 }
