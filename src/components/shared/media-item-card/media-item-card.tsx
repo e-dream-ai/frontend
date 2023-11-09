@@ -19,32 +19,33 @@ const ImageSizes = {
   `,
 };
 
-export const StyledDreamCardList = styled.ul`
+export const StyledMediaItemCardList = styled.ul`
   margin: 0;
   padding: 0;
 `;
 
-export const StyledDreamCard = styled.li`
-  display: flex;
+export const StyledMediaItemCard = styled.li`
+  display: inline-flex;
   flex-flow: row;
+  justify-content: space-between;
   list-style: none;
   margin: 0;
   margin-bottom: 4rem;
   padding: 2rem;
-  background-color: ${(props) => props.theme.background5};
+  background-color: ${(props) => props.theme.colorBackgroundQuaternary};
   cursor: pointer;
   user-select: none;
   :hover {
-    background-color: ${(props) => props.theme.background2};
+    background-color: ${(props) => props.theme.colorBackgroundSecondary};
   }
 `;
 
-export const DreamCardImage = styled.img<{ size: Sizes }>`
+export const MediaItemCardImage = styled.img<{ size: Sizes }>`
   ${(props) => ImageSizes[props.size]}
   object-fit: cover;
 `;
 
-export const DreamCardBody = styled.div`
+export const MediaItemCardBody = styled.div`
   margin-left: 2rem;
   display: flex;
   flex-flow: column;

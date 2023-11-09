@@ -3,30 +3,33 @@ import { DRAG_DROP_FORMAT } from "constants/dnd.constants";
 import { FORMAT } from "constants/moment.constants";
 import { ROUTES } from "constants/routes.constants";
 import moment from "moment";
-import { useCallback, useEffect, useRef } from "react";
+import { MouseEventHandler, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Dream } from "types/dream.types";
 import { Sizes } from "types/sizes.types";
 import Anchor from "../anchor/anchor";
+import { Button } from "../button/button";
 import {
-  DreamCardBody,
-  DreamCardImage,
-  StyledDreamCard,
-  StyledDreamCardList,
+  MediaItemCardBody,
+  MediaItemCardImage,
+  StyledMediaItemCard,
+  StyledMediaItemCardList,
   ThumbnailPlaceholder,
-} from "./dream-card.styled";
+} from "../media-item-card/media-item-card";
+import Row from "../row/row";
 
 type DreamCardProps = {
   dream: Dream;
   size?: Sizes;
+  onDelete?: MouseEventHandler<HTMLButtonElement>;
 };
 
-// const EVENTS = {
-//   DRAG_START: "dragstart",
-// };
-
-export const DreamCard: React.FC<DreamCardProps> = ({ dream, size = "md" }) => {
+export const DreamCard: React.FC<DreamCardProps> = ({
+  dream,
+  size = "md",
+  onDelete,
+}) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const { name, uuid, thumbnail, created_at, user } = dream;
   const { t } = useTranslation();
@@ -61,19 +64,19 @@ export const DreamCard: React.FC<DreamCardProps> = ({ dream, size = "md" }) => {
   }, [registerEvents, unregisterEvents]);
 
   return (
-    <StyledDreamCard
+    <StyledMediaItemCard
       ref={cardRef}
       draggable="true"
       onClick={navigateToDream(uuid)}
     >
       {thumbnail ? (
-        <DreamCardImage size={size} draggable="false" src={thumbnail} />
+        <MediaItemCardImage size={size} draggable="false" src={thumbnail} />
       ) : (
         <ThumbnailPlaceholder size={size}>
           <i className="fa fa-picture-o" />
         </ThumbnailPlaceholder>
       )}
-      <DreamCardBody>
+      <MediaItemCardBody>
         <Anchor onClick={navigateToDream(uuid)}>
           {name || "Unnamed dream"}
         </Anchor>
@@ -84,13 +87,20 @@ export const DreamCard: React.FC<DreamCardProps> = ({ dream, size = "md" }) => {
         <Text>
           {t("components.dream_card.owner")}: {user?.email}
         </Text>
-      </DreamCardBody>
-    </StyledDreamCard>
+      </MediaItemCardBody>
+      {onDelete && (
+        <Row justifyContent="flex-end" ml={1}>
+          <Button type="button" onClick={onDelete}>
+            <i className="fa fa-trash" />
+          </Button>
+        </Row>
+      )}
+    </StyledMediaItemCard>
   );
 };
 
 export const DreamCardList: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  return <StyledDreamCardList>{children}</StyledDreamCardList>;
+  return <StyledMediaItemCardList>{children}</StyledMediaItemCardList>;
 };

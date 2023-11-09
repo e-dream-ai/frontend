@@ -10,16 +10,16 @@ export const TabList = styled(TabListReactTabs)`
     list-style: none;
     margin-right: 0.5rem;
     padding: 0.5rem 0.5rem;
-    color: ${(props) => props.theme.text1};
+    color: ${(props) => props.theme.textPrimaryColor};
     cursor: pointer;
 
     &:hover {
-      background-color: ${(props) => props.theme.primary};
+      background-color: ${(props) => props.theme.colorPrimary};
     }
 
     &[aria-selected="true"] {
-      color: ${(props) => props.theme.primary};
-      border-bottom: 1px solid ${(props) => props.theme.primary};
+      color: ${(props) => props.theme.colorPrimary};
+      border-bottom: 1px solid ${(props) => props.theme.colorPrimary};
     }
 
     &[aria-selected="true"]:hover {

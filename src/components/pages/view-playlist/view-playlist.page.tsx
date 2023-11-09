@@ -11,7 +11,7 @@ import { Column } from "components/shared/row/row";
 import { Section } from "components/shared/section/section";
 import { FORMAT } from "constants/moment.constants";
 import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
@@ -21,6 +21,7 @@ import UpdatePlaylistSchema, {
 } from "schemas/update-playlist.schema";
 
 import { useDeletePlaylist } from "api/playlist/mutation/useDeletePlaylist";
+import { useDeletePlaylistItem } from "api/playlist/mutation/useDeletePlaylistItem";
 import { useUpdateThumbnailPlaylist } from "api/playlist/mutation/useUpdateThumbnailPlaylist";
 import { ConfirmModal } from "components/modals/confirm.modal";
 import {
@@ -35,6 +36,7 @@ import { Spinner } from "components/shared/spinner/spinner";
 import Text from "components/shared/text/text";
 import { ThumbnailInput } from "components/shared/thumbnail-input/thumbnail-input";
 import { ROUTES } from "constants/routes.constants";
+import { AUTO_CLOSE_MS } from "constants/toast.constants";
 import router from "routes/router";
 import { MultiMediaState } from "types/media.types";
 
@@ -66,6 +68,9 @@ export const ViewPlaylistPage = () => {
     mutate: mutateDeletePlaylist,
     isLoading: isLoadingDeletePlaylistMutation,
   } = useDeletePlaylist(playlistId);
+
+  const { mutate: mutateDeletePlaylistItem } =
+    useDeletePlaylistItem(playlistId);
 
   const isLoading =
     isLoadingPlaylistMutation || isLoadingThumbnailPlaylistMutation;
@@ -135,6 +140,55 @@ export const ViewPlaylistPage = () => {
       },
     );
   };
+
+  const handleDeletePlaylistItem =
+    (itemId: number) => (event: MouseEvent<HTMLButtonElement>) => {
+      event.stopPropagation();
+      const toastId = toast.loading(
+        t("components.view_playlist.deleting_playlist_item"),
+      );
+      mutateDeletePlaylistItem(
+        { itemId },
+        {
+          onSuccess: (response) => {
+            if (response.success) {
+              queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
+              toast.update(toastId, {
+                render: t(
+                  "page.view_playlist.playlist_item_deleted_successfully",
+                ),
+                type: "success",
+                isLoading: false,
+                closeButton: true,
+                closeOnClick: true,
+                autoClose: AUTO_CLOSE_MS,
+              });
+            } else {
+              toast.update(toastId, {
+                render: `${t(
+                  "page.view_playlist.error_deleting_playlist_item",
+                )} ${response.message}`,
+                type: "error",
+                isLoading: false,
+                closeButton: true,
+                closeOnClick: true,
+                autoClose: AUTO_CLOSE_MS,
+              });
+            }
+          },
+          onError: () => {
+            toast.update(toastId, {
+              render: `${t("page.view_playlist.error_deleting_playlist_item")}`,
+              type: "error",
+              isLoading: false,
+              closeButton: true,
+              closeOnClick: true,
+              autoClose: AUTO_CLOSE_MS,
+            });
+          },
+        },
+      );
+    };
 
   const handleEdit = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -287,7 +341,7 @@ export const ViewPlaylistPage = () => {
               </div>
             </Row>
             <Row justifyContent="space-between">
-              <Column flex="1 1 auto" mr="1rem">
+              <Column flex="1 1 auto" mr={1}>
                 <ThumbnailInput
                   thumbnail={playlist?.thumbnail}
                   localMultimedia={thumbnail}
@@ -298,7 +352,7 @@ export const ViewPlaylistPage = () => {
                   types={["JPG", "JPEG"]}
                 />
               </Column>
-              <Column flex="1 1 auto" ml="1rem">
+              <Column flex="1 1 auto" ml={1}>
                 <Input
                   disabled={!editMode}
                   placeholder={t("page.view_playlist.name")}
@@ -333,7 +387,12 @@ export const ViewPlaylistPage = () => {
                     ?.filter((i) => i.type === "dream")
                     .map((i) =>
                       i.dreamItem ? (
-                        <DreamCard size="sm" key={i.id} dream={i.dreamItem} />
+                        <DreamCard
+                          size="sm"
+                          key={i.id}
+                          dream={i.dreamItem}
+                          onDelete={handleDeletePlaylistItem(i.id)}
+                        />
                       ) : (
                         <></>
                       ),
@@ -348,6 +407,7 @@ export const ViewPlaylistPage = () => {
                           size="sm"
                           key={i.id}
                           playlist={i.playlistItem}
+                          onDelete={handleDeletePlaylistItem(i.id)}
                         />
                       ) : (
                         <></>

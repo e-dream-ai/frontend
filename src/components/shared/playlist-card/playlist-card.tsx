@@ -3,28 +3,32 @@ import { DRAG_DROP_FORMAT } from "constants/dnd.constants";
 import { FORMAT } from "constants/moment.constants";
 import { ROUTES } from "constants/routes.constants";
 import moment from "moment";
-import { useCallback, useEffect, useRef } from "react";
+import { MouseEventHandler, useCallback, useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { Playlist } from "types/playlist.types";
 import { Sizes } from "types/sizes.types";
 import Anchor from "../anchor/anchor";
+import { Button } from "../button/button";
 import {
-  PlaylistCardBody,
-  PlaylistCardImage,
-  StyledPlaylistCard,
-  StyledPlaylistCardList,
+  MediaItemCardBody,
+  MediaItemCardImage,
+  StyledMediaItemCard,
+  StyledMediaItemCardList,
   ThumbnailPlaceholder,
-} from "./playlist-card.styled";
+} from "../media-item-card/media-item-card";
+import Row from "../row/row";
 
 type PlaylistCardProps = {
   playlist: Playlist;
   size?: Sizes;
+  onDelete?: MouseEventHandler<HTMLButtonElement>;
 };
 
 export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   playlist,
   size = "md",
+  onDelete,
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const { id, name, thumbnail, created_at, user } = playlist;
@@ -60,23 +64,25 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
   }, [registerEvents, unregisterEvents]);
 
   return (
-    <StyledPlaylistCard
+    <StyledMediaItemCard
       ref={cardRef}
       draggable="true"
       onClick={navigateToPlaylist(id)}
     >
       {thumbnail ? (
-        <PlaylistCardImage size={size} draggable="false" src={thumbnail} />
+        <MediaItemCardImage size={size} draggable="false" src={thumbnail} />
       ) : (
         <ThumbnailPlaceholder size={size}>
           <i className="fa fa-picture-o" />
         </ThumbnailPlaceholder>
       )}
-      <PlaylistCardBody>
+      <MediaItemCardBody>
         <Anchor type="secondary" onClick={navigateToPlaylist(id)}>
           {name || "Unnamed Playlist"}
         </Anchor>
-        <Text>{t("components.playlist_card.videos")}: 0</Text>
+        <Text>
+          {t("components.playlist_card.videos")}: {playlist.itemCount ?? 0}
+        </Text>
         <Text>
           {t("components.playlist_card.created_at")}:{" "}
           {moment(created_at).format(FORMAT)}
@@ -84,13 +90,20 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         <Text>
           {t("components.playlist_card.owner")}: {user?.email}
         </Text>
-      </PlaylistCardBody>
-    </StyledPlaylistCard>
+      </MediaItemCardBody>
+      {onDelete && (
+        <Row justifyContent="flex-end" ml={1}>
+          <Button type="button" onClick={onDelete}>
+            <i className="fa fa-trash" />
+          </Button>
+        </Row>
+      )}
+    </StyledMediaItemCard>
   );
 };
 
 export const PlaylistCardList: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
-  return <StyledPlaylistCardList>{children}</StyledPlaylistCardList>;
+  return <StyledMediaItemCardList>{children}</StyledMediaItemCardList>;
 };

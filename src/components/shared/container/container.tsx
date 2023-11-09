@@ -1,7 +1,7 @@
 import styled from "styled-components";
 
 export const Container = styled.div`
-  background-color: ${(props) => props.theme.background4};
+  background-color: ${(props) => props.theme.colorBackgroundTertiary};
   padding: 1.875rem;
   margin-right: auto;
   margin-left: auto;
@@ -10,7 +10,7 @@ export const Container = styled.div`
     font-size: 1.25rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: ${(props) => props.theme.text1};
+    color: ${(props) => props.theme.textPrimaryColor};
     padding-bottom: 1.25rem;
     margin: 0;
     margin-bottom: 1rem;

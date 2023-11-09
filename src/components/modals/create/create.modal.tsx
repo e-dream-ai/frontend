@@ -153,7 +153,7 @@ export const CreateModal: React.FC<
                 controls
                 src={video?.url ?? ""}
               />
-              <Row mt="1rem" justifyContent="flex-end">
+              <Row mt={1} justifyContent="flex-end">
                 <Button
                   after={<i className="fa fa-upload" />}
                   onClick={handleUpload}
@@ -168,7 +168,7 @@ export const CreateModal: React.FC<
           ) : (
             <Column>
               <Text>{t("modal.upload_dream.dream_instructions")}</Text>
-              <Row mt="1rem" justifyContent="center">
+              <Row mt={1} justifyContent="center">
                 <FileUploader
                   maxSize={MAX_FILE_SIZE_MB}
                   handleChange={handleChange}
@@ -192,7 +192,7 @@ export const CreateModal: React.FC<
                 error={errors.name?.message}
                 {...register("name")}
               />
-              <Row mt="1rem" justifyContent="flex-end">
+              <Row mt={1} justifyContent="flex-end">
                 <Button isLoading={isLoadingCreatePlaylist}>
                   {isLoadingCreatePlaylist
                     ? t("modal.create_playlist.creating")

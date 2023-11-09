@@ -41,16 +41,16 @@ const ButtonSizes = {
 
 const ButtonTypes = {
   primary: css`
-    background-color: ${(props) => props.theme.primary};
-    color: ${(props) => props.theme.text1};
+    background-color: ${(props) => props.theme.colorPrimary};
+    color: ${(props) => props.theme.textPrimaryColor};
     &:hover {
-      background: ${(props) => props.theme.lightPrimary};
+      background: ${(props) => props.theme.colorLightPrimary};
     }
   `,
   secondary: css``,
   tertiary: css`
     background-color: transparent;
-    color: ${(props) => props.theme.primary};
+    color: ${(props) => props.theme.colorPrimary};
 
     -webkit-transition:
       color linear 0.4s,
@@ -62,7 +62,7 @@ const ButtonTypes = {
       border-color linear 0.4s;
 
     &:hover {
-      color: ${(props) => props.theme.text1};
+      color: ${(props) => props.theme.textPrimaryColor};
     }
   `,
 };
@@ -88,7 +88,7 @@ export const StyledButton = styled.button<{
   ${(props) => ButtonSizes[props.size]}
 
   &:disabled {
-    background-color: ${(props) => props.theme.lightPrimary};
+    background-color: ${(props) => props.theme.colorLightPrimary};
     cursor: not-allowed;
   }
 `;

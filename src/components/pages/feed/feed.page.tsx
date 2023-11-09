@@ -21,7 +21,7 @@ export const FeedPage: React.FC = () => {
     page,
   });
   const dreams = data?.data?.dreams;
-  const pageCount = (data?.data?.count ?? 0) / PAGINATION.TAKE;
+  const pageCount = Math.max((data?.data?.count ?? 0) / PAGINATION.TAKE, 1);
 
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);
@@ -36,11 +36,13 @@ export const FeedPage: React.FC = () => {
             <Spinner />
           </Row>
         ) : (
-          <DreamCardList>
-            {dreams?.map((dream) => (
-              <DreamCard dream={dream} key={dream.uuid} />
-            ))}
-          </DreamCardList>
+          <Row justifyContent="center">
+            <DreamCardList>
+              {dreams?.map((dream) => (
+                <DreamCard dream={dream} key={dream.uuid} />
+              ))}
+            </DreamCardList>
+          </Row>
         )}
 
         <Row justifyContent="center">

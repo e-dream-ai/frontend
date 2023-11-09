@@ -7,14 +7,14 @@ export const StyledInput = styled.input`
   width: fill-available;
   height: 2.2rem;
   padding: 6px 12px;
-  background: ${(props) => props.theme.background2};
+  background: ${(props) => props.theme.colorBackgroundSecondary};
   border-radius: 0;
   border: 0;
-  color: ${(props) => props.theme.inputText};
+  color: ${(props) => props.theme.inputTextColorPrimary};
   font-size: 1rem;
 
   &:disabled {
-    background-color: ${(props) => props.theme.disabledInputBackground};
+    background-color: ${(props) => props.theme.inputBackgroundDisabledColor};
     cursor: not-allowed;
   }
 `;
@@ -36,8 +36,8 @@ export const InputBefore = styled.span`
   height: 2.2rem;
   min-width: 40px;
   padding: 6px 12px;
-  background: ${(props) => props.theme.inputBackground};
-  color: ${(props) => props.theme.inputText2};
+  background: ${(props) => props.theme.inputBackgroundColor};
+  color: ${(props) => props.theme.inputTextColorSecondary};
   text-align: center;
 `;
 
@@ -45,15 +45,15 @@ export const InputAfter = styled.span`
   height: 2.2rem;
   min-width: 40px;
   padding: 6px 12px;
-  background: ${(props) => props.theme.inputBackground};
-  color: ${(props) => props.theme.inputText};
+  background: ${(props) => props.theme.inputBackgroundColor};
+  color: ${(props) => props.theme.inputTextColorPrimary};
   text-align: center;
   cursor: pointer;
 `;
 
 export const InputError = styled.span`
   font-size: 0.875rem;
-  color: ${(props) => props.theme.danger};
+  color: ${(props) => props.theme.colorDanger};
 `;
 
 export default StyledInput;

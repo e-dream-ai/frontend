@@ -22,7 +22,7 @@ export const MyDreamsPage: React.FC = () => {
     page,
   });
   const dreams = data?.data?.dreams;
-  const pageCount = (data?.data?.count ?? 0) / PAGINATION.TAKE;
+  const pageCount = Math.max((data?.data?.count ?? 0) / PAGINATION.TAKE, 1);
 
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);

@@ -20,7 +20,7 @@ export const PlaylistsPage: React.FC = () => {
   const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching } = useMyPlaylists({ page });
   const playlists: Playlist[] = data?.data?.playlists ?? [];
-  const pageCount = (data?.data?.count ?? 0) / PAGINATION.TAKE;
+  const pageCount = Math.max((data?.data?.count ?? 0) / PAGINATION.TAKE, 1);
 
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);

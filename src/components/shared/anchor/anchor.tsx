@@ -3,13 +3,13 @@ import { Types } from "types/style-types.types";
 
 const AnchorType = {
   primary: css`
-    color: ${(props) => props.theme.primary};
+    color: ${(props) => props.theme.colorPrimary};
   `,
   secondary: css`
-    color: ${(props) => props.theme.danger};
+    color: ${(props) => props.theme.colorDanger};
   `,
   tertiary: css`
-    color: ${(props) => props.theme.danger};
+    color: ${(props) => props.theme.colorDanger};
   `,
 };
 
@@ -28,7 +28,7 @@ export const Anchor = styled.a<{
     border-color linear 0.4s;
 
   &:hover {
-    color: ${(props) => props.theme.text1};
+    color: ${(props) => props.theme.textPrimaryColor};
   }
 `;
 

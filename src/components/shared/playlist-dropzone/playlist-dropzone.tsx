@@ -39,7 +39,7 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
         toast.error(t("modal.forgot_password.error_sending_instructions"));
         return;
       }
-      const toatId = toast.loading(
+      const toastId = toast.loading(
         t("components.playlist_dropzone.adding_playlist_item"),
       );
 
@@ -49,7 +49,7 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
           onSuccess: (data) => {
             if (data.success) {
               queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
-              toast.update(toatId, {
+              toast.update(toastId, {
                 render: t(
                   "components.playlist_dropzone.playlist_item_successfully_added",
                 ),
@@ -60,7 +60,7 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
                 autoClose: AUTO_CLOSE_MS,
               });
             } else {
-              toast.update(id, {
+              toast.update(toastId, {
                 render: `${t(
                   "components.playlist_dropzone.error_adding_playlist_item",
                 )} ${data.message}`,
@@ -73,7 +73,7 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
             }
           },
           onError: () => {
-            toast.update(id, {
+            toast.update(toastId, {
               render: t("modal.forgot_password.error_sending_instructions"),
               type: "error",
               isLoading: false,
