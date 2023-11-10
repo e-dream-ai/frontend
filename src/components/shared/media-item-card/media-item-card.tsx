@@ -24,20 +24,41 @@ export const StyledMediaItemCardList = styled.ul`
   padding: 0;
 `;
 
-export const StyledMediaItemCard = styled.li`
-  display: inline-flex;
-  flex-flow: row;
+export const StyledMediaItemCard = styled.li<{ isDragEntered?: boolean }>`
+  /* display: inline-flex; */
+  /* flex-flow: row; */
   justify-content: space-between;
   list-style: none;
   margin: 0;
   margin-bottom: 4rem;
   padding: 2rem;
-  background-color: ${(props) => props.theme.colorBackgroundQuaternary};
+  background-color: ${(props) =>
+    props.isDragEntered
+      ? props.theme.inputBackgroundColor
+      : props.theme.colorBackgroundQuaternary};
+  border: ${(props) =>
+    props.isDragEntered
+      ? `1px solid ${props.theme.colorPrimary}`
+      : `1px solid transparent`};
   cursor: pointer;
   user-select: none;
+
+  -webkit-transition:
+    color linear 0.4s,
+    background-color linear 0.4s,
+    border-color linear 0.4s;
+  transition:
+    color linear 0.4s,
+    background-color linear 0.4s,
+    border-color linear 0.4s;
   :hover {
     background-color: ${(props) => props.theme.colorBackgroundSecondary};
   }
+`;
+
+export const MediaItemCardContainer = styled.div`
+  display: inline-flex;
+  pointer-events: none;
 `;
 
 export const MediaItemCardImage = styled.img<{ size: Sizes }>`

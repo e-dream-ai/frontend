@@ -5,7 +5,7 @@ import {
   usePlaylist,
 } from "api/playlist/query/usePlaylist";
 import queryClient from "api/query-client";
-import { Button, Input, PlaylistDropzone, Row } from "components/shared";
+import { AddItemPlaylistDropzone, Button, Input, Row } from "components/shared";
 import Container from "components/shared/container/container";
 import { Column } from "components/shared/row/row";
 import { Section } from "components/shared/section/section";
@@ -145,7 +145,7 @@ export const ViewPlaylistPage = () => {
     (itemId: number) => (event: MouseEvent<HTMLButtonElement>) => {
       event.stopPropagation();
       const toastId = toast.loading(
-        t("components.view_playlist.deleting_playlist_item"),
+        t("page.view_playlist.deleting_playlist_item"),
       );
       mutateDeletePlaylistItem(
         { itemId },
@@ -388,6 +388,7 @@ export const ViewPlaylistPage = () => {
                     .map((i) =>
                       i.dreamItem ? (
                         <DreamCard
+                          dndMode="local"
                           size="sm"
                           key={i.id}
                           dream={i.dreamItem}
@@ -417,7 +418,7 @@ export const ViewPlaylistPage = () => {
               </Column>
             </Row>
             <Row>
-              <PlaylistDropzone show playlistId={playlist?.id} />
+              <AddItemPlaylistDropzone show playlistId={playlist?.id} />
             </Row>
           </form>
         </Container>

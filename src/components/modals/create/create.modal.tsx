@@ -167,7 +167,9 @@ export const CreateModal: React.FC<
             </Column>
           ) : (
             <Column>
-              <Text>{t("modal.upload_dream.dream_instructions")}</Text>
+              <Text marginY={2}>
+                {t("modal.upload_dream.dream_instructions")}
+              </Text>
               <Row mt={1} justifyContent="center">
                 <FileUploader
                   maxSize={MAX_FILE_SIZE_MB}
@@ -184,7 +186,7 @@ export const CreateModal: React.FC<
         <TabPanel>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Column>
-              <Text>{t("modal.create_playlist.instructions")}</Text>
+              <Text marginY={2}>{t("modal.create_playlist.instructions")}</Text>
               <Input
                 placeholder={t("modal.create_playlist.name")}
                 type="text"

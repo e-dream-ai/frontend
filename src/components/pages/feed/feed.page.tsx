@@ -39,7 +39,7 @@ export const FeedPage: React.FC = () => {
           <Row justifyContent="center">
             <DreamCardList>
               {dreams?.map((dream) => (
-                <DreamCard dream={dream} key={dream.uuid} />
+                <DreamCard key={dream.uuid} dream={dream} />
               ))}
             </DreamCardList>
           </Row>

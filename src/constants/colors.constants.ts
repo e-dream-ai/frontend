@@ -14,7 +14,7 @@ export const COLORS = {
   LIGHT_BLUE: "#009ba2",
   ORANGE: "#e4683a",
   DARK_ORANGE: "#ff5d20",
-  LIGHT_ORANGE: "#ff7845",
+  LIGHT_ORANGE: "#ff7d4d",
 };
 
 export const PrimaryTheme: DefaultTheme = {

@@ -19,15 +19,14 @@ import {
 //   DROP: "drop",
 // };
 
-type PlaylistDropzoneProps = {
+type AddItemPlaylistDropzoneProps = {
   playlistId?: number;
   show?: boolean;
 };
 
-export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
-  playlistId,
-  show = false,
-}) => {
+export const AddItemPlaylistDropzone: React.FC<
+  AddItemPlaylistDropzoneProps
+> = ({ playlistId, show = false }) => {
   const dropzoneRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const [isDragEnter, setIsDragEnter] = useState<boolean>(false);
@@ -74,7 +73,9 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
           },
           onError: () => {
             toast.update(toastId, {
-              render: t("modal.forgot_password.error_sending_instructions"),
+              render: t(
+                "components.playlist_dropzone.error_adding_playlist_item",
+              ),
               type: "error",
               isLoading: false,
               closeButton: true,
@@ -88,8 +89,12 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
     [mutate, t, playlistId],
   );
 
-  const handleDragEnter = () => {
+  const handleDragEnter = (event: DragEvent) => {
     setIsDragEnter(true);
+    const dt = event.dataTransfer;
+    const type = dt?.getData(DRAG_DROP_FORMAT.TYPE);
+    const id = dt?.getData(DRAG_DROP_FORMAT.ID);
+    console.log({ event, type, id });
     return false;
   };
 
@@ -140,7 +145,7 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
           <Column alignItems="center">
             <PlaylistDropzoneIcon>+</PlaylistDropzoneIcon>
             <span>
-              Drop dream or playlist to add it into the current playlist.
+              Drop dream or playlist here to add it into the current playlist.
             </span>
           </Column>
         </Row>
@@ -192,5 +197,3 @@ export const PlaylistDropzoneListener: React.FC<{
 
   return <div ref={dropzoneListenerRef}>{children}</div>;
 };
-
-export default PlaylistDropzone;

@@ -44,7 +44,7 @@ export const PlaylistCard: React.FC<PlaylistCardProps> = ({
         DRAG_DROP_FORMAT.PLAYLIST,
       );
       event?.dataTransfer?.setData(DRAG_DROP_FORMAT.ID, String(playlist.id));
-      return true;
+      return false;
     },
     [playlist.id],
   );
