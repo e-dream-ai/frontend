@@ -3,6 +3,7 @@ import axios from "axios";
 import { URL } from "constants/api.constants";
 import { ContentType, getRequestHeaders } from "constants/auth.constants";
 import { OrderPlaylistFormValues } from "schemas/order-playlist.schema";
+import { PlaylistApiResponse } from "schemas/playlist.schema";
 import { ApiResponse } from "types/api.types";
 
 type MutateFunctionParams = {
@@ -26,10 +27,12 @@ const orderPlaylist = ({ id }: MutateFunctionParams) => {
 };
 
 export const useOrderPlaylist = (id?: number) => {
-  return useMutation<ApiResponse<unknown>, Error, OrderPlaylistFormValues>(
-    orderPlaylist({ id }),
-    {
-      mutationKey: [ORDER_PLAYLIST_MUTATION_KEY],
-    },
-  );
+  return useMutation<
+    ApiResponse<unknown>,
+    Error,
+    OrderPlaylistFormValues,
+    PlaylistApiResponse
+  >(orderPlaylist({ id }), {
+    mutationKey: [ORDER_PLAYLIST_MUTATION_KEY],
+  });
 };

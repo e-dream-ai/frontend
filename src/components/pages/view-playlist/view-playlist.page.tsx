@@ -38,8 +38,13 @@ import { ThumbnailInput } from "components/shared/thumbnail-input/thumbnail-inpu
 import { ROUTES } from "constants/routes.constants";
 import { TOAST_DEFAULT_CONFIG } from "constants/toast.constants";
 import router from "routes/router";
+import { PlaylistApiResponse } from "schemas/playlist.schema";
 import { OrderedItem } from "types/dnd.types";
 import { MultiMediaState } from "types/media.types";
+import {
+  getOrderedItemsPlaylistRequest,
+  setQueryDataOrderedPlaylist,
+} from "utils/playlist.util";
 
 type Params = { id: string };
 
@@ -58,10 +63,6 @@ export const ViewPlaylistPage = () => {
         .map((item, index) => ({ ...item, order: index })) ?? [],
     [playlist],
   );
-
-  useEffect(() => {
-    console.log({ playlist, items });
-  }, [playlist, items]);
 
   const [editMode, setEditMode] = useState<boolean>(false);
   const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
@@ -130,7 +131,7 @@ export const ViewPlaylistPage = () => {
         onSuccess: (response) => {
           if (response.success) {
             queryClient.setQueryData(
-              [PLAYLIST_QUERY_KEY, playlist?.id],
+              [PLAYLIST_QUERY_KEY, playlistId],
               response,
             );
             reset({ name: response?.data?.playlist.name });
@@ -197,20 +198,10 @@ export const ViewPlaylistPage = () => {
     };
 
   const handleOrderPlaylist = (orderedItems: OrderedItem[]) => {
-    const playlistItems: OrderedItem[] = items.map((item) => {
-      const newOrderItem = orderedItems.find((i) => i.id === item.id);
-
-      console.log({ orderedItems, newOrderItem });
-
-      if (newOrderItem) return newOrderItem;
-
-      return {
-        id: item.id,
-        order: item.order,
-      } as OrderedItem;
+    const playlistItems: OrderedItem[] = getOrderedItemsPlaylistRequest({
+      items,
+      orderedItems,
     });
-
-    console.log({ playlistItems });
 
     const toastId = toast.loading(
       t("page.view_playlist.ordering_playlist_items"),
@@ -221,6 +212,11 @@ export const ViewPlaylistPage = () => {
         onSuccess: (response) => {
           if (response.success) {
             queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
+            queryClient.setQueryData<PlaylistApiResponse>(
+              [PLAYLIST_QUERY_KEY, playlistId],
+              (previousPlaylist) =>
+                setQueryDataOrderedPlaylist({ previousPlaylist, orderedItems }),
+            );
             toast.update(toastId, {
               render: t(
                 "page.view_playlist.playlist_items_ordered_successfully",
@@ -452,7 +448,7 @@ export const ViewPlaylistPage = () => {
                       dndMode="local"
                       size="sm"
                       type={i.type}
-                      item={i.type === "dream" ? i.dreamItem! : i.playlistItem!}
+                      item={i.type === "dream" ? i.dreamItem : i.playlistItem}
                       order={i.order}
                       onDelete={handleDeletePlaylistItem(i.id)}
                       onOrder={handleOrderPlaylist}

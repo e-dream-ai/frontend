@@ -36,7 +36,7 @@ type ItemCardProps = {
    */
   itemId?: number;
   type?: "dream" | "playlist";
-  item: Dream | Omit<Playlist, "items">;
+  item?: Dream | Omit<Playlist, "items">;
   size?: Sizes;
   dndMode?: DNDMode;
   order?: number;
@@ -47,7 +47,7 @@ type ItemCardProps = {
 export const ItemCard: React.FC<ItemCardProps> = ({
   itemId = 0,
   type = "dream",
-  item,
+  item = {},
   size = "md",
   onDelete,
   onOrder,
@@ -126,7 +126,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       setIsDragEntered(false);
       return false;
     },
-    [id, order, dndMode, onOrder],
+    [itemId, order, dndMode, onOrder],
   );
 
   const registerEvents = useCallback(() => {

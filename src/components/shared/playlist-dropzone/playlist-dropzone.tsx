@@ -85,9 +85,6 @@ export const AddItemPlaylistDropzone: React.FC<
 
   const handleDragEnter = (event: DragEvent) => {
     setIsDragEnter(true);
-    const dt = event.dataTransfer;
-    const type = dt?.getData(DND_METADATA.TYPE);
-    const id = dt?.getData(DND_METADATA.ID);
     return false;
   };
 
