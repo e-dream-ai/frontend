@@ -1,10 +1,7 @@
 import { useDreams } from "api/dream/query/useDreams";
 import { Row } from "components/shared";
 import Container from "components/shared/container/container";
-import {
-  DreamCard,
-  DreamCardList,
-} from "components/shared/dream-card/dream-card";
+import { ItemCard, ItemCardList } from "components/shared/item-card/item-card";
 import { Paginate } from "components/shared/paginate/paginate";
 import { Section } from "components/shared/section/section";
 import { Spinner } from "components/shared/spinner/spinner";
@@ -37,11 +34,11 @@ export const FeedPage: React.FC = () => {
           </Row>
         ) : (
           <Row justifyContent="center">
-            <DreamCardList>
+            <ItemCardList>
               {dreams?.map((dream) => (
-                <DreamCard key={dream.uuid} dream={dream} />
+                <ItemCard key={dream.uuid} item={dream} />
               ))}
-            </DreamCardList>
+            </ItemCardList>
           </Row>
         )}
 

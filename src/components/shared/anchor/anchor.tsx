@@ -1,4 +1,5 @@
 import styled, { css } from "styled-components";
+import { SpaceProps, space } from "styled-system";
 import { Types } from "types/style-types.types";
 
 const AnchorType = {
@@ -13,9 +14,12 @@ const AnchorType = {
   `,
 };
 
-export const Anchor = styled.a<{
-  type?: Types;
-}>`
+export const Anchor = styled.a<
+  {
+    type?: Types;
+  } & SpaceProps
+>`
+  ${space}
   ${(props) => AnchorType[props.type || "primary"]}
   cursor: pointer;
   -webkit-transition:

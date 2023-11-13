@@ -116,7 +116,7 @@ export const CreateModal: React.FC<
             t("modal.create_playlist.playlist_successfully_created"),
           );
           handleHideModal();
-          router.navigate(`${ROUTES.PLAYLIST}/${playlist?.id}`);
+          router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist?.id}`);
         } else {
           toast.error(
             `${t("modal.create_playlist.error_creating_playlist")} ${

@@ -5,13 +5,19 @@ import {
   usePlaylist,
 } from "api/playlist/query/usePlaylist";
 import queryClient from "api/query-client";
-import { AddItemPlaylistDropzone, Button, Input, Row } from "components/shared";
+import {
+  AddItemPlaylistDropzone,
+  Button,
+  Input,
+  ItemCardList,
+  Row,
+} from "components/shared";
 import Container from "components/shared/container/container";
 import { Column } from "components/shared/row/row";
 import { Section } from "components/shared/section/section";
 import { FORMAT } from "constants/moment.constants";
 import moment from "moment";
-import { MouseEvent, useCallback, useEffect, useState } from "react";
+import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
@@ -22,22 +28,17 @@ import UpdatePlaylistSchema, {
 
 import { useDeletePlaylist } from "api/playlist/mutation/useDeletePlaylist";
 import { useDeletePlaylistItem } from "api/playlist/mutation/useDeletePlaylistItem";
+import { useOrderPlaylist } from "api/playlist/mutation/useOrderPlaylist";
 import { useUpdateThumbnailPlaylist } from "api/playlist/mutation/useUpdateThumbnailPlaylist";
 import { ConfirmModal } from "components/modals/confirm.modal";
-import {
-  DreamCard,
-  DreamCardList,
-} from "components/shared/dream-card/dream-card";
-import {
-  PlaylistCard,
-  PlaylistCardList,
-} from "components/shared/playlist-card/playlist-card";
+import { ItemCard } from "components/shared";
 import { Spinner } from "components/shared/spinner/spinner";
 import Text from "components/shared/text/text";
 import { ThumbnailInput } from "components/shared/thumbnail-input/thumbnail-input";
 import { ROUTES } from "constants/routes.constants";
-import { AUTO_CLOSE_MS } from "constants/toast.constants";
+import { TOAST_DEFAULT_CONFIG } from "constants/toast.constants";
 import router from "routes/router";
+import { OrderedItem } from "types/dnd.types";
 import { MultiMediaState } from "types/media.types";
 
 type Params = { id: string };
@@ -50,7 +51,17 @@ export const ViewPlaylistPage = () => {
   const playlistId = Number(id) ?? 0;
   const { data, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
   const playlist = data?.data?.playlist;
-  const items = playlist?.items ?? [];
+  const items = useMemo(
+    () =>
+      playlist?.items
+        ?.sort((a, b) => a.order - b.order)
+        .map((item, index) => ({ ...item, order: index })) ?? [],
+    [playlist],
+  );
+
+  useEffect(() => {
+    console.log({ playlist, items });
+  }, [playlist, items]);
 
   const [editMode, setEditMode] = useState<boolean>(false);
   const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
@@ -68,6 +79,7 @@ export const ViewPlaylistPage = () => {
     mutate: mutateDeletePlaylist,
     isLoading: isLoadingDeletePlaylistMutation,
   } = useDeletePlaylist(playlistId);
+  const { mutate: mutateOrderPlaylist } = useOrderPlaylist(playlistId);
 
   const { mutate: mutateDeletePlaylistItem } =
     useDeletePlaylistItem(playlistId);
@@ -159,9 +171,7 @@ export const ViewPlaylistPage = () => {
                 ),
                 type: "success",
                 isLoading: false,
-                closeButton: true,
-                closeOnClick: true,
-                autoClose: AUTO_CLOSE_MS,
+                ...TOAST_DEFAULT_CONFIG,
               });
             } else {
               toast.update(toastId, {
@@ -170,9 +180,7 @@ export const ViewPlaylistPage = () => {
                 )} ${response.message}`,
                 type: "error",
                 isLoading: false,
-                closeButton: true,
-                closeOnClick: true,
-                autoClose: AUTO_CLOSE_MS,
+                ...TOAST_DEFAULT_CONFIG,
               });
             }
           },
@@ -181,14 +189,68 @@ export const ViewPlaylistPage = () => {
               render: `${t("page.view_playlist.error_deleting_playlist_item")}`,
               type: "error",
               isLoading: false,
-              closeButton: true,
-              closeOnClick: true,
-              autoClose: AUTO_CLOSE_MS,
+              ...TOAST_DEFAULT_CONFIG,
             });
           },
         },
       );
     };
+
+  const handleOrderPlaylist = (orderedItems: OrderedItem[]) => {
+    const playlistItems: OrderedItem[] = items.map((item) => {
+      const newOrderItem = orderedItems.find((i) => i.id === item.id);
+
+      console.log({ orderedItems, newOrderItem });
+
+      if (newOrderItem) return newOrderItem;
+
+      return {
+        id: item.id,
+        order: item.order,
+      } as OrderedItem;
+    });
+
+    console.log({ playlistItems });
+
+    const toastId = toast.loading(
+      t("page.view_playlist.ordering_playlist_items"),
+    );
+    mutateOrderPlaylist(
+      { order: playlistItems },
+      {
+        onSuccess: (response) => {
+          if (response.success) {
+            queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
+            toast.update(toastId, {
+              render: t(
+                "page.view_playlist.playlist_items_ordered_successfully",
+              ),
+              type: "success",
+              isLoading: false,
+              ...TOAST_DEFAULT_CONFIG,
+            });
+          } else {
+            toast.update(toastId, {
+              render: `${t(
+                "page.view_playlist.error_ordering_playlist_items",
+              )} ${response.message}`,
+              type: "error",
+              isLoading: false,
+              ...TOAST_DEFAULT_CONFIG,
+            });
+          }
+        },
+        onError: () => {
+          toast.update(toastId, {
+            render: `${t("page.view_playlist.error_ordering_playlist_items")}`,
+            type: "error",
+            isLoading: false,
+            ...TOAST_DEFAULT_CONFIG,
+          });
+        },
+      },
+    );
+  };
 
   const handleEdit = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -226,7 +288,7 @@ export const ViewPlaylistPage = () => {
             `${t("page.view_playlist.playlist_deleted_successfully")}`,
           );
           onHideConfirmDeleteModal();
-          router.navigate(ROUTES.PLAYLIST);
+          router.navigate(ROUTES.VIEW_PLAYLIST);
         } else {
           toast.error(
             `${t("page.view_playlist.error_deleting_playlist")} ${
@@ -382,39 +444,21 @@ export const ViewPlaylistPage = () => {
             </Row>
             <Row>
               <Column>
-                <DreamCardList>
-                  {items
-                    ?.filter((i) => i.type === "dream")
-                    .map((i) =>
-                      i.dreamItem ? (
-                        <DreamCard
-                          dndMode="local"
-                          size="sm"
-                          key={i.id}
-                          dream={i.dreamItem}
-                          onDelete={handleDeletePlaylistItem(i.id)}
-                        />
-                      ) : (
-                        <></>
-                      ),
-                    )}
-                </DreamCardList>
-                <PlaylistCardList>
-                  {items
-                    ?.filter((i) => i.type === "playlist")
-                    .map((i) =>
-                      i.playlistItem ? (
-                        <PlaylistCard
-                          size="sm"
-                          key={i.id}
-                          playlist={i.playlistItem}
-                          onDelete={handleDeletePlaylistItem(i.id)}
-                        />
-                      ) : (
-                        <></>
-                      ),
-                    )}
-                </PlaylistCardList>
+                <ItemCardList>
+                  {items.map((i) => (
+                    <ItemCard
+                      key={i.id}
+                      itemId={i.id}
+                      dndMode="local"
+                      size="sm"
+                      type={i.type}
+                      item={i.type === "dream" ? i.dreamItem! : i.playlistItem!}
+                      order={i.order}
+                      onDelete={handleDeletePlaylistItem(i.id)}
+                      onOrder={handleOrderPlaylist}
+                    />
+                  ))}
+                </ItemCardList>
               </Column>
             </Row>
             <Row>

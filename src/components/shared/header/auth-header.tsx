@@ -57,7 +57,7 @@ export const AuthHeader: React.FC = () => {
     );
   };
 
-  const onNavigateToPlaylists = () => router.navigate(ROUTES.PLAYLIST);
+  const onNavigateToPlaylists = () => router.navigate(ROUTES.VIEW_PLAYLIST);
 
   if (isLoading) return <StyledHeader />;
 

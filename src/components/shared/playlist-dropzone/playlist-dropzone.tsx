@@ -1,8 +1,8 @@
 import { useAddPlaylistItem } from "api/playlist/mutation/useAddPlaylistItem";
 import { PLAYLIST_QUERY_KEY } from "api/playlist/query/usePlaylist";
 import queryClient from "api/query-client";
-import { DRAG_DROP_FORMAT } from "constants/dnd.constants";
-import { AUTO_CLOSE_MS } from "constants/toast.constants";
+import { DND_ACTIONS, DND_METADATA } from "constants/dnd.constants";
+import { TOAST_DEFAULT_CONFIG } from "constants/toast.constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -54,9 +54,7 @@ export const AddItemPlaylistDropzone: React.FC<
                 ),
                 type: "success",
                 isLoading: false,
-                closeButton: true,
-                closeOnClick: true,
-                autoClose: AUTO_CLOSE_MS,
+                ...TOAST_DEFAULT_CONFIG,
               });
             } else {
               toast.update(toastId, {
@@ -65,9 +63,7 @@ export const AddItemPlaylistDropzone: React.FC<
                 )} ${data.message}`,
                 type: "error",
                 isLoading: false,
-                closeButton: true,
-                closeOnClick: true,
-                autoClose: AUTO_CLOSE_MS,
+                ...TOAST_DEFAULT_CONFIG,
               });
             }
           },
@@ -78,9 +74,7 @@ export const AddItemPlaylistDropzone: React.FC<
               ),
               type: "error",
               isLoading: false,
-              closeButton: true,
-              closeOnClick: true,
-              autoClose: AUTO_CLOSE_MS,
+              ...TOAST_DEFAULT_CONFIG,
             });
           },
         },
@@ -92,9 +86,8 @@ export const AddItemPlaylistDropzone: React.FC<
   const handleDragEnter = (event: DragEvent) => {
     setIsDragEnter(true);
     const dt = event.dataTransfer;
-    const type = dt?.getData(DRAG_DROP_FORMAT.TYPE);
-    const id = dt?.getData(DRAG_DROP_FORMAT.ID);
-    console.log({ event, type, id });
+    const type = dt?.getData(DND_METADATA.TYPE);
+    const id = dt?.getData(DND_METADATA.ID);
     return false;
   };
 
@@ -107,10 +100,14 @@ export const AddItemPlaylistDropzone: React.FC<
     (event: DragEvent) => {
       event?.preventDefault();
       const dt = event.dataTransfer;
-      const type = dt?.getData(DRAG_DROP_FORMAT.TYPE);
-      const id = dt?.getData(DRAG_DROP_FORMAT.ID);
+      const action = dt?.getData(DND_METADATA.ACTION);
+      const type = dt?.getData(DND_METADATA.TYPE);
+      const id = dt?.getData(DND_METADATA.ID);
 
-      handleAddPlaylistItemMutation({ type, id });
+      if (action === DND_ACTIONS.ADD) {
+        handleAddPlaylistItemMutation({ type, id });
+      }
+
       setIsDragEnter(false);
       return false;
     },

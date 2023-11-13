@@ -49,7 +49,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: ROUTES.PLAYLIST,
+    path: ROUTES.VIEW_PLAYLIST,
     element: (
       <ProtectedRoute>
         <PlaylistsPage />
@@ -57,7 +57,7 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    path: `${ROUTES.PLAYLIST}/:id`,
+    path: `${ROUTES.VIEW_PLAYLIST}/:id`,
     element: (
       <ProtectedRoute>
         <ViewPlaylistPage />

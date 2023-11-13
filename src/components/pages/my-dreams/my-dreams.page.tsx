@@ -1,10 +1,6 @@
 import { useMyDreams } from "api/dream/query/useMyDreams";
-import { Row } from "components/shared";
+import { ItemCard, ItemCardList, Row } from "components/shared";
 import Container from "components/shared/container/container";
-import {
-  DreamCard,
-  DreamCardList,
-} from "components/shared/dream-card/dream-card";
 import { Paginate } from "components/shared/paginate/paginate";
 import { Section } from "components/shared/section/section";
 import { Spinner } from "components/shared/spinner/spinner";
@@ -37,11 +33,9 @@ export const MyDreamsPage: React.FC = () => {
             <Spinner />
           </Row>
         ) : dreams?.length ? (
-          <DreamCardList>
-            {dreams?.map((dream) => (
-              <DreamCard dream={dream} key={dream.uuid} />
-            ))}
-          </DreamCardList>
+          <ItemCardList>
+            {dreams?.map((dream) => <ItemCard item={dream} key={dream.uuid} />)}
+          </ItemCardList>
         ) : (
           <Text>{t("page.my_dreams.empty")}</Text>
         )}

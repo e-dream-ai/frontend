@@ -19,12 +19,16 @@ const ImageSizes = {
   `,
 };
 
-export const StyledMediaItemCardList = styled.ul`
+export const StyledItemCardList = styled.ul`
   margin: 0;
   padding: 0;
 `;
 
-export const StyledMediaItemCard = styled.li<{ isDragEntered?: boolean }>`
+export const ItemCardContainer = styled.div`
+  display: inline-flex;
+`;
+
+export const StyledItemCard = styled.li<{ isDragEntered?: boolean }>`
   /* display: inline-flex; */
   /* flex-flow: row; */
   justify-content: space-between;
@@ -56,24 +60,19 @@ export const StyledMediaItemCard = styled.li<{ isDragEntered?: boolean }>`
   }
 `;
 
-export const MediaItemCardContainer = styled.div`
-  display: inline-flex;
-  pointer-events: none;
-`;
-
-export const MediaItemCardImage = styled.img<{ size: Sizes }>`
+export const ItemCardImage = styled.img<{ size: Sizes }>`
   ${(props) => ImageSizes[props.size]}
   object-fit: cover;
 `;
 
-export const MediaItemCardBody = styled.div`
-  margin-left: 2rem;
+export const ItemCardBody = styled.div`
+  pointer-events: none;
+  display: inline-flex;
+`;
+
+export const ItemCardBodyDetails = styled.div`
   display: flex;
   flex-flow: column;
-
-  span {
-    margin: 0.5rem 0;
-  }
 `;
 
 export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`

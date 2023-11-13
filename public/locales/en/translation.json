@@ -71,7 +71,10 @@
       "error_deleting_playlist": "Error deleting playlist.",
       "deleting_playlist_item": "Deleting playlist item",
       "playlist_item_deleted_successfully": "Playlist item deleted successfully.",
-      "error_deleting_playlist_item": "Error deleting playlist item."
+      "error_deleting_playlist_item": "Error deleting playlist item.",
+      "ordering_playlist_items": "Ordering playlist items",
+      "playlist_items_ordered_successfully": "Playlist items ordered successfully.",
+      "error_ordering_playlist_items": "Error ordering playlist items."
     },
     "my_dreams": {
       "title": "My dreams",
@@ -151,14 +154,11 @@
     }
   },
   "components": {
-    "dream_card": {
-      "created_at": "Created At",
-      "owner": "Owner"
-    },
-    "playlist_card": {
+    "item_card": {
       "created_at": "Created At",
       "owner": "Owner",
-      "videos": "Videos"
+      "videos": "Videos",
+      "unnamed": "Unnamed item"
     },
     "paginate": {
       "previous": "previous",
