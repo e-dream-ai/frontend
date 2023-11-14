@@ -20,6 +20,7 @@ export type Playlist = {
   user: User;
   created_at: string;
   items?: PlaylistItem[];
+  itemCount?: number;
 };
 
 export type PlaylistMediaState =

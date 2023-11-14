@@ -11,7 +11,7 @@ export const StyledPlaylistDropzone = styled.div<StyledPlaylistDropzoneProps>`
   justify-content: center;
   background-color: ${(props) =>
     props.isDragEnter ? "rgba(255,255,255, 0.1)" : "transparent"};
-  border: 1px dashed ${(props) => props.theme.inputText1};
+  border: 1px dashed ${(props) => props.theme.inputTextColorPrimary};
   border-radius: 10px;
   width: 100%;
   min-height: 300px;

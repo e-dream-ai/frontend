@@ -318,7 +318,7 @@ const ViewDreamPage: React.FC = () => {
               </div>
             </Row>
             <Row>
-              <Column flex="1 1 auto" mr="1rem">
+              <Column flex="1 1 auto" mr={1}>
                 <ThumbnailInput
                   localMultimedia={thumbnail}
                   thumbnail={dream?.thumbnail}
@@ -329,7 +329,7 @@ const ViewDreamPage: React.FC = () => {
                   types={["JPG", "JPEG"]}
                 />
               </Column>
-              <Column flex="1 1 auto" ml="1rem">
+              <Column flex="1 1 auto" ml={1}>
                 <ViewDreamInputs
                   register={register}
                   errors={errors}

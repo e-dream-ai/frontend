@@ -1,8 +1,8 @@
 import { useAddPlaylistItem } from "api/playlist/mutation/useAddPlaylistItem";
 import { PLAYLIST_QUERY_KEY } from "api/playlist/query/usePlaylist";
 import queryClient from "api/query-client";
-import { DRAG_DROP_FORMAT } from "constants/dnd.constants";
-import { AUTO_CLOSE_MS } from "constants/toast.constants";
+import { DND_ACTIONS, DND_METADATA } from "constants/dnd.constants";
+import { TOAST_DEFAULT_CONFIG } from "constants/toast.constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -19,15 +19,14 @@ import {
 //   DROP: "drop",
 // };
 
-type PlaylistDropzoneProps = {
+type AddItemPlaylistDropzoneProps = {
   playlistId?: number;
   show?: boolean;
 };
 
-export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
-  playlistId,
-  show = false,
-}) => {
+export const AddItemPlaylistDropzone: React.FC<
+  AddItemPlaylistDropzoneProps
+> = ({ playlistId, show = false }) => {
   const dropzoneRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const [isDragEnter, setIsDragEnter] = useState<boolean>(false);
@@ -39,7 +38,7 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
         toast.error(t("modal.forgot_password.error_sending_instructions"));
         return;
       }
-      const toatId = toast.loading(
+      const toastId = toast.loading(
         t("components.playlist_dropzone.adding_playlist_item"),
       );
 
@@ -49,37 +48,33 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
           onSuccess: (data) => {
             if (data.success) {
               queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
-              toast.update(toatId, {
+              toast.update(toastId, {
                 render: t(
                   "components.playlist_dropzone.playlist_item_successfully_added",
                 ),
                 type: "success",
                 isLoading: false,
-                closeButton: true,
-                closeOnClick: true,
-                autoClose: AUTO_CLOSE_MS,
+                ...TOAST_DEFAULT_CONFIG,
               });
             } else {
-              toast.update(id, {
+              toast.update(toastId, {
                 render: `${t(
                   "components.playlist_dropzone.error_adding_playlist_item",
                 )} ${data.message}`,
                 type: "error",
                 isLoading: false,
-                closeButton: true,
-                closeOnClick: true,
-                autoClose: AUTO_CLOSE_MS,
+                ...TOAST_DEFAULT_CONFIG,
               });
             }
           },
           onError: () => {
-            toast.update(id, {
-              render: t("modal.forgot_password.error_sending_instructions"),
+            toast.update(toastId, {
+              render: t(
+                "components.playlist_dropzone.error_adding_playlist_item",
+              ),
               type: "error",
               isLoading: false,
-              closeButton: true,
-              closeOnClick: true,
-              autoClose: AUTO_CLOSE_MS,
+              ...TOAST_DEFAULT_CONFIG,
             });
           },
         },
@@ -88,7 +83,7 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
     [mutate, t, playlistId],
   );
 
-  const handleDragEnter = () => {
+  const handleDragEnter = (event: DragEvent) => {
     setIsDragEnter(true);
     return false;
   };
@@ -102,10 +97,14 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
     (event: DragEvent) => {
       event?.preventDefault();
       const dt = event.dataTransfer;
-      const type = dt?.getData(DRAG_DROP_FORMAT.TYPE);
-      const id = dt?.getData(DRAG_DROP_FORMAT.ID);
+      const action = dt?.getData(DND_METADATA.ACTION);
+      const type = dt?.getData(DND_METADATA.TYPE);
+      const id = dt?.getData(DND_METADATA.ID);
 
-      handleAddPlaylistItemMutation({ type, id });
+      if (action === DND_ACTIONS.ADD) {
+        handleAddPlaylistItemMutation({ type, id });
+      }
+
       setIsDragEnter(false);
       return false;
     },
@@ -140,7 +139,7 @@ export const PlaylistDropzone: React.FC<PlaylistDropzoneProps> = ({
           <Column alignItems="center">
             <PlaylistDropzoneIcon>+</PlaylistDropzoneIcon>
             <span>
-              Drop dream or playlist to add it into the current playlist.
+              Drop dream or playlist here to add it into the current playlist.
             </span>
           </Column>
         </Row>
@@ -192,5 +191,3 @@ export const PlaylistDropzoneListener: React.FC<{
 
   return <div ref={dropzoneListenerRef}>{children}</div>;
 };
-
-export default PlaylistDropzone;

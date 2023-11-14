@@ -68,7 +68,13 @@
       "playlist_updated_successfully": "Playlist updated successfully.",
       "error_updating_playlist": "Error updating playlist.",
       "playlist_deleted_successfully": "Playlist deleted successfully.",
-      "error_deleting_playlist": "Error deleting playlist."
+      "error_deleting_playlist": "Error deleting playlist.",
+      "deleting_playlist_item": "Deleting playlist item",
+      "playlist_item_deleted_successfully": "Playlist item deleted successfully.",
+      "error_deleting_playlist_item": "Error deleting playlist item.",
+      "ordering_playlist_items": "Ordering playlist items",
+      "playlist_items_ordered_successfully": "Playlist items ordered successfully.",
+      "error_ordering_playlist_items": "Error ordering playlist items."
     },
     "my_dreams": {
       "title": "My dreams",
@@ -148,14 +154,11 @@
     }
   },
   "components": {
-    "dream_card": {
-      "created_at": "Created At",
-      "owner": "Owner"
-    },
-    "playlist_card": {
+    "item_card": {
       "created_at": "Created At",
       "owner": "Owner",
-      "videos": "Videos"
+      "videos": "Videos",
+      "unnamed": "Unnamed item"
     },
     "paginate": {
       "previous": "previous",
@@ -167,8 +170,8 @@
     },
     "playlist_dropzone": {
       "adding_playlist_item": "Adding playlist item.",
-      "playlist_item_successfully_added": "Playlist successfully created.",
-      "error_adding_playlist_item": "Error creating playlist."
+      "playlist_item_successfully_added": "Playlist item added successfully.",
+      "error_adding_playlist_item": "Error adding item to playlist."
     }
   }
 }
