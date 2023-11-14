@@ -1,18 +1,18 @@
 import styled from "styled-components";
+import { space, SpaceProps } from "styled-system";
 import { AlignItemsProperty, JustifyContentProperty } from "types/css.types";
-import { SpacerType, spacer } from "../spacer/spacer";
 
 type RowProps = {
   separator?: boolean;
   flex?: string;
   justifyContent?: JustifyContentProperty;
   alignItems?: AlignItemsProperty;
-} & SpacerType;
+} & SpaceProps;
 
 export const Row = styled.div<RowProps>`
-  ${(props) => spacer(props)}
+  ${space}
   border-bottom:  ${(props) =>
-    props.separator ? `1px solid ${props.theme.primary}` : "0"};
+    props.separator ? `1px solid ${props.theme.colorPrimary}` : "0"};
   flex: ${(props) => (props.flex ? props.flex : "initial")};
   display: flex;
   flex-flow: row;
@@ -22,7 +22,7 @@ export const Row = styled.div<RowProps>`
 `;
 
 export const Column = styled.div<RowProps>`
-  ${(props) => spacer(props)}
+  ${space}
   flex: ${(props) => (props.flex ? props.flex : "initial")};
   display: flex;
   flex-flow: column;

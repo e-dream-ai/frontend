@@ -5,22 +5,22 @@ export const Paginate = styled(ReactPaginate)`
   display: inline-flex;
 
   li {
-    color: ${(props) => props.theme.primary};
+    color: ${(props) => props.theme.colorPrimary};
     list-style: none;
     margin: 1rem;
     cursor: pointer;
 
     &:hover {
-      color: ${(props) => props.theme.text1};
+      color: ${(props) => props.theme.textPrimaryColor};
     }
 
     &.disabled {
-      color: ${(props) => props.theme.text2};
+      color: ${(props) => props.theme.textSecondaryColor};
       cursor: not-allowed;
     }
 
     &.selected {
-      color: ${(props) => props.theme.text1};
+      color: ${(props) => props.theme.textPrimaryColor};
     }
   }
 `;
