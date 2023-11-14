@@ -10,7 +10,7 @@ const StyledHeader = styled.header`
   width: 100%;
   z-index: 2;
   padding: 1rem 1rem;
-  background: ${(props) => props.theme.background4};
+  background: ${(props) => props.theme.colorBackgroundTertiary};
   -webkit-backface-visibility: hidden;
   margin-right: auto;
   margin-left: auto;
@@ -24,7 +24,7 @@ export const HeaderLogo = styled.div`
 export const HeaderTitle = styled.h1`
   font-family: "Comfortaa", sans-serif;
   font-size: 2.5rem;
-  color: ${(props) => props.theme.text1};
+  color: ${(props) => props.theme.textPrimaryColor};
   margin-left: 0.5rem;
 `;
 
@@ -55,7 +55,7 @@ export const HeaderListItem = styled.li`
 
   &::after {
     content: "/";
-    color: ${(props) => props.theme.text1};
+    color: ${(props) => props.theme.textPrimaryColor};
     margin: 0 12px;
   }
 
