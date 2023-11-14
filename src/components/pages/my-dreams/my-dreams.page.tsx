@@ -1,4 +1,4 @@
-import { useMyDreams } from "api/dream/query/useMyDreams";
+import { useFeedMyDreams } from "api/feed/query/useFeedMyDreams";
 import { ItemCard, ItemCardList, Row } from "components/shared";
 import Container from "components/shared/container/container";
 import { Paginate } from "components/shared/paginate/paginate";
@@ -8,17 +8,19 @@ import Text from "components/shared/text/text";
 import { PAGINATION } from "constants/pagination.constants";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Dream } from "types/dream.types";
+import { Playlist } from "types/playlist.types";
 
 const SECTION_ID = "my-dreams";
 
 export const MyDreamsPage: React.FC = () => {
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(0);
-  const { data, isLoading, isRefetching } = useMyDreams({
+  const { data, isLoading, isRefetching } = useFeedMyDreams({
     page,
   });
-  const dreams = data?.data?.dreams;
-  const pageCount = Math.max((data?.data?.count ?? 0) / PAGINATION.TAKE, 1);
+  const feed = data?.data?.feed;
+  const pageCount = Math.ceil((data?.data?.count ?? 0) / PAGINATION.TAKE);
 
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);
@@ -32,9 +34,22 @@ export const MyDreamsPage: React.FC = () => {
           <Row justifyContent="center">
             <Spinner />
           </Row>
-        ) : dreams?.length ? (
+        ) : feed?.length ? (
           <ItemCardList>
-            {dreams?.map((dream) => <ItemCard item={dream} key={dream.uuid} />)}
+            {feed?.map((feedItem) => {
+              let item;
+              if (feedItem.type === "dream") {
+                item = { ...feedItem.dreamItem, user: feedItem.user } as Dream;
+              } else if (feedItem.type === "playlist") {
+                item = {
+                  ...feedItem.playlistItem,
+                  user: feedItem.user,
+                } as Playlist;
+              }
+              return (
+                <ItemCard type={feedItem.type} item={item} key={feedItem.id} />
+              );
+            })}
           </ItemCardList>
         ) : (
           <Text>{t("page.my_dreams.empty")}</Text>

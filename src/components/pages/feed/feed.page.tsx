@@ -1,4 +1,4 @@
-import { useDreams } from "api/dream/query/useDreams";
+import { useFeed } from "api/feed/query/useFeed";
 import { Row } from "components/shared";
 import Container from "components/shared/container/container";
 import { ItemCard, ItemCardList } from "components/shared/item-card/item-card";
@@ -8,17 +8,19 @@ import { Spinner } from "components/shared/spinner/spinner";
 import { PAGINATION } from "constants/pagination.constants";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Dream } from "types/dream.types";
+import { Playlist } from "types/playlist.types";
 
 const SECTION_ID = "feed";
 
 export const FeedPage: React.FC = () => {
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(0);
-  const { data, isLoading, isRefetching } = useDreams({
+  const { data, isLoading, isRefetching } = useFeed({
     page,
   });
-  const dreams = data?.data?.dreams;
-  const pageCount = Math.max((data?.data?.count ?? 0) / PAGINATION.TAKE, 1);
+  const feed = data?.data?.feed;
+  const pageCount = Math.ceil((data?.data?.count ?? 0) / PAGINATION.TAKE);
 
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);
@@ -35,9 +37,28 @@ export const FeedPage: React.FC = () => {
         ) : (
           <Row justifyContent="center">
             <ItemCardList>
-              {dreams?.map((dream) => (
-                <ItemCard key={dream.uuid} item={dream} />
-              ))}
+              {feed?.map((feedItem) => {
+                let item;
+                if (feedItem.type === "dream") {
+                  item = {
+                    ...feedItem.dreamItem,
+                    user: feedItem.user,
+                  } as Dream;
+                } else if (feedItem.type === "playlist") {
+                  item = {
+                    ...feedItem.playlistItem,
+                    user: feedItem.user,
+                  } as Playlist;
+                }
+
+                return (
+                  <ItemCard
+                    key={feedItem.id}
+                    type={feedItem.type}
+                    item={item}
+                  />
+                );
+              })}
             </ItemCardList>
           </Row>
         )}

@@ -40,6 +40,7 @@
     "build": "react-scripts build",
     "test": "react-scripts test",
     "lint": "eslint . --ext .js,.ts",
+    "lint-staged": "lint-staged",
     "lint:fix": "eslint . --fix --ext .js,.ts",
     "eject": "react-scripts eject",
     "prepare": "husky install"
