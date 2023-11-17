@@ -1,11 +1,10 @@
-import { Input } from "components/shared";
+import { FileUploader, Input } from "components/shared";
 import { MAX_FILE_SIZE_MB } from "constants/file.constants";
-import { FileUploader } from "react-drag-drop-files";
 import { FieldErrors, UseFormRegister } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { UpdateDreamFormValues } from "schemas/update-dream.schema";
 import { Dream } from "types/dream.types";
-import { type MultiMediaState } from "types/media.types";
+import { HandleChangeFile, type MultiMediaState } from "types/media.types";
 import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
@@ -58,7 +57,7 @@ type DreamVideoInputProps = {
   video: MultiMediaState;
   editMode: boolean;
   isRemoved: boolean;
-  handleChange: (file: Blob) => void;
+  handleChange: HandleChangeFile;
 };
 
 export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({

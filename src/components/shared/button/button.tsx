@@ -11,6 +11,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   before?: React.ReactNode;
   after?: React.ReactNode;
   buttonType?: Types;
+  transparent?: boolean;
 };
 
 export const Button: React.FC<ButtonProps> = ({
@@ -22,6 +23,7 @@ export const Button: React.FC<ButtonProps> = ({
   marginLeft,
   marginRight,
   buttonType = "primary",
+  transparent,
   ...props
 }) => (
   <StyledButton
@@ -30,6 +32,7 @@ export const Button: React.FC<ButtonProps> = ({
     marginRight={marginRight}
     disabled={isLoading}
     buttonType={buttonType}
+    transparent={transparent}
     {...props}
   >
     {before && <ButtonBefore className="button-before">{before}</ButtonBefore>}

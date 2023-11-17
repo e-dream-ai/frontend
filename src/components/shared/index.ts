@@ -1,6 +1,7 @@
 export { Anchor } from "./anchor/anchor";
 export { Button } from "./button/button";
 export { Checkbox } from "./checkbox/checkbox";
+export { FileUploader } from "./file-uploader/file-uploader";
 export { Footer } from "./footer/footer";
 export { Header } from "./header/header";
 export { Input } from "./input/input";

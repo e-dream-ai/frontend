@@ -1,1 +1,7 @@
-export type Types = "primary" | "secondary" | "tertiary";
+export type Types =
+  | "default"
+  | "primary"
+  | "secondary"
+  | "tertiary"
+  | "danger"
+  | "success";
