@@ -35,22 +35,31 @@ export const MyDreamsPage: React.FC = () => {
             <Spinner />
           </Row>
         ) : feed?.length ? (
-          <ItemCardList>
-            {feed?.map((feedItem) => {
-              let item;
-              if (feedItem.type === "dream") {
-                item = { ...feedItem.dreamItem, user: feedItem.user } as Dream;
-              } else if (feedItem.type === "playlist") {
-                item = {
-                  ...feedItem.playlistItem,
-                  user: feedItem.user,
-                } as Playlist;
-              }
-              return (
-                <ItemCard type={feedItem.type} item={item} key={feedItem.id} />
-              );
-            })}
-          </ItemCardList>
+          <Row justifyContent="center">
+            <ItemCardList>
+              {feed?.map((feedItem) => {
+                let item;
+                if (feedItem.type === "dream") {
+                  item = {
+                    ...feedItem.dreamItem,
+                    user: feedItem.user,
+                  } as Dream;
+                } else if (feedItem.type === "playlist") {
+                  item = {
+                    ...feedItem.playlistItem,
+                    user: feedItem.user,
+                  } as Playlist;
+                }
+                return (
+                  <ItemCard
+                    type={feedItem.type}
+                    item={item}
+                    key={feedItem.id}
+                  />
+                );
+              })}
+            </ItemCardList>
+          </Row>
         ) : (
           <Text>{t("page.my_dreams.empty")}</Text>
         )}

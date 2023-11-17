@@ -23,21 +23,6 @@ export const StyledReactModal = styled(Modal.styled``)<{ size?: Sizes }>`
   display: flex;
   flex-flow: column;
   background-color: rgba(0, 0, 0, 0.8);
-
-  /*Devices smaller than 767px*/
-  @media (max-width: 767px) {
-    /* min-width: 320px; */
-  }
-
-  /*Devices between 768px and 1024px*/
-  @media (min-width: 768px) and (max-width: 1024px) {
-    /* min-width: 380px; */
-  }
-
-  /*Devices larger than 1024px*/
-  @media (min-width: 1024px) {
-    /* min-width: 420px; */
-  }
 `;
 
 export const ModalHeader = styled.div`

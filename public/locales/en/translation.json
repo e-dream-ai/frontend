@@ -165,10 +165,12 @@
       "next": "next"
     },
     "file_uploader": {
+      "dropzone_placeholder": "Upload or drop a file right here.",
       "size_error": "File size exceed limits allowed",
       "type_error": "File type is not allowed"
     },
     "playlist_dropzone": {
+      "dropzone_placeholder": "Drop dream or playlist here to add it into the current playlist.",
       "adding_playlist_item": "Adding playlist item.",
       "playlist_item_successfully_added": "Playlist item added successfully.",
       "error_adding_playlist_item": "Error adding item to playlist."

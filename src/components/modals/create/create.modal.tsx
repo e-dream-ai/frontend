@@ -1,7 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useCreateDream } from "api/dream/mutation/useCreateDream";
 import { useCreatePlaylist } from "api/playlist/mutation/useCreatePlaylist";
-import { Button, Input, Modal, Row } from "components/shared";
+import { Button, FileUploader, Input, Modal, Row } from "components/shared";
 import { Column } from "components/shared/row/row";
 import { TabList } from "components/shared/tabs/tabs";
 import Text from "components/shared/text/text";
@@ -10,7 +10,6 @@ import { ModalsKeys } from "constants/modal.constants";
 import { ROUTES } from "constants/routes.constants";
 import useModal from "hooks/useModal";
 import { useRef, useState } from "react";
-import { FileUploader } from "react-drag-drop-files";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Tab, TabPanel, Tabs } from "react-tabs";
@@ -19,6 +18,7 @@ import router from "routes/router";
 import CreatePlaylistSchema, {
   CreatePlaylistFormValues,
 } from "schemas/create-playlist.schema";
+import { HandleChangeFile } from "types/media.types";
 import { ModalComponent } from "types/modal.types";
 import {
   handleFileUploaderSizeError,
@@ -28,7 +28,7 @@ import { Video } from "./create.styled";
 
 type VideoState =
   | {
-      fileBlob: Blob;
+      fileBlob: File | Array<File> | File;
       url: string;
     }
   | undefined;
@@ -80,13 +80,13 @@ export const CreateModal: React.FC<
     hideModal(ModalsKeys.CREATE_MODAL);
   };
 
-  const handleChange = (file: Blob) => {
-    setVideo({ fileBlob: file, url: URL.createObjectURL(file) });
+  const handleChange: HandleChangeFile = (file) => {
+    setVideo({ fileBlob: file, url: URL.createObjectURL(file as Blob) });
   };
 
   const handleUpload = async () => {
     mutate(
-      { file: video?.fileBlob },
+      { file: video?.fileBlob as Blob },
       {
         onSuccess: (data) => {
           const dream = data?.data?.dream;
@@ -146,7 +146,7 @@ export const CreateModal: React.FC<
         <TabPanel>
           {video ? (
             <Column>
-              <Text>{t("modal.upload_dream.dream_preview")}</Text>
+              <Text my={3}>{t("modal.upload_dream.dream_preview")}</Text>
               <Video
                 ref={videoRef}
                 id="dream"
@@ -170,23 +170,21 @@ export const CreateModal: React.FC<
               <Text marginY={2}>
                 {t("modal.upload_dream.dream_instructions")}
               </Text>
-              <Row mt={1} justifyContent="center">
-                <FileUploader
-                  maxSize={MAX_FILE_SIZE_MB}
-                  handleChange={handleChange}
-                  onSizeError={handleFileUploaderSizeError(t)}
-                  onTypeError={handleFileUploaderTypeError(t)}
-                  name="file"
-                  types={fileTypes}
-                />
-              </Row>
+              <FileUploader
+                maxSize={MAX_FILE_SIZE_MB}
+                handleChange={handleChange}
+                onSizeError={handleFileUploaderSizeError(t)}
+                onTypeError={handleFileUploaderTypeError(t)}
+                name="file"
+                types={fileTypes}
+              />
             </Column>
           )}
         </TabPanel>
         <TabPanel>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Column>
-              <Text marginY={2}>{t("modal.create_playlist.instructions")}</Text>
+              <Text marginY={3}>{t("modal.create_playlist.instructions")}</Text>
               <Input
                 placeholder={t("modal.create_playlist.name")}
                 type="text"

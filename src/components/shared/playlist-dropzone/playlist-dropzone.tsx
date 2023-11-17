@@ -139,7 +139,7 @@ export const AddItemPlaylistDropzone: React.FC<
           <Column alignItems="center">
             <PlaylistDropzoneIcon>+</PlaylistDropzoneIcon>
             <span>
-              Drop dream or playlist here to add it into the current playlist.
+              {t("components.playlist_dropzone.dropzone_placeholder")}
             </span>
           </Column>
         </Row>

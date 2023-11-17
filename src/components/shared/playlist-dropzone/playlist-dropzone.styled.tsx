@@ -9,10 +9,11 @@ export const StyledPlaylistDropzone = styled.div<StyledPlaylistDropzoneProps>`
   display: ${(props) => (props.show ? "flex" : "none")};
   align-items: center;
   justify-content: center;
+  padding: 2rem;
   background-color: ${(props) =>
-    props.isDragEnter ? "rgba(255,255,255, 0.1)" : "transparent"};
+    props.isDragEnter ? props.theme.inputBackgroundColor : "transparent"};
   border: 1px dashed ${(props) => props.theme.inputTextColorPrimary};
-  border-radius: 10px;
+  border-radius: 5px;
   width: 100%;
   min-height: 300px;
 `;

@@ -1,13 +1,17 @@
-import { Button, Thumbnail, ThumbnailPlaceholder } from "components/shared";
+import {
+  Button,
+  FileUploader,
+  Thumbnail,
+  ThumbnailPlaceholder,
+} from "components/shared";
 import {
   ThumbnailButtons,
   ThumbnailContainer,
   ThumbnailOverlay,
 } from "components/shared/thumbnail/thumbnail";
 import { MAX_FILE_SIZE_MB } from "constants/file.constants";
-import { FileUploader } from "react-drag-drop-files";
 import { useTranslation } from "react-i18next";
-import { MultiMediaState } from "types/media.types";
+import { HandleChangeFile, MultiMediaState } from "types/media.types";
 import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
@@ -19,7 +23,7 @@ type ThumbnailInputProps = {
   localMultimedia: MultiMediaState;
   editMode: boolean;
   isRemoved: boolean;
-  handleChange: (file: Blob) => void;
+  handleChange: HandleChangeFile;
   handleRemove?: () => void;
   types: string[];
 };
@@ -51,7 +55,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
         <ThumbnailContainer editMode={editMode}>
           {Boolean(handleRemove) && editMode && (
             <ThumbnailButtons>
-              <Button type="button" onClick={handleRemove}>
+              <Button type="button" buttonType="danger" onClick={handleRemove}>
                 <i className="fa fa-trash" />
               </Button>
             </ThumbnailButtons>

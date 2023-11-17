@@ -1,3 +1,4 @@
+import { DEVICES } from "constants/devices.constants";
 import styled from "styled-components";
 
 export const Container = styled.div`
@@ -16,11 +17,11 @@ export const Container = styled.div`
     margin-bottom: 1rem;
   }
 
-  @media (min-width: 768px) {
+  @media (min-width: ${DEVICES.TABLET}) {
     width: 750px;
   }
 
-  @media (min-width: 992px) {
+  @media (min-width: ${DEVICES.LAPTOP}) {
     width: 970px;
   }
 
