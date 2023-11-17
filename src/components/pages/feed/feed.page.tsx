@@ -35,7 +35,7 @@ export const FeedPage: React.FC = () => {
             <Spinner />
           </Row>
         ) : (
-          <Row justifyContent="center">
+          <Row justifyContent="center" alignItems="center">
             <ItemCardList>
               {feed?.map((feedItem) => {
                 let item;

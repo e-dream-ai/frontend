@@ -25,7 +25,7 @@ import router from "routes/router";
 import UpdateDreamSchema, {
   UpdateDreamFormValues,
 } from "schemas/update-dream.schema";
-import { MultiMediaState } from "types/media.types";
+import { FileTypes, MultiMediaState } from "types/media.types";
 import { DreamVideoInput, ViewDreamInputs } from "./view-dream-inputs";
 
 type Params = { uuid: string };
@@ -73,9 +73,9 @@ const ViewDreamPage: React.FC = () => {
   });
 
   const handleMutateVideoDream = (data: UpdateDreamFormValues) => {
-    if (isVideoRemoved || video?.fileBlob) {
+    if (isVideoRemoved || video?.file) {
       mutateVideoDream(
-        { file: video?.fileBlob },
+        { file: video?.file as Blob },
         {
           onSuccess: (response) => {
             if (response.success) {
@@ -99,9 +99,9 @@ const ViewDreamPage: React.FC = () => {
   };
 
   const handleMutateThumbnailDream = (data: UpdateDreamFormValues) => {
-    if (isThumbnailRemoved || thumbnail?.fileBlob) {
+    if (isThumbnailRemoved || thumbnail?.file) {
       mutateThumbnailDream(
-        { file: thumbnail?.fileBlob },
+        { file: thumbnail?.file as Blob },
         {
           onSuccess: (response) => {
             if (response.success) {
@@ -188,13 +188,13 @@ const ViewDreamPage: React.FC = () => {
     setIsThumbnailRemoved(true);
   };
 
-  const handleVideoChange = (file: Blob) => {
-    setVideo({ fileBlob: file, url: URL.createObjectURL(file) });
+  const handleVideoChange = (file: FileTypes) => {
+    setVideo({ file: file, url: URL.createObjectURL(file as Blob) });
     setIsVideoRemoved(false);
   };
 
-  const handleThumbnailChange = (file: Blob) => {
-    setTumbnail({ fileBlob: file, url: URL.createObjectURL(file) });
+  const handleThumbnailChange = (file: FileTypes) => {
+    setTumbnail({ file: file, url: URL.createObjectURL(file as Blob) });
     setIsThumbnailRemoved(false);
   };
 
@@ -261,24 +261,26 @@ const ViewDreamPage: React.FC = () => {
               <Row>
                 <Button
                   type="button"
-                  buttonType="tertiary"
+                  buttonType="default"
                   after={<i className="fa fa-thumbs-up" />}
+                  transparent
                   marginLeft
                 />
                 <Button
                   type="button"
-                  buttonType="tertiary"
+                  buttonType="default"
                   after={<i className="fa fa-thumbs-down" />}
+                  transparent
                   marginLeft
                 />
                 <Button
                   type="button"
-                  buttonType="tertiary"
+                  buttonType="danger"
+                  after={<i className="fa fa-trash" />}
+                  transparent
                   marginLeft
                   onClick={onShowConfirmDeleteModal}
-                >
-                  <i className="fa fa-trash" />
-                </Button>
+                />
               </Row>
             )}
           </Row>
@@ -345,7 +347,11 @@ const ViewDreamPage: React.FC = () => {
             <Row justifyContent="space-between" alignItems="center">
               <h3>{t("page.view_dream.video")}</h3>
               {editMode && (
-                <Button type="button" size="sm" onClick={handleRemoveVideo}>
+                <Button
+                  type="button"
+                  buttonType="danger"
+                  onClick={handleRemoveVideo}
+                >
                   <i className="fa fa-trash" />
                 </Button>
               )}

@@ -1,15 +1,7 @@
 import Text from "components/shared/text/text";
 import { DND_ACTIONS, DND_METADATA } from "constants/dnd.constants";
-import { FORMAT } from "constants/moment.constants";
 import { ROUTES } from "constants/routes.constants";
-import moment from "moment";
-import {
-  MouseEventHandler,
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { OrderedItem } from "types/dnd.types";
@@ -17,11 +9,10 @@ import { Dream } from "types/dream.types";
 import { Playlist } from "types/playlist.types";
 import { Sizes } from "types/sizes.types";
 import Anchor from "../anchor/anchor";
-import { Button } from "../button/button";
+import { Menu, MenuButton, MenuItem } from "../menu/menu";
 import Row, { Column } from "../row/row";
 import {
   ItemCardBody,
-  ItemCardContainer,
   ItemCardImage,
   StyledItemCard,
   StyledItemCardList,
@@ -40,7 +31,7 @@ type ItemCardProps = {
   size?: Sizes;
   dndMode?: DNDMode;
   order?: number;
-  onDelete?: MouseEventHandler<HTMLButtonElement>;
+  onDelete?: () => void;
   onOrder?: (orderedItems: OrderedItem[]) => void;
 };
 
@@ -55,7 +46,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   order = 0,
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
-  const { id, name, thumbnail, created_at, user } = item;
+  const { id, name, thumbnail, user } = item;
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -166,50 +157,66 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   }, [registerEvents, unregisterEvents]);
 
   return (
-    <ItemCardContainer>
-      <StyledItemCard
-        ref={cardRef}
-        draggable="true"
-        onClick={navigateToItemPage}
-        isDragEntered={isDragEntered}
-      >
-        <ItemCardBody>
-          {thumbnail ? (
-            <ItemCardImage size={size} draggable="false" src={thumbnail} />
-          ) : (
-            <ThumbnailPlaceholder size={size}>
-              <i className="fa fa-picture-o" />
-            </ThumbnailPlaceholder>
-          )}
-          <Column ml={4}>
-            <Anchor type={type === "dream" ? "primary" : "secondary"} mb={4}>
-              {name || t("components.item_card.unnamed")}
-            </Anchor>
-            {"itemCount" in item ? (
-              <Text mb={2}>
-                {t("components.item_card.videos")}: {item?.itemCount ?? 0}
-              </Text>
+    <StyledItemCard
+      ref={cardRef}
+      size={size}
+      draggable="true"
+      isDragEntered={isDragEntered}
+    >
+      <ItemCardBody isDragEntered={isDragEntered}>
+        {thumbnail ? (
+          <ItemCardImage
+            size={size}
+            draggable="false"
+            src={thumbnail}
+            onClick={navigateToItemPage}
+          />
+        ) : (
+          <ThumbnailPlaceholder size={size} onClick={navigateToItemPage}>
+            <i className="fa fa-picture-o" />
+          </ThumbnailPlaceholder>
+        )}
+        <Column ml={4}>
+          <Anchor
+            type={type === "dream" ? "primary" : "secondary"}
+            mb={4}
+            onClick={navigateToItemPage}
+          >
+            {type === "playlist" ? (
+              <i className="fa  fa-list-ul" />
             ) : (
-              <></>
-            )}
+              <i className="fa  fa-play" />
+            )}{" "}
+            {name || t("components.item_card.unnamed")}
+          </Anchor>
+          {"itemCount" in item ? (
             <Text mb={2}>
-              {t("components.item_card.created_at")}:{" "}
-              {moment(created_at).format(FORMAT)}
+              {t("components.item_card.videos")}: {item?.itemCount ?? 0}
             </Text>
-            <Text mb={2}>
-              {t("components.item_card.owner")}: {user?.email}
-            </Text>
-          </Column>
-        </ItemCardBody>
-      </StyledItemCard>
+          ) : (
+            <></>
+          )}
+          <Text mb={2}>
+            {t("components.item_card.owner")}: {user?.email}
+          </Text>
+        </Column>
+      </ItemCardBody>
       {onDelete && (
-        <Row justifyContent="flex-end" ml={2} mb={0}>
-          <Button type="button" onClick={onDelete}>
-            <i className="fa fa-trash" />
-          </Button>
+        <Row justifyContent="flex-start" ml={2} mb={0}>
+          <Menu
+            menuButton={
+              <MenuButton>
+                <i className="fa fa-ellipsis-h" />
+              </MenuButton>
+            }
+            transition
+            menuClassName="my-menu"
+          >
+            <MenuItem onClick={() => onDelete()}>Delete</MenuItem>
+          </Menu>
         </Row>
       )}
-    </ItemCardContainer>
+    </StyledItemCard>
   );
 };
 

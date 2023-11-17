@@ -40,30 +40,36 @@ const ButtonSizes = {
 };
 
 const ButtonTypes = {
+  default: css`
+    background-color: ${(props) => props.theme.textPrimaryColor};
+  `,
   primary: css`
     background-color: ${(props) => props.theme.colorPrimary};
-    color: ${(props) => props.theme.textPrimaryColor};
-    &:hover {
-      background: ${(props) => props.theme.colorLightPrimary};
-    }
   `,
-  secondary: css``,
-  tertiary: css`
-    background-color: transparent;
+  secondary: css`
+    background-color: ${(props) => props.theme.colorSecondary};
+  `,
+  tertiary: css``,
+  success: css``,
+  danger: css`
+    background-color: ${(props) => props.theme.colorDanger};
+  `,
+};
+
+const ButtonTransparentTypes = {
+  default: css`
+    color: ${(props) => props.theme.textPrimaryColor};
+  `,
+  primary: css`
     color: ${(props) => props.theme.colorPrimary};
-
-    -webkit-transition:
-      color linear 0.4s,
-      background-color linear 0.4s,
-      border-color linear 0.4s;
-    transition:
-      color linear 0.4s,
-      background-color linear 0.4s,
-      border-color linear 0.4s;
-
-    &:hover {
-      color: ${(props) => props.theme.textPrimaryColor};
-    }
+  `,
+  secondary: css`
+    color: ${(props) => props.theme.colorSecondary};
+  `,
+  tertiary: css``,
+  success: css``,
+  danger: css`
+    color: ${(props) => props.theme.colorDanger};
   `,
 };
 
@@ -72,6 +78,7 @@ export const StyledButton = styled.button<{
   buttonType: Types;
   marginLeft?: boolean;
   marginRight?: boolean;
+  transparent?: boolean;
 }>`
   display: inline-flex;
   height: fit-content;
@@ -84,9 +91,27 @@ export const StyledButton = styled.button<{
   cursor: pointer;
   margin-left: ${(props) => (props.marginLeft ? "0.6rem" : 0)};
   margin-right: ${(props) => (props.marginRight ? "0.6rem" : 0)};
-  ${(props) => ButtonTypes[props.buttonType]}
+  color: ${(props) => props.theme.textPrimaryColor};
+  background-color: ${(props) => (props.transparent ? "transparent" : "none")};
+
+  -webkit-transition:
+    filter linear 0.4s,
+    background-color linear 0.4s,
+    border-color linear 0.4s;
+  transition:
+    filter linear 0.4s,
+    background-color linear 0.4s,
+    border-color linear 0.4s;
+
+  ${(props) =>
+    props.transparent
+      ? ButtonTransparentTypes[props.buttonType]
+      : ButtonTypes[props.buttonType]}
   ${(props) => ButtonSizes[props.size]}
 
+  &:hover {
+    filter: brightness(135%);
+  }
   &:disabled {
     background-color: ${(props) => props.theme.colorLightPrimary};
     cursor: not-allowed;

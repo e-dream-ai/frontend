@@ -1,3 +1,4 @@
+import { DEVICES } from "constants/devices.constants";
 import styled from "styled-components";
 
 export const StyledFooter = styled.footer`
@@ -12,7 +13,7 @@ export const StyledFooter = styled.footer`
   line-height: 1.4;
   background: ${(props) => props.theme.colorBackgroundTertiary};
 
-  @media only screen and (max-width: 1200px) {
+  @media only screen and (max-width: ${DEVICES.LAPTOP}) {
     position: static;
   }
 

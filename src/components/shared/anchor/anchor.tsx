@@ -3,15 +3,20 @@ import { SpaceProps, space } from "styled-system";
 import { Types } from "types/style-types.types";
 
 const AnchorType = {
+  default: css`
+    color: ${(props) => props.theme.colorPrimary};
+  `,
   primary: css`
     color: ${(props) => props.theme.colorPrimary};
   `,
   secondary: css`
-    color: ${(props) => props.theme.colorDanger};
+    color: ${(props) => props.theme.colorSecondary};
   `,
   tertiary: css`
-    color: ${(props) => props.theme.colorDanger};
+    color: ${(props) => props.theme.colorSecondary};
   `,
+  success: css``,
+  danger: css``,
 };
 
 export const Anchor = styled.a<

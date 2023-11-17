@@ -1,3 +1,5 @@
+import "@szhsin/react-menu/dist/index.css";
+import "@szhsin/react-menu/dist/transitions/slide.css";
 import { Footer, Header } from "components/shared";
 import { AUTO_CLOSE_MS } from "constants/toast.constants";
 import Providers, { withProviders } from "providers/providers";

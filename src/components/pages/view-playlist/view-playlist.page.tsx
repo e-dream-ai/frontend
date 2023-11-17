@@ -17,7 +17,7 @@ import { Column } from "components/shared/row/row";
 import { Section } from "components/shared/section/section";
 import { FORMAT } from "constants/moment.constants";
 import moment from "moment";
-import { MouseEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
@@ -38,13 +38,9 @@ import { ThumbnailInput } from "components/shared/thumbnail-input/thumbnail-inpu
 import { ROUTES } from "constants/routes.constants";
 import { TOAST_DEFAULT_CONFIG } from "constants/toast.constants";
 import router from "routes/router";
-import { PlaylistApiResponse } from "schemas/playlist.schema";
 import { OrderedItem } from "types/dnd.types";
-import { MultiMediaState } from "types/media.types";
-import {
-  getOrderedItemsPlaylistRequest,
-  setQueryDataOrderedPlaylist,
-} from "utils/playlist.util";
+import { HandleChangeFile, MultiMediaState } from "types/media.types";
+import { getOrderedItemsPlaylistRequest } from "utils/playlist.util";
 
 type Params = { id: string };
 
@@ -99,9 +95,9 @@ export const ViewPlaylistPage = () => {
   });
 
   const handleMutateThumbnailPlaylist = (data: UpdatePlaylistFormValues) => {
-    if (isThumbnailRemoved || thumbnail?.fileBlob) {
+    if (isThumbnailRemoved || thumbnail?.file) {
       mutateThumbnailPlaylist(
-        { file: thumbnail?.fileBlob },
+        { file: thumbnail?.file as Blob },
         {
           onSuccess: (response) => {
             if (response.success) {
@@ -154,51 +150,49 @@ export const ViewPlaylistPage = () => {
     );
   };
 
-  const handleDeletePlaylistItem =
-    (itemId: number) => (event: MouseEvent<HTMLButtonElement>) => {
-      event.stopPropagation();
-      const toastId = toast.loading(
-        t("page.view_playlist.deleting_playlist_item"),
-      );
-      mutateDeletePlaylistItem(
-        { itemId },
-        {
-          onSuccess: (response) => {
-            if (response.success) {
-              queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
-              toast.update(toastId, {
-                render: t(
-                  "page.view_playlist.playlist_item_deleted_successfully",
-                ),
-                type: "success",
-                isLoading: false,
-                ...TOAST_DEFAULT_CONFIG,
-              });
-            } else {
-              toast.update(toastId, {
-                render: `${t(
-                  "page.view_playlist.error_deleting_playlist_item",
-                )} ${response.message}`,
-                type: "error",
-                isLoading: false,
-                ...TOAST_DEFAULT_CONFIG,
-              });
-            }
-          },
-          onError: () => {
+  const handleDeletePlaylistItem = (itemId: number) => () => {
+    const toastId = toast.loading(
+      t("page.view_playlist.deleting_playlist_item"),
+    );
+    mutateDeletePlaylistItem(
+      { itemId },
+      {
+        onSuccess: (response) => {
+          if (response.success) {
+            queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
             toast.update(toastId, {
-              render: `${t("page.view_playlist.error_deleting_playlist_item")}`,
+              render: t(
+                "page.view_playlist.playlist_item_deleted_successfully",
+              ),
+              type: "success",
+              isLoading: false,
+              ...TOAST_DEFAULT_CONFIG,
+            });
+          } else {
+            toast.update(toastId, {
+              render: `${t(
+                "page.view_playlist.error_deleting_playlist_item",
+              )} ${response.message}`,
               type: "error",
               isLoading: false,
               ...TOAST_DEFAULT_CONFIG,
             });
-          },
+          }
         },
-      );
-    };
+        onError: () => {
+          toast.update(toastId, {
+            render: `${t("page.view_playlist.error_deleting_playlist_item")}`,
+            type: "error",
+            isLoading: false,
+            ...TOAST_DEFAULT_CONFIG,
+          });
+        },
+      },
+    );
+  };
 
   const handleOrderPlaylist = (orderedItems: OrderedItem[]) => {
-    const playlistItems: OrderedItem[] = getOrderedItemsPlaylistRequest({
+    const requestPlaylistItems: OrderedItem[] = getOrderedItemsPlaylistRequest({
       items,
       orderedItems,
     });
@@ -207,16 +201,16 @@ export const ViewPlaylistPage = () => {
       t("page.view_playlist.ordering_playlist_items"),
     );
     mutateOrderPlaylist(
-      { order: playlistItems },
+      { order: requestPlaylistItems },
       {
         onSuccess: (response) => {
           if (response.success) {
-            queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
-            queryClient.setQueryData<PlaylistApiResponse>(
-              [PLAYLIST_QUERY_KEY, playlistId],
-              (previousPlaylist) =>
-                setQueryDataOrderedPlaylist({ previousPlaylist, orderedItems }),
-            );
+            // queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
+            // queryClient.setQueryData<PlaylistApiResponse>(
+            //   [PLAYLIST_QUERY_KEY, playlistId],
+            //   (previousPlaylist) =>
+            //     setQueryDataOrderedPlaylist({ previousPlaylist, orderedItems }),
+            // );
             toast.update(toastId, {
               render: t(
                 "page.view_playlist.playlist_items_ordered_successfully",
@@ -264,8 +258,8 @@ export const ViewPlaylistPage = () => {
     setIsThumbnailRemoved(true);
   };
 
-  const handleThumbnailChange = (file: Blob) => {
-    setTumbnail({ fileBlob: file, url: URL.createObjectURL(file) });
+  const handleThumbnailChange: HandleChangeFile = (file) => {
+    setTumbnail({ file: file, url: URL.createObjectURL(file as Blob) });
     setIsThumbnailRemoved(false);
   };
 
@@ -351,12 +345,12 @@ export const ViewPlaylistPage = () => {
               <Row>
                 <Button
                   type="button"
-                  buttonType="tertiary"
+                  buttonType="danger"
+                  after={<i className="fa fa-trash" />}
+                  transparent
                   marginLeft
                   onClick={onShowConfirmDeleteModal}
-                >
-                  <i className="fa fa-trash" />
-                </Button>
+                />
               </Row>
             )}
           </Row>

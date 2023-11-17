@@ -4,24 +4,34 @@ import { OrderedItem } from "types/dnd.types";
 import { Playlist, PlaylistItem } from "types/playlist.types";
 
 export const getOrderedItemsPlaylistRequest = ({
-  items,
+  items = [],
   orderedItems,
 }: {
   items: PlaylistItem[];
   orderedItems: OrderedItem[];
-}): OrderedItem[] =>
-  items.map((item) => {
-    const newOrderItem = orderedItems.find((i) => i.id === item.id);
+}): OrderedItem[] => {
+  const requestPayload: OrderedItem[] = [];
+  items.forEach((item) => {
+    const orderedItem = orderedItems.find((oi) => oi?.id === item.id);
 
-    if (newOrderItem) return newOrderItem;
+    if (orderedItem) {
+      requestPayload.push({
+        id: item.id,
+        order: orderedItem.order,
+      } as OrderedItem);
+      return;
+    }
 
-    return {
+    requestPayload.push({
       id: item.id,
       order: item.order,
-    } as OrderedItem;
+    } as OrderedItem);
   });
 
-export const setQueryDataOrderedPlaylist = ({
+  return requestPayload;
+};
+
+export const getOrderedPlaylist = ({
   previousPlaylist,
   orderedItems,
 }: {
@@ -29,8 +39,8 @@ export const setQueryDataOrderedPlaylist = ({
   orderedItems: OrderedItem[];
 }): ApiResponse<{ playlist: Playlist }> | undefined => {
   if (previousPlaylist?.data?.playlist?.items) {
-    previousPlaylist.data.playlist.items =
-      previousPlaylist.data?.playlist?.items.map((item) => {
+    previousPlaylist.data.playlist.items = [
+      ...(previousPlaylist.data?.playlist?.items ?? []).map((item) => {
         const newOrderItem = orderedItems.find((i) => i.id === item.id);
 
         if (!newOrderItem) return item;
@@ -39,7 +49,8 @@ export const setQueryDataOrderedPlaylist = ({
           item = { ...item, order: newOrderItem.order };
 
         return item;
-      });
+      }),
+    ];
   }
 
   return previousPlaylist;
