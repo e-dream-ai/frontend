@@ -4,7 +4,13 @@ export type DragDropData = {
   playlist?: number;
 };
 
-export type OrderedItem = {
+export type ItemOrder = {
   id: number;
   order: number;
+};
+
+export type SetItemOrder = {
+  id: number;
+  currentIndex: number;
+  newIndex: number;
 };

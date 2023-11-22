@@ -38,7 +38,7 @@ import { ThumbnailInput } from "components/shared/thumbnail-input/thumbnail-inpu
 import { ROUTES } from "constants/routes.constants";
 import { TOAST_DEFAULT_CONFIG } from "constants/toast.constants";
 import router from "routes/router";
-import { OrderedItem } from "types/dnd.types";
+import { ItemOrder, SetItemOrder } from "types/dnd.types";
 import { HandleChangeFile, MultiMediaState } from "types/media.types";
 import { getOrderedItemsPlaylistRequest } from "utils/playlist.util";
 
@@ -191,10 +191,19 @@ export const ViewPlaylistPage = () => {
     );
   };
 
-  const handleOrderPlaylist = (orderedItems: OrderedItem[]) => {
-    const requestPlaylistItems: OrderedItem[] = getOrderedItemsPlaylistRequest({
-      items,
-      orderedItems,
+  const handleOrderPlaylist = (dropItem: SetItemOrder) => {
+    /**
+     * Validate new index value
+     */
+    if (dropItem.newIndex < 0) {
+      dropItem.newIndex = 0;
+    } else if (dropItem.newIndex > items.length - 1) {
+      dropItem.newIndex = items.length - 1;
+    }
+
+    const requestPlaylistItems: ItemOrder[] = getOrderedItemsPlaylistRequest({
+      items: items.map((i) => ({ id: i.id, order: i.order }) as ItemOrder),
+      dropItem,
     });
 
     const toastId = toast.loading(
@@ -205,12 +214,6 @@ export const ViewPlaylistPage = () => {
       {
         onSuccess: (response) => {
           if (response.success) {
-            // queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
-            // queryClient.setQueryData<PlaylistApiResponse>(
-            //   [PLAYLIST_QUERY_KEY, playlistId],
-            //   (previousPlaylist) =>
-            //     setQueryDataOrderedPlaylist({ previousPlaylist, orderedItems }),
-            // );
             toast.update(toastId, {
               render: t(
                 "page.view_playlist.playlist_items_ordered_successfully",
