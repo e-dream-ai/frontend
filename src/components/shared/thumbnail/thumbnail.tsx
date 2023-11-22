@@ -2,8 +2,8 @@ import styled from "styled-components";
 
 export const ThumbnailPlaceholder = styled.div`
   min-width: 320px;
-  min-height: 240px;
-  aspect-ratio: 4 / 3;
+  min-height: auto;
+  aspect-ratio: 16 / 9;
   background-color: rgba(30, 30, 30, 1);
   display: flex;
   justify-content: center;
@@ -32,10 +32,10 @@ export const ThumbnailOverlay = styled.div`
 
 export const Thumbnail = styled.img<{ url?: string }>`
   min-width: 320px;
-  min-height: 240px;
+  min-height: auto;
   width: 100%;
   height: 100%;
-  aspect-ratio: 4 / 3;
+  aspect-ratio: 16 / 9;
   background-repeat: no-repeat;
   background-position: left;
   background-size: cover;

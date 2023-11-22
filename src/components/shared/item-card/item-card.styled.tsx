@@ -29,22 +29,19 @@ const ItemCardSizes = {
 
 const ImageSizes = {
   sm: css`
-    // 480p - 360
-    // 480/3
+    // 16:9 ratio
     width: 160px;
-    height: 120px;
+    height: auto;
   `,
   md: css`
-    // 480p - 360
-    // 480/2
+    // 16:9 ratio
     width: 240px;
-    height: 180px;
+    height: auto;
   `,
   lg: css`
-    // 480p - 360
-    // 480/1.5
+    // 16:9 ratio
     width: 320px;
-    height: 240px;
+    height: auto;
   `,
 };
 
@@ -57,6 +54,7 @@ export const StyledItemCardList = styled.ul`
 
 export const StyledItemCard = styled.li<{
   isDragEntered?: boolean;
+  isMovedOnUpperHalf?: boolean;
   size: Sizes;
 }>`
   ${(props) => ItemCardSizes[props.size]}
@@ -64,8 +62,8 @@ export const StyledItemCard = styled.li<{
   justify-content: space-between;
   list-style: none;
   margin: 0;
-  margin-bottom: 0.8rem;
-  padding: 1.6rem;
+  margin-bottom: 0.2rem;
+  padding: 1rem;
   background-color: ${(props) =>
     props.isDragEntered
       ? props.theme.inputBackgroundColor
@@ -75,8 +73,12 @@ export const StyledItemCard = styled.li<{
       ? `1px solid ${props.theme.colorPrimary}`
       : `1px solid transparent`}; */
 
+  border-top: ${(props) =>
+    props.isDragEntered && props.isMovedOnUpperHalf
+      ? `1px solid ${props.theme.colorPrimary}`
+      : `1px solid transparent`};
   border-bottom: ${(props) =>
-    props.isDragEntered
+    props.isDragEntered && !props.isMovedOnUpperHalf
       ? `1px solid ${props.theme.colorPrimary}`
       : `1px solid transparent`};
   user-select: none;
@@ -95,6 +97,7 @@ export const StyledItemCard = styled.li<{
 `;
 
 export const ItemCardImage = styled.img<{ size: Sizes }>`
+  aspect-ratio: 16 / 9;
   ${(props) => ImageSizes[props.size]}
   object-fit: cover;
   cursor: pointer;
@@ -113,6 +116,7 @@ export const ItemCardBodyDetails = styled.div`
 `;
 
 export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`
+  aspect-ratio: 16 / 9;
   ${(props) => ImageSizes[props.size]}
   background-color: rgba(30, 30, 30, 1);
   display: flex;

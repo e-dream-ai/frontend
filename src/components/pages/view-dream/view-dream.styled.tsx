@@ -6,9 +6,9 @@ export const Video = styled.video`
 `;
 
 export const VideoPlaceholder = styled.div`
-  min-width: 320px;
-  min-height: 240px;
-  aspect-ratio: 4 / 3;
+  min-width: 420px;
+  min-height: auto;
+  aspect-ratio: 16 / 9;
   background-color: rgba(30, 30, 30, 1);
   display: flex;
   justify-content: center;

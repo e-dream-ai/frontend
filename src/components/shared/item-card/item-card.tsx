@@ -1,15 +1,21 @@
 import Text from "components/shared/text/text";
 import { DND_ACTIONS, DND_METADATA } from "constants/dnd.constants";
 import { ROUTES } from "constants/routes.constants";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { OrderedItem } from "types/dnd.types";
+import { SetItemOrder } from "types/dnd.types";
 import { Dream } from "types/dream.types";
 import { Playlist } from "types/playlist.types";
 import { Sizes } from "types/sizes.types";
 import Anchor from "../anchor/anchor";
-import { Menu, MenuButton, MenuItem } from "../menu/menu";
+import { Button } from "../button/button";
 import Row, { Column } from "../row/row";
 import {
   ItemCardBody,
@@ -32,7 +38,7 @@ type ItemCardProps = {
   dndMode?: DNDMode;
   order?: number;
   onDelete?: () => void;
-  onOrder?: (orderedItems: OrderedItem[]) => void;
+  onOrder?: (dropItem: SetItemOrder) => void;
 };
 
 export const ItemCard: React.FC<ItemCardProps> = ({
@@ -51,6 +57,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const navigate = useNavigate();
 
   const [isDragEntered, setIsDragEntered] = useState<boolean>(false);
+  const [isMovedOnUpperHalf, setIsMovedOnUpperHalf] = useState<boolean>(false);
+  const [height, setHeight] = useState<number>(0);
 
   const navigateToItemPage = () => {
     if ("uuid" in item) navigate(`${ROUTES.VIEW_DREAM}/${item?.uuid}`);
@@ -108,16 +116,29 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       if (dndMode === "local" && action === DND_ACTIONS.ORDER) {
         const dropOrder = Number(dt?.getData(DND_METADATA.ORDER)) ?? 0;
         const dropId = Number(dt?.getData(DND_METADATA.ID)) ?? 0;
-        const dragItem: OrderedItem = { id: itemId, order: dropOrder };
-        const dropItem: OrderedItem = { id: dropId, order };
-        const orderedItems: OrderedItem[] = [dragItem, dropItem];
-        onOrder?.(orderedItems);
+        const dropItem: SetItemOrder = {
+          id: dropId,
+          currentIndex: dropOrder,
+          newIndex: isMovedOnUpperHalf ? order - 1 : order,
+        };
+        onOrder?.(dropItem);
       }
 
       setIsDragEntered(false);
       return false;
     },
-    [itemId, order, dndMode, onOrder],
+    [order, dndMode, onOrder, isMovedOnUpperHalf],
+  );
+
+  const handleDragOver = useCallback(
+    (e: MouseEvent) => {
+      const y = e.pageY - (cardRef?.current?.offsetTop ?? 0);
+      const value = y / height < 0.5;
+      if (value !== isMovedOnUpperHalf) {
+        setIsMovedOnUpperHalf(value);
+      }
+    },
+    [height, isMovedOnUpperHalf],
   );
 
   const registerEvents = useCallback(() => {
@@ -126,6 +147,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     cardRef.current?.addEventListener("dragleave", handleDragLeave);
     cardRef.current?.addEventListener("dragend", handleDragEnd);
     cardRef.current?.addEventListener("drop", handleDrop);
+    cardRef.current?.addEventListener("dragover", handleDragOver);
   }, [
     cardRef,
     handleDragStart,
@@ -133,6 +155,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     handleDragLeave,
     handleDragEnd,
     handleDrop,
+    handleDragOver,
   ]);
 
   const unregisterEvents = useCallback(() => {
@@ -141,6 +164,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     cardRef.current?.removeEventListener("dragleave", handleDragLeave);
     cardRef.current?.removeEventListener("dragend", handleDragEnd);
     cardRef.current?.removeEventListener("drop", handleDrop);
+    cardRef.current?.removeEventListener("dragover", handleDragOver);
   }, [
     cardRef,
     handleDragStart,
@@ -148,7 +172,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     handleDragLeave,
     handleDragEnd,
     handleDrop,
+    handleDragOver,
   ]);
+
+  useLayoutEffect(() => {
+    setHeight(cardRef.current?.clientHeight ?? 0);
+  }, [cardRef]);
 
   useEffect(() => {
     registerEvents();
@@ -162,6 +191,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       size={size}
       draggable="true"
       isDragEntered={isDragEntered}
+      isMovedOnUpperHalf={isMovedOnUpperHalf}
     >
       <ItemCardBody isDragEntered={isDragEntered}>
         {thumbnail ? (
@@ -185,7 +215,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             {type === "playlist" ? (
               <i className="fa  fa-list-ul" />
             ) : (
-              <i className="fa  fa-play" />
+              <i className="fa  fa-film" />
             )}{" "}
             {name || t("components.item_card.unnamed")}
           </Anchor>
@@ -203,7 +233,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       </ItemCardBody>
       {onDelete && (
         <Row justifyContent="flex-start" ml={2} mb={0}>
-          <Menu
+          {/**
+           * Menu hidden temporarily
+           */}
+          {/* <Menu
             menuButton={
               <MenuButton>
                 <i className="fa fa-ellipsis-h" />
@@ -213,7 +246,16 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             menuClassName="my-menu"
           >
             <MenuItem onClick={() => onDelete()}>Delete</MenuItem>
-          </Menu>
+          </Menu> */}
+
+          <Button
+            type="button"
+            buttonType="danger"
+            after={<i className="fa fa-trash" />}
+            transparent
+            marginLeft
+            onClick={onDelete}
+          />
         </Row>
       )}
     </StyledItemCard>

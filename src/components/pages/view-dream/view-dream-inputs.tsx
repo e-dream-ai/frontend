@@ -74,7 +74,7 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
   if (!hasVideo && (!editMode || isLoading)) {
     return (
       <VideoPlaceholder>
-        <i className="fa fa-play" />
+        <i className="fa fa-film" />
       </VideoPlaceholder>
     );
   }

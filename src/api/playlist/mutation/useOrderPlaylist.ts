@@ -38,8 +38,7 @@ export const useOrderPlaylist = (id?: number) => {
   >(orderPlaylist({ id }), {
     mutationKey: [ORDER_PLAYLIST_MUTATION_KEY],
     onMutate: async (orderedItems) => {
-      // Cancel any outgoing refetches
-      await queryClient.cancelQueries({ queryKey: [PLAYLIST_QUERY_KEY, id] });
+      // invalidateQueries
       await queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, id]);
 
       // Snapshot the previous playlist value

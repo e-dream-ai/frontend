@@ -45,5 +45,6 @@ export const Button: React.FC<ButtonProps> = ({
         <i className="fa fa-spinner fa-spin" />
       </ButtonAfter>
     )}
+    <div className="overlay" />
   </StyledButton>
 );

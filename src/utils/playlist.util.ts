@@ -1,34 +1,33 @@
 import { PlaylistApiResponse } from "schemas/playlist.schema";
 import { ApiResponse } from "types/api.types";
-import { OrderedItem } from "types/dnd.types";
-import { Playlist, PlaylistItem } from "types/playlist.types";
+import { ItemOrder, SetItemOrder } from "types/dnd.types";
+import { Playlist } from "types/playlist.types";
 
 export const getOrderedItemsPlaylistRequest = ({
   items = [],
-  orderedItems,
+  dropItem,
 }: {
-  items: PlaylistItem[];
-  orderedItems: OrderedItem[];
-}): OrderedItem[] => {
-  const requestPayload: OrderedItem[] = [];
-  items.forEach((item) => {
-    const orderedItem = orderedItems.find((oi) => oi?.id === item.id);
+  items: ItemOrder[];
+  dropItem: SetItemOrder;
+}): ItemOrder[] => {
+  // Check if the indices are within the bounds of the array
+  if (
+    dropItem.currentIndex < 0 ||
+    dropItem.currentIndex >= items.length ||
+    dropItem.newIndex < 0 ||
+    dropItem.newIndex >= items.length
+  ) {
+    return items;
+  }
 
-    if (orderedItem) {
-      requestPayload.push({
-        id: item.id,
-        order: orderedItem.order,
-      } as OrderedItem);
-      return;
-    }
+  // Remove the item from the current position
+  const itemToMove = items.splice(dropItem.currentIndex, 1)[0];
 
-    requestPayload.push({
-      id: item.id,
-      order: item.order,
-    } as OrderedItem);
-  });
+  // Insert the item at the new position
+  items.splice(dropItem.newIndex, 0, itemToMove);
 
-  return requestPayload;
+  // Set new order value
+  return items.map((item, index) => ({ id: item.id, order: index }));
 };
 
 export const getOrderedPlaylist = ({
@@ -36,21 +35,19 @@ export const getOrderedPlaylist = ({
   orderedItems,
 }: {
   previousPlaylist?: PlaylistApiResponse;
-  orderedItems: OrderedItem[];
+  orderedItems: ItemOrder[];
 }): ApiResponse<{ playlist: Playlist }> | undefined => {
   if (previousPlaylist?.data?.playlist?.items) {
-    previousPlaylist.data.playlist.items = [
-      ...(previousPlaylist.data?.playlist?.items ?? []).map((item) => {
-        const newOrderItem = orderedItems.find((i) => i.id === item.id);
-
-        if (!newOrderItem) return item;
-
-        if (item.id === newOrderItem.id)
-          item = { ...item, order: newOrderItem.order };
-
+    previousPlaylist.data.playlist.items = (
+      previousPlaylist.data?.playlist?.items ?? []
+    ).map((item) => {
+      const newItemOrder = orderedItems.find((i) => i.id === item.id);
+      if (!newItemOrder) {
         return item;
-      }),
-    ];
+      }
+      item = { ...item, order: newItemOrder.order };
+      return item;
+    });
   }
 
   return previousPlaylist;
