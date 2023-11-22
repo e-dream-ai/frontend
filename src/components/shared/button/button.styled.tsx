@@ -110,7 +110,7 @@ export const StyledButton = styled.button<{
   ${(props) => ButtonSizes[props.size]}
 
   &:hover {
-    filter: brightness(135%);
+    filter: brightness(150%);
   }
   &:disabled {
     background-color: ${(props) => props.theme.colorLightPrimary};

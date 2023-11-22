@@ -15,7 +15,7 @@ const Style = createGlobalStyle`
   p {
     font-family: 'Source Sans 3', sans-serif;
   }
-  `;
+`;
 
 export const ThemeProvider: React.FC<{
   children?: React.ReactNode;
