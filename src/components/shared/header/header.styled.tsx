@@ -50,7 +50,6 @@ export const HeaderList = styled.ul`
 export const HeaderListItem = styled.li`
   display: inline-flex;
   font-size: 1.2rem;
-  font-family: "Lato", sans-serif;
   text-transform: uppercase;
 
   &::after {

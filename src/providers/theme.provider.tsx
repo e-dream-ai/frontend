@@ -8,12 +8,8 @@ const Style = createGlobalStyle`
     background: #000;
     color: #555;
     margin: 0;
-    font-family: 'Ubuntu', sans-serif;
+    font-family: "Lato", sans-serif;
     font-size: 16px;
-  }
-
-  p {
-    font-family: 'Source Sans 3', sans-serif;
   }
 `;
 
