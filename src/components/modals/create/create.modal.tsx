@@ -1,6 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useCreateDream } from "api/dream/mutation/useCreateDream";
 import { useCreatePlaylist } from "api/playlist/mutation/useCreatePlaylist";
+import ProgressBar from "components/progress-bar/progress-bar";
 import { Button, FileUploader, Input, Modal, Row } from "components/shared";
 import { Column } from "components/shared/row/row";
 import { TabList } from "components/shared/tabs/tabs";
@@ -56,10 +57,17 @@ export const CreateModal: React.FC<
 > = ({ isOpen = false }) => {
   const { t } = useTranslation();
   const { hideModal } = useModal();
-  const [video, setVideo] = useState<VideoState>();
   const videoRef = useRef(null);
+  const [video, setVideo] = useState<VideoState>();
   const [tabIndex, setTabIndex] = useState<MODAL_TYPE>(MODAL_TYPE.DREAM);
-  const { mutate, isLoading } = useCreateDream();
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
+
+  const handleUploadProgress = (value: number) => setUploadProgress(value);
+
+  const { mutate, isLoading } = useCreateDream({
+    onChangeUploadProgress: handleUploadProgress,
+  });
+
   const { mutate: mutateCreatePlaylist, isLoading: isLoadingCreatePlaylist } =
     useCreatePlaylist();
   const {
@@ -153,16 +161,26 @@ export const CreateModal: React.FC<
                 controls
                 src={video?.url ?? ""}
               />
-              <Row mt={1} justifyContent="flex-end">
-                <Button
-                  after={<i className="fa fa-upload" />}
-                  onClick={handleUpload}
-                  isLoading={isLoading}
+              <Row mt={1} justifyContent="space-between">
+                <Column
+                  pr={4}
+                  justifyContent="center"
+                  style={{ width: "100%" }}
                 >
-                  {isLoading
-                    ? t("modal.upload_dream.uploading")
-                    : t("modal.upload_dream.upload")}
-                </Button>
+                  {isLoading && <ProgressBar completed={uploadProgress} />}
+                </Column>
+
+                <Column>
+                  <Button
+                    after={<i className="fa fa-upload" />}
+                    onClick={handleUpload}
+                    isLoading={isLoading}
+                  >
+                    {isLoading
+                      ? t("modal.upload_dream.uploading")
+                      : t("modal.upload_dream.upload")}
+                  </Button>
+                </Column>
               </Row>
             </Column>
           ) : (
