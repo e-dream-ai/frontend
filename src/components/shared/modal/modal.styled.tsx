@@ -22,7 +22,7 @@ export const StyledReactModal = styled(Modal.styled``)<{ size?: Sizes }>`
   height: auto;
   display: flex;
   flex-flow: column;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.9);
 `;
 
 export const ModalHeader = styled.div`

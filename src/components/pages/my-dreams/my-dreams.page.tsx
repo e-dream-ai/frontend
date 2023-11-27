@@ -1,79 +1,18 @@
-import { useFeedMyDreams } from "api/feed/query/useFeedMyDreams";
-import { ItemCard, ItemCardList, Row } from "components/shared";
 import Container from "components/shared/container/container";
-import { Paginate } from "components/shared/paginate/paginate";
+import MyDreams from "components/shared/my-dreams/my-dreams";
 import { Section } from "components/shared/section/section";
-import { Spinner } from "components/shared/spinner/spinner";
-import Text from "components/shared/text/text";
-import { PAGINATION } from "constants/pagination.constants";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dream } from "types/dream.types";
-import { Playlist } from "types/playlist.types";
 
 const SECTION_ID = "my-dreams";
 
 export const MyDreamsPage: React.FC = () => {
   const { t } = useTranslation();
-  const [page, setPage] = useState<number>(0);
-  const { data, isLoading, isRefetching } = useFeedMyDreams({
-    page,
-  });
-  const feed = data?.data?.feed;
-  const pageCount = Math.ceil((data?.data?.count ?? 0) / PAGINATION.TAKE);
-
-  const handleonPageChange = ({ selected }: { selected: number }) => {
-    setPage(selected);
-  };
 
   return (
     <Container>
       <h2>{t("page.my_dreams.title")}</h2>
       <Section id={SECTION_ID}>
-        {isLoading || isRefetching ? (
-          <Row justifyContent="center">
-            <Spinner />
-          </Row>
-        ) : feed?.length ? (
-          <Row justifyContent="center">
-            <ItemCardList>
-              {feed?.map((feedItem) => {
-                let item;
-                if (feedItem.type === "dream") {
-                  item = {
-                    ...feedItem.dreamItem,
-                    user: feedItem.user,
-                  } as Dream;
-                } else if (feedItem.type === "playlist") {
-                  item = {
-                    ...feedItem.playlistItem,
-                    user: feedItem.user,
-                  } as Playlist;
-                }
-                return (
-                  <ItemCard
-                    type={feedItem.type}
-                    item={item}
-                    key={feedItem.id}
-                  />
-                );
-              })}
-            </ItemCardList>
-          </Row>
-        ) : (
-          <Text>{t("page.my_dreams.empty")}</Text>
-        )}
-
-        <Row justifyContent="center">
-          <Paginate
-            breakLabel="..."
-            nextLabel={`${t("components.paginate.next")} >`}
-            onPageChange={handleonPageChange}
-            pageCount={pageCount}
-            previousLabel={`< ${t("components.paginate.previous")}`}
-            renderOnZeroPageCount={null}
-          />
-        </Row>
+        <MyDreams />
       </Section>
     </Container>
   );

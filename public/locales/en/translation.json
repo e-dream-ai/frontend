@@ -77,14 +77,17 @@
       "error_ordering_playlist_items": "Error ordering playlist items."
     },
     "my_dreams": {
-      "title": "My dreams",
-      "empty": "You don't have dreams crated."
+      "title": "My dreams"
     },
     "feed": {
       "title": "Feed"
     },
     "playlists": {
       "title": "Playlists"
+    },
+    "profile": {
+      "title": "Profile",
+      "dreams": "Dreams"
     }
   },
   "modal": {
@@ -174,6 +177,18 @@
       "adding_playlist_item": "Adding playlist item.",
       "playlist_item_successfully_added": "Playlist item added successfully.",
       "error_adding_playlist_item": "Error adding item to playlist."
+    },
+    "my_dreams": {
+      "empty": "You don't have dreams crated."
+    },
+    "profile_card": {
+      "name": "Name",
+      "description": "Description"
+    }
+  },
+  "hooks": {
+    "use_create_dream": {
+      "upload_in_progress": "Upload dream in progress"
     }
   },
   "hooks": {

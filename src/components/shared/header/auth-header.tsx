@@ -57,7 +57,7 @@ export const AuthHeader: React.FC = () => {
     );
   };
 
-  const onNavigateToPlaylists = () => router.navigate(ROUTES.MY_DREAMS);
+  const onNavigateToPlaylists = () => router.navigate(ROUTES.MY_PROFILE);
 
   if (isLoading) return <StyledHeader />;
 
@@ -66,9 +66,7 @@ export const AuthHeader: React.FC = () => {
       {user ? (
         <>
           <HelloMessageHeader>{t("header.hello")} </HelloMessageHeader>
-          <Anchor onClick={onNavigateToPlaylists}>
-            {user.username || user.email}
-          </Anchor>
+          <Anchor onClick={onNavigateToPlaylists}>{user.email}</Anchor>
         </>
       ) : (
         <AuthAnchor

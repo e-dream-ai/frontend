@@ -45,7 +45,7 @@ export const ConfirmModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({
         </Button>
         <Button
           isLoading={isConfirming}
-          marginLeft
+          ml="1rem"
           onClick={isConfirming ? VoidFunction : onConfirm}
         >
           {t("modal.confirm.confirm")}
