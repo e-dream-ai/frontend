@@ -39,10 +39,17 @@ export const StyledModalProviderWrapper: React.FC<{
   return (
     <StyledReactModalProvider backgroundComponent={styledBackgroundComponent}>
       <>
-        <LoginModal isOpen={state.loginModal} />
-        <SignupModal isOpen={state.signupModal} />
-        <ForgotPasswordModal isOpen={state.forgotPasswordModal} />
-        <CreateModal isOpen={state.createModal} />
+        {state.loginModal && (
+          <LoginModal
+            key={Number(state.loginModal)}
+            isOpen={state.loginModal}
+          />
+        )}
+        {state.signupModal && <SignupModal isOpen={state.signupModal} />}
+        {state.forgotPasswordModal && (
+          <ForgotPasswordModal isOpen={state.forgotPasswordModal} />
+        )}
+        {state.createModal && <CreateModal isOpen={state.createModal} />}
       </>
       {children}
     </StyledReactModalProvider>

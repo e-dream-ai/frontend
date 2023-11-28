@@ -102,6 +102,14 @@ export const AddItemPlaylistDropzone: React.FC<
       const id = dt?.getData(DND_METADATA.ID);
 
       if (action === DND_ACTIONS.ADD) {
+        /**
+         * Item added from feed
+         */
+        handleAddPlaylistItemMutation({ type, id });
+      } else if (action === DND_ACTIONS.ORDER) {
+        /**
+         * Item added from playlist
+         */
         handleAddPlaylistItemMutation({ type, id });
       }
 

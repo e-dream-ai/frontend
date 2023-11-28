@@ -175,5 +175,10 @@
       "playlist_item_successfully_added": "Playlist item added successfully.",
       "error_adding_playlist_item": "Error adding item to playlist."
     }
+  },
+  "hooks": {
+    "use_create_dream": {
+      "upload_in_progress": "Upload dream in progress."
+    }
   }
 }
