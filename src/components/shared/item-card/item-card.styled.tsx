@@ -64,10 +64,7 @@ export const StyledItemCard = styled.li<{
   margin: 0;
   margin-bottom: 0.2rem;
   padding: 1rem;
-  background-color: ${(props) =>
-    props.isDragEntered
-      ? props.theme.inputBackgroundColor
-      : props.theme.colorBackgroundQuaternary};
+  background-color: ${(props) => props.theme.colorBackgroundQuaternary};
   /* border: ${(props) =>
     props.isDragEntered
       ? `1px solid ${props.theme.colorPrimary}`
@@ -75,12 +72,12 @@ export const StyledItemCard = styled.li<{
 
   border-top: ${(props) =>
     props.isDragEntered && props.isMovedOnUpperHalf
-      ? `1px solid ${props.theme.colorPrimary}`
-      : `1px solid transparent`};
+      ? `3px solid ${props.theme.colorPrimary}`
+      : `3px solid transparent`};
   border-bottom: ${(props) =>
     props.isDragEntered && !props.isMovedOnUpperHalf
-      ? `1px solid ${props.theme.colorPrimary}`
-      : `1px solid transparent`};
+      ? `3px solid ${props.theme.colorPrimary}`
+      : `3px solid transparent`};
   user-select: none;
 
   -webkit-transition:

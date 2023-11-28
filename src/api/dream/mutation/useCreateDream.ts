@@ -33,7 +33,6 @@ const createDream = ({ t, onChangeUploadProgress }: CreateDreamProps) => {
         }),
         onUploadProgress: (ev) => {
           const progress = ev.loaded / (ev?.total ?? 0);
-          console.log({ estimated: ev.estimated, progress });
           onChangeUploadProgress?.(Math.round(progress * 100));
           toast.update(toastId, {
             progress: progress,

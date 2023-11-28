@@ -52,6 +52,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   order = 0,
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
+  const tooltipRef = useRef<HTMLAnchorElement>(null);
   const { id, name, thumbnail, user } = item;
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -72,11 +73,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         dndMode === "local" ? DND_ACTIONS.ORDER : DND_ACTIONS.ADD,
       );
       event?.dataTransfer?.setData(DND_METADATA.TYPE, type);
-      event?.dataTransfer?.setData(
-        DND_METADATA.ID,
-        dndMode === "local" ? String(itemId) : String(id),
-      );
+      event?.dataTransfer?.setData(DND_METADATA.ID, String(id));
+      event?.dataTransfer?.setData(DND_METADATA.ITEM_ID, String(itemId));
       event?.dataTransfer?.setData(DND_METADATA.ORDER, String(order));
+      event.dataTransfer?.setDragImage(tooltipRef.current as HTMLElement, 0, 0);
       return false;
     },
     [itemId, id, type, order, dndMode],
@@ -112,14 +112,32 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       event?.preventDefault();
       const dt = event.dataTransfer;
       const action = dt?.getData(DND_METADATA.ACTION);
+      const dropOrder = Number(dt?.getData(DND_METADATA.ORDER)) ?? 0;
+      const dropItemId = Number(dt?.getData(DND_METADATA.ITEM_ID)) ?? 0;
 
-      if (dndMode === "local" && action === DND_ACTIONS.ORDER) {
-        const dropOrder = Number(dt?.getData(DND_METADATA.ORDER)) ?? 0;
-        const dropId = Number(dt?.getData(DND_METADATA.ID)) ?? 0;
+      if (
+        dndMode === "local" &&
+        action === DND_ACTIONS.ORDER &&
+        dropItemId === itemId
+      ) {
+        /**
+         * if drag and drop item is same, do nothing
+         */
+        return false;
+      } else if (dndMode === "local" && action === DND_ACTIONS.ORDER) {
+        const newIndexValue =
+          /**
+           * if item was drag upperhalf, set current order, else increase one to current order
+           */
+          (isMovedOnUpperHalf ? order : order + 1) -
+          /**
+           * if drop order is over current order, not decrease one, else, decrease one to set correct order
+           */
+          (dropOrder > order ? 0 : 1);
         const dropItem: SetItemOrder = {
-          id: dropId,
+          id: dropItemId,
           currentIndex: dropOrder,
-          newIndex: isMovedOnUpperHalf ? order - 1 : order,
+          newIndex: newIndexValue,
         };
         onOrder?.(dropItem);
       }
@@ -127,12 +145,15 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       setIsDragEntered(false);
       return false;
     },
-    [order, dndMode, onOrder, isMovedOnUpperHalf],
+    [order, dndMode, onOrder, isMovedOnUpperHalf, itemId],
   );
 
   const handleDragOver = useCallback(
     (e: MouseEvent) => {
       const y = e.pageY - (cardRef?.current?.offsetTop ?? 0);
+      /**
+       * Define if drag is on the upperhalf of the card
+       */
       const value = y / height < 0.5;
       if (value !== isMovedOnUpperHalf) {
         setIsMovedOnUpperHalf(value);
@@ -208,8 +229,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         )}
         <Column ml={4}>
           <Anchor
+            ref={tooltipRef}
             type={type === "dream" ? "primary" : "secondary"}
-            mb={4}
+            p={2}
+            mb={2}
             onClick={navigateToItemPage}
           >
             {type === "playlist" ? (
@@ -226,7 +249,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           ) : (
             <></>
           )}
-          <Text mb={2}>
+          <Text mb={2} p={2}>
             {t("components.item_card.owner")}: {user?.email}
           </Text>
         </Column>
