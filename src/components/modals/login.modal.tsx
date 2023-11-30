@@ -9,7 +9,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import LoginSchema, { LoginFormValues } from "schemas/login.schema";
-import { User } from "types/auth.types";
+import { UserWithToken } from "types/auth.types";
 import { ModalComponent } from "types/modal.types";
 
 export const LoginModal: React.FC<
@@ -48,7 +48,7 @@ export const LoginModal: React.FC<
       {
         onSuccess: (data) => {
           if (data.success) {
-            const user: User = data.data as User;
+            const user: UserWithToken = data.data?.user as UserWithToken;
             login(user);
             toast.success(
               `${t("modal.login.user_logged_successfully")} ${t(

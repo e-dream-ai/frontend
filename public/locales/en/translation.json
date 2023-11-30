@@ -87,6 +87,7 @@
     },
     "profile": {
       "title": "Profile",
+      "my_profile": "My Profile",
       "dreams": "Dreams"
     }
   },
@@ -183,12 +184,13 @@
     },
     "profile_card": {
       "name": "Name",
-      "description": "Description"
-    }
-  },
-  "hooks": {
-    "use_create_dream": {
-      "upload_in_progress": "Upload dream in progress"
+      "description": "Description",
+      "no_description": "No description",
+      "save": "Save",
+      "cancel": "Cancel",
+      "edit_profile": "Edit Profile",
+      "profile_successfully_updated": "Profile updated successfully.",
+      "error_updating_profile": "Error updating profile."
     }
   },
   "hooks": {

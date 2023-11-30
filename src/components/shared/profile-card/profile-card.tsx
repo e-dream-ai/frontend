@@ -1,12 +1,22 @@
+import { yupResolver } from "@hookform/resolvers/yup";
+import queryClient from "api/query-client";
+import { useUpdateUser } from "api/user/mutation/useUpdateUser";
+import { useUpdateUserAvatar } from "api/user/mutation/useUpdateUserAvatar";
+import { USER_QUERY_KEY } from "api/user/query/useUser";
 import { useState } from "react";
+import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { toast } from "react-toastify";
+import ProfileSchema, { ProfileFormValues } from "schemas/profile.schema";
 import { useTheme } from "styled-components";
 import { User } from "types/auth.types";
+import { HandleChangeFile, MultiMediaState } from "types/media.types";
+import { AvatarUploader } from "../avatar-uploader/avatar-uploader";
 import { Button } from "../button/button";
 import Input from "../input/input";
 import Row, { Column } from "../row/row";
 import Text from "../text/text";
-import { AvatarPlaceholder } from "./profile-card.styled";
+import { Avatar, AvatarPlaceholder } from "./profile-card.styled";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -18,9 +28,15 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
 
   return (
     <>
-      <AvatarPlaceholder mb="2rem">
-        <i className="fa fa-user" />
-      </AvatarPlaceholder>
+      <Row mb="2rem">
+        {user?.avatar ? (
+          <Avatar url={user.avatar} />
+        ) : (
+          <AvatarPlaceholder>
+            <i className="fa fa-user" />
+          </AvatarPlaceholder>
+        )}
+      </Row>
       <Text mb="0.5rem" fontSize="1rem" fontWeight={600}>
         {user?.email}
       </Text>
@@ -33,7 +49,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
         fontStyle="italic"
         color={theme.textSecondaryColor}
       >
-        {user?.description ?? "No description"}
+        {user?.description ?? t("components.profile_card.no_description")}
       </Text>
     </>
   );
@@ -41,18 +57,98 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
 
 type ProfileFormProps = {
   user?: Omit<User, "token">;
+  onDisableEditMode: () => void;
 };
 
-const ProfileForm: React.FC<ProfileFormProps> = ({ user }) => {
+const ProfileForm: React.FC<ProfileFormProps> = ({
+  user,
+  onDisableEditMode,
+}) => {
   const { t } = useTranslation();
+  const { isLoading: isLoadingUpdateUser, mutate: mutateUpdateUser } =
+    useUpdateUser({ id: user?.id });
+  const { isLoading: isLoadingUpdateAvatar, mutate: mutateUpdateAvatar } =
+    useUpdateUserAvatar({ id: user?.id });
+
+  const isLoading = isLoadingUpdateUser || isLoadingUpdateAvatar;
+  const [avatar, setAvatar] = useState<MultiMediaState>();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm<ProfileFormValues>({
+    resolver: yupResolver(ProfileSchema),
+    values: { name: user?.name ?? "", description: user?.description ?? "" },
+  });
+
+  const handleAvatarChange: HandleChangeFile = (file) => {
+    setAvatar({ file: file, url: URL.createObjectURL(file as Blob) });
+  };
+
+  const handleMutateUpdateAvatar = (formData: ProfileFormValues) => {
+    if (avatar?.file) {
+      mutateUpdateAvatar(
+        { file: avatar?.file as Blob },
+        {
+          onSuccess: (response) => {
+            if (response.success) {
+              handleMutateUpdateUser(formData);
+            } else {
+              toast.error(
+                `${t("components.profile_card.error_updating_profile")} ${
+                  response.message
+                }`,
+              );
+            }
+          },
+          onError: () => {
+            toast.error(t("components.profile_card.error_updating_profile"));
+          },
+        },
+      );
+    } else {
+      handleMutateUpdateUser(formData);
+    }
+  };
+
+  const handleMutateUpdateUser = (formData: ProfileFormValues) => {
+    mutateUpdateUser(formData, {
+      onSuccess: (response) => {
+        if (response.success) {
+          queryClient.setQueryData([USER_QUERY_KEY, user?.id], response);
+          toast.success(
+            `${t("components.profile_card.profile_successfully_updated")}`,
+          );
+          onDisableEditMode();
+          reset();
+        } else {
+          toast.error(
+            `${t("components.profile_card.error_updating_profile")} ${
+              response.message
+            }`,
+          );
+        }
+      },
+      onError: (error) => {
+        toast.error(t("components.profile_card.error_updating_profile"));
+      },
+    });
+  };
+
+  const onSubmit = (formData: ProfileFormValues) => {
+    handleMutateUpdateAvatar(formData);
+  };
 
   return (
-    <form
-    // onSubmit={handleSubmit(onSubmit)}
-    >
-      <AvatarPlaceholder mb="2rem">
-        <i className="fa fa-user" />
-      </AvatarPlaceholder>
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Row mb="2rem">
+        <AvatarUploader
+          handleChange={handleAvatarChange}
+          src={avatar?.url}
+          types={["JPG", "JPEG"]}
+        />
+      </Row>
       <Text mb="0.5rem" fontSize="1rem" fontWeight={600}>
         {user?.email}
       </Text>
@@ -60,16 +156,29 @@ const ProfileForm: React.FC<ProfileFormProps> = ({ user }) => {
         placeholder={t("components.profile_card.name")}
         type="text"
         before={<i className="fa fa-user" />}
-        // error={errors.name?.message}
-        // {...register("name")}
+        error={errors.name?.message}
+        {...register("name")}
       />
       <Input
         placeholder={t("components.profile_card.description")}
         type="text"
         before={<i className="fa fa-align-justify" />}
-        // error={errors.description?.message}
-        // {...register("description")}
+        error={errors.description?.message}
+        {...register("description")}
       />
+      <Row>
+        <Button
+          mr="1rem"
+          size="sm"
+          disabled={isLoading}
+          onClick={onDisableEditMode}
+        >
+          {t("components.profile_card.cancel")}
+        </Button>
+        <Button type="submit" isLoading={isLoading} size="sm">
+          {t("components.profile_card.save")}
+        </Button>
+      </Row>
     </form>
   );
 };
@@ -87,23 +196,18 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ user }) => {
 
   return (
     <Column mb="2rem" style={{ flex: "auto" }}>
-      {editMode ? <ProfileForm user={user} /> : <ProfileDetails user={user} />}
-      <Row>
-        {editMode ? (
-          <>
-            <Button mr="1rem" size="sm" onClick={onDisableEditMode}>
-              Cancel
-            </Button>
-            <Button size="sm" onClick={onDisableEditMode}>
-              Save
-            </Button>
-          </>
-        ) : (
+      {editMode ? (
+        <ProfileForm user={user} onDisableEditMode={onDisableEditMode} />
+      ) : (
+        <ProfileDetails user={user} />
+      )}
+      {!editMode && (
+        <Row>
           <Button size="sm" onClick={onEnableEditMode}>
-            Edit Profile
+            {t("components.profile_card.edit_profile")}
           </Button>
-        )}
-      </Row>
+        </Row>
+      )}
     </Column>
   );
 };

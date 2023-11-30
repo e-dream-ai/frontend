@@ -201,6 +201,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     handleDragOver,
   ]);
 
+  const navigateToProfile = (id?: number) => () =>
+    navigate(`/profile/${id ?? 0}`);
+
   useLayoutEffect(() => {
     setHeight(cardRef.current?.clientHeight ?? 0);
   }, [cardRef]);
@@ -255,7 +258,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             <></>
           )}
           <Text mb={2} p={2}>
-            {t("components.item_card.owner")}: {user?.email}
+            {t("components.item_card.owner")}:{" "}
+            <Anchor onClick={navigateToProfile(user?.id)}>{user?.email}</Anchor>
           </Text>
         </Column>
       </ItemCardBody>

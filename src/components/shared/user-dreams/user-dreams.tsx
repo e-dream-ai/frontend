@@ -1,4 +1,4 @@
-import { useFeedMyDreams } from "api/feed/query/useFeedMyDreams";
+import { useFeed } from "api/feed/query/useFeed";
 import { Column, ItemCard, ItemCardList, Row } from "components/shared";
 import { Paginate } from "components/shared/paginate/paginate";
 import { Spinner } from "components/shared/spinner/spinner";
@@ -9,11 +9,16 @@ import { useTranslation } from "react-i18next";
 import { Dream } from "types/dream.types";
 import { Playlist } from "types/playlist.types";
 
-const MyDreams = () => {
+type UserDreamsProps = {
+  userId?: number;
+};
+
+const UserDreams: React.FC<UserDreamsProps> = ({ userId }) => {
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(0);
-  const { data, isLoading, isRefetching } = useFeedMyDreams({
+  const { data, isLoading, isRefetching } = useFeed({
     page,
+    userId,
   });
   const feed = data?.data?.feed;
   const pageCount = Math.ceil((data?.data?.count ?? 0) / PAGINATION.TAKE);
@@ -65,4 +70,4 @@ const MyDreams = () => {
   );
 };
 
-export default MyDreams;
+export default UserDreams;
