@@ -7,9 +7,12 @@ export type Token = {
 };
 
 export type User = {
-  id: string;
+  id: number;
   email: string;
-  username: string;
-  token?: Token;
+  name?: string;
+  description?: string;
+  avatar?: string;
   cognitoId?: string;
 };
+
+export type UserWithToken = User & { token?: Token };

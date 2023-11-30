@@ -8,11 +8,11 @@ import {
 import { useLocalStorage } from "hooks/useLocalStorage";
 import { useCallback, useEffect, useRef } from "react";
 import { ApiResponse } from "types/api.types";
-import { Token, User } from "types/auth.types";
+import { Token, UserWithToken } from "types/auth.types";
 
 type InterceptorGenerator = {
   getItem: () => string | null;
-  handleRefreshUser: (user: User | null) => void;
+  handleRefreshUser: (user: UserWithToken | null) => void;
 };
 
 const generateRequestInterceptor = async ({
@@ -28,7 +28,7 @@ const generateRequestInterceptor = async ({
       if (!storagedUser) {
         return config;
       }
-      const user: User = JSON.parse(storagedUser);
+      const user: UserWithToken = JSON.parse(storagedUser);
       const accessToken: string = user.token?.AccessToken ?? "";
 
       /**
@@ -67,7 +67,7 @@ const generateResponseInterceptor = async ({
     (error) => {
       const storagedUser = getItem();
       if (error.response.status === 401 && storagedUser) {
-        const user: User = JSON.parse(storagedUser);
+        const user: UserWithToken = JSON.parse(storagedUser);
         refreshAccessToken({ user, handleRefreshUser });
         return;
       }
@@ -81,8 +81,8 @@ const refreshAccessToken = async ({
   user,
   handleRefreshUser,
 }: {
-  user: User;
-  handleRefreshUser: (user: User | null) => void;
+  user: UserWithToken;
+  handleRefreshUser: (user: UserWithToken | null) => void;
 }) => {
   const refreshToken = user?.token?.RefreshToken;
   const values = { refreshToken };
@@ -117,7 +117,7 @@ const refreshAccessToken = async ({
 };
 
 type UseHttpInterceptorsProps = {
-  handleRefreshUser: (user: User | null) => void;
+  handleRefreshUser: (user: UserWithToken | null) => void;
 };
 
 export const useHttpInterceptors = (

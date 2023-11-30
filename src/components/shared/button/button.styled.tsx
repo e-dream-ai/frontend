@@ -1,4 +1,5 @@
 import styled, { css } from "styled-components";
+import { SpaceProps, space } from "styled-system";
 import { Sizes } from "types/sizes.types";
 import { Types } from "types/style-types.types";
 
@@ -73,13 +74,14 @@ const ButtonTransparentTypes = {
   `,
 };
 
-export const StyledButton = styled.button<{
-  size: Sizes;
-  buttonType: Types;
-  marginLeft?: boolean;
-  marginRight?: boolean;
-  transparent?: boolean;
-}>`
+export const StyledButton = styled.button<
+  {
+    size: Sizes;
+    buttonType: Types;
+    transparent?: boolean;
+  } & SpaceProps
+>`
+  ${space}
   display: inline-flex;
   height: fit-content;
   align-items: center;
@@ -89,8 +91,6 @@ export const StyledButton = styled.button<{
   border: 1px solid transparent;
   border-radius: 4px;
   cursor: pointer;
-  margin-left: ${(props) => (props.marginLeft ? "0.6rem" : 0)};
-  margin-right: ${(props) => (props.marginRight ? "0.6rem" : 0)};
   color: ${(props) => props.theme.textPrimaryColor};
   background-color: ${(props) => (props.transparent ? "transparent" : "none")};
 

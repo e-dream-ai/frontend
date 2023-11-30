@@ -27,6 +27,11 @@ import {
 
 type DNDMode = "local" | "cross-window";
 
+const DND_MODES: { [key: string]: DNDMode } = {
+  LOCAL: "local",
+  CROSS_WINDOW: "cross-window",
+};
+
 type ItemCardProps = {
   /**
    * item playlist id
@@ -48,7 +53,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   size = "md",
   onDelete,
   onOrder,
-  dndMode = "cross-browser",
+  dndMode = DND_MODES.CROSS_WINDOW,
   order = 0,
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
@@ -70,7 +75,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     (event: DragEvent) => {
       event?.dataTransfer?.setData(
         DND_METADATA.ACTION,
-        dndMode === "local" ? DND_ACTIONS.ORDER : DND_ACTIONS.ADD,
+        dndMode === DND_MODES.LOCAL ? DND_ACTIONS.ORDER : DND_ACTIONS.ADD,
       );
       event?.dataTransfer?.setData(DND_METADATA.TYPE, type);
       event?.dataTransfer?.setData(DND_METADATA.ID, String(id));
@@ -85,7 +90,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const handleDragEnter = useCallback(
     (event: DragEvent) => {
       event.stopImmediatePropagation();
-      if (dndMode === "local") {
+      if (dndMode === DND_MODES.LOCAL) {
         setIsDragEntered(true);
       }
       return false;
@@ -94,14 +99,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   );
 
   const handleDragLeave = useCallback(() => {
-    if (dndMode === "local") {
+    if (dndMode === DND_MODES.LOCAL) {
       setIsDragEntered(false);
     }
     return false;
   }, [dndMode]);
 
   const handleDragEnd = useCallback(() => {
-    if (dndMode === "local") {
+    if (dndMode === DND_MODES.LOCAL) {
       setIsDragEntered(false);
     }
     return false;
@@ -196,6 +201,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     handleDragOver,
   ]);
 
+  const navigateToProfile = (id?: number) => () =>
+    navigate(`/profile/${id ?? 0}`);
+
   useLayoutEffect(() => {
     setHeight(cardRef.current?.clientHeight ?? 0);
   }, [cardRef]);
@@ -250,7 +258,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             <></>
           )}
           <Text mb={2} p={2}>
-            {t("components.item_card.owner")}: {user?.email}
+            {t("components.item_card.owner")}:{" "}
+            <Anchor onClick={navigateToProfile(user?.id)}>{user?.email}</Anchor>
           </Text>
         </Column>
       </ItemCardBody>
@@ -276,7 +285,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             buttonType="danger"
             after={<i className="fa fa-trash" />}
             transparent
-            marginLeft
+            ml="1rem"
             onClick={onDelete}
           />
         </Row>

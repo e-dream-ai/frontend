@@ -12,15 +12,17 @@ export const FEED_QUERY_KEY = "getFeed";
 type QueryFunctionParams = {
   take: number;
   skip: number;
+  userId?: number;
 };
 
-const getFeed = ({ take, skip }: QueryFunctionParams) => {
+const getFeed = ({ take, skip, userId }: QueryFunctionParams) => {
   return async () =>
     axios
       .get(`${URL}/feed`, {
         params: {
           take,
           skip,
+          userId,
         },
         headers: getRequestHeaders({
           contentType: ContentType.json,
@@ -31,15 +33,16 @@ const getFeed = ({ take, skip }: QueryFunctionParams) => {
 
 type HookParams = {
   page?: number;
+  userId?: number;
 };
 
-export const useFeed = ({ page = 0 }: HookParams) => {
+export const useFeed = ({ page = 0, userId }: HookParams) => {
   const take = PAGINATION.TAKE;
   const skip = page * take;
   const { user } = useAuth();
   return useQuery<ApiResponse<{ feed: FeedItem[]; count: number }>, Error>(
     [FEED_QUERY_KEY, page],
-    getFeed({ take, skip }),
+    getFeed({ take, skip, userId }),
     {
       refetchOnWindowFocus: false,
       enabled: Boolean(user),
