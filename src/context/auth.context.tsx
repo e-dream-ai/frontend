@@ -8,11 +8,11 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { User } from "types/auth.types";
+import { UserWithToken } from "types/auth.types";
 
 type AuthContextType = {
-  user: User | null;
-  login: (user: User) => void;
+  user: UserWithToken | null;
+  login: (user: UserWithToken) => void;
   logout: () => void;
   isLoading: boolean;
 };
@@ -28,10 +28,10 @@ export const AuthProvider: React.FC<{
   const { setItem, getItem, removeItem } = useLocalStorage(
     AUTH_LOCAL_STORAGE_KEY,
   );
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<UserWithToken | null>(null);
 
   const setLoggedUser = useCallback(
-    (user: User | null) => {
+    (user: UserWithToken | null) => {
       setUser(user);
       if (user) {
         setItem(JSON.stringify(user));
@@ -52,7 +52,7 @@ export const AuthProvider: React.FC<{
       return;
     }
 
-    const user: User = JSON.parse(storagedUser);
+    const user: UserWithToken = JSON.parse(storagedUser);
     setLoggedUser(user);
     setIsLoading(false);
   }, [getItem, setLoggedUser]);
@@ -61,8 +61,8 @@ export const AuthProvider: React.FC<{
     verifySession();
   }, [verifySession]);
 
-  const login: (user: User) => void = useCallback(
-    (user: User) => {
+  const login: (user: UserWithToken) => void = useCallback(
+    (user: UserWithToken) => {
       setLoggedUser(user);
     },
     [setLoggedUser],

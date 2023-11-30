@@ -26,7 +26,7 @@ const App = () => {
   return (
     <>
       <ToastContainer
-        theme="colored"
+        theme="dark"
         position="bottom-right"
         autoClose={AUTO_CLOSE_MS}
       />

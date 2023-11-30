@@ -12,7 +12,6 @@ export const Container = styled.div`
     font-weight: 700;
     text-transform: uppercase;
     color: ${(props) => props.theme.textPrimaryColor};
-    padding-bottom: 1.25rem;
     margin: 0;
     margin-bottom: 1rem;
   }

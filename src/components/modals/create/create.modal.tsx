@@ -1,8 +1,8 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useCreateDream } from "api/dream/mutation/useCreateDream";
 import { useCreatePlaylist } from "api/playlist/mutation/useCreatePlaylist";
-import ProgressBar from "components/progress-bar/progress-bar";
 import { Button, FileUploader, Input, Modal, Row } from "components/shared";
+import ProgressBar from "components/shared/progress-bar/progress-bar";
 import { Column } from "components/shared/row/row";
 import { TabList } from "components/shared/tabs/tabs";
 import Text from "components/shared/text/text";

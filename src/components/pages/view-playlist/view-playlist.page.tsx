@@ -351,7 +351,7 @@ export const ViewPlaylistPage = () => {
                   buttonType="danger"
                   after={<i className="fa fa-trash" />}
                   transparent
-                  marginLeft
+                  ml="1rem"
                   onClick={onShowConfirmDeleteModal}
                 />
               </Row>
@@ -375,7 +375,7 @@ export const ViewPlaylistPage = () => {
                       type="submit"
                       after={<i className="fa fa-save" />}
                       isLoading={isLoading}
-                      marginLeft
+                      ml="1rem"
                     >
                       {isLoading
                         ? t("page.view_playlist.saving")
