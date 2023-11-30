@@ -1,10 +1,18 @@
 import styled from "styled-components";
-import { space, SpaceProps, typography, TypographyProps } from "styled-system";
+import {
+  ColorProps,
+  SpaceProps,
+  TypographyProps,
+  color,
+  space,
+  typography,
+} from "styled-system";
 
-export const Text = styled.span<TypographyProps & SpaceProps>`
+export const Text = styled.span<TypographyProps & SpaceProps & ColorProps>`
   ${space}
-  ${typography}
   color: ${(props) => props.theme.textPrimaryColor};
+  ${color}
+  ${typography}
 `;
 
 export default Text;

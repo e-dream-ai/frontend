@@ -4,7 +4,7 @@ import { Sizes } from "types/sizes.types";
 
 const ItemCardSizes = {
   sm: css`
-    width: 70vw;
+    /* width: 70vw; */
     max-width: 650px;
 
     @media (max-width: ${DEVICES.TABLET}) {
@@ -12,14 +12,14 @@ const ItemCardSizes = {
     }
   `,
   md: css`
-    width: 80vw;
+    /* width: 80vw; */
     max-width: 800px;
     @media (max-width: ${DEVICES.TABLET}) {
       width: 90vw;
     }
   `,
   lg: css`
-    width: 60vw;
+    /* width: 60vw; */
     max-width: 800px;
     @media (max-width: ${DEVICES.TABLET}) {
       width: 90vw;
@@ -30,17 +30,17 @@ const ItemCardSizes = {
 const ImageSizes = {
   sm: css`
     // 16:9 ratio
-    width: 160px;
+    width: 120px;
     height: auto;
   `,
   md: css`
     // 16:9 ratio
-    width: 240px;
+    width: 142px;
     height: auto;
   `,
   lg: css`
     // 16:9 ratio
-    width: 320px;
+    width: 240px;
     height: auto;
   `,
 };

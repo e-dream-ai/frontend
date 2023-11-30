@@ -264,21 +264,21 @@ const ViewDreamPage: React.FC = () => {
                   buttonType="default"
                   after={<i className="fa fa-thumbs-up" />}
                   transparent
-                  marginLeft
+                  ml="1rem"
                 />
                 <Button
                   type="button"
                   buttonType="default"
                   after={<i className="fa fa-thumbs-down" />}
                   transparent
-                  marginLeft
+                  ml="1rem"
                 />
                 <Button
                   type="button"
                   buttonType="danger"
                   after={<i className="fa fa-trash" />}
                   transparent
-                  marginLeft
+                  ml="1rem"
                   onClick={onShowConfirmDeleteModal}
                 />
               </Row>
@@ -301,7 +301,7 @@ const ViewDreamPage: React.FC = () => {
                       type="submit"
                       after={<i className="fa fa-save" />}
                       isLoading={isLoading}
-                      marginLeft
+                      ml="1rem"
                     >
                       {isLoading
                         ? t("page.view_dream.saving")

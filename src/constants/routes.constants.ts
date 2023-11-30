@@ -5,4 +5,6 @@ export const ROUTES = {
   MY_DREAMS: "/my-dreams",
   FEED: "/feed",
   VIEW_PLAYLIST: "/playlist",
+  PROFILE: "/profile",
+  MY_PROFILE: "/my-profile",
 };

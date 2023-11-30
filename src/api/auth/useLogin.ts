@@ -21,9 +21,12 @@ const login = async (values: LoginFormValues) => {
 };
 
 export const useLogin = () => {
-  return useMutation<ApiResponse<User>, Error, LoginFormValues>(login, {
-    mutationKey: [LOGIN_MUTATION_KEY],
-  });
+  return useMutation<ApiResponse<{ user: User }>, Error, LoginFormValues>(
+    login,
+    {
+      mutationKey: [LOGIN_MUTATION_KEY],
+    },
+  );
 };
 
 export default useLogin;

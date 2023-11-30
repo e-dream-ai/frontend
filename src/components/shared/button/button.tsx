@@ -1,3 +1,4 @@
+import { SpaceProps } from "styled-system";
 import { Sizes } from "types/sizes.types";
 import { Types } from "types/style-types.types";
 import StyledButton, { ButtonAfter, ButtonBefore } from "./button.styled";
@@ -12,7 +13,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   after?: React.ReactNode;
   buttonType?: Types;
   transparent?: boolean;
-};
+} & SpaceProps;
 
 export const Button: React.FC<ButtonProps> = ({
   children,
@@ -20,16 +21,12 @@ export const Button: React.FC<ButtonProps> = ({
   after,
   isLoading,
   size = "md",
-  marginLeft,
-  marginRight,
   buttonType = "primary",
   transparent,
   ...props
 }) => (
   <StyledButton
     size={size}
-    marginLeft={marginLeft}
-    marginRight={marginRight}
     disabled={isLoading}
     buttonType={buttonType}
     transparent={transparent}
