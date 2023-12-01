@@ -23,7 +23,6 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
     const handleOnKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (
       event,
     ) => {
-      console.log(event.key);
       if (event.key === "Enter") {
         event.preventDefault();
       }

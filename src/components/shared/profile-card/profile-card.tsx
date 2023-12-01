@@ -6,6 +6,7 @@ import { USER_QUERY_KEY } from "api/user/query/useUser";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import Linkify from "react-linkify";
 import { toast } from "react-toastify";
 import ProfileSchema, { ProfileFormValues } from "schemas/profile.schema";
 import { useTheme } from "styled-components";
@@ -52,7 +53,9 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
         fontStyle="italic"
         color={theme.textSecondaryColor}
       >
-        {user?.description ?? t("components.profile_card.no_description")}
+        <Linkify>
+          {user?.description ?? t("components.profile_card.no_description")}
+        </Linkify>
       </Text>
     </>
   );
