@@ -11,6 +11,24 @@ const Style = createGlobalStyle`
     font-family: "Lato", sans-serif;
     font-size: 16px;
   }
+
+  a {
+    color: ${(props) => props.theme.colorPrimary};
+    text-decoration: none;
+    cursor: pointer;
+    -webkit-transition:
+      color linear 0.4s,
+      background-color linear 0.4s,
+      border-color linear 0.4s;
+    transition:
+      color linear 0.4s,
+      background-color linear 0.4s,
+      border-color linear 0.4s;
+
+    &:hover {
+      color: ${(props) => props.theme.textPrimaryColor};
+    }
+  }
 `;
 
 export const ThemeProvider: React.FC<{
