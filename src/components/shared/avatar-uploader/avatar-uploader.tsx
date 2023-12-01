@@ -1,5 +1,4 @@
 import { FileUploader as DragDropFileUploader } from "react-drag-drop-files";
-import { useTranslation } from "react-i18next";
 import styled, { useTheme } from "styled-components";
 import { HandleChangeFile } from "types/media.types";
 import { Avatar } from "../profile-card/profile-card.styled";
@@ -17,6 +16,7 @@ const StyledFileUploaderDropzone = styled.div`
   border-radius: 50%;
   cursor: pointer;
   color: blanchedalmond;
+  font-size: 2rem;
 `;
 
 /**
@@ -46,7 +46,6 @@ type Props = {
 };
 
 export const AvatarUploader: React.FC<Props> = (props) => {
-  const { t } = useTranslation();
   const theme = useTheme();
 
   return (
@@ -60,10 +59,8 @@ export const AvatarUploader: React.FC<Props> = (props) => {
       <Avatar url={props.src}>
         <StyledFileUploaderDropzone>
           <span>
-            <i className="fa fa-plus-circle" aria-hidden="true" />{" "}
-            {t("components.file_uploader.dropzone_placeholder")}
+            <i className="fa fa-plus-square" aria-hidden="true" />
           </span>
-          <span>{props.types?.join(", ")}</span>
         </StyledFileUploaderDropzone>
       </Avatar>
     </DragDropFileUploader>
