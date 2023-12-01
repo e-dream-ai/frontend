@@ -1,0 +1,60 @@
+import styled from "styled-components";
+
+export const StyledTextArea = styled.textarea`
+  width: 100%;
+  width: -moz-available; /* WebKit-based browsers will ignore this. */
+  width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
+  width: fill-available;
+  min-height: 12rem;
+  resize: none;
+  padding: 6px 12px;
+  background: ${(props) => props.theme.colorBackgroundSecondary};
+  border-radius: 0;
+  border: 0;
+  color: ${(props) => props.theme.inputTextColorPrimary};
+  font-size: 1rem;
+
+  &:disabled {
+    background-color: ${(props) => props.theme.inputBackgroundDisabledColor};
+    cursor: not-allowed;
+  }
+`;
+
+export const TextAreaGroup = styled.div`
+  display: flex;
+  flex-flow: column;
+  margin-bottom: 1rem;
+  border-collapse: separate;
+`;
+
+export const TextAreaRow = styled.div`
+  display: inline-flex;
+  border-collapse: separate;
+  align-items: center;
+`;
+
+export const TextAreaBefore = styled.span`
+  height: 100%;
+  min-width: 40px;
+  padding: 6px 12px;
+  background: ${(props) => props.theme.inputBackgroundColor};
+  color: ${(props) => props.theme.inputTextColorSecondary};
+  text-align: center;
+`;
+
+export const TextAreaAfter = styled.span`
+  height: 100%;
+  min-width: 40px;
+  padding: 6px 12px;
+  background: ${(props) => props.theme.inputBackgroundColor};
+  color: ${(props) => props.theme.inputTextColorPrimary};
+  text-align: center;
+  cursor: pointer;
+`;
+
+export const TextAreaError = styled.span`
+  font-size: 0.875rem;
+  color: ${(props) => props.theme.colorDanger};
+`;
+
+export default StyledTextArea;
