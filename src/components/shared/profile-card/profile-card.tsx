@@ -12,6 +12,7 @@ import ProfileSchema, { ProfileFormValues } from "schemas/profile.schema";
 import { useTheme } from "styled-components";
 import { User } from "types/auth.types";
 import { HandleChangeFile, MultiMediaState } from "types/media.types";
+import Anchor from "../anchor/anchor";
 import { AvatarUploader } from "../avatar-uploader/avatar-uploader";
 import { Button } from "../button/button";
 import Input from "../input/input";
@@ -53,7 +54,13 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
         fontStyle="italic"
         color={theme.textSecondaryColor}
       >
-        <Linkify>
+        <Linkify
+          componentDecorator={(decoratedHref, decoratedText, key) => (
+            <Anchor target="_blank" href={decoratedHref} key={key}>
+              {decoratedText}
+            </Anchor>
+          )}
+        >
           {user?.description ?? t("components.profile_card.no_description")}
         </Linkify>
       </Text>
