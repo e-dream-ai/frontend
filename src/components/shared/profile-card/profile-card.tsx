@@ -15,6 +15,7 @@ import { AvatarUploader } from "../avatar-uploader/avatar-uploader";
 import { Button } from "../button/button";
 import Input from "../input/input";
 import Row, { Column } from "../row/row";
+import TextArea from "../text-area/text-area";
 import Text from "../text/text";
 import { Avatar, AvatarPlaceholder } from "./profile-card.styled";
 
@@ -30,7 +31,9 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
     <>
       <Row mb="2rem">
         {user?.avatar ? (
-          <Avatar url={user.avatar} />
+          <Avatar
+            url={user.avatar ? `${user.avatar}?${Date.now()}` : undefined}
+          />
         ) : (
           <AvatarPlaceholder>
             <i className="fa fa-user" />
@@ -120,6 +123,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           toast.success(
             `${t("components.profile_card.profile_successfully_updated")}`,
           );
+          setAvatar(undefined);
           onDisableEditMode();
           reset();
         } else {
@@ -141,11 +145,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
+    <form id="profile-form" onSubmit={handleSubmit(onSubmit)}>
       <Row mb="2rem">
         <AvatarUploader
           handleChange={handleAvatarChange}
-          src={avatar?.url}
+          src={avatar?.url ? avatar?.url : `${user?.avatar}?${Date.now()}`}
           types={["JPG", "JPEG"]}
         />
       </Row>
@@ -159,15 +163,15 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         error={errors.name?.message}
         {...register("name")}
       />
-      <Input
+      <TextArea
         placeholder={t("components.profile_card.description")}
-        type="text"
         before={<i className="fa fa-align-justify" />}
         error={errors.description?.message}
         {...register("description")}
       />
       <Row>
         <Button
+          type="button"
           mr="1rem"
           size="sm"
           disabled={isLoading}
