@@ -48,7 +48,7 @@ export const LoginModal: React.FC<
       {
         onSuccess: (data) => {
           if (data.success) {
-            const user: UserWithToken = data.data?.user as UserWithToken;
+            const user: UserWithToken = data.data as UserWithToken;
             login(user);
             toast.success(
               `${t("modal.login.user_logged_successfully")} ${t(
