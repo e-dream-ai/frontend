@@ -1,3 +1,5 @@
+import { RoleType } from "./role.types";
+
 export type Token = {
   AccessToken: string;
   ExpiresIn: number;
@@ -13,6 +15,12 @@ export type User = {
   description?: string;
   avatar?: string;
   cognitoId?: string;
+  role?: Role;
+};
+
+export type Role = {
+  id: number;
+  name: RoleType;
 };
 
 export type UserWithToken = User & { token?: Token };

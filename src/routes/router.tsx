@@ -6,6 +6,7 @@ import ProfilePage from "components/pages/profile/profile.page";
 import ViewDreamPage from "components/pages/view-dream/view-dream.page";
 import { ViewPlaylistPage } from "components/pages/view-playlist/view-playlist.page";
 import Container from "components/shared/container/container";
+import { ROLES } from "constants/role.constants";
 import { ROUTES } from "constants/routes.constants";
 import { createBrowserRouter } from "react-router-dom";
 import ProtectedRoute from "./protected-route";
@@ -27,7 +28,7 @@ export const router = createBrowserRouter([
   {
     path: `${ROUTES.VIEW_DREAM}/:uuid`,
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
         <ViewDreamPage />
       </ProtectedRoute>
     ),
@@ -35,7 +36,7 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.MY_DREAMS,
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
         <MyDreamsPage />
       </ProtectedRoute>
     ),
@@ -43,7 +44,7 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.FEED,
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
         <FeedPage />
       </ProtectedRoute>
     ),
@@ -51,7 +52,7 @@ export const router = createBrowserRouter([
   {
     path: `${ROUTES.VIEW_PLAYLIST}/:id`,
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
         <ViewPlaylistPage />
       </ProtectedRoute>
     ),
@@ -59,7 +60,7 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.MY_PROFILE,
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
         <ProfilePage />
       </ProtectedRoute>
     ),
@@ -67,7 +68,7 @@ export const router = createBrowserRouter([
   {
     path: `${ROUTES.PROFILE}/:id`,
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
         <ProfilePage />
       </ProtectedRoute>
     ),

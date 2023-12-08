@@ -2,6 +2,7 @@ import AuthProvider from "providers/auth.provider";
 import ModalProvider from "providers/modal.provider";
 import QueryClientProvider from "providers/query-client.provider";
 import React from "react";
+import PermissionProvider from "./permission.provider";
 import ThemeProvider from "./theme.provider";
 
 export const withProviders = (
@@ -22,6 +23,7 @@ export const Providers = [
   QueryClientProvider,
   AuthProvider,
   ModalProvider,
+  PermissionProvider,
 ];
 
 export default Providers;
