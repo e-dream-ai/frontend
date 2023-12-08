@@ -32,11 +32,15 @@ import { useOrderPlaylist } from "api/playlist/mutation/useOrderPlaylist";
 import { useUpdateThumbnailPlaylist } from "api/playlist/mutation/useUpdateThumbnailPlaylist";
 import { ConfirmModal } from "components/modals/confirm.modal";
 import { ItemCard } from "components/shared";
+import Restricted from "components/shared/restricted/restricted";
 import { Spinner } from "components/shared/spinner/spinner";
 import Text from "components/shared/text/text";
 import { ThumbnailInput } from "components/shared/thumbnail-input/thumbnail-input";
+import { PLAYLIST_PERMISSIONS } from "constants/permissions.constants";
 import { ROUTES } from "constants/routes.constants";
 import { TOAST_DEFAULT_CONFIG } from "constants/toast.constants";
+import useAuth from "hooks/useAuth";
+import usePermission from "hooks/usePermission";
 import router from "routes/router";
 import { ItemOrder, SetItemOrder } from "types/dnd.types";
 import { HandleChangeFile, MultiMediaState } from "types/media.types";
@@ -50,8 +54,14 @@ export const ViewPlaylistPage = () => {
   const { t } = useTranslation();
   const { id } = useParams<Params>();
   const playlistId = Number(id) ?? 0;
+  const { user } = useAuth();
   const { data, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
   const playlist = data?.data?.playlist;
+  const isOwner = user?.id === playlist?.user?.id;
+  const allowedEditPlaylist = usePermission({
+    permission: PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST,
+    isOwner: isOwner,
+  });
   const items = useMemo(
     () =>
       playlist?.items
@@ -345,16 +355,21 @@ export const ViewPlaylistPage = () => {
           <Row justifyContent="space-between" separator>
             <h2>{t("page.view_playlist.title")}</h2>
             {!editMode && (
-              <Row>
-                <Button
-                  type="button"
-                  buttonType="danger"
-                  after={<i className="fa fa-trash" />}
-                  transparent
-                  ml="1rem"
-                  onClick={onShowConfirmDeleteModal}
-                />
-              </Row>
+              <Restricted
+                to={PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST}
+                isOwner={isOwner}
+              >
+                <Row>
+                  <Button
+                    type="button"
+                    buttonType="danger"
+                    after={<i className="fa fa-trash" />}
+                    transparent
+                    ml="1rem"
+                    onClick={onShowConfirmDeleteModal}
+                  />
+                </Row>
+              </Restricted>
             )}
           </Row>
           <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
@@ -383,7 +398,10 @@ export const ViewPlaylistPage = () => {
                     </Button>
                   </>
                 ) : (
-                  <>
+                  <Restricted
+                    to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
+                    isOwner={user?.id === playlist?.user?.id}
+                  >
                     <Button
                       type="button"
                       after={<i className="fa fa-pencil" />}
@@ -391,7 +409,7 @@ export const ViewPlaylistPage = () => {
                     >
                       {t("page.view_playlist.edit")}
                     </Button>
-                  </>
+                  </Restricted>
                 )}
               </div>
             </Row>
@@ -447,6 +465,7 @@ export const ViewPlaylistPage = () => {
                       type={i.type}
                       item={i.type === "dream" ? i.dreamItem : i.playlistItem}
                       order={i.order}
+                      deleteDisabled={!allowedEditPlaylist}
                       onDelete={handleDeletePlaylistItem(i.id)}
                       onOrder={handleOrderPlaylist}
                     />
@@ -454,9 +473,14 @@ export const ViewPlaylistPage = () => {
                 </ItemCardList>
               </Column>
             </Row>
-            <Row>
-              <AddItemPlaylistDropzone show playlistId={playlist?.id} />
-            </Row>
+            <Restricted
+              to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
+              isOwner={user?.id === playlist?.user?.id}
+            >
+              <Row>
+                <AddItemPlaylistDropzone show playlistId={playlist?.id} />
+              </Row>
+            </Restricted>
           </form>
         </Container>
       </Section>

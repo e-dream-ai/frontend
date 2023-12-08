@@ -3,6 +3,8 @@ import queryClient from "api/query-client";
 import { useUpdateUser } from "api/user/mutation/useUpdateUser";
 import { useUpdateUserAvatar } from "api/user/mutation/useUpdateUserAvatar";
 import { USER_QUERY_KEY } from "api/user/query/useUser";
+import { PROFILE_PERMISSIONS } from "constants/permissions.constants";
+import useAuth from "hooks/useAuth";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -16,6 +18,7 @@ import Anchor from "../anchor/anchor";
 import { AvatarUploader } from "../avatar-uploader/avatar-uploader";
 import { Button } from "../button/button";
 import Input from "../input/input";
+import Restricted from "../restricted/restricted";
 import Row, { Column } from "../row/row";
 import TextArea from "../text-area/text-area";
 import Text from "../text/text";
@@ -203,6 +206,7 @@ type ProfileCardProps = {
 
 export const ProfileCard: React.FC<ProfileCardProps> = ({ user }) => {
   const { t } = useTranslation();
+  const { user: authUser } = useAuth();
   const [editMode, setEditMode] = useState<boolean>(false);
 
   const onEnableEditMode = () => setEditMode(true);
@@ -216,11 +220,16 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ user }) => {
         <ProfileDetails user={user} />
       )}
       {!editMode && (
-        <Row>
-          <Button size="sm" onClick={onEnableEditMode}>
-            {t("components.profile_card.edit_profile")}
-          </Button>
-        </Row>
+        <Restricted
+          to={PROFILE_PERMISSIONS.CAN_EDIT_PROFILE}
+          isOwner={authUser?.id === user?.id}
+        >
+          <Row>
+            <Button size="sm" onClick={onEnableEditMode}>
+              {t("components.profile_card.edit_profile")}
+            </Button>
+          </Row>
+        </Restricted>
       )}
     </Column>
   );
