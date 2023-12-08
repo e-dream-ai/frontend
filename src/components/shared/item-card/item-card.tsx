@@ -42,6 +42,7 @@ type ItemCardProps = {
   size?: Sizes;
   dndMode?: DNDMode;
   order?: number;
+  deleteDisabled?: boolean;
   onDelete?: () => void;
   onOrder?: (dropItem: SetItemOrder) => void;
 };
@@ -52,6 +53,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   item = {},
   size = "md",
   onDelete,
+  deleteDisabled = false,
   onOrder,
   dndMode = DND_MODES.CROSS_WINDOW,
   order = 0,
@@ -280,14 +282,16 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             <MenuItem onClick={() => onDelete()}>Delete</MenuItem>
           </Menu> */}
 
-          <Button
-            type="button"
-            buttonType="danger"
-            after={<i className="fa fa-trash" />}
-            transparent
-            ml="1rem"
-            onClick={onDelete}
-          />
+          {!deleteDisabled && (
+            <Button
+              type="button"
+              buttonType="danger"
+              after={<i className="fa fa-trash" />}
+              transparent
+              ml="1rem"
+              onClick={onDelete}
+            />
+          )}
         </Row>
       )}
     </StyledItemCard>

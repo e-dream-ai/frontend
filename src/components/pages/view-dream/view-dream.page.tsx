@@ -8,13 +8,16 @@ import queryClient from "api/query-client";
 import { ConfirmModal } from "components/modals/confirm.modal";
 import { Button, Row } from "components/shared";
 import Container from "components/shared/container/container";
+import Restricted from "components/shared/restricted/restricted";
 import { Column } from "components/shared/row/row";
 import { Section } from "components/shared/section/section";
 import { Spinner } from "components/shared/spinner/spinner";
 import Text from "components/shared/text/text";
 import { ThumbnailInput } from "components/shared/thumbnail-input/thumbnail-input";
 import { FORMAT } from "constants/moment.constants";
+import { DREAM_PERMISSIONS } from "constants/permissions.constants";
 import { ROUTES } from "constants/routes.constants";
+import useAuth from "hooks/useAuth";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -35,6 +38,7 @@ const SectionID = "dream";
 const ViewDreamPage: React.FC = () => {
   const { t } = useTranslation();
   const { uuid } = useParams<Params>();
+  const { user } = useAuth();
   const { data, isLoading: isDreamLoading } = useDream(uuid);
   const dream = data?.data?.dream;
 
@@ -273,14 +277,20 @@ const ViewDreamPage: React.FC = () => {
                   transparent
                   ml="1rem"
                 />
-                <Button
-                  type="button"
-                  buttonType="danger"
-                  after={<i className="fa fa-trash" />}
-                  transparent
-                  ml="1rem"
-                  onClick={onShowConfirmDeleteModal}
-                />
+
+                <Restricted
+                  to={DREAM_PERMISSIONS.CAN_DELETE_DREAM}
+                  isOwner={user?.id === dream?.user?.id}
+                >
+                  <Button
+                    type="button"
+                    buttonType="danger"
+                    after={<i className="fa fa-trash" />}
+                    transparent
+                    ml="1rem"
+                    onClick={onShowConfirmDeleteModal}
+                  />
+                </Restricted>
               </Row>
             )}
           </Row>
@@ -309,13 +319,18 @@ const ViewDreamPage: React.FC = () => {
                     </Button>
                   </>
                 ) : (
-                  <Button
-                    type="button"
-                    after={<i className="fa fa-pencil" />}
-                    onClick={handleEdit}
+                  <Restricted
+                    to={DREAM_PERMISSIONS.CAN_EDIT_DREAM}
+                    isOwner={user?.id === dream?.user?.id}
                   >
-                    {t("page.view_dream.edit")}
-                  </Button>
+                    <Button
+                      type="button"
+                      after={<i className="fa fa-pencil" />}
+                      onClick={handleEdit}
+                    >
+                      {t("page.view_dream.edit")}
+                    </Button>
+                  </Restricted>
                 )}
               </div>
             </Row>
