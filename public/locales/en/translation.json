@@ -89,6 +89,21 @@
       "title": "Profile",
       "my_profile": "My Profile",
       "dreams": "Dreams"
+    },
+    "help": {
+      "title": "Help"
+    },
+    "learn_more": {
+      "title": "Learn more"
+    },
+    "about": {
+      "title": "About"
+    },
+    "install": {
+      "title": "Install"
+    },
+    "terms_of_service": {
+      "title": "Terms of Service"
     }
   },
   "modal": {

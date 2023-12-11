@@ -12,6 +12,10 @@ export const ProtectedRoute: React.FC<{
     return <Navigate to="/" replace />;
   }
 
+  if (isLoading) {
+    return <></>;
+  }
+
   if (allowedRoles && allowedRoles.indexOf(user?.role?.name as RoleType) < 0) {
     return <Navigate to="/" replace />;
   }
