@@ -13,8 +13,14 @@ export const MenuHeader: React.FC = () => {
   const { t } = useTranslation();
 
   const USER_NAV_ROUTES: Array<{ name: string; action?: () => void }> = [
-    { name: t("header.about") },
-    { name: t("header.install") },
+    {
+      name: t("header.about"),
+      action: () => router.navigate(ROUTES.ABOUT),
+    },
+    {
+      name: t("header.install"),
+      action: () => router.navigate(ROUTES.INSTALL),
+    },
     {
       name: t("header.create"),
       action: () => showModal(ModalsKeys.CREATE_MODAL),
@@ -28,9 +34,17 @@ export const MenuHeader: React.FC = () => {
   ];
 
   const NAV_ROUTES: Array<{ name: string; action?: () => void }> = [
-    { name: t("header.about") },
-    { name: t("header.install") },
-    { name: t("header.forum") },
+    {
+      name: t("header.about"),
+      action: () => router.navigate(ROUTES.ABOUT),
+    },
+    {
+      name: t("header.install"),
+      action: () => router.navigate(ROUTES.INSTALL),
+    },
+    {
+      name: t("header.forum"),
+    },
   ];
 
   return (

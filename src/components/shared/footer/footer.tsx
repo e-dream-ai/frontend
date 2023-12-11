@@ -1,5 +1,7 @@
 import { Anchor } from "components/shared";
+import { ROUTES } from "constants/routes.constants";
 import { useTranslation } from "react-i18next";
+import router from "routes/router";
 import { FooterCol, FooterRow, StyledFooter } from "./footer.styled";
 
 const FooterIcons: React.FC = () => (
@@ -40,10 +42,9 @@ export const Footer: React.FC = () => {
       <FooterRow>
         <FooterCol flow="column">
           <div>
-            <Anchor>{t("footer.license")}</Anchor>
-          </div>
-          <div>
-            <Anchor>{t("footer.terms_of_service")}</Anchor>
+            <Anchor onClick={() => router.navigate(ROUTES.TERMS_OF_SERVICE)}>
+              {t("footer.terms_of_service")}
+            </Anchor>
           </div>
         </FooterCol>
         <FooterCol>

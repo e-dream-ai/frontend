@@ -1,8 +1,13 @@
+import AboutPage from "components/pages/about/about.page";
 import ConfirmForgotPassword from "components/pages/confirm-forgot-password/confirm-forgot-password.page";
 import ErrorPage from "components/pages/error/error.page";
 import FeedPage from "components/pages/feed/feed.page";
+import HelpPage from "components/pages/help/help.page";
+import InstallPage from "components/pages/install/install.page";
+import LearnMorePage from "components/pages/learn-more/learn-more.page";
 import MyDreamsPage from "components/pages/my-dreams/my-dreams.page";
 import ProfilePage from "components/pages/profile/profile.page";
+import TermsOfServicePage from "components/pages/terms-of-service/terms-of-service.page";
 import ViewDreamPage from "components/pages/view-dream/view-dream.page";
 import { ViewPlaylistPage } from "components/pages/view-playlist/view-playlist.page";
 import Container from "components/shared/container/container";
@@ -70,6 +75,46 @@ export const router = createBrowserRouter([
     element: (
       <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
         <ProfilePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.HELP,
+    element: (
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+        <HelpPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.LEARN_MORE,
+    element: (
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+        <LearnMorePage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.ABOUT,
+    element: (
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+        <AboutPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.INSTALL,
+    element: (
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+        <InstallPage />
+      </ProtectedRoute>
+    ),
+  },
+  {
+    path: ROUTES.TERMS_OF_SERVICE,
+    element: (
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+        <TermsOfServicePage />
       </ProtectedRoute>
     ),
   },
