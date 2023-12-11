@@ -4,6 +4,7 @@ import { useUpdateUser } from "api/user/mutation/useUpdateUser";
 import { useUpdateUserAvatar } from "api/user/mutation/useUpdateUserAvatar";
 import { USER_QUERY_KEY } from "api/user/query/useUser";
 import { PROFILE_PERMISSIONS } from "constants/permissions.constants";
+import { ROLES_NAMES } from "constants/role.constants";
 import useAuth from "hooks/useAuth";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -45,11 +46,14 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
           </AvatarPlaceholder>
         )}
       </Row>
+      <Text fontSize="1rem" color={theme.colorPrimary}>
+        {t(ROLES_NAMES[user?.role?.name ?? ""]) ?? "-"}
+      </Text>
       <Text mb="0.5rem" fontSize="1rem" fontWeight={600}>
         {user?.email}
       </Text>
       <Text mb="0.5rem" fontSize="1rem" color={theme.textSecondaryColor}>
-        {user?.name ?? "--"}
+        {user?.name ?? "-"}
       </Text>
       <Text
         mb="1rem"
