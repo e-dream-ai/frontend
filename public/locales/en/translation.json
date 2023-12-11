@@ -114,7 +114,7 @@
       "login": "Login",
       "dont_have_account": "Don't have an account?",
       "forgot_your_password": "Forgot your password?",
-      "user_logged_successfully": "User logged in successfully.",
+      "user_logged_successfully": "{{role}} logged in successfully.",
       "welcome_user": "Welcome {{username}}",
       "error_logging_in": "Error logging in."
 
@@ -212,5 +212,9 @@
     "use_create_dream": {
       "upload_in_progress": "Upload dream in progress."
     }
+  },
+  "roles": {
+    "user_group": "User",
+    "admin_group": "Admin"
   }
 }

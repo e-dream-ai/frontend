@@ -3,6 +3,7 @@ import useLogin from "api/auth/useLogin";
 import { Anchor, Button, Input, Modal, Row } from "components/shared";
 import InputPassword from "components/shared/input-password/input-password";
 import { ModalsKeys } from "constants/modal.constants";
+import { ROLES_NAMES } from "constants/role.constants";
 import { useAuth } from "hooks/useAuth";
 import useModal from "hooks/useModal";
 import { useForm } from "react-hook-form";
@@ -51,10 +52,9 @@ export const LoginModal: React.FC<
             const user: UserWithToken = data.data as UserWithToken;
             login(user);
             toast.success(
-              `${t("modal.login.user_logged_successfully")} ${t(
-                "modal.login.welcome_user",
-                { username: user.email },
-              )}`,
+              `${t("modal.login.user_logged_successfully", {
+                role: t(ROLES_NAMES[user?.role?.name ?? ""]),
+              })} ${t("modal.login.welcome_user", { username: user.email })}`,
             );
             reset();
             handleHideModal();
