@@ -7,4 +7,9 @@ export const ROUTES = {
   VIEW_PLAYLIST: "/playlist",
   PROFILE: "/profile",
   MY_PROFILE: "/my-profile",
+  HELP: "/help",
+  LEARN_MORE: "/learn-more",
+  ABOUT: "/about",
+  INSTALL: "/install",
+  TERMS_OF_SERVICE: "/tos",
 };
