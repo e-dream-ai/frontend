@@ -42,7 +42,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
             url={user.avatar ? `${user.avatar}?${Date.now()}` : undefined}
           />
         ) : (
-          <AvatarPlaceholder>
+          <AvatarPlaceholder size="lg">
             <i className="fa fa-user" />
           </AvatarPlaceholder>
         )}

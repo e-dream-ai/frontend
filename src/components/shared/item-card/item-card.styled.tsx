@@ -4,23 +4,16 @@ import { Sizes } from "types/sizes.types";
 
 const ItemCardSizes = {
   sm: css`
-    /* width: 70vw; */
-    max-width: 650px;
-
     @media (max-width: ${DEVICES.TABLET}) {
       width: 90vw;
     }
   `,
   md: css`
-    /* width: 80vw; */
-    max-width: 800px;
     @media (max-width: ${DEVICES.TABLET}) {
       width: 90vw;
     }
   `,
   lg: css`
-    /* width: 60vw; */
-    max-width: 800px;
     @media (max-width: ${DEVICES.TABLET}) {
       width: 90vw;
     }
