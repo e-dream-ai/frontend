@@ -38,6 +38,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
       <Row mb="2rem">
         {user?.avatar ? (
           <Avatar
+            size="lg"
             url={user.avatar ? `${user.avatar}?${Date.now()}` : undefined}
           />
         ) : (

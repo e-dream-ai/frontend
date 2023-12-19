@@ -1,5 +1,5 @@
 {
-  "header":{
+  "header": {
     "e_dream": "e-dream",
     "hello": "Hello",
     "signup": "Signup",
@@ -23,7 +23,7 @@
     },
     "confirm_forgot_password": {
       "code": "Code",
-      "new_password":"New Password",
+      "new_password": "New Password",
       "confirm_new_password": "Confirm New Password",
       "change_password": "Change Password",
       "password_change_successfully": "Password changed successfully.",
@@ -80,7 +80,17 @@
       "title": "My dreams"
     },
     "feed": {
-      "title": "Feed"
+      "title": "Feed",
+      "feed": "Feed",
+      "all": "All",
+      "dream": "Dream",
+      "dreams": "Dreams",
+      "playlist": "Playlist",
+      "playlists": "Playlists",
+      "user": "User",
+      "users": "Users",
+      "empty_feed": "No items to show",
+      "empty_users": "No users to show"
     },
     "playlists": {
       "title": "Playlists"
@@ -107,7 +117,7 @@
     }
   },
   "modal": {
-    "login":{
+    "login": {
       "title": "Login",
       "email": "Email",
       "password": "Password",
@@ -117,7 +127,6 @@
       "user_logged_successfully": "{{role}} logged in successfully.",
       "welcome_user": "Welcome {{username}}",
       "error_logging_in": "Error logging in."
-
     },
     "logout": {
       "user_logged_out_successfully": "User logged out successfully.",

@@ -56,7 +56,7 @@ export const AvatarUploader: React.FC<Props> = (props) => {
         opacity: 1,
       }}
     >
-      <Avatar url={props.src}>
+      <Avatar size="lg" url={props.src}>
         <StyledFileUploaderDropzone>
           <span>
             <i className="fa fa-plus-square" aria-hidden="true" />
