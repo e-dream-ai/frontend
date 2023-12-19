@@ -5,28 +5,24 @@ import { ContentType, getRequestHeaders } from "constants/auth.constants";
 import { PAGINATION } from "constants/pagination.constants";
 import useAuth from "hooks/useAuth";
 import { ApiResponse } from "types/api.types";
-import { FeedItem, FeedItemServerType } from "types/feed.types";
+import { User } from "types/auth.types";
 
-export const FEED_QUERY_KEY = "getFeed";
+export const USERS_QUERY_KEY = "getUsers";
 
 type QueryFunctionParams = {
   take: number;
   skip: number;
   search?: string;
-  userId?: number;
-  type?: FeedItemServerType;
 };
 
-const getFeed = ({ take, skip, userId, search, type }: QueryFunctionParams) => {
+const getUsers = ({ take, skip, search }: QueryFunctionParams) => {
   return async () =>
     axios
-      .get(`${URL}/feed`, {
+      .get(`${URL}/user`, {
         params: {
           take,
           skip,
-          userId,
           search,
-          type,
         },
         headers: getRequestHeaders({
           contentType: ContentType.json,
@@ -37,18 +33,21 @@ const getFeed = ({ take, skip, userId, search, type }: QueryFunctionParams) => {
 
 type HookParams = {
   page?: number;
-  userId?: number;
+  take?: number;
   search?: string;
-  type?: FeedItemServerType;
 };
 
-export const useFeed = ({ page = 0, userId, search, type }: HookParams) => {
-  const take = PAGINATION.TAKE;
+export const useUsers = ({
+  page = 0,
+  search,
+  take = PAGINATION.TAKE,
+}: HookParams) => {
+  take = Math.min(take, PAGINATION.TAKE);
   const skip = page * take;
   const { user } = useAuth();
-  return useQuery<ApiResponse<{ feed: FeedItem[]; count: number }>, Error>(
-    [FEED_QUERY_KEY, page, search, type],
-    getFeed({ take, skip, userId, search, type }),
+  return useQuery<ApiResponse<{ users: User[]; count: number }>, Error>(
+    [USERS_QUERY_KEY, page, search, take],
+    getUsers({ take, skip, search }),
     {
       refetchOnWindowFocus: false,
       enabled: Boolean(user),

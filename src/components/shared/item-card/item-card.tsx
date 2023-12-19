@@ -24,6 +24,7 @@ import {
   StyledItemCardList,
   ThumbnailPlaceholder,
 } from "./item-card.styled";
+import { FeedItemServerType } from "types/feed.types";
 
 type DNDMode = "local" | "cross-window";
 
@@ -37,7 +38,7 @@ type ItemCardProps = {
    * item playlist id
    */
   itemId?: number;
-  type?: "dream" | "playlist";
+  type?: FeedItemServerType;
   item?: Dream | Omit<Playlist, "items">;
   size?: Sizes;
   dndMode?: DNDMode;
@@ -79,7 +80,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         DND_METADATA.ACTION,
         dndMode === DND_MODES.LOCAL ? DND_ACTIONS.ORDER : DND_ACTIONS.ADD,
       );
-      event?.dataTransfer?.setData(DND_METADATA.TYPE, type);
+      event?.dataTransfer?.setData(DND_METADATA.TYPE, type as string);
       event?.dataTransfer?.setData(DND_METADATA.ID, String(id));
       event?.dataTransfer?.setData(DND_METADATA.ITEM_ID, String(itemId));
       event?.dataTransfer?.setData(DND_METADATA.ORDER, String(order));
@@ -303,3 +304,5 @@ export const ItemCardList: React.FC<{ children: React.ReactNode }> = ({
 }) => {
   return <StyledItemCardList>{children}</StyledItemCardList>;
 };
+
+export default ItemCard;

@@ -1,5 +1,5 @@
 import styled from "styled-components";
-import { space, SpaceProps } from "styled-system";
+import { space, SpaceProps, width, WidthProps } from "styled-system";
 import { AlignItemsProperty, JustifyContentProperty } from "types/css.types";
 
 type RowProps = {
@@ -7,7 +7,8 @@ type RowProps = {
   flex?: string;
   justifyContent?: JustifyContentProperty;
   alignItems?: AlignItemsProperty;
-} & SpaceProps;
+} & SpaceProps &
+  WidthProps;
 
 export const Row = styled.div<RowProps>`
   ${space}
@@ -23,6 +24,7 @@ export const Row = styled.div<RowProps>`
 
 export const Column = styled.div<RowProps>`
   ${space}
+  ${width}
   flex: ${(props) => (props.flex ? props.flex : "initial")};
   display: flex;
   flex-flow: column;

@@ -1,9 +1,10 @@
 import styled from "styled-components";
 
-export const StyledUserCard = styled.div`
+export const StyledUserCard = styled.li`
   display: inline-flex;
-  flex-flow: column;
+  flex-flow: row;
   justify-content: space-between;
+  align-items: center;
   width: fit-content;
   margin: 0;
   margin-bottom: 0.2rem;
@@ -20,4 +21,11 @@ export const StyledUserCard = styled.div`
   :hover {
     background-color: ${(props) => props.theme.colorBackgroundSecondary};
   }
+`;
+
+export const StyledUserCardList = styled.ul`
+  display: flex;
+  flex-flow: column;
+  margin: 0;
+  padding: 0;
 `;

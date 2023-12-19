@@ -37,7 +37,7 @@ const RadioButton: React.FC<RadioButtonProps> = ({
         checked={checked}
         onChange={handleChange}
       />
-      <RadioButtonLabel htmlFor={id}>{value}</RadioButtonLabel>
+      <RadioButtonLabel htmlFor={id}>{id}</RadioButtonLabel>
     </StyledRadioButton>
   );
 };
