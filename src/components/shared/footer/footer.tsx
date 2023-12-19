@@ -6,23 +6,26 @@ import { FooterCol, FooterRow, StyledFooter } from "./footer.styled";
 
 const FooterIcons: React.FC = () => (
   <>
-    <Anchor
-      href="https://www.facebook.com/groups/ElectricSHE3P/"
-      target="_blank"
-    >
+    <Anchor href="https://www.facebook.com/groups/edreamai/" target="_blank">
       <span className="fa-stack fa-lg">
         <i className="fa fa-circle fa-stack-2x" />
         <i className="fa fa-facebook fa-stack-1x fa-inverse reverse" />
       </span>
     </Anchor>
-    <Anchor href="https://twitter.com/electricshe3p" target="_blank">
+    <Anchor href="https://www.threads.net/@e_dream_ai" target="_blank">
+      <span className="fa-stack fa-lg">
+        <i className="fa fa-circle fa-stack-2x" />
+        <i className="fa fa-threads fa-stack-1x fa-inverse reverse" />
+      </span>
+    </Anchor>
+    <Anchor href="https://twitter.com/e_dream_ai" target="_blank">
       <span className="fa-stack fa-lg">
         <i className="fa fa-circle fa-stack-2x" />
         <i className="fa fa-twitter fa-stack-1x fa-inverse reverse" />
       </span>
     </Anchor>
     <Anchor
-      href="https://github.com/scottdraves/electricsheep"
+      href="https://github.com/e-dream-ai/client"
       target="_blank"
       rel="noreferrer"
     >
