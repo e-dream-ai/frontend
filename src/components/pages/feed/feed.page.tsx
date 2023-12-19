@@ -97,6 +97,8 @@ export const FeedPage: React.FC = () => {
     setSearch(value);
   };
 
+  const handleOnClearSearch = () => setSearch("");
+
   useEffect(() => {
     setPage(0);
     setUsersPage(0);
@@ -108,7 +110,11 @@ export const FeedPage: React.FC = () => {
       <Section id={SECTION_ID}>
         <Row justifyContent="center" alignItems="center">
           <Column width="-webkit-fill-available">
-            <SearchBar onSearch={handleOnSearch} />
+            <SearchBar
+              showClearButton={Boolean(search)}
+              onSearch={handleOnSearch}
+              onClear={handleOnClearSearch}
+            />
             <RadioButtonGroup
               name="search-filter"
               value={radioGroupState as string}
@@ -176,7 +182,7 @@ const FeedList: React.FC<{ feed?: FeedItem[] }> = ({ feed }) => {
           })}
         </ItemCardList>
       ) : (
-        <Text>{t("page.feed.empty_feed")}</Text>
+        <Text mb={4}>{t("page.feed.empty_feed")}</Text>
       )}
     </>
   );
@@ -196,7 +202,7 @@ const UserList: React.FC<{ users?: User[] }> = ({ users }) => {
           ))}
         </UserCardList>
       ) : (
-        <Text>{t("page.feed.empty_users")}</Text>
+        <Text mb={4}>{t("page.feed.empty_users")}</Text>
       )}
     </>
   );

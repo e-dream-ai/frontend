@@ -5,23 +5,32 @@ import {
   useState,
 } from "react";
 import {
+  SearchBarClearButton,
   SearchBarIcon,
   SearchInput,
   StyledSearchBar,
 } from "./search-bar.styled";
 
 type SearchBarProps = {
+  showClearButton?: boolean;
   onSearch?: (value?: string) => void;
+  onClear?: () => void;
 };
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
+const SearchBar: React.FC<SearchBarProps> = ({
+  showClearButton,
+  onSearch,
+  onClear,
+}) => {
   const [search, setSearch] = useState<string | undefined>();
 
   const handleSearchInputChange: ChangeEventHandler<HTMLInputElement> = (
     event,
   ) => setSearch(event.target.value);
 
-  const handleSearchBarIconClick: MouseEventHandler<HTMLLIElement> = (_) => {
+  const handleSearchBarIconClick: MouseEventHandler<HTMLButtonElement> = (
+    _,
+  ) => {
     onSearch?.(search);
   };
 
@@ -32,16 +41,30 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch }) => {
     }
   };
 
+  const handleSearchBarClearClick: MouseEventHandler<HTMLButtonElement> = (
+    _,
+  ) => {
+    onClear?.();
+    setSearch("");
+  };
+
   return (
     <StyledSearchBar>
       <SearchInput
+        value={search}
         onKeyDown={handleOnKeyDown}
         onChange={handleSearchInputChange}
       />
-      <SearchBarIcon
-        className="fa fa-search"
-        onClick={handleSearchBarIconClick}
-      />
+      {showClearButton ? (
+        <SearchBarClearButton onClick={handleSearchBarClearClick}>
+          <i className="fa fa-remove" />
+        </SearchBarClearButton>
+      ) : (
+        false
+      )}
+      <SearchBarIcon onClick={handleSearchBarIconClick}>
+        <i className="fa fa-search" />
+      </SearchBarIcon>
     </StyledSearchBar>
   );
 };

@@ -17,10 +17,11 @@ const AvatarSizes = {
   `,
 };
 
-export const AvatarPlaceholder = styled.div<SpaceProps>`
+export const AvatarPlaceholder = styled.div<
+  { url?: string; size: Sizes } & SpaceProps
+>`
+  ${(props) => AvatarSizes[props.size]}
   ${space}
-  width: 200px;
-  height: 200px;
   border-radius: 100%;
   background-color: rgba(30, 30, 30, 1);
   display: flex;

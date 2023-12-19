@@ -25,7 +25,32 @@ export const StyledSearchBar = styled.div`
   font-size: 1.6rem;
 `;
 
-export const SearchBarIcon = styled.i`
-  padding: 0 1rem;
+export const SearchBarClearButton = styled.button`
+  width: 30px;
+  height: 30px;
+  background: transparent;
+  border: none;
+  margin: 0 0.2rem;
+  border-radius: 100%;
   cursor: pointer;
+  font-size: 1.2rem;
+  color: ${(props) => props.theme.inputTextColorPrimary};
+  :hover {
+    background-color: ${(props) => props.theme.inputBackgroundDisabledColor};
+  }
+`;
+
+export const SearchBarIcon = styled.button`
+  width: 34px;
+  height: 34px;
+  background: transparent;
+  border: none;
+  margin: 0 1rem;
+  border-radius: 100%;
+  cursor: pointer;
+  font-size: 1.4rem;
+  color: ${(props) => props.theme.inputTextColorPrimary};
+  :hover {
+    background-color: ${(props) => props.theme.inputBackgroundDisabledColor};
+  }
 `;

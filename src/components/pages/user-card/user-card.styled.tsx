@@ -3,13 +3,13 @@ import styled from "styled-components";
 export const StyledUserCard = styled.li`
   display: inline-flex;
   flex-flow: row;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  width: fit-content;
   margin: 0;
   margin-bottom: 0.2rem;
   padding: 1rem;
   background-color: transparent;
+  cursor: pointer;
   -webkit-transition:
     color linear 0.4s,
     background-color linear 0.4s,
