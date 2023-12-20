@@ -14,7 +14,7 @@ import { Playlist } from "types/playlist.types";
 import UserCard, { UserCardList } from "../user-card/user-card";
 import { FEED_FILTERS, getFilterData } from "constants/feed.constants";
 import { useUsers } from "api/user/query/useUsers";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { FeedItem, FeedItemServerType } from "types/feed.types";
 import { User } from "types/auth.types";
 import Text from "components/shared/text/text";
@@ -84,6 +84,14 @@ export const FeedPage: React.FC = () => {
 
   const showUserListTab = radioGroupState === FEED_FILTERS.USER;
 
+  const handleRadioButtonGroupChange = (value?: string) => {
+    setRadioGroupState(value);
+    setPage(0);
+    setUsersPage(0);
+  };
+
+  console.log({ page, usersPage });
+
   const handleOnPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);
   };
@@ -97,12 +105,11 @@ export const FeedPage: React.FC = () => {
     setSearch(value);
   };
 
-  const handleOnClearSearch = () => setSearch("");
-
-  useEffect(() => {
+  const handleOnClearSearch = () => {
+    setSearch("");
     setPage(0);
     setUsersPage(0);
-  }, [radioGroupState]);
+  };
 
   return (
     <Container>
@@ -119,7 +126,7 @@ export const FeedPage: React.FC = () => {
               name="search-filter"
               value={radioGroupState as string}
               data={getFilterData(t)}
-              onChange={(value) => setRadioGroupState(value)}
+              onChange={handleRadioButtonGroupChange}
             />
             {isLoading ? (
               <Row justifyContent="center">
@@ -140,6 +147,7 @@ export const FeedPage: React.FC = () => {
           <Paginate
             breakLabel="..."
             nextLabel={`${t("components.paginate.next")} >`}
+            forcePage={showUserListTab ? usersPage : page}
             onPageChange={
               showUserListTab ? handleOnUserPageChange : handleOnPageChange
             }
