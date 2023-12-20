@@ -80,4 +80,6 @@ You don’t have to ever use `eject`. The curated feature set is suitable for sm
 
 ### Production
 
-- You can follow the same steps used in stage.
+- When you merge a change from stage branch to production brach (**main**), or push changes directly to production (**main**) a deploy review will be created on netlify. Only owners might deploy directly without permissions.
+- To trigger a deploy to production (**main**) on netlify, go to netlify dashboard and find stage app > **deploys** on sidemenu, find **trigger deploy** > **deploy site**
+- Deploy will be trigger, wait for the build and deploy should be done.
