@@ -1,4 +1,5 @@
 import { Row } from "components/shared";
+import { Anchor } from "components/shared";
 import Container from "components/shared/container/container";
 import { Section } from "components/shared/section/section";
 import Text from "components/shared/text/text";
@@ -17,7 +18,7 @@ export const TermsOfServicePage: React.FC = () => {
           <ol>
             <li>
               <b>Acceptance of Terms of Service</b>
-              <ol>
+              <ol type="a">
                 <li>
                   These Terms of Service, which include our End User License
                   Agreement (&ldquo;EULA&rdquo;) govern your use of the e-dream
@@ -30,7 +31,8 @@ export const TermsOfServicePage: React.FC = () => {
               <b>Changes to Terms of Service.</b> The company may, from time to
               time, change these Terms of Service. We will post announcements
               through social media and on
-              <a href="https://e-dream.ai/">e-dream.ai</a> when we do so.
+              <Anchor href="https://e-dream.ai/">e-dream.ai</Anchor>
+              when we do so.
             </li>
           </ol>
         </Text>
