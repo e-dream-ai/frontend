@@ -64,12 +64,12 @@ const generateResponseInterceptor = async ({
    */
   return axios.interceptors.response.use(
     (response) => response,
-    (error) => {
+    async (error) => {
       const storagedUser = getItem();
       if (error.response.status === 401 && storagedUser) {
         const user: UserWithToken = JSON.parse(storagedUser);
-        refreshAccessToken({ user, handleRefreshUser });
-        return;
+        await refreshAccessToken({ user, handleRefreshUser });
+        return axios.request(error.config);
       }
 
       return error.response;
