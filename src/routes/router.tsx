@@ -112,11 +112,7 @@ export const router = createBrowserRouter([
   },
   {
     path: ROUTES.TERMS_OF_SERVICE,
-    element: (
-      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
-        <TermsOfServicePage />
-      </ProtectedRoute>
-    ),
+    element: <TermsOfServicePage />,
   },
 ]);
 
