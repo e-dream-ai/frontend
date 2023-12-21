@@ -96,7 +96,9 @@ export const SignupModal: React.FC<
           <Row>
             <Checkbox {...register("terms")} error={errors.terms?.message}>
               {t("modal.signup.agree_to")}{" "}
-              <Anchor>{t("modal.signup.terms_of_service")}</Anchor>
+              <Anchor target="_blank" href="/tos">
+                {t("modal.signup.terms_of_service")}
+              </Anchor>
             </Checkbox>
           </Row>
           <Button
