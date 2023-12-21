@@ -273,6 +273,31 @@ export const TermsOfServicePage: React.FC = () => {
               limited to, developing, manufacturing and marketing products and
               creating, modifying or improving the service.
             </li>
+            <li>
+              <b>Customer Support.</b> To find more information about our
+              service and its features, or if you need assistance with your
+              account, please visit our web site,
+              <Anchor href="https://e-dream.ai/">e-dream.ai</Anchor> and if
+              necessary, contact us from your verified account email address.
+              The company does not provide live help desk service. You may find
+              us on social media, but the company does not guarantee any
+              response.
+            </li>
+            <li>
+              <b>Arbitration Agreement.</b> Any dispute, claim or controversy
+              arising out of or relating in any way to the service shall be
+              determined by binding arbitration or in small claims court.
+              Arbitration is more informal than a lawsuit in court. Arbitration
+              uses a neutral arbitrator instead of a judge or jury, allows for
+              more limited discovery than in court, and is subject to very
+              limited review by courts.
+            </li>
+            <li>
+              <b>Survival.</b> If any provision or provisions of these Terms of
+              Service shall be held to be invalid, illegal, or unenforceable,
+              the validity, legality and enforceability of the remaining
+              provisions shall remain in full force and effect.
+            </li>
           </ol>
         </Text>
       </Section>
