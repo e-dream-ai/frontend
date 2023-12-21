@@ -263,15 +263,15 @@ export const TermsOfServicePage: React.FC = () => {
               </ol>
             </li>
             <li>
-              <b>Use of Information Submitted.</b> The Companyis free to use any
-              comments, information, ideas, concepts, reviews, or techniques or
-              any other material contained in any communication you may send to
-              us (&ldquo;Feedback&rdquo;), including responses to questionnaires
-              or through postings to the service, worldwide and in perpetuity
-              without further compensation, acknowledgement or payment to you
-              for any purpose whatsoever including, but not limited to,
-              developing, manufacturing and marketing products and creating,
-              modifying or improving the service.
+              <b>Use of Information Submitted.</b> The Company is free to use
+              any comments, information, ideas, concepts, reviews, or techniques
+              or any other material contained in any communication you may send
+              to us (&ldquo;Feedback&rdquo;), including responses to
+              questionnaires or through postings to the service, worldwide and
+              in perpetuity without further compensation, acknowledgement or
+              payment to you for any purpose whatsoever including, but not
+              limited to, developing, manufacturing and marketing products and
+              creating, modifying or improving the service.
             </li>
           </ol>
         </Text>
