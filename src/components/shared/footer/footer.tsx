@@ -18,7 +18,7 @@ const FooterIcons: React.FC = () => (
         <i className="fa fa-twitter fa-stack-1x fa-inverse reverse" />
       </span>
     </Anchor>
-    <Anchor href="https://twitter.com/e_dream_ai" target="_blank">
+    <Anchor href="https://discord.gg/FFDTWwBgBe" target="_blank">
       <span className="fa-stack fa-lg">
         <i className="fa fa-circle fa-stack-2x" />
         <i className="fa fa-discord fa-stack-1x fa-inverse reverse" />
