@@ -2,10 +2,10 @@ import {
   ForgotPasswordModal,
   LoginModal,
   SignupModal,
-} from "components/modals";
-import { CreateModal } from "components/modals/create/create.modal";
-import { ModalProvider as StateModalProvider } from "context/modal.context";
-import useModal from "hooks/useModal";
+} from "@/components/modals";
+import { CreateModal } from "@/components/modals/create/create.modal";
+import { ModalProvider as StateModalProvider } from "@/context/modal.context";
+import useModal from "@/hooks/useModal";
 import styled from "styled-components";
 import { ModalProvider as StyledReactModalProvider } from "styled-react-modal";
 

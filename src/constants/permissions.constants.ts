@@ -1,4 +1,4 @@
-import { Permission } from "types/role.types";
+import { Permission } from "@/types/role.types";
 import { ROLES } from "./role.constants";
 
 export const PROFILE_PERMISSIONS = {

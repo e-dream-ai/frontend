@@ -1,17 +1,17 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import useForgotPassword from "api/auth/useForgotPassword";
-import { Button, Input, Modal, Row } from "components/shared";
-import { ModalsKeys } from "constants/modal.constants";
-import { ROUTES } from "constants/routes.constants";
-import useModal from "hooks/useModal";
+import useForgotPassword from "@/api/auth/useForgotPassword";
+import { Button, Input, Modal, Row } from "@/components/shared";
+import { ModalsKeys } from "@/constants/modal.constants";
+import { ROUTES } from "@/constants/routes.constants";
+import useModal from "@/hooks/useModal";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { router } from "routes/router";
+import { router } from "@/routes/router";
 import ForgotPasswordSchema, {
   ForgotPasswordFormValues,
-} from "schemas/forgot-password.schema";
-import { ModalComponent } from "types/modal.types";
+} from "@/schemas/forgot-password.schema";
+import { ModalComponent } from "@/types/modal.types";
 
 export const ForgotPasswordModal: React.FC<
   ModalComponent<{

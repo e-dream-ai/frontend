@@ -1,6 +1,6 @@
-import useAuth from "hooks/useAuth";
+import useAuth from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
-import { RoleType } from "types/role.types";
+import { RoleType } from "@/types/role.types";
 
 export const ProtectedRoute: React.FC<{
   children?: React.ReactNode;

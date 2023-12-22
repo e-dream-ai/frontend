@@ -4,7 +4,7 @@ import {
   ModalContextType,
   ModalState,
   ModalsKeys,
-} from "constants/modal.constants";
+} from "@/constants/modal.constants";
 import React, { createContext, useCallback, useMemo, useReducer } from "react";
 
 const initialState: ModalState = {

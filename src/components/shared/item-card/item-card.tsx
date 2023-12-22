@@ -1,6 +1,6 @@
-import Text from "components/shared/text/text";
-import { DND_ACTIONS, DND_METADATA } from "constants/dnd.constants";
-import { ROUTES } from "constants/routes.constants";
+import Text from "@/components/shared/text/text";
+import { DND_ACTIONS, DND_METADATA } from "@/constants/dnd.constants";
+import { ROUTES } from "@/constants/routes.constants";
 import {
   useCallback,
   useEffect,
@@ -10,10 +10,10 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { SetItemOrder } from "types/dnd.types";
-import { Dream } from "types/dream.types";
-import { Playlist } from "types/playlist.types";
-import { Sizes } from "types/sizes.types";
+import { SetItemOrder } from "@/types/dnd.types";
+import { Dream } from "@/types/dream.types";
+import { Playlist } from "@/types/playlist.types";
+import { Sizes } from "@/types/sizes.types";
 import Anchor from "../anchor/anchor";
 import { Button } from "../button/button";
 import Row, { Column } from "../row/row";
@@ -24,7 +24,7 @@ import {
   StyledItemCardList,
   ThumbnailPlaceholder,
 } from "./item-card.styled";
-import { FeedItemServerType } from "types/feed.types";
+import { FeedItemServerType } from "@/types/feed.types";
 
 type DNDMode = "local" | "cross-window";
 

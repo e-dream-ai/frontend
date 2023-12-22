@@ -1,17 +1,17 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import useLogin from "api/auth/useLogin";
-import { Anchor, Button, Input, Modal, Row } from "components/shared";
-import InputPassword from "components/shared/input-password/input-password";
-import { ModalsKeys } from "constants/modal.constants";
-import { ROLES_NAMES } from "constants/role.constants";
-import { useAuth } from "hooks/useAuth";
-import useModal from "hooks/useModal";
+import useLogin from "@/api/auth/useLogin";
+import { Anchor, Button, Input, Modal, Row } from "@/components/shared";
+import InputPassword from "@/components/shared/input-password/input-password";
+import { ModalsKeys } from "@/constants/modal.constants";
+import { ROLES_NAMES } from "@/constants/role.constants";
+import { useAuth } from "@/hooks/useAuth";
+import useModal from "@/hooks/useModal";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import LoginSchema, { LoginFormValues } from "schemas/login.schema";
-import { UserWithToken } from "types/auth.types";
-import { ModalComponent } from "types/modal.types";
+import LoginSchema, { LoginFormValues } from "@/schemas/login.schema";
+import { UserWithToken } from "@/types/auth.types";
+import { ModalComponent } from "@/types/modal.types";
 
 export const LoginModal: React.FC<
   ModalComponent<{
@@ -62,7 +62,7 @@ export const LoginModal: React.FC<
             toast.error(`${t("modal.login.error_logging_in")} ${data.message}`);
           }
         },
-        onError: (error) => {
+        onError: (_) => {
           toast.error(t("modal.login.error_logging_in"));
         },
       },

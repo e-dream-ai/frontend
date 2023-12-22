@@ -1,7 +1,7 @@
-import Container from "components/shared/container/container";
-import { Section } from "components/shared/section/section";
-import UserDreams from "components/shared/user-dreams/user-dreams";
-import useAuth from "hooks/useAuth";
+import Container from "@/components/shared/container/container";
+import { Section } from "@/components/shared/section/section";
+import UserDreams from "@/components/shared/user-dreams/user-dreams";
+import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "my-dreams";

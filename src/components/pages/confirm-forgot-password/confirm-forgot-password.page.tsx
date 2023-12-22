@@ -1,15 +1,15 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import useConfirmForgotPassword from "api/auth/useConfirmForgotPassword";
-import { Button, Input, Row } from "components/shared";
-import Container from "components/shared/container/container";
-import { ROUTES } from "constants/routes.constants";
+import useConfirmForgotPassword from "@/api/auth/useConfirmForgotPassword";
+import { Button, Input, Row } from "@/components/shared";
+import Container from "@/components/shared/container/container";
+import { ROUTES } from "@/constants/routes.constants";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import ConfirmForgotPasswordSchema, {
   ConfirmForgotPasswordFormValues,
-} from "schemas/confirm-forgot-password.schema";
+} from "@/schemas/confirm-forgot-password.schema";
 
 export const ConfirmForgotPassword: React.FC = () => {
   const { t } = useTranslation();

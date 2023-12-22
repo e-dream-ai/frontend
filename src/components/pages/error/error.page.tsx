@@ -1,7 +1,7 @@
-import { Anchor } from "components/shared";
-import Container from "components/shared/container/container";
-import Text from "components/shared/text/text";
-import { ROUTES } from "constants/routes.constants";
+import { Anchor } from "@/components/shared";
+import Container from "@/components/shared/container/container";
+import Text from "@/components/shared/text/text";
+import { ROUTES } from "@/constants/routes.constants";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 

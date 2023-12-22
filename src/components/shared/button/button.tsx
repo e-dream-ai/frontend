@@ -1,6 +1,6 @@
 import { SpaceProps } from "styled-system";
-import { Sizes } from "types/sizes.types";
-import { Types } from "types/style-types.types";
+import { Sizes } from "@/types/sizes.types";
+import { Types } from "@/types/style-types.types";
 import StyledButton, { ButtonAfter, ButtonBefore } from "./button.styled";
 
 type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {

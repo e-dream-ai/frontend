@@ -1,6 +1,6 @@
-import { AUTH_LOCAL_STORAGE_KEY } from "constants/auth.constants";
-import { useHttpInterceptors } from "hooks/useHttpInterceptors";
-import { useLocalStorage } from "hooks/useLocalStorage";
+import { AUTH_LOCAL_STORAGE_KEY } from "@/constants/auth.constants";
+import { useHttpInterceptors } from "@/hooks/useHttpInterceptors";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import React, {
   createContext,
   useCallback,
@@ -8,7 +8,7 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { UserWithToken } from "types/auth.types";
+import { UserWithToken } from "@/types/auth.types";
 
 type AuthContextType = {
   user: UserWithToken | null;

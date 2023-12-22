@@ -1,14 +1,14 @@
 import axios from "axios";
-import { URL } from "constants/api.constants";
+import { URL } from "@/constants/api.constants";
 import {
   AUTH_LOCAL_STORAGE_KEY,
   ContentType,
   getRequestHeaders,
-} from "constants/auth.constants";
-import { useLocalStorage } from "hooks/useLocalStorage";
+} from "@/constants/auth.constants";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useCallback, useEffect, useRef } from "react";
-import { ApiResponse } from "types/api.types";
-import { Token, UserWithToken } from "types/auth.types";
+import { ApiResponse } from "@/types/api.types";
+import { Token, UserWithToken } from "@/types/auth.types";
 
 type InterceptorGenerator = {
   getItem: () => string | null;
@@ -17,7 +17,6 @@ type InterceptorGenerator = {
 
 const generateRequestInterceptor = async ({
   getItem,
-  handleRefreshUser,
 }: InterceptorGenerator) => {
   /**
    * Axios request middleware

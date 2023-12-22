@@ -1,6 +1,6 @@
 import styled, { css } from "styled-components";
 import { SpaceProps, space } from "styled-system";
-import { Types } from "types/style-types.types";
+import { Types } from "@/types/style-types.types";
 
 const AnchorType = {
   default: css`

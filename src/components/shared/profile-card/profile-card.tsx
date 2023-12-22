@@ -1,20 +1,20 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import queryClient from "api/query-client";
-import { useUpdateUser } from "api/user/mutation/useUpdateUser";
-import { useUpdateUserAvatar } from "api/user/mutation/useUpdateUserAvatar";
-import { USER_QUERY_KEY } from "api/user/query/useUser";
-import { PROFILE_PERMISSIONS } from "constants/permissions.constants";
-import { ROLES_NAMES } from "constants/role.constants";
-import useAuth from "hooks/useAuth";
+import queryClient from "@/api/query-client";
+import { useUpdateUser } from "@/api/user/mutation/useUpdateUser";
+import { useUpdateUserAvatar } from "@/api/user/mutation/useUpdateUserAvatar";
+import { USER_QUERY_KEY } from "@/api/user/query/useUser";
+import { PROFILE_PERMISSIONS } from "@/constants/permissions.constants";
+import { ROLES_NAMES } from "@/constants/role.constants";
+import useAuth from "@/hooks/useAuth";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import Linkify from "react-linkify";
 import { toast } from "react-toastify";
-import ProfileSchema, { ProfileFormValues } from "schemas/profile.schema";
+import ProfileSchema, { ProfileFormValues } from "@/schemas/profile.schema";
 import { useTheme } from "styled-components";
-import { User } from "types/auth.types";
-import { HandleChangeFile, MultiMediaState } from "types/media.types";
+import { User } from "@/types/auth.types";
+import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import Anchor from "../anchor/anchor";
 import { AvatarUploader } from "../avatar-uploader/avatar-uploader";
 import { Button } from "../button/button";
@@ -152,7 +152,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           );
         }
       },
-      onError: (error) => {
+      onError: (_) => {
         toast.error(t("components.profile_card.error_updating_profile"));
       },
     });

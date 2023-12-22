@@ -1,6 +1,6 @@
-import { DEVICES } from "constants/devices.constants";
+import { DEVICES } from "@/constants/devices.constants";
 import styled, { css } from "styled-components";
-import { Sizes } from "types/sizes.types";
+import { Sizes } from "@/types/sizes.types";
 
 const ItemCardSizes = {
   sm: css`

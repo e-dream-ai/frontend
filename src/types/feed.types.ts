@@ -1,6 +1,6 @@
-import { User } from "types/auth.types";
-import { Dream } from "types/dream.types";
-import { Playlist } from "types/playlist.types";
+import { User } from "@/types/auth.types";
+import { Dream } from "@/types/dream.types";
+import { Playlist } from "@/types/playlist.types";
 
 export enum FeedItemType {
   ALL = "all",

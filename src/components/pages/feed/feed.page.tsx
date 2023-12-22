@@ -1,23 +1,26 @@
-import { useFeed } from "api/feed/query/useFeed";
-import { Column, Row } from "components/shared";
-import Container from "components/shared/container/container";
-import { ItemCard, ItemCardList } from "components/shared/item-card/item-card";
-import { Paginate } from "components/shared/paginate/paginate";
-import RadioButtonGroup from "components/shared/radio-button-group/radio-button-group";
-import SearchBar from "components/shared/search-bar/search-bar";
-import { Section } from "components/shared/section/section";
-import { Spinner } from "components/shared/spinner/spinner";
-import { PAGINATION } from "constants/pagination.constants";
+import { useFeed } from "@/api/feed/query/useFeed";
+import { Column, Row } from "@/components/shared";
+import Container from "@/components/shared/container/container";
+import {
+  ItemCard,
+  ItemCardList,
+} from "@/components/shared/item-card/item-card";
+import { Paginate } from "@/components/shared/paginate/paginate";
+import RadioButtonGroup from "@/components/shared/radio-button-group/radio-button-group";
+import SearchBar from "@/components/shared/search-bar/search-bar";
+import { Section } from "@/components/shared/section/section";
+import { Spinner } from "@/components/shared/spinner/spinner";
+import { PAGINATION } from "@/constants/pagination.constants";
 import { useTranslation } from "react-i18next";
-import { Dream } from "types/dream.types";
-import { Playlist } from "types/playlist.types";
+import { Dream } from "@/types/dream.types";
+import { Playlist } from "@/types/playlist.types";
 import UserCard, { UserCardList } from "../user-card/user-card";
-import { FEED_FILTERS, getFilterData } from "constants/feed.constants";
-import { useUsers } from "api/user/query/useUsers";
+import { FEED_FILTERS, getFilterData } from "@/constants/feed.constants";
+import { useUsers } from "@/api/user/query/useUsers";
 import { useCallback, useState } from "react";
-import { FeedItem, FeedItemServerType } from "types/feed.types";
-import { User } from "types/auth.types";
-import Text from "components/shared/text/text";
+import { FeedItem, FeedItemServerType } from "@/types/feed.types";
+import { User } from "@/types/auth.types";
+import Text from "@/components/shared/text/text";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -89,8 +92,6 @@ export const FeedPage: React.FC = () => {
     setPage(0);
     setUsersPage(0);
   };
-
-  console.log({ page, usersPage });
 
   const handleOnPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);

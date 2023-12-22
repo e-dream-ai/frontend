@@ -1,6 +1,6 @@
-import PermissionContext from "context/permission.context";
+import PermissionContext from "@/context/permission.context";
 import { useContext } from "react";
-import { Permission } from "types/role.types";
+import { Permission } from "@/types/role.types";
 
 type UsePermissionProps = {
   permission: Permission;

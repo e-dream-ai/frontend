@@ -1,6 +1,6 @@
-import { ForgotPasswordModal } from "components/modals";
+import { ForgotPasswordModal } from "@/components/modals";
 import { useTranslation } from "react-i18next";
-import { router } from "routes/router";
+import { router } from "@/routes/router";
 import { AuthHeader } from "./auth-header";
 import StyledHeader, {
   HeaderImage,
