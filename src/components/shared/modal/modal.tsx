@@ -1,5 +1,5 @@
-import { Anchor } from "components/shared";
-import { Sizes } from "types/sizes.types";
+import { Anchor } from "@/components/shared";
+import { Sizes } from "@/types/sizes.types";
 import {
   ModalBody,
   ModalCloseIcon,
@@ -30,7 +30,6 @@ export const Modal: React.FC<ModalProps> = ({
   title,
   size = "sm",
   children,
-  showModal,
   hideModal,
 }) => {
   return (

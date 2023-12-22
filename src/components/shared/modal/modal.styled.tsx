@@ -1,6 +1,6 @@
 import styled, { css } from "styled-components";
 import Modal from "styled-react-modal";
-import { Sizes } from "types/sizes.types";
+import { Sizes } from "@/types/sizes.types";
 
 const ModalSizes = {
   sm: css`

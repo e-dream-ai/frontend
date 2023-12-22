@@ -1,13 +1,13 @@
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
-import { Footer, Header } from "components/shared";
-import { AUTO_CLOSE_MS } from "constants/toast.constants";
-import Providers, { withProviders } from "providers/providers";
+import { Footer, Header } from "@/components/shared";
+import { AUTO_CLOSE_MS } from "@/constants/toast.constants";
+import Providers, { withProviders } from "@/providers/providers";
 import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { router } from "routes/router";
+import { router } from "@/routes/router";
 
 const App = () => {
   /**

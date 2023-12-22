@@ -1,7 +1,7 @@
 import { FileUploader as DragDropFileUploader } from "react-drag-drop-files";
 import { useTranslation } from "react-i18next";
 import styled, { useTheme } from "styled-components";
-import { HandleChangeFile } from "types/media.types";
+import { HandleChangeFile } from "@/types/media.types";
 
 const StyledFileUploaderDropzone = styled.p`
   display: inline-flex;

@@ -1,6 +1,6 @@
 import { FileUploader as DragDropFileUploader } from "react-drag-drop-files";
 import styled, { useTheme } from "styled-components";
-import { HandleChangeFile } from "types/media.types";
+import { HandleChangeFile } from "@/types/media.types";
 import { Avatar } from "../profile-card/profile-card.styled";
 
 const StyledFileUploaderDropzone = styled.div`

@@ -1,4 +1,4 @@
-import { DEVICES } from "constants/devices.constants";
+import { DEVICES } from "@/constants/devices.constants";
 import styled from "styled-components";
 
 export const StyledFooter = styled.footer`

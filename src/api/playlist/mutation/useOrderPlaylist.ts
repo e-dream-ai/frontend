@@ -1,12 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import queryClient from "api/query-client";
+import queryClient from "@/api/query-client";
 import axios from "axios";
-import { URL } from "constants/api.constants";
-import { ContentType, getRequestHeaders } from "constants/auth.constants";
-import { OrderPlaylistFormValues } from "schemas/order-playlist.schema";
-import { PlaylistApiResponse } from "schemas/playlist.schema";
-import { ApiResponse } from "types/api.types";
-import { getOrderedPlaylist } from "utils/playlist.util";
+import { URL } from "@/constants/api.constants";
+import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
+import { OrderPlaylistFormValues } from "@/schemas/order-playlist.schema";
+import { PlaylistApiResponse } from "@/schemas/playlist.schema";
+import { ApiResponse } from "@/types/api.types";
+import { getOrderedPlaylist } from "@/utils/playlist.util";
 import { PLAYLIST_QUERY_KEY } from "../query/usePlaylist";
 
 type MutateFunctionParams = {

@@ -1,6 +1,6 @@
 import styled, { css } from "styled-components";
 import { SpaceProps, space } from "styled-system";
-import { Sizes } from "types/sizes.types";
+import { Sizes } from "@/types/sizes.types";
 
 const AvatarSizes = {
   sm: css`

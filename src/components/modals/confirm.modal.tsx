@@ -1,8 +1,8 @@
-import { Button, Modal, Row } from "components/shared";
+import { Button, Modal, Row } from "@/components/shared";
 import { useTranslation } from "react-i18next";
-import { VoidFunctionType } from "types/function.types";
-import { ModalComponent } from "types/modal.types";
-import { VoidFunction } from "utils/function.util";
+import { VoidFunctionType } from "@/types/function.types";
+import { ModalComponent } from "@/types/modal.types";
+import { VoidFunction } from "@/utils/function.util";
 
 type ConfirmModalTypes = {
   isOpen?: boolean;
@@ -20,9 +20,7 @@ export const ConfirmModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({
   isConfirming = false,
   title,
   onConfirm = VoidFunction,
-  confirmText,
   onCancel = VoidFunction,
-  cancelText,
   text,
 }) => {
   const { t } = useTranslation();

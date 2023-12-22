@@ -1,13 +1,13 @@
-import { useMyPlaylists } from "api/playlist/query/useMyPlaylists";
-import { ItemCard, ItemCardList, Row } from "components/shared";
-import Container from "components/shared/container/container";
-import { Paginate } from "components/shared/paginate/paginate";
-import { Section } from "components/shared/section/section";
-import { Spinner } from "components/shared/spinner/spinner";
-import { PAGINATION } from "constants/pagination.constants";
+import { useMyPlaylists } from "@/api/playlist/query/useMyPlaylists";
+import { ItemCard, ItemCardList, Row } from "@/components/shared";
+import Container from "@/components/shared/container/container";
+import { Paginate } from "@/components/shared/paginate/paginate";
+import { Section } from "@/components/shared/section/section";
+import { Spinner } from "@/components/shared/spinner/spinner";
+import { PAGINATION } from "@/constants/pagination.constants";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Playlist } from "types/playlist.types";
+import { Playlist } from "@/types/playlist.types";
 
 const SECTION_ID = "playlists";
 

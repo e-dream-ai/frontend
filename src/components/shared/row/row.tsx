@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { space, SpaceProps, width, WidthProps } from "styled-system";
-import { AlignItemsProperty, JustifyContentProperty } from "types/css.types";
+import { AlignItemsProperty, JustifyContentProperty } from "@/types/css.types";
 
 type RowProps = {
   separator?: boolean;

@@ -1,4 +1,4 @@
-import { PrimaryTheme } from "constants/colors.constants";
+import { PrimaryTheme } from "@/constants/colors.constants";
 import { ThemeProvider as TP, createGlobalStyle } from "styled-components";
 
 const Style = createGlobalStyle`

@@ -1,7 +1,7 @@
-import { PlaylistApiResponse } from "schemas/playlist.schema";
-import { ApiResponse } from "types/api.types";
-import { ItemOrder, SetItemOrder } from "types/dnd.types";
-import { Playlist } from "types/playlist.types";
+import { PlaylistApiResponse } from "@/schemas/playlist.schema";
+import { ApiResponse } from "@/types/api.types";
+import { ItemOrder, SetItemOrder } from "@/types/dnd.types";
+import { Playlist } from "@/types/playlist.types";
 
 export const getOrderedItemsPlaylistRequest = ({
   items = [],

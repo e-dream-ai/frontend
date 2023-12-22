@@ -1,8 +1,8 @@
-import { Row } from "components/shared";
-import Container from "components/shared/container/container";
-import { LoremIpsum8P } from "components/shared/lorem-ipsum/lorem-ipsum";
-import { Section } from "components/shared/section/section";
-import Text from "components/shared/text/text";
+import { Row } from "@/components/shared";
+import Container from "@/components/shared/container/container";
+import { LoremIpsum8P } from "@/components/shared/lorem-ipsum/lorem-ipsum";
+import { Section } from "@/components/shared/section/section";
+import Text from "@/components/shared/text/text";
 import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "about";

@@ -3,19 +3,19 @@ import {
   FileUploader,
   Thumbnail,
   ThumbnailPlaceholder,
-} from "components/shared";
+} from "@/components/shared";
 import {
   ThumbnailButtons,
   ThumbnailContainer,
   ThumbnailOverlay,
-} from "components/shared/thumbnail/thumbnail";
-import { MAX_FILE_SIZE_MB } from "constants/file.constants";
+} from "@/components/shared/thumbnail/thumbnail";
+import { MAX_FILE_SIZE_MB } from "@/constants/file.constants";
 import { useTranslation } from "react-i18next";
-import { HandleChangeFile, MultiMediaState } from "types/media.types";
+import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
-} from "utils/file-uploader.util";
+} from "@/utils/file-uploader.util";
 
 type ThumbnailInputProps = {
   isLoading?: boolean;

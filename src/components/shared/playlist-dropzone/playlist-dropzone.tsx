@@ -1,8 +1,8 @@
-import { useAddPlaylistItem } from "api/playlist/mutation/useAddPlaylistItem";
-import { PLAYLIST_QUERY_KEY } from "api/playlist/query/usePlaylist";
-import queryClient from "api/query-client";
-import { DND_ACTIONS, DND_METADATA } from "constants/dnd.constants";
-import { TOAST_DEFAULT_CONFIG } from "constants/toast.constants";
+import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
+import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
+import queryClient from "@/api/query-client";
+import { DND_ACTIONS, DND_METADATA } from "@/constants/dnd.constants";
+import { TOAST_DEFAULT_CONFIG } from "@/constants/toast.constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -83,7 +83,7 @@ export const AddItemPlaylistDropzone: React.FC<
     [mutate, t, playlistId],
   );
 
-  const handleDragEnter = (event: DragEvent) => {
+  const handleDragEnter = (_: DragEvent) => {
     setIsDragEnter(true);
     return false;
   };

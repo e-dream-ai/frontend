@@ -1,21 +1,21 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useUpdatePlaylist } from "api/playlist/mutation/useUpdatePlaylist";
+import { useUpdatePlaylist } from "@/api/playlist/mutation/useUpdatePlaylist";
 import {
   PLAYLIST_QUERY_KEY,
   usePlaylist,
-} from "api/playlist/query/usePlaylist";
-import queryClient from "api/query-client";
+} from "@/api/playlist/query/usePlaylist";
+import queryClient from "@/api/query-client";
 import {
   AddItemPlaylistDropzone,
   Button,
   Input,
   ItemCardList,
   Row,
-} from "components/shared";
-import Container from "components/shared/container/container";
-import { Column } from "components/shared/row/row";
-import { Section } from "components/shared/section/section";
-import { FORMAT } from "constants/moment.constants";
+} from "@/components/shared";
+import Container from "@/components/shared/container/container";
+import { Column } from "@/components/shared/row/row";
+import { Section } from "@/components/shared/section/section";
+import { FORMAT } from "@/constants/moment.constants";
 import moment from "moment";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
@@ -24,27 +24,27 @@ import { Navigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import UpdatePlaylistSchema, {
   UpdatePlaylistFormValues,
-} from "schemas/update-playlist.schema";
+} from "@/schemas/update-playlist.schema";
 
-import { useDeletePlaylist } from "api/playlist/mutation/useDeletePlaylist";
-import { useDeletePlaylistItem } from "api/playlist/mutation/useDeletePlaylistItem";
-import { useOrderPlaylist } from "api/playlist/mutation/useOrderPlaylist";
-import { useUpdateThumbnailPlaylist } from "api/playlist/mutation/useUpdateThumbnailPlaylist";
-import { ConfirmModal } from "components/modals/confirm.modal";
-import { ItemCard } from "components/shared";
-import Restricted from "components/shared/restricted/restricted";
-import { Spinner } from "components/shared/spinner/spinner";
-import Text from "components/shared/text/text";
-import { ThumbnailInput } from "components/shared/thumbnail-input/thumbnail-input";
-import { PLAYLIST_PERMISSIONS } from "constants/permissions.constants";
-import { ROUTES } from "constants/routes.constants";
-import { TOAST_DEFAULT_CONFIG } from "constants/toast.constants";
-import useAuth from "hooks/useAuth";
-import usePermission from "hooks/usePermission";
-import router from "routes/router";
-import { ItemOrder, SetItemOrder } from "types/dnd.types";
-import { HandleChangeFile, MultiMediaState } from "types/media.types";
-import { getOrderedItemsPlaylistRequest } from "utils/playlist.util";
+import { useDeletePlaylist } from "@/api/playlist/mutation/useDeletePlaylist";
+import { useDeletePlaylistItem } from "@/api/playlist/mutation/useDeletePlaylistItem";
+import { useOrderPlaylist } from "@/api/playlist/mutation/useOrderPlaylist";
+import { useUpdateThumbnailPlaylist } from "@/api/playlist/mutation/useUpdateThumbnailPlaylist";
+import { ConfirmModal } from "@/components/modals/confirm.modal";
+import { ItemCard } from "@/components/shared";
+import Restricted from "@/components/shared/restricted/restricted";
+import { Spinner } from "@/components/shared/spinner/spinner";
+import Text from "@/components/shared/text/text";
+import { ThumbnailInput } from "@/components/shared/thumbnail-input/thumbnail-input";
+import { PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
+import { ROUTES } from "@/constants/routes.constants";
+import { TOAST_DEFAULT_CONFIG } from "@/constants/toast.constants";
+import useAuth from "@/hooks/useAuth";
+import usePermission from "@/hooks/usePermission";
+import router from "@/routes/router";
+import { ItemOrder, SetItemOrder } from "@/types/dnd.types";
+import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
+import { getOrderedItemsPlaylistRequest } from "@/utils/playlist.util";
 
 type Params = { id: string };
 

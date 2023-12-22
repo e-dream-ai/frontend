@@ -1,30 +1,30 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useCreateDream } from "api/dream/mutation/useCreateDream";
-import { useCreatePlaylist } from "api/playlist/mutation/useCreatePlaylist";
-import { Button, FileUploader, Input, Modal, Row } from "components/shared";
-import ProgressBar from "components/shared/progress-bar/progress-bar";
-import { Column } from "components/shared/row/row";
-import { TabList } from "components/shared/tabs/tabs";
-import Text from "components/shared/text/text";
-import { MAX_FILE_SIZE_MB } from "constants/file.constants";
-import { ModalsKeys } from "constants/modal.constants";
-import { ROUTES } from "constants/routes.constants";
-import useModal from "hooks/useModal";
+import { useCreateDream } from "@/api/dream/mutation/useCreateDream";
+import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
+import { Button, FileUploader, Input, Modal, Row } from "@/components/shared";
+import ProgressBar from "@/components/shared/progress-bar/progress-bar";
+import { Column } from "@/components/shared/row/row";
+import { TabList } from "@/components/shared/tabs/tabs";
+import Text from "@/components/shared/text/text";
+import { MAX_FILE_SIZE_MB } from "@/constants/file.constants";
+import { ModalsKeys } from "@/constants/modal.constants";
+import { ROUTES } from "@/constants/routes.constants";
+import useModal from "@/hooks/useModal";
 import { useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Tab, TabPanel, Tabs } from "react-tabs";
 import { toast } from "react-toastify";
-import router from "routes/router";
+import router from "@/routes/router";
 import CreatePlaylistSchema, {
   CreatePlaylistFormValues,
-} from "schemas/create-playlist.schema";
-import { HandleChangeFile } from "types/media.types";
-import { ModalComponent } from "types/modal.types";
+} from "@/schemas/create-playlist.schema";
+import { HandleChangeFile } from "@/types/media.types";
+import { ModalComponent } from "@/types/modal.types";
 import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
-} from "utils/file-uploader.util";
+} from "@/utils/file-uploader.util";
 import { Video } from "./create.styled";
 
 type VideoState =

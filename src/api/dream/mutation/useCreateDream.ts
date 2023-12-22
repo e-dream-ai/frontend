@@ -1,13 +1,13 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { URL } from "constants/api.constants";
-import { ContentType, getRequestHeaders } from "constants/auth.constants";
-import { FILE_FORM } from "constants/file.constants";
+import { URL } from "@/constants/api.constants";
+import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
+import { FILE_FORM } from "@/constants/file.constants";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { FileFormValues } from "schemas/file.schema";
-import { ApiResponse } from "types/api.types";
-import { Dream } from "types/dream.types";
+import { FileFormValues } from "@/schemas/file.schema";
+import { ApiResponse } from "@/types/api.types";
+import { Dream } from "@/types/dream.types";
 
 export const CREATE_DREAM_MUTATION_KEY = "createDream";
 

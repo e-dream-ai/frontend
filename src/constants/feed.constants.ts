@@ -1,5 +1,5 @@
 import { TFunction } from "i18next";
-import { FeedItemServerType } from "types/feed.types";
+import { FeedItemServerType } from "@/types/feed.types";
 
 export const FEED_FILTERS: { [key: string]: FeedItemServerType } = {
   ALL: "all",
