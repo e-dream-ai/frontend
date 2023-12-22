@@ -1,12 +1,12 @@
-import useLogout from "api/auth/useLogout";
-import { Anchor } from "components/shared";
-import { ModalsKeys } from "constants/modal.constants";
-import { ROUTES } from "constants/routes.constants";
-import { useAuth } from "hooks/useAuth";
-import useModal from "hooks/useModal";
+import useLogout from "@/api/auth/useLogout";
+import { Anchor } from "@/components/shared";
+import { ModalsKeys } from "@/constants/modal.constants";
+import { ROUTES } from "@/constants/routes.constants";
+import { useAuth } from "@/hooks/useAuth";
+import useModal from "@/hooks/useModal";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import router from "routes/router";
+import router from "@/routes/router";
 import {
   AnchorIcon,
   Divider,

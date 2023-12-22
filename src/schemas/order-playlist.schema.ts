@@ -1,4 +1,4 @@
-import { ItemOrder } from "types/dnd.types";
+import { ItemOrder } from "@/types/dnd.types";
 
 export type OrderPlaylistFormValues = {
   order: ItemOrder[];

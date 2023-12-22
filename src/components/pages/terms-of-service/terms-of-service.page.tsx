@@ -1,8 +1,8 @@
-import { Row } from "components/shared";
-import { Anchor } from "components/shared";
-import Container from "components/shared/container/container";
-import { Section } from "components/shared/section/section";
-import Text from "components/shared/text/text";
+import { Row } from "@/components/shared";
+import { Anchor } from "@/components/shared";
+import Container from "@/components/shared/container/container";
+import { Section } from "@/components/shared/section/section";
+import Text from "@/components/shared/text/text";
 import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "terms-of-service";

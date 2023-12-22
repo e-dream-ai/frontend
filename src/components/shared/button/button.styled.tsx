@@ -1,7 +1,7 @@
 import styled, { css } from "styled-components";
 import { SpaceProps, space } from "styled-system";
-import { Sizes } from "types/sizes.types";
-import { Types } from "types/style-types.types";
+import { Sizes } from "@/types/sizes.types";
+import { Types } from "@/types/style-types.types";
 
 const ButtonSizes = {
   sm: css`

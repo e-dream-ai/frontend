@@ -1,8 +1,8 @@
-import PermissionContext from "context/permission.context";
-import useAuth from "hooks/useAuth";
+import PermissionContext from "@/context/permission.context";
+import useAuth from "@/hooks/useAuth";
 import React from "react";
-import { Permission, RoleType } from "types/role.types";
-import { getRolePermissions } from "utils/permissions.util";
+import { Permission, RoleType } from "@/types/role.types";
+import { getRolePermissions } from "@/utils/permissions.util";
 
 type Props = {
   children?: React.ReactNode;

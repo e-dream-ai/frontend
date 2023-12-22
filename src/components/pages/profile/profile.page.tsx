@@ -1,12 +1,12 @@
-import { useUser } from "api/user/query/useUser";
-import { Row } from "components/shared";
-import Container from "components/shared/container/container";
-import { ProfileCard } from "components/shared/profile-card/profile-card";
-import { Section } from "components/shared/section/section";
-import Text from "components/shared/text/text";
-import UserDreams from "components/shared/user-dreams/user-dreams";
-import { ROUTES } from "constants/routes.constants";
-import useAuth from "hooks/useAuth";
+import { useUser } from "@/api/user/query/useUser";
+import { Row } from "@/components/shared";
+import Container from "@/components/shared/container/container";
+import { ProfileCard } from "@/components/shared/profile-card/profile-card";
+import { Section } from "@/components/shared/section/section";
+import Text from "@/components/shared/text/text";
+import UserDreams from "@/components/shared/user-dreams/user-dreams";
+import { ROUTES } from "@/constants/routes.constants";
+import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
 import {

@@ -1,12 +1,12 @@
 import {
   Avatar,
   AvatarPlaceholder,
-} from "components/shared/profile-card/profile-card.styled";
-import Text from "components/shared/text/text";
-import { User } from "types/auth.types";
+} from "@/components/shared/profile-card/profile-card.styled";
+import Text from "@/components/shared/text/text";
+import { User } from "@/types/auth.types";
 import { StyledUserCard, StyledUserCardList } from "./user-card.styled";
-import { Sizes } from "types/sizes.types";
-import { Column, Row } from "components/shared";
+import { Sizes } from "@/types/sizes.types";
+import { Column, Row } from "@/components/shared";
 import { useNavigate } from "react-router-dom";
 
 const UserCard: React.FC<{ user: User; size: Sizes }> = ({ user, size }) => {

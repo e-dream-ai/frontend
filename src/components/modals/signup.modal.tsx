@@ -1,13 +1,20 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import useSignup from "api/auth/useSignup";
-import { Anchor, Button, Checkbox, Input, Modal, Row } from "components/shared";
-import { ModalsKeys } from "constants/modal.constants";
-import useModal from "hooks/useModal";
+import useSignup from "@/api/auth/useSignup";
+import {
+  Anchor,
+  Button,
+  Checkbox,
+  Input,
+  Modal,
+  Row,
+} from "@/components/shared";
+import { ModalsKeys } from "@/constants/modal.constants";
+import useModal from "@/hooks/useModal";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import SignupSchema, { SignupFormValues } from "schemas/signup.schema";
-import { ModalComponent } from "types/modal.types";
+import SignupSchema, { SignupFormValues } from "@/schemas/signup.schema";
+import { ModalComponent } from "@/types/modal.types";
 
 export const SignupModal: React.FC<
   ModalComponent<{

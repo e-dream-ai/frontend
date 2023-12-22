@@ -1,5 +1,5 @@
 import React from "react";
-import { Permission } from "types/role.types";
+import { Permission } from "@/types/role.types";
 
 type PermissionContextType = {
   isAllowedTo: (props: {

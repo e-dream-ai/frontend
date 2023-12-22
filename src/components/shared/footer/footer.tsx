@@ -1,7 +1,7 @@
-import { Anchor } from "components/shared";
-import { ROUTES } from "constants/routes.constants";
+import { Anchor } from "@/components/shared";
+import { ROUTES } from "@/constants/routes.constants";
 import { useTranslation } from "react-i18next";
-import router from "routes/router";
+import router from "@/routes/router";
 import { FooterCol, FooterRow, StyledFooter } from "./footer.styled";
 
 const FooterIcons: React.FC = () => (

@@ -1,9 +1,9 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { URL } from "constants/api.constants";
-import { ContentType, getRequestHeaders } from "constants/auth.constants";
-import { DeletePlaylistItemFormValues } from "schemas/delete-playlist-item.schema";
-import { ApiResponse } from "types/api.types";
+import { URL } from "@/constants/api.constants";
+import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
+import { DeletePlaylistItemFormValues } from "@/schemas/delete-playlist-item.schema";
+import { ApiResponse } from "@/types/api.types";
 
 type MutateFunctionParams = {
   id?: number;

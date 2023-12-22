@@ -1,10 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
 import axios from "axios";
-import { URL } from "constants/api.constants";
-import { ContentType, getRequestHeaders } from "constants/auth.constants";
-import { AddPlaylistItemFormValues } from "schemas/add-playlist-item.schema";
-import { ApiResponse } from "types/api.types";
-import { Playlist } from "types/playlist.types";
+import { URL } from "@/constants/api.constants";
+import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
+import { AddPlaylistItemFormValues } from "@/schemas/add-playlist-item.schema";
+import { ApiResponse } from "@/types/api.types";
+import { Playlist } from "@/types/playlist.types";
 
 type MutateFunctionParams = {
   id?: number;

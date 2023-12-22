@@ -1,14 +1,14 @@
-import { FileUploader, Input } from "components/shared";
-import { MAX_FILE_SIZE_MB } from "constants/file.constants";
+import { FileUploader, Input } from "@/components/shared";
+import { MAX_FILE_SIZE_MB } from "@/constants/file.constants";
 import { FieldErrors, UseFormRegister } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { UpdateDreamFormValues } from "schemas/update-dream.schema";
-import { Dream } from "types/dream.types";
-import { HandleChangeFile, type MultiMediaState } from "types/media.types";
+import { UpdateDreamFormValues } from "@/schemas/update-dream.schema";
+import { Dream } from "@/types/dream.types";
+import { HandleChangeFile, type MultiMediaState } from "@/types/media.types";
 import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
-} from "utils/file-uploader.util";
+} from "@/utils/file-uploader.util";
 import { Video, VideoPlaceholder } from "./view-dream.styled";
 
 type ViewDreamInputsProps = {

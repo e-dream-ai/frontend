@@ -1,13 +1,13 @@
-import { useFeed } from "api/feed/query/useFeed";
-import { Column, ItemCard, ItemCardList, Row } from "components/shared";
-import { Paginate } from "components/shared/paginate/paginate";
-import { Spinner } from "components/shared/spinner/spinner";
-import Text from "components/shared/text/text";
-import { PAGINATION } from "constants/pagination.constants";
+import { useFeed } from "@/api/feed/query/useFeed";
+import { Column, ItemCard, ItemCardList, Row } from "@/components/shared";
+import { Paginate } from "@/components/shared/paginate/paginate";
+import { Spinner } from "@/components/shared/spinner/spinner";
+import Text from "@/components/shared/text/text";
+import { PAGINATION } from "@/constants/pagination.constants";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Dream } from "types/dream.types";
-import { Playlist } from "types/playlist.types";
+import { Dream } from "@/types/dream.types";
+import { Playlist } from "@/types/playlist.types";
 
 type UserDreamsProps = {
   userId?: number;

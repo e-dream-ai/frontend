@@ -1,11 +1,11 @@
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
-import { URL } from "constants/api.constants";
-import { ContentType, getRequestHeaders } from "constants/auth.constants";
-import { PAGINATION } from "constants/pagination.constants";
-import useAuth from "hooks/useAuth";
-import { ApiResponse } from "types/api.types";
-import { FeedItem } from "types/feed.types";
+import { URL } from "@/constants/api.constants";
+import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
+import { PAGINATION } from "@/constants/pagination.constants";
+import useAuth from "@/hooks/useAuth";
+import { ApiResponse } from "@/types/api.types";
+import { FeedItem } from "@/types/feed.types";
 
 export const FEED_MY_DREAMS_QUERY_KEY = "getFeedMyDreams";
 
