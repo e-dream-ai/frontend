@@ -32,19 +32,23 @@ export const InputRow = styled.div`
   align-items: center;
 `;
 
-export const InputBefore = styled.span`
+export const InputBefore = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 2.2rem;
   min-width: 40px;
-  padding: 6px 12px;
   background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorSecondary};
   text-align: center;
 `;
 
-export const InputAfter = styled.span`
+export const InputAfter = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   height: 2.2rem;
   min-width: 40px;
-  padding: 6px 12px;
   background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorPrimary};
   text-align: center;
