@@ -22,7 +22,6 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     { before, after, onClickAfter, error, disabled, value, anchor, ...props },
     ref,
   ) => {
-    console.log({ props, value, ref });
     return (
       <InputGroup>
         <InputRow>

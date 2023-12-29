@@ -208,7 +208,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
   const navigateToItemPage = (event: React.MouseEvent) => {
     event.stopPropagation();
-    if ("uuid" in item) navigate(`${ROUTES.VIEW_DREAM}/${item?.uuid}`);
+    if ((item as Dream).uuid)
+      navigate(`${ROUTES.VIEW_DREAM}/${(item as Dream)?.uuid}`);
     else navigate(`${ROUTES.VIEW_PLAYLIST}/${item?.id}`);
   };
 
@@ -264,9 +265,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             )}{" "}
             {name || t("components.item_card.unnamed")}
           </Anchor>
-          {"itemCount" in item ? (
+          {(item as Playlist).itemCount ? (
             <Text mb={2}>
-              {t("components.item_card.videos")}: {item?.itemCount ?? 0}
+              {t("components.item_card.videos")}:{" "}
+              {(item as Playlist)?.itemCount ?? 0}
             </Text>
           ) : (
             <></>
