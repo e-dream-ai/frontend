@@ -17,19 +17,26 @@ import {
   faFilm,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
+import { ROUTES } from "@/constants/routes.constants";
+import { useNavigate } from "react-router-dom";
 
 type ViewDreamInputsProps = {
+  dream?: Dream;
+  values: UpdateDreamFormValues;
   register: UseFormRegister<UpdateDreamFormValues>;
   errors: FieldErrors<UpdateDreamFormValues>;
   editMode: boolean;
 };
 
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
+  dream,
+  values,
   register,
   errors,
   editMode,
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   return (
     <>
       <Input
@@ -38,6 +45,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         type="text"
         before={<FontAwesomeIcon icon={faFileVideo} />}
         error={errors.name?.message}
+        value={values.name}
         {...register("name")}
       />
       <Input
@@ -45,6 +53,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         placeholder={t("page.view_dream.owner")}
         type="text"
         before={<FontAwesomeIcon icon={faUser} />}
+        value={values.owner}
+        anchor={() => navigate(`${ROUTES.PROFILE}/${dream?.user.id ?? 0}`)}
         {...register("owner")}
       />
       <Input
@@ -52,6 +62,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         placeholder={t("page.view_dream.created")}
         type="text"
         before={<FontAwesomeIcon icon={faCalendar} />}
+        value={values.created_at}
         {...register("created_at")}
       />
     </>

@@ -20,7 +20,7 @@ import moment from "moment";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Navigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import UpdatePlaylistSchema, {
   UpdatePlaylistFormValues,
@@ -63,6 +63,7 @@ export const ViewPlaylistPage = () => {
   const { id } = useParams<Params>();
   const playlistId = Number(id) ?? 0;
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
   const playlist = data?.data?.playlist;
   const isOwner = user?.id === playlist?.user?.id;
@@ -107,10 +108,13 @@ export const ViewPlaylistPage = () => {
     handleSubmit,
     formState: { errors },
     reset,
+    getValues,
   } = useForm<UpdatePlaylistFormValues>({
     resolver: yupResolver(UpdatePlaylistSchema),
     defaultValues: { name: "" },
   });
+
+  const values = getValues();
 
   const handleMutateThumbnailPlaylist = (data: UpdatePlaylistFormValues) => {
     if (isThumbnailRemoved || thumbnail?.file) {
@@ -168,46 +172,48 @@ export const ViewPlaylistPage = () => {
     );
   };
 
-  const handleDeletePlaylistItem = (itemId: number) => () => {
-    const toastId = toast.loading(
-      t("page.view_playlist.deleting_playlist_item"),
-    );
-    mutateDeletePlaylistItem(
-      { itemId },
-      {
-        onSuccess: (response) => {
-          if (response.success) {
-            queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
+  const handleDeletePlaylistItem =
+    (itemId: number) => (event: React.MouseEvent) => {
+      event.stopPropagation();
+      const toastId = toast.loading(
+        t("page.view_playlist.deleting_playlist_item"),
+      );
+      mutateDeletePlaylistItem(
+        { itemId },
+        {
+          onSuccess: (response) => {
+            if (response.success) {
+              queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
+              toast.update(toastId, {
+                render: t(
+                  "page.view_playlist.playlist_item_deleted_successfully",
+                ),
+                type: "success",
+                isLoading: false,
+                ...TOAST_DEFAULT_CONFIG,
+              });
+            } else {
+              toast.update(toastId, {
+                render: `${t(
+                  "page.view_playlist.error_deleting_playlist_item",
+                )} ${response.message}`,
+                type: "error",
+                isLoading: false,
+                ...TOAST_DEFAULT_CONFIG,
+              });
+            }
+          },
+          onError: () => {
             toast.update(toastId, {
-              render: t(
-                "page.view_playlist.playlist_item_deleted_successfully",
-              ),
-              type: "success",
-              isLoading: false,
-              ...TOAST_DEFAULT_CONFIG,
-            });
-          } else {
-            toast.update(toastId, {
-              render: `${t(
-                "page.view_playlist.error_deleting_playlist_item",
-              )} ${response.message}`,
+              render: `${t("page.view_playlist.error_deleting_playlist_item")}`,
               type: "error",
               isLoading: false,
               ...TOAST_DEFAULT_CONFIG,
             });
-          }
+          },
         },
-        onError: () => {
-          toast.update(toastId, {
-            render: `${t("page.view_playlist.error_deleting_playlist_item")}`,
-            type: "error",
-            isLoading: false,
-            ...TOAST_DEFAULT_CONFIG,
-          });
-        },
-      },
-    );
-  };
+      );
+    };
 
   const handleOrderPlaylist = (dropItem: SetItemOrder) => {
     /**
@@ -367,15 +373,16 @@ export const ViewPlaylistPage = () => {
                 to={PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST}
                 isOwner={isOwner}
               >
-                <Row>
+                <Row marginBottom={0}>
                   <Button
                     type="button"
                     buttonType="danger"
-                    after={<FontAwesomeIcon icon={faTrash} />}
                     transparent
                     ml="1rem"
                     onClick={onShowConfirmDeleteModal}
-                  />
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
                 </Row>
               </Restricted>
             )}
@@ -440,6 +447,7 @@ export const ViewPlaylistPage = () => {
                   type="text"
                   before={<FontAwesomeIcon icon={faFileVideo} />}
                   error={errors.name?.message}
+                  value={values.name}
                   {...register("name")}
                 />
                 <Input
@@ -447,6 +455,10 @@ export const ViewPlaylistPage = () => {
                   placeholder={t("page.view_playlist.owner")}
                   type="text"
                   before={<FontAwesomeIcon icon={faUser} />}
+                  value={values.owner}
+                  anchor={() =>
+                    navigate(`${ROUTES.PROFILE}/${playlist?.user.id ?? 0}`)
+                  }
                   {...register("owner")}
                 />
                 <Input
@@ -454,6 +466,7 @@ export const ViewPlaylistPage = () => {
                   placeholder={t("page.view_playlist.created")}
                   type="text"
                   before={<FontAwesomeIcon icon={faCalendar} />}
+                  value={values.created_at}
                   {...register("created_at")}
                 />
               </Column>

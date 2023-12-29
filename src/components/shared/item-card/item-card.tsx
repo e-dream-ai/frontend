@@ -51,14 +51,14 @@ type ItemCardProps = {
   dndMode?: DNDMode;
   order?: number;
   deleteDisabled?: boolean;
-  onDelete?: () => void;
+  onDelete?: (event: React.MouseEvent) => void;
   onOrder?: (dropItem: SetItemOrder) => void;
 };
 
 export const ItemCard: React.FC<ItemCardProps> = ({
   itemId = 0,
   type = "dream",
-  item = {},
+  item,
   size = "md",
   onDelete,
   deleteDisabled = false,
@@ -68,18 +68,13 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
-  const { id, name, thumbnail, user } = item;
+  const { id, name, thumbnail, user } = item!;
   const { t } = useTranslation();
   const navigate = useNavigate();
 
   const [isDragEntered, setIsDragEntered] = useState<boolean>(false);
   const [isMovedOnUpperHalf, setIsMovedOnUpperHalf] = useState<boolean>(false);
   const [height, setHeight] = useState<number>(0);
-
-  const navigateToItemPage = () => {
-    if ("uuid" in item) navigate(`${ROUTES.VIEW_DREAM}/${item?.uuid}`);
-    else navigate(`${ROUTES.VIEW_PLAYLIST}/${item?.id}`);
-  };
 
   const handleDragStart = useCallback(
     (event: DragEvent) => {
@@ -211,8 +206,16 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     handleDragOver,
   ]);
 
-  const navigateToProfile = (id?: number) => () =>
-    navigate(`/profile/${id ?? 0}`);
+  const navigateToItemPage = (event: React.MouseEvent) => {
+    event.stopPropagation();
+    if ("uuid" in item) navigate(`${ROUTES.VIEW_DREAM}/${item?.uuid}`);
+    else navigate(`${ROUTES.VIEW_PLAYLIST}/${item?.id}`);
+  };
+
+  const navigateToProfile = (id?: number) => (event: React.MouseEvent) => {
+    event.stopPropagation();
+    navigate(`${ROUTES.PROFILE}/${id ?? 0}`);
+  };
 
   useLayoutEffect(() => {
     setHeight(cardRef.current?.clientHeight ?? 0);
@@ -227,6 +230,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   return (
     <StyledItemCard
       ref={cardRef}
+      onClick={navigateToItemPage}
       size={size}
       draggable="true"
       isDragEntered={isDragEntered}
