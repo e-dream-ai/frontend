@@ -21,6 +21,7 @@ import {
   faEnvelope,
   faLock,
 } from "@fortawesome/free-solid-svg-icons";
+import InputPassword from "../shared/input-password/input-password";
 
 export const SignupModal: React.FC<
   ModalComponent<{
@@ -90,14 +91,14 @@ export const SignupModal: React.FC<
           error={errors.username?.message}
           {...register("username")}
         />
-        <Input
+        <InputPassword
           placeholder={t("modal.signup.password")}
           type="password"
           before={<FontAwesomeIcon icon={faLock} />}
           error={errors.password?.message}
           {...register("password")}
         />
-        <Input
+        <InputPassword
           placeholder={t("modal.signup.confirm_password")}
           type="password"
           before={<FontAwesomeIcon icon={faLock} />}
