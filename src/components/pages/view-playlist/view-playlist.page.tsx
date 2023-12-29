@@ -45,6 +45,14 @@ import router from "@/routes/router";
 import { ItemOrder, SetItemOrder } from "@/types/dnd.types";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import { getOrderedItemsPlaylistRequest } from "@/utils/playlist.util";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCalendar,
+  faFileVideo,
+  faSave,
+  faTrash,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 
 type Params = { id: string };
 
@@ -363,7 +371,7 @@ export const ViewPlaylistPage = () => {
                   <Button
                     type="button"
                     buttonType="danger"
-                    after={<i className="fa fa-trash" />}
+                    after={<FontAwesomeIcon icon={faTrash} />}
                     transparent
                     ml="1rem"
                     onClick={onShowConfirmDeleteModal}
@@ -388,7 +396,7 @@ export const ViewPlaylistPage = () => {
 
                     <Button
                       type="submit"
-                      after={<i className="fa fa-save" />}
+                      after={<FontAwesomeIcon icon={faSave} />}
                       isLoading={isLoading}
                       ml="1rem"
                     >
@@ -404,7 +412,7 @@ export const ViewPlaylistPage = () => {
                   >
                     <Button
                       type="button"
-                      after={<i className="fa fa-pencil" />}
+                      after={<FontAwesomeIcon icon={faSave} />}
                       onClick={handleEdit}
                     >
                       {t("page.view_playlist.edit")}
@@ -430,7 +438,7 @@ export const ViewPlaylistPage = () => {
                   disabled={!editMode}
                   placeholder={t("page.view_playlist.name")}
                   type="text"
-                  before={<i className="fa fa-file-video-o" />}
+                  before={<FontAwesomeIcon icon={faFileVideo} />}
                   error={errors.name?.message}
                   {...register("name")}
                 />
@@ -438,14 +446,14 @@ export const ViewPlaylistPage = () => {
                   disabled
                   placeholder={t("page.view_playlist.owner")}
                   type="text"
-                  before={<i className="fa fa-user" />}
+                  before={<FontAwesomeIcon icon={faUser} />}
                   {...register("owner")}
                 />
                 <Input
                   disabled
                   placeholder={t("page.view_playlist.created")}
                   type="text"
-                  before={<i className="fa fa-calendar" />}
+                  before={<FontAwesomeIcon icon={faCalendar} />}
                   {...register("created_at")}
                 />
               </Column>

@@ -1,9 +1,13 @@
+import { faSpinner } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import styled from "styled-components";
 
-const StyledSpinner = styled.i`
+const StyledSpinner = styled.span`
   color: ${(props) => props.theme.textPrimaryColor};
 `;
 
 export const Spinner: React.FC = () => (
-  <StyledSpinner className="fa fa-spinner fa-spin" />
+  <StyledSpinner>
+    <FontAwesomeIcon icon={faSpinner} spin />
+  </StyledSpinner>
 );

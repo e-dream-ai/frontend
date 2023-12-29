@@ -16,6 +16,8 @@ import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
 } from "@/utils/file-uploader.util";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPhotoFilm, faTrash } from "@fortawesome/free-solid-svg-icons";
 
 type ThumbnailInputProps = {
   isLoading?: boolean;
@@ -44,7 +46,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   if (!hasThumbnail && (!editMode || isLoading)) {
     return (
       <ThumbnailPlaceholder>
-        <i className="fa fa-picture-o" />
+        <FontAwesomeIcon icon={faPhotoFilm} />
       </ThumbnailPlaceholder>
     );
   }
@@ -56,7 +58,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
           {Boolean(handleRemove) && editMode && (
             <ThumbnailButtons>
               <Button type="button" buttonType="danger" onClick={handleRemove}>
-                <i className="fa fa-trash" />
+                <FontAwesomeIcon icon={faTrash} />
               </Button>
             </ThumbnailButtons>
           )}

@@ -2,6 +2,8 @@ import { FileUploader as DragDropFileUploader } from "react-drag-drop-files";
 import styled, { useTheme } from "styled-components";
 import { HandleChangeFile } from "@/types/media.types";
 import { Avatar } from "../profile-card/profile-card.styled";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlusSquare } from "@fortawesome/free-solid-svg-icons";
 
 const StyledFileUploaderDropzone = styled.div`
   width: 100%;
@@ -59,7 +61,7 @@ export const AvatarUploader: React.FC<Props> = (props) => {
       <Avatar size="lg" url={props.src}>
         <StyledFileUploaderDropzone>
           <span>
-            <i className="fa fa-plus-square" aria-hidden="true" />
+            <FontAwesomeIcon icon={faPlusSquare} aria-hidden="true" />
           </span>
         </StyledFileUploaderDropzone>
       </Avatar>

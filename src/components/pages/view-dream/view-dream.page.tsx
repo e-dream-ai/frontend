@@ -30,6 +30,14 @@ import UpdateDreamSchema, {
 } from "@/schemas/update-dream.schema";
 import { FileTypes, MultiMediaState } from "@/types/media.types";
 import { DreamVideoInput, ViewDreamInputs } from "./view-dream-inputs";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPencil,
+  faSave,
+  faThumbsDown,
+  faThumbsUp,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 
 type Params = { uuid: string };
 
@@ -266,14 +274,14 @@ const ViewDreamPage: React.FC = () => {
                 <Button
                   type="button"
                   buttonType="default"
-                  after={<i className="fa fa-thumbs-up" />}
+                  after={<FontAwesomeIcon icon={faThumbsUp} />}
                   transparent
                   ml="1rem"
                 />
                 <Button
                   type="button"
                   buttonType="default"
-                  after={<i className="fa fa-thumbs-down" />}
+                  after={<FontAwesomeIcon icon={faThumbsDown} />}
                   transparent
                   ml="1rem"
                 />
@@ -285,7 +293,7 @@ const ViewDreamPage: React.FC = () => {
                   <Button
                     type="button"
                     buttonType="danger"
-                    after={<i className="fa fa-trash" />}
+                    after={<FontAwesomeIcon icon={faTrash} />}
                     transparent
                     ml="1rem"
                     onClick={onShowConfirmDeleteModal}
@@ -309,7 +317,7 @@ const ViewDreamPage: React.FC = () => {
                     </Button>
                     <Button
                       type="submit"
-                      after={<i className="fa fa-save" />}
+                      after={<FontAwesomeIcon icon={faSave} />}
                       isLoading={isLoading}
                       ml="1rem"
                     >
@@ -325,7 +333,7 @@ const ViewDreamPage: React.FC = () => {
                   >
                     <Button
                       type="button"
-                      after={<i className="fa fa-pencil" />}
+                      after={<FontAwesomeIcon icon={faPencil} />}
                       onClick={handleEdit}
                     >
                       {t("page.view_dream.edit")}
@@ -367,7 +375,7 @@ const ViewDreamPage: React.FC = () => {
                   buttonType="danger"
                   onClick={handleRemoveVideo}
                 >
-                  <i className="fa fa-trash" />
+                  <FontAwesomeIcon icon={faTrash} />
                 </Button>
               )}
             </Row>

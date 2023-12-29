@@ -12,6 +12,8 @@ import ForgotPasswordSchema, {
   ForgotPasswordFormValues,
 } from "@/schemas/forgot-password.schema";
 import { ModalComponent } from "@/types/modal.types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faAngleRight, faEnvelope } from "@fortawesome/free-solid-svg-icons";
 
 export const ForgotPasswordModal: React.FC<
   ModalComponent<{
@@ -71,7 +73,7 @@ export const ForgotPasswordModal: React.FC<
         <Input
           placeholder={t("modal.forgot_password.email")}
           type="email"
-          before={<i className="fa fa-envelope" />}
+          before={<FontAwesomeIcon icon={faEnvelope} />}
           error={errors.username?.message}
           {...register("username")}
         />
@@ -79,7 +81,7 @@ export const ForgotPasswordModal: React.FC<
         <Row justifyContent="flex-end">
           <Button
             type="submit"
-            after={<i className="fa fa-angle-right" />}
+            after={<FontAwesomeIcon icon={faAngleRight} />}
             isLoading={isLoading}
           >
             {t("modal.forgot_password.send")}

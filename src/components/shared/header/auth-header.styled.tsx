@@ -5,7 +5,7 @@ export const Divider = styled.div`
   padding: 0 12px;
 `;
 
-export const AnchorIcon = styled.i`
+export const AnchorIcon = styled.span`
   margin: 0 10px 0 0;
   font-size: 1.2rem;
   color: ${(props) => props.theme.textPrimaryColor};

@@ -10,6 +10,8 @@ import {
   SearchInput,
   StyledSearchBar,
 } from "./search-bar.styled";
+import { faRemove, faSearch } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 type SearchBarProps = {
   showClearButton?: boolean;
@@ -57,13 +59,13 @@ const SearchBar: React.FC<SearchBarProps> = ({
       />
       {showClearButton ? (
         <SearchBarClearButton onClick={handleSearchBarClearClick}>
-          <i className="fa fa-remove" />
+          <FontAwesomeIcon icon={faRemove} />
         </SearchBarClearButton>
       ) : (
         false
       )}
       <SearchBarIcon onClick={handleSearchBarIconClick}>
-        <i className="fa fa-search" />
+        <FontAwesomeIcon icon={faSearch} />
       </SearchBarIcon>
     </StyledSearchBar>
   );

@@ -15,6 +15,12 @@ import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import SignupSchema, { SignupFormValues } from "@/schemas/signup.schema";
 import { ModalComponent } from "@/types/modal.types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faAngleRight,
+  faEnvelope,
+  faLock,
+} from "@fortawesome/free-solid-svg-icons";
 
 export const SignupModal: React.FC<
   ModalComponent<{
@@ -80,21 +86,21 @@ export const SignupModal: React.FC<
         <Input
           placeholder={t("modal.signup.email")}
           type="email"
-          before={<i className="fa fa-envelope" />}
+          before={<FontAwesomeIcon icon={faEnvelope} />}
           error={errors.username?.message}
           {...register("username")}
         />
         <Input
           placeholder={t("modal.signup.password")}
           type="password"
-          before={<i className="fa fa-lock" />}
+          before={<FontAwesomeIcon icon={faLock} />}
           error={errors.password?.message}
           {...register("password")}
         />
         <Input
           placeholder={t("modal.signup.confirm_password")}
           type="password"
-          before={<i className="fa fa-lock" />}
+          before={<FontAwesomeIcon icon={faLock} />}
           error={errors.confirmPassword?.message}
           {...register("confirmPassword")}
         />
@@ -110,7 +116,7 @@ export const SignupModal: React.FC<
           </Row>
           <Button
             type="submit"
-            after={<i className="fa fa-angle-right" />}
+            after={<FontAwesomeIcon icon={faAngleRight} />}
             isLoading={isLoading}
           >
             {t("modal.signup.next")}

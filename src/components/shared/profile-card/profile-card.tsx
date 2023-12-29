@@ -24,6 +24,8 @@ import Row, { Column } from "../row/row";
 import TextArea from "../text-area/text-area";
 import Text from "../text/text";
 import { Avatar, AvatarPlaceholder } from "./profile-card.styled";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faAlignJustify, faUser } from "@fortawesome/free-solid-svg-icons";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -43,7 +45,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
           />
         ) : (
           <AvatarPlaceholder size="lg">
-            <i className="fa fa-user" />
+            <FontAwesomeIcon icon={faUser} />
           </AvatarPlaceholder>
         )}
       </Row>
@@ -152,7 +154,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           );
         }
       },
-      onError: (_) => {
+      onError: () => {
         toast.error(t("components.profile_card.error_updating_profile"));
       },
     });
@@ -177,13 +179,13 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       <Input
         placeholder={t("components.profile_card.name")}
         type="text"
-        before={<i className="fa fa-user" />}
+        before={<FontAwesomeIcon icon={faUser} />}
         error={errors.name?.message}
         {...register("name")}
       />
       <TextArea
         placeholder={t("components.profile_card.description")}
-        before={<i className="fa fa-align-justify" />}
+        before={<FontAwesomeIcon icon={faAlignJustify} />}
         error={errors.description?.message}
         {...register("description")}
       />

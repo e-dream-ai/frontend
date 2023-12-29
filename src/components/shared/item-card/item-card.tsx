@@ -25,6 +25,13 @@ import {
   ThumbnailPlaceholder,
 } from "./item-card.styled";
 import { FeedItemServerType } from "@/types/feed.types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faFilm,
+  faListUl,
+  faPhotoFilm,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
 
 type DNDMode = "local" | "cross-window";
 
@@ -235,7 +242,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           />
         ) : (
           <ThumbnailPlaceholder size={size} onClick={navigateToItemPage}>
-            <i className="fa fa-picture-o" />
+            <FontAwesomeIcon icon={faPhotoFilm} />
           </ThumbnailPlaceholder>
         )}
         <Column ml={4}>
@@ -247,9 +254,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             onClick={navigateToItemPage}
           >
             {type === "playlist" ? (
-              <i className="fa  fa-list-ul" />
+              <FontAwesomeIcon icon={faListUl} />
             ) : (
-              <i className="fa  fa-film" />
+              <FontAwesomeIcon icon={faFilm} />
             )}{" "}
             {name || t("components.item_card.unnamed")}
           </Anchor>
@@ -274,7 +281,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           {/* <Menu
             menuButton={
               <MenuButton>
-                <i className="fa fa-ellipsis-h" />
+                <FontAwesomeIcon icon{faEllipsis} />
               </MenuButton>
             }
             transition
@@ -287,7 +294,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             <Button
               type="button"
               buttonType="danger"
-              after={<i className="fa fa-trash" />}
+              after={<FontAwesomeIcon icon={faTrash} />}
               transparent
               ml="1rem"
               onClick={onDelete}

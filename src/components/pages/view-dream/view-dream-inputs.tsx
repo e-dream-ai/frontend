@@ -10,6 +10,13 @@ import {
   handleFileUploaderTypeError,
 } from "@/utils/file-uploader.util";
 import { Video, VideoPlaceholder } from "./view-dream.styled";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCalendar,
+  faFileVideo,
+  faFilm,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 
 type ViewDreamInputsProps = {
   register: UseFormRegister<UpdateDreamFormValues>;
@@ -29,7 +36,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         disabled={!editMode}
         placeholder={t("page.view_dream.name")}
         type="text"
-        before={<i className="fa fa-file-video-o" />}
+        before={<FontAwesomeIcon icon={faFileVideo} />}
         error={errors.name?.message}
         {...register("name")}
       />
@@ -37,14 +44,14 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         disabled
         placeholder={t("page.view_dream.owner")}
         type="text"
-        before={<i className="fa fa-user" />}
+        before={<FontAwesomeIcon icon={faUser} />}
         {...register("owner")}
       />
       <Input
         disabled
         placeholder={t("page.view_dream.created")}
         type="text"
-        before={<i className="fa fa-calendar" />}
+        before={<FontAwesomeIcon icon={faCalendar} />}
         {...register("created_at")}
       />
     </>
@@ -74,7 +81,7 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
   if (!hasVideo && (!editMode || isLoading)) {
     return (
       <VideoPlaceholder>
-        <i className="fa fa-film" />
+        <FontAwesomeIcon icon={faFilm} />
       </VideoPlaceholder>
     );
   }

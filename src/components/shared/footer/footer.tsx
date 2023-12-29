@@ -3,25 +3,43 @@ import { ROUTES } from "@/constants/routes.constants";
 import { useTranslation } from "react-i18next";
 import router from "@/routes/router";
 import { FooterCol, FooterRow, StyledFooter } from "./footer.styled";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faDiscord,
+  faFacebookF,
+  faGithub,
+  faThreads,
+  faTwitter,
+} from "@fortawesome/free-brands-svg-icons";
+import { faCircle } from "@fortawesome/free-solid-svg-icons";
 
 const FooterIcons: React.FC = () => (
   <>
     <Anchor href="https://www.threads.net/@e_dream_ai" target="_blank">
-      <span className="fa-stack fa-lg">
-        <i className="fa fa-circle fa-stack-2x" />
-        <i className="fa fa-threads fa-stack-1x fa-inverse reverse" />
+      <span className="fa-stack fa-lg --fa-li-margin">
+        <FontAwesomeIcon icon={faCircle} className="fa-2x" />
+        <FontAwesomeIcon
+          icon={faThreads}
+          className="fa-stack-1x fa-inverse reverse"
+        />
       </span>
     </Anchor>
     <Anchor href="https://twitter.com/e_dream_ai" target="_blank">
       <span className="fa-stack fa-lg">
-        <i className="fa fa-circle fa-stack-2x" />
-        <i className="fa fa-twitter fa-stack-1x fa-inverse reverse" />
+        <FontAwesomeIcon icon={faCircle} className="fa-2x" />
+        <FontAwesomeIcon
+          icon={faTwitter}
+          className="fa-stack-1x fa-inverse reverse"
+        />
       </span>
     </Anchor>
     <Anchor href="https://discord.gg/FFDTWwBgBe" target="_blank">
       <span className="fa-stack fa-lg">
-        <i className="fa fa-circle fa-stack-2x" />
-        <i className="fa fa-discord fa-stack-1x fa-inverse reverse" />
+        <FontAwesomeIcon icon={faCircle} className="fa-2x" />
+        <FontAwesomeIcon
+          icon={faDiscord}
+          className="fa-stack-1x fa-inverse reverse"
+        />
       </span>
     </Anchor>
     <Anchor
@@ -30,14 +48,20 @@ const FooterIcons: React.FC = () => (
       rel="noreferrer"
     >
       <span className="fa-stack fa-lg">
-        <i className="fa fa-circle fa-stack-2x" />
-        <i className="fa fa-github fa-stack-1x fa-inverse reverse" />
+        <FontAwesomeIcon icon={faCircle} className="fa-2x" />
+        <FontAwesomeIcon
+          icon={faGithub}
+          className="fa-stack-1x fa-inverse reverse"
+        />
       </span>
     </Anchor>
     <Anchor href="https://www.facebook.com/groups/edreamai/" target="_blank">
       <span className="fa-stack fa-lg">
-        <i className="fa fa-circle fa-stack-2x" />
-        <i className="fa fa-facebook fa-stack-1x fa-inverse reverse" />
+        <FontAwesomeIcon icon={faCircle} className="fa-2x" />
+        <FontAwesomeIcon
+          icon={faFacebookF}
+          className="fa-stack-1x fa-inverse reverse"
+        />
       </span>
     </Anchor>
   </>

@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import Input, { InputProps } from "../input/input";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash } from "@fortawesome/free-solid-svg-icons";
 
-// eslint-disable-next-line react/display-name
 export const InputPassword = React.forwardRef<HTMLInputElement, InputProps>(
   ({ after, ...props }, ref) => {
     const [show, setShow] = useState(false);
@@ -16,7 +17,7 @@ export const InputPassword = React.forwardRef<HTMLInputElement, InputProps>(
         after={
           <>
             {after}
-            <i className={`fa ${show ? "fa-eye-slash" : "fa-eye"}`} />
+            <FontAwesomeIcon icon={show ? faEyeSlash : faEye} />
           </>
         }
       />

@@ -10,6 +10,8 @@ import { toast } from "react-toastify";
 import ConfirmForgotPasswordSchema, {
   ConfirmForgotPasswordFormValues,
 } from "@/schemas/confirm-forgot-password.schema";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faAngleRight, faKey, faLock } from "@fortawesome/free-solid-svg-icons";
 
 export const ConfirmForgotPassword: React.FC = () => {
   const { t } = useTranslation();
@@ -60,7 +62,7 @@ export const ConfirmForgotPassword: React.FC = () => {
         <Input
           placeholder={t("page.confirm_forgot_password.codes")}
           type="text"
-          before={<i className="fa fa-key" />}
+          before={<FontAwesomeIcon icon={faKey} />}
           error={errors.code?.message}
           {...register("code")}
         />
@@ -68,14 +70,14 @@ export const ConfirmForgotPassword: React.FC = () => {
         <Input
           placeholder={t("page.confirm_forgot_password.new_password")}
           type="password"
-          before={<i className="fa fa-lock" />}
+          before={<FontAwesomeIcon icon={faLock} />}
           error={errors.password?.message}
           {...register("password")}
         />
         <Input
           placeholder={t("page.confirm_forgot_password.confirm_new_password")}
           type="password"
-          before={<i className="fa fa-lock" />}
+          before={<FontAwesomeIcon icon={faLock} />}
           error={errors.confirmPassword?.message}
           {...register("confirmPassword")}
         />
@@ -84,7 +86,7 @@ export const ConfirmForgotPassword: React.FC = () => {
           <Button
             type="submit"
             isLoading={isLoading}
-            after={<i className="fa fa-angle-right" />}
+            after={<FontAwesomeIcon icon={faAngleRight} />}
           >
             {t("page.confirm_forgot_password.change_password")}
           </Button>

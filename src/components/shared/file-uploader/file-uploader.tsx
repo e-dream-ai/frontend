@@ -2,6 +2,8 @@ import { FileUploader as DragDropFileUploader } from "react-drag-drop-files";
 import { useTranslation } from "react-i18next";
 import styled, { useTheme } from "styled-components";
 import { HandleChangeFile } from "@/types/media.types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 
 const StyledFileUploaderDropzone = styled.p`
   display: inline-flex;
@@ -58,7 +60,7 @@ export const FileUploader: React.FC<Props> = (props) => {
     >
       <StyledFileUploaderDropzone>
         <span>
-          <i className="fa fa-plus-circle" aria-hidden="true" />{" "}
+          <FontAwesomeIcon icon={faPlusCircle} aria-hidden="true" />{" "}
           {t("components.file_uploader.dropzone_placeholder")}
         </span>
         <span>{props.types?.join(", ")}</span>
