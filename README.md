@@ -25,7 +25,13 @@
 
 ## Run locally
 
-Copy env file, replace data with correct environment info
+Install pnpm, follow next [instructions](https://pnpm.io/installation). Using npm
+
+```bash
+npm install -g pnpm
+```
+
+Copy env file, replace data with correct environment info.
 
 ```bash
 cp .env.example .env
@@ -39,7 +45,9 @@ pnpm install
 
 Then you can run:
 
-### `pnpm run dev`
+```bash
+pnpm run dev
+```
 
 Runs the app in the development mode.\
 Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
@@ -49,7 +57,11 @@ You will also see any lint errors in the console.
 
 ## Build
 
-### `pnpm run build`
+Run build command
+
+```bash
+pnpm run build
+```
 
 Builds the app for production to the `build` folder.\
 It correctly bundles React in production mode and optimizes the build for the best performance.
