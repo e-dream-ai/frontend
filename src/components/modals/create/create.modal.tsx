@@ -26,6 +26,8 @@ import {
   handleFileUploaderTypeError,
 } from "@/utils/file-uploader.util";
 import { Video } from "./create.styled";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faList, faUpload } from "@fortawesome/free-solid-svg-icons";
 
 type VideoState =
   | {
@@ -172,7 +174,7 @@ export const CreateModal: React.FC<
 
                 <Column>
                   <Button
-                    after={<i className="fa fa-upload" />}
+                    after={<FontAwesomeIcon icon={faUpload} />}
                     onClick={handleUpload}
                     isLoading={isLoading}
                   >
@@ -206,7 +208,7 @@ export const CreateModal: React.FC<
               <Input
                 placeholder={t("modal.create_playlist.name")}
                 type="text"
-                before={<i className="fa fa-list" />}
+                before={<FontAwesomeIcon icon={faList} />}
                 error={errors.name?.message}
                 {...register("name")}
               />

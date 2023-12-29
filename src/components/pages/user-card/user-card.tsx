@@ -8,6 +8,8 @@ import { StyledUserCard, StyledUserCardList } from "./user-card.styled";
 import { Sizes } from "@/types/sizes.types";
 import { Column, Row } from "@/components/shared";
 import { useNavigate } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faUser } from "@fortawesome/free-solid-svg-icons";
 
 const UserCard: React.FC<{ user: User; size: Sizes }> = ({ user, size }) => {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ const UserCard: React.FC<{ user: User; size: Sizes }> = ({ user, size }) => {
         />
       ) : (
         <AvatarPlaceholder size={size}>
-          <i className="fa fa-user" />
+          <FontAwesomeIcon icon={faUser} />
         </AvatarPlaceholder>
       )}
       <Row>

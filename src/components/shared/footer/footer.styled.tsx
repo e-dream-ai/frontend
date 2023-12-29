@@ -34,6 +34,7 @@ export const FooterCol = styled.div<{ flow?: string }>`
   align-items: center;
   justify-content: center;
   margin-top: 25px;
+  gap: 1rem;
 `;
 
 export default StyledFooter;

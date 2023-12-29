@@ -58,6 +58,6 @@ export const ModalTitle = styled.h2`
   line-height: 1.5rem;
 `;
 
-export const ModalCloseIcon = styled.i`
+export const ModalCloseIcon = styled.span`
   font-size: 1.5rem;
 `;

@@ -12,6 +12,12 @@ import { toast } from "react-toastify";
 import LoginSchema, { LoginFormValues } from "@/schemas/login.schema";
 import { UserWithToken } from "@/types/auth.types";
 import { ModalComponent } from "@/types/modal.types";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faEnvelope,
+  faLock,
+  faAngleRight,
+} from "@fortawesome/free-solid-svg-icons";
 
 export const LoginModal: React.FC<
   ModalComponent<{
@@ -62,7 +68,7 @@ export const LoginModal: React.FC<
             toast.error(`${t("modal.login.error_logging_in")} ${data.message}`);
           }
         },
-        onError: (_) => {
+        onError: () => {
           toast.error(t("modal.login.error_logging_in"));
         },
       },
@@ -79,13 +85,13 @@ export const LoginModal: React.FC<
         <Input
           placeholder={t("modal.login.email")}
           type="email"
-          before={<i className="fa fa-envelope" />}
+          before={<FontAwesomeIcon icon={faEnvelope} />}
           error={errors.username?.message}
           {...register("username")}
         />
         <InputPassword
           placeholder={t("modal.login.password")}
-          before={<i className="fa fa-lock" />}
+          before={<FontAwesomeIcon icon={faLock} />}
           error={errors.password?.message}
           {...register("password")}
         />
@@ -93,7 +99,7 @@ export const LoginModal: React.FC<
         <Row justifyContent="flex-end">
           <Button
             type="submit"
-            after={<i className="fa fa-angle-right" />}
+            after={<FontAwesomeIcon icon={faAngleRight} />}
             isLoading={isLoading}
           >
             {t("modal.login.login")}

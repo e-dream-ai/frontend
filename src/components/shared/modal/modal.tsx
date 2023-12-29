@@ -7,6 +7,8 @@ import {
   ModalTitle,
   StyledReactModal,
 } from "./modal.styled";
+import { faClose } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 
 type ModalProps = {
   isOpen?: boolean;
@@ -20,7 +22,9 @@ type ModalProps = {
 const ModalClose: React.FC<{ onClick?: () => void }> = ({ onClick }) => {
   return (
     <Anchor onClick={onClick}>
-      <ModalCloseIcon className="fa fa-close" />
+      <ModalCloseIcon>
+        <FontAwesomeIcon icon={faClose} />
+      </ModalCloseIcon>
     </Anchor>
   );
 };

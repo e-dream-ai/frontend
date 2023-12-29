@@ -8,7 +8,7 @@ export const ThumbnailPlaceholder = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 6rem;
+  font-size: 3rem;
 `;
 
 export const ThumbnailContainer = styled.div<{ editMode?: boolean }>`

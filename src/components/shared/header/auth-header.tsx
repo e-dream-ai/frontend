@@ -14,15 +14,17 @@ import {
   StyledAuthHeader,
 } from "./auth-header.styled";
 import StyledHeader from "./header.styled";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faLock, faPencil } from "@fortawesome/free-solid-svg-icons";
 
 const AuthAnchor: React.FC<{
   text: string;
-  faClass: string;
+  icon: React.ReactElement;
   onClick?: () => void;
-}> = ({ text, faClass, onClick }) => {
+}> = ({ text, icon, onClick }) => {
   return (
     <Anchor onClick={onClick}>
-      <AnchorIcon className={`${faClass} fa-inverse`} />
+      <AnchorIcon>{icon}</AnchorIcon>
       <span>{text}</span>
     </Anchor>
   );
@@ -71,7 +73,7 @@ export const AuthHeader: React.FC = () => {
       ) : (
         <AuthAnchor
           text={t("header.signup")}
-          faClass="fa fa-pencil"
+          icon={<FontAwesomeIcon icon={faPencil} />}
           onClick={handleShowSignupModal}
         />
       )}
@@ -81,7 +83,7 @@ export const AuthHeader: React.FC = () => {
       ) : (
         <AuthAnchor
           text={t("header.login")}
-          faClass="fa fa-lock"
+          icon={<FontAwesomeIcon icon={faLock} />}
           onClick={handleShowLoginModal}
         />
       )}

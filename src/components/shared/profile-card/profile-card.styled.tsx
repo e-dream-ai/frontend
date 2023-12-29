@@ -27,7 +27,7 @@ export const AvatarPlaceholder = styled.div<
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 6rem;
+  font-size: 3rem;
 `;
 
 export const Avatar = styled.div<{ url?: string; size: Sizes }>`
