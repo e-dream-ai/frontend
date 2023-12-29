@@ -19,6 +19,26 @@ export const StyledInput = styled.input`
   }
 `;
 
+export const DisabledInput = styled.div`
+  width: 100%;
+  width: -moz-available; /* WebKit-based browsers will ignore this. */
+  width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
+  width: fill-available;
+  height: 2.2rem;
+  padding: 6px 12px;
+  background: ${(props) => props.theme.colorBackgroundSecondary};
+  border-radius: 0;
+  border: 0;
+  color: ${(props) => props.theme.inputTextColorPrimary};
+  font-size: 1rem;
+  cursor: not-allowed;
+
+  &:disabled {
+    background-color: ${(props) => props.theme.inputBackgroundDisabledColor};
+    cursor: not-allowed;
+  }
+`;
+
 export const InputGroup = styled.div`
   display: flex;
   flex-flow: column;

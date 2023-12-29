@@ -11,8 +11,7 @@ type RowProps = {
   WidthProps;
 
 export const Row = styled.div<RowProps>`
-  ${space}
-  border-bottom:  ${(props) =>
+  border-bottom: ${(props) =>
     props.separator ? `1px solid ${props.theme.colorPrimary}` : "0"};
   flex: ${(props) => (props.flex ? props.flex : "initial")};
   display: flex;
@@ -20,16 +19,18 @@ export const Row = styled.div<RowProps>`
   justify-content: ${(props) => props.justifyContent};
   align-items: ${(props) => props.alignItems};
   margin-bottom: 1rem;
+  ${space}
+  ${width}
 `;
 
 export const Column = styled.div<RowProps>`
-  ${space}
-  ${width}
   flex: ${(props) => (props.flex ? props.flex : "initial")};
   display: flex;
   flex-flow: column;
   justify-content: ${(props) => props.justifyContent};
   align-items: ${(props) => props.alignItems};
+  ${space}
+  ${width}
 `;
 
 export default Row;

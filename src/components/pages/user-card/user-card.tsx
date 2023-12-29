@@ -10,11 +10,12 @@ import { Column, Row } from "@/components/shared";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
+import { ROUTES } from "@/constants/routes.constants";
 
 const UserCard: React.FC<{ user: User; size: Sizes }> = ({ user, size }) => {
   const navigate = useNavigate();
 
-  const navigateToProfile = () => navigate(`/profile/${user.id ?? 0}`);
+  const navigateToProfile = () => navigate(`${ROUTES.PROFILE}/${user.id ?? 0}`);
 
   return (
     <StyledUserCard onClick={navigateToProfile}>

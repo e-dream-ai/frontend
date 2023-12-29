@@ -79,10 +79,13 @@ const ViewDreamPage: React.FC = () => {
     handleSubmit,
     formState: { errors },
     reset,
+    getValues,
   } = useForm<UpdateDreamFormValues>({
     resolver: yupResolver(UpdateDreamSchema),
     defaultValues: { name: "" },
   });
+
+  const values = getValues();
 
   const handleMutateVideoDream = (data: UpdateDreamFormValues) => {
     if (isVideoRemoved || video?.file) {
@@ -267,24 +270,27 @@ const ViewDreamPage: React.FC = () => {
       />
       <Section id={SectionID}>
         <Container>
-          <Row justifyContent="space-between" separator>
+          <Row justifyContent="space-between" pb="1rem" separator>
             <h2>{t("page.view_dream.title")}</h2>
+
             {!editMode && (
-              <Row>
+              <Row margin={0}>
                 <Button
                   type="button"
                   buttonType="default"
-                  after={<FontAwesomeIcon icon={faThumbsUp} />}
                   transparent
                   ml="1rem"
-                />
+                >
+                  <FontAwesomeIcon icon={faThumbsUp} />
+                </Button>
                 <Button
                   type="button"
                   buttonType="default"
-                  after={<FontAwesomeIcon icon={faThumbsDown} />}
                   transparent
                   ml="1rem"
-                />
+                >
+                  <FontAwesomeIcon icon={faThumbsDown} />
+                </Button>
 
                 <Restricted
                   to={DREAM_PERMISSIONS.CAN_DELETE_DREAM}
@@ -293,11 +299,12 @@ const ViewDreamPage: React.FC = () => {
                   <Button
                     type="button"
                     buttonType="danger"
-                    after={<FontAwesomeIcon icon={faTrash} />}
                     transparent
                     ml="1rem"
                     onClick={onShowConfirmDeleteModal}
-                  />
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
                 </Restricted>
               </Row>
             )}
@@ -356,6 +363,8 @@ const ViewDreamPage: React.FC = () => {
               </Column>
               <Column flex="1 1 auto" ml={1}>
                 <ViewDreamInputs
+                  dream={dream}
+                  values={values}
                   register={register}
                   errors={errors}
                   editMode={editMode}
