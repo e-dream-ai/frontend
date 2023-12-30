@@ -30,7 +30,6 @@ export const MenuHeader: React.FC = () => {
       name: t("header.my_dreams"),
       action: () => router.navigate(ROUTES.MY_DREAMS),
     },
-    { name: t("header.forum") },
   ];
 
   const NAV_ROUTES: Array<{ name: string; action?: () => void }> = [
@@ -41,9 +40,6 @@ export const MenuHeader: React.FC = () => {
     {
       name: t("header.install"),
       action: () => router.navigate(ROUTES.INSTALL),
-    },
-    {
-      name: t("header.forum"),
     },
   ];
 
