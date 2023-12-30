@@ -98,28 +98,64 @@ export const TermsOfServicePage: React.FC = () => {
               </ol>
             </li>
             <li>
-              <b>Subscriptions</b>
-              <ol type="a">
-                <li>TBD</li>
-              </ol>
+	      <b>Payments</b>
+	      <ol type="a">
+                <li>
+		  <b>Subscriptions</b>
+		  <ol type="i">
+		    <li>TBD</li>
+		  </ol>
+		</li>
+		<li>
+		  <b>Credits</b>
+		  <ol type="i">
+		    <li>TBD</li>
+		  </ol>
+		</li>
+		<li>
+		  <b>Creator Bonuses</b>
+		  <ol type="i">
+		    <li>TBD</li>
+		  </ol>
+		</li>
+		<li>
+		  <b>Billing</b>
+		  <ol type="i">
+		    <li>TBD</li>
+		  </ol>
+		</li>
+	      </ol>
             </li>
             <li>
-              <b>Billing</b>
+              <b>Content Policy</b>
               <ol type="a">
-                <li>TBD</li>
-              </ol>
-            </li>
-            <li>
-              <b>NSFW Content Policy</b>
-              <ol type="a">
+                <li>
+                  The following types of content are prohibited:
+                  <ol type="i">
+                    <li>
+                      Discriminates against people (including skin color,
+                      gender, sexual orientation and religion).
+                    </li>
+		    <li>
+		      Is harassing or contains non-consensual porn.
+		    </li>
+                    <li>
+                      Contains any logos, watermarks, bugs, titles, or
+                      credits. Note: Title, artist, and other metadata
+                      can be displayed onscreen by the playback
+                      software at the user’s direction, and there are
+                      commands to open up the web page with all the
+                      info for the content, including its attribution.
+                    </li>
+                  </ol>
+                </li>
+                <li>
+                  Prohibited content may not be uploaded to e-dream.
+                </li>
                 <li>
                   We define &ldquo;not safe for work&rdquo; (NSFW) as any
                   content that:
                   <ol type="i">
-                    <li>
-                      Discriminates against people (including skin color,
-                      gender, sexual orientation and religion),
-                    </li>
                     <li>Depicts violent behavior, or</li>
                     <li>
                       Is pornographic or contains sexually oriented nudity.
@@ -177,15 +213,7 @@ export const TermsOfServicePage: React.FC = () => {
                   sole discretion.
                 </li>
                 <li>
-                  Uploaded visuals may not have logos, watermarks, bugs, titles,
-                  or credits. Title, artist, and other metadata can be displayed
-                  onscreen by the playback software at the user’s direction, and
-                  there are commands to open up the web page with all the info
-                  for the content, including its attribution.
-                </li>
-                <li>
-                  NSFW Visuals must be declared by checking the box in the
-                  upload form.
+                  Uploaded content must respect the Content Policy, above.
                 </li>
                 <li>
                   The company reserves the right to edit the content to meet
