@@ -15,7 +15,8 @@ export const AboutPage: React.FC = () => {
         <Row justifyContent="space-between" separator />
         <Text>
 	  <p>
-	    E-dream is a community for gen AI visuals.
+	    E-dream is a community for generative AI visuals and all
+	    animated artwork.
 	  </p>
 	  <p>
 	    Discover and experience the latest animations from the
@@ -23,8 +24,10 @@ export const AboutPage: React.FC = () => {
 	  </p>
 	  <p>
 	    Install e-dream on your Mac to get the highest quality
-	    experience, including interaction and screensaver
-	    integration.
+	    experience, including interaction, screensaver
+	    integration, and remote control. The e-dream native client
+	    provides unsurpassed support for ambient use, including
+	    adjustable super slow and smooth playback.
 	  </p>
 	  <p>
 	    Curate playlists or upload your own creations and earn
