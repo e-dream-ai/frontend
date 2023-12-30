@@ -1,6 +1,5 @@
 import { Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
-import { LoremIpsum8P } from "@/components/shared/lorem-ipsum/lorem-ipsum";
 import { Section } from "@/components/shared/section/section";
 import Text from "@/components/shared/text/text";
 import { useTranslation } from "react-i18next";
@@ -15,7 +14,30 @@ export const AboutPage: React.FC = () => {
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
         <Text>
-          <LoremIpsum8P />
+	  <p>
+	    E-dream is a community for gen AI visuals.
+	  </p>
+	  <p>
+	    Discover and experience the latest animations from the
+	    greatest artists.
+	  </p>
+	  <p>
+	    Install e-dream on your Mac to get the highest quality
+	    experience, including interaction and screensaver
+	    integration.
+	  </p>
+	  <p>
+	    Curate playlists or upload your own creations and earn
+	    based on views of your work.
+	  </p>
+	  <p>
+	    Connect and learn from other fans on Discord or social
+	    media. Become a creator yourself!
+	  </p>
+	  <p>
+	    Create an account, install the native client, and begin
+	    the experience.
+	  </p>
         </Text>
       </Section>
     </Container>
