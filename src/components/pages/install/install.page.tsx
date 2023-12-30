@@ -1,6 +1,5 @@
 import { Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
-import { LoremIpsum8P } from "@/components/shared/lorem-ipsum/lorem-ipsum";
 import { Section } from "@/components/shared/section/section";
 import Text from "@/components/shared/text/text";
 import { useTranslation } from "react-i18next";
@@ -15,7 +14,18 @@ export const InstallPage: React.FC = () => {
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
         <Text>
-          <LoremIpsum8P />
+          <p>
+	    Download and double click a DMG with a native Mac
+	    application. Run installer or drag to applications.
+	  </p>
+	  <p>
+	    Requirements: Mac OS version X or better, x86 or Apple
+	    Silicon.
+	  </p>
+	  <p>
+	    Open the settings to log in. Press F1 key for help and F2
+	    key for status.
+	  </p>
         </Text>
       </Section>
     </Container>
