@@ -141,7 +141,7 @@ const ViewDreamPage: React.FC = () => {
 
   const handleMutateDream = (data: UpdateDreamFormValues) => {
     mutateDream(
-      { name: data.name },
+      { name: data.name, activityLevel: data.activityLevel },
       {
         onSuccess: (data) => {
           if (data.success) {
@@ -149,7 +149,10 @@ const ViewDreamPage: React.FC = () => {
               [DREAM_QUERY_KEY, { uuid: dream?.uuid }],
               data,
             );
-            reset({ name: data?.data?.dream.name });
+            reset({
+              name: data?.data?.dream.name,
+              activityLevel: data.data?.dream.activityLevel,
+            });
             toast.success(t("page.view_dream.dream_updated_successfully"));
             setEditMode(false);
           } else {
@@ -190,6 +193,7 @@ const ViewDreamPage: React.FC = () => {
   const resetRemoteDreamForm = useCallback(() => {
     reset({
       name: dream?.name,
+      activityLevel: dream?.activityLevel,
       owner: dream?.user.email,
       created_at: moment(dream?.created_at).format(FORMAT),
     });

@@ -2,6 +2,7 @@ import * as yup from "yup";
 
 export type UpdateDreamFormValues = {
   name: string;
+  activityLevel?: number;
   owner?: string;
   created_at?: string;
 };
@@ -9,6 +10,7 @@ export type UpdateDreamFormValues = {
 export const UpdateDreamSchema = yup
   .object({
     name: yup.string().required(),
+    activityLevel: yup.number(),
     owner: yup.string(),
     created_at: yup.string(),
   })
