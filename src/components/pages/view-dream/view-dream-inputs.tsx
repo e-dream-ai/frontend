@@ -15,6 +15,7 @@ import {
   faCalendar,
   faFileVideo,
   faFilm,
+  faFire,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
@@ -47,6 +48,16 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         error={errors.name?.message}
         value={values.name}
         {...register("name")}
+      />
+      <Input
+        disabled={!editMode}
+        placeholder={t("page.view_dream.activity_level")}
+        type="number"
+        step="0.01"
+        before={<FontAwesomeIcon icon={faFire} />}
+        error={errors.activityLevel?.message}
+        value={values.activityLevel}
+        {...register("activityLevel")}
       />
       <Input
         disabled

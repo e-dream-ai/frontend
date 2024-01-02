@@ -38,6 +38,7 @@
       "upvote": "Upvote",
       "downvote": "Downvote",
       "name": "Name",
+      "activity_level": "Activity Level",
       "owner": "Owner",
       "created": "Created",
       "votes": "votes",
