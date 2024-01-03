@@ -48,9 +48,9 @@ export const TermsOfServicePage: React.FC = () => {
             <li>
               <b>Changes to Terms of Service.</b> The company may, from time to
               time, change these Terms of Service. We will post announcements
-              through social media and on
-              <Anchor href="https://e-dream.ai/">e-dream.ai</Anchor>
-              when we do so.
+              through social media and on{" "}
+              <Anchor href="https://e-dream.ai/">e-dream.ai</Anchor> when we do
+              so.
             </li>
             <li>
               <b>Communication Preferences.</b> You are required to give us a
@@ -98,33 +98,33 @@ export const TermsOfServicePage: React.FC = () => {
               </ol>
             </li>
             <li>
-	      <b>Payments</b>
-	      <ol type="a">
+              <b>Payments</b>
+              <ol type="a">
                 <li>
-		  <b>Subscriptions</b>
-		  <ol type="i">
-		    <li>TBD</li>
-		  </ol>
-		</li>
-		<li>
-		  <b>Credits</b>
-		  <ol type="i">
-		    <li>TBD</li>
-		  </ol>
-		</li>
-		<li>
-		  <b>Creator Bonuses</b>
-		  <ol type="i">
-		    <li>TBD</li>
-		  </ol>
-		</li>
-		<li>
-		  <b>Billing</b>
-		  <ol type="i">
-		    <li>TBD</li>
-		  </ol>
-		</li>
-	      </ol>
+                  <b>Subscriptions</b>
+                  <ol type="i">
+                    <li>TBD</li>
+                  </ol>
+                </li>
+                <li>
+                  <b>Credits</b>
+                  <ol type="i">
+                    <li>TBD</li>
+                  </ol>
+                </li>
+                <li>
+                  <b>Creator Bonuses</b>
+                  <ol type="i">
+                    <li>TBD</li>
+                  </ol>
+                </li>
+                <li>
+                  <b>Billing</b>
+                  <ol type="i">
+                    <li>TBD</li>
+                  </ol>
+                </li>
+              </ol>
             </li>
             <li>
               <b>Content Policy</b>
@@ -136,22 +136,17 @@ export const TermsOfServicePage: React.FC = () => {
                       Discriminates against people (including skin color,
                       gender, sexual orientation and religion).
                     </li>
-		    <li>
-		      Is harassing or contains non-consensual porn.
-		    </li>
+                    <li>Is harassing or contains non-consensual porn.</li>
                     <li>
-                      Contains any logos, watermarks, bugs, titles, or
-                      credits. Note: Title, artist, and other metadata
-                      can be displayed onscreen by the playback
-                      software at the user’s direction, and there are
-                      commands to open up the web page with all the
-                      info for the content, including its attribution.
+                      Contains any logos, watermarks, bugs, titles, or credits.
+                      Note: Title, artist, and other metadata can be displayed
+                      onscreen by the playback software at the user’s direction,
+                      and there are commands to open up the web page with all
+                      the info for the content, including its attribution.
                     </li>
                   </ol>
                 </li>
-                <li>
-                  Prohibited content may not be uploaded to e-dream.
-                </li>
+                <li>Prohibited content may not be uploaded to e-dream.</li>
                 <li>
                   We define &ldquo;not safe for work&rdquo; (NSFW) as any
                   content that:
@@ -304,7 +299,7 @@ export const TermsOfServicePage: React.FC = () => {
             <li>
               <b>Customer Support.</b> To find more information about our
               service and its features, or if you need assistance with your
-              account, please visit our web site,
+              account, please visit our web site,{" "}
               <Anchor href="https://e-dream.ai/">e-dream.ai</Anchor> and if
               necessary, contact us from your verified account email address.
               The company does not provide live help desk service. You may find
