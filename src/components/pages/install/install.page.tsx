@@ -15,21 +15,16 @@ export const InstallPage: React.FC = () => {
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
         <Text>
-	  <p>
-	    Requirements: Mac OS version X or better, x86 or Apple
-	    Silicon.
-	  </p>
+          <p>Requirements: Mac OS version X or better, x86 or Apple Silicon.</p>
           <p>
-	    <Anchor href="https://something.com/somewhere.dmg">
-	      Download
-	    </Anchor>
-	    and double click a DMG with a native Mac application. Run
-	    installer or drag to applications.
-	  </p>
-	  <p>
-	    Open the settings to log in. Press F1 key for help and F2
-	    key for status.
-	  </p>
+            <Anchor href="https://something.com/somewhere.dmg">Download</Anchor>{" "}
+            and double click a DMG with a native Mac application. Run installer
+            or drag to applications.
+          </p>
+          <p>
+            Open the settings to log in. Press F1 key for help and F2 key for
+            status.
+          </p>
         </Text>
       </Section>
     </Container>
