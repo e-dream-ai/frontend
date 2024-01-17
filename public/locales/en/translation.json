@@ -216,6 +216,9 @@
       "edit_profile": "Edit Profile",
       "profile_successfully_updated": "Profile updated successfully.",
       "error_updating_profile": "Error updating profile."
+    },
+    "thumbnail_input": {
+      "processing": "Processing dream, wait for it finish."
     }
   },
   "hooks": {

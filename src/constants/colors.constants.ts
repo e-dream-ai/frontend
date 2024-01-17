@@ -30,6 +30,7 @@ export const PrimaryTheme: DefaultTheme = {
   colorBackgroundQuaternary: COLORS.LIGHT_BLACK,
   colorBackgroundModalHeader: COLORS.GRAY_4,
   colorDanger: COLORS.RED,
+  textBodyColor: COLORS.GRAY_2,
   textPrimaryColor: COLORS.PRINCIPAL_WHITE,
   textSecondaryColor: COLORS.GRAY_1,
   textTertiaryColor: COLORS.BLACK,

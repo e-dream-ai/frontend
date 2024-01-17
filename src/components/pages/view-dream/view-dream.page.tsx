@@ -38,6 +38,7 @@ import {
   faThumbsUp,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
+import { DreamStatusType } from "@/types/dream.types";
 
 type Params = { uuid: string };
 
@@ -86,6 +87,13 @@ const ViewDreamPage: React.FC = () => {
   });
 
   const values = getValues();
+
+  const isDreamProcessing =
+    dream?.status === DreamStatusType.NONE ||
+    dream?.status === DreamStatusType.QUEUE ||
+    dream?.status === DreamStatusType.PROCESSING;
+  const showEditButton = editMode && !isDreamProcessing;
+  const showSaveAndCancelButtns = !editMode && !isDreamProcessing;
 
   const handleMutateVideoDream = (data: UpdateDreamFormValues) => {
     if (isVideoRemoved || video?.file) {
@@ -257,6 +265,9 @@ const ViewDreamPage: React.FC = () => {
 
   return (
     <>
+      {/**
+       * Confirm delete modal
+       */}
       <ConfirmModal
         isOpen={showConfirmDeleteModal}
         onCancel={onHideConfirmDeleteModal}
@@ -317,7 +328,7 @@ const ViewDreamPage: React.FC = () => {
             <Row justifyContent="space-between">
               <span />
               <div>
-                {editMode ? (
+                {showEditButton && (
                   <>
                     <Button
                       type="button"
@@ -337,7 +348,8 @@ const ViewDreamPage: React.FC = () => {
                         : t("page.view_dream.save")}
                     </Button>
                   </>
-                ) : (
+                )}
+                {showSaveAndCancelButtns && (
                   <Restricted
                     to={DREAM_PERMISSIONS.CAN_EDIT_DREAM}
                     isOwner={user?.id === dream?.user?.id}
@@ -359,6 +371,7 @@ const ViewDreamPage: React.FC = () => {
                   localMultimedia={thumbnail}
                   thumbnail={dream?.thumbnail}
                   editMode={editMode}
+                  isProcessing={isDreamProcessing}
                   isRemoved={isThumbnailRemoved}
                   handleChange={handleThumbnailChange}
                   handleRemove={handleRemoveThumbnail}
@@ -375,32 +388,37 @@ const ViewDreamPage: React.FC = () => {
                 />
               </Column>
             </Row>
-            <Row justifyContent="space-between">
-              <Text>0 {t("page.view_dream.votes")}</Text>
-              <Text>0 {t("page.view_dream.downvotes")}</Text>
-            </Row>
-
-            <Row justifyContent="space-between" alignItems="center">
-              <h3>{t("page.view_dream.video")}</h3>
-              {editMode && (
-                <Button
-                  type="button"
-                  buttonType="danger"
-                  onClick={handleRemoveVideo}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
-              )}
-            </Row>
-            <Row>
-              <DreamVideoInput
-                dream={dream}
-                editMode={editMode}
-                video={video}
-                isRemoved={isVideoRemoved}
-                handleChange={handleVideoChange}
-              />
-            </Row>
+            {!isDreamProcessing ? (
+              <>
+                <Row justifyContent="space-between">
+                  <Text>0 {t("page.view_dream.votes")}</Text>
+                  <Text>0 {t("page.view_dream.downvotes")}</Text>
+                </Row>
+                <Row justifyContent="space-between" alignItems="center">
+                  <h3>{t("page.view_dream.video")}</h3>
+                  {editMode && (
+                    <Button
+                      type="button"
+                      buttonType="danger"
+                      onClick={handleRemoveVideo}
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </Button>
+                  )}
+                </Row>
+                <Row>
+                  <DreamVideoInput
+                    dream={dream}
+                    editMode={editMode}
+                    video={video}
+                    isRemoved={isVideoRemoved}
+                    handleChange={handleVideoChange}
+                  />
+                </Row>
+              </>
+            ) : (
+              false
+            )}
           </form>
         </Container>
       </Section>
