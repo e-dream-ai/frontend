@@ -17,7 +17,7 @@ export type Dream = {
   user: Omit<User, "token">;
   uuid: string;
   video: string;
-  processed_video?: string;
+  original_video?: string;
   status: DreamStatusType;
   created_at: string;
 };
