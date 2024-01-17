@@ -44,6 +44,7 @@
       "votes": "votes",
       "downvotes": "downvotes",
       "video": "Video",
+      "original_video": "Original Video",
       "thumbnail": "Thumbnail",
       "confirm_delete_modal_title": "Confirm delete dream",
       "confirm_delete_modal_body": "Are you sure to delete this dream?",

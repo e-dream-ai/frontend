@@ -39,6 +39,7 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { DreamStatusType } from "@/types/dream.types";
+import { Video } from "./view-dream.styled";
 
 type Params = { uuid: string };
 
@@ -414,6 +415,12 @@ const ViewDreamPage: React.FC = () => {
                     isRemoved={isVideoRemoved}
                     handleChange={handleVideoChange}
                   />
+                </Row>
+                <Row justifyContent="space-between">
+                  <h3>{t("page.view_dream.original_video")}</h3>
+                </Row>
+                <Row>
+                  <Video controls src={video?.url || dream?.original_video} />
                 </Row>
               </>
             ) : (
