@@ -56,7 +56,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
       <ThumbnailPlaceholder fontSize="1.2rem">
         <Row>
           <Column alignItems="center">
-            <Spinner color={theme.textBodyColor} />
+            <Spinner />
             <Text color={theme.textBodyColor} mt="1rem">
               {t("components.thumbnail_input.processing")}
             </Text>
