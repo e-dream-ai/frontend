@@ -1,6 +1,7 @@
 import styled from "styled-components";
+import { TypographyProps, typography } from "styled-system";
 
-export const ThumbnailPlaceholder = styled.div`
+export const ThumbnailPlaceholder = styled.div<TypographyProps>`
   min-width: 320px;
   min-height: auto;
   aspect-ratio: 16 / 9;
@@ -9,6 +10,7 @@ export const ThumbnailPlaceholder = styled.div`
   justify-content: center;
   align-items: center;
   font-size: 3rem;
+  ${typography}
 `;
 
 export const ThumbnailContainer = styled.div<{ editMode?: boolean }>`

@@ -31,6 +31,10 @@ export const useDream = (uuid?: string) => {
     {
       refetchOnWindowFocus: false,
       enabled: Boolean(user) && Boolean(uuid),
+      /**
+       * Refetch dream info every 5 seconds
+       */
+      refetchInterval: 5000,
     },
   );
 };

@@ -1,6 +1,8 @@
 import {
   Button,
+  Column,
   FileUploader,
+  Row,
   Thumbnail,
   ThumbnailPlaceholder,
 } from "@/components/shared";
@@ -18,12 +20,16 @@ import {
 } from "@/utils/file-uploader.util";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPhotoFilm, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { Spinner } from "../spinner/spinner";
+import { useTheme } from "styled-components";
+import Text from "../text/text";
 
 type ThumbnailInputProps = {
   isLoading?: boolean;
   thumbnail?: string;
   localMultimedia: MultiMediaState;
   editMode: boolean;
+  isProcessing?: boolean;
   isRemoved: boolean;
   handleChange: HandleChangeFile;
   handleRemove?: () => void;
@@ -35,13 +41,30 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   thumbnail,
   localMultimedia,
   editMode,
+  isProcessing,
   isRemoved,
   handleChange,
   handleRemove,
   types,
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const hasThumbnail = Boolean(thumbnail) || localMultimedia;
+
+  if (isProcessing && !isLoading) {
+    return (
+      <ThumbnailPlaceholder fontSize="1.2rem">
+        <Row>
+          <Column alignItems="center">
+            <Spinner color={theme.textBodyColor} />
+            <Text color={theme.textBodyColor} mt="1rem">
+              {t("components.thumbnail_input.processing")}
+            </Text>
+          </Column>
+        </Row>
+      </ThumbnailPlaceholder>
+    );
+  }
 
   if (!hasThumbnail && (!editMode || isLoading)) {
     return (
