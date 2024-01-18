@@ -96,19 +96,11 @@ export const router = createBrowserRouter([
   },
   {
     path: ROUTES.ABOUT,
-    element: (
-      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
-        <AboutPage />
-      </ProtectedRoute>
-    ),
+    element: <AboutPage />,
   },
   {
     path: ROUTES.INSTALL,
-    element: (
-      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
-        <InstallPage />
-      </ProtectedRoute>
-    ),
+    element: <InstallPage />,
   },
   {
     path: ROUTES.TERMS_OF_SERVICE,
