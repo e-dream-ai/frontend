@@ -21,3 +21,10 @@ export type Dream = {
   status: DreamStatusType;
   created_at: string;
 };
+
+export type PresignedPost = {
+  url: string;
+  fields: {
+    [key: string]: string;
+  };
+};

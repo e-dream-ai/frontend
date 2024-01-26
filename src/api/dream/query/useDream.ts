@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import useAuth from "@/hooks/useAuth";
 import { ApiResponse } from "@/types/api.types";
 import { Dream } from "@/types/dream.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const DREAM_QUERY_KEY = "getDream";
 
@@ -14,8 +13,8 @@ type QueryFunctionParams = {
 
 const getDream = ({ uuid }: QueryFunctionParams) => {
   return async () =>
-    axios
-      .get(`${URL}/dream/${uuid ?? ""}`, {
+    axiosClient
+      .get(`/dream/${uuid ?? ""}`, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

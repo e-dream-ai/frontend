@@ -1,18 +1,17 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { ConfirmForgotPasswordRequestValues } from "@/schemas/confirm-forgot-password.schema";
 import { ApiResponse } from "@/types/api.types";
 import { User } from "@/types/auth.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const CONFIRM_FORGOT_PASSWORD_MUTATION_KEY = "confirmForgotPassword";
 
 const confirmForgotPassowrd = async (
   values: ConfirmForgotPasswordRequestValues,
 ) => {
-  return axios
-    .post(`${URL}/auth/confirm-forgot-password`, values, {
+  return axiosClient
+    .post(`/auth/confirm-forgot-password`, values, {
       headers: getRequestHeaders({
         contentType: ContentType.json,
       }),

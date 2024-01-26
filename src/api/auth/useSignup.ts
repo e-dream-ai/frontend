@@ -1,15 +1,14 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { SignupRequestValues } from "@/schemas/signup.schema";
 import { ApiResponse } from "@/types/api.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const SIGNUP_MUTATION_KEY = "signup";
 
 const signup = async (values: SignupRequestValues) => {
-  return axios
-    .post(`${URL}/auth/signup`, values, {
+  return axiosClient
+    .post(`/auth/signup`, values, {
       headers: getRequestHeaders({
         contentType: ContentType.json,
       }),
