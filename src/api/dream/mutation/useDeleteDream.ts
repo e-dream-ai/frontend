@@ -1,9 +1,8 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { ApiResponse } from "@/types/api.types";
 import { Dream } from "@/types/dream.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const DELETE_DREAM_MUTATION_KEY = "deleteDream";
 
@@ -13,8 +12,8 @@ type MutateFunctionParams = {
 
 const deleteDream = ({ uuid }: MutateFunctionParams) => {
   return async () => {
-    return axios
-      .delete(`${URL}/dream/${uuid}`, {
+    return axiosClient
+      .delete(`/dream/${uuid}`, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

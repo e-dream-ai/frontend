@@ -1,11 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { FILE_FORM } from "@/constants/file.constants";
 import { FileFormValues } from "@/schemas/file.schema";
 import { ApiResponse } from "@/types/api.types";
 import { Playlist } from "@/types/playlist.types";
+import { axiosClient } from "@/client/axios.client";
 
 type MutateFunctionParams = {
   id?: number;
@@ -19,8 +18,8 @@ const updateThumbnailPlaylist = ({ id }: MutateFunctionParams) => {
 
     formData.append(FILE_FORM.FILE, params?.file ?? "");
 
-    return axios
-      .put(`${URL}/playlist/${id}/thumbnail`, formData, {
+    return axiosClient
+      .put(`/playlist/${id}/thumbnail`, formData, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

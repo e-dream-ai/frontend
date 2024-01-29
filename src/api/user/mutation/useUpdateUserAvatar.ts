@@ -1,11 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { FILE_FORM } from "@/constants/file.constants";
 import { FileFormValues } from "@/schemas/file.schema";
 import { ApiResponse } from "@/types/api.types";
 import { User } from "@/types/auth.types";
+import { axiosClient } from "@/client/axios.client";
 
 type MutateFunctionParams = {
   id?: number;
@@ -19,8 +18,8 @@ const updateUserAvatar = ({ id }: MutateFunctionParams) => {
 
     formData.append(FILE_FORM.FILE, params?.file ?? "");
 
-    return axios
-      .put(`${URL}/user/${id}/avatar`, formData, {
+    return axiosClient
+      .put(`/user/${id}/avatar`, formData, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

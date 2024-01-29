@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { PAGINATION } from "@/constants/pagination.constants";
 import useAuth from "@/hooks/useAuth";
 import { ApiResponse } from "@/types/api.types";
 import { FeedItem } from "@/types/feed.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const FEED_MY_DREAMS_QUERY_KEY = "getFeedMyDreams";
 
@@ -16,8 +15,8 @@ type QueryFunctionParams = {
 
 const getFeedMyDreams = ({ take, skip }: QueryFunctionParams) => {
   return async () =>
-    axios
-      .get(`${URL}/feed/my-dreams`, {
+    axiosClient
+      .get(`/feed/my-dreams`, {
         params: {
           take,
           skip,

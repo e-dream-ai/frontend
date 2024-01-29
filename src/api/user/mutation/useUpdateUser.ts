@@ -1,17 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { ProfileFormValues } from "@/schemas/profile.schema";
 import { ApiResponse } from "@/types/api.types";
 import { User } from "@/types/auth.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const UPDATE_USER_MUTATION_KEY = "updateUser";
 
 const updateUser = ({ id }: { id?: number }) => {
   return async (params: ProfileFormValues) => {
-    return axios
-      .put(`${URL}/user/${id}`, params, {
+    return axiosClient
+      .put(`/user/${id}`, params, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

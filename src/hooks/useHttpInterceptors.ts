@@ -1,4 +1,3 @@
-import axios from "axios";
 import { URL } from "@/constants/api.constants";
 import {
   AUTH_LOCAL_STORAGE_KEY,
@@ -9,6 +8,7 @@ import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useCallback, useEffect, useRef } from "react";
 import { ApiResponse } from "@/types/api.types";
 import { Token, UserWithToken } from "@/types/auth.types";
+import { axiosClient } from "@/client/axios.client";
 
 type InterceptorGenerator = {
   getItem: () => string | null;
@@ -21,7 +21,7 @@ const generateRequestInterceptor = async ({
   /**
    * Axios request middleware
    */
-  return axios.interceptors.request.use(
+  return axiosClient.interceptors.request.use(
     async (config) => {
       const storagedUser = getItem();
       if (!storagedUser) {
@@ -61,14 +61,14 @@ const generateResponseInterceptor = async ({
   /**
    * Axios response middleware
    */
-  return axios.interceptors.response.use(
+  return axiosClient.interceptors.response.use(
     (response) => response,
     async (error) => {
       const storagedUser = getItem();
       if (error.response.status === 401 && storagedUser) {
         const user: UserWithToken = JSON.parse(storagedUser);
         await refreshAccessToken({ user, handleRefreshUser });
-        return axios.request(error.config);
+        return axiosClient.request(error.config);
       }
 
       return error.response;
@@ -86,7 +86,7 @@ const refreshAccessToken = async ({
   const refreshToken = user?.token?.RefreshToken;
   const values = { refreshToken };
   try {
-    const response = await axios
+    const response = await axiosClient
       .post<ApiResponse<Token>>(`${URL}/auth/refresh`, values, {
         transformRequest: (data, headers) => {
           delete headers["Authorization"];
@@ -144,10 +144,10 @@ export const useHttpInterceptors = (
 
   const cleanInterceptors = () => {
     if (requestInterceptorRef.current) {
-      axios.interceptors.request.eject(requestInterceptorRef.current);
+      axiosClient.interceptors.request.eject(requestInterceptorRef.current);
     }
     if (responseInterceptorRef.current) {
-      axios.interceptors.response.eject(responseInterceptorRef.current);
+      axiosClient.interceptors.response.eject(responseInterceptorRef.current);
     }
   };
 

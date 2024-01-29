@@ -21,3 +21,16 @@ export type Dream = {
   status: DreamStatusType;
   created_at: string;
 };
+
+export type PresignedPost = {
+  url: string;
+  uuid: string;
+  fields: {
+    [key: string]: string;
+  };
+};
+
+export type PresignedPostRequest = {
+  params?: PresignedPost;
+  file?: Blob;
+};

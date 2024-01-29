@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { PAGINATION } from "@/constants/pagination.constants";
 import useAuth from "@/hooks/useAuth";
 import { ApiResponse } from "@/types/api.types";
 import { Playlist } from "@/types/playlist.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const MY_PLAYLISTS_QUERY_KEY = "getMyPlaylists";
 
@@ -16,8 +15,8 @@ type QueryFunctionParams = {
 
 const getPlaylists = ({ take, skip }: QueryFunctionParams) => {
   return async () =>
-    axios
-      .get(`${URL}/playlist/my-playlists`, {
+    axiosClient
+      .get(`/playlist/my-playlists`, {
         params: {
           take,
           skip,
