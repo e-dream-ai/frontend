@@ -1,16 +1,16 @@
 import { useMutation } from "@tanstack/react-query";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { ApiResponse } from "@/types/api.types";
-import { PresignedPost } from "@/types/dream.types";
+import { Dream } from "@/types/dream.types";
 import { axiosClient } from "@/client/axios.client";
 
 export const CONFIRM_PRESIGNED_POST_MUTATION_KEY = "confirmPresignedPost";
 
 const confirmPresignedPost = () => {
-  return async () => {
+  return async (uuid?: string) => {
     return axiosClient
       .post(
-        `/dream/confirm-presigned-post`,
+        `/dream/${uuid}/confirm-presigned-post`,
         {},
         {
           headers: getRequestHeaders({
@@ -25,7 +25,7 @@ const confirmPresignedPost = () => {
 };
 
 export const useConfirmPresignedPost = () => {
-  return useMutation<ApiResponse<PresignedPost>, Error, unknown>(
+  return useMutation<ApiResponse<{ dream: Dream }>, Error, string | undefined>(
     confirmPresignedPost(),
     {
       mutationKey: [CONFIRM_PRESIGNED_POST_MUTATION_KEY],

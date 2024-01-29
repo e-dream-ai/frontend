@@ -24,7 +24,13 @@ export type Dream = {
 
 export type PresignedPost = {
   url: string;
+  uuid: string;
   fields: {
     [key: string]: string;
   };
+};
+
+export type PresignedPostRequest = {
+  params?: PresignedPost;
+  file?: Blob;
 };
