@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { PAGINATION } from "@/constants/pagination.constants";
 import useAuth from "@/hooks/useAuth";
 import { ApiResponse } from "@/types/api.types";
 import { User } from "@/types/auth.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const USERS_QUERY_KEY = "getUsers";
 
@@ -17,8 +16,8 @@ type QueryFunctionParams = {
 
 const getUsers = ({ take, skip, search }: QueryFunctionParams) => {
   return async () =>
-    axios
-      .get(`${URL}/user`, {
+    axiosClient
+      .get(`/user`, {
         params: {
           take,
           skip,

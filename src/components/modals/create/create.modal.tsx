@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useCreateDream } from "@/api/dream/mutation/useCreateDream";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
 import { Button, FileUploader, Input, Modal, Row } from "@/components/shared";
 import ProgressBar from "@/components/shared/progress-bar/progress-bar";
@@ -28,6 +27,11 @@ import {
 import { Video } from "./create.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faList, faUpload } from "@fortawesome/free-solid-svg-icons";
+import { useCreatePresignedPost } from "@/api/dream/mutation/useCreatePresignedPost";
+import { useConfirmPresignedPost } from "@/api/dream/mutation/useConfirmPresignedPost";
+import { useUploadFilePresignedPost } from "@/api/dream/mutation/useUploadFilePresignedPost";
+import { useGlobalMutationLoading } from "@/hooks/useGlobalMutationLoading";
+import { PresignedPostRequest } from "@/types/dream.types";
 
 type VideoState =
   | {
@@ -66,9 +70,22 @@ export const CreateModal: React.FC<
 
   const handleUploadProgress = (value: number) => setUploadProgress(value);
 
-  const { mutate, isLoading } = useCreateDream({
+  // const { mutate, isLoading } = useCreateDream({
+  //   onChangeUploadProgress: handleUploadProgress,
+  // });
+
+  const createPresignedPostMutation = useCreatePresignedPost();
+  const uploadFilePresignedPostMutation = useUploadFilePresignedPost({
     onChangeUploadProgress: handleUploadProgress,
   });
+  const confirmPresignedPostMutation = useConfirmPresignedPost();
+
+  const isAnyCreateDreamMutationLoading = useGlobalMutationLoading(
+    createPresignedPostMutation,
+    // @ts-expect-error no valid issue
+    uploadFilePresignedPostMutation,
+    confirmPresignedPostMutation,
+  );
 
   const { mutate: mutateCreatePlaylist, isLoading: isLoadingCreatePlaylist } =
     useCreatePlaylist();
@@ -82,7 +99,7 @@ export const CreateModal: React.FC<
   });
 
   const handleHideModal = () => {
-    if (isLoading || isLoadingCreatePlaylist) {
+    if (isAnyCreateDreamMutationLoading || isLoadingCreatePlaylist) {
       return;
     }
     setVideo(undefined);
@@ -94,16 +111,17 @@ export const CreateModal: React.FC<
     setVideo({ fileBlob: file, url: URL.createObjectURL(file as Blob) });
   };
 
-  const handleUpload = async () => {
-    mutate(
-      { file: video?.fileBlob as Blob },
+  const handleUploadDream = async () => {
+    createPresignedPostMutation.mutate(
+      {},
       {
         onSuccess: (data) => {
-          const dream = data?.data?.dream;
+          const presignedPost = data?.data;
           if (data.success) {
-            toast.success(t("modal.upload_dream.dream_successfully_created"));
-            handleHideModal();
-            router.navigate(`${ROUTES.VIEW_DREAM}/${dream?.uuid}`);
+            handleUploadVideoDream({
+              params: presignedPost,
+              file: video?.fileBlob as Blob,
+            });
           } else {
             toast.error(
               `${t("modal.upload_dream.error_creating_dream")} ${data.message}`,
@@ -115,6 +133,38 @@ export const CreateModal: React.FC<
         },
       },
     );
+  };
+
+  const handleUploadVideoDream = (presignedPost: PresignedPostRequest) => {
+    const uuid = presignedPost?.params?.uuid;
+    uploadFilePresignedPostMutation.mutate(presignedPost, {
+      onSuccess: () => {
+        handleConfirmUploadDream(uuid);
+      },
+      onError: () => {
+        toast.error(t("modal.upload_dream.error_creating_dream"));
+      },
+    });
+  };
+
+  const handleConfirmUploadDream = (uuid?: string) => {
+    confirmPresignedPostMutation.mutate(uuid, {
+      onSuccess: (data) => {
+        const dream = data?.data?.dream;
+        if (data.success) {
+          toast.success(t("modal.upload_dream.dream_successfully_created"));
+          handleHideModal();
+          router.navigate(`${ROUTES.VIEW_DREAM}/${dream?.uuid}`);
+        } else {
+          toast.error(
+            `${t("modal.upload_dream.error_creating_dream")} ${data.message}`,
+          );
+        }
+      },
+      onError: () => {
+        toast.error(t("modal.upload_dream.error_creating_dream"));
+      },
+    });
   };
 
   const onSubmit = (data: CreatePlaylistFormValues) => {
@@ -169,16 +219,18 @@ export const CreateModal: React.FC<
                   justifyContent="center"
                   style={{ width: "100%" }}
                 >
-                  {isLoading && <ProgressBar completed={uploadProgress} />}
+                  {isAnyCreateDreamMutationLoading && (
+                    <ProgressBar completed={uploadProgress} />
+                  )}
                 </Column>
 
                 <Column>
                   <Button
                     after={<FontAwesomeIcon icon={faUpload} />}
-                    onClick={handleUpload}
-                    isLoading={isLoading}
+                    onClick={handleUploadDream}
+                    isLoading={isAnyCreateDreamMutationLoading}
                   >
-                    {isLoading
+                    {isAnyCreateDreamMutationLoading
                       ? t("modal.upload_dream.uploading")
                       : t("modal.upload_dream.upload")}
                   </Button>

@@ -1,6 +1,4 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { FILE_FORM } from "@/constants/file.constants";
 import { useTranslation } from "react-i18next";
@@ -8,6 +6,7 @@ import { toast } from "react-toastify";
 import { FileFormValues } from "@/schemas/file.schema";
 import { ApiResponse } from "@/types/api.types";
 import { Dream } from "@/types/dream.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const CREATE_DREAM_MUTATION_KEY = "createDream";
 
@@ -26,8 +25,8 @@ const createDream = ({ t, onChangeUploadProgress }: CreateDreamProps) => {
       progress: 0,
     });
 
-    return axios
-      .post(`${URL}/dream`, formData, {
+    return axiosClient
+      .post(`/dream`, formData, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

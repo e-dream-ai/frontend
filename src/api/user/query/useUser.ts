@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import useAuth from "@/hooks/useAuth";
 import { ApiResponse } from "@/types/api.types";
 import { User } from "@/types/auth.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const USER_QUERY_KEY = "getUser";
 
@@ -14,8 +13,8 @@ type QueryFunctionParams = {
 
 const getUser = ({ id }: QueryFunctionParams) => {
   return async () =>
-    axios
-      .get(`${URL}/user/${id}`, {
+    axiosClient
+      .get(`/user/${id}`, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

@@ -1,13 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
 import queryClient from "@/api/query-client";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { OrderPlaylistFormValues } from "@/schemas/order-playlist.schema";
 import { PlaylistApiResponse } from "@/schemas/playlist.schema";
 import { ApiResponse } from "@/types/api.types";
 import { getOrderedPlaylist } from "@/utils/playlist.util";
 import { PLAYLIST_QUERY_KEY } from "../query/usePlaylist";
+import { axiosClient } from "@/client/axios.client";
 
 type MutateFunctionParams = {
   id?: number;
@@ -17,8 +16,8 @@ export const ORDER_PLAYLIST_MUTATION_KEY = "orderPlaylist";
 
 const orderPlaylist = ({ id }: MutateFunctionParams) => {
   return async (values: OrderPlaylistFormValues) => {
-    return axios
-      .put(`${URL}/playlist/${id ?? ""}/order`, values, {
+    return axiosClient
+      .put(`/playlist/${id ?? ""}/order`, values, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

@@ -1,11 +1,10 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { FILE_FORM } from "@/constants/file.constants";
 import { FileFormValues } from "@/schemas/file.schema";
 import { ApiResponse } from "@/types/api.types";
 import { Dream } from "@/types/dream.types";
+import { axiosClient } from "@/client/axios.client";
 
 type MutateFunctionParams = {
   uuid?: string;
@@ -19,8 +18,8 @@ const updateVideoDream = ({ uuid }: MutateFunctionParams) => {
 
     formData.append(FILE_FORM.FILE, params?.file ?? "");
 
-    return axios
-      .put(`${URL}/dream/${uuid}/video`, formData, {
+    return axiosClient
+      .put(`/dream/${uuid}/video`, formData, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

@@ -1,15 +1,14 @@
 import { useMutation } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { LogoutRequestValues } from "@/schemas/logout.schema";
 import { ApiResponse } from "@/types/api.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const LOGOUT_MUTATION_KEY = "logout";
 
 const logout = async (values: LogoutRequestValues) => {
-  return axios
-    .post(`${URL}/auth/logout`, values, {
+  return axiosClient
+    .post(`/auth/logout`, values, {
       headers: getRequestHeaders({
         contentType: ContentType.json,
       }),

@@ -1,11 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
-import { URL } from "@/constants/api.constants";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { PAGINATION } from "@/constants/pagination.constants";
 import useAuth from "@/hooks/useAuth";
 import { ApiResponse } from "@/types/api.types";
 import { Dream } from "@/types/dream.types";
+import { axiosClient } from "@/client/axios.client";
 
 export const MY_DREAMS_QUERY_KEY = "getMyDreams";
 
@@ -16,8 +15,8 @@ type QueryFunctionParams = {
 
 const getMyDreams = ({ take, skip }: QueryFunctionParams) => {
   return async () =>
-    axios
-      .get(`${URL}/dream/my-dreams`, {
+    axiosClient
+      .get(`/dream/my-dreams`, {
         params: {
           take,
           skip,
