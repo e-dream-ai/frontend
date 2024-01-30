@@ -15,15 +15,22 @@ export const InstallPage: React.FC = () => {
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
         <Text>
-          <p>Requirements: Mac OS version X or better, x86 or Apple Silicon.</p>
+          <p>Requirements: Mac OS, x86 or Apple Silicon.</p>
           <p>
-            <Anchor href="https://something.com/somewhere.dmg">Download</Anchor>{" "}
-            and double click a DMG with a native Mac application. Run installer
-            or drag to applications.
+            <Anchor href="https://drive.google.com/drive/u/1/folders/1-luT_kzFfJqMDeuyDDhXTLjbFfRNmm7t">Download</Anchor>{" "}
+            the DMG, open it and run the package installer.
           </p>
           <p>
-            Open the settings to log in. Press F1 key for help and F2 key for
-            status.
+            Run the e-dream app, open the settings, log in, and press
+            OK to close the settings. The app will automatically
+            download and play visuals. Press F1 key for help and F2
+            key for status.
+          </p>
+          <p>
+            It also installs a screen saver. To enable it, go into
+	    the system settings, select the "Screen Saver" panel, and
+	    then in the Other section click on "Show More" and then
+	    click on e-dream.
           </p>
         </Text>
       </Section>
