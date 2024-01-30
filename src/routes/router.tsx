@@ -10,7 +10,6 @@ import ProfilePage from "@/components/pages/profile/profile.page";
 import TermsOfServicePage from "@/components/pages/terms-of-service/terms-of-service.page";
 import ViewDreamPage from "@/components/pages/view-dream/view-dream.page";
 import { ViewPlaylistPage } from "@/components/pages/view-playlist/view-playlist.page";
-import Container from "@/components/shared/container/container";
 import { ROLES } from "@/constants/role.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import { createBrowserRouter } from "react-router-dom";
@@ -21,9 +20,9 @@ export const router = createBrowserRouter([
     path: ROUTES.ROOT,
     errorElement: <ErrorPage />,
     element: (
-      <Container>
-        <div>Home</div>
-      </Container>
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+        <ProfilePage isMyProfile />
+      </ProtectedRoute>
     ),
   },
   {
@@ -66,7 +65,7 @@ export const router = createBrowserRouter([
     path: ROUTES.MY_PROFILE,
     element: (
       <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
-        <ProfilePage />
+        <ProfilePage isMyProfile />
       </ProtectedRoute>
     ),
   },

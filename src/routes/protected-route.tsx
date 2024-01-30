@@ -1,6 +1,7 @@
 import useAuth from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { RoleType } from "@/types/role.types";
+import { ROUTES } from "@/constants/routes.constants";
 
 export const ProtectedRoute: React.FC<{
   children?: React.ReactNode;
@@ -9,7 +10,7 @@ export const ProtectedRoute: React.FC<{
   const { user, isLoading } = useAuth();
 
   if (!user && !isLoading) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={ROUTES.ABOUT} replace />;
   }
 
   if (isLoading) {

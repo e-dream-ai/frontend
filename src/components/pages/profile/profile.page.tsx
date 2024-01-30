@@ -17,10 +17,15 @@ import {
 
 const SECTION_ID = "my-profile";
 
-const Profile = () => {
+type ProfileProps = {
+  isMyProfile?: boolean;
+};
+
+const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
   const { t } = useTranslation();
   const location = useLocation();
-  const isMyProfilePage = location.pathname.includes(ROUTES.MY_PROFILE);
+  const isMyProfilePage =
+    isMyProfile || location.pathname.includes(ROUTES.MY_PROFILE);
   const { id } = useParams<{ id: string }>();
   const paramId = Number(id) || 0;
   const { user: authUser } = useAuth();
