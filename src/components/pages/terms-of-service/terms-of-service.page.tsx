@@ -34,7 +34,7 @@ export const TermsOfServicePage: React.FC = () => {
                   use our service.
                 </li>
                 <li>
-                  The service is provided by Spotworks LLC, hereafter,
+                  The service is provided by e-dream, inc, hereafter,
                   &ldquo;The Company&rdquo;.
                 </li>
                 <li>
