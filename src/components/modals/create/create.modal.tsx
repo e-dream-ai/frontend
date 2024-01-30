@@ -1,6 +1,13 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
-import { Button, FileUploader, Input, Modal, Row } from "@/components/shared";
+import {
+  Anchor,
+  Button,
+  FileUploader,
+  Input,
+  Modal,
+  Row,
+} from "@/components/shared";
 import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { Column } from "@/components/shared/row/row";
 import { TabList } from "@/components/shared/tabs/tabs";
@@ -250,6 +257,12 @@ export const CreateModal: React.FC<
                 name="file"
                 types={fileTypes}
               />
+              <Text mt={4} mb={4}>
+                {t("modal.upload_dream.content_policy")} {""}
+                <Anchor href={ROUTES.TERMS_OF_SERVICE}>
+                  {t("modal.upload_dream.terms_of_service")}
+                </Anchor>
+              </Text>
             </Column>
           )}
         </TabPanel>
