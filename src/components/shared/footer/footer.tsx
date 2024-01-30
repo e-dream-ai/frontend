@@ -84,7 +84,7 @@ export const Footer: React.FC = () => {
           <FooterIcons />
         </FooterCol>
         <FooterCol>
-          <p>© Spotworks, LLC</p>
+          <p>© e-dream, inc</p>
         </FooterCol>
       </FooterRow>
     </StyledFooter>
