@@ -18,7 +18,7 @@ export const InstallPage: React.FC = () => {
           <p>Requirements: Mac OS, x86 or Apple Silicon.</p>
           <p>
             <Anchor href="https://drive.google.com/drive/u/1/folders/1-luT_kzFfJqMDeuyDDhXTLjbFfRNmm7t">Download</Anchor>{" "}
-            the DMG, open it and run the package installer.
+            and open the DMG, then control-click and open the package installer.
           </p>
           <p>
             Run the e-dream app, open the settings, log in, and press
