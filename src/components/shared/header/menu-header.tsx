@@ -1,15 +1,12 @@
 import { Anchor } from "@/components/shared";
-import { ModalsKeys } from "@/constants/modal.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
-import useModal from "@/hooks/useModal";
 import { useTranslation } from "react-i18next";
 import router from "@/routes/router";
 import { HeaderList, HeaderListItem } from "./header.styled";
 
 export const MenuHeader: React.FC = () => {
   const { user } = useAuth();
-  const { showModal } = useModal();
   const { t } = useTranslation();
 
   const USER_NAV_ROUTES: Array<{ name: string; action?: () => void }> = [
@@ -23,7 +20,7 @@ export const MenuHeader: React.FC = () => {
     },
     {
       name: t("header.create"),
-      action: () => showModal(ModalsKeys.CREATE_MODAL),
+      action: () => router.navigate(ROUTES.CREATE),
     },
     { name: t("header.feed"), action: () => router.navigate(ROUTES.FEED) },
     {

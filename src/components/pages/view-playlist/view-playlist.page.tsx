@@ -305,7 +305,7 @@ export const ViewPlaylistPage = () => {
             `${t("page.view_playlist.playlist_deleted_successfully")}`,
           );
           onHideConfirmDeleteModal();
-          router.navigate(ROUTES.VIEW_PLAYLIST);
+          router.navigate(ROUTES.FEED);
         } else {
           toast.error(
             `${t("page.view_playlist.error_deleting_playlist")} ${

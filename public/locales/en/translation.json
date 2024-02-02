@@ -29,6 +29,24 @@
       "password_change_successfully": "Password changed successfully.",
       "error_changing_password": "Error changing user password."
     },
+    "create": {
+      "title": "Create",
+      "dream_tab_title": "Create dream",
+      "dream_preview": "Dream Preview",
+      "dream_instructions": "Upload or drop your dream here.",
+      "content_policy": "Be sure to follow the Content Policy and User Generated Content section of the",
+      "terms_of_service": "Terms of Service",
+      "cancel": "Cancel",
+      "create": "Create",
+      "creating": "Creating",
+      "dream_successfully_created": "Dream successfully created.",
+      "error_creating_dream": "Error creating dream.",
+      "playlist_tab_title": "Create playlist",
+      "playlist_instructions": "Create your playlist here.",
+      "playlist_name": "Name",
+      "playlist_successfully_created": "Playlist successfully created.",
+      "error_creating_playlist": "Error creating playlist."
+    },
     "view_dream": {
       "title": "View Dream",
       "edit": "Edit",
@@ -157,32 +175,10 @@
     "create": {
       "title": "Create"
     },
-    "upload_dream": {
-      "title": "Upload Dream",
-      "tab_title": "Create dream",
-      "dream_preview": "Dream Preview",
-      "dream_instructions": "Upload or drop your dream here.",
-      "content_policy": "Be sure to follow the Content Policy and User Generated Content section of the",
-      "terms_of_service": "Terms of Service",
-      "upload": "Upload",
-      "uploading": "Uploading",
-      "dream_successfully_created": "Dream successfully created.",
-      "error_creating_dream": "Error creating dream."
-    },
     "confirm": {
       "title": "Confirm",
       "cancel": "Cancel",
       "confirm": "Confirm"
-    },
-    "create_playlist": {
-      "title": "Create playlist",
-      "tab_title": "Create playlist",
-      "name": "Name",
-      "create": "Create",
-      "creating": "Creating",
-      "instructions": "Create your playlist here.",
-      "playlist_successfully_created": "Playlist successfully created.",
-      "error_creating_playlist": "Error creating playlist."
     }
   },
   "components": {
