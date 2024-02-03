@@ -8,6 +8,9 @@ export const FILE_FORM = {
 export const ALLOWED_VIDEO_TYPES = ["MP4"];
 
 export type FileState = {
-  fileBlob: File | Array<File> | File;
+  fileBlob: File;
   url: string;
+  name?: string;
+  uploaded?: boolean;
+  failed?: boolean;
 };

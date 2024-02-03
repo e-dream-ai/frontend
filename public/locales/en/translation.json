@@ -44,8 +44,11 @@
       "playlist_tab_title": "Create playlist",
       "playlist_instructions": "Create your playlist here.",
       "playlist_name": "Name",
+      "playlist_dreams": "Playlist dreams",
       "playlist_successfully_created": "Playlist successfully created.",
-      "error_creating_playlist": "Error creating playlist."
+      "error_creating_playlist": "Error creating playlist.",
+      "playlist_file_count": "Uploaded files: {{current}} of {{total}}",
+      "playlist_uploading_current_file": "Uploading file {{current}}"
     },
     "view_dream": {
       "title": "View Dream",

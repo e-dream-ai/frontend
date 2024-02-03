@@ -16,6 +16,15 @@ export const Container = styled.div`
     margin-bottom: 1rem;
   }
 
+  h3 {
+    font-size: 1rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: ${(props) => props.theme.textPrimaryColor};
+    margin: 0;
+    margin-bottom: 1rem;
+  }
+
   @media (min-width: ${DEVICES.TABLET}) {
     width: 750px;
   }
