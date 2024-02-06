@@ -14,6 +14,7 @@ import { ROLES } from "@/constants/role.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import { createBrowserRouter } from "react-router-dom";
 import ProtectedRoute from "./protected-route";
+import { CreatePage } from "@/components/pages/create/create.page";
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +29,14 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.CONFIRM_FORGOT_PASSWORD,
     element: <ConfirmForgotPassword />,
+  },
+  {
+    path: `${ROUTES.CREATE}`,
+    element: (
+      <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+        <CreatePage />
+      </ProtectedRoute>
+    ),
   },
   {
     path: `${ROUTES.VIEW_DREAM}/:uuid`,
