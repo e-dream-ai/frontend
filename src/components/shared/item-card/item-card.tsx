@@ -32,6 +32,7 @@ import {
   faPhotoFilm,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
+import { getUserName } from "@/utils/user.util";
 
 type DNDMode = "local" | "cross-window";
 
@@ -275,7 +276,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           )}
           <Text mb={2} p={2}>
             {t("components.item_card.owner")}:{" "}
-            <Anchor onClick={navigateToProfile(user?.id)}>{user?.email}</Anchor>
+            <Anchor onClick={navigateToProfile(user?.id)}>
+              {getUserName(user)}
+            </Anchor>
           </Text>
         </Column>
       </ItemCardBody>
