@@ -1,4 +1,4 @@
-export type FileTypes = File | Array<File> | File;
+export type FileTypes = File;
 
 export type MultiMediaState =
   | {

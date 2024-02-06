@@ -83,7 +83,7 @@ export const AddItemPlaylistDropzone: React.FC<
     [mutate, t, playlistId],
   );
 
-  const handleDragEnter = (_: DragEvent) => {
+  const handleDragEnter = () => {
     setIsDragEnter(true);
     return false;
   };
