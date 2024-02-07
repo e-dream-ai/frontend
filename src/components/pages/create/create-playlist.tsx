@@ -14,6 +14,7 @@ import CreatePlaylistSchema, {
   CreatePlaylistFormValues,
 } from "@/schemas/create-playlist.schema";
 import {
+  getFileState,
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
 } from "@/utils/file-uploader.util";
@@ -63,18 +64,17 @@ export const CreatePlaylist: React.FC = () => {
     (prev, video) => prev + (video.uploaded ? 1 : 0),
     0,
   );
-  const totalUploadedVideosPercentage =
-    (totalUploadedVideos / totalVideos) * 100;
+  const totalUploadedVideosPercentage = Math.round(
+    (totalUploadedVideos / totalVideos) * 100,
+  );
 
-  const handleChange: HandleChangeFile = (file) => {
-    setVideos((v) => [
-      ...v,
-      {
-        name: file?.name,
-        fileBlob: file,
-        url: URL.createObjectURL(file as Blob),
-      },
-    ]);
+  const handleChange: HandleChangeFile = (files) => {
+    if (files instanceof FileList) {
+      const filesArray = Array.from(files);
+      setVideos((v) => [...v, ...filesArray.map((f) => getFileState(f))]);
+    } else {
+      setVideos((v) => [...v, getFileState(files)]);
+    }
   };
 
   const setVideoUploaded = (index: number) => {
@@ -165,6 +165,7 @@ export const CreatePlaylist: React.FC = () => {
         </>
         <Text my={3}>{t("page.create.dream_instructions")}</Text>
         <FileUploader
+          multiple
           maxSize={MAX_FILE_SIZE_MB}
           handleChange={handleChange}
           onSizeError={handleFileUploaderSizeError(t)}

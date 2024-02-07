@@ -7,4 +7,4 @@ export type MultiMediaState =
     }
   | undefined;
 
-export type HandleChangeFile = (arg0: FileTypes) => void;
+export type HandleChangeFile = (arg0: File | FileList) => void;
