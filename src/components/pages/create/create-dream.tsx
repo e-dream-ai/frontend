@@ -9,6 +9,7 @@ import { HandleChangeFile } from "@/types/media.types";
 import { Column } from "@/components/shared/row/row";
 import Text from "@/components/shared/text/text";
 import {
+  getFileState,
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
 } from "@/utils/file-uploader.util";
@@ -26,8 +27,12 @@ export const CreateDream: React.FC = () => {
   const videoRef = useRef(null);
   const [video, setVideo] = useState<FileState>();
 
-  const handleChange: HandleChangeFile = (file) => {
-    setVideo({ fileBlob: file, url: URL.createObjectURL(file as Blob) });
+  const handleChange: HandleChangeFile = (files) => {
+    if (files instanceof FileList) {
+      return;
+    } else {
+      setVideo(getFileState(files));
+    }
   };
 
   const { isLoading, uploadProgress, mutateAsync } = useCreateS3Dream();
