@@ -9,15 +9,15 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { SetItemOrder } from "@/types/dnd.types";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 import { Sizes } from "@/types/sizes.types";
-import Anchor from "../anchor/anchor";
+import Anchor, { AnchorLink } from "../anchor/anchor";
 import { Button } from "../button/button";
 import Row, { Column } from "../row/row";
 import {
+  ItemCardAnchor,
   ItemCardBody,
   ItemCardImage,
   StyledItemCard,
@@ -71,11 +71,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const tooltipRef = useRef<HTMLAnchorElement>(null);
   const { id, name, thumbnail, user } = item!;
   const { t } = useTranslation();
-  const navigate = useNavigate();
 
   const [isDragEntered, setIsDragEntered] = useState<boolean>(false);
   const [isMovedOnUpperHalf, setIsMovedOnUpperHalf] = useState<boolean>(false);
   const [height, setHeight] = useState<number>(0);
+
+  const navigateRoute = (item as Dream)?.uuid
+    ? `${ROUTES.VIEW_DREAM}/${(item as Dream)?.uuid}`
+    : `${ROUTES.VIEW_PLAYLIST}/${item?.id}`;
 
   const handleDragStart = useCallback(
     (event: DragEvent) => {
@@ -207,16 +210,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     handleDragOver,
   ]);
 
-  const navigateToItemPage = (event: React.MouseEvent) => {
+  const handleUserClick = () => (event: React.MouseEvent) => {
     event.stopPropagation();
-    if ((item as Dream).uuid)
-      navigate(`${ROUTES.VIEW_DREAM}/${(item as Dream)?.uuid}`);
-    else navigate(`${ROUTES.VIEW_PLAYLIST}/${item?.id}`);
-  };
-
-  const navigateToProfile = (id?: number) => (event: React.MouseEvent) => {
-    event.stopPropagation();
-    navigate(`${ROUTES.PROFILE}/${id ?? 0}`);
   };
 
   useLayoutEffect(() => {
@@ -232,62 +227,59 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   return (
     <StyledItemCard
       ref={cardRef}
-      onClick={navigateToItemPage}
       size={size}
       draggable="true"
       isDragEntered={isDragEntered}
       isMovedOnUpperHalf={isMovedOnUpperHalf}
     >
-      <ItemCardBody isDragEntered={isDragEntered}>
-        {thumbnail ? (
-          <ItemCardImage
-            size={size}
-            draggable="false"
-            src={thumbnail}
-            onClick={navigateToItemPage}
-          />
-        ) : (
-          <ThumbnailPlaceholder size={size} onClick={navigateToItemPage}>
-            <FontAwesomeIcon icon={faPhotoFilm} />
-          </ThumbnailPlaceholder>
-        )}
-        <Column ml={4}>
-          <Anchor
-            ref={tooltipRef}
-            type={type === "dream" ? "primary" : "secondary"}
-            p={2}
-            mb={2}
-            onClick={navigateToItemPage}
-          >
-            {type === "playlist" ? (
-              <FontAwesomeIcon icon={faListUl} />
-            ) : (
-              <FontAwesomeIcon icon={faFilm} />
-            )}{" "}
-            {name || t("components.item_card.unnamed")}
-          </Anchor>
-          {(item as Playlist).itemCount ? (
-            <Text mb={2}>
-              {t("components.item_card.videos")}:{" "}
-              {(item as Playlist)?.itemCount ?? 0}
-            </Text>
+      <ItemCardAnchor to={navigateRoute}>
+        <ItemCardBody isDragEntered={isDragEntered}>
+          {thumbnail ? (
+            <ItemCardImage size={size} draggable="false" src={thumbnail} />
           ) : (
-            <></>
+            <ThumbnailPlaceholder size={size}>
+              <FontAwesomeIcon icon={faPhotoFilm} />
+            </ThumbnailPlaceholder>
           )}
-          <Text mb={2} p={2}>
-            {t("components.item_card.owner")}:{" "}
-            <Anchor onClick={navigateToProfile(user?.id)}>
-              {getUserName(user)}
+          <Column ml={4}>
+            <Anchor
+              ref={tooltipRef}
+              type={type === "dream" ? "primary" : "secondary"}
+              p={2}
+              mb={2}
+            >
+              {type === "playlist" ? (
+                <FontAwesomeIcon icon={faListUl} />
+              ) : (
+                <FontAwesomeIcon icon={faFilm} />
+              )}{" "}
+              {name || t("components.item_card.unnamed")}
             </Anchor>
-          </Text>
-        </Column>
-      </ItemCardBody>
-      {onDelete && (
-        <Row justifyContent="flex-start" ml={2} mb={0}>
-          {/**
-           * Menu hidden temporarily
-           */}
-          {/* <Menu
+            {(item as Playlist).itemCount ? (
+              <Text mb={2}>
+                {t("components.item_card.videos")}:{" "}
+                {(item as Playlist)?.itemCount ?? 0}
+              </Text>
+            ) : (
+              <></>
+            )}
+            <Text mb={2} p={2}>
+              {t("components.item_card.owner")}:{" "}
+              <AnchorLink
+                to={`${ROUTES.PROFILE}/${user?.id}`}
+                onClick={handleUserClick()}
+              >
+                {getUserName(user)}
+              </AnchorLink>
+            </Text>
+          </Column>
+        </ItemCardBody>
+        {onDelete && (
+          <Row justifyContent="flex-start" ml={2} mb={0}>
+            {/**
+             * Menu hidden temporarily
+             */}
+            {/* <Menu
             menuButton={
               <MenuButton>
                 <FontAwesomeIcon icon{faEllipsis} />
@@ -299,18 +291,19 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             <MenuItem onClick={() => onDelete()}>Delete</MenuItem>
           </Menu> */}
 
-          {!deleteDisabled && (
-            <Button
-              type="button"
-              buttonType="danger"
-              after={<FontAwesomeIcon icon={faTrash} />}
-              transparent
-              ml="1rem"
-              onClick={onDelete}
-            />
-          )}
-        </Row>
-      )}
+            {!deleteDisabled && (
+              <Button
+                type="button"
+                buttonType="danger"
+                after={<FontAwesomeIcon icon={faTrash} />}
+                transparent
+                ml="1rem"
+                onClick={onDelete}
+              />
+            )}
+          </Row>
+        )}
+      </ItemCardAnchor>
     </StyledItemCard>
   );
 };

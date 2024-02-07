@@ -1,7 +1,7 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
 import {
-  Anchor,
+  AnchorLink,
   Button,
   FileUploader,
   Input,
@@ -259,9 +259,9 @@ export const CreateModal: React.FC<
               />
               <Text mt={4} mb={4}>
                 {t("modal.upload_dream.content_policy")} {""}
-                <Anchor href={ROUTES.TERMS_OF_SERVICE}>
+                <AnchorLink to={ROUTES.TERMS_OF_SERVICE}>
                   {t("modal.upload_dream.terms_of_service")}
-                </Anchor>
+                </AnchorLink>
               </Text>
             </Column>
           )}

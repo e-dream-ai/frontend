@@ -1,7 +1,6 @@
-import { Anchor } from "@/components/shared";
+import { Anchor, AnchorLink } from "@/components/shared";
 import { ROUTES } from "@/constants/routes.constants";
 import { useTranslation } from "react-i18next";
-import router from "@/routes/router";
 import { FooterCol, FooterRow, StyledFooter } from "./footer.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -75,9 +74,9 @@ export const Footer: React.FC = () => {
       <FooterRow>
         <FooterCol flow="column">
           <div>
-            <Anchor onClick={() => router.navigate(ROUTES.TERMS_OF_SERVICE)}>
+            <AnchorLink to={ROUTES.TERMS_OF_SERVICE}>
               {t("footer.terms_of_service")}
-            </Anchor>
+            </AnchorLink>
           </div>
         </FooterCol>
         <FooterCol>

@@ -336,7 +336,7 @@ export const ViewPlaylistPage = () => {
   }, [reset, resetRemotePlaylistForm]);
 
   if (!id || !playlistId) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={ROUTES.ROOT} replace />;
   }
 
   if (isPlaylistLoading) {
@@ -475,24 +475,22 @@ export const ViewPlaylistPage = () => {
               <h3>{t("page.view_playlist.items")}</h3>
             </Row>
             <Row>
-              <Column>
-                <ItemCardList>
-                  {items.map((i) => (
-                    <ItemCard
-                      key={i.id}
-                      itemId={i.id}
-                      dndMode="local"
-                      size="sm"
-                      type={i.type}
-                      item={i.type === "dream" ? i.dreamItem : i.playlistItem}
-                      order={i.order}
-                      deleteDisabled={!allowedEditPlaylist}
-                      onDelete={handleDeletePlaylistItem(i.id)}
-                      onOrder={handleOrderPlaylist}
-                    />
-                  ))}
-                </ItemCardList>
-              </Column>
+              <ItemCardList>
+                {items.map((i) => (
+                  <ItemCard
+                    key={i.id}
+                    itemId={i.id}
+                    dndMode="local"
+                    size="sm"
+                    type={i.type}
+                    item={i.type === "dream" ? i.dreamItem : i.playlistItem}
+                    order={i.order}
+                    deleteDisabled={!allowedEditPlaylist}
+                    onDelete={handleDeletePlaylistItem(i.id)}
+                    onOrder={handleOrderPlaylist}
+                  />
+                ))}
+              </ItemCardList>
             </Row>
             <Restricted
               to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}

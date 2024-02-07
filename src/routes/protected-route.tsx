@@ -18,7 +18,7 @@ export const ProtectedRoute: React.FC<{
   }
 
   if (allowedRoles && allowedRoles.indexOf(user?.role?.name as RoleType) < 0) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={ROUTES.ROOT} replace />;
   }
 
   return <>{children}</>;

@@ -253,7 +253,7 @@ const ViewDreamPage: React.FC = () => {
   }, [reset, resetRemoteDreamForm]);
 
   if (!uuid) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={ROUTES.ROOT} replace />;
   }
 
   if (isDreamLoading) {

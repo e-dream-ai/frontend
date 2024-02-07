@@ -1,42 +1,41 @@
-import { Anchor } from "@/components/shared";
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-import router from "@/routes/router";
 import { HeaderList, HeaderListItem } from "./header.styled";
+import { AnchorLink } from "../anchor/anchor";
 
 export const MenuHeader: React.FC = () => {
   const { user } = useAuth();
   const { t } = useTranslation();
 
-  const USER_NAV_ROUTES: Array<{ name: string; action?: () => void }> = [
+  const USER_NAV_ROUTES: Array<{ name: string; route: string }> = [
     {
       name: t("header.about"),
-      action: () => router.navigate(ROUTES.ABOUT),
+      route: ROUTES.ABOUT,
     },
     {
       name: t("header.install"),
-      action: () => router.navigate(ROUTES.INSTALL),
+      route: ROUTES.INSTALL,
     },
     {
       name: t("header.create"),
-      action: () => router.navigate(ROUTES.CREATE),
+      route: ROUTES.CREATE,
     },
-    { name: t("header.feed"), action: () => router.navigate(ROUTES.FEED) },
+    { name: t("header.feed"), route: ROUTES.FEED },
     {
       name: t("header.my_dreams"),
-      action: () => router.navigate(ROUTES.MY_DREAMS),
+      route: ROUTES.MY_DREAMS,
     },
   ];
 
-  const NAV_ROUTES: Array<{ name: string; action?: () => void }> = [
+  const NAV_ROUTES: Array<{ name: string; route: string }> = [
     {
       name: t("header.about"),
-      action: () => router.navigate(ROUTES.ABOUT),
+      route: ROUTES.ABOUT,
     },
     {
       name: t("header.install"),
-      action: () => router.navigate(ROUTES.INSTALL),
+      route: ROUTES.INSTALL,
     },
   ];
 
@@ -44,7 +43,7 @@ export const MenuHeader: React.FC = () => {
     <HeaderList>
       {(user ? USER_NAV_ROUTES : NAV_ROUTES).map((route) => (
         <HeaderListItem key={route.name}>
-          <Anchor onClick={route.action}>{route.name}</Anchor>
+          <AnchorLink to={route.route}>{route.name}</AnchorLink>
         </HeaderListItem>
       ))}
     </HeaderList>
