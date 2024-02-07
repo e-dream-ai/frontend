@@ -1,6 +1,5 @@
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
-import { Footer, Header } from "@/components/shared";
 import { AUTO_CLOSE_MS } from "@/constants/toast.constants";
 import Providers, { withProviders } from "@/providers/providers";
 import { useEffect } from "react";
@@ -30,11 +29,7 @@ const App = () => {
         position="bottom-right"
         autoClose={AUTO_CLOSE_MS}
       />
-      <Header />
-      <section style={{ paddingTop: "150px" }}></section>
       <RouterProvider router={router} />
-      <section style={{ paddingTop: "150px" }}></section>
-      <Footer />
     </>
   );
 };

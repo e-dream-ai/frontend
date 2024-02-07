@@ -1,6 +1,7 @@
 import styled, { css } from "styled-components";
 import { SpaceProps, space } from "styled-system";
 import { Types } from "@/types/style-types.types";
+import { Link } from "react-router-dom";
 
 const AnchorType = {
   default: css`
@@ -19,13 +20,9 @@ const AnchorType = {
   danger: css``,
 };
 
-export const Anchor = styled.a<
-  {
-    type?: Types;
-  } & SpaceProps
->`
+const commonStyles = css`
   ${space}
-  ${(props) => AnchorType[props.type || "primary"]}
+  text-decoration: none;
   cursor: pointer;
   -webkit-transition:
     color linear 0.4s,
@@ -39,6 +36,24 @@ export const Anchor = styled.a<
   &:hover {
     color: ${(props) => props.theme.textPrimaryColor};
   }
+`;
+
+export const Anchor = styled.a<
+  {
+    type?: Types;
+  } & SpaceProps
+>`
+  ${(props) => AnchorType[props.type || "primary"]}
+  ${commonStyles}
+`;
+
+export const AnchorLink = styled(Link)<
+  {
+    type?: Types;
+  } & SpaceProps
+>`
+  ${(props) => AnchorType[props.type || "primary"]}
+  ${commonStyles}
 `;
 
 export default Anchor;

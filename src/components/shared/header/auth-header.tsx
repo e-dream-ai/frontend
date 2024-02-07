@@ -1,12 +1,11 @@
 import useLogout from "@/api/auth/useLogout";
-import { Anchor } from "@/components/shared";
+import { Anchor, AnchorLink } from "@/components/shared";
 import { ModalsKeys } from "@/constants/modal.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAuth } from "@/hooks/useAuth";
 import useModal from "@/hooks/useModal";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import router from "@/routes/router";
 import {
   AnchorIcon,
   Divider,
@@ -59,8 +58,6 @@ export const AuthHeader: React.FC = () => {
     );
   };
 
-  const onNavigateToPlaylists = () => router.navigate(ROUTES.MY_PROFILE);
-
   if (isLoading) return <StyledHeader />;
 
   return (
@@ -68,7 +65,7 @@ export const AuthHeader: React.FC = () => {
       {user ? (
         <>
           <HelloMessageHeader>{t("header.hello")} </HelloMessageHeader>
-          <Anchor onClick={onNavigateToPlaylists}>{user.email}</Anchor>
+          <AnchorLink to={ROUTES.MY_PROFILE}>{user.email}</AnchorLink>
         </>
       ) : (
         <AuthAnchor

@@ -1,6 +1,7 @@
 import { DEVICES } from "@/constants/devices.constants";
 import styled, { css } from "styled-components";
 import { Sizes } from "@/types/sizes.types";
+import { Link } from "react-router-dom";
 
 const ItemCardSizes = {
   sm: css`
@@ -51,12 +52,7 @@ export const StyledItemCard = styled.li<{
   size: Sizes;
 }>`
   ${(props) => ItemCardSizes[props.size]}
-  display: inline-flex;
-  justify-content: space-between;
   list-style: none;
-  margin: 0;
-  margin-bottom: 0.2rem;
-  padding: 1rem;
   background-color: ${(props) => props.theme.colorBackgroundQuaternary};
   /* border: ${(props) =>
     props.isDragEntered
@@ -84,6 +80,18 @@ export const StyledItemCard = styled.li<{
   :hover {
     background-color: ${(props) => props.theme.colorBackgroundSecondary};
   }
+`;
+
+export const ItemCardAnchor = styled(Link)`
+  display: inline-flex;
+  justify-content: space-between;
+  width: -webkit-fill-available;
+  height: -webkit-fill-available;
+  margin: 0;
+  margin-bottom: 0.2rem;
+  padding: 1rem;
+  color: ${(props) => props.theme.textBodyColor};
+  text-decoration: none;
 `;
 
 export const ItemCardImage = styled.img<{ size: Sizes }>`

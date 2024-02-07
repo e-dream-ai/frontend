@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
 import { faUpload } from "@fortawesome/free-solid-svg-icons";
 import router from "@/routes/router";
-import { Anchor, Button, FileUploader, Row } from "@/components/shared";
+import { AnchorLink, Button, FileUploader, Row } from "@/components/shared";
 import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { HandleChangeFile } from "@/types/media.types";
 import { Column } from "@/components/shared/row/row";
@@ -62,9 +62,9 @@ export const CreateDream: React.FC = () => {
 
       <Text my={4}>
         {t("page.create.content_policy")} {""}
-        <Anchor href={ROUTES.TERMS_OF_SERVICE}>
+        <AnchorLink to={ROUTES.TERMS_OF_SERVICE}>
           {t("page.create.terms_of_service")}
-        </Anchor>
+        </AnchorLink>
       </Text>
       <Row mt={1} justifyContent="space-between">
         <Column pr={4} justifyContent="center" style={{ width: "100%" }}>

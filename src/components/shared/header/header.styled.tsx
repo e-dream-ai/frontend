@@ -16,9 +16,11 @@ const StyledHeader = styled.header`
   margin-left: auto;
 `;
 
-export const HeaderLogo = styled.div`
+export const HeaderLogo = styled.a`
   display: inline-flex;
   align-items: center;
+  cursor: pointer;
+  text-decoration: none;
 `;
 
 export const HeaderTitle = styled.h1`
