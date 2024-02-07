@@ -28,7 +28,7 @@ import router from "@/routes/router";
 import UpdateDreamSchema, {
   UpdateDreamFormValues,
 } from "@/schemas/update-dream.schema";
-import { FileTypes, MultiMediaState } from "@/types/media.types";
+import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import { DreamVideoInput, ViewDreamInputs } from "./view-dream-inputs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -216,13 +216,21 @@ const ViewDreamPage: React.FC = () => {
     setIsThumbnailRemoved(true);
   };
 
-  const handleVideoChange = (file: FileTypes) => {
-    setVideo({ file: file, url: URL.createObjectURL(file as Blob) });
+  const handleVideoChange: HandleChangeFile = (files) => {
+    if (files instanceof FileList) {
+      return;
+    } else {
+      setVideo({ file: files, url: URL.createObjectURL(files) });
+    }
     setIsVideoRemoved(false);
   };
 
-  const handleThumbnailChange = (file: FileTypes) => {
-    setTumbnail({ file: file, url: URL.createObjectURL(file as Blob) });
+  const handleThumbnailChange: HandleChangeFile = (files) => {
+    if (files instanceof FileList) {
+      return;
+    } else {
+      setTumbnail({ file: files, url: URL.createObjectURL(files) });
+    }
     setIsThumbnailRemoved(false);
   };
 

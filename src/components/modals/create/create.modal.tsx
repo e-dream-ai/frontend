@@ -25,7 +25,7 @@ import router from "@/routes/router";
 import CreatePlaylistSchema, {
   CreatePlaylistFormValues,
 } from "@/schemas/create-playlist.schema";
-import { HandleChangeFile } from "@/types/media.types";
+import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import { ModalComponent } from "@/types/modal.types";
 import {
   handleFileUploaderSizeError,
@@ -39,13 +39,6 @@ import { useConfirmPresignedPost } from "@/api/dream/mutation/useConfirmPresigne
 import { useUploadFilePresignedPost } from "@/api/dream/mutation/useUploadFilePresignedPost";
 import { useGlobalMutationLoading } from "@/hooks/useGlobalMutationLoading";
 import { PresignedPostRequest } from "@/types/dream.types";
-
-type VideoState =
-  | {
-      fileBlob: File | Array<File> | File;
-      url: string;
-    }
-  | undefined;
 
 const fileTypes = ["MP4"];
 
@@ -71,7 +64,7 @@ export const CreateModal: React.FC<
   const { t } = useTranslation();
   const { hideModal } = useModal();
   const videoRef = useRef(null);
-  const [video, setVideo] = useState<VideoState>();
+  const [video, setVideo] = useState<MultiMediaState>();
   const [tabIndex, setTabIndex] = useState<MODAL_TYPE>(MODAL_TYPE.DREAM);
   const [uploadProgress, setUploadProgress] = useState<number>(0);
 
@@ -114,8 +107,12 @@ export const CreateModal: React.FC<
     hideModal(ModalsKeys.CREATE_MODAL);
   };
 
-  const handleChange: HandleChangeFile = (file) => {
-    setVideo({ fileBlob: file, url: URL.createObjectURL(file as Blob) });
+  const handleChange: HandleChangeFile = (files) => {
+    if (files instanceof FileList) {
+      return;
+    } else {
+      setVideo({ file: files, url: URL.createObjectURL(files) });
+    }
   };
 
   const handleUploadDream = async () => {
@@ -127,7 +124,7 @@ export const CreateModal: React.FC<
           if (data.success) {
             handleUploadVideoDream({
               params: presignedPost,
-              file: video?.fileBlob as Blob,
+              file: video?.file,
             });
           } else {
             toast.error(

@@ -285,8 +285,12 @@ export const ViewPlaylistPage = () => {
     setIsThumbnailRemoved(true);
   };
 
-  const handleThumbnailChange: HandleChangeFile = (file) => {
-    setTumbnail({ file: file, url: URL.createObjectURL(file as Blob) });
+  const handleThumbnailChange: HandleChangeFile = (files) => {
+    if (files instanceof FileList) {
+      return;
+    } else {
+      setTumbnail({ file: files, url: URL.createObjectURL(files) });
+    }
     setIsThumbnailRemoved(false);
   };
 

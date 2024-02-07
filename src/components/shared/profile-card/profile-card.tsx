@@ -105,8 +105,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     values: { name: user?.name ?? "", description: user?.description ?? "" },
   });
 
-  const handleAvatarChange: HandleChangeFile = (file) => {
-    setAvatar({ file: file, url: URL.createObjectURL(file as Blob) });
+  const handleAvatarChange: HandleChangeFile = (files) => {
+    if (files instanceof FileList) {
+      return;
+    } else {
+      setAvatar({ file: files, url: URL.createObjectURL(files) });
+    }
   };
 
   const handleMutateUpdateAvatar = (formData: ProfileFormValues) => {
