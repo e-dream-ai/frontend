@@ -82,8 +82,8 @@ export const CreateModal: React.FC<
   const confirmPresignedPostMutation = useConfirmPresignedPost();
 
   const isAnyCreateDreamMutationLoading = useGlobalMutationLoading(
-    createPresignedPostMutation,
     // @ts-expect-error no valid issue
+    createPresignedPostMutation,
     uploadFilePresignedPostMutation,
     confirmPresignedPostMutation,
   );
@@ -153,23 +153,29 @@ export const CreateModal: React.FC<
   };
 
   const handleConfirmUploadDream = (uuid?: string) => {
-    confirmPresignedPostMutation.mutate(uuid, {
-      onSuccess: (data) => {
-        const dream = data?.data?.dream;
-        if (data.success) {
-          toast.success(t("modal.upload_dream.dream_successfully_created"));
-          handleHideModal();
-          router.navigate(`${ROUTES.VIEW_DREAM}/${dream?.uuid}`);
-        } else {
-          toast.error(
-            `${t("modal.upload_dream.error_creating_dream")} ${data.message}`,
-          );
-        }
+    /**
+     * Missing name and extension
+     */
+    confirmPresignedPostMutation.mutate(
+      { uuid },
+      {
+        onSuccess: (data) => {
+          const dream = data?.data?.dream;
+          if (data.success) {
+            toast.success(t("modal.upload_dream.dream_successfully_created"));
+            handleHideModal();
+            router.navigate(`${ROUTES.VIEW_DREAM}/${dream?.uuid}`);
+          } else {
+            toast.error(
+              `${t("modal.upload_dream.error_creating_dream")} ${data.message}`,
+            );
+          }
+        },
+        onError: () => {
+          toast.error(t("modal.upload_dream.error_creating_dream"));
+        },
       },
-      onError: () => {
-        toast.error(t("modal.upload_dream.error_creating_dream"));
-      },
-    });
+    );
   };
 
   const onSubmit = (data: CreatePlaylistFormValues) => {
