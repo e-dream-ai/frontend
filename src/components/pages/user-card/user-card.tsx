@@ -11,6 +11,7 @@ import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
+import { getUserName } from "@/utils/user.util";
 
 const UserCard: React.FC<{ user: User; size: Sizes }> = ({ user, size }) => {
   const navigate = useNavigate();
@@ -38,10 +39,7 @@ const UserCard: React.FC<{ user: User; size: Sizes }> = ({ user, size }) => {
             fontSize="1rem"
             fontWeight={600}
           >
-            {user?.email}
-          </Text>
-          <Text ml="3rem" fontSize="1rem">
-            {user?.name}
+            {getUserName(user)}
           </Text>
         </Column>
       </Row>
