@@ -40,6 +40,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { DreamStatusType } from "@/types/dream.types";
 import { Video } from "./view-dream.styled";
+import { getUserName } from "@/utils/user.util";
 
 type Params = { uuid: string };
 
@@ -203,7 +204,7 @@ const ViewDreamPage: React.FC = () => {
     reset({
       name: dream?.name,
       activityLevel: dream?.activityLevel,
-      owner: dream?.user.email,
+      owner: getUserName(dream?.user),
       created_at: moment(dream?.created_at).format(FORMAT),
     });
   }, [reset, dream]);
