@@ -32,5 +32,5 @@ export type PresignedPost = {
 
 export type PresignedPostRequest = {
   params?: PresignedPost;
-  file?: Blob;
+  file?: File;
 };

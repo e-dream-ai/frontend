@@ -1,5 +1,8 @@
 import { FileUploader, Input } from "@/components/shared";
-import { MAX_FILE_SIZE_MB } from "@/constants/file.constants";
+import {
+  ALLOWED_VIDEO_TYPES,
+  MAX_FILE_SIZE_MB,
+} from "@/constants/file.constants";
 import { FieldErrors, UseFormRegister } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { UpdateDreamFormValues } from "@/schemas/update-dream.schema";
@@ -119,7 +122,7 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
           onSizeError={handleFileUploaderSizeError(t)}
           onTypeError={handleFileUploaderTypeError(t)}
           name="file"
-          types={["MP4"]}
+          types={ALLOWED_VIDEO_TYPES}
         />
       )}
     </>

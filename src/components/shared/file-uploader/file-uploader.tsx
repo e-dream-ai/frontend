@@ -4,6 +4,7 @@ import styled, { useTheme } from "styled-components";
 import { HandleChangeFile } from "@/types/media.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
+import { truncateArray } from "@/utils/array.util";
 
 const StyledFileUploaderDropzone = styled.p`
   display: inline-flex;
@@ -63,7 +64,7 @@ export const FileUploader: React.FC<Props> = (props) => {
           <FontAwesomeIcon icon={faPlusCircle} aria-hidden="true" />{" "}
           {t("components.file_uploader.dropzone_placeholder")}
         </span>
-        <span>{props.types?.join(", ")}</span>
+        <span>{truncateArray(props.types, 3)?.join(", ")}...</span>
       </StyledFileUploaderDropzone>
     </DragDropFileUploader>
   );

@@ -12,7 +12,10 @@ import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { Column } from "@/components/shared/row/row";
 import { TabList } from "@/components/shared/tabs/tabs";
 import Text from "@/components/shared/text/text";
-import { MAX_FILE_SIZE_MB } from "@/constants/file.constants";
+import {
+  ALLOWED_VIDEO_TYPES,
+  MAX_FILE_SIZE_MB,
+} from "@/constants/file.constants";
 import { ModalsKeys } from "@/constants/modal.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import useModal from "@/hooks/useModal";
@@ -39,8 +42,6 @@ import { useConfirmPresignedPost } from "@/api/dream/mutation/useConfirmPresigne
 import { useUploadFilePresignedPost } from "@/api/dream/mutation/useUploadFilePresignedPost";
 import { useGlobalMutationLoading } from "@/hooks/useGlobalMutationLoading";
 import { PresignedPostRequest } from "@/types/dream.types";
-
-const fileTypes = ["MP4"];
 
 enum MODAL_TYPE {
   DREAM = 0,
@@ -252,7 +253,7 @@ export const CreateModal: React.FC<
                 onSizeError={handleFileUploaderSizeError(t)}
                 onTypeError={handleFileUploaderTypeError(t)}
                 name="file"
-                types={fileTypes}
+                types={ALLOWED_VIDEO_TYPES}
               />
               <Text mt={4} mb={4}>
                 {t("modal.upload_dream.content_policy")} {""}
