@@ -6,10 +6,14 @@ import { useGlobalMutationLoading } from "@/hooks/useGlobalMutationLoading";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { Dream } from "@/types/dream.types";
+import {
+  getFileExtension,
+  getFileNameWithoutExtension,
+} from "@/utils/file-uploader.util";
 
 type OnSucess = (dream?: Dream) => void;
 type AsyncMutationProps = (
-  params?: { file?: Blob },
+  params?: { file?: File },
   callbacks?: { onSuccess?: OnSucess },
 ) => Promise<Dream | undefined>;
 
@@ -26,8 +30,8 @@ export const useCreateS3Dream = () => {
   const confirmPresignedPostMutation = useConfirmPresignedPost();
 
   const isAnyCreateDreamMutationLoading = useGlobalMutationLoading(
-    createPresignedPostMutation,
     // @ts-expect-error no valid issue
+    createPresignedPostMutation,
     uploadFilePresignedPostMutation,
     confirmPresignedPostMutation,
   );
@@ -37,8 +41,10 @@ export const useCreateS3Dream = () => {
     { onSuccess } = {},
   ) => {
     try {
+      const extension = getFileExtension(file);
+      const name = getFileNameWithoutExtension(file);
       const { data: presignedPost } =
-        await createPresignedPostMutation.mutateAsync({});
+        await createPresignedPostMutation.mutateAsync({ name, extension });
       const uuid = presignedPost?.uuid;
 
       await uploadFilePresignedPostMutation.mutateAsync({
@@ -46,7 +52,11 @@ export const useCreateS3Dream = () => {
         file,
       });
 
-      const confirmData = await confirmPresignedPostMutation.mutateAsync(uuid);
+      const confirmData = await confirmPresignedPostMutation.mutateAsync({
+        uuid,
+        name,
+        extension,
+      });
       const newDream = confirmData?.data?.dream;
       toast.success(t("page.create.dream_successfully_created"));
       onSuccess?.(newDream);
@@ -54,7 +64,6 @@ export const useCreateS3Dream = () => {
       return newDream;
     } catch (error) {
       toast.error(t("page.create.error_creating_dream"));
-      console.log(error);
     }
   };
 

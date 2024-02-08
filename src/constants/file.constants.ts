@@ -5,7 +5,24 @@ export const FILE_FORM = {
   FILE: "file",
 };
 
-export const ALLOWED_VIDEO_TYPES = ["MP4"];
+export const ALLOWED_VIDEO_TYPES = [
+  "MP4",
+  "AVI",
+  "MOV",
+  "WMV",
+  "MKV",
+  "FLV",
+  "MPEG",
+  "WEBM",
+  "OGV",
+  "3GP",
+  "3G2",
+  "H264",
+  "HEVC",
+  "DIVX",
+  "XVID",
+  "AVCHD",
+];
 
 export type FileState = {
   fileBlob: File;
