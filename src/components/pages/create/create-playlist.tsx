@@ -163,7 +163,7 @@ export const CreatePlaylist: React.FC = () => {
             </Row>
           ))}
         </>
-        <Text my={3}>{t("page.create.dream_instructions")}</Text>
+        <Text my={3}>{t("page.create.playlist_file_instructions")}</Text>
         <FileUploader
           multiple
           maxSize={MAX_FILE_SIZE_MB}

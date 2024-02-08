@@ -43,6 +43,7 @@
       "error_creating_dream": "Error creating dream.",
       "playlist_tab_title": "Create playlist",
       "playlist_instructions": "Create your playlist here.",
+      "playlist_file_instructions": "Upload or drop one or more dreams here.",
       "playlist_name": "Name",
       "playlist_dreams": "Playlist dreams",
       "playlist_successfully_created": "Playlist successfully created.",
