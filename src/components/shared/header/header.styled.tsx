@@ -1,19 +1,31 @@
+import { DEVICES } from "@/constants/devices.constants";
 import styled from "styled-components";
 
 const StyledHeader = styled.header`
   display: flex;
+  justify-content: space-between;
   align-items: center;
+
+  @media (min-width: ${DEVICES.TABLET}) {
+    width: 750px;
+  }
+
+  @media (min-width: ${DEVICES.LAPTOP}) {
+    width: 970px;
+  }
+`;
+
+export const HeaderContainer = styled.div`
+  display: flex;
   justify-content: center;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
-  z-index: 2;
-  padding: 1rem 1rem;
+  padding: 2rem 0;
   background: ${(props) => props.theme.colorBackgroundTertiary};
   -webkit-backface-visibility: hidden;
-  margin-right: auto;
-  margin-left: auto;
+  z-index: 2;
 `;
 
 export const HeaderLogo = styled.a`
@@ -25,16 +37,14 @@ export const HeaderLogo = styled.a`
 
 export const HeaderTitle = styled.h1`
   font-family: "Comfortaa", sans-serif;
-  font-size: 2.5rem;
+  font-size: 2.2rem;
   color: ${(props) => props.theme.textPrimaryColor};
   margin-left: 0.5rem;
 `;
 
 export const HeaderImage = styled.img`
-  float: left;
-  margin: 9px 0 0 0;
   width: auto;
-  height: 8rem;
+  height: 6rem;
   max-width: 100%;
   cursor: pointer;
 `;
@@ -63,6 +73,21 @@ export const HeaderListItem = styled.li`
   &:last-child::after {
     display: none;
   }
+`;
+
+export const HeaderProfileMenu = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+`;
+
+export const HeaderAvatar = styled.div<{ url?: string }>`
+  width: 30px;
+  height: 30px;
+  border-radius: 100%;
+  background-color: rgba(30, 30, 30, 1);
+  background-image: ${(props) => `url(${props?.url})`};
+  background-size: contain;
 `;
 
 export default StyledHeader;

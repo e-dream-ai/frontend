@@ -14,7 +14,6 @@ export const LeftProfilePage = styled.div`
   display: flex;
   flex-flow: column;
   flex: 1;
-  padding: 0 4rem;
   @media (max-width: ${DEVICES.LAPTOP}) {
     flex: auto;
   }

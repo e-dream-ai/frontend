@@ -4,6 +4,8 @@
     "hello": "Hello",
     "signup": "Signup",
     "login": "Login",
+    "logout": "Logout",
+    "profile": "Profile",
     "about": "About",
     "install": "Install",
     "forum": "Forum",

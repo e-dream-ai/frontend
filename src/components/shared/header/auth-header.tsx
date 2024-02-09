@@ -6,15 +6,17 @@ import { useAuth } from "@/hooks/useAuth";
 import useModal from "@/hooks/useModal";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import {
-  AnchorIcon,
-  Divider,
-  HelloMessageHeader,
-  StyledAuthHeader,
-} from "./auth-header.styled";
-import StyledHeader from "./header.styled";
+import { AnchorIcon, Divider, StyledAuthHeader } from "./auth-header.styled";
+import StyledHeader, { HeaderAvatar, HeaderProfileMenu } from "./header.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLock, faPencil } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCaretDown,
+  faLock,
+  faPencil,
+} from "@fortawesome/free-solid-svg-icons";
+import { Menu, MenuButton, MenuItem } from "@/components/shared/menu/menu";
+import { getUserName } from "@/utils/user.util";
+import { User } from "@/types/auth.types";
 
 const AuthAnchor: React.FC<{
   text: string;
@@ -32,6 +34,7 @@ const AuthAnchor: React.FC<{
 export const AuthHeader: React.FC = () => {
   const { t } = useTranslation();
   const { user, logout, isLoading } = useAuth();
+  const userWithoutToken = user as Omit<User, "token">;
   const { mutate } = useLogout();
   const { showModal } = useModal();
   const handleShowLoginModal = () => showModal(ModalsKeys.LOGIN_MODAL);
@@ -63,26 +66,42 @@ export const AuthHeader: React.FC = () => {
   return (
     <StyledAuthHeader>
       {user ? (
+        <Menu
+          menuButton={
+            <MenuButton>
+              <HeaderProfileMenu>
+                <HeaderAvatar url={userWithoutToken?.avatar} />
+                {getUserName(userWithoutToken)}{" "}
+                <FontAwesomeIcon icon={faCaretDown} />
+              </HeaderProfileMenu>
+            </MenuButton>
+          }
+          transition
+          position="anchor"
+          align="end"
+          menuClassName="my-menu"
+        >
+          <MenuItem onClick={() => ({})}>
+            <AnchorLink type="tertiary" to={ROUTES.MY_PROFILE}>
+              {t("header.profile")}
+            </AnchorLink>
+          </MenuItem>
+          <MenuItem onClick={logoutSession}>{t("header.logout")}</MenuItem>
+        </Menu>
+      ) : (
         <>
-          <HelloMessageHeader>{t("header.hello")} </HelloMessageHeader>
-          <AnchorLink to={ROUTES.MY_PROFILE}>{user.email}</AnchorLink>
+          <AuthAnchor
+            text={t("header.signup")}
+            icon={<FontAwesomeIcon icon={faPencil} />}
+            onClick={handleShowSignupModal}
+          />
+          <Divider>/</Divider>
+          <AuthAnchor
+            text={t("header.login")}
+            icon={<FontAwesomeIcon icon={faLock} />}
+            onClick={handleShowLoginModal}
+          />
         </>
-      ) : (
-        <AuthAnchor
-          text={t("header.signup")}
-          icon={<FontAwesomeIcon icon={faPencil} />}
-          onClick={handleShowSignupModal}
-        />
-      )}
-      <Divider>/</Divider>
-      {user ? (
-        <Anchor onClick={logoutSession}>Logout</Anchor>
-      ) : (
-        <AuthAnchor
-          text={t("header.login")}
-          icon={<FontAwesomeIcon icon={faLock} />}
-          onClick={handleShowLoginModal}
-        />
       )}
     </StyledAuthHeader>
   );

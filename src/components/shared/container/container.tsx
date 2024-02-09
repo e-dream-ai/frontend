@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 export const Container = styled.div`
   background-color: ${(props) => props.theme.colorBackgroundTertiary};
-  padding: 1.875rem;
+  padding: 1.875rem 0;
   margin-right: auto;
   margin-left: auto;
 

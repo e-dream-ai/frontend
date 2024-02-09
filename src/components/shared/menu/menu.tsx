@@ -10,9 +10,8 @@ export const MenuButton = styled(MenuButtonComponent)`
   cursor: pointer;
   background-color: transparent;
   border: 0;
-  color: ${(props) => props.theme.textPrimaryColor};
-  font-size: 1.4rem;
-  padding: 0.4rem 1.4rem;
+  color: ${(props) => props.theme.colorPrimary};
+  font-size: 1rem;
 `;
 
 export const MenuItem = styled(MenuItemComponent)`

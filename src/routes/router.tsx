@@ -21,9 +21,9 @@ import { Footer } from "@/components/shared";
 const RootElement = () => (
   <>
     <Header />
-    <section style={{ paddingTop: "150px" }}></section>
+    <section style={{ paddingTop: "140px" }}></section>
     <Outlet />
-    <section style={{ paddingTop: "150px" }}></section>
+    <section style={{ paddingTop: "140px" }}></section>
     <Footer />
   </>
 );

@@ -14,7 +14,7 @@ const AnchorType = {
     color: ${(props) => props.theme.colorSecondary};
   `,
   tertiary: css`
-    color: ${(props) => props.theme.colorSecondary};
+    color: ${(props) => props.theme.textPrimaryColor};
   `,
   success: css``,
   danger: css``,
