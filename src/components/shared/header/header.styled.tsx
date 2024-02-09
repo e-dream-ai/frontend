@@ -40,6 +40,7 @@ export const HeaderTitle = styled.h1`
   font-size: 2.2rem;
   color: ${(props) => props.theme.textPrimaryColor};
   margin-left: 0.5rem;
+  white-space: nowrap;
 `;
 
 export const HeaderImage = styled.img`
