@@ -7,12 +7,17 @@ import useModal from "@/hooks/useModal";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { AnchorIcon, Divider, StyledAuthHeader } from "./auth-header.styled";
-import StyledHeader, { HeaderAvatar, HeaderProfileMenu } from "./header.styled";
+import StyledHeader, {
+  HeaderAvatar,
+  HeaderAvatarPlaceholder,
+  HeaderProfileMenu,
+} from "./header.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCaretDown,
   faLock,
   faPencil,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { Menu, MenuButton, MenuItem } from "@/components/shared/menu/menu";
 import { User } from "@/types/auth.types";
@@ -69,7 +74,13 @@ export const AuthHeader: React.FC = () => {
           menuButton={
             <MenuButton>
               <HeaderProfileMenu>
-                <HeaderAvatar url={userWithoutToken?.avatar} />
+                {userWithoutToken?.avatar ? (
+                  <HeaderAvatar url={userWithoutToken?.avatar} />
+                ) : (
+                  <HeaderAvatarPlaceholder>
+                    <FontAwesomeIcon icon={faUser} />
+                  </HeaderAvatarPlaceholder>
+                )}
                 {user?.name ?? user.email ?? "-"}{" "}
                 <FontAwesomeIcon icon={faCaretDown} />
               </HeaderProfileMenu>

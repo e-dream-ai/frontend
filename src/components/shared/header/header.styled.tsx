@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 const StyledHeader = styled.header`
   display: flex;
-  justify-content: space-between;
+  flex-flow: column;
   align-items: center;
 
   @media (min-width: ${DEVICES.TABLET}) {
@@ -49,10 +49,19 @@ export const HeaderImage = styled.img`
   cursor: pointer;
 `;
 
-export const NavHeader = styled.nav`
-  overflow: hidden;
-  text-align: right;
-  white-space: nowrap;
+export const NavHeader = styled.nav``;
+
+export const TopHeader = styled.div`
+  width: -webkit-fill-available;
+  display: inline-flex;
+  justify-content: flex-end;
+`;
+
+export const BottomHeader = styled.div`
+  width: -webkit-fill-available;
+  display: inline-flex;
+  justify-content: space-between;
+  align-items: center;
 `;
 
 export const HeaderList = styled.ul`
@@ -88,6 +97,18 @@ export const HeaderAvatar = styled.div<{ url?: string }>`
   background-color: rgba(30, 30, 30, 1);
   background-image: ${(props) => `url(${props?.url})`};
   background-size: contain;
+`;
+
+export const HeaderAvatarPlaceholder = styled.div<{ url?: string }>`
+  width: 30px;
+  height: 30px;
+  border-radius: 100%;
+  color: ${(props) => props.theme.textBodyColor};
+  background-color: rgba(30, 30, 30, 1);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1rem;
 `;
 
 export default StyledHeader;
