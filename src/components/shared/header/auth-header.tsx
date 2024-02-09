@@ -75,7 +75,9 @@ export const AuthHeader: React.FC = () => {
             <MenuButton>
               <HeaderProfileMenu>
                 {userWithoutToken?.avatar ? (
-                  <HeaderAvatar url={userWithoutToken?.avatar} />
+                  <HeaderAvatar
+                    url={`${userWithoutToken.avatar}?${Date.now()}`}
+                  />
                 ) : (
                   <HeaderAvatarPlaceholder>
                     <FontAwesomeIcon icon={faUser} />
