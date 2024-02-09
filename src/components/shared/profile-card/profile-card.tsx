@@ -52,9 +52,6 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
       <Text fontSize="1rem" color={theme.colorPrimary}>
         {t(ROLES_NAMES[user?.role?.name ?? ""]) ?? "-"}
       </Text>
-      <Text mb="0.5rem" fontSize="1rem" fontWeight={600}>
-        {user?.email}
-      </Text>
       <Text mb="0.5rem" fontSize="1rem" color={theme.textSecondaryColor}>
         {user?.name ?? "-"}
       </Text>

@@ -15,7 +15,6 @@ import {
   faPencil,
 } from "@fortawesome/free-solid-svg-icons";
 import { Menu, MenuButton, MenuItem } from "@/components/shared/menu/menu";
-import { getUserName } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
 
 const AuthAnchor: React.FC<{
@@ -71,7 +70,7 @@ export const AuthHeader: React.FC = () => {
             <MenuButton>
               <HeaderProfileMenu>
                 <HeaderAvatar url={userWithoutToken?.avatar} />
-                {getUserName(userWithoutToken)}{" "}
+                {user?.name ?? user.email ?? "-"}{" "}
                 <FontAwesomeIcon icon={faCaretDown} />
               </HeaderProfileMenu>
             </MenuButton>
