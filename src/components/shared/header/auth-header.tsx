@@ -80,11 +80,9 @@ export const AuthHeader: React.FC = () => {
           align="end"
           menuClassName="my-menu"
         >
-          <MenuItem onClick={() => ({})}>
-            <AnchorLink type="tertiary" to={ROUTES.MY_PROFILE}>
-              {t("header.profile")}
-            </AnchorLink>
-          </MenuItem>
+          <AnchorLink type="tertiary" to={ROUTES.MY_PROFILE}>
+            <MenuItem onClick={() => ({})}>{t("header.profile")}</MenuItem>
+          </AnchorLink>
           <MenuItem onClick={logoutSession}>{t("header.logout")}</MenuItem>
         </Menu>
       ) : (
