@@ -2,7 +2,7 @@
   "header": {
     "e_dream": "e-dream",
     "hello": "Hello",
-    "signup": "Signup",
+    "signup": "Sign up",
     "login": "Login",
     "logout": "Logout",
     "profile": "Profile",
@@ -159,7 +159,7 @@
       "error_signingout_user": "Error signing out user."
     },
     "signup": {
-      "title": "Sign up for gold",
+      "title": "Sign up for e-dream",
       "email": "Email",
       "password": "Password",
       "confirm_password": "Confirm Password",
@@ -168,7 +168,7 @@
       "next": "Next",
       "already_have_account": "Already have an account?",
       "forgot_your_password": "Forgot your password?",
-      "user_signup_successfully": "User signup successfully. Check your email to verify user.",
+      "user_signup_successfully": "User signed up successfully. Check your email to verify user.",
       "error_signingup_user": "Error signing up user."
     },
     "forgot_password": {
