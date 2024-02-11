@@ -1,4 +1,7 @@
 import { Row } from "@/components/shared";
+import { Anchor } from "@/components/shared";
+import { ModalsKeys } from "@/constants/modal.constants";
+import useModal from "@/hooks/useModal";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import Text from "@/components/shared/text/text";
@@ -8,6 +11,8 @@ const SECTION_ID = "about";
 
 export const AboutPage: React.FC = () => {
   const { t } = useTranslation();
+  const { showModal } = useModal();
+  const handleShowSignupModal = () => showModal(ModalsKeys.SIGNUP_MODAL);
   return (
     <Container>
       <h2>{t("page.about.title")}</h2>
@@ -22,7 +27,7 @@ export const AboutPage: React.FC = () => {
 	    Install e-dream on your Mac to get the highest quality
 	    experience, including interaction, screensaver
 	    integration, and remote control. The e-dream native client
-	    provides unsurpassed support for ambient use, including
+	    provides unsurpassed support for the ambient use, including
 	    adjustable super slow and smooth playback.
 	  </p>
 	  <p>
@@ -30,8 +35,9 @@ export const AboutPage: React.FC = () => {
 	    media. Become a creator yourself!
 	  </p>
 	  <p>
-	    Signup, install the native client, and begin
-	    the experience.
+	    <Anchor onClick={handleShowSignupModal}>Sign up</Anchor>,
+	    then <Anchor href="/install">install</Anchor> the native client,
+	    and begin the experience.
 	  </p>
         </Text>
       </Section>
