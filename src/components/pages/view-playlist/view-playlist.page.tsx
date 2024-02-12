@@ -53,6 +53,7 @@ import {
   faTrash,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
+import { getUserName } from "@/utils/user.util";
 
 type Params = { id: string };
 
@@ -327,7 +328,7 @@ export const ViewPlaylistPage = () => {
   const resetRemotePlaylistForm = useCallback(() => {
     reset({
       name: playlist?.name,
-      owner: playlist?.user.email,
+      owner: getUserName(playlist?.user),
       created_at: moment(playlist?.created_at).format(FORMAT),
     });
   }, [reset, playlist]);
