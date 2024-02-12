@@ -26,6 +26,7 @@ import Text from "../text/text";
 import { Avatar, AvatarPlaceholder } from "./profile-card.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAlignJustify, faUser } from "@fortawesome/free-solid-svg-icons";
+import { getUserEmail, getUserName } from "@/utils/user.util";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -53,8 +54,13 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
         {t(ROLES_NAMES[user?.role?.name ?? ""]) ?? "-"}
       </Text>
       <Text mb="0.5rem" fontSize="1rem" color={theme.textSecondaryColor}>
-        {user?.name ?? "-"}
+        {getUserName(user) ?? "-"}
       </Text>
+      {Boolean(user?.email) && (
+        <Text mb="0.5rem" fontSize="1rem" color={theme.textPrimaryColor}>
+          {getUserEmail(user) ?? "-"}
+        </Text>
+      )}
       <Text
         mb="1rem"
         fontSize="1rem"
@@ -221,7 +227,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ user }) => {
   const onDisableEditMode = () => setEditMode(false);
 
   return (
-    <Column mb="2rem" style={{ flex: "auto" }}>
+    <Column mb="2rem" style={{ flex: "auto" }} mr="1rem">
       {editMode ? (
         <ProfileForm user={user} onDisableEditMode={onDisableEditMode} />
       ) : (
