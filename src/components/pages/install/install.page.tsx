@@ -32,6 +32,22 @@ export const InstallPage: React.FC = () => {
 	    then in the Other section click on "Show More" and then
 	    click on e-dream.
           </p>
+	  <p>
+	    Hints to avoid bugs and get the best from this alpha client:
+	    <ul>
+	      <li>
+	        When you first run it, press F2 and confirm it is
+	        downloading and let it download everything, then exit
+	        and restart the app, then advance through the content
+	        with the right arrow.
+	      </li>
+	      <li>
+	        The most unique commands to try are the A and D keys,
+		which control the speed of playback. Try pressing the
+		A key ten times to really slow it down.
+	      </li>
+	    </ul>
+	  </p>
         </Text>
       </Section>
     </Container>
