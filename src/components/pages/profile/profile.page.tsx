@@ -14,6 +14,7 @@ import {
   ProfilePageContainer,
   RightProfilePage,
 } from "./profile.styled";
+import { RemoteControl } from "@/components/shared/remote-control/remote-control";
 
 const SECTION_ID = "my-profile";
 
@@ -47,6 +48,11 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
             <ProfileCard user={user} />
           </LeftProfilePage>
           <RightProfilePage>
+            <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+              {t("page.profile.remote_control")}
+            </Text>
+            <RemoteControl />
+
             <Text mb="1rem" fontSize="1rem" fontWeight={600}>
               {t("page.profile.dreams")}
             </Text>
