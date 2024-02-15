@@ -124,7 +124,8 @@
     "profile": {
       "title": "Profile",
       "my_profile": "My Profile",
-      "dreams": "Dreams"
+      "dreams": "Dreams",
+      "remote_control": "Remote Control"
     },
     "help": {
       "title": "Help"
@@ -224,6 +225,14 @@
     },
     "thumbnail_input": {
       "processing": "Processing dream, wait for it finish."
+    },
+    "remote_control": {
+      "like_current_dream": "Liked current dream",
+      "dislike_current_dream": "Disliked current dream",
+      "go_next_dream": "Next dream played",
+      "go_previous_dream": "Previous dream played",
+      "playback_slower": "Played back slower",
+      "playback_faster": "Played back faster"
     }
   },
   "hooks": {

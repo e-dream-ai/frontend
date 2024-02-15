@@ -71,10 +71,6 @@ export const CreateModal: React.FC<
 
   const handleUploadProgress = (value: number) => setUploadProgress(value);
 
-  // const { mutate, isLoading } = useCreateDream({
-  //   onChangeUploadProgress: handleUploadProgress,
-  // });
-
   const createPresignedPostMutation = useCreatePresignedPost();
   const uploadFilePresignedPostMutation = useUploadFilePresignedPost({
     onChangeUploadProgress: handleUploadProgress,
