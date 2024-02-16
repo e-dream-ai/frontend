@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import io from "@/client/socket.client";
 import { Button, Row } from "@/components/shared";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -16,30 +15,33 @@ import {
 } from "@/constants/remote-control.constants";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
+import useIO from "@/hooks/useIO";
 
 const REMOTE_CONTROL_EVENT = "remote_control_event";
 const NEW_REMOTE_CONTROL_EVENT = "new_remote_control_event";
 
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
+  const { io } = useIO();
+
   // Listen for events from the server
   useEffect(() => {
-    io.on(NEW_REMOTE_CONTROL_EVENT, (data) => {
-      const command = data?.command;
-      if (command) {
-        toast.info(t(REMOTE_CONTROLS_TRANSLATIONS[command]));
+    io?.on(NEW_REMOTE_CONTROL_EVENT, (data) => {
+      const event = data?.event;
+      if (event) {
+        toast.info(t(REMOTE_CONTROLS_TRANSLATIONS[event]));
       }
     });
 
     // Cleanup on component unmount
     return () => {
-      io.off(NEW_REMOTE_CONTROL_EVENT);
+      io?.off(NEW_REMOTE_CONTROL_EVENT);
     };
-  }, []);
+  }, [io, t]);
 
   // Emit an event to the server
-  const sendMessage = (command: string) => () => {
-    io.emit(REMOTE_CONTROL_EVENT, { command: command });
+  const sendMessage = (event: string) => () => {
+    io?.emit(REMOTE_CONTROL_EVENT, { event: event });
   };
 
   return (
