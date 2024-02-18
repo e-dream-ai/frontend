@@ -205,7 +205,7 @@
       "type_error": "File type is not allowed"
     },
     "playlist_dropzone": {
-      "dropzone_placeholder": "Drop dream or playlist here to add it into the current playlist.",
+      "dropzone_placeholder": "Drop dream or playlist here from another window to add it to this playlist.",
       "adding_playlist_item": "Adding playlist item.",
       "playlist_item_successfully_added": "Playlist item added successfully.",
       "error_adding_playlist_item": "Error adding item to playlist."
