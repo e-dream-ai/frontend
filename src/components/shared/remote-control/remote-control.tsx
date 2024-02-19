@@ -17,7 +17,6 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import useIO from "@/hooks/useIO";
 
-const REMOTE_CONTROL_EVENT = "remote_control_event";
 const NEW_REMOTE_CONTROL_EVENT = "new_remote_control_event";
 
 export const RemoteControl: React.FC = () => {
@@ -41,7 +40,7 @@ export const RemoteControl: React.FC = () => {
 
   // Emit an event to the server
   const sendMessage = (event: string) => () => {
-    io?.emit(REMOTE_CONTROL_EVENT, { event: event });
+    io?.emit(NEW_REMOTE_CONTROL_EVENT, { event: event });
   };
 
   return (
