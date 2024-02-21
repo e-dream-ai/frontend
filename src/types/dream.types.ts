@@ -34,3 +34,16 @@ export type PresignedPostRequest = {
   params?: PresignedPost;
   file?: File;
 };
+
+export type MultipartUpload = {
+  urls?: Array<string>;
+  uuid?: string;
+  uploadId?: string;
+};
+
+export type MultipartUploadRequest = {
+  presignedUrl: string;
+  filePart: Blob;
+  partNumber: number;
+  totalParts: number;
+};
