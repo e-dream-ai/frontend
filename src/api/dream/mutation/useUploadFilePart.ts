@@ -18,7 +18,7 @@ type UploadFilePartProps = {
 };
 
 const uploadFilePart = ({
-  /* t,*/ onChangeUploadPartProgress,
+  onChangeUploadPartProgress,
 }: UploadFilePartProps) => {
   return async (values: MultipartUploadRequest) => {
     const type = values?.filePart?.type;
@@ -40,7 +40,10 @@ const uploadFilePart = ({
         },
       })
       .then((res) => {
-        return res.headers?.Etag;
+        const etag = res.headers?.etag;
+        // Removes leading and trailing double quotes on header
+        const cleanedEtag = etag?.replace(/^"|"$/g, "");
+        return cleanedEtag;
       });
   };
 };

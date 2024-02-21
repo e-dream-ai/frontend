@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useGlobalMutationLoading } from "@/hooks/useGlobalMutationLoading";
-import { toast } from "react-toastify";
+import { toast, Id as ToastId } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { Dream } from "@/types/dream.types";
 import {
@@ -13,41 +13,37 @@ import { useUploadFilePart } from "../mutation/useUploadFilePart";
 import { MULTIPART_FILE_PART_SIZE } from "@/constants/modal.constants";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
+import { CompletedPart } from "@/schemas/multipart-upload";
 
 type OnSucess = (dream?: Dream) => void;
+
 type AsyncMutationProps = (
   params?: { file?: File },
   callbacks?: { onSuccess?: OnSucess },
 ) => Promise<Dream | undefined>;
 
-export const useCreateS3Dream = () => {
-  const [uploadProgress, setUploadProgress] = useState<number>(0);
-  const [partsProgress, setPartsProgress] = useState<object>({});
-  const [toastId, setToastId] = useState<number | string | undefined>();
+type UseCreateS3DreamProps = {
+  navigateToDream?: boolean;
+  showUploadProgressToast?: boolean;
+};
 
-  const handleUploadPartProgress = (
-    partNumber: number,
-    progress: number,
-    totalParts: number,
-  ) => {
+export const useCreateS3Dream = ({
+  navigateToDream = true,
+  showUploadProgressToast = true,
+}: UseCreateS3DreamProps = {}) => {
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [partsProgress, setPartsProgress] = useState<object>({});
+  /**
+   * totalUploadProgress value between 1 and 100
+   */
+  const [totalUploadProgress, setTotalUploadProgress] = useState<number>(0);
+  const [toastId, setToastId] = useState<ToastId | undefined>();
+
+  const handleUploadPartProgress = (partNumber: number, progress: number) => {
     setPartsProgress((prevProgress) => ({
       ...prevProgress,
       [partNumber]: progress,
     }));
-
-    // Calculate percentage average
-    const totalProgress =
-      Object.values(partsProgress).reduce((acc, current) => acc + current, 0) /
-      totalParts;
-
-    console.log({
-      partsProgress,
-      totalProgress,
-      partNumber,
-      progress,
-      totalParts,
-    });
-    setUploadProgress(Math.round(totalProgress));
   };
 
   const { t } = useTranslation();
@@ -66,6 +62,31 @@ export const useCreateS3Dream = () => {
     completeMultipartUploadMutation,
   );
 
+  /**
+   * Function to reset states
+   */
+
+  const resetStates = (toastId?: ToastId) => {
+    setTotalUploadProgress(0);
+    setToastId(undefined);
+    setIsLoading(false);
+    if (toastId) {
+      toast.done(toastId);
+    }
+  };
+
+  /**
+   * Calculates totalUploadProgress value
+   */
+  const calculateTotalProgress = (partsProgress: object) => {
+    const allProgress = Object.values(partsProgress);
+    const totalProgress =
+      allProgress.length > 0
+        ? allProgress.reduce((acc, cur) => acc + cur, 0) / allProgress.length
+        : 0;
+    setTotalUploadProgress(totalProgress);
+  };
+
   const mutateAsync: AsyncMutationProps = async (
     { file } = {},
     { onSuccess } = {},
@@ -74,15 +95,20 @@ export const useCreateS3Dream = () => {
       toast.error(t("page.create.error_creating_dream"));
     }
 
-    const newToastId = toast(t("hooks.use_create_dream.upload_in_progress"), {
-      progress: 0,
-    });
-    setToastId(newToastId);
+    setIsLoading(true);
+    let newToastId: ToastId | undefined;
+    if (showUploadProgressToast) {
+      newToastId = toast(t("hooks.use_create_dream.upload_in_progress"), {
+        progress: 0,
+      });
+      setToastId(newToastId);
+    }
     let dream: Dream | undefined;
     const extension = getFileExtension(file);
     const name = getFileNameWithoutExtension(file);
     const partSize = MULTIPART_FILE_PART_SIZE;
-    const totalParts = Math.ceil(file!.size / partSize);
+    // calculate number of parts, set 1 as min
+    const totalParts = Math.max(Math.ceil(file!.size / partSize), 1);
 
     try {
       const { data: presignedPost } =
@@ -96,57 +122,75 @@ export const useCreateS3Dream = () => {
       const uploadId = presignedPost?.uploadId;
 
       const uploadPromises: Array<Promise<string>> = urls.map(
-        (presignedUrl, index) => {
+        async (presignedUrl, index) => {
           const partNumber = index + 1;
           const start = (partNumber - 1) * partSize;
           const end = partNumber * partSize;
           const blob = file!.slice(start, end);
 
-          return uploadFilePartMutation.mutateAsync({
+          const etag = await uploadFilePartMutation.mutateAsync({
             filePart: blob,
             presignedUrl,
             partNumber,
             totalParts,
           });
+
+          return etag;
         },
       );
 
       const etags = await Promise.all(uploadPromises);
+      const parts: Array<CompletedPart> = etags.map(
+        (etag, index) =>
+          ({
+            ETag: etag,
+            PartNumber: index + 1,
+          }) as CompletedPart,
+      );
 
-      const confirmData = await completeMultipartUploadMutation.mutateAsync({
-        uuid,
-        name,
-        extension,
-        etags: etags,
-        uploadId: uploadId,
-      });
+      const completeMultipartUploadData =
+        await completeMultipartUploadMutation.mutateAsync({
+          uuid,
+          name,
+          extension,
+          parts,
+          uploadId: uploadId,
+        });
 
-      dream = confirmData?.data?.dream;
+      dream = completeMultipartUploadData?.data?.dream;
       toast.success(t("page.create.dream_successfully_created"));
       onSuccess?.(dream);
-      setUploadProgress(0);
-      setToastId(undefined);
-      router.navigate(`${ROUTES.VIEW_DREAM}/${dream?.uuid}`);
+      resetStates(newToastId);
+      if (navigateToDream) {
+        router.navigate(`${ROUTES.VIEW_DREAM}/${dream?.uuid}`);
+      }
       return dream;
     } catch (error) {
-      setUploadProgress(0);
-      setToastId(undefined);
+      resetStates(newToastId);
       toast.error(t("page.create.error_creating_dream"));
     }
   };
 
+  /**
+   * update toast with totalUploadProgress
+   */
   useEffect(() => {
     if (toastId) {
+      const progress = (totalUploadProgress / 100).toFixed(2);
       toast.update(toastId, {
-        progress: uploadProgress,
+        progress,
         isLoading: true,
       });
     }
-  }, [toastId, uploadProgress]);
+  }, [toastId, totalUploadProgress]);
+
+  useEffect(() => {
+    calculateTotalProgress(partsProgress);
+  }, [partsProgress]);
 
   return {
-    isLoading: isAnyCreateDreamMutationLoading,
+    isLoading: isAnyCreateDreamMutationLoading || isLoading,
     mutateAsync,
-    uploadProgress,
+    uploadProgress: totalUploadProgress,
   };
 };

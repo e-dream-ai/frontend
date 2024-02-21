@@ -4,10 +4,12 @@ export type CreateMultipartUploadFormValues = {
   parts?: number;
 };
 
+export type CompletedPart = { ETag?: string; PartNumber?: number };
+
 export type CompleteMultipartUploadFormValues = {
   uuid?: string;
   name?: string;
   extension?: string;
-  parts?: number;
+  parts?: Array<CompletedPart>;
   uploadId?: string;
 };
