@@ -10,6 +10,9 @@ export enum ModalActionKind {
   HIDE = "hide",
 }
 
+// Part file size 100 MB
+export const MULTIPART_FILE_PART_SIZE = 1024 * 1024 * 100;
+
 export type ModalContextType = {
   state: ModalState;
   showModal: (modal: ModalsKeys) => void;
