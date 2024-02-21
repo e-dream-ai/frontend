@@ -25,6 +25,10 @@ const confirmPresignedPost = () => {
   };
 };
 
+/**
+ * Confirms presigned post, use useCreatePresignedPost to create presigned post and useUploadFilePresignedPost to upload file before use this hook
+ * @returns UseMutationResult
+ */
 export const useConfirmPresignedPost = () => {
   return useMutation<
     ApiResponse<{ dream: Dream }>,

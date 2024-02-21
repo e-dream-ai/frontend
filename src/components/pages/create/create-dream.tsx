@@ -2,7 +2,6 @@ import { useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
 import { faUpload } from "@fortawesome/free-solid-svg-icons";
-import router from "@/routes/router";
 import { AnchorLink, Button, FileUploader, Row } from "@/components/shared";
 import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { HandleChangeFile } from "@/types/media.types";
@@ -38,8 +37,7 @@ export const CreateDream: React.FC = () => {
   const { isLoading, uploadProgress, mutateAsync } = useCreateS3Dream();
 
   const handleUploadDream = async () => {
-    const dream = await mutateAsync({ file: video?.fileBlob });
-    router.navigate(`${ROUTES.VIEW_DREAM}/${dream?.uuid}`);
+    await mutateAsync({ file: video?.fileBlob });
   };
 
   const handleCancelCreateDream = () => setVideo(undefined);

@@ -44,7 +44,7 @@ export const CreatePlaylist: React.FC = () => {
     isLoading: isUploadingSingleFile,
     uploadProgress,
     mutateAsync,
-  } = useCreateS3Dream();
+  } = useCreateS3Dream({ navigateToDream: false });
   const addPlaylistItemMutation = useAddPlaylistItem(playlist?.id);
 
   const isLoading =

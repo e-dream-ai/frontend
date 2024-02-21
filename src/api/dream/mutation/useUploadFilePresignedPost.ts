@@ -55,6 +55,10 @@ const uploadFilePresignedPost = ({
   };
 };
 
+/**
+ * Uploads file of presigned post, use useCreatePresignedPost to create presigned post before and useConfirmPresignedPost to confirm upload
+ * @returns UseMutationResult
+ */
 export const useUploadFilePresignedPost = ({
   onChangeUploadProgress,
 }: {

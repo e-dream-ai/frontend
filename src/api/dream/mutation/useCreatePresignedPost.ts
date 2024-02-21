@@ -21,6 +21,10 @@ const createPresignedPost = () => {
   };
 };
 
+/**
+ * Creates presigned post, use useUploadFilePresignedPost to upload files and useConfirmPresignedPost to confirm upload
+ * @returns UseMutationResult
+ */
 export const useCreatePresignedPost = () => {
   return useMutation<
     ApiResponse<PresignedPost>,
