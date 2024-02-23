@@ -11,7 +11,6 @@ const initialState: ModalState = {
   loginModal: false,
   signupModal: false,
   forgotPasswordModal: false,
-  createModal: false,
 };
 
 export const ModalContext = createContext<ModalContextType>({
