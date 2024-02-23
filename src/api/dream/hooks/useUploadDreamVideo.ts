@@ -18,19 +18,19 @@ import { CompletedPart } from "@/schemas/multipart-upload";
 type OnSucess = (dream?: Dream) => void;
 
 type AsyncMutationProps = (
-  params?: { file?: File },
+  params?: { file?: File; dream?: Dream },
   callbacks?: { onSuccess?: OnSucess },
 ) => Promise<Dream | undefined>;
 
-type UseCreateS3DreamProps = {
+type UseUploadDreamVideoProps = {
   navigateToDream?: boolean;
   showUploadProgressToast?: boolean;
 };
 
-export const useCreateS3Dream = ({
+export const useUploadDreamVideo = ({
   navigateToDream = true,
   showUploadProgressToast = true,
-}: UseCreateS3DreamProps = {}) => {
+}: UseUploadDreamVideoProps = {}) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [partsProgress, setPartsProgress] = useState<object>({});
   /**
@@ -84,11 +84,12 @@ export const useCreateS3Dream = ({
       allProgress.length > 0
         ? allProgress.reduce((acc, cur) => acc + cur, 0) / allProgress.length
         : 0;
-    setTotalUploadProgress(totalProgress);
+    const roundedTotalProgress = Math.round(totalProgress);
+    setTotalUploadProgress(roundedTotalProgress);
   };
 
   const mutateAsync: AsyncMutationProps = async (
-    { file } = {},
+    { file, dream } = {},
     { onSuccess } = {},
   ) => {
     if (!file) {
@@ -103,7 +104,7 @@ export const useCreateS3Dream = ({
       });
       setToastId(newToastId);
     }
-    let dream: Dream | undefined;
+
     const extension = getFileExtension(file);
     const name = getFileNameWithoutExtension(file);
     const partSize = MULTIPART_FILE_PART_SIZE;
@@ -111,16 +112,24 @@ export const useCreateS3Dream = ({
     const totalParts = Math.max(Math.ceil(file!.size / partSize), 1);
 
     try {
-      const { data: presignedPost } =
+      const { data: multipartUpload } =
         await createMultipartUploadMutation.mutateAsync({
           name,
           extension,
           parts: totalParts,
+          // If the mutation doesn't receive a dream, it'll be created on the server
+          uuid: dream?.uuid,
         });
-      const uuid = presignedPost?.uuid;
-      const urls = presignedPost?.urls ?? [];
-      const uploadId = presignedPost?.uploadId;
 
+      if (!dream) {
+        dream = multipartUpload?.dream;
+      }
+
+      const uuid = dream?.uuid;
+      const urls = multipartUpload?.urls ?? [];
+      const uploadId = multipartUpload?.uploadId;
+
+      // prepare upload promises to send each part
       const uploadPromises: Array<Promise<string>> = urls.map(
         async (presignedUrl, index) => {
           const partNumber = index + 1;
@@ -139,7 +148,9 @@ export const useCreateS3Dream = ({
         },
       );
 
+      // get parts etags
       const etags = await Promise.all(uploadPromises);
+      // generate completed parts array
       const parts: Array<CompletedPart> = etags.map(
         (etag, index) =>
           ({
@@ -148,6 +159,7 @@ export const useCreateS3Dream = ({
           }) as CompletedPart,
       );
 
+      // complete multipart upload
       const completeMultipartUploadData =
         await completeMultipartUploadMutation.mutateAsync({
           uuid,
@@ -158,7 +170,7 @@ export const useCreateS3Dream = ({
         });
 
       dream = completeMultipartUploadData?.data?.dream;
-      toast.success(t("page.create.dream_successfully_created"));
+      toast.success(t("page.create.dream_successfully_uploaded"));
       onSuccess?.(dream);
       resetStates(newToastId);
       if (navigateToDream) {
@@ -167,7 +179,7 @@ export const useCreateS3Dream = ({
       return dream;
     } catch (error) {
       resetStates(newToastId);
-      toast.error(t("page.create.error_creating_dream"));
+      toast.error(t("page.create.error_uploading_dream"));
     }
   };
 

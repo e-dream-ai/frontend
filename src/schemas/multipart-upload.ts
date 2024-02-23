@@ -1,4 +1,5 @@
 export type CreateMultipartUploadFormValues = {
+  uuid?: string;
   name?: string;
   extension?: string;
   parts?: number;

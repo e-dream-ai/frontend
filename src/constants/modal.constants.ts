@@ -2,7 +2,6 @@ export enum ModalsKeys {
   LOGIN_MODAL = "loginModal",
   SIGNUP_MODAL = "signupModal",
   FORGOT_PASSWORD_MODAL = "forgotPasswordModal",
-  CREATE_MODAL = "createModal",
 }
 
 export enum ModalActionKind {

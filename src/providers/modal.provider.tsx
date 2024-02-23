@@ -3,7 +3,6 @@ import {
   LoginModal,
   SignupModal,
 } from "@/components/modals";
-import { CreateModal } from "@/components/modals/create/create.modal";
 import { ModalProvider as StateModalProvider } from "@/context/modal.context";
 import useModal from "@/hooks/useModal";
 import styled from "styled-components";
@@ -49,7 +48,6 @@ export const StyledModalProviderWrapper: React.FC<{
         {state.forgotPasswordModal && (
           <ForgotPasswordModal isOpen={state.forgotPasswordModal} />
         )}
-        {state.createModal && <CreateModal isOpen={state.createModal} />}
       </>
       {children}
     </StyledReactModalProvider>
