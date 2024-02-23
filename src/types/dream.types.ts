@@ -37,7 +37,7 @@ export type PresignedPostRequest = {
 
 export type MultipartUpload = {
   urls?: Array<string>;
-  uuid?: string;
+  dream: Dream;
   uploadId?: string;
 };
 

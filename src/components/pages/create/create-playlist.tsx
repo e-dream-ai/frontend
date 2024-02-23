@@ -25,7 +25,7 @@ import {
   MAX_FILE_SIZE_MB,
 } from "@/constants/file.constants";
 import { HandleChangeFile } from "@/types/media.types";
-import { useCreateS3Dream } from "@/api/dream/hooks/useCreateS3Dream";
+import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { Playlist } from "@/types/playlist.types";
 import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
@@ -44,7 +44,7 @@ export const CreatePlaylist: React.FC = () => {
     isLoading: isUploadingSingleFile,
     uploadProgress,
     mutateAsync,
-  } = useCreateS3Dream({ navigateToDream: false });
+  } = useUploadDreamVideo({ navigateToDream: false });
   const addPlaylistItemMutation = useAddPlaylistItem(playlist?.id);
 
   const isLoading =
@@ -54,7 +54,6 @@ export const CreatePlaylist: React.FC = () => {
     register,
     handleSubmit,
     formState: { errors },
-    // reset,
   } = useForm<CreatePlaylistFormValues>({
     resolver: yupResolver(CreatePlaylistSchema),
   });

@@ -19,7 +19,7 @@ import {
 } from "@/constants/file.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import { Video } from "./create.styled";
-import { useCreateS3Dream } from "@/api/dream/hooks/useCreateS3Dream";
+import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 
 export const CreateDream: React.FC = () => {
   const { t } = useTranslation();
@@ -34,7 +34,7 @@ export const CreateDream: React.FC = () => {
     }
   };
 
-  const { isLoading, uploadProgress, mutateAsync } = useCreateS3Dream();
+  const { isLoading, uploadProgress, mutateAsync } = useUploadDreamVideo();
 
   const handleUploadDream = async () => {
     await mutateAsync({ file: video?.fileBlob });

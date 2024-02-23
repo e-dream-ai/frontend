@@ -101,7 +101,7 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
   handleChange,
 }) => {
   const { t } = useTranslation();
-  const hasVideo = Boolean(dream?.video) || video;
+  const hasVideo = Boolean(dream?.original_video) || video;
 
   if (!hasVideo && (!editMode || isLoading)) {
     return (
@@ -114,7 +114,7 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
   return (
     <>
       {hasVideo && !isRemoved ? (
-        <Video controls src={video?.url || dream?.video} />
+        <Video controls src={video?.url || dream?.original_video} />
       ) : (
         <FileUploader
           maxSize={MAX_FILE_SIZE_MB}
