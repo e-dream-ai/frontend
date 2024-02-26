@@ -51,7 +51,8 @@
       "playlist_successfully_created": "Playlist successfully created.",
       "error_creating_playlist": "Error creating playlist.",
       "playlist_file_count": "Uploaded files: {{current}} of {{total}}",
-      "playlist_uploading_current_file": "Uploading file {{current}}"
+      "playlist_uploading_current_file": "Uploading file {{current}}",
+      "multipart_dream_upload_cancelled_successfully": "Dream upload successfully cancelled."
     },
     "view_dream": {
       "title": "View Dream",
@@ -238,6 +239,9 @@
   "hooks": {
     "use_create_dream": {
       "upload_in_progress": "Upload dream in progress."
+    },
+    "use_upload_dream_video": {
+      "upload_canceled": "Upload canceled."
     }
   },
   "roles": {

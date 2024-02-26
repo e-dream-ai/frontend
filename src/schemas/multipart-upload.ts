@@ -14,3 +14,9 @@ export type CompleteMultipartUploadFormValues = {
   parts?: Array<CompletedPart>;
   uploadId?: string;
 };
+
+export type AbortMultipartUploadFormValues = {
+  uuid?: string;
+  extension?: string;
+  uploadId?: string;
+};
