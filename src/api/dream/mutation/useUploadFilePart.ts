@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
+import { CancelTokenSource } from "axios";
 import { MultipartUploadRequest } from "@/types/dream.types";
-// import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import axios from "axios";
 
@@ -15,10 +15,12 @@ type OnChangeUploadPartProgress = (
 type UploadFilePartProps = {
   t: (value: string) => string;
   onChangeUploadPartProgress: OnChangeUploadPartProgress;
+  cancelTokenSource?: CancelTokenSource;
 };
 
 const uploadFilePart = ({
   onChangeUploadPartProgress,
+  cancelTokenSource,
 }: UploadFilePartProps) => {
   return async (values: MultipartUploadRequest) => {
     const type = values?.filePart?.type;
@@ -28,6 +30,7 @@ const uploadFilePart = ({
         headers: {
           "Content-Type": type,
         },
+        cancelToken: cancelTokenSource?.token,
         onUploadProgress: (ev) => {
           const partNumber = values.partNumber;
           const totalParts = values.totalParts;
@@ -54,12 +57,14 @@ const uploadFilePart = ({
  */
 export const useUploadFilePart = ({
   onChangeUploadPartProgress,
+  cancelTokenSource,
 }: {
   onChangeUploadPartProgress: OnChangeUploadPartProgress;
+  cancelTokenSource?: CancelTokenSource;
 }) => {
   const { t } = useTranslation();
   return useMutation<string, Error, MultipartUploadRequest>(
-    uploadFilePart({ t, onChangeUploadPartProgress }),
+    uploadFilePart({ t, onChangeUploadPartProgress, cancelTokenSource }),
     {
       mutationKey: [UPLOAD_FILE_PART_MUTATION_KEY],
     },

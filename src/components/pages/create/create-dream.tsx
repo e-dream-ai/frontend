@@ -20,6 +20,7 @@ import {
 import { ROUTES } from "@/constants/routes.constants";
 import { Video } from "./create.styled";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
+import { toast } from "react-toastify";
 
 export const CreateDream: React.FC = () => {
   const { t } = useTranslation();
@@ -34,13 +35,24 @@ export const CreateDream: React.FC = () => {
     }
   };
 
-  const { isLoading, uploadProgress, mutateAsync } = useUploadDreamVideo();
+  const { isLoading, isAborting, uploadProgress, mutateAsync, reset } =
+    useUploadDreamVideo();
 
   const handleUploadDream = async () => {
-    await mutateAsync({ file: video?.fileBlob });
+    try {
+      await mutateAsync({ file: video?.fileBlob });
+    } catch (error) {
+      toast.error(t("page.create.error_uploading_dream"));
+    }
   };
 
-  const handleCancelCreateDream = () => setVideo(undefined);
+  const handleCancelCreateDream = async () => {
+    await reset();
+    setVideo(undefined);
+    toast.success(
+      `${t("page.create.multipart_dream_upload_cancelled_successfully")}`,
+    );
+  };
 
   return (
     <Column>
@@ -79,7 +91,8 @@ export const CreateDream: React.FC = () => {
             <Row>
               <Button
                 mr={2}
-                disabled={isLoading}
+                isLoading={isAborting}
+                disabled={isAborting}
                 onClick={handleCancelCreateDream}
               >
                 {t("page.create.cancel")}
@@ -88,7 +101,7 @@ export const CreateDream: React.FC = () => {
                 after={<FontAwesomeIcon icon={faUpload} />}
                 onClick={handleUploadDream}
                 isLoading={isLoading}
-                disabled={!video}
+                disabled={!video || isAborting || isLoading}
               >
                 {isLoading
                   ? t("page.create.creating")
