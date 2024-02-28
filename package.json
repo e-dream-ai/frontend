@@ -40,7 +40,7 @@
   "scripts": {
     "start": "vite",
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "tsc && vite build --mode prod",
     "serve": "vite preview",
     "lint": "eslint . --ext .js,.ts",
     "lint-staged": "lint-staged",
