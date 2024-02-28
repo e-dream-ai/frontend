@@ -13,10 +13,12 @@ const root = ReactDOM.createRoot(
 
 if (IS_PRODUCTION) {
   Bugsnag.start({
-    apiKey: "563a8a8c8ca5c81400b1a137177abcab",
+    apiKey: "7743b75d16aa1c3b8ef18de27aa35e30",
     plugins: [new BugsnagPluginReact()],
   });
-  BugsnagPerformance.start({ apiKey: "563a8a8c8ca5c81400b1a137177abcab" });
+  BugsnagPerformance.start({ apiKey: "7743b75d16aa1c3b8ef18de27aa35e30" });
+
+  Bugsnag.notify(new Error("Test error"));
 
   const ErrorBoundary = Bugsnag.getPlugin("react")!.createErrorBoundary(React);
 
