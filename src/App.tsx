@@ -34,4 +34,6 @@ const App = () => {
   );
 };
 
-export default withProviders(...Providers)(App);
+const AppWithProviders = withProviders(...Providers)(App);
+
+export default AppWithProviders;
