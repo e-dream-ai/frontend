@@ -4,6 +4,8 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "typescript": "^5.0.2",
+    "vite": "^5.0.10",
     "@bugsnag/browser-performance": "^2.2.0",
     "@bugsnag/js": "^7.22.4",
     "@bugsnag/plugin-react": "^7.19.0",
@@ -86,8 +88,6 @@
     "husky": "^8.0.3",
     "lint-staged": "^14.0.1",
     "prettier": "^3.0.3",
-    "typescript": "^5.0.2",
-    "vite": "^5.0.10",
     "vite-tsconfig-paths": "^4.2.2"
   },
   "lint-staged": {
