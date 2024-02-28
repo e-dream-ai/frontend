@@ -18,8 +18,6 @@ if (IS_PRODUCTION) {
   });
   BugsnagPerformance.start({ apiKey: "7743b75d16aa1c3b8ef18de27aa35e30" });
 
-  Bugsnag.notify(new Error("Test error"));
-
   const ErrorBoundary = Bugsnag.getPlugin("react")!.createErrorBoundary(React);
 
   root.render(
