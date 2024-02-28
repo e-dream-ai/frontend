@@ -84,3 +84,7 @@ See the section about [deployment](https://facebook.github.io/create-react-app/d
 - When you merge a change from stage branch to production brach (**main**), or push changes directly to production (**main**) a deploy review will be created on netlify. Only owners might deploy directly without permissions.
 - To trigger a deploy to production (**main**) on netlify, go to netlify dashboard and find stage app > **deploys** on sidemenu, find **trigger deploy** > **deploy site**
 - Deploy will be trigger, wait for the build and deploy should be done.
+
+#### Note
+
+On Netlify, we use "prod" instead of "production" value, since "production" removes dev dependencies, needed to build this project, read [here](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-environment).

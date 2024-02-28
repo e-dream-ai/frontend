@@ -5,12 +5,13 @@ import React from "react";
 import Bugsnag from "@bugsnag/js";
 import BugsnagPluginReact from "@bugsnag/plugin-react";
 import BugsnagPerformance from "@bugsnag/browser-performance";
+import { IS_PRODUCTION } from "@/constants/env.constantes";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
 );
 
-if (import.meta.env.PROD) {
+if (IS_PRODUCTION) {
   Bugsnag.start({
     apiKey: "563a8a8c8ca5c81400b1a137177abcab",
     plugins: [new BugsnagPluginReact()],
