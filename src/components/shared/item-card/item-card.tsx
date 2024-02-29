@@ -33,6 +33,7 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserName } from "@/utils/user.util";
+import { generateImageURLFromResource } from "@/utils/image-handler";
 
 type DNDMode = "local" | "cross-window";
 
@@ -235,7 +236,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       <ItemCardAnchor to={navigateRoute}>
         <ItemCardBody isDragEntered={isDragEntered}>
           {thumbnail ? (
-            <ItemCardImage size={size} draggable="false" src={thumbnail} />
+            <ItemCardImage
+              size={size}
+              draggable="false"
+              src={generateImageURLFromResource(thumbnail, {
+                width: 142,
+                fit: "cover",
+              })}
+            />
           ) : (
             <ThumbnailPlaceholder size={size}>
               <FontAwesomeIcon icon={faPhotoFilm} />
