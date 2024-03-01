@@ -54,6 +54,7 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserName } from "@/utils/user.util";
+import { generateImageURLFromResource } from "@/utils/image-handler";
 
 type Params = { id: string };
 
@@ -436,7 +437,10 @@ export const ViewPlaylistPage = () => {
             <Row justifyContent="space-between">
               <Column flex="1 1 auto" mr={1}>
                 <ThumbnailInput
-                  thumbnail={playlist?.thumbnail}
+                  thumbnail={generateImageURLFromResource(playlist?.thumbnail, {
+                    width: 500,
+                    fit: "cover",
+                  })}
                   localMultimedia={thumbnail}
                   editMode={editMode}
                   isRemoved={isThumbnailRemoved}

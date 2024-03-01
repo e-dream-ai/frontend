@@ -41,6 +41,7 @@ import { DreamStatusType } from "@/types/dream.types";
 import { Video } from "./view-dream.styled";
 import { getUserName } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
+import { generateImageURLFromResource } from "@/utils/image-handler";
 
 type Params = { uuid: string };
 
@@ -370,7 +371,10 @@ const ViewDreamPage: React.FC = () => {
               <Column flex="1 1 auto" mr={1}>
                 <ThumbnailInput
                   localMultimedia={thumbnail}
-                  thumbnail={dream?.thumbnail}
+                  thumbnail={generateImageURLFromResource(dream?.thumbnail, {
+                    width: 500,
+                    fit: "cover",
+                  })}
                   editMode={editMode}
                   isProcessing={isDreamProcessing}
                   isRemoved={isThumbnailRemoved}
