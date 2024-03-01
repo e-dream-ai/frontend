@@ -41,12 +41,8 @@ export const generateImageURLFromResource = (
   if (!url) {
     return undefined;
   }
-  console.log(url);
 
   const objectKey = url!.replace(`${BUCKET_URL}/`, "");
-  console.log(objectKey);
-
   const generatedUrl = generateImageURL(objectKey, resizeOptions);
-  console.log(generatedUrl);
-  return generatedUrl;
+  return `${generatedUrl}?v=${new Date().getTime()}`;
 };

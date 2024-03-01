@@ -22,6 +22,7 @@ import {
 import { Menu, MenuButton, MenuItem } from "@/components/shared/menu/menu";
 import { User } from "@/types/auth.types";
 import { getUserNameOrEmail } from "@/utils/user.util";
+import { generateImageURLFromResource } from "@/utils/image-handler";
 
 const AuthAnchor: React.FC<{
   text: string;
@@ -77,7 +78,13 @@ export const AuthHeader: React.FC = () => {
               <HeaderProfileMenu>
                 {userWithoutToken?.avatar ? (
                   <HeaderAvatar
-                    url={`${userWithoutToken.avatar}?${Date.now()}`}
+                    url={generateImageURLFromResource(
+                      userWithoutToken?.avatar,
+                      {
+                        width: 30,
+                        fit: "cover",
+                      },
+                    )}
                   />
                 ) : (
                   <HeaderAvatarPlaceholder>

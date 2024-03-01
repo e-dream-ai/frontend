@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 import { getUserName } from "@/utils/user.util";
+import { generateImageURLFromResource } from "@/utils/image-handler";
 
 const UserCard: React.FC<{ user: User; size: Sizes }> = ({ user, size }) => {
   const navigate = useNavigate();
@@ -23,7 +24,10 @@ const UserCard: React.FC<{ user: User; size: Sizes }> = ({ user, size }) => {
       {user?.avatar ? (
         <Avatar
           size={size}
-          url={user.avatar ? `${user.avatar}?${Date.now()}` : undefined}
+          url={generateImageURLFromResource(user?.avatar, {
+            width: 142,
+            fit: "cover",
+          })}
         />
       ) : (
         <AvatarPlaceholder size={size}>

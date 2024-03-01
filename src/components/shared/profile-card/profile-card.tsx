@@ -27,6 +27,7 @@ import { Avatar, AvatarPlaceholder } from "./profile-card.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAlignJustify, faUser } from "@fortawesome/free-solid-svg-icons";
 import { getUserEmail, getUserName } from "@/utils/user.util";
+import { generateImageURLFromResource } from "@/utils/image-handler";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -42,7 +43,10 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
         {user?.avatar ? (
           <Avatar
             size="lg"
-            url={user.avatar ? `${user.avatar}?${Date.now()}` : undefined}
+            url={generateImageURLFromResource(user?.avatar, {
+              width: 142,
+              fit: "cover",
+            })}
           />
         ) : (
           <AvatarPlaceholder size="lg">
@@ -98,6 +102,12 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 
   const isLoading = isLoadingUpdateUser || isLoadingUpdateAvatar;
   const [avatar, setAvatar] = useState<MultiMediaState>();
+
+  const avatarUrl = generateImageURLFromResource(user?.avatar, {
+    width: 142,
+    fit: "cover",
+  });
+
   const {
     register,
     handleSubmit,
@@ -176,7 +186,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       <Row mb="2rem">
         <AvatarUploader
           handleChange={handleAvatarChange}
-          src={avatar?.url ? avatar?.url : `${user?.avatar}?${Date.now()}`}
+          src={avatar?.url ? avatar?.url : avatarUrl}
           types={["JPG", "JPEG"]}
         />
       </Row>
