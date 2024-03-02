@@ -1,14 +1,5 @@
 import React, { useEffect } from "react";
 import { Button, Row } from "@/components/shared";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faAngleDoubleLeft,
-  faAngleDoubleRight,
-  faAngleLeft,
-  faAngleRight,
-  faThumbsDown,
-  faThumbsUp,
-} from "@fortawesome/free-solid-svg-icons";
 import {
   REMOTE_CONTROLS,
   REMOTE_CONTROLS_TRANSLATIONS,
@@ -16,6 +7,8 @@ import {
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import useIO from "@/hooks/useIO";
+import { getRemoteControlEvent } from "@/utils/remote-control.util";
+import { RemoteControlAction } from "@/types/remote-control.types";
 
 const NEW_REMOTE_CONTROL_EVENT = "new_remote_control_event";
 
@@ -25,10 +18,23 @@ export const RemoteControl: React.FC = () => {
 
   // Listen for events from the server
   useEffect(() => {
-    io?.on(NEW_REMOTE_CONTROL_EVENT, (data) => {
-      const event = data?.event;
+    io?.on(NEW_REMOTE_CONTROL_EVENT, (data): void => {
+      const event: RemoteControlAction | undefined = getRemoteControlEvent(
+        data?.event,
+      );
+
+      if (!event) {
+        return;
+      }
+
+      const key = event?.key;
+
       if (event) {
-        toast.info(t(REMOTE_CONTROLS_TRANSLATIONS[event]));
+        toast.info(
+          `${t("components.remote_control.event")}: ${
+            key ? `(${key})` : ""
+          } ${t(REMOTE_CONTROLS_TRANSLATIONS[event?.key])}`,
+        );
       }
     });
 
@@ -44,49 +50,19 @@ export const RemoteControl: React.FC = () => {
   };
 
   return (
-    <Row>
-      <Button
-        size="sm"
-        mr="0.4rem"
-        onClick={sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM)}
-      >
-        <FontAwesomeIcon icon={faThumbsDown} />
-      </Button>
-      <Button
-        size="sm"
-        mr="0.4rem"
-        onClick={sendMessage(REMOTE_CONTROLS.PLAYBACK_SLOWER)}
-      >
-        <FontAwesomeIcon icon={faAngleDoubleLeft} />
-      </Button>
-      <Button
-        size="sm"
-        mr="0.4rem"
-        onClick={sendMessage(REMOTE_CONTROLS.GO_PREVIOUS_DREAM)}
-      >
-        <FontAwesomeIcon icon={faAngleLeft} />
-      </Button>
-      <Button
-        size="sm"
-        mr="0.4rem"
-        onClick={sendMessage(REMOTE_CONTROLS.GO_NEXT_DREAM)}
-      >
-        <FontAwesomeIcon icon={faAngleRight} />
-      </Button>
-      <Button
-        size="sm"
-        mr="0.4rem"
-        onClick={sendMessage(REMOTE_CONTROLS.PLAYBACK_FASTER)}
-      >
-        <FontAwesomeIcon icon={faAngleDoubleRight} />
-      </Button>
-      <Button
-        size="sm"
-        mr="0.4rem"
-        onClick={sendMessage(REMOTE_CONTROLS.LIKE_CURRENT_DREAM)}
-      >
-        <FontAwesomeIcon icon={faThumbsUp} />
-      </Button>
+    <Row flexWrap="wrap" style={{ gap: "4px" }}>
+      {Object.keys(REMOTE_CONTROLS).map((key) => {
+        const REMOTE_CONTROL = REMOTE_CONTROLS[key];
+        return (
+          <Button
+            size="sm"
+            mr="0.4rem"
+            onClick={sendMessage(REMOTE_CONTROL?.event)}
+          >
+            {t(`components.remote_control.${REMOTE_CONTROL?.event}`)}
+          </Button>
+        );
+      })}
     </Row>
   );
 };

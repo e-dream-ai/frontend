@@ -1,22 +1,62 @@
-export const REMOTE_CONTROLS = {
-  LIKE_CURRENT_DREAM: "like",
-  DISLIKE_CURRENT_DREAM: "dislike",
-  GO_NEXT_DREAM: "next",
-  GO_PREVIOUS_DREAM: "previous",
-  PLAYBACK_SLOWER: "playback_slower",
-  PLAYBACK_FASTER: "playback_faster",
+import { RemoteControlAction } from "@/types/remote-control.types";
+
+export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
+  DISLIKE_CURRENT_DREAM: { event: "dislike", key: "↓", order: 1 },
+  LIKE_CURRENT_DREAM: { event: "like", key: "↑", order: 1 },
+  GO_PREVIOUS_DREAM: { event: "previous", key: "←", order: 1 },
+  GO_NEXT_DREAM: { event: "next", key: "→", order: 1 },
+  PLAYBACK_SLOWER: { event: "playback_slower", key: "A", order: 1 },
+  PLAYBACK_FASTER: { event: "playback_faster", key: "D", order: 1 },
+  FORWARD: { event: "forward", key: "L", order: 1 },
+  BACKWARD: { event: "backward", key: "J", order: 1 },
+  BRIGHTER: { event: "brighter", key: "W", order: 1 },
+  DARKER: { event: "darker", key: "S", order: 1 },
+  CREDIT: { event: "credit", key: "C", order: 1 },
+  WEB: { event: "web", key: "V", order: 1 },
+  HELP: { event: "help", key: "F1, ?", order: 1 },
+  STATUS: { event: "status", key: "F2", order: 1 },
+  SET_SPEED_1: { event: "set_speed_1", key: "1", order: 1 },
+  SET_SPEED_2: { event: "set_speed_2", key: "2", order: 1 },
+  SET_SPEED_3: { event: "set_speed_3", key: "3", order: 1 },
+  SET_SPEED_4: { event: "set_speed_4", key: "4", order: 1 },
+  SET_SPEED_5: { event: "set_speed_5", key: "5", order: 1 },
+  SET_SPEED_6: { event: "set_speed_6", key: "6", order: 1 },
+  SET_SPEED_7: { event: "set_speed_7", key: "7", order: 1 },
+  SET_SPEED_8: { event: "set_speed_8", key: "8", order: 1 },
+  SET_SPEED_9: { event: "set_speed_9", key: "9", order: 1 },
+  PAUSE: { event: "pause", key: "0, K", order: 1 },
+  CAPTURE: { event: "capture", key: "T", order: 1 },
+  REPORT: { event: "report", key: "R, !", order: 1 },
 };
 
 export const REMOTE_CONTROLS_TRANSLATIONS = {
-  [REMOTE_CONTROLS.LIKE_CURRENT_DREAM]:
-    "components.remote_control.like_current_dream",
-  [REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM]:
-    "components.remote_control.dislike_current_dream",
-  [REMOTE_CONTROLS.GO_NEXT_DREAM]: "components.remote_control.go_next_dream",
-  [REMOTE_CONTROLS.GO_PREVIOUS_DREAM]:
-    "components.remote_control.go_previous_dream",
-  [REMOTE_CONTROLS.PLAYBACK_SLOWER]:
+  [REMOTE_CONTROLS.LIKE_CURRENT_DREAM.key]: "components.remote_control.like",
+  [REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.key]:
+    "components.remote_control.dislike",
+  [REMOTE_CONTROLS.GO_PREVIOUS_DREAM.key]: "components.remote_control.previous",
+  [REMOTE_CONTROLS.GO_NEXT_DREAM.key]: "components.remote_control.next",
+  [REMOTE_CONTROLS.PLAYBACK_SLOWER.key]:
     "components.remote_control.playback_slower",
-  [REMOTE_CONTROLS.PLAYBACK_FASTER]:
+  [REMOTE_CONTROLS.PLAYBACK_FASTER.key]:
     "components.remote_control.playback_faster",
+  [REMOTE_CONTROLS.FORWARD.key]: "components.remote_control.forward",
+  [REMOTE_CONTROLS.BACKWARD.key]: "components.remote_control.backward",
+  [REMOTE_CONTROLS.BRIGHTER.key]: "components.remote_control.brighter",
+  [REMOTE_CONTROLS.DARKER.key]: "components.remote_control.darker",
+  [REMOTE_CONTROLS.CREDIT.key]: "components.remote_control.credit",
+  [REMOTE_CONTROLS.WEB.key]: "components.remote_control.web",
+  [REMOTE_CONTROLS.HELP.key]: "components.remote_control.help",
+  [REMOTE_CONTROLS.STATUS.key]: "components.remote_control.status",
+  [REMOTE_CONTROLS.SET_SPEED_1.key]: "components.remote_control.set_speed_1",
+  [REMOTE_CONTROLS.SET_SPEED_2.key]: "components.remote_control.set_speed_2",
+  [REMOTE_CONTROLS.SET_SPEED_3.key]: "components.remote_control.set_speed_3",
+  [REMOTE_CONTROLS.SET_SPEED_4.key]: "components.remote_control.set_speed_4",
+  [REMOTE_CONTROLS.SET_SPEED_5.key]: "components.remote_control.set_speed_5",
+  [REMOTE_CONTROLS.SET_SPEED_6.key]: "components.remote_control.set_speed_6",
+  [REMOTE_CONTROLS.SET_SPEED_7.key]: "components.remote_control.set_speed_7",
+  [REMOTE_CONTROLS.SET_SPEED_8.key]: "components.remote_control.set_speed_8",
+  [REMOTE_CONTROLS.SET_SPEED_9.key]: "components.remote_control.set_speed_9",
+  [REMOTE_CONTROLS.PAUSE.key]: "components.remote_control.pause",
+  [REMOTE_CONTROLS.CAPTURE.key]: "components.remote_control.capture",
+  [REMOTE_CONTROLS.REPORT.key]: "components.remote_control.report",
 };
