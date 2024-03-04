@@ -1,11 +1,11 @@
 import styled, { css } from "styled-components";
-import { SpaceProps, space } from "styled-system";
+import { SpaceProps, TypographyProps, space, typography } from "styled-system";
 import { Sizes } from "@/types/sizes.types";
 import { Types } from "@/types/style-types.types";
 
 const ButtonSizes = {
   sm: css`
-    font-size: 1rem;
+    /* font-size: 1rem; */
     height: 2rem;
 
     .button-before {
@@ -50,7 +50,9 @@ const ButtonTypes = {
   secondary: css`
     background-color: ${(props) => props.theme.colorSecondary};
   `,
-  tertiary: css``,
+  tertiary: css`
+    background-color: ${(props) => props.theme.inputBackgroundColor};
+  `,
   success: css``,
   danger: css`
     background-color: ${(props) => props.theme.colorDanger};
@@ -79,9 +81,9 @@ export const StyledButton = styled.button<
     size: Sizes;
     buttonType: Types;
     transparent?: boolean;
-  } & SpaceProps
+  } & SpaceProps &
+    TypographyProps
 >`
-  ${space}
   display: inline-flex;
   height: fit-content;
   align-items: center;
@@ -116,6 +118,9 @@ export const StyledButton = styled.button<
     background-color: ${(props) => props.theme.colorLightPrimary};
     cursor: not-allowed;
   }
+
+  ${space}
+  ${typography}
 `;
 
 export const ButtonBefore = styled.span`

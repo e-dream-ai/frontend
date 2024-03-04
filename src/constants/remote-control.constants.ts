@@ -24,7 +24,8 @@ export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
   SET_SPEED_7: { event: "set_speed_7", key: "7", order: 1 },
   SET_SPEED_8: { event: "set_speed_8", key: "8", order: 1 },
   SET_SPEED_9: { event: "set_speed_9", key: "9", order: 1 },
-  PAUSE: { event: "pause", key: "0, K", order: 1 },
+  PAUSE_1: { event: "pause", key: "0", order: 1 },
+  PAUSE_2: { event: "pause", key: "K", order: 1 },
   CAPTURE: { event: "capture", key: "T", order: 1 },
   REPORT: { event: "report", key: "R, !", order: 1 },
 };
@@ -56,7 +57,8 @@ export const REMOTE_CONTROLS_TRANSLATIONS = {
   [REMOTE_CONTROLS.SET_SPEED_7.key]: "components.remote_control.set_speed_7",
   [REMOTE_CONTROLS.SET_SPEED_8.key]: "components.remote_control.set_speed_8",
   [REMOTE_CONTROLS.SET_SPEED_9.key]: "components.remote_control.set_speed_9",
-  [REMOTE_CONTROLS.PAUSE.key]: "components.remote_control.pause",
+  [REMOTE_CONTROLS.PAUSE_1.key]: "components.remote_control.pause",
+  [REMOTE_CONTROLS.PAUSE_2.key]: "components.remote_control.pause",
   [REMOTE_CONTROLS.CAPTURE.key]: "components.remote_control.capture",
   [REMOTE_CONTROLS.REPORT.key]: "components.remote_control.report",
 };
