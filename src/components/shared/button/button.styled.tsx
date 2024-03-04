@@ -1,7 +1,7 @@
 import styled, { css } from "styled-components";
 import { SpaceProps, TypographyProps, space, typography } from "styled-system";
 import { Sizes } from "@/types/sizes.types";
-import { Types } from "@/types/style-types.types";
+import { TextTransform, Types } from "@/types/style-types.types";
 
 const ButtonSizes = {
   sm: css`
@@ -81,13 +81,14 @@ export const StyledButton = styled.button<
     size: Sizes;
     buttonType: Types;
     transparent?: boolean;
+    textTransform?: TextTransform;
   } & SpaceProps &
     TypographyProps
 >`
   display: inline-flex;
   height: fit-content;
   align-items: center;
-  text-transform: uppercase;
+  text-transform: ${(props) => props.textTransform ?? "uppercase"};
   padding: 6px 12px;
   margin-bottom: 0;
   border: 1px solid transparent;
@@ -95,6 +96,7 @@ export const StyledButton = styled.button<
   cursor: pointer;
   color: ${(props) => props.theme.textPrimaryColor};
   background-color: ${(props) => (props.transparent ? "transparent" : "none")};
+  text-wrap: nowrap;
 
   -webkit-transition:
     filter linear 0.4s,

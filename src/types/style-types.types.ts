@@ -5,3 +5,5 @@ export type Types =
   | "tertiary"
   | "danger"
   | "success";
+
+export type TextTransform = "capitalize" | "uppercase" | "lowercase" | "none";

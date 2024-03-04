@@ -1,6 +1,6 @@
 import { SpaceProps, TypographyProps } from "styled-system";
 import { Sizes } from "@/types/sizes.types";
-import { Types } from "@/types/style-types.types";
+import { TextTransform, Types } from "@/types/style-types.types";
 import StyledButton, { ButtonAfter, ButtonBefore } from "./button.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSpinner } from "@fortawesome/free-solid-svg-icons";
@@ -13,6 +13,7 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   after?: React.ReactNode;
   buttonType?: Types;
   transparent?: boolean;
+  textTransform?: TextTransform;
 } & SpaceProps &
   TypographyProps;
 

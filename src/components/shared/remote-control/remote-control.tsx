@@ -68,17 +68,19 @@ export const RemoteControl: React.FC = () => {
   return (
     <Row flexWrap="wrap" style={{ gap: "4px" }}>
       <Grid
-        gridTemplateRows="repeat(4, auto)"
-        gridTemplateColumns="repeat(10, auto)"
+        gridTemplateRows="repeat(6, auto)"
+        gridTemplateColumns="repeat(11, 60px)"
         gridGap="0.2rem"
       >
         {/* ROW 1 */}
+        <p />
         {ROW_1.map((remoteControl) => {
           return (
             <Button
               buttonType="tertiary"
               size="sm"
               fontSize="0.6rem"
+              textTransform="none"
               onClick={sendMessage(remoteControl?.event)}
             >
               {remoteControl.key +
@@ -95,6 +97,7 @@ export const RemoteControl: React.FC = () => {
         <p />
         <p />
         <p />
+
         {/* ROW 2 */}
         {ROW_2.map((remoteControl) => {
           return (
@@ -102,6 +105,7 @@ export const RemoteControl: React.FC = () => {
               buttonType="tertiary"
               size="sm"
               fontSize="0.6rem"
+              textTransform="none"
               onClick={sendMessage(remoteControl?.event)}
             >
               {remoteControl.key +
@@ -110,12 +114,15 @@ export const RemoteControl: React.FC = () => {
             </Button>
           );
         })}
+        <p />
+
         {/* ROW 3 */}
         <p />
         <Button
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.BRIGHTER.event)}
         >
           {REMOTE_CONTROLS.BRIGHTER.key +
@@ -130,11 +137,14 @@ export const RemoteControl: React.FC = () => {
         <p />
         <p />
         <p />
+        <p />
+
         {/* ROW 4 */}
         <Button
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.PLAYBACK_SLOWER.event)}
         >
           {REMOTE_CONTROLS.PLAYBACK_SLOWER.key +
@@ -147,6 +157,7 @@ export const RemoteControl: React.FC = () => {
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.DARKER.event)}
         >
           {REMOTE_CONTROLS.DARKER.key +
@@ -157,6 +168,7 @@ export const RemoteControl: React.FC = () => {
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.PLAYBACK_FASTER.event)}
         >
           {REMOTE_CONTROLS.PLAYBACK_FASTER.key +
@@ -168,10 +180,13 @@ export const RemoteControl: React.FC = () => {
         <p />
         <p />
         <p />
+        <p />
+
         <Button
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.BACKWARD.event)}
         >
           {REMOTE_CONTROLS.BACKWARD.key +
@@ -182,6 +197,7 @@ export const RemoteControl: React.FC = () => {
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.PAUSE_2.event)}
         >
           {REMOTE_CONTROLS.PAUSE_2.key +
@@ -192,6 +208,7 @@ export const RemoteControl: React.FC = () => {
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.FORWARD.event)}
         >
           {REMOTE_CONTROLS.FORWARD.key +
@@ -202,10 +219,12 @@ export const RemoteControl: React.FC = () => {
         {/* ROW 5 */}
         <p />
         <p />
+        <p />
         <Button
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.CREDIT.event)}
         >
           {REMOTE_CONTROLS.CREDIT.key +
@@ -216,6 +235,7 @@ export const RemoteControl: React.FC = () => {
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.WEB.event)}
         >
           {REMOTE_CONTROLS.WEB.key +
@@ -226,18 +246,8 @@ export const RemoteControl: React.FC = () => {
         <p />
         <p />
         <p />
-        <Button
-          buttonType="tertiary"
-          size="sm"
-          fontSize="0.6rem"
-          onClick={sendMessage(REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event)}
-        >
-          {REMOTE_CONTROLS.LIKE_CURRENT_DREAM.key +
-            " " +
-            t(
-              `components.remote_control.${REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event}`,
-            )}
-        </Button>
+        <p />
+        <p />
         {/* ROW 5 */}
         <p />
         <p />
@@ -247,10 +257,38 @@ export const RemoteControl: React.FC = () => {
         <p />
         <p />
         <p />
+        <p />
+
         <Button
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
+          onClick={sendMessage(REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event)}
+        >
+          {REMOTE_CONTROLS.LIKE_CURRENT_DREAM.key +
+            " " +
+            t(
+              `components.remote_control.${REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event}`,
+            )}
+        </Button>
+        <p />
+
+        {/* ROW 6 */}
+        <p />
+        <p />
+        <p />
+        <p />
+        <p />
+        <p />
+        <p />
+        <p />
+
+        <Button
+          buttonType="tertiary"
+          size="sm"
+          fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event)}
         >
           {REMOTE_CONTROLS.GO_PREVIOUS_DREAM.key +
@@ -264,6 +302,7 @@ export const RemoteControl: React.FC = () => {
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event)}
         >
           {REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.key +
@@ -277,6 +316,7 @@ export const RemoteControl: React.FC = () => {
           buttonType="tertiary"
           size="sm"
           fontSize="0.6rem"
+          textTransform="none"
           onClick={sendMessage(REMOTE_CONTROLS.GO_NEXT_DREAM.event)}
         >
           {REMOTE_CONTROLS.GO_NEXT_DREAM.key +
@@ -292,6 +332,7 @@ export const RemoteControl: React.FC = () => {
               buttonType="tertiary"
               size="sm"
               fontSize="0.6rem"
+              textTransform="none"
               onClick={sendMessage(REMOTE_CONTROL?.event)}
             >
               {REMOTE_CONTROL.key +
