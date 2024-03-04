@@ -31,34 +31,35 @@ export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
 };
 
 export const REMOTE_CONTROLS_TRANSLATIONS = {
-  [REMOTE_CONTROLS.LIKE_CURRENT_DREAM.key]: "components.remote_control.like",
-  [REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.key]:
+  [REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event]: "components.remote_control.like",
+  [REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event]:
     "components.remote_control.dislike",
-  [REMOTE_CONTROLS.GO_PREVIOUS_DREAM.key]: "components.remote_control.previous",
-  [REMOTE_CONTROLS.GO_NEXT_DREAM.key]: "components.remote_control.next",
-  [REMOTE_CONTROLS.PLAYBACK_SLOWER.key]:
+  [REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event]:
+    "components.remote_control.previous",
+  [REMOTE_CONTROLS.GO_NEXT_DREAM.event]: "components.remote_control.next",
+  [REMOTE_CONTROLS.PLAYBACK_SLOWER.event]:
     "components.remote_control.playback_slower",
-  [REMOTE_CONTROLS.PLAYBACK_FASTER.key]:
+  [REMOTE_CONTROLS.PLAYBACK_FASTER.event]:
     "components.remote_control.playback_faster",
-  [REMOTE_CONTROLS.FORWARD.key]: "components.remote_control.forward",
-  [REMOTE_CONTROLS.BACKWARD.key]: "components.remote_control.backward",
-  [REMOTE_CONTROLS.BRIGHTER.key]: "components.remote_control.brighter",
-  [REMOTE_CONTROLS.DARKER.key]: "components.remote_control.darker",
-  [REMOTE_CONTROLS.CREDIT.key]: "components.remote_control.credit",
-  [REMOTE_CONTROLS.WEB.key]: "components.remote_control.web",
-  [REMOTE_CONTROLS.HELP.key]: "components.remote_control.help",
-  [REMOTE_CONTROLS.STATUS.key]: "components.remote_control.status",
-  [REMOTE_CONTROLS.SET_SPEED_1.key]: "components.remote_control.set_speed_1",
-  [REMOTE_CONTROLS.SET_SPEED_2.key]: "components.remote_control.set_speed_2",
-  [REMOTE_CONTROLS.SET_SPEED_3.key]: "components.remote_control.set_speed_3",
-  [REMOTE_CONTROLS.SET_SPEED_4.key]: "components.remote_control.set_speed_4",
-  [REMOTE_CONTROLS.SET_SPEED_5.key]: "components.remote_control.set_speed_5",
-  [REMOTE_CONTROLS.SET_SPEED_6.key]: "components.remote_control.set_speed_6",
-  [REMOTE_CONTROLS.SET_SPEED_7.key]: "components.remote_control.set_speed_7",
-  [REMOTE_CONTROLS.SET_SPEED_8.key]: "components.remote_control.set_speed_8",
-  [REMOTE_CONTROLS.SET_SPEED_9.key]: "components.remote_control.set_speed_9",
-  [REMOTE_CONTROLS.PAUSE_1.key]: "components.remote_control.pause",
-  [REMOTE_CONTROLS.PAUSE_2.key]: "components.remote_control.pause",
-  [REMOTE_CONTROLS.CAPTURE.key]: "components.remote_control.capture",
-  [REMOTE_CONTROLS.REPORT.key]: "components.remote_control.report",
+  [REMOTE_CONTROLS.FORWARD.event]: "components.remote_control.forward",
+  [REMOTE_CONTROLS.BACKWARD.event]: "components.remote_control.backward",
+  [REMOTE_CONTROLS.BRIGHTER.event]: "components.remote_control.brighter",
+  [REMOTE_CONTROLS.DARKER.event]: "components.remote_control.darker",
+  [REMOTE_CONTROLS.CREDIT.event]: "components.remote_control.credit",
+  [REMOTE_CONTROLS.WEB.event]: "components.remote_control.web",
+  [REMOTE_CONTROLS.HELP.event]: "components.remote_control.help",
+  [REMOTE_CONTROLS.STATUS.event]: "components.remote_control.status",
+  [REMOTE_CONTROLS.SET_SPEED_1.event]: "components.remote_control.set_speed_1",
+  [REMOTE_CONTROLS.SET_SPEED_2.event]: "components.remote_control.set_speed_2",
+  [REMOTE_CONTROLS.SET_SPEED_3.event]: "components.remote_control.set_speed_3",
+  [REMOTE_CONTROLS.SET_SPEED_4.event]: "components.remote_control.set_speed_4",
+  [REMOTE_CONTROLS.SET_SPEED_5.event]: "components.remote_control.set_speed_5",
+  [REMOTE_CONTROLS.SET_SPEED_6.event]: "components.remote_control.set_speed_6",
+  [REMOTE_CONTROLS.SET_SPEED_7.event]: "components.remote_control.set_speed_7",
+  [REMOTE_CONTROLS.SET_SPEED_8.event]: "components.remote_control.set_speed_8",
+  [REMOTE_CONTROLS.SET_SPEED_9.event]: "components.remote_control.set_speed_9",
+  [REMOTE_CONTROLS.PAUSE_1.event]: "components.remote_control.pause",
+  [REMOTE_CONTROLS.PAUSE_2.event]: "components.remote_control.pause",
+  [REMOTE_CONTROLS.CAPTURE.event]: "components.remote_control.capture",
+  [REMOTE_CONTROLS.REPORT.event]: "components.remote_control.report",
 };

@@ -47,9 +47,9 @@ export const RemoteControl: React.FC = () => {
 
       if (event) {
         toast.info(
-          `${t("components.remote_control.event")}: ${
-            key ? `(${key})` : ""
-          } ${t(REMOTE_CONTROLS_TRANSLATIONS[event?.key])}`,
+          `${t("components.remote_control.event")}: ${key ? `${key}` : ""} ${t(
+            REMOTE_CONTROLS_TRANSLATIONS[event?.event],
+          )}`,
         );
       }
     });
