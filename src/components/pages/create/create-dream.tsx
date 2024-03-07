@@ -1,7 +1,7 @@
 import { useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
-import { faUpload } from "@fortawesome/free-solid-svg-icons";
+import { faRotateRight, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { AnchorLink, Button, FileUploader, Row } from "@/components/shared";
 import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { HandleChangeFile } from "@/types/media.types";
@@ -35,8 +35,15 @@ export const CreateDream: React.FC = () => {
     }
   };
 
-  const { isLoading, isAborting, uploadProgress, mutateAsync, reset } =
-    useUploadDreamVideo();
+  const {
+    isLoading,
+    isFailed,
+    isAborting,
+    uploadProgress,
+    retryUploadFailedParts,
+    mutateAsync,
+    reset,
+  } = useUploadDreamVideo();
 
   const handleUploadDream = async () => {
     try {
@@ -97,16 +104,28 @@ export const CreateDream: React.FC = () => {
               >
                 {t("page.create.cancel")}
               </Button>
-              <Button
-                after={<FontAwesomeIcon icon={faUpload} />}
-                onClick={handleUploadDream}
-                isLoading={isLoading}
-                disabled={!video || isAborting || isLoading}
-              >
-                {isLoading
-                  ? t("page.create.creating")
-                  : t("page.create.create")}
-              </Button>
+              {!isFailed && (
+                <Button
+                  after={<FontAwesomeIcon icon={faUpload} />}
+                  onClick={handleUploadDream}
+                  isLoading={isLoading}
+                  disabled={!video || isAborting || isLoading}
+                >
+                  {isLoading
+                    ? t("page.create.creating")
+                    : t("page.create.create")}
+                </Button>
+              )}
+              {isFailed && (
+                <Button
+                  after={<FontAwesomeIcon icon={faRotateRight} />}
+                  onClick={retryUploadFailedParts}
+                  isLoading={isLoading}
+                  disabled={isAborting || isLoading}
+                >
+                  {t("page.create.retry")}
+                </Button>
+              )}
             </Row>
           )}
         </Column>

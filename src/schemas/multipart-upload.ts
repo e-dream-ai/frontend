@@ -7,6 +7,13 @@ export type CreateMultipartUploadFormValues = {
 
 export type CompletedPart = { ETag?: string; PartNumber?: number };
 
+export type RefreshMultipartUploadUrlFormValues = {
+  uuid?: string;
+  extension?: string;
+  uploadId?: string;
+  part?: number;
+};
+
 export type CompleteMultipartUploadFormValues = {
   uuid?: string;
   name?: string;

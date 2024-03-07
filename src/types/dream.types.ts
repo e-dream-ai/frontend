@@ -41,6 +41,12 @@ export type MultipartUpload = {
   uploadId?: string;
 };
 
+export type RefresgMultipartUpload = {
+  url?: string;
+  dream: Dream;
+  uploadId?: string;
+};
+
 export type MultipartUploadRequest = {
   presignedUrl: string;
   filePart: Blob;
