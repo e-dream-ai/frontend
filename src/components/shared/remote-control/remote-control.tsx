@@ -1,17 +1,12 @@
-import React, { useEffect } from "react";
+import React from "react";
 import { Button, Row } from "@/components/shared";
 import {
+  NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
-  REMOTE_CONTROLS_TRANSLATIONS,
 } from "@/constants/remote-control.constants";
-import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import useIO from "@/hooks/useIO";
-import { getRemoteControlEvent } from "@/utils/remote-control.util";
-import { RemoteControlAction } from "@/types/remote-control.types";
+import useSocket from "@/hooks/useSocket";
 import Grid from "@/components/shared/grid/grid";
-
-const NEW_REMOTE_CONTROL_EVENT = "new_remote_control_event";
 
 const ROW_1 = [REMOTE_CONTROLS.HELP, REMOTE_CONTROLS.STATUS];
 
@@ -30,39 +25,11 @@ const ROW_2 = [
 
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
-  const { io } = useIO();
-
-  // Listen for events from the server
-  useEffect(() => {
-    io?.on(NEW_REMOTE_CONTROL_EVENT, (data): void => {
-      const event: RemoteControlAction | undefined = getRemoteControlEvent(
-        data?.event,
-      );
-
-      if (!event) {
-        return;
-      }
-
-      const key = event?.key;
-
-      if (event) {
-        toast.info(
-          `${t("components.remote_control.event")}: ${key ? `${key}` : ""} ${t(
-            REMOTE_CONTROLS_TRANSLATIONS[event?.event],
-          )}`,
-        );
-      }
-    });
-
-    // Cleanup on component unmount
-    return () => {
-      io?.off(NEW_REMOTE_CONTROL_EVENT);
-    };
-  }, [io, t]);
+  const { socket } = useSocket();
 
   // Emit an event to the server
   const sendMessage = (event: string) => () => {
-    io?.emit(NEW_REMOTE_CONTROL_EVENT, { event: event });
+    socket?.emit(NEW_REMOTE_CONTROL_EVENT, { event: event });
   };
 
   return (
@@ -77,6 +44,7 @@ export const RemoteControl: React.FC = () => {
         {ROW_1.map((remoteControl) => {
           return (
             <Button
+              key={remoteControl.event}
               buttonType="tertiary"
               size="sm"
               fontSize="0.6rem"
@@ -102,6 +70,7 @@ export const RemoteControl: React.FC = () => {
         {ROW_2.map((remoteControl) => {
           return (
             <Button
+              key={remoteControl.event}
               buttonType="tertiary"
               size="sm"
               fontSize="0.6rem"
@@ -325,22 +294,6 @@ export const RemoteControl: React.FC = () => {
               `components.remote_control.${REMOTE_CONTROLS.GO_NEXT_DREAM.event}`,
             )}
         </Button>
-        {/* {Object.keys(REMOTE_CONTROLS).map((key) => {
-          const REMOTE_CONTROL = REMOTE_CONTROLS[key];
-          return (
-            <Button
-              buttonType="tertiary"
-              size="sm"
-              fontSize="0.6rem"
-              textTransform="none"
-              onClick={sendMessage(REMOTE_CONTROL?.event)}
-            >
-              {REMOTE_CONTROL.key +
-                " " +
-                t(`components.remote_control.${REMOTE_CONTROL?.event}`)}
-            </Button>
-          );
-        })} */}
       </Grid>
     </Row>
   );

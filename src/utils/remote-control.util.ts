@@ -2,7 +2,7 @@ import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
 import { RemoteControlAction } from "@/types/remote-control.types";
 
 export const getRemoteControlEvent = (
-  event: string,
+  event?: string,
 ): RemoteControlAction | undefined => {
   const foundIndex = Object.keys(REMOTE_CONTROLS).findIndex((key) => {
     const remoteControl = REMOTE_CONTROLS[key] as RemoteControlAction;

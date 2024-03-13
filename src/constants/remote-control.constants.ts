@@ -1,6 +1,11 @@
 import { RemoteControlAction } from "@/types/remote-control.types";
 
+export const NEW_REMOTE_CONTROL_EVENT = "new_remote_control_event";
+
 export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
+  PLAYING: { event: "playing", key: "", order: 1 },
+  PLAY_DREAM: { event: "play_dream", key: "", order: 1 },
+  PLAY_PLAYLIST: { event: "play_playlist", key: "", order: 1 },
   DISLIKE_CURRENT_DREAM: { event: "dislike", key: "↓", order: 1 },
   LIKE_CURRENT_DREAM: { event: "like", key: "↑", order: 1 },
   GO_PREVIOUS_DREAM: { event: "previous", key: "←", order: 1 },
@@ -31,6 +36,9 @@ export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
 };
 
 export const REMOTE_CONTROLS_TRANSLATIONS = {
+  [REMOTE_CONTROLS.PLAY_DREAM.event]: "components.remote_control.play_dream",
+  [REMOTE_CONTROLS.PLAY_PLAYLIST.event]:
+    "components.remote_control.play_playlist",
   [REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event]: "components.remote_control.like",
   [REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event]:
     "components.remote_control.dislike",

@@ -32,6 +32,7 @@ import { DreamVideoInput, ViewDreamInputs } from "./view-dream-inputs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faPencil,
+  faPlay,
   faSave,
   faThumbsDown,
   faThumbsUp,
@@ -42,6 +43,8 @@ import { Video } from "./view-dream.styled";
 import { getUserName } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { generateImageURLFromResource } from "@/utils/image-handler";
+import useSocket from "@/hooks/useSocket";
+import { emitPlayDream } from "@/utils/socket.util";
 
 type Params = { uuid: string };
 
@@ -52,6 +55,7 @@ const ViewDreamPage: React.FC = () => {
   const { uuid } = useParams<Params>();
   const { user } = useAuth();
   const { data, isLoading: isDreamLoading } = useDream(uuid);
+  const { socket } = useSocket();
   const dream = data?.data?.dream;
 
   const [editMode, setEditMode] = useState<boolean>(false);
@@ -246,6 +250,10 @@ const ViewDreamPage: React.FC = () => {
     });
   };
 
+  const handlePlayDream = () => {
+    emitPlayDream(socket, dream);
+  };
+
   /**
    * Setting api values to form
    */
@@ -292,6 +300,15 @@ const ViewDreamPage: React.FC = () => {
 
             {!editMode && (
               <Row margin={0}>
+                <Button
+                  type="button"
+                  buttonType="default"
+                  transparent
+                  ml="1rem"
+                  onClick={handlePlayDream}
+                >
+                  <FontAwesomeIcon icon={faPlay} />
+                </Button>
                 <Button
                   type="button"
                   buttonType="default"

@@ -4,6 +4,7 @@ import QueryClientProvider from "@/providers/query-client.provider";
 import React from "react";
 import PermissionProvider from "./permission.provider";
 import ThemeProvider from "./theme.provider";
+import SocketProvider from "./socket.provider";
 
 export const withProviders = (
   ...providers: Array<React.FC<{ children?: React.ReactNode }>>
@@ -24,6 +25,7 @@ export const Providers = [
   AuthProvider,
   ModalProvider,
   PermissionProvider,
+  SocketProvider,
 ];
 
 export default Providers;

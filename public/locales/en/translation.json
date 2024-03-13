@@ -229,7 +229,10 @@
       "processing": "Processing dream, wait for it finish."
     },
     "remote_control": {
-      "event": "Event triggered",
+      "event": "Event",
+      "playing": "Playing",
+      "play_dream": "Now dream",
+      "play_playlist": "Now playlist",
       "dislike": "Dislike",
       "like": "Like",
       "previous": "Previous",

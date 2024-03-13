@@ -49,12 +49,15 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendar,
   faFileVideo,
+  faPlay,
   faSave,
   faTrash,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserName } from "@/utils/user.util";
 import { generateImageURLFromResource } from "@/utils/image-handler";
+import { emitPlayPlaylist } from "@/utils/socket.util";
+import useSocket from "@/hooks/useSocket";
 
 type Params = { id: string };
 
@@ -67,6 +70,8 @@ export const ViewPlaylistPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { data, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
+  const { socket } = useSocket();
+
   const playlist = data?.data?.playlist;
   const isOwner = user?.id === playlist?.user?.id;
   const allowedEditPlaylist = usePermission({
@@ -326,6 +331,10 @@ export const ViewPlaylistPage = () => {
     });
   };
 
+  const handlePlayPlaylist = () => {
+    emitPlayPlaylist(socket, playlist);
+  };
+
   const resetRemotePlaylistForm = useCallback(() => {
     reset({
       name: playlist?.name,
@@ -372,14 +381,24 @@ export const ViewPlaylistPage = () => {
       />
       <Section id={SectionID}>
         <Container>
-          <Row justifyContent="space-between" separator>
+          <Row justifyContent="space-between" pb="1rem" separator>
             <h2>{t("page.view_playlist.title")}</h2>
-            {!editMode && (
-              <Restricted
-                to={PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST}
-                isOwner={isOwner}
+
+            <Row marginBottom={0}>
+              <Button
+                type="button"
+                buttonType="default"
+                transparent
+                ml="1rem"
+                onClick={handlePlayPlaylist}
               >
-                <Row marginBottom={0}>
+                <FontAwesomeIcon icon={faPlay} />
+              </Button>
+              {!editMode && (
+                <Restricted
+                  to={PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST}
+                  isOwner={isOwner}
+                >
                   <Button
                     type="button"
                     buttonType="danger"
@@ -389,9 +408,9 @@ export const ViewPlaylistPage = () => {
                   >
                     <FontAwesomeIcon icon={faTrash} />
                   </Button>
-                </Row>
-              </Restricted>
-            )}
+                </Restricted>
+              )}
+            </Row>
           </Row>
           <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
             <Row justifyContent="space-between">

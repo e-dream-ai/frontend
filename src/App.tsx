@@ -5,10 +5,18 @@ import Providers, { withProviders } from "@/providers/providers";
 import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { useTranslation } from "react-i18next";
+import useSocket from "@/hooks/useSocket";
 import { router } from "@/routes/router";
+import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
+import { onNewRemoteControlEvent } from "@/utils/socket.util";
+import "react-toastify/dist/ReactToastify.css";
+import useAuth from "./hooks/useAuth";
 
 const App = () => {
+  const { t } = useTranslation();
+  const { socket, sessionId } = useSocket();
+  const { user } = useAuth();
   /**
    * Unregister document events to allow dragover
    */
@@ -17,6 +25,19 @@ const App = () => {
       event.preventDefault();
     });
   };
+
+  /**
+   * Listen new remote control events from the server
+   */
+  useEffect(() => {
+    const handleEvent = onNewRemoteControlEvent(t);
+    socket?.on(NEW_REMOTE_CONTROL_EVENT, handleEvent);
+
+    // Cleanup on component unmount
+    return () => {
+      socket?.off(NEW_REMOTE_CONTROL_EVENT);
+    };
+  }, [socket, sessionId, t, user]);
 
   useEffect(() => {
     unregisterDocumentEvents();
