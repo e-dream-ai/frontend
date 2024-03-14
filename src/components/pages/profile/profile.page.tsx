@@ -15,6 +15,8 @@ import {
   RightProfilePage,
 } from "./profile.styled";
 import { RemoteControl } from "@/components/shared/remote-control/remote-control";
+import { CurrentDream } from "@/components/shared/current-dream/current-dream";
+import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
 
 const SECTION_ID = "my-profile";
 
@@ -48,6 +50,16 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
             <ProfileCard user={user} />
           </LeftProfilePage>
           <RightProfilePage>
+            <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+              {t("page.profile.current_dream")}
+            </Text>
+            <CurrentDream uuid={user?.currentDream?.uuid} />
+
+            <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+              {t("page.profile.current_playlist")}
+            </Text>
+            <CurrentPlaylist id={user?.currentPlaylist?.id} />
+
             <Text mb="1rem" fontSize="1rem" fontWeight={600}>
               {t("page.profile.remote_control")}
             </Text>

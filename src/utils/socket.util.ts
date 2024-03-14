@@ -8,7 +8,10 @@ import {
 } from "@/constants/remote-control.constants";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
-import { RemoteControlAction } from "@/types/remote-control.types";
+import {
+  RemoteControlAction,
+  RemoteControlEvent,
+} from "@/types/remote-control.types";
 import { getRemoteControlEvent } from "@/utils/remote-control.util";
 
 export const emitPlayDream = (socket?: Socket, dream?: Dream) => {
@@ -29,7 +32,7 @@ export const emitPlayPlaylist = (socket?: Socket, playlist?: Playlist) => {
 
 export const onNewRemoteControlEvent =
   (t: TFunction) =>
-  (data: { event?: string; [key: string]: unknown } = {}): void => {
+  (data: RemoteControlEvent): void => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
       data?.event,
     );

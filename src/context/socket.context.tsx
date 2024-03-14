@@ -45,7 +45,6 @@ export const SocketProvider: React.FC<{
   };
 
   useEffect(() => {
-    console.log({ user });
     if (!user) {
       return;
     }

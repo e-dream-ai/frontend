@@ -11,6 +11,15 @@ type QueryFunctionParams = {
   uuid?: string;
 };
 
+type HookOptions = {
+  activeRefetchInterval?: boolean;
+};
+
+/**
+ * Refetch dream info every 5 seconds
+ */
+const DREAM_REFETCH_INTERVAL = 5000;
+
 const getDream = ({ uuid }: QueryFunctionParams) => {
   return async () =>
     axiosClient
@@ -22,7 +31,7 @@ const getDream = ({ uuid }: QueryFunctionParams) => {
       .then((res) => res.data);
 };
 
-export const useDream = (uuid?: string) => {
+export const useDream = (uuid?: string, options?: HookOptions) => {
   const { user } = useAuth();
   return useQuery<ApiResponse<{ dream: Dream }>, Error>(
     [DREAM_QUERY_KEY, { uuid }],
@@ -30,10 +39,9 @@ export const useDream = (uuid?: string) => {
     {
       refetchOnWindowFocus: false,
       enabled: Boolean(user) && Boolean(uuid),
-      /**
-       * Refetch dream info every 5 seconds
-       */
-      refetchInterval: 5000,
+      refetchInterval: options?.activeRefetchInterval
+        ? DREAM_REFETCH_INTERVAL
+        : false,
     },
   );
 };

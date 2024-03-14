@@ -54,7 +54,9 @@ const ViewDreamPage: React.FC = () => {
   const { t } = useTranslation();
   const { uuid } = useParams<Params>();
   const { user } = useAuth();
-  const { data, isLoading: isDreamLoading } = useDream(uuid);
+  const { data, isLoading: isDreamLoading } = useDream(uuid, {
+    activeRefetchInterval: true,
+  });
   const { socket } = useSocket();
   const dream = data?.data?.dream;
 

@@ -127,7 +127,9 @@
       "title": "Profile",
       "my_profile": "My Profile",
       "dreams": "Dreams",
-      "remote_control": "Remote Control"
+      "remote_control": "Remote Control",
+      "current_dream": "Current Dream",
+      "current_playlist": "Current Playlist"
     },
     "help": {
       "title": "Help"

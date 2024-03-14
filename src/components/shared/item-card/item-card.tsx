@@ -70,7 +70,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
-  const { id, name, thumbnail, user } = item!;
+  const { id, name, thumbnail, user } = item ?? {};
   const { t } = useTranslation();
 
   const [isDragEntered, setIsDragEntered] = useState<boolean>(false);
@@ -263,7 +263,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               )}{" "}
               {name || t("components.item_card.unnamed")}
             </Anchor>
-            {(item as Playlist).itemCount ? (
+            {(item as Playlist)?.itemCount ? (
               <Text mb={2}>
                 {t("components.item_card.videos")}:{" "}
                 {(item as Playlist)?.itemCount ?? 0}
@@ -284,21 +284,6 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         </ItemCardBody>
         {onDelete && (
           <Row justifyContent="flex-start" ml={2} mb={0}>
-            {/**
-             * Menu hidden temporarily
-             */}
-            {/* <Menu
-            menuButton={
-              <MenuButton>
-                <FontAwesomeIcon icon{faEllipsis} />
-              </MenuButton>
-            }
-            transition
-            menuClassName="my-menu"
-          >
-            <MenuItem onClick={() => onDelete()}>Delete</MenuItem>
-          </Menu> */}
-
             {!deleteDisabled && (
               <Button
                 type="button"

@@ -1,3 +1,5 @@
+import { Dream } from "./dream.types";
+import { Playlist } from "./playlist.types";
 import { RoleType } from "./role.types";
 
 export type Token = {
@@ -16,6 +18,8 @@ export type User = {
   avatar?: string;
   cognitoId?: string;
   role?: Role;
+  currentDream?: Dream;
+  currentPlaylist?: Playlist;
 };
 
 export type Role = {

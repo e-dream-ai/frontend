@@ -11,12 +11,10 @@ import { router } from "@/routes/router";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
 import { onNewRemoteControlEvent } from "@/utils/socket.util";
 import "react-toastify/dist/ReactToastify.css";
-import useAuth from "./hooks/useAuth";
 
 const App = () => {
   const { t } = useTranslation();
-  const { socket, sessionId } = useSocket();
-  const { user } = useAuth();
+  const { socket } = useSocket();
   /**
    * Unregister document events to allow dragover
    */
@@ -37,7 +35,7 @@ const App = () => {
     return () => {
       socket?.off(NEW_REMOTE_CONTROL_EVENT);
     };
-  }, [socket, sessionId, t, user]);
+  }, [socket, t]);
 
   useEffect(() => {
     unregisterDocumentEvents();
