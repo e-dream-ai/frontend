@@ -1,29 +1,28 @@
 import { usePlaylist } from "@/api/playlist/query/usePlaylist";
 import { Row, Column, ItemCardList, ItemCard } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
-import {
-  NEW_REMOTE_CONTROL_EVENT,
-  REMOTE_CONTROLS,
-} from "@/constants/remote-control.constants";
+import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
 import useSocket from "@/hooks/useSocket";
+import { User } from "@/types/auth.types";
 import {
   RemoteControlAction,
   RemoteControlEvent,
 } from "@/types/remote-control.types";
 import { getRemoteControlEvent } from "@/utils/remote-control.util";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 type CurrentPlaylistProps = {
   id?: number;
+  user?: User;
 };
 
-export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
+export const CurrentPlaylist = ({ id, user }: CurrentPlaylistProps) => {
   const { socket } = useSocket();
+  const { t } = useTranslation();
   const [stateId, setStateId] = useState<number | undefined>(id);
   const { data, isLoading, isRefetching, refetch } = usePlaylist(stateId);
   const playlist = data?.data?.playlist;
-
-  console.log({ playlist, id, stateId });
 
   useEffect(() => {
     refetch();
@@ -37,7 +36,8 @@ export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
    * Listen new remote control events from the server for dream on profile
    */
   useEffect(() => {
-    socket?.on(NEW_REMOTE_CONTROL_EVENT, (data?: RemoteControlEvent): void => {
+    const channel = user?.cognitoId ?? "user";
+    socket?.on(channel, (data?: RemoteControlEvent): void => {
       const event: RemoteControlAction | undefined = getRemoteControlEvent(
         data?.event,
       );
@@ -54,9 +54,17 @@ export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
 
     // Cleanup on component unmount
     return () => {
-      socket?.off(NEW_REMOTE_CONTROL_EVENT);
+      socket?.off(channel);
     };
-  }, [socket]);
+  }, [socket, user]);
+
+  if (!playlist) {
+    return (
+      <Column mb="2rem">
+        {t("components.current_playlist.no_current_playlist")}
+      </Column>
+    );
+  }
 
   return (
     <Column mb="2rem">

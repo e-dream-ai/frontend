@@ -261,6 +261,12 @@
       "pause": "Pause",
       "capture": "Capture",
       "report": "Report"
+    },
+    "current_dream": {
+      "no_current_dream": "No current dream"
+    },
+    "current_playlist": {
+      "no_current_playlist": "No current playlist"
     }
   },
   "hooks": {
