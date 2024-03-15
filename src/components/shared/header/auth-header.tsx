@@ -1,9 +1,7 @@
 import useLogout from "@/api/auth/useLogout";
 import { Anchor, AnchorLink } from "@/components/shared";
-import { ModalsKeys } from "@/constants/modal.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAuth } from "@/hooks/useAuth";
-import useModal from "@/hooks/useModal";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { AnchorIcon, Divider, StyledAuthHeader } from "./auth-header.styled";
@@ -27,10 +25,10 @@ import { generateImageURLFromResource } from "@/utils/image-handler";
 const AuthAnchor: React.FC<{
   text: string;
   icon: React.ReactElement;
-  onClick?: () => void;
-}> = ({ text, icon, onClick }) => {
+  href: string;
+}> = ({ text, icon, href }) => {
   return (
-    <Anchor onClick={onClick}>
+    <Anchor href={href}>
       <AnchorIcon>{icon}</AnchorIcon>
       <span>{text}</span>
     </Anchor>
@@ -42,9 +40,6 @@ export const AuthHeader: React.FC = () => {
   const { user, logout, isLoading } = useAuth();
   const userWithoutToken = user as Omit<User, "token">;
   const { mutate } = useLogout();
-  const { showModal } = useModal();
-  const handleShowLoginModal = () => showModal(ModalsKeys.LOGIN_MODAL);
-  const handleShowSignupModal = () => showModal(ModalsKeys.SIGNUP_MODAL);
 
   const logoutSession = () => {
     mutate(
@@ -111,13 +106,13 @@ export const AuthHeader: React.FC = () => {
           <AuthAnchor
             text={t("header.signup")}
             icon={<FontAwesomeIcon icon={faPencil} />}
-            onClick={handleShowSignupModal}
+            href="/signup"
           />
           <Divider>/</Divider>
           <AuthAnchor
             text={t("header.login")}
             icon={<FontAwesomeIcon icon={faLock} />}
-            onClick={handleShowLoginModal}
+            href="/login"
           />
         </>
       )}

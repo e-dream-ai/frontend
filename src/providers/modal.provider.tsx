@@ -1,8 +1,4 @@
-import {
-  ForgotPasswordModal,
-  LoginModal,
-  SignupModal,
-} from "@/components/modals";
+import { ForgotPasswordModal } from "@/components/modals";
 import { ModalProvider as StateModalProvider } from "@/context/modal.context";
 import useModal from "@/hooks/useModal";
 import styled from "styled-components";
@@ -38,13 +34,6 @@ export const StyledModalProviderWrapper: React.FC<{
   return (
     <StyledReactModalProvider backgroundComponent={styledBackgroundComponent}>
       <>
-        {state.loginModal && (
-          <LoginModal
-            key={Number(state.loginModal)}
-            isOpen={state.loginModal}
-          />
-        )}
-        {state.signupModal && <SignupModal isOpen={state.signupModal} />}
         {state.forgotPasswordModal && (
           <ForgotPasswordModal isOpen={state.forgotPasswordModal} />
         )}

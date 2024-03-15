@@ -25,7 +25,7 @@ export const CurrentPlaylist = ({ id, user }: CurrentPlaylistProps) => {
   const playlist = data?.data?.playlist;
 
   useEffect(() => {
-    refetch();
+    if (stateId) refetch();
   }, [stateId, refetch]);
 
   useEffect(() => {

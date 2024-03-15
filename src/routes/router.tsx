@@ -17,6 +17,8 @@ import { Outlet, createBrowserRouter } from "react-router-dom";
 import ProtectedRoute from "./protected-route";
 import { CreatePage } from "@/components/pages/create/create.page";
 import { Footer } from "@/components/shared";
+import { LoginPage } from "@/components/pages/login/login.page";
+import { SignupPage } from "@/components/pages/signup/signup.page";
 
 const RootElement = () => (
   <>
@@ -117,6 +119,14 @@ export const router = createBrowserRouter([
             <LearnMorePage />
           </ProtectedRoute>
         ),
+      },
+      {
+        path: ROUTES.LOGIN,
+        element: <LoginPage />,
+      },
+      {
+        path: ROUTES.SIGNUP,
+        element: <SignupPage />,
       },
       {
         path: ROUTES.ABOUT,

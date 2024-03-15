@@ -59,7 +59,7 @@ export const FeedPage: React.FC = () => {
     type: getFeedType(radioGroupState),
   });
   const feed = feedData?.data?.feed;
-  const pageCount = Math.ceil((feedData?.data?.count ?? 0) / PAGINATION.TAKE);
+  const pageCount = Math.ceil((feedData?.data?.count ?? 1) / PAGINATION.TAKE);
 
   const {
     data: usersData,
@@ -75,7 +75,7 @@ export const FeedPage: React.FC = () => {
   });
   const users = usersData?.data?.users;
   const usersPageCount = Math.ceil(
-    (usersData?.data?.count ?? 0) / PAGINATION.TAKE,
+    (usersData?.data?.count ?? 1) / PAGINATION.TAKE,
   );
 
   const isLoading =

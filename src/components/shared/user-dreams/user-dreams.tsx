@@ -21,7 +21,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({ userId }) => {
     userId,
   });
   const feed = data?.data?.feed;
-  const pageCount = Math.ceil((data?.data?.count ?? 0) / PAGINATION.TAKE);
+  const pageCount = Math.ceil((data?.data?.count ?? 1) / PAGINATION.TAKE);
 
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);

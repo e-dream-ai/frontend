@@ -25,7 +25,7 @@ export const CurrentDream = ({ uuid, user }: CurrentDreamProps) => {
   const dream = data?.data?.dream;
 
   useEffect(() => {
-    refetch();
+    if (stateUUID) refetch();
   }, [stateUUID, refetch]);
 
   useEffect(() => {
