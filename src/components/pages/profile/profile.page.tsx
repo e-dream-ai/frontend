@@ -60,10 +60,14 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
             </Text>
             <CurrentPlaylist user={user} id={user?.currentPlaylist?.id} />
 
-            <Text mb="1rem" fontSize="1rem" fontWeight={600}>
-              {t("page.profile.remote_control")}
-            </Text>
-            <RemoteControl />
+            {isMyProfile && (
+              <>
+                <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+                  {t("page.profile.remote_control")}
+                </Text>
+                <RemoteControl />
+              </>
+            )}
 
             <Text mb="1rem" fontSize="1rem" fontWeight={600}>
               {t("page.profile.dreams")}
