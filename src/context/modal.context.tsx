@@ -8,8 +8,6 @@ import {
 import React, { createContext, useCallback, useMemo, useReducer } from "react";
 
 const initialState: ModalState = {
-  loginModal: false,
-  signupModal: false,
   forgotPasswordModal: false,
 };
 

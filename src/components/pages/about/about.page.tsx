@@ -1,7 +1,5 @@
 import { Row } from "@/components/shared";
 import { Anchor } from "@/components/shared";
-import { ModalsKeys } from "@/constants/modal.constants";
-import useModal from "@/hooks/useModal";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import Text from "@/components/shared/text/text";
@@ -11,34 +9,31 @@ const SECTION_ID = "about";
 
 export const AboutPage: React.FC = () => {
   const { t } = useTranslation();
-  const { showModal } = useModal();
-  const handleShowSignupModal = () => showModal(ModalsKeys.SIGNUP_MODAL);
   return (
     <Container>
       <h2>{t("page.about.title")}</h2>
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
         <Text>
-	  <p>
-	    Discover and experience the latest generative AI animations
-	    from the greatest artists.
-	  </p>
-	  <p>
-	    Install e-dream on your Mac to get the highest quality
-	    experience, including interaction, screensaver
-	    integration, and remote control. The e-dream native client
-	    provides unsurpassed support for the ambient use, including
-	    adjustable super slow and smooth playback.
-	  </p>
-	  <p>
-	    Curate playlists, connect and learn from other fans on Discord or social
-	    media. Become a creator yourself!
-	  </p>
-	  <p>
-	    <Anchor onClick={handleShowSignupModal}>Sign up</Anchor>,
-	    then <Anchor href="/install">install</Anchor> the native client,
-	    and begin the experience.
-	  </p>
+          <p>
+            Discover and experience the latest generative AI animations from the
+            greatest artists.
+          </p>
+          <p>
+            Install e-dream on your Mac to get the highest quality experience,
+            including interaction, screensaver integration, and remote control.
+            The e-dream native client provides unsurpassed support for the
+            ambient use, including adjustable super slow and smooth playback.
+          </p>
+          <p>
+            Curate playlists, connect and learn from other fans on Discord or
+            social media. Become a creator yourself!
+          </p>
+          <p>
+            <Anchor href="/signup">Sign up</Anchor>, then{" "}
+            <Anchor href="/install">install</Anchor> the native client, and
+            begin the experience.
+          </p>
         </Text>
       </Section>
     </Container>

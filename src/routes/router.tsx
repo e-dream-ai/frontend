@@ -19,6 +19,7 @@ import { CreatePage } from "@/components/pages/create/create.page";
 import { Footer } from "@/components/shared";
 import { LoginPage } from "@/components/pages/login/login.page";
 import { SignupPage } from "@/components/pages/signup/signup.page";
+import PublicRoute from "@/routes/public-route";
 
 const RootElement = () => (
   <>
@@ -122,11 +123,19 @@ export const router = createBrowserRouter([
       },
       {
         path: ROUTES.LOGIN,
-        element: <LoginPage />,
+        element: (
+          <PublicRoute>
+            <LoginPage />
+          </PublicRoute>
+        ),
       },
       {
         path: ROUTES.SIGNUP,
-        element: <SignupPage />,
+        element: (
+          <PublicRoute>
+            <SignupPage />
+          </PublicRoute>
+        ),
       },
       {
         path: ROUTES.ABOUT,
