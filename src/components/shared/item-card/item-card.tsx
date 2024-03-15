@@ -13,7 +13,6 @@ import { SetItemOrder } from "@/types/dnd.types";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 import { Sizes } from "@/types/sizes.types";
-import Anchor, { AnchorLink } from "../anchor/anchor";
 import { Button } from "../button/button";
 import Row, { Column } from "../row/row";
 import {
@@ -34,6 +33,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserName } from "@/utils/user.util";
 import { generateImageURLFromResource } from "@/utils/image-handler";
+import { useTheme } from "styled-components";
 
 type DNDMode = "local" | "cross-window";
 
@@ -72,6 +72,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const tooltipRef = useRef<HTMLAnchorElement>(null);
   const { id, name, thumbnail, user } = item ?? {};
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const [isDragEntered, setIsDragEntered] = useState<boolean>(false);
   const [isMovedOnUpperHalf, setIsMovedOnUpperHalf] = useState<boolean>(false);
@@ -211,10 +212,6 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     handleDragOver,
   ]);
 
-  const handleUserClick = () => (event: React.MouseEvent) => {
-    event.stopPropagation();
-  };
-
   useLayoutEffect(() => {
     setHeight(cardRef.current?.clientHeight ?? 0);
   }, [cardRef]);
@@ -250,11 +247,13 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             </ThumbnailPlaceholder>
           )}
           <Column ml={4}>
-            <Anchor
+            <Text
               ref={tooltipRef}
-              type={type === "dream" ? "primary" : "secondary"}
               p={2}
               mb={2}
+              color={
+                type === "dream" ? theme.colorPrimary : theme.colorSecondary
+              }
             >
               {type === "playlist" ? (
                 <FontAwesomeIcon icon={faListUl} />
@@ -262,7 +261,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                 <FontAwesomeIcon icon={faFilm} />
               )}{" "}
               {name || t("components.item_card.unnamed")}
-            </Anchor>
+            </Text>
             {(item as Playlist)?.itemCount ? (
               <Text mb={2}>
                 {t("components.item_card.videos")}:{" "}
@@ -271,14 +270,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             ) : (
               <></>
             )}
-            <Text mb={2} p={2}>
-              {t("components.item_card.owner")}:{" "}
-              <AnchorLink
-                to={`${ROUTES.PROFILE}/${user?.id}`}
-                onClick={handleUserClick()}
-              >
-                {getUserName(user)}
-              </AnchorLink>
+            <Text mb={2} p={2} color={theme.textSecondaryColor}>
+              {t("components.item_card.owner")}
+              {" - "}
+              <Text color={theme.textPrimaryColor}>{getUserName(user)}</Text>
             </Text>
           </Column>
         </ItemCardBody>
