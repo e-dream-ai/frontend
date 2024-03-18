@@ -50,18 +50,18 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
             <ProfileCard user={user} />
           </LeftProfilePage>
           <RightProfilePage>
-            <Text mb="1rem" fontSize="1rem" fontWeight={600}>
-              {t("page.profile.current_dream")}
-            </Text>
-            <CurrentDream user={user} uuid={user?.currentDream?.uuid} />
-
-            <Text mb="1rem" fontSize="1rem" fontWeight={600}>
-              {t("page.profile.current_playlist")}
-            </Text>
-            <CurrentPlaylist user={user} id={user?.currentPlaylist?.id} />
-
             {isMyProfile && (
               <>
+                <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+                  {t("page.profile.current_dream")}
+                </Text>
+                <CurrentDream user={user} uuid={user?.currentDream?.uuid} />
+
+                <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+                  {t("page.profile.current_playlist")}
+                </Text>
+                <CurrentPlaylist user={user} id={user?.currentPlaylist?.id} />
+
                 <Text mb="1rem" fontSize="1rem" fontWeight={600}>
                   {t("page.profile.remote_control")}
                 </Text>
