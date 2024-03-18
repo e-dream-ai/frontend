@@ -3,7 +3,7 @@ import router from "@/routes/router";
 import useLogin from "@/api/auth/useLogin";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
-import { Anchor, Button, Input, Row } from "@/components/shared";
+import { Anchor, Button, Column, Input, Row } from "@/components/shared";
 import InputPassword from "@/components/shared/input-password/input-password";
 import { ModalsKeys } from "@/constants/modal.constants";
 import { ROLES_NAMES } from "@/constants/role.constants";
@@ -21,6 +21,7 @@ import {
   faAngleRight,
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
+import { StyledLogin } from "./login.styled";
 
 const SECTION_ID = "login";
 
@@ -73,42 +74,52 @@ export const LoginPage: React.FC = () => {
 
   return (
     <Container>
-      <h2>{t("page.login.title")}</h2>
       <Section id={SECTION_ID}>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Input
-            placeholder={t("page.login.email")}
-            type="email"
-            before={<FontAwesomeIcon icon={faEnvelope} />}
-            error={errors.username?.message}
-            {...register("username")}
-          />
-          <InputPassword
-            placeholder={t("page.login.password")}
-            before={<FontAwesomeIcon icon={faLock} />}
-            error={errors.password?.message}
-            {...register("password")}
-          />
+        <StyledLogin>
+          <Row alignContent="flex-start">
+            <h2>{t("page.login.title")}</h2>
+          </Row>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Input
+              placeholder={t("page.login.email")}
+              type="email"
+              before={<FontAwesomeIcon icon={faEnvelope} />}
+              error={errors.username?.message}
+              {...register("username")}
+            />
+            <InputPassword
+              placeholder={t("page.login.password")}
+              before={<FontAwesomeIcon icon={faLock} />}
+              error={errors.password?.message}
+              {...register("password")}
+            />
 
-          <Row justifyContent="flex-end">
-            <Button
-              type="submit"
-              after={<FontAwesomeIcon icon={faAngleRight} />}
-              isLoading={isLoading}
-            >
-              {t("page.login.login")}
-            </Button>
-          </Row>
+            <Row justifyContent="space-between" mb="0.4rem">
+              <Column>
+                <Row mb="0.6rem">
+                  <Anchor href="/signup">
+                    {t("page.login.dont_have_account")}
+                  </Anchor>
+                </Row>
+                <Row mb="0.4rem">
+                  <Anchor onClick={handleOpenForgotPasswordModal}>
+                    {t("page.login.forgot_your_password")}
+                  </Anchor>
+                </Row>
+              </Column>
 
-          <Row>
-            <Anchor href="/signup">{t("page.login.dont_have_account")}</Anchor>
-          </Row>
-          <Row>
-            <Anchor onClick={handleOpenForgotPasswordModal}>
-              {t("page.login.forgot_your_password")}
-            </Anchor>
-          </Row>
-        </form>
+              <Button
+                type="submit"
+                after={<FontAwesomeIcon icon={faAngleRight} />}
+                isLoading={isLoading}
+              >
+                {t("page.login.login")}
+              </Button>
+            </Row>
+
+            <Row justifyContent="flex-end"></Row>
+          </form>
+        </StyledLogin>
       </Section>
     </Container>
   );

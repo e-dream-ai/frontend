@@ -3,7 +3,14 @@ import router from "@/routes/router";
 import useSignup from "@/api/auth/useSignup";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
-import { Anchor, Button, Checkbox, Input, Row } from "@/components/shared";
+import {
+  Anchor,
+  Button,
+  Checkbox,
+  Column,
+  Input,
+  Row,
+} from "@/components/shared";
 import { ModalsKeys } from "@/constants/modal.constants";
 import useModal from "@/hooks/useModal";
 import { useForm } from "react-hook-form";
@@ -18,6 +25,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import InputPassword from "@/components/shared/input-password/input-password";
 import { ROUTES } from "@/constants/routes.constants";
+import { StyledSignup } from "./signup.styled";
 
 const SECTION_ID = "signup";
 
@@ -68,33 +76,35 @@ export const SignupPage: React.FC = () => {
 
   return (
     <Container>
-      <h2>{t("page.signup.title")}</h2>
       <Section id={SECTION_ID}>
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <Input
-            placeholder={t("page.signup.email")}
-            type="email"
-            before={<FontAwesomeIcon icon={faEnvelope} />}
-            error={errors.username?.message}
-            {...register("username")}
-          />
-          <InputPassword
-            placeholder={t("page.signup.password")}
-            type="password"
-            before={<FontAwesomeIcon icon={faLock} />}
-            error={errors.password?.message}
-            {...register("password")}
-          />
-          <InputPassword
-            placeholder={t("page.signup.confirm_password")}
-            type="password"
-            before={<FontAwesomeIcon icon={faLock} />}
-            error={errors.confirmPassword?.message}
-            {...register("confirmPassword")}
-          />
+        <StyledSignup>
+          <Row alignContent="flex-start">
+            <h2>{t("page.signup.title")}</h2>
+          </Row>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Input
+              placeholder={t("page.signup.email")}
+              type="email"
+              before={<FontAwesomeIcon icon={faEnvelope} />}
+              error={errors.username?.message}
+              {...register("username")}
+            />
+            <InputPassword
+              placeholder={t("page.signup.password")}
+              type="password"
+              before={<FontAwesomeIcon icon={faLock} />}
+              error={errors.password?.message}
+              {...register("password")}
+            />
+            <InputPassword
+              placeholder={t("page.signup.confirm_password")}
+              type="password"
+              before={<FontAwesomeIcon icon={faLock} />}
+              error={errors.confirmPassword?.message}
+              {...register("confirmPassword")}
+            />
 
-          <Row justifyContent="space-between">
-            <Row>
+            <Row mb="0.4rem">
               <Checkbox {...register("terms")} error={errors.terms?.message}>
                 {t("page.signup.agree_to")}{" "}
                 <Anchor target="_blank" href="/tos">
@@ -102,24 +112,31 @@ export const SignupPage: React.FC = () => {
                 </Anchor>
               </Checkbox>
             </Row>
-            <Button
-              type="submit"
-              after={<FontAwesomeIcon icon={faAngleRight} />}
-              isLoading={isLoading}
-            >
-              {t("page.signup.next")}
-            </Button>
-          </Row>
 
-          <Row justifyContent="space-between">
-            <Anchor href="/login">
-              {t("page.signup.already_have_account")}
-            </Anchor>
-            <Anchor onClick={handleOpenForgotPasswordModal}>
-              {t("page.signup.forgot_your_password")}
-            </Anchor>
-          </Row>
-        </form>
+            <Row justifyContent="space-between">
+              <Column>
+                <Row justifyContent="space-between" mb="0.4rem">
+                  <Anchor href="/login">
+                    {t("page.signup.already_have_account")}
+                  </Anchor>
+                </Row>
+                <Row mb="0.4rem">
+                  <Anchor onClick={handleOpenForgotPasswordModal}>
+                    {t("page.signup.forgot_your_password")}
+                  </Anchor>
+                </Row>
+              </Column>
+
+              <Button
+                type="submit"
+                after={<FontAwesomeIcon icon={faAngleRight} />}
+                isLoading={isLoading}
+              >
+                {t("page.signup.next")}
+              </Button>
+            </Row>
+          </form>
+        </StyledSignup>
       </Section>
     </Container>
   );

@@ -7,8 +7,8 @@ export type LoginFormValues = {
 
 export const LoginSchema = yup
   .object({
-    username: yup.string().email().required(),
-    password: yup.string().required(),
+    username: yup.string().email().required("Email is required."),
+    password: yup.string().required("Password is required."),
   })
   .required();
 

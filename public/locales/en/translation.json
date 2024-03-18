@@ -35,7 +35,7 @@
       "error_logging_in": "Error logging in."
     },
     "signup": {
-      "title": "Sign up for e-dream",
+      "title": "Sign up",
       "email": "Email",
       "password": "Password",
       "confirm_password": "Confirm Password",
