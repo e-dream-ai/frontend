@@ -45,6 +45,8 @@ import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { generateImageURLFromResource } from "@/utils/image-handler";
 import useSocket from "@/hooks/useSocket";
 import { emitPlayDream } from "@/utils/socket.util";
+import { bytesToMegabytes } from "@/utils/file.util";
+import { framesToSeconds, secondsToTimeFormat } from "@/utils/video.utils";
 
 type Params = { uuid: string };
 
@@ -152,14 +154,15 @@ const ViewDreamPage: React.FC = () => {
       { name: data.name, activityLevel: data.activityLevel },
       {
         onSuccess: (data) => {
+          const dream = data?.data?.dream;
           if (data.success) {
             queryClient.setQueryData(
               [DREAM_QUERY_KEY, { uuid: dream?.uuid }],
               data,
             );
             reset({
-              name: data?.data?.dream.name,
-              activityLevel: data.data?.dream.activityLevel,
+              name: dream?.name,
+              activityLevel: dream?.activityLevel,
             });
             toast.success(t("page.view_dream.dream_updated_successfully"));
             setEditMode(false);
@@ -202,6 +205,14 @@ const ViewDreamPage: React.FC = () => {
     reset({
       name: dream?.name,
       activityLevel: dream?.activityLevel,
+      processedVideoSize: dream?.processedVideoSize
+        ? Math.round(bytesToMegabytes(dream?.processedVideoSize)) + " MB"
+        : "-",
+      processedVideoFrames: dream?.processedVideoFrames
+        ? secondsToTimeFormat(
+            Math.ceil(framesToSeconds(dream?.processedVideoFrames)),
+          )
+        : "-",
       owner: getUserName(dream?.user),
       created_at: moment(dream?.created_at).format(FORMAT),
     });

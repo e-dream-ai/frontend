@@ -16,6 +16,8 @@ import { Video, VideoPlaceholder } from "./view-dream.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendar,
+  faClock,
+  faFile,
   faFileVideo,
   faFilm,
   faFire,
@@ -61,6 +63,22 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         error={errors.activityLevel?.message}
         value={values.activityLevel}
         {...register("activityLevel")}
+      />
+      <Input
+        disabled
+        placeholder={t("page.view_dream.duration")}
+        type="text"
+        before={<FontAwesomeIcon icon={faClock} />}
+        value={values.processedVideoFrames}
+        {...register("processedVideoFrames")}
+      />
+      <Input
+        disabled
+        placeholder={t("page.view_dream.size")}
+        type="text"
+        before={<FontAwesomeIcon icon={faFile} />}
+        value={values.processedVideoSize}
+        {...register("processedVideoSize")}
       />
       <Input
         disabled

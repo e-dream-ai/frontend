@@ -18,6 +18,8 @@ export type Dream = {
   uuid: string;
   video: string;
   original_video?: string;
+  processedVideoSize?: number;
+  processedVideoFrames?: number;
   status: DreamStatusType;
   created_at: string;
 };

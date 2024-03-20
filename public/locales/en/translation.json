@@ -89,6 +89,8 @@
       "downvote": "Downvote",
       "name": "Name",
       "activity_level": "Activity Level",
+      "duration": "Duration",
+      "size": "Size",
       "owner": "Owner",
       "created": "Created",
       "votes": "votes",
