@@ -47,6 +47,7 @@ import useSocket from "@/hooks/useSocket";
 import { emitPlayDream } from "@/utils/socket.util";
 import { bytesToMegabytes } from "@/utils/file.util";
 import { framesToSeconds, secondsToTimeFormat } from "@/utils/video.utils";
+import { truncateString } from "@/utils/string.util";
 
 type Params = { uuid: string };
 
@@ -301,7 +302,7 @@ const ViewDreamPage: React.FC = () => {
           <Text>
             {t("page.view_dream.confirm_delete_modal_body")}{" "}
             <em>
-              <strong>{dream?.name}</strong>
+              <strong>{truncateString(dream?.name, 30)}</strong>
             </em>
           </Text>
         }
