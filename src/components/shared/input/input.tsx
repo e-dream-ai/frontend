@@ -8,6 +8,7 @@ import StyledInput, {
   InputRow,
 } from "./input.styled";
 import { Anchor } from "..";
+import { truncateString } from "@/utils/string.util";
 
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   anchor?: React.MouseEventHandler<HTMLAnchorElement>;
@@ -30,6 +31,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             <DisabledInput>
               {anchor ? (
                 <Anchor onClick={anchor}>{value}</Anchor>
+              ) : typeof value === "string" ? (
+                truncateString(value, 30)
               ) : (
                 value ?? "-"
               )}

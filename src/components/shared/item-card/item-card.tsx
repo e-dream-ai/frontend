@@ -34,6 +34,7 @@ import {
 import { getUserName } from "@/utils/user.util";
 import { generateImageURLFromResource } from "@/utils/image-handler";
 import { useTheme } from "styled-components";
+import { truncateString } from "@/utils/string.util";
 
 type DNDMode = "local" | "cross-window";
 
@@ -260,7 +261,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               ) : (
                 <FontAwesomeIcon icon={faFilm} />
               )}{" "}
-              {name || t("components.item_card.unnamed")}
+              {truncateString(name, 60) || t("components.item_card.unnamed")}
             </Text>
             {(item as Playlist)?.itemCount ? (
               <Text mb={2}>
