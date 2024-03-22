@@ -3,7 +3,12 @@ import axios from "axios";
 import { useGlobalMutationLoading } from "@/hooks/useGlobalMutationLoading";
 import { toast, Id as ToastId } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { Dream, MultipartUploadRequest } from "@/types/dream.types";
+import {
+  Dream,
+  MultipartUpload,
+  MultipartUploadRequest,
+  RefresgMultipartUpload,
+} from "@/types/dream.types";
 import {
   getFileExtension,
   getFileNameWithoutExtension,
@@ -14,10 +19,17 @@ import { useUploadFilePart } from "../mutation/useUploadFilePart";
 import { MULTIPART_FILE_PART_SIZE } from "@/constants/modal.constants";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
-import { CompletedPart } from "@/schemas/multipart-upload";
+import {
+  CompleteMultipartUploadFormValues,
+  CompletedPart,
+  CreateMultipartUploadFormValues,
+  RefreshMultipartUploadUrlFormValues,
+} from "@/schemas/multipart-upload";
 import { useAbortMultipartUpload } from "../mutation/useAbortMultipartUpload";
 import { useRefreshMultipartUploadUrl } from "../mutation/useRefreshMultipartUploadUrl";
 import { UseMutationResult } from "@tanstack/react-query";
+import { ApiResponse } from "@/types/api.types";
+import { TFunction } from "i18next";
 
 type AsyncMutationProps = (params?: {
   file?: File;
@@ -33,8 +45,6 @@ type UseUploadDreamVideoProps = {
 type State = {
   dream?: Dream;
   file?: File;
-  name?: string;
-  extension?: string;
   uploadId?: string;
   isLoading: boolean;
   isFailed: boolean;
@@ -53,8 +63,6 @@ type State = {
 type Action =
   | { type: "SET_DREAM"; payload?: Dream }
   | { type: "SET_FILE"; payload?: File }
-  | { type: "SET_NAME"; payload?: string }
-  | { type: "SET_EXTENSION"; payload?: string }
   | { type: "SET_UPLOAD_ID"; payload?: string }
   | { type: "SET_LOADING"; payload: boolean }
   | { type: "SET_FAILED"; payload: boolean }
@@ -75,8 +83,6 @@ const partSize = MULTIPART_FILE_PART_SIZE;
 const initialState: State = {
   dream: undefined,
   file: undefined,
-  name: undefined,
-  extension: undefined,
   uploadId: undefined,
   isLoading: false,
   isFailed: false,
@@ -95,10 +101,6 @@ const reducer = (state: State, action: Action): State => {
       return { ...state, dream: action.payload };
     case "SET_FILE":
       return { ...state, file: action.payload };
-    case "SET_NAME":
-      return { ...state, name: action.payload };
-    case "SET_EXTENSION":
-      return { ...state, extension: action.payload };
     case "SET_UPLOAD_ID":
       return { ...state, uploadId: action.payload };
     case "SET_LOADING":
@@ -148,50 +150,299 @@ const reducer = (state: State, action: Action): State => {
   }
 };
 
-const uploadFilePart = async ({
-  addCompletedPart,
-  addFailedPart,
+const initiateUpload = async ({
+  file,
+  dream,
+  totalNumberOfParts,
+  createMultipartUploadMutation,
+}: {
+  file?: File;
+  dream?: Dream;
+  totalNumberOfParts?: number;
+  createMultipartUploadMutation: UseMutationResult<
+    ApiResponse<MultipartUpload>,
+    Error,
+    CreateMultipartUploadFormValues
+  >;
+}) => {
+  const extension = getFileExtension(file);
+  const name = getFileNameWithoutExtension(file);
+  const { data: multipartUpload } =
+    await createMultipartUploadMutation.mutateAsync({
+      name,
+      extension,
+      parts: totalNumberOfParts,
+      uuid: dream?.uuid,
+    });
+
+  return {
+    dream: multipartUpload?.dream || dream,
+    uploadId: multipartUpload?.uploadId,
+    urls: multipartUpload?.urls || [],
+  };
+};
+
+const calculateTotalParts = (fileSize: number) => {
+  return Math.max(Math.ceil(fileSize / partSize), 1);
+};
+
+const attemptUploadFilePart = async ({
   mutation,
+  filePart,
+  presignedUrl,
+  totalParts,
+  partNumber,
+}: {
+  mutation: UseMutationResult<string, Error, MultipartUploadRequest>;
+  filePart: Blob;
+  presignedUrl: string;
+  totalParts: number;
+  partNumber: number;
+}) => {
+  try {
+    const etag = await mutation.mutateAsync({
+      filePart,
+      presignedUrl,
+      partNumber,
+      totalParts,
+    });
+    return etag;
+  } catch (error) {
+    console.error(`Error uploading part ${partNumber} `, error);
+    return undefined;
+  }
+};
+
+const refreshPresignedUrl = async ({
+  uuid,
+  uploadId,
+  partNumber,
+  extension,
+  refreshMultipartUploadUrlMutation,
+}: {
+  uuid?: string;
+  uploadId?: string;
+  extension?: string;
+  partNumber: number;
+  refreshMultipartUploadUrlMutation: UseMutationResult<
+    ApiResponse<RefresgMultipartUpload>,
+    Error,
+    RefreshMultipartUploadUrlFormValues
+  >;
+}) => {
+  try {
+    const response = await refreshMultipartUploadUrlMutation.mutateAsync({
+      uuid,
+      extension,
+      part: partNumber,
+      uploadId,
+    });
+    return response?.data?.url;
+  } catch (error) {
+    console.error("Error refreshing presigned URL", error);
+    return undefined;
+  }
+};
+
+const uploadFilePart = async ({
+  uuid,
+  uploadId,
+  uploadFilePartMutation,
+  refreshMultipartUploadUrlMutation,
   partSize,
   partNumber,
   totalParts,
   presignedUrl,
   file,
+  extension,
   skipAddFailedPart = false,
+  addCompletedPart,
+  addFailedPart,
+  resetPartProgress,
 }: {
-  addCompletedPart: (completedPart: CompletedPart) => void;
-  addFailedPart: (failedPart: CompletedPart) => void;
-  mutation: UseMutationResult<string, Error, MultipartUploadRequest>;
+  uploadFilePartMutation: UseMutationResult<
+    string,
+    Error,
+    MultipartUploadRequest
+  >;
+  refreshMultipartUploadUrlMutation: UseMutationResult<
+    ApiResponse<RefresgMultipartUpload>,
+    Error,
+    RefreshMultipartUploadUrlFormValues
+  >;
+  uuid?: string;
+  file: File;
+  extension?: string;
+  uploadId?: string;
   partSize: number;
   partNumber: number;
   totalParts: number;
   presignedUrl: string;
-  file: File;
   skipAddFailedPart?: boolean;
+  addCompletedPart: (completedPart: CompletedPart) => void;
+  addFailedPart: (failedPart: CompletedPart) => void;
+  resetPartProgress: (partNumber: number) => void;
 }): Promise<CompletedPart | undefined> => {
   const start = (partNumber - 1) * partSize;
   const end = partNumber * partSize;
-  const blob = file!.slice(start, end);
+  const blob = file.slice(start, end);
+  let currentUrl = presignedUrl;
+  let attempts = 0;
+  // Configure the maximum number of attempts as needed
+  const maxAttempts = 2;
 
-  try {
-    const etag = await mutation.mutateAsync({
+  while (attempts < maxAttempts) {
+    const etag = await attemptUploadFilePart({
+      mutation: uploadFilePartMutation,
       filePart: blob,
-      presignedUrl,
+      presignedUrl: currentUrl,
       partNumber,
       totalParts,
     });
-    const completedPart = {
-      PartNumber: partNumber,
-      ETag: etag,
-    } as CompletedPart;
-    addCompletedPart(completedPart);
-    return completedPart;
-  } catch (error) {
-    if (!skipAddFailedPart) {
-      addFailedPart({ PartNumber: partNumber } as CompletedPart);
+
+    if (etag) {
+      const completedPart = { PartNumber: partNumber, ETag: etag };
+      addCompletedPart(completedPart);
+      return completedPart; // Successfully uploaded
+    } else {
+      attempts += 1;
+      resetPartProgress(partNumber);
+      if (attempts < maxAttempts) {
+        const refreshedUrl = await refreshPresignedUrl({
+          uuid,
+          uploadId,
+          partNumber,
+          extension,
+          refreshMultipartUploadUrlMutation,
+        });
+        // If refreshing the URL fails, exit the loop
+        if (!refreshedUrl) break;
+        // Update the URL for the next attempt
+        currentUrl = refreshedUrl;
+      }
     }
   }
+
+  // If the loop completes without a successful upload, handle as a failed part
+  if (!skipAddFailedPart) {
+    addFailedPart({ PartNumber: partNumber });
+  }
+
+  return undefined;
 };
+
+const completeMultipartUpload = async ({
+  t,
+  dream,
+  name,
+  extension,
+  toastId,
+  parts,
+  uploadId,
+  navigateToDream,
+  completeMultipartUploadMutation,
+  resetStates,
+}: {
+  t: TFunction;
+  dream?: Dream;
+  name?: string;
+  extension?: string;
+  toastId?: ToastId;
+  parts?: CompletedPart[];
+  uploadId?: string;
+  navigateToDream: boolean;
+  completeMultipartUploadMutation: UseMutationResult<
+    ApiResponse<{ dream: Dream }>,
+    Error,
+    CompleteMultipartUploadFormValues
+  >;
+  resetStates: (toastId?: ToastId) => void;
+}) => {
+  if (parts) {
+    // Ensure parts are sorted by PartNumber before completing the upload
+    parts.sort((a, b) => a.PartNumber! - b.PartNumber!);
+  }
+
+  console.log({ parts });
+
+  try {
+    await completeMultipartUploadMutation.mutateAsync({
+      uuid: dream?.uuid,
+      name,
+      extension,
+      parts,
+      uploadId,
+    });
+
+    toast.success(t("page.create.dream_successfully_uploaded"));
+    resetStates(toastId);
+    if (navigateToDream && dream?.uuid) {
+      // Navigate to the dream view page
+      router.navigate(`${ROUTES.VIEW_DREAM}/${dream.uuid}`);
+    }
+  } catch (error) {
+    // Handle potential errors from the mutation or other operations
+    console.error("Error completing multipart upload", error);
+    toast.error(t("page.create.error_completing_upload"));
+  }
+
+  return dream;
+};
+
+async function uploadParts({
+  urls,
+  file,
+  totalNumberOfParts,
+  uploadId,
+  dream,
+  uploadFilePartMutation,
+  refreshMultipartUploadUrlMutation,
+  addCompletedPart,
+  addFailedPart,
+  resetPartProgress,
+}: {
+  urls: Array<string>;
+  file: File;
+  totalNumberOfParts: number;
+  uploadId?: string;
+  dream?: Dream;
+  uploadFilePartMutation: UseMutationResult<
+    string,
+    Error,
+    MultipartUploadRequest
+  >;
+  refreshMultipartUploadUrlMutation: UseMutationResult<
+    ApiResponse<RefresgMultipartUpload>,
+    Error,
+    RefreshMultipartUploadUrlFormValues
+  >;
+  addCompletedPart: (completedPart: CompletedPart) => void;
+  addFailedPart: (failedPart: CompletedPart) => void;
+  resetPartProgress: (partNumber: number) => void;
+}) {
+  const uploadPromises = urls.map((presignedUrl, index) =>
+    uploadFilePart({
+      addCompletedPart,
+      addFailedPart,
+      uploadFilePartMutation,
+      partNumber: index + 1,
+      partSize,
+      totalParts: totalNumberOfParts,
+      presignedUrl,
+      file,
+      extension: getFileExtension(file),
+      refreshMultipartUploadUrlMutation,
+      uploadId,
+      uuid: dream?.uuid,
+      resetPartProgress,
+    }),
+  );
+
+  const completedParts = await Promise.all(uploadPromises);
+  return completedParts.filter(
+    (part) => part !== undefined,
+  ) as Array<CompletedPart>;
+}
 
 export const useUploadDreamVideo = ({
   navigateToDream = true,
@@ -212,8 +463,17 @@ export const useUploadDreamVideo = ({
   const addCompletedPart = (completedPart: CompletedPart) =>
     dispatch({ type: "ADD_COMPLETED_PART", payload: completedPart });
 
-  const addFailedPart = (failedPart: CompletedPart) =>
+  const addFailedPart = (failedPart: CompletedPart) => {
     dispatch({ type: "ADD_FAILED_PART", payload: failedPart });
+    resetPartProgress(failedPart.PartNumber!);
+  };
+
+  const resetPartProgress = (partNumber: number) => {
+    dispatch({
+      type: "SET_PARTS_PROGRESS",
+      payload: { [partNumber]: 0 },
+    });
+  };
 
   const removeFailedPart = (partNumber: number) =>
     dispatch({ type: "REMOVE_FAILED_PART", payload: partNumber });
@@ -243,6 +503,36 @@ export const useUploadDreamVideo = ({
     uploadFilePartMutation,
     completeMultipartUploadMutation,
   );
+
+  /**
+   *
+   */
+  const dispatchMultipleUpdates = ({
+    type,
+    payload,
+  }: {
+    type: string;
+    payload?: {
+      dream?: Dream;
+      file?: File;
+      toastId?: ToastId;
+      uploadId?: string;
+    };
+  }) => {
+    const { file, dream, toastId, uploadId } = payload || {};
+
+    switch (type) {
+      case "INITIALIZE_UPLOAD":
+        dispatch({ type: "SET_LOADING", payload: true });
+        break;
+      case "UPDATE_UPLOAD":
+        if (file) dispatch({ type: "SET_FILE", payload: file });
+        if (dream) dispatch({ type: "SET_DREAM", payload: dream });
+        if (toastId) dispatch({ type: "SET_TOAST_ID", payload: toastId });
+        if (uploadId) dispatch({ type: "SET_UPLOAD_ID", payload: uploadId });
+        break;
+    }
+  };
 
   /**
    * Function to reset states
@@ -276,112 +566,107 @@ export const useUploadDreamVideo = ({
   );
 
   const retryUploadFailedParts = async () => {
-    // prepare upload promises to send each part
+    // If there are no failed parts, no need to proceed
+    if (state.failedParts.length === 0) {
+      return;
+    }
+
+    const newToastId = showUploadProgressToast
+      ? toast(t("hooks.use_create_dream.upload_in_progress"), { progress: 0 })
+      : undefined;
+
+    dispatchMultipleUpdates({
+      type: "INITIALIZE_UPLOAD",
+      payload: { toastId: newToastId },
+    });
+
+    // Prepare to track failed parts locally to avoid stale state issues
+    const localCompletedParts = [];
+    let localFailedParts = [...state.failedParts];
+
     dispatch({ type: "SET_LOADING", payload: true });
 
-    let newToastId: ToastId | undefined;
+    for (const failedPart of localFailedParts) {
+      try {
+        const extension = getFileExtension(state.file);
 
-    if (showUploadProgressToast) {
-      newToastId = toast(t("hooks.use_create_dream.upload_in_progress"), {
-        progress: 0,
-      });
+        const refreshedUrl = await refreshPresignedUrl({
+          uuid: state.dream?.uuid,
+          uploadId: state.uploadId,
+          partNumber: failedPart.PartNumber!,
+          extension: extension,
+          refreshMultipartUploadUrlMutation,
+        });
 
-      dispatch({ type: "SET_TOAST_ID", payload: newToastId });
-    }
-
-    const uploadPromises: Array<Promise<CompletedPart | undefined>> =
-      state.failedParts.map(async (failedPart) => {
-        try {
-          const refreshMultipartResponse =
-            await refreshMultipartUploadUrlMutation.mutateAsync({
-              uuid: state.dream?.uuid,
-              extension: state.extension,
-              part: failedPart.PartNumber!,
-              uploadId: state.uploadId,
-            });
-
-          const refreshedUrl = refreshMultipartResponse?.data?.url;
-
-          const completedPart = await uploadFilePart({
-            addCompletedPart,
-            addFailedPart,
-            mutation: uploadFilePartMutation,
-            partNumber: failedPart.PartNumber!,
-            partSize,
-            totalParts: state.totalParts,
-            presignedUrl: refreshedUrl!,
-            file: state.file!,
-            skipAddFailedPart: true,
-          });
-          removeFailedPart(failedPart.PartNumber!);
-
-          return completedPart;
-        } catch (_) {
-          return;
+        if (!refreshedUrl) {
+          throw new Error("Failed to refresh URL");
         }
-      });
 
-    /**
-     * waits all upload promises to finish
-     */
-    const completedParts = await Promise.all(uploadPromises);
-    const filteredCompletedParts = completedParts.filter(
-      (part) => part !== undefined,
-    ) as CompletedPart[];
-    // count completed parts and retried completed task to verify all parts are uploaded
-    const completedPartCount =
-      (state.completedParts?.length || 0) +
-      (filteredCompletedParts?.length || 0);
+        const completedPart = await uploadFilePart({
+          // Pass necessary parameters, including the refreshed URL
+          presignedUrl: refreshedUrl,
+          file: state.file!,
+          partNumber: failedPart.PartNumber!,
+          partSize,
+          refreshMultipartUploadUrlMutation,
+          totalParts: state.totalParts,
+          uploadFilePartMutation,
+          extension,
+          uploadId: state.uploadId,
+          uuid: state.dream?.uuid,
+          addCompletedPart,
+          addFailedPart,
+          resetPartProgress,
+          skipAddFailedPart: true,
+        });
 
-    if (completedPartCount !== state.totalParts) {
-      dispatch({ type: "SET_LOADING", payload: false });
-      dispatch({ type: "SET_FAILED", payload: true });
-      if (newToastId) {
-        toast.done(newToastId);
+        // Assuming uploadFilePart returns undefined on failure
+        if (!completedPart) {
+          throw new Error("Failed to upload part");
+        }
+
+        // Successfully uploaded part, update state accordingly
+        localCompletedParts.push(completedPart);
+        addCompletedPart(completedPart);
+        removeFailedPart(completedPart.PartNumber!);
+
+        // Remove successfully retried part from localFailedParts
+        localFailedParts = localFailedParts.filter(
+          (part) => part.PartNumber !== failedPart.PartNumber,
+        );
+      } catch (error) {
+        console.error(`Retry failed for part ${failedPart.PartNumber}:`, error);
+        // Optionally, handle the failure (e.g., by showing a message to the user)
       }
-      toast.error(t("page.create.error_uploading_dream"));
-      return undefined;
     }
 
-    return completeMultipartUpload({
-      dream: state.dream,
-      extension: state.extension,
-      name: state.name,
-      // combine previous completed parts and new completed parts to complete upload
-      parts: [...state.completedParts, ...filteredCompletedParts],
-      uploadId: state.uploadId,
-    });
-  };
+    // Update the failed parts state to reflect any parts that still failed after retry
+    dispatch({ type: "SET_FAILED_PARTS", payload: localFailedParts });
 
-  const completeMultipartUpload = async ({
-    dream,
-    name,
-    extension,
-    parts,
-    uploadId,
-  }: {
-    dream?: Dream;
-    name?: string;
-    extension?: string;
-    parts?: CompletedPart[];
-    uploadId?: string;
-  }) => {
-    // complete multipart upload
-    parts = parts?.sort((a, b) => a.PartNumber! - b.PartNumber!);
-    await completeMultipartUploadMutation.mutateAsync({
-      uuid: dream?.uuid,
-      name: name,
-      extension: extension,
-      parts,
-      uploadId: uploadId,
-    });
+    // Final state updates after retry attempts
+    if (localFailedParts.length > 0) {
+      dispatch({ type: "SET_FAILED", payload: true });
+    } else {
+      dispatch({ type: "SET_LOADING", payload: false });
+      toast.success("All parts were successfully uploaded.");
 
-    toast.success(t("page.create.dream_successfully_uploaded"));
-    resetStates(state.toastId);
-    if (navigateToDream) {
-      router.navigate(`${ROUTES.VIEW_DREAM}/${dream?.uuid}`);
+      return await completeMultipartUpload({
+        dream: state.dream,
+        parts: [...state.completedParts, ...localCompletedParts],
+        uploadId: state.uploadId,
+        toastId: newToastId,
+        completeMultipartUploadMutation,
+        navigateToDream,
+        t,
+        extension: getFileExtension(state.file),
+        name: getFileNameWithoutExtension(state.file),
+        resetStates,
+      });
     }
-    return dream;
+
+    if (newToastId) {
+      toast.done(newToastId);
+    }
   };
 
   /**
@@ -393,125 +678,104 @@ export const useUploadDreamVideo = ({
   const mutateAsync: AsyncMutationProps = async ({ file, dream } = {}) => {
     if (!file) {
       toast.error(t("page.create.error_uploading_dream"));
+      return undefined;
     }
 
     dispatch({ type: "SET_LOADING", payload: true });
 
-    let newToastId: ToastId | undefined;
+    const newToastId = showUploadProgressToast
+      ? toast(t("hooks.use_create_dream.upload_in_progress"), { progress: 0 })
+      : undefined;
 
-    if (showUploadProgressToast) {
-      newToastId = toast(t("hooks.use_create_dream.upload_in_progress"), {
-        progress: 0,
-      });
-
-      dispatch({ type: "SET_TOAST_ID", payload: newToastId });
-    }
-
-    const extension = getFileExtension(file);
-    const name = getFileNameWithoutExtension(file);
-    // calculate number of parts, set 1 as min
-    const totalNumberOfParts = Math.max(Math.ceil(file!.size / partSize), 1);
-    dispatch({ type: "SET_TOTAL_PARTS", payload: totalNumberOfParts });
+    dispatchMultipleUpdates({
+      type: "INITIALIZE_UPLOAD",
+    });
 
     try {
-      const { data: multipartUpload } =
-        await createMultipartUploadMutation.mutateAsync({
-          name,
-          extension,
-          parts: totalNumberOfParts,
-          // If the mutation doesn't receive a dream, it'll be created on the server
-          uuid: dream?.uuid,
-        });
+      const totalNumberOfParts = calculateTotalParts(file.size);
+      dispatch({ type: "SET_TOTAL_PARTS", payload: totalNumberOfParts });
 
-      if (!dream) {
-        dream = multipartUpload?.dream;
-      }
-
-      const urls = multipartUpload?.urls ?? [];
-      const uploadId = multipartUpload?.uploadId;
-
-      dispatch({
-        type: "SET_DREAM",
-        payload: dream!,
+      const {
+        dream: updatedDream,
+        uploadId,
+        urls,
+      } = await initiateUpload({
+        file,
+        dream,
+        totalNumberOfParts,
+        createMultipartUploadMutation,
       });
 
-      dispatch({
-        type: "SET_FILE",
-        payload: file,
+      dispatchMultipleUpdates({
+        type: "UPDATE_UPLOAD",
+        payload: { file, dream: updatedDream, toastId: newToastId, uploadId },
       });
 
-      dispatch({
-        type: "SET_NAME",
-        payload: name,
+      const completedParts = await uploadParts({
+        urls,
+        file,
+        totalNumberOfParts,
+        uploadId,
+        dream: updatedDream,
+        refreshMultipartUploadUrlMutation,
+        uploadFilePartMutation,
+        addCompletedPart,
+        addFailedPart,
+        resetPartProgress,
       });
 
-      dispatch({
-        type: "SET_EXTENSION",
-        payload: extension,
-      });
+      console.log({ completedParts, totalNumberOfParts });
 
-      dispatch({
-        type: "SET_UPLOAD_ID",
-        payload: uploadId,
-      });
-
-      // prepare upload promises to send each part
-      const uploadPromises: Array<Promise<CompletedPart | undefined>> =
-        urls.map((presignedUrl, index) =>
-          uploadFilePart({
-            addCompletedPart,
-            addFailedPart,
-            mutation: uploadFilePartMutation,
-            partNumber: index + 1,
-            partSize,
-            totalParts: totalNumberOfParts,
-            presignedUrl,
-            file: file!,
-          }),
-        );
-
-      /**
-       * waits all upload promises to finish
-       */
-      const completedParts = await Promise.all(uploadPromises);
-      const filteredCompletedParts = completedParts.filter(
-        (part) => part !== undefined,
-      ) as CompletedPart[];
-      const completedPartCount = filteredCompletedParts?.length ?? 0;
-
-      /**
-       * missing upload parts
-       */
-      if (completedPartCount !== totalNumberOfParts) {
-        dispatch({ type: "SET_LOADING", payload: false });
-        dispatch({ type: "SET_FAILED", payload: true });
-        if (newToastId) {
-          toast.done(newToastId);
-        }
-        toast.error(t("page.create.error_uploading_dream"));
+      if (completedParts.length !== totalNumberOfParts) {
+        handleUploadFailure({ toastId: newToastId });
         return undefined;
       }
 
-      return completeMultipartUpload({
-        dream,
+      const name = getFileNameWithoutExtension(file);
+      const extension = getFileExtension(file);
+
+      return await completeMultipartUpload({
+        dream: updatedDream,
+        parts: completedParts,
+        uploadId,
+        toastId: newToastId,
+        completeMultipartUploadMutation,
+        navigateToDream,
+        t,
         extension,
         name,
-        parts: filteredCompletedParts,
-        uploadId,
+        resetStates,
       });
     } catch (error) {
-      resetStates(newToastId);
+      handleUploadFailure({ toastId: newToastId, error });
       return undefined;
     }
   };
+
+  function handleUploadFailure({
+    toastId,
+    error,
+  }: {
+    toastId?: ToastId;
+    error?: object | unknown;
+  }) {
+    console.log({ toastId });
+    if (error) console.error("Upload error:", error);
+    dispatch({ type: "SET_LOADING", payload: false });
+    dispatch({ type: "SET_FAILED", payload: true });
+    if (toastId) toast.done(toastId);
+    toast.error(t("page.create.error_uploading_dream"));
+  }
 
   /**
    * Function to clean the mutation internal state (i.e., it resets the mutation to its initial state).
    */
   const reset = async () => {
     cancelTokenSource.cancel(t("hooks.use_upload_dream_video.upload_canceled"));
+    const extension = getFileExtension(state.file);
+
     await abortMultipartUploadMutation.mutateAsync({
-      extension: state.extension,
+      extension: extension,
       uploadId: state.uploadId,
       uuid: state.dream?.uuid,
     });
