@@ -66,6 +66,7 @@
       "create": "Create",
       "creating": "Creating",
       "retry": "Retry",
+      "retry_upload": "Oops, the upload didn't complete. Click on retry button to try again.",
       "dream_successfully_uploaded": "Dream successfully uploaded.",
       "error_uploading_dream": "Error uploading dream.",
       "playlist_tab_title": "Create playlist",

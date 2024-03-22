@@ -78,7 +78,7 @@ type Action =
   | { type: "SET_TOAST_ID"; payload?: ToastId }
   | { type: "RESET_STATE" };
 
-const partSize = MULTIPART_FILE_PART_SIZE;
+type MultipleUpdatesActionType = "INITIALIZE_UPLOAD" | "UPDATE_UPLOAD";
 
 const initialState: State = {
   dream: undefined,
@@ -150,6 +150,20 @@ const reducer = (state: State, action: Action): State => {
   }
 };
 
+/**
+ * Calculates the total number of parts a file needs to be divided into for upload
+ * @param fileSize The size of the file in bytes.
+ * @returns The total number of parts (integer).
+ */
+const calculateTotalParts = (fileSize: number) => {
+  return Math.max(Math.ceil(fileSize / MULTIPART_FILE_PART_SIZE), 1);
+};
+
+/**
+ * Initiates the multipart upload process by obtaining presigned URLs for uploading each part.
+ * @param params Object containing file, dream, totalNumberOfParts, and createMultipartUploadMutation.
+ * @returns An object containing updated dream information, upload ID, and presigned URLs for parts.
+ */
 const initiateUpload = async ({
   file,
   dream,
@@ -182,10 +196,11 @@ const initiateUpload = async ({
   };
 };
 
-const calculateTotalParts = (fileSize: number) => {
-  return Math.max(Math.ceil(fileSize / partSize), 1);
-};
-
+/**
+ * Attempts to upload a single part of the file to the AWS S3 server using a presigned URL.
+ * @param params Object containing details about the file part, presigned URL, and part number.
+ * @returns The ETag of the uploaded part if successful; otherwise, `undefined`.
+ */
 const attemptUploadFilePart = async ({
   mutation,
   filePart,
@@ -213,6 +228,11 @@ const attemptUploadFilePart = async ({
   }
 };
 
+/**
+ * Refreshes the presigned URL for a specific part of the file, in case the previous URL expired or failed.
+ * @param params Object containing details about the upload session and part number.
+ * @returns A new presigned URL for the part number.
+ */
 const refreshPresignedUrl = async ({
   uuid,
   uploadId,
@@ -244,12 +264,16 @@ const refreshPresignedUrl = async ({
   }
 };
 
+/**
+ * Manages the upload of a single file part, including retrying with a refreshed URL if necessary.
+ * @param params Object containing details about the file part, presigned URL, and part number,including mutation hooks for uploading and refreshing URLs.
+ * @returns A promise resolving to the completed part information or `undefined` on failure.
+ */
 const uploadFilePart = async ({
   uuid,
   uploadId,
   uploadFilePartMutation,
   refreshMultipartUploadUrlMutation,
-  partSize,
   partNumber,
   totalParts,
   presignedUrl,
@@ -274,7 +298,6 @@ const uploadFilePart = async ({
   file: File;
   extension?: string;
   uploadId?: string;
-  partSize: number;
   partNumber: number;
   totalParts: number;
   presignedUrl: string;
@@ -283,13 +306,13 @@ const uploadFilePart = async ({
   addFailedPart: (failedPart: CompletedPart) => void;
   resetPartProgress: (partNumber: number) => void;
 }): Promise<CompletedPart | undefined> => {
-  const start = (partNumber - 1) * partSize;
-  const end = partNumber * partSize;
+  const start = (partNumber - 1) * MULTIPART_FILE_PART_SIZE;
+  const end = partNumber * MULTIPART_FILE_PART_SIZE;
   const blob = file.slice(start, end);
   let currentUrl = presignedUrl;
   let attempts = 0;
   // Configure the maximum number of attempts as needed
-  const maxAttempts = 2;
+  const maxAttempts = 3;
 
   while (attempts < maxAttempts) {
     const etag = await attemptUploadFilePart({
@@ -331,6 +354,11 @@ const uploadFilePart = async ({
   return undefined;
 };
 
+/**
+ * Completes the multipart upload process by sending a request with all successfully uploaded parts.
+ * @param params Object containing details about the dream, file, parts, and upload ID, including mutation hooks.
+ * @returns The updated dream object upon successful completion of the upload.
+ */
 const completeMultipartUpload = async ({
   t,
   dream,
@@ -363,8 +391,6 @@ const completeMultipartUpload = async ({
     parts.sort((a, b) => a.PartNumber! - b.PartNumber!);
   }
 
-  console.log({ parts });
-
   try {
     await completeMultipartUploadMutation.mutateAsync({
       uuid: dream?.uuid,
@@ -389,6 +415,11 @@ const completeMultipartUpload = async ({
   return dream;
 };
 
+/**
+ * Maps the upload of all file parts based on the provided presigned URLs.
+ * @param params Object containing details about the file, total number of parts and mutation hooks.
+ * @returns An array of completed part information for successful uploads.
+ */
 async function uploadParts({
   urls,
   file,
@@ -420,22 +451,22 @@ async function uploadParts({
   addFailedPart: (failedPart: CompletedPart) => void;
   resetPartProgress: (partNumber: number) => void;
 }) {
-  const uploadPromises = urls.map((presignedUrl, index) =>
-    uploadFilePart({
-      addCompletedPart,
-      addFailedPart,
-      uploadFilePartMutation,
-      partNumber: index + 1,
-      partSize,
-      totalParts: totalNumberOfParts,
-      presignedUrl,
-      file,
-      extension: getFileExtension(file),
-      refreshMultipartUploadUrlMutation,
-      uploadId,
-      uuid: dream?.uuid,
-      resetPartProgress,
-    }),
+  const uploadPromises = urls.map(
+    async (presignedUrl, index) =>
+      await uploadFilePart({
+        addCompletedPart,
+        addFailedPart,
+        uploadFilePartMutation,
+        partNumber: index + 1,
+        totalParts: totalNumberOfParts,
+        presignedUrl,
+        file,
+        extension: getFileExtension(file),
+        refreshMultipartUploadUrlMutation,
+        uploadId,
+        uuid: dream?.uuid,
+        resetPartProgress,
+      }),
   );
 
   const completedParts = await Promise.all(uploadPromises);
@@ -511,7 +542,7 @@ export const useUploadDreamVideo = ({
     type,
     payload,
   }: {
-    type: string;
+    type: MultipleUpdatesActionType;
     payload?: {
       dream?: Dream;
       file?: File;
@@ -565,6 +596,9 @@ export const useUploadDreamVideo = ({
     [state.totalParts],
   );
 
+  /**
+   * Attempts to re-upload parts of the file that previously failed to upload.
+   */
   const retryUploadFailedParts = async () => {
     // If there are no failed parts, no need to proceed
     if (state.failedParts.length === 0) {
@@ -607,7 +641,6 @@ export const useUploadDreamVideo = ({
           presignedUrl: refreshedUrl,
           file: state.file!,
           partNumber: failedPart.PartNumber!,
-          partSize,
           refreshMultipartUploadUrlMutation,
           totalParts: state.totalParts,
           uploadFilePartMutation,
@@ -670,10 +703,9 @@ export const useUploadDreamVideo = ({
   };
 
   /**
-   * Executes mutation
-   * @param props
-   * @param callbacks
-   * @returns
+   * Main function to initiate and manage the file upload process.
+   * @param props Object containing optional `file` and `dream` details.
+   * @returns A promise resolving to the updated dream object on successful upload or `undefined` on failure.
    */
   const mutateAsync: AsyncMutationProps = async ({ file, dream } = {}) => {
     if (!file) {
@@ -724,8 +756,6 @@ export const useUploadDreamVideo = ({
         resetPartProgress,
       });
 
-      console.log({ completedParts, totalNumberOfParts });
-
       if (completedParts.length !== totalNumberOfParts) {
         handleUploadFailure({ toastId: newToastId });
         return undefined;
@@ -752,33 +782,39 @@ export const useUploadDreamVideo = ({
     }
   };
 
-  function handleUploadFailure({
+  /**
+   * Handles upload failure by logging the error, updating state to reflect the failure
+   * @param params An object containing toastId and error
+   */
+  const handleUploadFailure = ({
     toastId,
     error,
   }: {
     toastId?: ToastId;
     error?: object | unknown;
-  }) {
-    console.log({ toastId });
+  }) => {
     if (error) console.error("Upload error:", error);
     dispatch({ type: "SET_LOADING", payload: false });
     dispatch({ type: "SET_FAILED", payload: true });
     if (toastId) toast.done(toastId);
     toast.error(t("page.create.error_uploading_dream"));
-  }
+  };
 
   /**
-   * Function to clean the mutation internal state (i.e., it resets the mutation to its initial state).
+   * Resets the internal state and aborts the upload process if needed.
    */
   const reset = async () => {
     cancelTokenSource.cancel(t("hooks.use_upload_dream_video.upload_canceled"));
     const extension = getFileExtension(state.file);
-
-    await abortMultipartUploadMutation.mutateAsync({
-      extension: extension,
-      uploadId: state.uploadId,
-      uuid: state.dream?.uuid,
-    });
+    try {
+      await abortMultipartUploadMutation.mutateAsync({
+        extension: extension,
+        uploadId: state.uploadId,
+        uuid: state.dream?.uuid,
+      });
+    } catch (error) {
+      console.error("Error aborting upload.", error);
+    }
     resetStates(state.toastId);
     createMultipartUploadMutation.reset();
     uploadFilePartMutation.reset();
@@ -786,7 +822,7 @@ export const useUploadDreamVideo = ({
   };
 
   /**
-   * update toast with totalUploadProgress
+   * Updates toast with totalUploadProgress
    */
   useEffect(() => {
     if (state.toastId) {

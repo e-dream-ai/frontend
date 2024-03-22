@@ -21,10 +21,12 @@ import { ROUTES } from "@/constants/routes.constants";
 import { Video } from "./create.styled";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { toast } from "react-toastify";
+import { useTheme } from "styled-components";
 
 export const CreateDream: React.FC = () => {
   const { t } = useTranslation();
   const videoRef = useRef(null);
+  const theme = useTheme();
   const [video, setVideo] = useState<FileState>();
 
   const handleChange: HandleChangeFile = (files) => {
@@ -82,12 +84,19 @@ export const CreateDream: React.FC = () => {
         </>
       )}
 
-      <Text my={4}>
+      <Text my={2}>
         {t("page.create.content_policy")} {""}
         <AnchorLink to={ROUTES.TERMS_OF_SERVICE}>
           {t("page.create.terms_of_service")}
         </AnchorLink>
       </Text>
+
+      {isFailed && (
+        <Row>
+          <Text color={theme.colorDanger}>{t("page.create.retry_upload")}</Text>
+        </Row>
+      )}
+
       <Row mt={1} justifyContent="space-between">
         <Column pr={4} justifyContent="center" style={{ width: "100%" }}>
           {isLoading && <ProgressBar completed={uploadProgress} />}
