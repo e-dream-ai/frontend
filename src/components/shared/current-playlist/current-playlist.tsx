@@ -1,5 +1,11 @@
 import { usePlaylist } from "@/api/playlist/query/usePlaylist";
-import { Row, Column, ItemCardList, ItemCard } from "@/components/shared";
+import {
+  Row,
+  Column,
+  ItemCardList,
+  ItemCard,
+  Button,
+} from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import {
   NEW_REMOTE_CONTROL_EVENT,
@@ -12,6 +18,8 @@ import {
   RemoteControlEvent,
 } from "@/types/remote-control.types";
 import { getRemoteControlEvent } from "@/utils/remote-control.util";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -26,6 +34,15 @@ export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
   const [stateId, setStateId] = useState<number | undefined>(id);
   const { data, isLoading, isRefetching, refetch } = usePlaylist(stateId);
   const playlist = data?.data?.playlist;
+
+  const onRemoveCurrentPlaylist = () => {
+    console.log({ socket });
+    socket?.emit(NEW_REMOTE_CONTROL_EVENT, {
+      event: REMOTE_CONTROLS.RESET_PLAYLIST.event,
+    });
+
+    setStateId(undefined);
+  };
 
   useEffect(() => {
     if (stateId) refetch();
@@ -52,6 +69,10 @@ export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
         const newId = data?.id;
         setStateId(newId);
       }
+
+      if (event.event === REMOTE_CONTROLS.RESET_PLAYLIST.event) {
+        setStateId(undefined);
+      }
     });
 
     // Cleanup on component unmount
@@ -75,9 +96,22 @@ export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
           <Spinner />
         </Row>
       ) : (
-        <ItemCardList>
-          <ItemCard type="playlist" item={playlist} />
-        </ItemCardList>
+        <>
+          <Row justifyContent="flex-end">
+            <Button
+              type="button"
+              buttonType="danger"
+              transparent
+              ml="1rem"
+              onClick={onRemoveCurrentPlaylist}
+            >
+              <FontAwesomeIcon icon={faTrash} />
+            </Button>
+          </Row>
+          <ItemCardList>
+            <ItemCard type="playlist" item={playlist} />
+          </ItemCardList>
+        </>
       )}
     </Column>
   );

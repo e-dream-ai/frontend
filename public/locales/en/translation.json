@@ -263,7 +263,8 @@
       "set_speed_9": "Speed",
       "pause": "Pause",
       "capture": "Capture",
-      "report": "Report"
+      "report": "Report",
+      "reset_playlist": "Reset Playlist"
     },
     "current_dream": {
       "no_current_dream": "No current dream"

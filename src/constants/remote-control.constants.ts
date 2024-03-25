@@ -33,6 +33,7 @@ export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
   PAUSE_2: { event: "pause", key: "K" },
   CAPTURE: { event: "capture", key: "T" },
   REPORT: { event: "report", key: "R, !" },
+  RESET_PLAYLIST: { event: "reset_playlist", key: "" },
 };
 
 export const REMOTE_CONTROLS_TRANSLATIONS = {
@@ -70,4 +71,6 @@ export const REMOTE_CONTROLS_TRANSLATIONS = {
   [REMOTE_CONTROLS.PAUSE_2.event]: "components.remote_control.pause",
   [REMOTE_CONTROLS.CAPTURE.event]: "components.remote_control.capture",
   [REMOTE_CONTROLS.REPORT.event]: "components.remote_control.report",
+  [REMOTE_CONTROLS.RESET_PLAYLIST.event]:
+    "components.remote_control.reset_playlist",
 };
