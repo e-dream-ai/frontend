@@ -223,7 +223,6 @@ const attemptUploadFilePart = async ({
     });
     return etag;
   } catch (error) {
-    console.error(`Error uploading part ${partNumber} `, error);
     return undefined;
   }
 };
@@ -259,7 +258,6 @@ const refreshPresignedUrl = async ({
     });
     return response?.data?.url;
   } catch (error) {
-    console.error("Error refreshing presigned URL", error);
     return undefined;
   }
 };
@@ -408,7 +406,6 @@ const completeMultipartUpload = async ({
     }
   } catch (error) {
     // Handle potential errors from the mutation or other operations
-    console.error("Error completing multipart upload", error);
     toast.error(t("page.create.error_completing_upload"));
   }
 
@@ -668,8 +665,7 @@ export const useUploadDreamVideo = ({
           (part) => part.PartNumber !== failedPart.PartNumber,
         );
       } catch (error) {
-        console.error(`Retry failed for part ${failedPart.PartNumber}:`, error);
-        // Optionally, handle the failure (e.g., by showing a message to the user)
+        /* empty */
       }
     }
 
@@ -788,12 +784,10 @@ export const useUploadDreamVideo = ({
    */
   const handleUploadFailure = ({
     toastId,
-    error,
   }: {
     toastId?: ToastId;
     error?: object | unknown;
   }) => {
-    if (error) console.error("Upload error:", error);
     dispatch({ type: "SET_LOADING", payload: false });
     dispatch({ type: "SET_FAILED", payload: true });
     if (toastId) toast.done(toastId);
@@ -813,7 +807,7 @@ export const useUploadDreamVideo = ({
         uuid: state.dream?.uuid,
       });
     } catch (error) {
-      console.error("Error aborting upload.", error);
+      /* empty */
     }
     resetStates(state.toastId);
     createMultipartUploadMutation.reset();
