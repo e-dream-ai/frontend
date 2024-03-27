@@ -168,7 +168,8 @@
       "title": "About"
     },
     "install": {
-      "title": "Install"
+      "title": "Install Native App",
+      "title_remote": "Install Remote Control"
     },
     "terms_of_service": {
       "title": "Terms of Service"

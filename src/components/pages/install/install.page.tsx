@@ -15,40 +15,46 @@ export const InstallPage: React.FC = () => {
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
         <Text>
-          <p>Requirements: Mac OS, x86 or Apple Silicon.</p>
+          <p><em>Requirements:</em> MacOS, x86 or Apple Silicon.</p>
           <p>
-            <Anchor href="https://drive.google.com/drive/u/1/folders/1-luT_kzFfJqMDeuyDDhXTLjbFfRNmm7t">Download</Anchor>{" "}
-            and open the DMG, then control-click and open the package installer.
-          </p>
-          <p>
-            Run the e-dream app, open the settings, log in, and press
-            OK to close the settings. The app will automatically
-            download and play visuals. Press F1 key for help and F2
-            key for status.
-          </p>
-          <p>
-            It also installs a screen saver. To enable it, go into
-	    the system settings, select the "Screen Saver" panel, and
-	    then in the Other section click on "Show More" and then
-	    click on e-dream.
-          </p>
-	  <p>
-	    Hints to avoid bugs and get the best from this alpha client:
-	    <ul>
+            Download and unzip the app and/or screen saver from the {" "}
+	    <Anchor target="_blank" href="https://drive.google.com/drive/folders/1I2SHmq6eRuN836c13GWyaq4kGC3aiLZM">
+	      release
+	    </Anchor>
+	    {" "} folder, and then:
+            <ul>
 	      <li>
-	        When you first run it, press F2 and confirm it is
-	        downloading and let it download everything, then exit
-	        and restart the app, then advance through the content
-	        with the right arrow.
+                Drag the e-dream native app to your Applications folder then run it. Open the settings, log in, then close the settings.
+		The app will automatically download and play visuals. Press F1 key for help and F2 key for status.
 	      </li>
 	      <li>
-	        The most unique commands to try are the A and D keys,
-		which control the speed of playback. Try pressing the
-		A key ten times to really slow it down.
+	        Double click the screen saver to install it. Then to enable it, go into
+	        the system settings, select the "Screen Saver" panel, and
+	        then in the "Other" section click on "Show More" and then
+	        click on "e-dream".
 	      </li>
 	    </ul>
-	  </p>
+          </p>
         </Text>
+      </Section>
+      <p>&nbsp;</p>
+      <h2>{t("page.install.title_remote")}</h2>
+      <Section id="install_remote">
+        <Row justifyContent="space-between" separator />
+        <Text>
+          <p>
+	    Install this web app on your phore or tablet to use it as a remote control.
+	    <ul>
+	      <li>
+	        On iOS, share this page to your Home Screen.
+	      </li>
+	      <li>
+	        On Android, use the "Install App" menu in Chrome.
+	      </li>
+	    </ul>
+	    Run the app, log in, and then enjoy complete control of your laptop or computer from a distance.
+	  </p>
+	</Text>
       </Section>
     </Container>
   );
