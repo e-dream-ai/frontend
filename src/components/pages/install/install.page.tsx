@@ -44,7 +44,7 @@ export const InstallPage: React.FC = () => {
         <Row justifyContent="space-between" separator />
         <Text>
           <p>
-	    Install this web app on your phone or tablet to use as a remote control.
+	    Install <Anchor target="_blank" href="/">this web app</Anchor> on your phone or tablet to use as a remote control.
 	    <ul>
 	      <li>
 	        On iOS, share this page to your Home Screen.
