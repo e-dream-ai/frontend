@@ -15,7 +15,7 @@ export const InstallPage: React.FC = () => {
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
         <Text>
-          <p><em>Requirements:</em> MacOS, x86 or Apple Silicon.</p>
+          <p><em>Requirements:</em> macOS version 11+, x86 or Apple Silicon.</p>
           <p>
             Download and unzip the app and/or screen saver from the {" "}
 	    <Anchor target="_blank" href="https://drive.google.com/drive/folders/1I2SHmq6eRuN836c13GWyaq4kGC3aiLZM">
@@ -30,7 +30,7 @@ export const InstallPage: React.FC = () => {
 	      </li>
 	      <li>
 	        Double click the screen saver to install it. Then to enable it, go into
-	        the system settings, select the "Screen Saver" panel, and
+	        System Settings, select the "Screen Saver" panel, and
 	        then in the "Other" section click on "Show More" and then
 	        click on "e-dream".
 	      </li>
@@ -44,7 +44,7 @@ export const InstallPage: React.FC = () => {
         <Row justifyContent="space-between" separator />
         <Text>
           <p>
-	    Install this web app on your phore or tablet to use it as a remote control.
+	    Install this web app on your phone or tablet to use it as a remote control.
 	    <ul>
 	      <li>
 	        On iOS, share this page to your Home Screen.
