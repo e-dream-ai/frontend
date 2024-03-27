@@ -50,7 +50,7 @@ export const InstallPage: React.FC = () => {
 	        On iOS, share this page to your Home Screen.
 	      </li>
 	      <li>
-	        On Android, use the "Install App" menu in Chrome.
+	        On Android, use the "Install App" menu item in Chrome.
 	      </li>
 	    </ul>
 	    Run the app, log in, and then enjoy complete control of your laptop or computer from a distance.
