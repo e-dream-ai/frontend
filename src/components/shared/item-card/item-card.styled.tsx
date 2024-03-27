@@ -85,8 +85,6 @@ export const StyledItemCard = styled.li<{
 export const ItemCardAnchor = styled(Link)`
   display: inline-flex;
   justify-content: space-between;
-  width: -webkit-fill-available;
-  height: -webkit-fill-available;
   margin: 0;
   margin-bottom: 0.2rem;
   padding: 1rem;
