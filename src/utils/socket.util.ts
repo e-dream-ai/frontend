@@ -32,7 +32,7 @@ export const emitPlayPlaylist = (socket?: Socket, playlist?: Playlist) => {
 
 export const onNewRemoteControlEvent =
   (t: TFunction) =>
-  (data: RemoteControlEvent): void => {
+  (data?: RemoteControlEvent): void => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
       data?.event,
     );

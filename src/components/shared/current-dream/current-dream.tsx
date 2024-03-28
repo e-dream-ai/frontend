@@ -1,11 +1,8 @@
 import { useDream } from "@/api/dream/query/useDream";
 import { Row, Column, ItemCardList, ItemCard } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
-import {
-  NEW_REMOTE_CONTROL_EVENT,
-  REMOTE_CONTROLS,
-} from "@/constants/remote-control.constants";
-import useSocket from "@/hooks/useSocket";
+import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
+import useRemoteControlSocket from "@/hooks/useRemoteControlSocket";
 import { User } from "@/types/auth.types";
 import {
   RemoteControlAction,
@@ -21,7 +18,6 @@ type CurrentDreamProps = {
 };
 
 export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
-  const { socket } = useSocket();
   const { t } = useTranslation();
   const [stateUUID, setStateUUID] = useState<string | undefined>(uuid);
   const { data, isLoading, isRefetching, refetch } = useDream(stateUUID);
@@ -35,33 +31,28 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
     setStateUUID(uuid);
   }, [uuid]);
 
+  const handleRemoteControlEvent = (data?: RemoteControlEvent): void => {
+    const event: RemoteControlAction | undefined = getRemoteControlEvent(
+      data?.event,
+    );
+
+    if (!event) {
+      return;
+    }
+
+    if (
+      event.event === REMOTE_CONTROLS.PLAYING.event ||
+      event.event === REMOTE_CONTROLS.PLAY_DREAM.event
+    ) {
+      const newUUID = data?.uuid;
+      setStateUUID(newUUID);
+    }
+  };
+
   /**
-   * Listen new remote control events from the server for dream on profile
+   * Handle new remote control events from the server for dream on profile
    */
-  useEffect(() => {
-    socket?.on(NEW_REMOTE_CONTROL_EVENT, (data?: RemoteControlEvent): void => {
-      const event: RemoteControlAction | undefined = getRemoteControlEvent(
-        data?.event,
-      );
-
-      if (!event) {
-        return;
-      }
-
-      if (
-        event.event === REMOTE_CONTROLS.PLAYING.event ||
-        event.event === REMOTE_CONTROLS.PLAY_DREAM.event
-      ) {
-        const newUUID = data?.uuid;
-        setStateUUID(newUUID);
-      }
-    });
-
-    // Cleanup on component unmount
-    return () => {
-      socket?.off(NEW_REMOTE_CONTROL_EVENT);
-    };
-  }, [socket]);
+  useRemoteControlSocket(handleRemoteControlEvent);
 
   if (!dream) {
     return (

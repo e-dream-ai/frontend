@@ -7,11 +7,8 @@ import {
   Button,
 } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
-import {
-  NEW_REMOTE_CONTROL_EVENT,
-  REMOTE_CONTROLS,
-} from "@/constants/remote-control.constants";
-import useSocket from "@/hooks/useSocket";
+import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
+import useRemoteControlSocket from "@/hooks/useRemoteControlSocket";
 import { User } from "@/types/auth.types";
 import {
   RemoteControlAction,
@@ -29,18 +26,12 @@ type CurrentPlaylistProps = {
 };
 
 export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
-  const { socket } = useSocket();
   const { t } = useTranslation();
   const [stateId, setStateId] = useState<number | undefined>(id);
   const { data, isLoading, isRefetching, refetch } = usePlaylist(stateId);
   const playlist = data?.data?.playlist;
 
   const onRemoveCurrentPlaylist = () => {
-    console.log({ socket });
-    socket?.emit(NEW_REMOTE_CONTROL_EVENT, {
-      event: REMOTE_CONTROLS.RESET_PLAYLIST.event,
-    });
-
     setStateId(undefined);
   };
 
@@ -52,34 +43,29 @@ export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
     setStateId(id);
   }, [id]);
 
+  const handleRemoteControlEvent = (data?: RemoteControlEvent): void => {
+    const event: RemoteControlAction | undefined = getRemoteControlEvent(
+      data?.event,
+    );
+
+    if (!event) {
+      return;
+    }
+
+    if (event.event === REMOTE_CONTROLS.PLAY_PLAYLIST.event) {
+      const newId = data?.id;
+      setStateId(newId);
+    }
+
+    if (event.event === REMOTE_CONTROLS.RESET_PLAYLIST.event) {
+      setStateId(undefined);
+    }
+  };
+
   /**
-   * Listen new remote control events from the server for dream on profile
+   * Handle new remote control events from the server for dream on profile
    */
-  useEffect(() => {
-    socket?.on(NEW_REMOTE_CONTROL_EVENT, (data?: RemoteControlEvent): void => {
-      const event: RemoteControlAction | undefined = getRemoteControlEvent(
-        data?.event,
-      );
-
-      if (!event) {
-        return;
-      }
-
-      if (event.event === REMOTE_CONTROLS.PLAY_PLAYLIST.event) {
-        const newId = data?.id;
-        setStateId(newId);
-      }
-
-      if (event.event === REMOTE_CONTROLS.RESET_PLAYLIST.event) {
-        setStateId(undefined);
-      }
-    });
-
-    // Cleanup on component unmount
-    return () => {
-      socket?.off(NEW_REMOTE_CONTROL_EVENT);
-    };
-  }, [socket]);
+  useRemoteControlSocket(handleRemoteControlEvent);
 
   if (!playlist) {
     return (

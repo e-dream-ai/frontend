@@ -1,4 +1,10 @@
-import React, { createContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import socketIO, { Socket } from "socket.io-client";
 import useAuth from "@/hooks/useAuth";
 import { UserWithToken } from "@/types/auth.types";
@@ -23,8 +29,7 @@ export const SocketProvider: React.FC<{
   const [socket, setSocket] = useState<Socket>();
   const [sessionId, setSessionId] = useState<string>();
 
-  const generateSocketInstance = (user: UserWithToken) => {
-    // Connect to Socket.IO server
+  const generateSocketInstance = useCallback((user: UserWithToken) => {
     const newSocket = socketIO(`${SOCKET_URL}/${REMOTE_CONTROL_NAMESPACE}`, {
       query: {
         token: user?.token?.AccessToken
@@ -33,34 +38,37 @@ export const SocketProvider: React.FC<{
       },
     });
 
-    // Store the socket instance
-    setSocket(newSocket);
-
+    // Listen to connect event only once
     newSocket.on("connect", () => {
-      // Access session ID when connected
+      console.log({ newSocket });
+      console.log(newSocket.connected);
+      setSocket(newSocket);
       setSessionId(newSocket.id);
     });
-
-    return newSocket;
-  };
+  }, []);
 
   useEffect(() => {
-    if (!user) {
-      return;
+    if (user) {
+      generateSocketInstance(user);
     }
-    const newSocket = generateSocketInstance(user);
-    return () => {
-      newSocket?.disconnect();
-    };
-  }, [user]);
+  }, [user, generateSocketInstance]);
 
-  const memoedValue = useMemo(
+  useEffect(() => {
+    return () => {
+      if (socket && socket.connected) {
+        socket.disconnect();
+      }
+    };
+  }, [socket]);
+
+  // useMemo to memoize context value
+  const contextValue = useMemo(
     () => ({ socket, sessionId }),
     [socket, sessionId],
   );
 
   return (
-    <SocketContext.Provider value={memoedValue}>
+    <SocketContext.Provider value={contextValue}>
       {children}
     </SocketContext.Provider>
   );
