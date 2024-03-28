@@ -43,8 +43,6 @@ export const FeedPage: React.FC = () => {
   const pageRange = (width ?? 0) > 600 ? 5 : 0;
   const marginPages = (width ?? 0) > 600 ? 2 : 0;
 
-  console.log({ width, pageRange, marginPages });
-
   const getFeedType: (
     type?: FeedItemServerType,
   ) => FeedItemServerType | undefined = useCallback((type) => {

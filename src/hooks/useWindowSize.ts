@@ -16,8 +16,6 @@ export const useWindowSize = () => {
     });
   }, []);
 
-  console.log({ width: size.width });
-
   useEffect(() => {
     // Add event listener
     window.addEventListener("resize", handleResize);

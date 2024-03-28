@@ -9,6 +9,11 @@ import React, {
   useState,
 } from "react";
 import { UserWithToken } from "@/types/auth.types";
+import useLogout from "@/api/auth/useLogout";
+import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
+import router from "@/routes/router";
+import { ROUTES } from "@/constants/routes.constants";
 
 type AuthContextType = {
   user: UserWithToken | null;
@@ -24,6 +29,9 @@ export const AuthContext = createContext<AuthContextType>(
 export const AuthProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
+  const logoutMutation = useLogout();
+  const { t } = useTranslation();
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const { setItem, getItem, removeItem } = useLocalStorage(
     AUTH_LOCAL_STORAGE_KEY,
@@ -68,9 +76,29 @@ export const AuthProvider: React.FC<{
     [setLoggedUser],
   );
 
-  const logout = useCallback(() => {
+  const fetchLogout = useCallback(async () => {
+    try {
+      const data = await logoutMutation.mutateAsync({
+        refreshToken: user?.token?.RefreshToken ?? "",
+      });
+
+      if (data.success) {
+        toast.success(t("modal.logout.user_logged_out_successfully"));
+        router.navigate(ROUTES.ROOT);
+      } else {
+        toast.error(
+          `${t("modal.logout.error_signingout_user")} ${data.message}`,
+        );
+      }
+    } catch (error) {
+      toast.error(t("modal.logout.error_signingout_user"));
+    }
+  }, [t, user, logoutMutation]);
+
+  const logout = useCallback(async () => {
+    await fetchLogout();
     setLoggedUser(null);
-  }, [setLoggedUser]);
+  }, [setLoggedUser, fetchLogout]);
 
   const memoedValue = useMemo(
     () => ({

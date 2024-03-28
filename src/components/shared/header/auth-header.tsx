@@ -1,9 +1,7 @@
-import useLogout from "@/api/auth/useLogout";
 import { Anchor, AnchorLink } from "@/components/shared";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 import { AnchorIcon, Divider, StyledAuthHeader } from "./auth-header.styled";
 import StyledHeader, {
   HeaderAvatar,
@@ -39,28 +37,6 @@ export const AuthHeader: React.FC = () => {
   const { t } = useTranslation();
   const { user, logout, isLoading } = useAuth();
   const userWithoutToken = user as Omit<User, "token">;
-  const { mutate } = useLogout();
-
-  const logoutSession = () => {
-    mutate(
-      { refreshToken: user?.token?.RefreshToken ?? "" },
-      {
-        onSuccess: (data) => {
-          if (data.success) {
-            toast.success(t("modal.logout.user_logged_out_successfully"));
-            logout();
-          } else {
-            toast.error(
-              `${t("modal.logout.error_signingout_user")} ${data.message}`,
-            );
-          }
-        },
-        onError: () => {
-          toast.error(t("modal.logout.error_signingout_user"));
-        },
-      },
-    );
-  };
 
   if (isLoading) return <StyledHeader />;
 
@@ -99,7 +75,7 @@ export const AuthHeader: React.FC = () => {
           <AnchorLink type="tertiary" to={ROUTES.MY_PROFILE}>
             <MenuItem onClick={() => ({})}>{t("header.profile")}</MenuItem>
           </AnchorLink>
-          <MenuItem onClick={logoutSession}>{t("header.logout")}</MenuItem>
+          <MenuItem onClick={logout}>{t("header.logout")}</MenuItem>
         </Menu>
       ) : (
         <>

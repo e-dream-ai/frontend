@@ -21,8 +21,7 @@ export const Header: React.FC = () => {
   const { t } = useTranslation();
   const [isNavOpen, setNavOpen] = useState<boolean>(false);
 
-  const handleOpenNav = () => setNavOpen(true);
-  const handleCloseNav = () => setNavOpen(false);
+  const toggleNav = () => setNavOpen(!isNavOpen);
 
   return (
     <>
@@ -41,24 +40,15 @@ export const Header: React.FC = () => {
                 />
                 <HeaderTitle>{t("header.e_dream")}</HeaderTitle>
               </LogoAnchor>{" "}
-              {isNavOpen ? (
-                <Button
-                  transparent
-                  size="lg"
-                  before={<FontAwesomeIcon icon={faClose} />}
-                  onClick={handleCloseNav}
-                />
-              ) : (
-                <Button
-                  transparent
-                  size="lg"
-                  before={<FontAwesomeIcon icon={faBars} />}
-                  onClick={handleOpenNav}
-                />
-              )}
+              <Button
+                transparent
+                size="lg"
+                before={<FontAwesomeIcon icon={isNavOpen ? faClose : faBars} />}
+                onClick={toggleNav}
+              />
             </LogoContainer>
             <NavHeader isOpen={isNavOpen}>
-              <MenuHeader onClickMenuItem={handleCloseNav} />
+              <MenuHeader onClickMenuItem={toggleNav} />
             </NavHeader>
           </BottomHeader>
         </StyledHeader>

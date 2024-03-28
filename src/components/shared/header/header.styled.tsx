@@ -129,8 +129,8 @@ export const HeaderList = styled.ul`
   }
 `;
 
-export const HeaderListItem = styled.li`
-  display: inline-flex;
+export const HeaderListItem = styled.li<{ onlyMobile?: boolean }>`
+  display: ${(props) => (props.onlyMobile ? "none" : " inline-flex")};
   font-size: 1.2rem;
   text-transform: uppercase;
 
@@ -149,6 +149,7 @@ export const HeaderListItem = styled.li`
   }
 
   @media (max-width: ${DEVICES.TABLET}) {
+    display: inline-flex;
     margin: 0.6rem 0;
   }
 `;
