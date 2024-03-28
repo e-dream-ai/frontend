@@ -82,8 +82,6 @@ export const MenuHeader: React.FC<{ onClickMenuItem?: () => void }> = ({
     },
   ];
 
-  console.log({ user, routes: user ? USER_NAV_ROUTES : NAV_ROUTES });
-
   return (
     <HeaderList>
       {(user ? USER_NAV_ROUTES : NAV_ROUTES).map((route) => {

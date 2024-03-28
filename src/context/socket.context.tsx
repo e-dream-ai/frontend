@@ -40,8 +40,6 @@ export const SocketProvider: React.FC<{
 
     // Listen to connect event only once
     newSocket.on("connect", () => {
-      console.log({ newSocket });
-      console.log(newSocket.connected);
       setSocket(newSocket);
       setSessionId(newSocket.id);
     });

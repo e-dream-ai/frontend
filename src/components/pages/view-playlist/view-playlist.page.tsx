@@ -332,7 +332,7 @@ export const ViewPlaylistPage = () => {
   };
 
   const handlePlayPlaylist = () => {
-    emitPlayPlaylist(socket, playlist, t("page.view_dream.play_dream_client"));
+    emitPlayPlaylist(socket, playlist);
   };
 
   const resetRemotePlaylistForm = useCallback(() => {
