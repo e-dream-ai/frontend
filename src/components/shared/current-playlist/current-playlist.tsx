@@ -7,8 +7,12 @@ import {
   Button,
 } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
-import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
+import {
+  NEW_REMOTE_CONTROL_EVENT,
+  REMOTE_CONTROLS,
+} from "@/constants/remote-control.constants";
 import useRemoteControlSocket from "@/hooks/useRemoteControlSocket";
+import useSocket from "@/hooks/useSocket";
 import { User } from "@/types/auth.types";
 import {
   RemoteControlAction,
@@ -26,12 +30,16 @@ type CurrentPlaylistProps = {
 };
 
 export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
+  const { socket } = useSocket();
   const { t } = useTranslation();
   const [stateId, setStateId] = useState<number | undefined>(id);
   const { data, isLoading, isRefetching, refetch } = usePlaylist(stateId);
   const playlist = data?.data?.playlist;
 
   const onRemoveCurrentPlaylist = () => {
+    socket?.emit(NEW_REMOTE_CONTROL_EVENT, {
+      event: REMOTE_CONTROLS.RESET_PLAYLIST.event,
+    });
     setStateId(undefined);
   };
 

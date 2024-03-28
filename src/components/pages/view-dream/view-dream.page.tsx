@@ -265,7 +265,7 @@ const ViewDreamPage: React.FC = () => {
   };
 
   const handlePlayDream = () => {
-    emitPlayDream(socket, dream);
+    emitPlayDream(socket, dream, t("page.view_dream.play_playlist_client"));
   };
 
   /**

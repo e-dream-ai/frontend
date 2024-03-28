@@ -40,10 +40,7 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
       return;
     }
 
-    if (
-      event.event === REMOTE_CONTROLS.PLAYING.event ||
-      event.event === REMOTE_CONTROLS.PLAY_DREAM.event
-    ) {
+    if (event.event === REMOTE_CONTROLS.PLAYING.event) {
       const newUUID = data?.uuid;
       setStateUUID(newUUID);
     }
