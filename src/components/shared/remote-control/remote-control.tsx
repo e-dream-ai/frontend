@@ -6,7 +6,7 @@ import {
 } from "@/constants/remote-control.constants";
 import { useTranslation } from "react-i18next";
 import useSocket from "@/hooks/useSocket";
-import Grid from "@/components/shared/grid/grid";
+import { RemoteControlContainer } from "./remote-control.styled";
 
 const ROW_1 = [REMOTE_CONTROLS.HELP, REMOTE_CONTROLS.STATUS];
 
@@ -34,11 +34,7 @@ export const RemoteControl: React.FC = () => {
 
   return (
     <Row flexWrap="wrap" style={{ gap: "4px" }}>
-      <Grid
-        gridTemplateRows="repeat(6, auto)"
-        gridTemplateColumns="repeat(11, 60px)"
-        gridGap="0.2rem"
-      >
+      <RemoteControlContainer>
         {/* ROW 1 */}
         <p />
         {ROW_1.map((remoteControl) => {
@@ -294,7 +290,7 @@ export const RemoteControl: React.FC = () => {
               `components.remote_control.${REMOTE_CONTROLS.GO_NEXT_DREAM.event}`,
             )}
         </Button>
-      </Grid>
+      </RemoteControlContainer>
     </Row>
   );
 };

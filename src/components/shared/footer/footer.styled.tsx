@@ -13,18 +13,22 @@ export const StyledFooter = styled.footer`
   line-height: 1.4;
   background: ${(props) => props.theme.colorBackgroundTertiary};
 
-  @media only screen and (max-width: ${DEVICES.LAPTOP}) {
-    position: static;
-  }
-
   .reverse {
     color: ${(props) => props.theme.textTertiaryColor};
+  }
+
+  @media only screen and (max-width: ${DEVICES.LAPTOP}) {
+    position: static;
   }
 `;
 
 export const FooterRow = styled.div`
   display: flex;
   flex-flow: row;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    flex-flow: column;
+  }
 `;
 
 export const FooterCol = styled.div<{ flow?: string }>`
@@ -33,7 +37,7 @@ export const FooterCol = styled.div<{ flow?: string }>`
   flex-flow: ${(props) => props.flow ?? "row"};
   align-items: center;
   justify-content: center;
-  margin-top: 25px;
+  margin-top: 1rem;
   gap: 1rem;
 `;
 

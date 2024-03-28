@@ -1,11 +1,23 @@
 import { DEVICES } from "@/constants/devices.constants";
 import styled from "styled-components";
 
-export const Container = styled.div`
+export const StyledContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  width: 100vw;
+  padding: 2rem;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    padding: 1rem;
+  }
+`;
+
+const StyledChildren = styled.div`
+  display: flex;
+  flex-flow: column;
+  width: inherit;
+  max-width: 1024px;
   background-color: ${(props) => props.theme.colorBackgroundTertiary};
-  padding: 1.875rem 0;
-  margin-right: auto;
-  margin-left: auto;
 
   h2 {
     font-size: 1.25rem;
@@ -25,19 +37,19 @@ export const Container = styled.div`
     margin-bottom: 1rem;
   }
 
-  @media (min-width: ${DEVICES.TABLET}) {
-    width: 750px;
-  }
-
-  @media (min-width: ${DEVICES.LAPTOP}) {
-    width: 970px;
-  }
-
   form {
     width: auto;
     display: flex;
     flex-flow: column;
   }
 `;
+
+export const Container: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => (
+  <StyledContainer>
+    <StyledChildren>{children}</StyledChildren>
+  </StyledContainer>
+);
 
 export default Container;

@@ -5,14 +5,8 @@ const StyledHeader = styled.header`
   display: flex;
   flex-flow: column;
   align-items: center;
-
-  @media (min-width: ${DEVICES.TABLET}) {
-    width: 750px;
-  }
-
-  @media (min-width: ${DEVICES.LAPTOP}) {
-    width: 970px;
-  }
+  width: inherit;
+  max-width: 1024px;
 `;
 
 export const HeaderContainer = styled.div`
@@ -21,14 +15,18 @@ export const HeaderContainer = styled.div`
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  padding: 2rem 0;
+  width: 100vw;
+  padding: 2rem;
   background: ${(props) => props.theme.colorBackgroundTertiary};
   -webkit-backface-visibility: hidden;
   z-index: 2;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    padding: 1rem;
+  }
 `;
 
-export const HeaderLogo = styled.a`
+export const LogoAnchor = styled.a`
   display: inline-flex;
   align-items: center;
   cursor: pointer;
@@ -41,21 +39,73 @@ export const HeaderTitle = styled.h1`
   color: ${(props) => props.theme.textPrimaryColor};
   margin-left: 0.5rem;
   white-space: nowrap;
+
+  @media (max-width: ${DEVICES.LAPTOP}) {
+    font-size: 2rem;
+  }
+
+  @media (max-width: ${DEVICES.MOBILE_L}) {
+    font-size: 1.6rem;
+  }
 `;
 
-export const HeaderImage = styled.img`
+export const LogoContainer = styled.div`
+  display: inline-flex;
+  flex-flow: row;
+  justify-content: space-between;
+  align-items: center;
+
+  p,
+  button {
+    display: none;
+  }
+
+  button {
+    width: 60px;
+  }
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    width: inherit;
+    p,
+    button {
+      display: block;
+    }
+  }
+`;
+
+export const LogoIcon = styled.img`
   width: auto;
   height: 6rem;
   max-width: 100%;
   cursor: pointer;
+
+  @media (max-width: ${DEVICES.LAPTOP}) {
+    height: 4rem;
+  }
+
+  @media (max-width: ${DEVICES.MOBILE_L}) {
+    height: 3rem;
+  }
 `;
 
-export const NavHeader = styled.nav``;
+export const NavHeader = styled.nav<{ isOpen?: boolean }>`
+  overflow: hidden;
+  transition: height 0.3s ease-out;
+  @media (max-width: ${DEVICES.TABLET}) {
+    width: 100vw;
+    height: ${(props) => (props.isOpen ? "100vh" : "0px")};
+    background-color: ${(props) => props.theme.colorBackgroundTertiary};
+  }
+`;
 
 export const TopHeader = styled.div`
-  width: -webkit-fill-available;
   display: inline-flex;
+  width: -webkit-fill-available;
   justify-content: flex-end;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    display: none;
+  }
 `;
 
 export const BottomHeader = styled.div`
@@ -63,10 +113,20 @@ export const BottomHeader = styled.div`
   display: inline-flex;
   justify-content: space-between;
   align-items: center;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    flex-flow: column;
+  }
 `;
 
 export const HeaderList = styled.ul`
+  display: inline-flex;
   list-style: none;
+  white-space: nowrap;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    flex-flow: column;
+  }
 `;
 
 export const HeaderListItem = styled.li`
@@ -78,10 +138,18 @@ export const HeaderListItem = styled.li`
     content: "/";
     color: ${(props) => props.theme.textPrimaryColor};
     margin: 0 12px;
+
+    @media (max-width: ${DEVICES.TABLET}) {
+      content: "";
+    }
   }
 
   &:last-child::after {
     display: none;
+  }
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    margin: 0.6rem 0;
   }
 `;
 

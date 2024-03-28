@@ -4,7 +4,9 @@ import { useTranslation } from "react-i18next";
 import { HeaderList, HeaderListItem } from "./header.styled";
 import { AnchorLink } from "../anchor/anchor";
 
-export const MenuHeader: React.FC = () => {
+export const MenuHeader: React.FC<{ onClickMenuItem?: () => void }> = ({
+  onClickMenuItem,
+}) => {
   const { user } = useAuth();
   const { t } = useTranslation();
 
@@ -43,7 +45,9 @@ export const MenuHeader: React.FC = () => {
     <HeaderList>
       {(user ? USER_NAV_ROUTES : NAV_ROUTES).map((route) => (
         <HeaderListItem key={route.name}>
-          <AnchorLink to={route.route}>{route.name}</AnchorLink>
+          <AnchorLink to={route.route} onClick={onClickMenuItem}>
+            {route.name}
+          </AnchorLink>
         </HeaderListItem>
       ))}
     </HeaderList>

@@ -16,7 +16,7 @@ import { ROUTES } from "@/constants/routes.constants";
 import { Outlet, createBrowserRouter } from "react-router-dom";
 import ProtectedRoute from "./protected-route";
 import { CreatePage } from "@/components/pages/create/create.page";
-import { Footer } from "@/components/shared";
+import { Footer, Row } from "@/components/shared";
 import { LoginPage } from "@/components/pages/login/login.page";
 import { SignupPage } from "@/components/pages/signup/signup.page";
 import PublicRoute from "@/routes/public-route";
@@ -24,9 +24,9 @@ import PublicRoute from "@/routes/public-route";
 const RootElement = () => (
   <>
     <Header />
-    <section style={{ paddingTop: "170px" }}></section>
+    <Row mb={["100px", "160px", "160px", "180px"]} />
     <Outlet />
-    <section style={{ paddingTop: "170px" }}></section>
+    <Row mb={["100px", "160px", "160px", "180px"]} />
     <Footer />
   </>
 );

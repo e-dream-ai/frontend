@@ -1,24 +1,12 @@
-import { DEVICES } from "@/constants/devices.constants";
 import styled, { css } from "styled-components";
 import { Sizes } from "@/types/sizes.types";
 import { Link } from "react-router-dom";
+import { DEVICES } from "@/constants/devices.constants";
 
 const ItemCardSizes = {
-  sm: css`
-    @media (max-width: ${DEVICES.TABLET}) {
-      width: 90vw;
-    }
-  `,
-  md: css`
-    @media (max-width: ${DEVICES.TABLET}) {
-      width: 90vw;
-    }
-  `,
-  lg: css`
-    @media (max-width: ${DEVICES.TABLET}) {
-      width: 90vw;
-    }
-  `,
+  sm: css``,
+  md: css``,
+  lg: css``,
 };
 
 const ImageSizes = {
@@ -62,11 +50,11 @@ export const StyledItemCard = styled.li<{
   border-top: ${(props) =>
     props.isDragEntered && props.isMovedOnUpperHalf
       ? `3px solid ${props.theme.colorPrimary}`
-      : `3px solid transparent`};
+      : `3px solid ${props.theme.colorBackgroundTertiary}`};
   border-bottom: ${(props) =>
     props.isDragEntered && !props.isMovedOnUpperHalf
       ? `3px solid ${props.theme.colorPrimary}`
-      : `3px solid transparent`};
+      : `3px solid ${props.theme.colorBackgroundTertiary}`};
   user-select: none;
 
   -webkit-transition:
@@ -83,7 +71,8 @@ export const StyledItemCard = styled.li<{
 `;
 
 export const ItemCardAnchor = styled(Link)`
-  display: inline-flex;
+  display: flex;
+  flex-flow: row;
   justify-content: space-between;
   margin: 0;
   margin-bottom: 0.2rem;
@@ -97,6 +86,11 @@ export const ItemCardImage = styled.img<{ size: Sizes }>`
   ${(props) => ImageSizes[props.size]}
   object-fit: cover;
   cursor: pointer;
+
+  @media (max-width: ${DEVICES.MOBILE_L}) {
+    width: auto;
+    margin-bottom: 1rem;
+  }
 `;
 
 export const ItemCardBody = styled.div<{
@@ -104,6 +98,11 @@ export const ItemCardBody = styled.div<{
 }>`
   display: inline-flex;
   pointer-events: ${(props) => (props.isDragEntered ? "none" : "all")};
+
+  @media (max-width: ${DEVICES.MOBILE_L}) {
+    width: 100%;
+    flex-flow: column;
+  }
 `;
 
 export const ItemCardBodyDetails = styled.div`
@@ -119,4 +118,9 @@ export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`
   justify-content: center;
   align-items: center;
   font-size: 3rem;
+
+  @media (max-width: ${DEVICES.MOBILE_L}) {
+    width: auto;
+    margin-bottom: 1rem;
+  }
 `;

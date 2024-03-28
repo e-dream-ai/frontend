@@ -21,6 +21,7 @@ import { useCallback, useState } from "react";
 import { FeedItem, FeedItemServerType } from "@/types/feed.types";
 import { User } from "@/types/auth.types";
 import Text from "@/components/shared/text/text";
+import { useWindowSize } from "@/hooks/useWindowSize";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -37,6 +38,12 @@ export const FeedPage: React.FC = () => {
   const [radioGroupState, setRadioGroupState] = useState<
     FeedItemServerType | undefined
   >(FEED_FILTERS.ALL);
+  const { width } = useWindowSize();
+
+  const pageRange = (width ?? 0) > 600 ? 5 : 0;
+  const marginPages = (width ?? 0) > 600 ? 2 : 0;
+
+  console.log({ width, pageRange, marginPages });
 
   const getFeedType: (
     type?: FeedItemServerType,
@@ -114,35 +121,34 @@ export const FeedPage: React.FC = () => {
 
   return (
     <Container>
-      <h2>{t("page.feed.title")}</h2>
       <Section id={SECTION_ID}>
-        <Row justifyContent="center" alignItems="center">
-          <Column width="-webkit-fill-available">
-            <SearchBar
-              showClearButton={Boolean(search)}
-              onSearch={handleOnSearch}
-              onClear={handleOnClearSearch}
-            />
-            <RadioButtonGroup
-              name="search-filter"
-              value={radioGroupState as string}
-              data={getFilterData(t)}
-              onChange={handleRadioButtonGroupChange}
-            />
-            {isLoading ? (
-              <Row justifyContent="center">
-                <Spinner />
-              </Row>
-            ) : (
-              <>
-                {showUserList && <UserList users={users} />}
-                {radioGroupState !== FEED_FILTERS.USER && (
-                  <FeedList feed={feed} />
-                )}
-              </>
-            )}
-          </Column>
-        </Row>
+        <h2>{t("page.feed.title")}</h2>
+
+        <Column>
+          <SearchBar
+            showClearButton={Boolean(search)}
+            onSearch={handleOnSearch}
+            onClear={handleOnClearSearch}
+          />
+          <RadioButtonGroup
+            name="search-filter"
+            value={radioGroupState as string}
+            data={getFilterData(t)}
+            onChange={handleRadioButtonGroupChange}
+          />
+          {isLoading ? (
+            <Row justifyContent="center">
+              <Spinner />
+            </Row>
+          ) : (
+            <>
+              {showUserList && <UserList users={users} />}
+              {radioGroupState !== FEED_FILTERS.USER && (
+                <FeedList feed={feed} />
+              )}
+            </>
+          )}
+        </Column>
 
         <Row justifyContent="center">
           <Paginate
@@ -153,6 +159,8 @@ export const FeedPage: React.FC = () => {
               showUserListTab ? handleOnUserPageChange : handleOnPageChange
             }
             pageCount={showUserListTab ? usersPageCount : pageCount}
+            marginPagesDisplayed={marginPages}
+            pageRangeDisplayed={pageRange}
             previousLabel={`< ${t("components.paginate.previous")}`}
             renderOnZeroPageCount={null}
           />

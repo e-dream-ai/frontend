@@ -1,9 +1,7 @@
 import styled from "styled-components";
 
 export const SearchInput = styled.input`
-  width: -moz-available; /* WebKit-based browsers will ignore this. */
-  width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
-  width: fill-available;
+  width: 100%;
   height: 3rem;
   padding: 6px 12px;
   background-color: transparent;
@@ -17,9 +15,6 @@ export const StyledSearchBar = styled.div`
   display: flex;
   flex-flow: row;
   align-items: center;
-  width: -moz-available; /* WebKit-based browsers will ignore this. */
-  width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
-  width: fill-available;
   border-radius: 5px;
   background-color: ${(props) => props.theme.colorBackgroundSecondary};
   font-size: 1.6rem;

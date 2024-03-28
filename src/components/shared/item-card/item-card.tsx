@@ -247,11 +247,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               <FontAwesomeIcon icon={faPhotoFilm} />
             </ThumbnailPlaceholder>
           )}
-          <Column ml={4}>
+          <Column ml={[0, 4, 4]}>
             <Text
               ref={tooltipRef}
-              p={2}
-              mb={2}
+              p={[1, 2, 2, 2]}
+              mb={[1, 2, 2, 2]}
               color={
                 type === "dream" ? theme.colorPrimary : theme.colorSecondary
               }
@@ -264,14 +264,18 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               {truncateString(name, 60) || t("components.item_card.unnamed")}
             </Text>
             {(item as Playlist)?.itemCount ? (
-              <Text mb={2}>
+              <Text mb={[1, 2, 2, 2]}>
                 {t("components.item_card.videos")}:{" "}
                 {(item as Playlist)?.itemCount ?? 0}
               </Text>
             ) : (
               <></>
             )}
-            <Text mb={2} p={2} color={theme.textSecondaryColor}>
+            <Text
+              mb={[1, 2, 2, 2]}
+              p={[1, 2, 2, 2]}
+              color={theme.textSecondaryColor}
+            >
               {t("components.item_card.owner")}
               {" - "}
               <Text color={theme.textPrimaryColor}>{getUserName(user)}</Text>

@@ -23,4 +23,11 @@ export const Paginate = styled(ReactPaginate)`
       color: ${(props) => props.theme.textPrimaryColor};
     }
   }
+
+  @media (max-width: 768px) {
+    li {
+      flex-wrap: wrap;
+      margin: 0.8rem;
+    }
+  }
 `;
