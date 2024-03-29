@@ -64,7 +64,11 @@ export const onNewRemoteControlEvent =
       event.event === REMOTE_CONTROLS.PLAYING.event ||
       event.event === REMOTE_CONTROLS.PLAY_PLAYLIST.event
     ) {
-      toast(`${t(REMOTE_CONTROLS_TRANSLATIONS[event?.event])}: ${data?.name}`);
+      toast(
+        `${t(REMOTE_CONTROLS_TRANSLATIONS[event?.event])}: ${
+          data?.name ?? data?.uuid ?? "-"
+        }`,
+      );
       return;
     }
 
