@@ -18,7 +18,7 @@ export const MenuItem = styled(MenuItemComponent)`
   color: ${(props) => props.theme.textPrimaryColor};
   background-color: ${(props) => props.theme.inputBackgroundColor};
   &:hover {
-    background-color: ${(props) => props.theme.inputBackgroundDisabledColor};
+    background-color: ${(props) => props.theme.inputBackgroundColor};
   }
 `;
 

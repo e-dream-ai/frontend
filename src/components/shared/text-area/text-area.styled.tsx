@@ -15,7 +15,7 @@ export const StyledTextArea = styled.textarea`
   font-size: 1rem;
 
   &:disabled {
-    background-color: ${(props) => props.theme.inputBackgroundDisabledColor};
+    background-color: ${(props) => props.theme.inputBackgroundColor};
     cursor: not-allowed;
   }
 `;

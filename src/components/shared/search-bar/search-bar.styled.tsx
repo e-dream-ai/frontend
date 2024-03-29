@@ -30,9 +30,6 @@ export const SearchBarClearButton = styled.button`
   cursor: pointer;
   font-size: 1.2rem;
   color: ${(props) => props.theme.inputTextColorPrimary};
-  :hover {
-    background-color: ${(props) => props.theme.inputBackgroundDisabledColor};
-  }
 `;
 
 export const SearchBarIcon = styled.button`
@@ -45,7 +42,4 @@ export const SearchBarIcon = styled.button`
   cursor: pointer;
   font-size: 1.4rem;
   color: ${(props) => props.theme.inputTextColorPrimary};
-  :hover {
-    background-color: ${(props) => props.theme.inputBackgroundDisabledColor};
-  }
 `;

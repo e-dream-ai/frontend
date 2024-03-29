@@ -237,24 +237,26 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ user }) => {
   const onDisableEditMode = () => setEditMode(false);
 
   return (
-    <Column mb="2rem" style={{ flex: "auto" }} mr="1rem">
-      {editMode ? (
-        <ProfileForm user={user} onDisableEditMode={onDisableEditMode} />
-      ) : (
-        <ProfileDetails user={user} />
-      )}
-      {!editMode && (
-        <Restricted
-          to={PROFILE_PERMISSIONS.CAN_EDIT_PROFILE}
-          isOwner={authUser?.id === user?.id}
-        >
-          <Row>
-            <Button size="sm" onClick={onEnableEditMode}>
-              {t("components.profile_card.edit_profile")}
-            </Button>
-          </Row>
-        </Restricted>
-      )}
-    </Column>
+    <Row mb="2rem" mr="1rem">
+      <Column>
+        {editMode ? (
+          <ProfileForm user={user} onDisableEditMode={onDisableEditMode} />
+        ) : (
+          <ProfileDetails user={user} />
+        )}
+        {!editMode && (
+          <Restricted
+            to={PROFILE_PERMISSIONS.CAN_EDIT_PROFILE}
+            isOwner={authUser?.id === user?.id}
+          >
+            <Row>
+              <Button size="sm" onClick={onEnableEditMode}>
+                {t("components.profile_card.edit_profile")}
+              </Button>
+            </Row>
+          </Restricted>
+        )}
+      </Column>
+    </Row>
   );
 };

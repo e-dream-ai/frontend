@@ -26,7 +26,7 @@ const RootElement = () => (
     <Header />
     {/* <Row mb={["100px", "160px", "0"]} /> */}
     <Outlet />
-    <Row mb={["100px", "160px", "0"]} />
+    <Row mb={["200px", "160px", "0"]} />
     <Footer />
   </>
 );
