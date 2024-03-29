@@ -19,6 +19,6 @@ declare module "styled-components" {
     inputTextColorPrimary: string;
     inputTextColorSecondary: string;
     inputBackgroundColor: string;
-    inputBackgroundDisabledColor: string;
+    inputBackgroundEnabledColor: string;
   }
 }

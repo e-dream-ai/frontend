@@ -7,15 +7,18 @@ export const StyledInput = styled.input`
   width: fill-available;
   height: 2.2rem;
   padding: 6px 12px;
-  background: ${(props) => props.theme.colorBackgroundSecondary};
+  background: ${(props) => props.theme.inputBackgroundColor};
   border-radius: 0;
   border: 0;
   color: ${(props) => props.theme.inputTextColorPrimary};
   font-size: 1rem;
 
   &:disabled {
-    background-color: ${(props) => props.theme.inputBackgroundDisabledColor};
     cursor: not-allowed;
+  }
+
+  &:focus {
+    outline: none;
   }
 `;
 
@@ -26,7 +29,7 @@ export const DisabledInput = styled.div`
   width: fill-available;
   height: 2.2rem;
   padding: 6px 12px;
-  background: ${(props) => props.theme.colorBackgroundSecondary};
+  background: ${(props) => props.theme.inputBackgroundColor};
   border-radius: 0;
   border: 0;
   color: ${(props) => props.theme.inputTextColorPrimary};
@@ -34,7 +37,6 @@ export const DisabledInput = styled.div`
   cursor: not-allowed;
 
   &:disabled {
-    background-color: ${(props) => props.theme.inputBackgroundDisabledColor};
     cursor: not-allowed;
   }
 `;

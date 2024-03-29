@@ -37,5 +37,5 @@ export const PrimaryTheme: DefaultTheme = {
   inputTextColorPrimary: COLORS.GRAY_5,
   inputTextColorSecondary: COLORS.GRAY_2,
   inputBackgroundColor: COLORS.GRAY_4,
-  inputBackgroundDisabledColor: COLORS.GRAY_2,
+  inputBackgroundEnabledColor: COLORS.GRAY_2,
 } as const;

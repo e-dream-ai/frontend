@@ -28,8 +28,8 @@ export const ThumbnailOverlay = styled.div`
   position: absolute;
   opacity: 1;
   background-color: rgba(0, 0, 0, 0.5);
-  min-width: -webkit-fill-available;
-  min-height: -webkit-fill-available;
+  width: 100%;
+  height: 100%;
 `;
 
 export const Thumbnail = styled.img<{ url?: string }>`
