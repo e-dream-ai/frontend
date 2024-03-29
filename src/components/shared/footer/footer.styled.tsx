@@ -39,6 +39,10 @@ export const FooterCol = styled.div<{ flow?: string }>`
   justify-content: center;
   margin-top: 1rem;
   gap: 1rem;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    font-size: 0.8rem;
+  }
 `;
 
 export default StyledFooter;

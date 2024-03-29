@@ -381,36 +381,46 @@ export const ViewPlaylistPage = () => {
       />
       <Section id={SectionID}>
         <Container>
-          <Row justifyContent="space-between" pb="1rem" separator>
-            <h2>{t("page.view_playlist.title")}</h2>
+          <Row
+            justifyContent="space-between"
+            alignItems="center"
+            flexWrap="wrap"
+            pb={[2, 2, "1rem"]}
+            separator
+          >
+            <Column flex={["1 1 200px", "1", "1"]}>
+              <h2 style={{ margin: 0 }}>{t("page.view_playlist.title")}</h2>
+            </Column>
 
-            <Row marginBottom={0}>
-              <Button
-                type="button"
-                buttonType="default"
-                transparent
-                ml="1rem"
-                onClick={handlePlayPlaylist}
-              >
-                <FontAwesomeIcon icon={faPlay} />
-              </Button>
-              {!editMode && (
-                <Restricted
-                  to={PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST}
-                  isOwner={isOwner}
+            <Column flex="1" alignSelf="flex-end" alignItems="flex-end">
+              <Row marginBottom={0}>
+                <Button
+                  type="button"
+                  buttonType="default"
+                  transparent
+                  ml="1rem"
+                  onClick={handlePlayPlaylist}
                 >
-                  <Button
-                    type="button"
-                    buttonType="danger"
-                    transparent
-                    ml="1rem"
-                    onClick={onShowConfirmDeleteModal}
+                  <FontAwesomeIcon icon={faPlay} />
+                </Button>
+                {!editMode && (
+                  <Restricted
+                    to={PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST}
+                    isOwner={isOwner}
                   >
-                    <FontAwesomeIcon icon={faTrash} />
-                  </Button>
-                </Restricted>
-              )}
-            </Row>
+                    <Button
+                      type="button"
+                      buttonType="danger"
+                      transparent
+                      ml="1rem"
+                      onClick={onShowConfirmDeleteModal}
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </Button>
+                  </Restricted>
+                )}
+              </Row>
+            </Column>
           </Row>
           <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
             <Row justifyContent="space-between">
@@ -453,8 +463,12 @@ export const ViewPlaylistPage = () => {
                 )}
               </div>
             </Row>
-            <Row justifyContent="space-between">
-              <Column flex="1 1 auto" mr={1}>
+            <Row flexWrap="wrap">
+              <Column
+                mr={[0, 2, 2]}
+                mb={[4, 4, 0]}
+                flex={["1 1 320px", "1", "1"]}
+              >
                 <ThumbnailInput
                   thumbnail={generateImageURLFromResource(playlist?.thumbnail, {
                     width: 500,
@@ -468,7 +482,7 @@ export const ViewPlaylistPage = () => {
                   types={["JPG", "JPEG"]}
                 />
               </Column>
-              <Column flex="1 1 auto" ml={1}>
+              <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>
                 <Input
                   disabled={!editMode}
                   placeholder={t("page.view_playlist.name")}

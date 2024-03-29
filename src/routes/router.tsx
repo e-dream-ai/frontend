@@ -24,9 +24,9 @@ import PublicRoute from "@/routes/public-route";
 const RootElement = () => (
   <>
     <Header />
-    <Row mb={["100px", "160px", "160px", "180px"]} />
+    {/* <Row mb={["100px", "160px", "0"]} /> */}
     <Outlet />
-    <Row mb={["100px", "160px", "160px", "180px"]} />
+    <Row mb={["100px", "160px", "0"]} />
     <Footer />
   </>
 );

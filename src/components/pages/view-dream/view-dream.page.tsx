@@ -105,6 +105,7 @@ const ViewDreamPage: React.FC = () => {
     dream?.status === DreamStatusType.NONE ||
     dream?.status === DreamStatusType.QUEUE ||
     dream?.status === DreamStatusType.PROCESSING;
+
   const showEditButton = editMode && !isDreamProcessing;
   const showSaveAndCancelButtns = !editMode && !isDreamProcessing;
 
@@ -309,53 +310,53 @@ const ViewDreamPage: React.FC = () => {
       />
       <Section id={SectionID}>
         <Container>
-          <Row justifyContent="space-between" pb="1rem" separator>
-            <h2>{t("page.view_dream.title")}</h2>
+          <Row
+            justifyContent="space-between"
+            alignItems="center"
+            flexWrap="wrap"
+            pb={[2, 2, "1rem"]}
+            separator
+          >
+            <Column flex={["1 1 200px", "1", "1"]}>
+              <h2 style={{ margin: 0 }}>{t("page.view_dream.title")}</h2>
+            </Column>
 
-            {!editMode && (
-              <Row margin={0}>
-                <Button
-                  type="button"
-                  buttonType="default"
-                  transparent
-                  ml="1rem"
-                  onClick={handlePlayDream}
-                >
-                  <FontAwesomeIcon icon={faPlay} />
-                </Button>
-                <Button
-                  type="button"
-                  buttonType="default"
-                  transparent
-                  ml="1rem"
-                >
-                  <FontAwesomeIcon icon={faThumbsUp} />
-                </Button>
-                <Button
-                  type="button"
-                  buttonType="default"
-                  transparent
-                  ml="1rem"
-                >
-                  <FontAwesomeIcon icon={faThumbsDown} />
-                </Button>
-
-                <Restricted
-                  to={DREAM_PERMISSIONS.CAN_DELETE_DREAM}
-                  isOwner={user?.id === dream?.user?.id}
-                >
+            <Column flex="1" alignSelf="flex-end" alignItems="flex-end">
+              {!editMode && (
+                <Row margin={0}>
                   <Button
                     type="button"
-                    buttonType="danger"
+                    buttonType="default"
                     transparent
-                    ml="1rem"
-                    onClick={onShowConfirmDeleteModal}
+                    mr="2"
+                    onClick={handlePlayDream}
                   >
-                    <FontAwesomeIcon icon={faTrash} />
+                    <FontAwesomeIcon icon={faPlay} />
                   </Button>
-                </Restricted>
-              </Row>
-            )}
+                  <Button type="button" buttonType="default" transparent mr="2">
+                    <FontAwesomeIcon icon={faThumbsUp} />
+                  </Button>
+                  <Button type="button" buttonType="default" transparent mr="2">
+                    <FontAwesomeIcon icon={faThumbsDown} />
+                  </Button>
+
+                  <Restricted
+                    to={DREAM_PERMISSIONS.CAN_DELETE_DREAM}
+                    isOwner={user?.id === dream?.user?.id}
+                  >
+                    <Button
+                      type="button"
+                      buttonType="danger"
+                      transparent
+                      mr="2"
+                      onClick={onShowConfirmDeleteModal}
+                    >
+                      <FontAwesomeIcon icon={faTrash} />
+                    </Button>
+                  </Restricted>
+                </Row>
+              )}
+            </Column>
           </Row>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Row justifyContent="space-between">
@@ -398,8 +399,12 @@ const ViewDreamPage: React.FC = () => {
                 )}
               </div>
             </Row>
-            <Row>
-              <Column flex="1 1 auto" mr={1}>
+            <Row flexWrap="wrap">
+              <Column
+                mr={[0, 2, 2]}
+                mb={[4, 4, 0]}
+                flex={["1 1 320px", "1", "1"]}
+              >
                 <ThumbnailInput
                   localMultimedia={thumbnail}
                   thumbnail={generateImageURLFromResource(dream?.thumbnail, {
@@ -414,7 +419,7 @@ const ViewDreamPage: React.FC = () => {
                   types={["JPG", "JPEG"]}
                 />
               </Column>
-              <Column flex="1 1 auto" ml={1}>
+              <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>
                 <ViewDreamInputs
                   dream={dream}
                   values={values}
@@ -442,7 +447,7 @@ const ViewDreamPage: React.FC = () => {
                     </Button>
                   )}
                 </Row>
-                <Row>
+                <Row justifyContent={["center", "center", "flex-start"]}>
                   <DreamVideoInput
                     dream={dream}
                     editMode={editMode}
@@ -451,10 +456,10 @@ const ViewDreamPage: React.FC = () => {
                     handleChange={handleVideoChange}
                   />
                 </Row>
-                <Row justifyContent="space-between">
+                <Row>
                   <h3>{t("page.view_dream.video")}</h3>
                 </Row>
-                <Row>
+                <Row justifyContent={["center", "center", "flex-start"]}>
                   <Video controls src={video?.url || dream?.video} />
                 </Row>
               </>

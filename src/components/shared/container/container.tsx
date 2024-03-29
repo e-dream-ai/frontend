@@ -8,7 +8,7 @@ export const StyledContainer = styled.div`
   padding: 2rem;
 
   @media (max-width: ${DEVICES.TABLET}) {
-    padding: 1rem;
+    padding: 0.8rem;
   }
 `;
 

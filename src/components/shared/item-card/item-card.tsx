@@ -247,7 +247,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               <FontAwesomeIcon icon={faPhotoFilm} />
             </ThumbnailPlaceholder>
           )}
-          <Column ml={[0, 4, 4]}>
+          <Column>
             <Text
               ref={tooltipRef}
               p={[1, 2, 2, 2]}

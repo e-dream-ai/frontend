@@ -29,6 +29,7 @@ const ImageSizes = {
 
 export const StyledItemCardList = styled.ul`
   display: flex;
+  flex: 1;
   flex-flow: column;
   margin: 0;
   padding: 0;
@@ -86,9 +87,11 @@ export const ItemCardImage = styled.img<{ size: Sizes }>`
   ${(props) => ImageSizes[props.size]}
   object-fit: cover;
   cursor: pointer;
+  margin-right: 1rem;
 
   @media (max-width: ${DEVICES.MOBILE_L}) {
     width: auto;
+    margin: 0;
     margin-bottom: 1rem;
   }
 `;

@@ -12,7 +12,8 @@ export const StyledRadioButton = styled.div<{ checked?: boolean }>`
   display: inline-flex;
   width: fit-content;
   padding: 0.4rem 0.8rem;
-  margin: 1rem 0.2rem;
+  margin-right: 0.2rem;
+  margin-bottom: 0.6rem;
   border-radius: 15px;
   background-color: ${(props) =>
     props.checked

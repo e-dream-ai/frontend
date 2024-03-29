@@ -33,8 +33,6 @@ export const ThumbnailOverlay = styled.div`
 `;
 
 export const Thumbnail = styled.img<{ url?: string }>`
-  min-width: 320px;
-  min-height: auto;
   width: 100%;
   height: 100%;
   aspect-ratio: 16 / 9;

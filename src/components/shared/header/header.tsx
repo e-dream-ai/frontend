@@ -25,14 +25,13 @@ export const Header: React.FC = () => {
 
   return (
     <>
-      <HeaderContainer>
+      <HeaderContainer isNavOpen={isNavOpen}>
         <StyledHeader>
           <TopHeader>
             <AuthHeader />
           </TopHeader>
           <BottomHeader>
             <LogoContainer>
-              <p></p>
               <LogoAnchor href={ROUTES.ROOT}>
                 <LogoIcon
                   src="/images/edream-logo-512x512.png"
@@ -47,7 +46,7 @@ export const Header: React.FC = () => {
                 onClick={toggleNav}
               />
             </LogoContainer>
-            <NavHeader isOpen={isNavOpen}>
+            <NavHeader isNavOpen={isNavOpen}>
               <MenuHeader onClickMenuItem={toggleNav} />
             </NavHeader>
           </BottomHeader>

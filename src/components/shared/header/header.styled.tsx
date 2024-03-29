@@ -3,27 +3,32 @@ import styled from "styled-components";
 
 const StyledHeader = styled.header`
   display: flex;
+  flex: 1;
   flex-flow: column;
-  align-items: center;
+  justify-content: space-between;
   width: inherit;
   max-width: 1024px;
+  padding: 2rem 0;
+
+  @media (max-width: ${DEVICES.LAPTOP}) {
+    padding: 2rem;
+  }
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    padding: 0.8rem 1rem;
+  }
 `;
 
-export const HeaderContainer = styled.div`
+export const HeaderContainer = styled.div<{ isNavOpen?: boolean }>`
   display: flex;
+  position: sticky;
   justify-content: center;
-  position: fixed;
   top: 0;
   left: 0;
   width: 100vw;
-  padding: 2rem;
   background: ${(props) => props.theme.colorBackgroundTertiary};
   -webkit-backface-visibility: hidden;
   z-index: 2;
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    padding: 1rem;
-  }
 `;
 
 export const LogoAnchor = styled.a`
@@ -37,7 +42,7 @@ export const HeaderTitle = styled.h1`
   font-family: "Comfortaa", sans-serif;
   font-size: 2.2rem;
   color: ${(props) => props.theme.textPrimaryColor};
-  margin-left: 0.5rem;
+  margin: 0.4rem 1rem;
   white-space: nowrap;
 
   @media (max-width: ${DEVICES.LAPTOP}) {
@@ -62,10 +67,12 @@ export const LogoContainer = styled.div`
 
   button {
     width: 60px;
+    height: 60px;
   }
 
   @media (max-width: ${DEVICES.TABLET}) {
-    width: inherit;
+    width: -webkit-fill-available;
+    width: fill-available;
     p,
     button {
       display: block;
@@ -88,19 +95,17 @@ export const LogoIcon = styled.img`
   }
 `;
 
-export const NavHeader = styled.nav<{ isOpen?: boolean }>`
+export const NavHeader = styled.nav<{ isNavOpen?: boolean }>`
   overflow: hidden;
-  transition: height 0.3s ease-out;
   @media (max-width: ${DEVICES.TABLET}) {
     width: 100vw;
-    height: ${(props) => (props.isOpen ? "100vh" : "0px")};
+    height: ${(props) => (props.isNavOpen ? "100vh" : "0px")};
     background-color: ${(props) => props.theme.colorBackgroundTertiary};
   }
 `;
 
 export const TopHeader = styled.div`
   display: inline-flex;
-  width: -webkit-fill-available;
   justify-content: flex-end;
 
   @media (max-width: ${DEVICES.TABLET}) {
@@ -109,23 +114,22 @@ export const TopHeader = styled.div`
 `;
 
 export const BottomHeader = styled.div`
-  width: -webkit-fill-available;
   display: inline-flex;
   justify-content: space-between;
   align-items: center;
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    flex-flow: column;
-  }
+  flex-wrap: wrap;
 `;
 
 export const HeaderList = styled.ul`
   display: inline-flex;
   list-style: none;
   white-space: nowrap;
+  /* margin: 0; */
+  padding: 0;
 
   @media (max-width: ${DEVICES.TABLET}) {
     flex-flow: column;
+    padding: 1rem 2rem;
   }
 `;
 
