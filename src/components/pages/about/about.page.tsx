@@ -21,10 +21,15 @@ export const AboutPage: React.FC = () => {
           </p>
           <p>
             Install e-dream on your Mac to get the highest quality experience,
-            including interaction, screensaver integration, and remote control.
-            The e-dream native client provides unsurpassed support for the
-            ambient use, including adjustable super slow and smooth playback.
+            including interaction and screensaver integration.
+            The e-dream native client provides unsurpassed support for
+            ambient situations, including adjustable super slow and smooth
+	    playback.
           </p>
+          <p>
+            Install the web app on your phone to control your e-dream
+            from anywhere.
+	  </p>
           <p>
             Curate playlists, connect and learn from other fans on Discord or
             social media. Become a creator yourself!
