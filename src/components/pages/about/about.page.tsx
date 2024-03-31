@@ -20,7 +20,7 @@ export const AboutPage: React.FC = () => {
             greatest artists.
           </p>
           <p>
-            Install e-dream on your Mac to get the highest quality experience,
+            Install e-dream on your Mac to get the best experience,
             including interaction and screensaver integration.
             The e-dream native client provides unsurpassed support for
             ambient situations, including adjustable super slow and smooth
