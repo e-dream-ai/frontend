@@ -23,7 +23,7 @@ export const AboutPage: React.FC = () => {
             Install e-dream on your Mac to get the best experience,
             including interaction and screensaver integration.
             The e-dream native client provides unsurpassed support for
-            ambient situations, including adjustable super slow and smooth
+            ambient situations, including adjustable slow and smooth
 	    playback.
           </p>
           <p>
