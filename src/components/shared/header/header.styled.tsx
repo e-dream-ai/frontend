@@ -124,7 +124,6 @@ export const HeaderList = styled.ul`
   display: inline-flex;
   list-style: none;
   white-space: nowrap;
-  /* margin: 0; */
   padding: 0;
 
   @media (max-width: ${DEVICES.TABLET}) {
@@ -133,28 +132,27 @@ export const HeaderList = styled.ul`
   }
 `;
 
-export const HeaderListItem = styled.li<{ onlyMobile?: boolean }>`
+export const HeaderListItem = styled.li<{
+  onlyMobile?: boolean;
+  showSlash?: boolean;
+}>`
   display: ${(props) => (props.onlyMobile ? "none" : " inline-flex")};
   font-size: 1.2rem;
   text-transform: uppercase;
 
+  @media (max-width: ${DEVICES.TABLET}) {
+    display: inline-flex;
+    margin: 0.6rem 0;
+  }
+
   &::after {
-    content: "/";
+    content: ${(props) => (props.showSlash ? `"/"` : "none")};
     color: ${(props) => props.theme.textPrimaryColor};
     margin: 0 12px;
 
     @media (max-width: ${DEVICES.TABLET}) {
       content: "";
     }
-  }
-
-  &:last-child::after {
-    display: none;
-  }
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    display: inline-flex;
-    margin: 0.6rem 0;
   }
 `;
 

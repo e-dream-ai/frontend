@@ -12,6 +12,7 @@ type RouteLink = {
   component: React.ReactNode;
   route: string;
   onlyMobile?: boolean;
+  showSlash?: boolean;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
 
@@ -26,23 +27,28 @@ export const MenuHeader: React.FC<{ onClickMenuItem?: () => void }> = ({
       component: t("header.profile"),
       route: ROUTES.MY_PROFILE,
       onlyMobile: true,
+      showSlash: true,
     },
     {
       component: t("header.about"),
       route: ROUTES.ABOUT,
+      showSlash: true,
     },
     {
       component: t("header.install"),
       route: ROUTES.INSTALL,
+      showSlash: true,
     },
     {
       component: t("header.create"),
       route: ROUTES.CREATE,
+      showSlash: true,
     },
-    { component: t("header.feed"), route: ROUTES.FEED },
+    { component: t("header.feed"), route: ROUTES.FEED, showSlash: true },
     {
       component: t("header.my_dreams"),
       route: ROUTES.MY_DREAMS,
+      showSlash: false,
     },
     {
       component: (
@@ -54,6 +60,7 @@ export const MenuHeader: React.FC<{ onClickMenuItem?: () => void }> = ({
       ),
       route: ROUTES.ROOT,
       onlyMobile: true,
+      showSlash: false,
       onClick: (event) => {
         event.stopPropagation();
         logout();
@@ -65,20 +72,24 @@ export const MenuHeader: React.FC<{ onClickMenuItem?: () => void }> = ({
     {
       component: t("header.about"),
       route: ROUTES.ABOUT,
+      showSlash: true,
     },
     {
       component: t("header.install"),
       route: ROUTES.INSTALL,
+      showSlash: false,
     },
     {
       component: t("header.login"),
       route: ROUTES.LOGIN,
       onlyMobile: true,
+      showSlash: false,
     },
     {
       component: t("header.signup"),
       route: ROUTES.SIGNUP,
       onlyMobile: true,
+      showSlash: false,
     },
   ];
 
@@ -91,7 +102,11 @@ export const MenuHeader: React.FC<{ onClickMenuItem?: () => void }> = ({
         };
 
         return (
-          <HeaderListItem key={route.route} onlyMobile={route.onlyMobile}>
+          <HeaderListItem
+            key={route.route}
+            onlyMobile={route.onlyMobile}
+            showSlash={route.showSlash}
+          >
             <AnchorLink to={route.route} onClick={handleOnClick}>
               {route.component}
             </AnchorLink>
