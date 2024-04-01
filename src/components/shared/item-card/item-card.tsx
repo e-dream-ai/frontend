@@ -238,7 +238,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               size={size}
               draggable="false"
               src={generateImageURLFromResource(thumbnail, {
-                width: 142,
+                width: 420,
                 fit: "cover",
               })}
             />
