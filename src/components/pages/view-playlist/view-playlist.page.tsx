@@ -44,7 +44,11 @@ import usePermission from "@/hooks/usePermission";
 import router from "@/routes/router";
 import { ItemOrder, SetItemOrder } from "@/types/dnd.types";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
-import { getOrderedItemsPlaylistRequest } from "@/utils/playlist.util";
+import {
+  getOrderedItemsPlaylistRequest,
+  sortPlaylistItemsByDate,
+  sortPlaylistItemsByName,
+} from "@/utils/playlist.util";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendar,
@@ -60,6 +64,8 @@ import { emitPlayPlaylist } from "@/utils/socket.util";
 import useSocket from "@/hooks/useSocket";
 
 type Params = { id: string };
+
+type SortType = "name" | "date";
 
 const SectionID = "playlist";
 
@@ -78,12 +84,10 @@ export const ViewPlaylistPage = () => {
     permission: PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST,
     isOwner: isOwner,
   });
+
   const items = useMemo(
-    () =>
-      playlist?.items
-        ?.sort((a, b) => a.order - b.order)
-        .map((item, index) => ({ ...item, order: index })) ?? [],
-    [playlist],
+    () => playlist?.items?.sort((a, b) => a.order - b.order) ?? [],
+    [playlist?.items],
   );
 
   const [editMode, setEditMode] = useState<boolean>(false);
@@ -102,7 +106,7 @@ export const ViewPlaylistPage = () => {
     mutate: mutateDeletePlaylist,
     isLoading: isLoadingDeletePlaylistMutation,
   } = useDeletePlaylist(playlistId);
-  const { mutate: mutateOrderPlaylist } = useOrderPlaylist(playlistId);
+  const orderPlaylistMutation = useOrderPlaylist(playlistId);
 
   const { mutate: mutateDeletePlaylistItem } =
     useDeletePlaylistItem(playlistId);
@@ -222,7 +226,7 @@ export const ViewPlaylistPage = () => {
       );
     };
 
-  const handleOrderPlaylist = (dropItem: SetItemOrder) => {
+  const handleOrderPlaylist = async (dropItem: SetItemOrder) => {
     /**
      * Validate new index value
      */
@@ -240,40 +244,81 @@ export const ViewPlaylistPage = () => {
     const toastId = toast.loading(
       t("page.view_playlist.ordering_playlist_items"),
     );
-    mutateOrderPlaylist(
-      { order: requestPlaylistItems },
-      {
-        onSuccess: (response) => {
-          if (response.success) {
-            toast.update(toastId, {
-              render: t(
-                "page.view_playlist.playlist_items_ordered_successfully",
-              ),
-              type: "success",
-              isLoading: false,
-              ...TOAST_DEFAULT_CONFIG,
-            });
-          } else {
-            toast.update(toastId, {
-              render: `${t(
-                "page.view_playlist.error_ordering_playlist_items",
-              )} ${response.message}`,
-              type: "error",
-              isLoading: false,
-              ...TOAST_DEFAULT_CONFIG,
-            });
-          }
-        },
-        onError: () => {
-          toast.update(toastId, {
-            render: `${t("page.view_playlist.error_ordering_playlist_items")}`,
-            type: "error",
-            isLoading: false,
-            ...TOAST_DEFAULT_CONFIG,
-          });
-        },
-      },
+    try {
+      const response = await orderPlaylistMutation.mutateAsync({
+        order: requestPlaylistItems,
+      });
+
+      if (response.success) {
+        toast.update(toastId, {
+          render: t("page.view_playlist.playlist_items_ordered_successfully"),
+          type: "success",
+          isLoading: false,
+          ...TOAST_DEFAULT_CONFIG,
+        });
+      } else {
+        toast.update(toastId, {
+          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
+            response.message
+          }`,
+          type: "error",
+          isLoading: false,
+          ...TOAST_DEFAULT_CONFIG,
+        });
+      }
+    } catch (_) {
+      toast.update(toastId, {
+        render: `${t("page.view_playlist.error_ordering_playlist_items")}`,
+        type: "error",
+        isLoading: false,
+        ...TOAST_DEFAULT_CONFIG,
+      });
+    }
+  };
+
+  const handleOrderPlaylistBy = (type: SortType) => async () => {
+    const items = playlist?.items;
+    let orderedItems;
+    if (type === "name") orderedItems = sortPlaylistItemsByName(items);
+    else orderedItems = sortPlaylistItemsByDate(items);
+
+    if (!orderedItems) {
+      return;
+    }
+
+    const toastId = toast.loading(
+      t("page.view_playlist.ordering_playlist_items"),
     );
+    try {
+      const response = await orderPlaylistMutation.mutateAsync({
+        order: orderedItems,
+      });
+
+      if (response.success) {
+        toast.update(toastId, {
+          render: t("page.view_playlist.playlist_items_ordered_successfully"),
+          type: "success",
+          isLoading: false,
+          ...TOAST_DEFAULT_CONFIG,
+        });
+      } else {
+        toast.update(toastId, {
+          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
+            response.message
+          }`,
+          type: "error",
+          isLoading: false,
+          ...TOAST_DEFAULT_CONFIG,
+        });
+      }
+    } catch (_) {
+      toast.update(toastId, {
+        render: `${t("page.view_playlist.error_ordering_playlist_items")}`,
+        type: "error",
+        isLoading: false,
+        ...TOAST_DEFAULT_CONFIG,
+      });
+    }
   };
 
   const handleEdit = (event: React.MouseEvent) => {
@@ -515,6 +560,30 @@ export const ViewPlaylistPage = () => {
             </Row>
             <Row justifyContent="space-between" alignItems="center">
               <h3>{t("page.view_playlist.items")}</h3>
+              <Column>
+                <Row mb={2} justifyContent="flex-end">
+                  <Text>{t("page.view_playlist.sort_by")}</Text>
+                </Row>
+                <Row mb={0}>
+                  <Button
+                    type="button"
+                    size="sm"
+                    buttonType="tertiary"
+                    mr={2}
+                    onClick={handleOrderPlaylistBy("name")}
+                  >
+                    {t("page.view_playlist.name")}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    buttonType="tertiary"
+                    onClick={handleOrderPlaylistBy("date")}
+                  >
+                    {t("page.view_playlist.date")}
+                  </Button>
+                </Row>
+              </Column>
             </Row>
             <Row>
               <ItemCardList>

@@ -1,7 +1,7 @@
 import { PlaylistApiResponse } from "@/schemas/playlist.schema";
 import { ApiResponse } from "@/types/api.types";
 import { ItemOrder, SetItemOrder } from "@/types/dnd.types";
-import { Playlist } from "@/types/playlist.types";
+import { Playlist, PlaylistItem } from "@/types/playlist.types";
 
 export const getOrderedItemsPlaylistRequest = ({
   items = [],
@@ -51,4 +51,51 @@ export const getOrderedPlaylist = ({
   }
 
   return previousPlaylist;
+};
+
+export const sortPlaylistItemsByName = (
+  items?: PlaylistItem[],
+): ItemOrder[] | undefined => {
+  if (!items) {
+    return undefined;
+  }
+
+  return items
+    .slice()
+    .sort((a, b) => {
+      // Determine the names based on the item type
+      const nameA =
+        (a.type === "dream" ? a.dreamItem?.name : a.playlistItem?.name) || "";
+      const nameB =
+        (b.type === "dream" ? b.dreamItem?.name : b.playlistItem?.name) || "";
+
+      return nameA.localeCompare(nameB);
+    })
+    .map((item, index) => ({ id: item.id, order: index + 1 }));
+};
+
+export const sortPlaylistItemsByDate = (
+  items?: PlaylistItem[],
+): ItemOrder[] | undefined => {
+  items?.slice();
+  if (!items) {
+    return undefined;
+  }
+
+  return items
+    .slice()
+    .sort((a, b) => {
+      // Direct comparison of date strings assuming ISO format
+      const dateA = a.created_at;
+      const dateB = b.created_at;
+
+      if (dateA < dateB) {
+        return -1;
+      }
+      if (dateA > dateB) {
+        return 1;
+      }
+      return 0;
+    })
+    .map((item, index) => ({ id: item.id, order: index + 1 }));
 };
