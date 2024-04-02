@@ -43,10 +43,6 @@ export const StyledItemCard = styled.li<{
   ${(props) => ItemCardSizes[props.size]}
   list-style: none;
   background-color: ${(props) => props.theme.colorBackgroundQuaternary};
-  /* border: ${(props) =>
-    props.isDragEntered
-      ? `1px solid ${props.theme.colorPrimary}`
-      : `1px solid transparent`}; */
 
   border-top: ${(props) =>
     props.isDragEntered && props.isMovedOnUpperHalf
@@ -71,7 +67,13 @@ export const StyledItemCard = styled.li<{
   }
 `;
 
-export const ItemCardAnchor = styled(Link)`
+export const ItemCardAnchor = styled(Link).withConfig({
+  shouldForwardProp: (prop, defaultValidatorFn) =>
+    !["isDragEntered"].includes(prop) && defaultValidatorFn(prop),
+})<{
+  isDragEntered?: boolean;
+}>`
+  pointer-events: ${(props) => (props.isDragEntered ? "none" : "all")};
   display: flex;
   flex-flow: row;
   justify-content: space-between;
@@ -96,11 +98,8 @@ export const ItemCardImage = styled.img<{ size: Sizes }>`
   }
 `;
 
-export const ItemCardBody = styled.div<{
-  isDragEntered?: boolean;
-}>`
+export const ItemCardBody = styled.div`
   display: inline-flex;
-  pointer-events: ${(props) => (props.isDragEntered ? "none" : "all")};
 
   @media (max-width: ${DEVICES.MOBILE_L}) {
     width: 100%;

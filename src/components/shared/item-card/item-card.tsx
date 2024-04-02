@@ -231,8 +231,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       isDragEntered={isDragEntered}
       isMovedOnUpperHalf={isMovedOnUpperHalf}
     >
-      <ItemCardAnchor to={navigateRoute}>
-        <ItemCardBody isDragEntered={isDragEntered}>
+      <ItemCardAnchor to={navigateRoute} isDragEntered={isDragEntered}>
+        <ItemCardBody>
           {thumbnail ? (
             <ItemCardImage
               size={size}
