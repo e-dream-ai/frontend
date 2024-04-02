@@ -5,8 +5,8 @@ import React from "react";
 import Bugsnag from "@bugsnag/js";
 import BugsnagPluginReact from "@bugsnag/plugin-react";
 import BugsnagPerformance from "@bugsnag/browser-performance";
-import { MODE } from "@/constants/env.constantes";
 import { ErrorFallback } from "./components/shared/error-fallback/error-fallback";
+import { getReleaseStage } from "@/utils/bugsnag.util";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
@@ -15,8 +15,8 @@ const root = ReactDOM.createRoot(
 Bugsnag.start({
   apiKey: "7743b75d16aa1c3b8ef18de27aa35e30",
   plugins: [new BugsnagPluginReact()],
-  enabledReleaseStages: ["prod", "stage"],
-  releaseStage: MODE,
+  enabledReleaseStages: ["production", "development"],
+  releaseStage: getReleaseStage(),
 });
 BugsnagPerformance.start({ apiKey: "7743b75d16aa1c3b8ef18de27aa35e30" });
 
