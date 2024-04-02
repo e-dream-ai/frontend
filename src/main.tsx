@@ -5,26 +5,26 @@ import React from "react";
 import Bugsnag from "@bugsnag/js";
 import BugsnagPluginReact from "@bugsnag/plugin-react";
 import BugsnagPerformance from "@bugsnag/browser-performance";
-import { IS_PRODUCTION } from "@/constants/env.constantes";
+import { MODE } from "@/constants/env.constantes";
+import { ErrorFallback } from "./components/shared/error-fallback/error-fallback";
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
 );
 
-if (IS_PRODUCTION) {
-  Bugsnag.start({
-    apiKey: "7743b75d16aa1c3b8ef18de27aa35e30",
-    plugins: [new BugsnagPluginReact()],
-  });
-  BugsnagPerformance.start({ apiKey: "7743b75d16aa1c3b8ef18de27aa35e30" });
+Bugsnag.start({
+  apiKey: "7743b75d16aa1c3b8ef18de27aa35e30",
+  plugins: [new BugsnagPluginReact()],
+  enabledReleaseStages: ["prod", "stage"],
+  releaseStage: MODE,
+});
+BugsnagPerformance.start({ apiKey: "7743b75d16aa1c3b8ef18de27aa35e30" });
 
-  const ErrorBoundary = Bugsnag.getPlugin("react")!.createErrorBoundary(React);
+export const ErrorBoundary =
+  Bugsnag.getPlugin("react")!.createErrorBoundary(React);
 
-  root.render(
-    <ErrorBoundary>
-      <App />
-    </ErrorBoundary>,
-  );
-} else {
-  root.render(<App />);
-}
+root.render(
+  <ErrorBoundary FallbackComponent={ErrorFallback}>
+    <App />
+  </ErrorBoundary>,
+);
