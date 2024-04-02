@@ -1,6 +1,6 @@
-export const framesToSeconds = (frames: number) => {
+export const framesToSeconds = (frames: number, fps?: number) => {
   // assuming 30fps on video
-  return frames / 30;
+  return frames / (fps || 30);
 };
 
 export const secondsToTimeFormat = (seconds: number) => {

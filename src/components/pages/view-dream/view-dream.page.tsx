@@ -212,7 +212,12 @@ const ViewDreamPage: React.FC = () => {
         : "-",
       processedVideoFrames: dream?.processedVideoFrames
         ? secondsToTimeFormat(
-            Math.ceil(framesToSeconds(dream?.processedVideoFrames)),
+            Math.round(
+              framesToSeconds(
+                dream?.processedVideoFrames,
+                dream?.processedVideoFPS,
+              ),
+            ),
           )
         : "-",
       owner: getUserName(dream?.user),

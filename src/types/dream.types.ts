@@ -20,6 +20,7 @@ export type Dream = {
   original_video?: string;
   processedVideoSize?: number;
   processedVideoFrames?: number;
+  processedVideoFPS?: number;
   status: DreamStatusType;
   created_at: string;
 };
