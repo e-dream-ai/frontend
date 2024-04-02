@@ -38,9 +38,10 @@
     "yup": "^1.2.0"
   },
   "scripts": {
-    "start": "vite",
+    "start": "vite --mode development",
     "dev": "vite",
     "build": "tsc && vite build --mode prod",
+    "build:stage": "tsc && vite build --mode stage",
     "serve": "vite preview",
     "lint": "eslint . --ext .js,.ts",
     "lint-staged": "lint-staged",
