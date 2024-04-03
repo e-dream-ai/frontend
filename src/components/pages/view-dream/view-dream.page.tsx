@@ -212,12 +212,7 @@ const ViewDreamPage: React.FC = () => {
         : "-",
       processedVideoFrames: dream?.processedVideoFrames
         ? secondsToTimeFormat(
-            Math.round(
-              framesToSeconds(
-                dream?.processedVideoFrames,
-                dream?.processedVideoFPS,
-              ),
-            ),
+            Math.round(framesToSeconds(dream?.processedVideoFrames)),
           )
         : "-",
       processedVideoFPS: dream?.processedVideoFPS
