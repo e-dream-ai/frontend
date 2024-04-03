@@ -19,13 +19,13 @@ const Restricted: React.FC<Props> = ({ to, isOwner, fallback, children }) => {
    *  If user has permission, render children components
    */
   if (allowed) {
-    return <>{children}</>;
+    return <React.Fragment>{children}</React.Fragment>;
   }
 
   /**
    *  Render fallback
    */
-  return <>{fallback}</>;
+  return <React.Fragment>{fallback}</React.Fragment>;
 };
 
 export default Restricted;

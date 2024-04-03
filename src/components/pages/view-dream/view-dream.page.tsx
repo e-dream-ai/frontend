@@ -18,7 +18,7 @@ import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import moment from "moment";
-import { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
@@ -31,6 +31,7 @@ import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import { DreamVideoInput, ViewDreamInputs } from "./view-dream-inputs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faGears,
   faPencil,
   faPlay,
   faSave,
@@ -48,6 +49,7 @@ import { emitPlayDream } from "@/utils/socket.util";
 import { bytesToMegabytes } from "@/utils/file.util";
 import { framesToSeconds, secondsToTimeFormat } from "@/utils/video.utils";
 import { truncateString } from "@/utils/string.util";
+import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 
 type Params = { uuid: string };
 
@@ -57,7 +59,11 @@ const ViewDreamPage: React.FC = () => {
   const { t } = useTranslation();
   const { uuid } = useParams<Params>();
   const { user } = useAuth();
-  const { data, isLoading: isDreamLoading } = useDream(uuid, {
+  const {
+    data,
+    isLoading: isDreamLoading,
+    refetch,
+  } = useDream(uuid, {
     activeRefetchInterval: true,
   });
   const { socket } = useSocket();
@@ -73,6 +79,7 @@ const ViewDreamPage: React.FC = () => {
 
   const { mutate: mutateDream, isLoading: isLoadingDreamMutation } =
     useUpdateDream(uuid);
+  const processDreamMutation = useProcessDream(uuid);
   const uploadDreamVideoMutation = useUploadDreamVideo({
     navigateToDream: false,
   });
@@ -101,13 +108,22 @@ const ViewDreamPage: React.FC = () => {
 
   const values = getValues();
 
-  const isDreamProcessing =
-    dream?.status === DreamStatusType.NONE ||
-    dream?.status === DreamStatusType.QUEUE ||
-    dream?.status === DreamStatusType.PROCESSING;
+  const isDreamProcessing: boolean = useMemo(
+    () =>
+      dream?.status === DreamStatusType.QUEUE ||
+      dream?.status === DreamStatusType.PROCESSING,
+    [dream],
+  );
 
-  const showEditButton = editMode && !isDreamProcessing;
-  const showSaveAndCancelButtns = !editMode && !isDreamProcessing;
+  const isOwner: boolean = useMemo(
+    () => (user?.id ? user?.id === dream?.user?.id : false),
+    [dream, user],
+  );
+
+  const showEditButton = !editMode && !isDreamProcessing;
+  const showSaveAndCancelButtons = editMode && !isDreamProcessing;
+
+  // Handlers
 
   const handleMutateVideoDream = async (data: UpdateDreamFormValues) => {
     if (isVideoRemoved || video?.file) {
@@ -179,6 +195,21 @@ const ViewDreamPage: React.FC = () => {
         },
       },
     );
+  };
+
+  const handleProcessDream = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    try {
+      const response = await processDreamMutation.mutateAsync();
+      if (response?.success) {
+        toast.success(`${t("page.view_dream.dream_processing_successfully")}`);
+        refetch();
+      } else {
+        toast.error(`${t("page.view_dream.error_processing_dream")}`);
+      }
+    } catch (_) {
+      toast.error(`${t("page.view_dream.error_processing_dream")}`);
+    }
   };
 
   const onSubmit = (data: UpdateDreamFormValues) => {
@@ -292,7 +323,7 @@ const ViewDreamPage: React.FC = () => {
   }
 
   return (
-    <>
+    <React.Fragment>
       {/**
        * Confirm delete modal
        */}
@@ -345,7 +376,7 @@ const ViewDreamPage: React.FC = () => {
 
                   <Restricted
                     to={DREAM_PERMISSIONS.CAN_DELETE_DREAM}
-                    isOwner={user?.id === dream?.user?.id}
+                    isOwner={isOwner}
                   >
                     <Button
                       type="button"
@@ -362,11 +393,38 @@ const ViewDreamPage: React.FC = () => {
             </Column>
           </Row>
           <form onSubmit={handleSubmit(onSubmit)}>
-            <Row justifyContent="space-between">
+            <Row justifyContent="space-between" justifyItems="flex-end">
               <span />
               <div>
                 {showEditButton && (
-                  <>
+                  <Row justifyItems="flex-end">
+                    <Restricted to={DREAM_PERMISSIONS.CAN_PROCESS_DREAM}>
+                      <Button
+                        type="button"
+                        mr="2"
+                        after={<FontAwesomeIcon icon={faGears} />}
+                        isLoading={processDreamMutation.isLoading}
+                        onClick={handleProcessDream}
+                      >
+                        {t("page.view_dream.rerun")}{" "}
+                      </Button>
+                    </Restricted>
+                    <Restricted
+                      to={DREAM_PERMISSIONS.CAN_EDIT_DREAM}
+                      isOwner={isOwner}
+                    >
+                      <Button
+                        type="button"
+                        after={<FontAwesomeIcon icon={faPencil} />}
+                        onClick={handleEdit}
+                      >
+                        {t("page.view_dream.edit")}{" "}
+                      </Button>
+                    </Restricted>
+                  </Row>
+                )}
+                {showSaveAndCancelButtons && (
+                  <React.Fragment>
                     <Button
                       type="button"
                       onClick={handleCancel}
@@ -384,21 +442,7 @@ const ViewDreamPage: React.FC = () => {
                         ? t("page.view_dream.saving")
                         : t("page.view_dream.save")}
                     </Button>
-                  </>
-                )}
-                {showSaveAndCancelButtns && (
-                  <Restricted
-                    to={DREAM_PERMISSIONS.CAN_EDIT_DREAM}
-                    isOwner={user?.id === dream?.user?.id}
-                  >
-                    <Button
-                      type="button"
-                      after={<FontAwesomeIcon icon={faPencil} />}
-                      onClick={handleEdit}
-                    >
-                      {t("page.view_dream.edit")}
-                    </Button>
-                  </Restricted>
+                  </React.Fragment>
                 )}
               </div>
             </Row>
@@ -433,7 +477,7 @@ const ViewDreamPage: React.FC = () => {
               </Column>
             </Row>
             {!isDreamProcessing ? (
-              <>
+              <React.Fragment>
                 <Row justifyContent="space-between">
                   <Text>0 {t("page.view_dream.votes")}</Text>
                   <Text>0 {t("page.view_dream.downvotes")}</Text>
@@ -465,14 +509,14 @@ const ViewDreamPage: React.FC = () => {
                 <Row justifyContent={["center", "center", "flex-start"]}>
                   <Video controls src={video?.url || dream?.video} />
                 </Row>
-              </>
+              </React.Fragment>
             ) : (
               false
             )}
           </form>
         </Container>
       </Section>
-    </>
+    </React.Fragment>
   );
 };
 

@@ -83,6 +83,7 @@
     "view_dream": {
       "title": "View Dream",
       "edit": "Edit",
+      "rerun": "Rerun",
       "save": "Save",
       "saving": "Saving",
       "cancel": "Cancel",
@@ -105,6 +106,8 @@
       "confirm_delete_modal_body": "Are you sure to delete this dream?",
       "dream_updated_successfully": "Dream updated successfully.",
       "error_updating_dream": "Error updating dream.",
+      "dream_processing_successfully": "Dream processing successfully.",
+      "error_processing_dream": "Error processing dream.",
       "dream_deleted_successfully": "Dream deleted successfully.",
       "error_deleting_dream": "Error deleting dream."
     },
