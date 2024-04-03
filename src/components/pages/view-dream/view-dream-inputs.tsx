@@ -21,6 +21,7 @@ import {
   faFileVideo,
   faFilm,
   faFire,
+  faPhotoVideo,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
@@ -79,6 +80,14 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         before={<FontAwesomeIcon icon={faFile} />}
         value={values.processedVideoSize}
         {...register("processedVideoSize")}
+      />
+      <Input
+        disabled
+        placeholder={t("page.view_dream.original_fps")}
+        type="text"
+        before={<FontAwesomeIcon icon={faPhotoVideo} />}
+        value={values.processedVideoFPS}
+        {...register("processedVideoFPS")}
       />
       <Input
         disabled

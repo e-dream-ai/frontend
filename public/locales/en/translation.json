@@ -98,6 +98,7 @@
       "downvotes": "downvotes",
       "video": "Video",
       "original_video": "Original Video",
+      "original_fps": "Original FPS",
       "thumbnail": "Thumbnail",
       "play_dream_client": "Dream sent to play on client.",
       "confirm_delete_modal_title": "Confirm delete dream",

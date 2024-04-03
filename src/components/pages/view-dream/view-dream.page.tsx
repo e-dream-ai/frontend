@@ -220,6 +220,9 @@ const ViewDreamPage: React.FC = () => {
             ),
           )
         : "-",
+      processedVideoFPS: dream?.processedVideoFPS
+        ? `${dream?.processedVideoFPS} Original FPS`
+        : "-",
       owner: getUserName(dream?.user),
       created_at: moment(dream?.created_at).format(FORMAT),
     });

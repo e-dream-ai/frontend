@@ -5,6 +5,7 @@ export type UpdateDreamFormValues = {
   activityLevel?: number;
   processedVideoSize?: string;
   processedVideoFrames?: string;
+  processedVideoFPS?: string;
   owner?: string;
   created_at?: string;
 };

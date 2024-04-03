@@ -21,12 +21,12 @@ import { LoginPage } from "@/components/pages/login/login.page";
 import { SignupPage } from "@/components/pages/signup/signup.page";
 import PublicRoute from "@/routes/public-route";
 
-const RootElement = () => (
+export const RootElement = () => (
   <>
     <Header />
-    {/* <Row mb={["100px", "160px", "0"]} /> */}
+    {/* <Row mb={["100px", "160px", "160px"]} /> */}
     <Outlet />
-    <Row mb={["200px", "160px", "0"]} />
+    <Row mb={["200px", "160px", "100px"]} />
     <Footer />
   </>
 );
