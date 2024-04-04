@@ -169,7 +169,11 @@ const ViewDreamPage: React.FC = () => {
 
   const handleMutateDream = (data: UpdateDreamFormValues) => {
     mutateDream(
-      { name: data.name, activityLevel: data.activityLevel },
+      {
+        name: data.name,
+        activityLevel: data.activityLevel,
+        featureRank: data.featureRank,
+      },
       {
         onSuccess: (data) => {
           const dream = data?.data?.dream;
@@ -181,6 +185,7 @@ const ViewDreamPage: React.FC = () => {
             reset({
               name: dream?.name,
               activityLevel: dream?.activityLevel,
+              featureRank: dream?.featureRank,
             });
             toast.success(t("page.view_dream.dream_updated_successfully"));
             setEditMode(false);
@@ -238,6 +243,7 @@ const ViewDreamPage: React.FC = () => {
     reset({
       name: dream?.name,
       activityLevel: dream?.activityLevel,
+      featureRank: dream?.featureRank,
       processedVideoSize: dream?.processedVideoSize
         ? Math.round(bytesToMegabytes(dream?.processedVideoSize)) + " MB"
         : "-",

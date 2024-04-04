@@ -91,6 +91,7 @@
       "downvote": "Downvote",
       "name": "Name",
       "activity_level": "Activity Level",
+      "feature_rank": "Feature Rank",
       "duration": "Duration",
       "size": "Size",
       "owner": "Owner",

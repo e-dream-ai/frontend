@@ -22,10 +22,13 @@ import {
   faFilm,
   faFire,
   faPhotoVideo,
+  faRankingStar,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 import { useNavigate } from "react-router-dom";
+import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
+import Restricted from "@/components/shared/restricted/restricted";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -65,6 +68,18 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         value={values.activityLevel}
         {...register("activityLevel")}
       />
+      <Restricted to={DREAM_PERMISSIONS.CAN_EDIT_FEATURE_RANK}>
+        <Input
+          disabled={!editMode}
+          placeholder={t("page.view_dream.feature_rank")}
+          type="number"
+          step="0.01"
+          before={<FontAwesomeIcon icon={faRankingStar} />}
+          error={errors.activityLevel?.message}
+          value={values.featureRank}
+          {...register("featureRank")}
+        />
+      </Restricted>
       <Input
         disabled
         placeholder={t("page.view_dream.duration")}

@@ -3,6 +3,7 @@ import * as yup from "yup";
 export type UpdateDreamFormValues = {
   name: string;
   activityLevel?: number;
+  featureRank?: number;
   processedVideoSize?: string;
   processedVideoFrames?: string;
   processedVideoFPS?: string;
@@ -14,6 +15,7 @@ export const UpdateDreamSchema = yup
   .object({
     name: yup.string().required(),
     activityLevel: yup.number(),
+    featureRank: yup.number(),
     processedVideoSize: yup.string(),
     processedVideoFrames: yup.string(),
     owner: yup.string(),
