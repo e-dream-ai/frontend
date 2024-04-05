@@ -67,7 +67,7 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
         </Row>
       ) : (
         <ItemCardList>
-          <ItemCard type="dream" item={dream} />
+          <ItemCard type="dream" item={dream} size="lg" />
         </ItemCardList>
       )}
     </Column>

@@ -1,15 +1,10 @@
-import {
-  Avatar,
-  AvatarPlaceholder,
-} from "@/components/shared/profile-card/profile-card.styled";
+import { Avatar } from "@/components/shared/avatar/avatar";
 import Text from "@/components/shared/text/text";
 import { User } from "@/types/auth.types";
 import { StyledUserCard, StyledUserCardList } from "./user-card.styled";
 import { Sizes } from "@/types/sizes.types";
 import { Column, Row } from "@/components/shared";
 import { useNavigate } from "react-router-dom";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 import { getUserName } from "@/utils/user.util";
 import { generateImageURLFromResource } from "@/utils/image-handler";
@@ -21,19 +16,13 @@ const UserCard: React.FC<{ user: User; size: Sizes }> = ({ user, size }) => {
 
   return (
     <StyledUserCard onClick={navigateToProfile}>
-      {user?.avatar ? (
-        <Avatar
-          size={size}
-          url={generateImageURLFromResource(user?.avatar, {
-            width: 142,
-            fit: "cover",
-          })}
-        />
-      ) : (
-        <AvatarPlaceholder size={size}>
-          <FontAwesomeIcon icon={faUser} />
-        </AvatarPlaceholder>
-      )}
+      <Avatar
+        size={size}
+        url={generateImageURLFromResource(user?.avatar, {
+          width: 142,
+          fit: "cover",
+        })}
+      />
       <Row>
         <Column>
           <Text

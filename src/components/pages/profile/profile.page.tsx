@@ -72,7 +72,9 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
             <Text mb="1rem" fontSize="1rem" fontWeight={600}>
               {t("page.profile.dreams")}
             </Text>
-            <UserDreams userId={userId} />
+            <Row>
+              <UserDreams userId={userId} />
+            </Row>
           </RightProfilePage>
         </ProfilePageContainer>
       </Section>

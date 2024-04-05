@@ -23,7 +23,7 @@ import Restricted from "../restricted/restricted";
 import Row, { Column } from "../row/row";
 import TextArea from "../text-area/text-area";
 import Text from "../text/text";
-import { Avatar, AvatarPlaceholder } from "./profile-card.styled";
+import { Avatar } from "@/components/shared/avatar/avatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAlignJustify, faUser } from "@fortawesome/free-solid-svg-icons";
 import { getUserEmail, getUserName } from "@/utils/user.util";
@@ -40,19 +40,13 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
   return (
     <>
       <Row mb="2rem">
-        {user?.avatar ? (
-          <Avatar
-            size="lg"
-            url={generateImageURLFromResource(user?.avatar, {
-              width: 142,
-              fit: "cover",
-            })}
-          />
-        ) : (
-          <AvatarPlaceholder size="lg">
-            <FontAwesomeIcon icon={faUser} />
-          </AvatarPlaceholder>
-        )}
+        <Avatar
+          size="lg"
+          url={generateImageURLFromResource(user?.avatar, {
+            width: 142,
+            fit: "cover",
+          })}
+        />
       </Row>
       <Text fontSize="1rem" color={theme.colorPrimary}>
         {t(ROLES_NAMES[user?.role?.name ?? ""]) ?? "-"}

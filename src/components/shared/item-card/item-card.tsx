@@ -17,7 +17,6 @@ import { Button } from "../button/button";
 import Row, { Column } from "../row/row";
 import {
   ItemCardAnchor,
-  ItemCardBody,
   ItemCardImage,
   StyledItemCard,
   StyledItemCardList,
@@ -29,12 +28,13 @@ import {
   faFilm,
   faListUl,
   faPhotoFilm,
+  faPlay,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserName } from "@/utils/user.util";
 import { generateImageURLFromResource } from "@/utils/image-handler";
 import { useTheme } from "styled-components";
-import { truncateString } from "@/utils/string.util";
+import { Avatar } from "@/components/shared/avatar/avatar";
 
 type DNDMode = "local" | "cross-window";
 
@@ -54,8 +54,9 @@ type ItemCardProps = {
   dndMode?: DNDMode;
   order?: number;
   deleteDisabled?: boolean;
-  onDelete?: (event: React.MouseEvent) => void;
+  showPlayButton?: boolean;
   onOrder?: (dropItem: SetItemOrder) => void;
+  onDelete?: (event: React.MouseEvent) => void;
 };
 
 export const ItemCard: React.FC<ItemCardProps> = ({
@@ -63,11 +64,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   type = "dream",
   item,
   size = "md",
-  onDelete,
   deleteDisabled = false,
-  onOrder,
   dndMode = DND_MODES.CROSS_WINDOW,
   order = 0,
+  showPlayButton = false,
+  onOrder,
+  onDelete,
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
@@ -232,79 +234,100 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       isMovedOnUpperHalf={isMovedOnUpperHalf}
     >
       <ItemCardAnchor to={navigateRoute} isDragEntered={isDragEntered}>
-        <ItemCardBody>
-          {thumbnail ? (
-            <ItemCardImage
-              size={size}
-              draggable="false"
-              src={generateImageURLFromResource(thumbnail, {
-                width: 420,
-                fit: "cover",
-              })}
-            />
-          ) : (
-            <ThumbnailPlaceholder size={size}>
-              <FontAwesomeIcon icon={faPhotoFilm} />
-            </ThumbnailPlaceholder>
-          )}
-          <Column>
-            <Text
-              ref={tooltipRef}
-              p={[1, 2, 2, 2]}
-              mb={[1, 2, 2, 2]}
-              color={
-                type === "dream" ? theme.colorPrimary : theme.colorSecondary
-              }
+        <Row margin="0" padding="3" justifyContent="space-between">
+          <Row
+            flex="auto"
+            margin="0"
+            padding="0"
+            justifyContent="space-between"
+            style={{ overflow: "hidden" }}
+          >
+            <Column
+              mr="4"
+              flex={["auto", "auto", "0 0 200px", "0 0 280px"]}
+              style={{ overflow: "hidden" }}
             >
-              {type === "playlist" ? (
-                <FontAwesomeIcon icon={faListUl} />
-              ) : (
-                <FontAwesomeIcon icon={faFilm} />
-              )}{" "}
-              {truncateString(name, 60) || t("components.item_card.unnamed")}
-            </Text>
-            {(item as Playlist)?.itemCount ? (
-              <Text mb={[1, 2, 2, 2]}>
-                {t("components.item_card.videos")}:{" "}
-                {(item as Playlist)?.itemCount ?? 0}
-              </Text>
-            ) : (
-              <></>
-            )}
-            <Text
-              mb={[1, 2, 2, 2]}
-              p={[1, 2, 2, 2]}
-              color={theme.textSecondaryColor}
-            >
-              {t("components.item_card.owner")}
-              {" - "}
-              <Text color={theme.textPrimaryColor}>{getUserName(user)}</Text>
-            </Text>
-          </Column>
-        </ItemCardBody>
-        {onDelete && (
-          <Row justifyContent="flex-start" ml={2} mb={0}>
-            {!deleteDisabled && (
-              <Button
-                type="button"
-                buttonType="danger"
-                after={<FontAwesomeIcon icon={faTrash} />}
-                transparent
-                ml="1rem"
-                onClick={onDelete}
-              />
-            )}
+              <Row flex="auto" margin="0" mb="2">
+                <Text
+                  ref={tooltipRef}
+                  color={
+                    type === "dream" ? theme.colorPrimary : theme.colorSecondary
+                  }
+                  style={{
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {type === "playlist" ? (
+                    <FontAwesomeIcon icon={faListUl} />
+                  ) : (
+                    <FontAwesomeIcon icon={faFilm} />
+                  )}{" "}
+                  {name || t("components.item_card.unnamed")}
+                </Text>
+              </Row>
+              <Row margin="0">
+                {thumbnail ? (
+                  <ItemCardImage
+                    size={size}
+                    draggable="false"
+                    src={generateImageURLFromResource(thumbnail, {
+                      width: 420,
+                      fit: "cover",
+                    })}
+                  />
+                ) : (
+                  <ThumbnailPlaceholder size={size}>
+                    <FontAwesomeIcon icon={faPhotoFilm} />
+                  </ThumbnailPlaceholder>
+                )}
+              </Row>
+            </Column>
+            <Column justifyContent="center">
+              {showPlayButton && (
+                <Column alignItems="flex-end" mb="3">
+                  <Button
+                    type="button"
+                    buttonType="default"
+                    transparent
+                    after={<FontAwesomeIcon icon={faPlay} />}
+                  />
+                </Column>
+              )}
+              <Column alignItems="center">
+                <Avatar
+                  size={["lg", "md"].includes(size) ? "md" : "sm"}
+                  url={generateImageURLFromResource(user?.avatar, {
+                    width: 142,
+                    fit: "cover",
+                  })}
+                />
+                <Text color={theme.textPrimaryColor} mt="2">
+                  {getUserName(user)}
+                </Text>
+              </Column>
+            </Column>
           </Row>
-        )}
+          {onDelete && (
+            <Column justifyContent="flex-start" ml="4">
+              {!deleteDisabled && (
+                <Button
+                  type="button"
+                  buttonType="danger"
+                  after={<FontAwesomeIcon icon={faTrash} />}
+                  transparent
+                  onClick={onDelete}
+                />
+              )}
+            </Column>
+          )}
+        </Row>
       </ItemCardAnchor>
     </StyledItemCard>
   );
 };
 
-export const ItemCardList: React.FC<{ children: React.ReactNode }> = ({
-  children,
-}) => {
-  return <StyledItemCardList>{children}</StyledItemCardList>;
-};
+export const ItemCardList = StyledItemCardList;
 
 export default ItemCard;

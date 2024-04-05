@@ -5,7 +5,6 @@ import { TextTransform, Types } from "@/types/style-types.types";
 
 const ButtonSizes = {
   sm: css`
-    /* font-size: 1rem; */
     height: 2rem;
 
     .button-before {

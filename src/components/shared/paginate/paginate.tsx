@@ -1,3 +1,4 @@
+import { DEVICES } from "@/constants/devices.constants";
 import ReactPaginate from "react-paginate";
 import styled from "styled-components";
 
@@ -24,7 +25,7 @@ export const Paginate = styled(ReactPaginate)`
     }
   }
 
-  @media (max-width: 768px) {
+  @media (max-width: ${DEVICES.TABLET}) {
     li {
       flex-wrap: wrap;
       margin: 0.8rem;

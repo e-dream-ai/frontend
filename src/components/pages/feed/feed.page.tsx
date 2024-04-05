@@ -122,7 +122,7 @@ export const FeedPage: React.FC = () => {
       <Section id={SECTION_ID}>
         <h2>{t("page.feed.title")}</h2>
 
-        <Column>
+        <Column flex="auto">
           <SearchBar
             showClearButton={Boolean(search)}
             onSearch={handleOnSearch}
@@ -176,7 +176,7 @@ const FeedList: React.FC<{ feed?: FeedItem[] }> = ({ feed }) => {
         {t("page.feed.feed")}
       </Row>
       {feed?.length ? (
-        <ItemCardList>
+        <ItemCardList grid>
           {feed?.map((feedItem) => {
             let item;
             if (feedItem.type === "dream") {
@@ -192,7 +192,13 @@ const FeedList: React.FC<{ feed?: FeedItem[] }> = ({ feed }) => {
             }
 
             return (
-              <ItemCard key={feedItem.id} type={feedItem.type} item={item} />
+              <ItemCard
+                showPlayButton
+                key={feedItem.id}
+                type={feedItem.type}
+                item={item}
+                size="lg"
+              />
             );
           })}
         </ItemCardList>

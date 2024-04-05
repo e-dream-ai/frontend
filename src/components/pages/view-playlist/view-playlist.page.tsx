@@ -585,7 +585,7 @@ export const ViewPlaylistPage = () => {
                 </Row>
               </Column>
             </Row>
-            <Row>
+            <Row flex="auto">
               <ItemCardList>
                 {items.map((i) => (
                   <ItemCard

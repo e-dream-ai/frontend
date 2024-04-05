@@ -11,9 +11,10 @@ import { Playlist } from "@/types/playlist.types";
 
 type UserDreamsProps = {
   userId?: number;
+  grid?: boolean;
 };
 
-const UserDreams: React.FC<UserDreamsProps> = ({ userId }) => {
+const UserDreams: React.FC<UserDreamsProps> = ({ userId, grid }) => {
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching } = useFeed({
@@ -22,51 +23,58 @@ const UserDreams: React.FC<UserDreamsProps> = ({ userId }) => {
   });
   const feed = data?.data?.feed;
   const pageCount = Math.ceil((data?.data?.count ?? 1) / PAGINATION.TAKE);
-
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);
   };
   return (
-    <Column>
-      {isLoading || isRefetching ? (
-        <Row justifyContent="center">
-          <Spinner />
-        </Row>
-      ) : feed?.length ? (
-        <ItemCardList>
-          {feed?.map((feedItem) => {
-            let item;
-            if (feedItem.type === "dream") {
-              item = {
-                ...feedItem.dreamItem,
-                user: feedItem.user,
-              } as Dream;
-            } else if (feedItem.type === "playlist") {
-              item = {
-                ...feedItem.playlistItem,
-                user: feedItem.user,
-              } as Playlist;
-            }
-            return (
-              <ItemCard type={feedItem.type} item={item} key={feedItem.id} />
-            );
-          })}
-        </ItemCardList>
-      ) : (
-        <Text>{t("components.my_dreams.empty")}</Text>
-      )}
+    <Row flex="auto">
+      <Column flex="auto">
+        {isLoading || isRefetching ? (
+          <Row justifyContent="center">
+            <Spinner />
+          </Row>
+        ) : feed?.length ? (
+          <ItemCardList grid={grid}>
+            {feed?.map((feedItem) => {
+              let item;
+              if (feedItem.type === "dream") {
+                item = {
+                  ...feedItem.dreamItem,
+                  user: feedItem.user,
+                } as Dream;
+              } else if (feedItem.type === "playlist") {
+                item = {
+                  ...feedItem.playlistItem,
+                  user: feedItem.user,
+                } as Playlist;
+              }
+              return (
+                <ItemCard
+                  type={feedItem.type}
+                  item={item}
+                  key={feedItem.id}
+                  size="lg"
+                  showPlayButton
+                />
+              );
+            })}
+          </ItemCardList>
+        ) : (
+          <Text>{t("components.my_dreams.empty")}</Text>
+        )}
 
-      <Row justifyContent="center">
-        <Paginate
-          breakLabel="..."
-          nextLabel={`${t("components.paginate.next")} >`}
-          onPageChange={handleonPageChange}
-          pageCount={pageCount}
-          previousLabel={`< ${t("components.paginate.previous")}`}
-          renderOnZeroPageCount={null}
-        />
-      </Row>
-    </Column>
+        <Row justifyContent="center">
+          <Paginate
+            breakLabel="..."
+            nextLabel={`${t("components.paginate.next")} >`}
+            onPageChange={handleonPageChange}
+            pageCount={pageCount}
+            previousLabel={`< ${t("components.paginate.previous")}`}
+            renderOnZeroPageCount={null}
+          />
+        </Row>
+      </Column>
+    </Row>
   );
 };
 

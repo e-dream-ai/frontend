@@ -31,9 +31,14 @@ export const PlaylistsPage: React.FC = () => {
             <Spinner />
           </Row>
         ) : (
-          <ItemCardList>
+          <ItemCardList grid>
             {playlists?.map((playlist) => (
-              <ItemCard type="playlist" item={playlist} key={playlist.id} />
+              <ItemCard
+                type="playlist"
+                item={playlist}
+                key={playlist.id}
+                size="lg"
+              />
             ))}
           </ItemCardList>
         )}
