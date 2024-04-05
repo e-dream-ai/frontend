@@ -103,7 +103,7 @@ export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
             </Button>
           </Row>
           <ItemCardList>
-            <ItemCard type="playlist" item={playlist} />
+            <ItemCard type="playlist" item={playlist} size="sm" />
           </ItemCardList>
         </>
       )}

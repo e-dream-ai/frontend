@@ -3,15 +3,17 @@ import styled from "styled-components";
 
 const StyledHeader = styled.header`
   display: flex;
-  flex: 1;
-  flex-flow: column;
+  flex-flow: row;
+  flex: auto;
+  flex-wrap: wrap;
   justify-content: space-between;
+  align-items: center;
   width: inherit;
   max-width: 1024px;
-  padding: 2rem 0;
+  padding: 1rem 0;
 
   @media (max-width: ${DEVICES.LAPTOP}) {
-    padding: 2rem;
+    padding: 1rem;
   }
 
   @media (max-width: ${DEVICES.TABLET}) {
@@ -59,6 +61,7 @@ export const LogoContainer = styled.div`
   flex-flow: row;
   justify-content: space-between;
   align-items: center;
+  margin-right: 2rem;
 
   p,
   button {
@@ -73,6 +76,8 @@ export const LogoContainer = styled.div`
   @media (max-width: ${DEVICES.TABLET}) {
     width: -webkit-fill-available;
     width: fill-available;
+    margin: 0;
+
     p,
     button {
       display: block;
@@ -95,7 +100,7 @@ export const LogoIcon = styled.img`
   }
 `;
 
-export const NavHeader = styled.nav<{ isNavOpen?: boolean }>`
+export const Nav = styled.nav<{ isNavOpen?: boolean }>`
   overflow: hidden;
   @media (max-width: ${DEVICES.TABLET}) {
     width: 100vw;
@@ -104,23 +109,14 @@ export const NavHeader = styled.nav<{ isNavOpen?: boolean }>`
   }
 `;
 
-export const TopHeader = styled.div`
-  display: inline-flex;
-  justify-content: flex-end;
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    display: none;
-  }
-`;
-
-export const BottomHeader = styled.div`
-  display: inline-flex;
+export const MenuContainer = styled.div`
+  display: flex;
+  flex: auto;
   justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
 `;
 
-export const HeaderList = styled.ul`
+export const StyledNavList = styled.ul`
   display: inline-flex;
   list-style: none;
   white-space: nowrap;
@@ -132,7 +128,7 @@ export const HeaderList = styled.ul`
   }
 `;
 
-export const HeaderListItem = styled.li<{
+export const NavListItem = styled.li<{
   onlyMobile?: boolean;
   showSlash?: boolean;
 }>`

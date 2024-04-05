@@ -148,7 +148,7 @@ export const FeedPage: React.FC = () => {
           )}
         </Column>
 
-        <Row justifyContent="center">
+        <Row justifyContent="center" margin="0">
           <Paginate
             breakLabel="..."
             nextLabel={`${t("components.paginate.next")} >`}

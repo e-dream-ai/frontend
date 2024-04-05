@@ -5,7 +5,7 @@ export const StyledContainer = styled.div`
   display: flex;
   justify-content: center;
   width: 100vw;
-  padding: 2rem;
+  padding: 1rem;
 
   @media (max-width: ${DEVICES.TABLET}) {
     padding: 0.8rem;

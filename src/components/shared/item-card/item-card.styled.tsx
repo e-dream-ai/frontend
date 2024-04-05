@@ -11,40 +11,32 @@ const ItemCardSizes = {
 
 const ImageSizes = {
   sm: css`
-    // 16:9 atio
-    width: 120px;
-    height: auto;
+    max-width: 160px;
   `,
-  md: css`
-    // 16:9 ratio
-    width: 142px;
-    height: auto;
-  `,
-  lg: css`
-    // 16:9 ratio
-    width: 280px;
-    height: auto;
-  `,
+  md: css``,
+  lg: css``,
 };
 
 export const StyledItemCardList = styled.ul<{
   grid?: boolean;
 }>`
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
   display: flex;
   flex-wrap: wrap;
   flex: auto;
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
   gap: ${(props) => (props?.grid ? "10px" : "0")};
 
   li {
     width: ${(props) => (props?.grid ? "calc(50% - 5px)" : "100%")};
+    max-width: ${(props) => (props?.grid ? "calc(50% - 5px)" : "100%")};
   }
 
   @media (max-width: ${DEVICES.TABLET}) {
     li {
-      width: 90%;
+      width: 100%;
+      max-width: 100%;
     }
   }
 `;
@@ -55,6 +47,10 @@ export const StyledItemCard = styled.li<{
   size: Sizes;
   grid?: boolean;
 }>`
+  display: flex;
+  flex-wrap: wrap;
+  flex: auto;
+
   ${(props) => ItemCardSizes[props.size]}
 
   background-color: ${(props) => props.theme.colorBackgroundQuaternary};
@@ -88,35 +84,57 @@ export const ItemCardAnchor = styled(Link).withConfig({
 })<{
   isDragEntered?: boolean;
 }>`
+  display: flex;
+  flex: auto;
   pointer-events: ${(props) => (props.isDragEntered ? "none" : "all")};
   color: ${(props) => props.theme.textBodyColor};
   text-decoration: none;
 `;
 
 export const ItemCardImage = styled.img<{ size: Sizes }>`
+  // 16:9 ratio
   aspect-ratio: 16 / 9;
-  ${(props) => ImageSizes[props.size]}
+  display: flex;
+  flex: 1 1 auto;
   object-fit: cover;
   cursor: pointer;
+  max-width: 100%;
+  height: auto;
+  ${(props) => ImageSizes[props.size]}
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    width: auto;
+    max-width: 300px;
+  }
 
   @media (max-width: ${DEVICES.MOBILE_L}) {
+    max-width: 100%;
     width: auto;
-    margin: 0;
-    margin-bottom: 1rem;
   }
 `;
 
 export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`
+  // 16:9 ratio
   aspect-ratio: 16 / 9;
-  ${(props) => ImageSizes[props.size]}
-  background-color: rgba(30, 30, 30, 1);
   display: flex;
+  flex: 1 1 auto;
+  object-fit: cover;
+  cursor: pointer;
+  max-width: 100%;
+  height: auto;
   justify-content: center;
   align-items: center;
   font-size: 3rem;
+  background-color: rgba(30, 30, 30, 1);
+  ${(props) => ImageSizes[props.size]}
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    max-width: 300px;
+    width: auto;
+  }
 
   @media (max-width: ${DEVICES.MOBILE_L}) {
+    max-width: 100%;
     width: auto;
-    margin-bottom: 1rem;
   }
 `;

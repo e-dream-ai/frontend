@@ -8,8 +8,8 @@ const AvatarSizes = {
     height: 60px;
   `,
   md: css`
-    width: 100px;
-    height: 100px;
+    width: 80px;
+    height: 80px;
   `,
   lg: css`
     width: 200px;

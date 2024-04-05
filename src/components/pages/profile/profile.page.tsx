@@ -73,7 +73,7 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
               {t("page.profile.dreams")}
             </Text>
             <Row>
-              <UserDreams userId={userId} />
+              <UserDreams userId={userId} grid />
             </Row>
           </RightProfilePage>
         </ProfilePageContainer>

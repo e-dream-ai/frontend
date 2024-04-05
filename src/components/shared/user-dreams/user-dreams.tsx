@@ -63,7 +63,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({ userId, grid }) => {
           <Text>{t("components.my_dreams.empty")}</Text>
         )}
 
-        <Row justifyContent="center">
+        <Row justifyContent="center" margin="0">
           <Paginate
             breakLabel="..."
             nextLabel={`${t("components.paginate.next")} >`}

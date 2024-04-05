@@ -43,7 +43,7 @@ export const PlaylistsPage: React.FC = () => {
           </ItemCardList>
         )}
 
-        <Row justifyContent="center">
+        <Row justifyContent="center" margin="0">
           <Paginate
             breakLabel="..."
             nextLabel={`${t("components.paginate.next")} >`}

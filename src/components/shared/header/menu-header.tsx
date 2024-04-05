@@ -1,7 +1,7 @@
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-import { HeaderList, HeaderListItem } from "./header.styled";
+import { StyledNavList, NavListItem } from "./header.styled";
 import { AnchorLink } from "../anchor/anchor";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons";
@@ -16,7 +16,7 @@ type RouteLink = {
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
 
-export const MenuHeader: React.FC<{ onClickMenuItem?: () => void }> = ({
+export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
   onClickMenuItem,
 }) => {
   const { user, logout } = useAuth();
@@ -94,7 +94,7 @@ export const MenuHeader: React.FC<{ onClickMenuItem?: () => void }> = ({
   ];
 
   return (
-    <HeaderList>
+    <StyledNavList>
       {(user ? USER_NAV_ROUTES : NAV_ROUTES).map((route) => {
         const handleOnClick: MouseEventHandler<HTMLAnchorElement> = (event) => {
           onClickMenuItem?.();
@@ -102,7 +102,7 @@ export const MenuHeader: React.FC<{ onClickMenuItem?: () => void }> = ({
         };
 
         return (
-          <HeaderListItem
+          <NavListItem
             key={route.route}
             onlyMobile={route.onlyMobile}
             showSlash={route.showSlash}
@@ -110,9 +110,9 @@ export const MenuHeader: React.FC<{ onClickMenuItem?: () => void }> = ({
             <AnchorLink to={route.route} onClick={handleOnClick}>
               {route.component}
             </AnchorLink>
-          </HeaderListItem>
+          </NavListItem>
         );
       })}
-    </HeaderList>
+    </StyledNavList>
   );
 };

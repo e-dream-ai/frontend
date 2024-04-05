@@ -1,3 +1,4 @@
+import { DEVICES } from "@/constants/devices.constants";
 import styled from "styled-components";
 
 export const Divider = styled.div`
@@ -12,8 +13,13 @@ export const AnchorIcon = styled.span`
 `;
 
 export const StyledAuthHeader = styled.div`
-  display: inline-flex;
-  align-self: flex-end;
+  display: flex;
+  justify-content: flex-end;
+  flex-direction: row;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    display: none;
+  }
 `;
 
 export const HelloMessageHeader = styled.span`

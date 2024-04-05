@@ -186,6 +186,7 @@ export const ViewPlaylistPage = () => {
   const handleDeletePlaylistItem =
     (itemId: number) => (event: React.MouseEvent) => {
       event.stopPropagation();
+      event.preventDefault();
       const toastId = toast.loading(
         t("page.view_playlist.deleting_playlist_item"),
       );

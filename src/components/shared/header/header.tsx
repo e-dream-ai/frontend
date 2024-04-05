@@ -1,16 +1,15 @@
 import { useTranslation } from "react-i18next";
-import { AuthHeader } from "./auth-header";
+import { NavList } from "./menu-header";
 import StyledHeader, {
-  BottomHeader,
+  MenuContainer,
   HeaderContainer,
   HeaderTitle,
   LogoAnchor,
   LogoContainer,
   LogoIcon,
-  NavHeader,
-  TopHeader,
+  Nav,
 } from "./header.styled";
-import { MenuHeader } from "./menu-header";
+import { AuthMenu } from "./auth-menu";
 import { ROUTES } from "@/constants/routes.constants";
 import { Button } from "@/components/shared";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -27,29 +26,27 @@ export const Header: React.FC = () => {
     <>
       <HeaderContainer isNavOpen={isNavOpen}>
         <StyledHeader>
-          <TopHeader>
-            <AuthHeader />
-          </TopHeader>
-          <BottomHeader>
-            <LogoContainer>
-              <LogoAnchor href={ROUTES.ROOT}>
-                <LogoIcon
-                  src="/images/edream-logo-512x512.png"
-                  alt={t("header.e_dream")}
-                />
-                <HeaderTitle>{t("header.e_dream")}</HeaderTitle>
-              </LogoAnchor>{" "}
-              <Button
-                transparent
-                size="lg"
-                before={<FontAwesomeIcon icon={isNavOpen ? faClose : faBars} />}
-                onClick={toggleNav}
+          <LogoContainer>
+            <LogoAnchor href={ROUTES.ROOT}>
+              <LogoIcon
+                src="/images/edream-logo-512x512.png"
+                alt={t("header.e_dream")}
               />
-            </LogoContainer>
-            <NavHeader isNavOpen={isNavOpen}>
-              <MenuHeader onClickMenuItem={toggleNav} />
-            </NavHeader>
-          </BottomHeader>
+              <HeaderTitle>{t("header.e_dream")}</HeaderTitle>
+            </LogoAnchor>{" "}
+            <Button
+              transparent
+              size="lg"
+              before={<FontAwesomeIcon icon={isNavOpen ? faClose : faBars} />}
+              onClick={toggleNav}
+            />
+          </LogoContainer>
+          <MenuContainer>
+            <Nav isNavOpen={isNavOpen}>
+              <NavList onClickMenuItem={toggleNav} />
+            </Nav>
+            <AuthMenu />
+          </MenuContainer>
         </StyledHeader>
       </HeaderContainer>
     </>

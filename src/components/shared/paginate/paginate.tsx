@@ -4,6 +4,8 @@ import styled from "styled-components";
 
 export const Paginate = styled(ReactPaginate)`
   display: inline-flex;
+  margin: 0;
+  margin-top: 1rem;
 
   li {
     color: ${(props) => props.theme.colorPrimary};

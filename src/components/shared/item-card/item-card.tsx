@@ -2,6 +2,7 @@ import Text from "@/components/shared/text/text";
 import { DND_ACTIONS, DND_METADATA } from "@/constants/dnd.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import {
+  MouseEventHandler,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -35,6 +36,9 @@ import { getUserName } from "@/utils/user.util";
 import { generateImageURLFromResource } from "@/utils/image-handler";
 import { useTheme } from "styled-components";
 import { Avatar } from "@/components/shared/avatar/avatar";
+import { truncateString } from "@/utils/string.util";
+import { emitPlayDream, emitPlayPlaylist } from "@/utils/socket.util";
+import useSocket from "@/hooks/useSocket";
 
 type DNDMode = "local" | "cross-window";
 
@@ -76,6 +80,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const { id, name, thumbnail, user } = item ?? {};
   const { t } = useTranslation();
   const theme = useTheme();
+  const { socket } = useSocket();
 
   const [isDragEntered, setIsDragEntered] = useState<boolean>(false);
   const [isMovedOnUpperHalf, setIsMovedOnUpperHalf] = useState<boolean>(false);
@@ -84,6 +89,15 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const navigateRoute = (item as Dream)?.uuid
     ? `${ROUTES.VIEW_DREAM}/${(item as Dream)?.uuid}`
     : `${ROUTES.VIEW_PLAYLIST}/${item?.id}`;
+
+  const handlePlay: MouseEventHandler<HTMLButtonElement> = (event) => {
+    event?.preventDefault();
+    if ((item as Dream)?.uuid) {
+      emitPlayDream(socket, item as Dream);
+    } else {
+      emitPlayPlaylist(socket, item as Playlist);
+    }
+  };
 
   const handleDragStart = useCallback(
     (event: DragEvent) => {
@@ -234,37 +248,28 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       isMovedOnUpperHalf={isMovedOnUpperHalf}
     >
       <ItemCardAnchor to={navigateRoute} isDragEntered={isDragEntered}>
-        <Row margin="0" padding="3" justifyContent="space-between">
+        <Row flex="auto" margin="0" padding="3" justifyContent="space-between">
           <Row
             flex="auto"
             margin="0"
             padding="0"
             justifyContent="space-between"
-            style={{ overflow: "hidden" }}
           >
-            <Column
-              mr="4"
-              flex={["auto", "auto", "0 0 200px", "0 0 280px"]}
-              style={{ overflow: "hidden" }}
-            >
-              <Row flex="auto" margin="0" mb="2">
+            <Column mr={["2", "3", "4", "4"]} flex="auto">
+              <Row flex="auto" margin="0" mb="3">
                 <Text
                   ref={tooltipRef}
                   color={
                     type === "dream" ? theme.colorPrimary : theme.colorSecondary
                   }
-                  style={{
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
-                  }}
                 >
                   {type === "playlist" ? (
                     <FontAwesomeIcon icon={faListUl} />
                   ) : (
                     <FontAwesomeIcon icon={faFilm} />
                   )}{" "}
-                  {name || t("components.item_card.unnamed")}
+                  {truncateString(name, 60, true) ||
+                    t("components.item_card.unnamed")}
                 </Text>
               </Row>
               <Row margin="0">
@@ -292,12 +297,13 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                     buttonType="default"
                     transparent
                     after={<FontAwesomeIcon icon={faPlay} />}
+                    onClick={handlePlay}
                   />
                 </Column>
               )}
               <Column alignItems="center">
                 <Avatar
-                  size={["lg", "md"].includes(size) ? "md" : "sm"}
+                  size={size === "lg" ? "md" : "sm"}
                   url={generateImageURLFromResource(user?.avatar, {
                     width: 142,
                     fit: "cover",

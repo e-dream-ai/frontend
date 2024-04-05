@@ -2,7 +2,7 @@ import { Anchor, AnchorLink } from "@/components/shared";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-import { AnchorIcon, Divider, StyledAuthHeader } from "./auth-header.styled";
+import { AnchorIcon, Divider, StyledAuthHeader } from "./auth-menu.styled";
 import StyledHeader, {
   HeaderAvatar,
   HeaderAvatarPlaceholder,
@@ -33,7 +33,7 @@ const AuthAnchor: React.FC<{
   );
 };
 
-export const AuthHeader: React.FC = () => {
+export const AuthMenu: React.FC = () => {
   const { t } = useTranslation();
   const { user, logout, isLoading } = useAuth();
   const userWithoutToken = user as Omit<User, "token">;
