@@ -7,6 +7,8 @@ import {
 import { useTranslation } from "react-i18next";
 import useSocket from "@/hooks/useSocket";
 import { RemoteControlContainer } from "./remote-control.styled";
+import { onNewRemoteControlEvent } from "@/utils/socket.util";
+import useRemoteControlSocket from "@/hooks/useRemoteControlSocket";
 
 const ROW_1 = [REMOTE_CONTROLS.HELP, REMOTE_CONTROLS.STATUS];
 
@@ -26,6 +28,13 @@ const ROW_2 = [
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
   const { socket } = useSocket();
+
+  const handleRemoteControlEvent = onNewRemoteControlEvent(t);
+
+  /**
+   * Listen new remote control events from the server
+   */
+  useRemoteControlSocket(handleRemoteControlEvent);
 
   // Emit an event to the server
   const sendMessage = (event: string) => () => {

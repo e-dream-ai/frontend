@@ -5,15 +5,10 @@ import Providers, { withProviders } from "@/providers/providers";
 import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
-import { useTranslation } from "react-i18next";
 import { router } from "@/routes/router";
-import { onNewRemoteControlEvent } from "@/utils/socket.util";
 import "react-toastify/dist/ReactToastify.css";
-import useRemoteControlSocket from "./hooks/useRemoteControlSocket";
 
 const App = () => {
-  const { t } = useTranslation();
-
   /**
    * Unregister document events to allow dragover
    */
@@ -22,13 +17,6 @@ const App = () => {
       event.preventDefault();
     });
   };
-
-  const handleRemoteControlEvent = onNewRemoteControlEvent(t);
-
-  /**
-   * Listen new remote control events from the server
-   */
-  useRemoteControlSocket(handleRemoteControlEvent);
 
   useEffect(() => {
     unregisterDocumentEvents();

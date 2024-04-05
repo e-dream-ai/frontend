@@ -306,7 +306,7 @@ const ViewDreamPage: React.FC = () => {
   };
 
   const handlePlayDream = () => {
-    emitPlayDream(socket, dream);
+    emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
   };
 
   /**

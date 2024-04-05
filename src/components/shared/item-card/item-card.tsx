@@ -93,9 +93,17 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const handlePlay: MouseEventHandler<HTMLButtonElement> = (event) => {
     event?.preventDefault();
     if ((item as Dream)?.uuid) {
-      emitPlayDream(socket, item as Dream);
+      emitPlayDream(
+        socket,
+        item as Dream,
+        t("toasts.play_dream", { name: (item as Dream)?.name }),
+      );
     } else {
-      emitPlayPlaylist(socket, item as Playlist);
+      emitPlayPlaylist(
+        socket,
+        item as Playlist,
+        t("toasts.play_playlist", { name: (item as Playlist)?.name }),
+      );
     }
   };
 

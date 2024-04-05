@@ -294,5 +294,9 @@
   "roles": {
     "user_group": "User",
     "admin_group": "Admin"
+  },
+  "toasts": {
+    "play_dream": "Played dream: {{name}}",
+    "play_playlist": "Played playlist: {{name}}"
   }
 }

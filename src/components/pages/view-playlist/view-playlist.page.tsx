@@ -378,7 +378,11 @@ export const ViewPlaylistPage = () => {
   };
 
   const handlePlayPlaylist = () => {
-    emitPlayPlaylist(socket, playlist);
+    emitPlayPlaylist(
+      socket,
+      playlist,
+      t("toasts.play_playlist", { name: playlist?.name }),
+    );
   };
 
   const resetRemotePlaylistForm = useCallback(() => {

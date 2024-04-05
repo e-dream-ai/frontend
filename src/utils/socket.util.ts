@@ -24,7 +24,7 @@ export const emitPlayDream = (
     uuid: dream?.uuid,
     name: dream?.name,
   });
-  if (message) toast.info(message);
+  if (message) toast.success(message);
 };
 
 export const emitPlayPlaylist = (
@@ -37,7 +37,7 @@ export const emitPlayPlaylist = (
     id: playlist?.id,
     name: playlist?.name,
   });
-  if (message) toast.info(message);
+  if (message) toast.success(message);
 };
 
 export const onNewRemoteControlEvent =
@@ -64,7 +64,7 @@ export const onNewRemoteControlEvent =
       event.event === REMOTE_CONTROLS.PLAYING.event ||
       event.event === REMOTE_CONTROLS.PLAY_PLAYLIST.event
     ) {
-      toast(
+      toast.info(
         `${t(REMOTE_CONTROLS_TRANSLATIONS[event?.event])}: ${
           data?.name ?? data?.uuid ?? "-"
         }`,
@@ -72,7 +72,7 @@ export const onNewRemoteControlEvent =
       return;
     }
 
-    toast(
+    toast.info(
       `${t("components.remote_control.event")}: ${key ? `${key}` : ""} ${t(
         REMOTE_CONTROLS_TRANSLATIONS[event?.event],
       )}`,
