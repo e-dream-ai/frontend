@@ -12,7 +12,7 @@ export const StyledFooter = styled.footer`
   bottom: 0;
   font-size: 0.875rem;
   color: ${(props) => props.theme.textPrimaryColor};
-  padding: 0.5rem;
+  padding: 0.875rem;
   line-height: 1.4;
   background: ${(props) => props.theme.colorBackgroundTertiary};
 
@@ -43,7 +43,7 @@ export const FooterCol = styled.div<{ flow?: string }>`
   flex-flow: ${(props) => props.flow ?? "row"};
   align-items: center;
   justify-content: center;
-  margin-bottom: 1rem;
+  margin: 0;
   gap: 1rem;
 
   p {
@@ -51,6 +51,7 @@ export const FooterCol = styled.div<{ flow?: string }>`
   }
 
   @media (max-width: ${DEVICES.TABLET}) {
+    margin-bottom: 1rem;
     font-size: 0.8rem;
   }
 `;

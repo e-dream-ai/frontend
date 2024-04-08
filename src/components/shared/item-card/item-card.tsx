@@ -1,4 +1,3 @@
-import Text from "@/components/shared/text/text";
 import { DND_ACTIONS, DND_METADATA } from "@/constants/dnd.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import {
@@ -19,9 +18,11 @@ import Row, { Column } from "../row/row";
 import {
   ItemCardAnchor,
   ItemCardImage,
+  ItemTitleText,
   StyledItemCard,
   StyledItemCardList,
   ThumbnailPlaceholder,
+  UsernameText,
 } from "./item-card.styled";
 import { FeedItemServerType } from "@/types/feed.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -36,7 +37,6 @@ import { getUserName } from "@/utils/user.util";
 import { generateImageURLFromResource } from "@/utils/image-handler";
 import { useTheme } from "styled-components";
 import { Avatar } from "@/components/shared/avatar/avatar";
-import { truncateString } from "@/utils/string.util";
 import { emitPlayDream, emitPlayPlaylist } from "@/utils/socket.util";
 import useSocket from "@/hooks/useSocket";
 
@@ -263,9 +263,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             padding="0"
             justifyContent="space-between"
           >
-            <Column mr={["2", "3", "4", "4"]} flex="auto">
+            <Column mr={["2", "2", "3", "3"]} flex="auto">
               <Row flex="auto" margin="0" mb="3">
-                <Text
+                <ItemTitleText
                   ref={tooltipRef}
                   color={
                     type === "dream" ? theme.colorPrimary : theme.colorSecondary
@@ -276,9 +276,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                   ) : (
                     <FontAwesomeIcon icon={faFilm} />
                   )}{" "}
-                  {truncateString(name, 60, true) ||
-                    t("components.item_card.unnamed")}
-                </Text>
+                  {/* {truncateString(name, 60, true) ||
+                    t("components.item_card.unnamed")} */}
+                  {name || t("components.item_card.unnamed")}
+                </ItemTitleText>
               </Row>
               <Row margin="0">
                 {thumbnail ? (
@@ -317,9 +318,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                     fit: "cover",
                   })}
                 />
-                <Text color={theme.textPrimaryColor} mt="2">
+                <UsernameText color={theme.textPrimaryColor} mt="2">
                   {getUserName(user)}
-                </Text>
+                </UsernameText>
               </Column>
             </Column>
           </Row>

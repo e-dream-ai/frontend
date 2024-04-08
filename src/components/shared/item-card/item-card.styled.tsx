@@ -2,6 +2,7 @@ import styled, { css } from "styled-components";
 import { Sizes } from "@/types/sizes.types";
 import { Link } from "react-router-dom";
 import { DEVICES } from "@/constants/devices.constants";
+import Text from "@/components/shared/text/text";
 
 const ItemCardSizes = {
   sm: css``,
@@ -17,6 +18,22 @@ const ImageSizes = {
   lg: css``,
 };
 
+export const UsernameText = styled(Text)`
+  display: block;
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
+export const ItemTitleText = styled(Text)`
+  display: block;
+  max-height: 40px;
+  white-space: wrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;
+
 export const StyledItemCardList = styled.ul<{
   grid?: boolean;
 }>`
@@ -29,8 +46,16 @@ export const StyledItemCardList = styled.ul<{
   gap: ${(props) => (props?.grid ? "10px" : "0")};
 
   li {
-    width: ${(props) => (props?.grid ? "calc(50% - 5px)" : "100%")};
-    max-width: ${(props) => (props?.grid ? "calc(50% - 5px)" : "100%")};
+    width: ${(props) => (props?.grid ? "calc(1/3 * 100% - 20px/3)" : "100%")};
+    max-width: ${(props) =>
+      props?.grid ? "calc(1/3 * 100% - 20px/3)" : "100%"};
+  }
+
+  @media (max-width: ${DEVICES.LAPTOP}) {
+    li {
+      width: ${(props) => (props?.grid ? "calc(50% - 5px)" : "100%")};
+      max-width: ${(props) => (props?.grid ? "calc(50% - 5px)" : "100%")};
+    }
   }
 
   @media (max-width: ${DEVICES.TABLET}) {
