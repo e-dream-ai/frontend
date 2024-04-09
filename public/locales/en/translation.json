@@ -10,6 +10,7 @@
     "install": "Install",
     "forum": "Forum",
     "create": "Create",
+    "ranked": "Ranked",
     "feed": "Feed",
     "my_dreams": "My dreams"
   },
@@ -155,6 +156,11 @@
       "users": "Users",
       "empty_feed": "No items to show",
       "empty_users": "No users to show"
+    },
+    "ranked": {
+      "title": "Ranked",
+      "feed": "Ranked Feed",
+      "empty_feed": "No items to show"
     },
     "playlists": {
       "title": "Playlists"

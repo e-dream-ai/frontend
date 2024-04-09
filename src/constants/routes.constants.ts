@@ -7,6 +7,7 @@ export const ROUTES = {
   VIEW_DREAM: "/dream",
   MY_DREAMS: "/my-dreams",
   FEED: "/feed",
+  RANKED: "/ranked",
   VIEW_PLAYLIST: "/playlist",
   PROFILE: "/profile",
   MY_PROFILE: "/my-profile",
