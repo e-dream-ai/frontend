@@ -159,7 +159,7 @@
     },
     "ranked": {
       "title": "Ranked",
-      "feed": "Ranked Feed",
+      "feed": "Top ranked dreams feed",
       "empty_feed": "No items to show"
     },
     "playlists": {
