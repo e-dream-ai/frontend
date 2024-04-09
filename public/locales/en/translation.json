@@ -124,6 +124,7 @@
       "owner": "Owner",
       "created": "Created",
       "video": "Video",
+      "feature_rank": "Feature Rank",
       "thumbnail": "Thumbnail",
       "items": "Playlist items",
       "sort_by": "Sort by",
@@ -159,7 +160,7 @@
     },
     "ranked": {
       "title": "Ranked",
-      "feed": "Top ranked dreams feed",
+      "feed": "Top ranked playlists feed",
       "empty_feed": "No items to show"
     },
     "playlists": {

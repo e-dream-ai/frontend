@@ -54,6 +54,7 @@ import {
   faCalendar,
   faFileVideo,
   faPlay,
+  faRankingStar,
   faSave,
   faTrash,
   faUser,
@@ -155,7 +156,7 @@ export const ViewPlaylistPage = () => {
 
   const handleMutatePlaylist = (data: UpdatePlaylistFormValues) => {
     mutate(
-      { name: data.name },
+      { name: data.name, featureRank: data?.featureRank },
       {
         onSuccess: (response) => {
           if (response.success) {
@@ -389,6 +390,7 @@ export const ViewPlaylistPage = () => {
     reset({
       name: playlist?.name,
       owner: getUserName(playlist?.user),
+      featureRank: playlist?.featureRank,
       created_at: moment(playlist?.created_at).format(FORMAT),
     });
   }, [reset, playlist]);
@@ -541,6 +543,15 @@ export const ViewPlaylistPage = () => {
                   error={errors.name?.message}
                   value={values.name}
                   {...register("name")}
+                />
+                <Input
+                  disabled={!editMode}
+                  placeholder={t("page.view_playlist.feature_rank")}
+                  type="text"
+                  before={<FontAwesomeIcon icon={faRankingStar} />}
+                  error={errors.featureRank?.message}
+                  value={values.featureRank}
+                  {...register("featureRank")}
                 />
                 <Input
                   disabled

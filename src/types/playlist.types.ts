@@ -21,6 +21,7 @@ export type Playlist = {
   created_at: string;
   items?: PlaylistItem[];
   itemCount?: number;
+  featureRank?: number;
 };
 
 export type PlaylistMediaState =
