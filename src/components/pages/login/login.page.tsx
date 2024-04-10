@@ -60,7 +60,7 @@ export const LoginPage: React.FC = () => {
               })} ${t("page.login.welcome_user", { username: user.email })}`,
             );
             reset();
-            router.navigate(ROUTES.RANKED);
+            router.navigate(ROUTES.PLAYLISTS);
           } else {
             toast.error(`${t("page.login.error_logging_in")} ${data.message}`);
           }
