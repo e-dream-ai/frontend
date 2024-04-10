@@ -101,6 +101,7 @@ const ViewDreamPage: React.FC = () => {
     formState: { errors },
     reset,
     getValues,
+    control,
   } = useForm<UpdateDreamFormValues>({
     resolver: yupResolver(UpdateDreamSchema),
     defaultValues: { name: "" },
@@ -173,6 +174,7 @@ const ViewDreamPage: React.FC = () => {
         name: data.name,
         activityLevel: data.activityLevel,
         featureRank: data.featureRank,
+        displayedOwner: data?.displayedOwner?.value,
       },
       {
         onSuccess: (data) => {
@@ -255,7 +257,11 @@ const ViewDreamPage: React.FC = () => {
       processedVideoFPS: dream?.processedVideoFPS
         ? `${dream?.processedVideoFPS} Original FPS`
         : "-",
-      owner: getUserName(dream?.user),
+      user: getUserName(dream?.user),
+      displayedOwner: {
+        value: dream?.displayedOwner?.id ?? -1,
+        label: getUserName(dream?.displayedOwner),
+      },
       created_at: moment(dream?.created_at).format(FORMAT),
     });
   }, [reset, dream]);
@@ -479,6 +485,7 @@ const ViewDreamPage: React.FC = () => {
                   register={register}
                   errors={errors}
                   editMode={editMode}
+                  control={control}
                 />
               </Column>
             </Row>
@@ -488,27 +495,32 @@ const ViewDreamPage: React.FC = () => {
                   <Text>0 {t("page.view_dream.votes")}</Text>
                   <Text>0 {t("page.view_dream.downvotes")}</Text>
                 </Row>
-                <Row justifyContent="space-between" alignItems="center">
-                  <h3>{t("page.view_dream.original_video")}</h3>
-                  {editMode && (
-                    <Button
-                      type="button"
-                      buttonType="danger"
-                      onClick={handleRemoveVideo}
-                    >
-                      <FontAwesomeIcon icon={faTrash} />
-                    </Button>
-                  )}
-                </Row>
-                <Row justifyContent={["center", "center", "flex-start"]}>
-                  <DreamVideoInput
-                    dream={dream}
-                    editMode={editMode}
-                    video={video}
-                    isRemoved={isVideoRemoved}
-                    handleChange={handleVideoChange}
-                  />
-                </Row>
+                <Restricted
+                  to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
+                  isOwner={isOwner}
+                >
+                  <Row justifyContent="space-between" alignItems="center">
+                    <h3>{t("page.view_dream.original_video")}</h3>
+                    {editMode && (
+                      <Button
+                        type="button"
+                        buttonType="danger"
+                        onClick={handleRemoveVideo}
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </Button>
+                    )}
+                  </Row>
+                  <Row justifyContent={["center", "center", "flex-start"]}>
+                    <DreamVideoInput
+                      dream={dream}
+                      editMode={editMode}
+                      video={video}
+                      isRemoved={isVideoRemoved}
+                      handleChange={handleVideoChange}
+                    />
+                  </Row>
+                </Restricted>
                 <Row>
                   <h3>{t("page.view_dream.video")}</h3>
                 </Row>

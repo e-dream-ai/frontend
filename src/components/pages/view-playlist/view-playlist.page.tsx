@@ -88,10 +88,12 @@ export const ViewPlaylistPage = () => {
     width: 500,
     fit: "cover",
   });
-  const usersOptions = (usersData?.data?.users ?? []).map((user) => ({
-    label: user?.name ?? "-",
-    value: user?.id,
-  }));
+  const usersOptions = (usersData?.data?.users ?? [])
+    .filter((user) => user.name)
+    .map((user) => ({
+      label: user?.name ?? "-",
+      value: user?.id,
+    }));
   const isOwner = user?.id === playlist?.user?.id;
   const allowedEditPlaylist = usePermission({
     permission: PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST,
@@ -100,6 +102,7 @@ export const ViewPlaylistPage = () => {
 
   const allowedEditOwner = usePermission({
     permission: PLAYLIST_PERMISSIONS.CAN_EDIT_OWNER,
+    isOwner,
   });
 
   const items = useMemo(
@@ -176,7 +179,7 @@ export const ViewPlaylistPage = () => {
       {
         name: data.name,
         featureRank: data?.featureRank,
-        user: data?.user?.value,
+        displayedOwner: data?.displayedOwner?.value,
       },
       {
         onSuccess: (response) => {
@@ -410,9 +413,10 @@ export const ViewPlaylistPage = () => {
   const resetRemotePlaylistForm = useCallback(() => {
     reset({
       name: playlist?.name,
-      user: {
-        value: playlist?.user.id ?? -1,
-        label: getUserName(playlist?.user),
+      user: playlist?.user?.name,
+      displayedOwner: {
+        value: playlist?.displayedOwner?.id ?? -1,
+        label: getUserName(playlist?.displayedOwner),
       },
       featureRank: playlist?.featureRank,
       created_at: moment(playlist?.created_at).format(FORMAT),
@@ -574,8 +578,25 @@ export const ViewPlaylistPage = () => {
                   value={values.featureRank}
                   {...register("featureRank")}
                 />
+                <Restricted
+                  to={PLAYLIST_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
+                  isOwner={user?.id === playlist?.user?.id}
+                >
+                  <Input
+                    disabled
+                    placeholder={t("page.view_playlist.owner")}
+                    type="text"
+                    before={<FontAwesomeIcon icon={faSave} />}
+                    value={values.user}
+                    anchor={() =>
+                      navigate(`${ROUTES.PROFILE}/${playlist?.user.id ?? 0}`)
+                    }
+                    {...register("user")}
+                  />
+                </Restricted>
+
                 <Controller
-                  name="user"
+                  name="displayedOwner"
                   control={control}
                   rules={{ required: "Please select an option" }} // Example validation rule
                   render={({ field }) => (
@@ -592,6 +613,7 @@ export const ViewPlaylistPage = () => {
                     />
                   )}
                 />
+
                 <Input
                   disabled
                   placeholder={t("page.view_playlist.created")}

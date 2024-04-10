@@ -1,6 +1,6 @@
 import { useMutation } from "@tanstack/react-query";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
-import { UpdateDreamFormValues } from "@/schemas/update-dream.schema";
+import { UpdateDreamRequestValues } from "@/schemas/update-dream.schema";
 import { ApiResponse } from "@/types/api.types";
 import { Dream } from "@/types/dream.types";
 import { axiosClient } from "@/client/axios.client";
@@ -12,7 +12,7 @@ type MutateFunctionParams = {
 export const UPDATE_DREAM_MUTATION_KEY = "updateDream";
 
 const updateDream = ({ uuid }: MutateFunctionParams) => {
-  return async (values: UpdateDreamFormValues) => {
+  return async (values: UpdateDreamRequestValues) => {
     return axiosClient
       .put(`/dream/${uuid ?? ""}`, values, {
         headers: getRequestHeaders({
@@ -29,7 +29,7 @@ export const useUpdateDream = (uuid?: string) => {
   return useMutation<
     ApiResponse<{ dream: Dream }>,
     Error,
-    UpdateDreamFormValues
+    UpdateDreamRequestValues
   >(updateDream({ uuid }), {
     mutationKey: [UPDATE_DREAM_MUTATION_KEY],
   });

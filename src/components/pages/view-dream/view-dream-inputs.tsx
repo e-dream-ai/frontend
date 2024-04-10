@@ -3,7 +3,12 @@ import {
   ALLOWED_VIDEO_TYPES,
   MAX_FILE_SIZE_MB,
 } from "@/constants/file.constants";
-import { FieldErrors, UseFormRegister } from "react-hook-form";
+import {
+  Control,
+  Controller,
+  FieldErrors,
+  UseFormRegister,
+} from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { UpdateDreamFormValues } from "@/schemas/update-dream.schema";
 import { Dream } from "@/types/dream.types";
@@ -23,12 +28,21 @@ import {
   faFire,
   faPhotoVideo,
   faRankingStar,
+  faSave,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 import { useNavigate } from "react-router-dom";
-import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
+import {
+  DREAM_PERMISSIONS,
+  PLAYLIST_PERMISSIONS,
+} from "@/constants/permissions.constants";
 import Restricted from "@/components/shared/restricted/restricted";
+import Select from "@/components/shared/select/select";
+import usePermission from "@/hooks/usePermission";
+import { useState } from "react";
+import { useUsers } from "@/api/user/query/useUsers";
+import useAuth from "@/hooks/useAuth";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -36,6 +50,7 @@ type ViewDreamInputsProps = {
   register: UseFormRegister<UpdateDreamFormValues>;
   errors: FieldErrors<UpdateDreamFormValues>;
   editMode: boolean;
+  control: Control<UpdateDreamFormValues>;
 };
 
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
@@ -44,9 +59,26 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   register,
   errors,
   editMode,
+  control,
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [userSearch, setUserSearch] = useState<string>("");
+  const { user } = useAuth();
+  const { data: usersData, isLoading: isUsersLoading } = useUsers({
+    search: userSearch,
+  });
+  const usersOptions = (usersData?.data?.users ?? [])
+    .filter((user) => user.name)
+    .map((user) => ({
+      label: user?.name ?? "-",
+      value: user?.id,
+    }));
+
+  const allowedEditOwner = usePermission({
+    permission: PLAYLIST_PERMISSIONS.CAN_EDIT_OWNER,
+  });
+
   return (
     <>
       <Input
@@ -104,14 +136,38 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         value={values.processedVideoFPS}
         {...register("processedVideoFPS")}
       />
-      <Input
-        disabled
-        placeholder={t("page.view_dream.owner")}
-        type="text"
-        before={<FontAwesomeIcon icon={faUser} />}
-        value={values.owner}
-        anchor={() => navigate(`${ROUTES.PROFILE}/${dream?.user.id ?? 0}`)}
-        {...register("owner")}
+
+      <Restricted
+        to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
+        isOwner={user?.id === dream?.user?.id}
+      >
+        <Input
+          disabled
+          placeholder={t("page.view_dream.owner")}
+          type="text"
+          before={<FontAwesomeIcon icon={faSave} />}
+          value={values.user}
+          anchor={() => navigate(`${ROUTES.PROFILE}/${dream?.user.id ?? 0}`)}
+          {...register("user")}
+        />
+      </Restricted>
+      <Controller
+        name="displayedOwner"
+        control={control}
+        rules={{ required: "Please select an option" }} // Example validation rule
+        render={({ field }) => (
+          <Select
+            {...field}
+            isDisabled={!editMode || !allowedEditOwner}
+            isLoading={isUsersLoading}
+            before={<FontAwesomeIcon icon={faUser} />}
+            anchor={() =>
+              navigate(`${ROUTES.PROFILE}/${dream?.displayedOwner.id ?? 0}`)
+            }
+            options={usersOptions}
+            onInputChange={(newValue) => setUserSearch(newValue)}
+          />
+        )}
       />
       <Input
         disabled

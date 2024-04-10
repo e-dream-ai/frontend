@@ -78,8 +78,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
-  const { id, name, thumbnail, user } = item ?? {};
-  const avatarUrl = useImage(user?.avatar, {
+  const { id, name, thumbnail, user, displayedOwner } = item ?? {};
+  const avatarUrl = useImage(displayedOwner?.avatar ?? user?.avatar, {
     width: 142,
     fit: "cover",
   });
@@ -318,7 +318,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               <Column alignItems="center">
                 <Avatar size={size === "lg" ? "md" : "sm"} url={avatarUrl} />
                 <UsernameText color={theme.textPrimaryColor} mt="2">
-                  {getUserName(user)}
+                  {getUserName(displayedOwner ?? user)}
                 </UsernameText>
               </Column>
             </Column>

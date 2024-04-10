@@ -15,6 +15,7 @@ export type Dream = {
   featureRank: number;
   thumbnail: string;
   updated_at: string;
+  displayedOwner: Omit<User, "token">;
   user: Omit<User, "token">;
   uuid: string;
   video: string;

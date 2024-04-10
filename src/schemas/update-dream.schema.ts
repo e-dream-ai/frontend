@@ -7,8 +7,19 @@ export type UpdateDreamFormValues = {
   processedVideoSize?: string;
   processedVideoFrames?: string;
   processedVideoFPS?: string;
-  owner?: string;
+  user?: string;
+  displayedOwner: {
+    label?: string;
+    value: number;
+  };
   created_at?: string;
+};
+
+export type UpdateDreamRequestValues = {
+  name: string;
+  activityLevel?: number;
+  featureRank?: number;
+  displayedOwner?: number;
 };
 
 export const UpdateDreamSchema = yup
@@ -18,7 +29,11 @@ export const UpdateDreamSchema = yup
     featureRank: yup.number(),
     processedVideoSize: yup.string(),
     processedVideoFrames: yup.string(),
-    owner: yup.string(),
+    user: yup.string(),
+    displayedOwner: yup.object({
+      label: yup.string(),
+      value: yup.number().required(),
+    }),
     created_at: yup.string(),
   })
   .required();

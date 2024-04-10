@@ -18,6 +18,7 @@ export type Playlist = {
   thumbnail: string;
   updated_at: string;
   user: User;
+  displayedOwner: User;
   created_at: string;
   items?: PlaylistItem[];
   itemCount?: number;
