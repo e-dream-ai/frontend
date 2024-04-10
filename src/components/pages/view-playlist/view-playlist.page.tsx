@@ -58,12 +58,13 @@ import {
   faTrash,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { getUserName } from "@/utils/user.util";
+import { getUserName, isAdmin } from "@/utils/user.util";
 import { emitPlayPlaylist } from "@/utils/socket.util";
 import useSocket from "@/hooks/useSocket";
 import { Select } from "@/components/shared/select/select";
 import { useUsers } from "@/api/user/query/useUsers";
 import { useImage } from "@/hooks/useImage";
+import { User } from "@/types/auth.types";
 
 type Params = { id: string };
 
@@ -94,7 +95,12 @@ export const ViewPlaylistPage = () => {
       label: user?.name ?? "-",
       value: user?.id,
     }));
-  const isOwner = user?.id === playlist?.user?.id;
+
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
+  const isOwner: boolean = useMemo(
+    () => (user?.id ? user?.id === playlist?.user?.id : false),
+    [playlist, user],
+  );
   const allowedEditPlaylist = usePermission({
     permission: PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST,
     isOwner: isOwner,
@@ -414,14 +420,24 @@ export const ViewPlaylistPage = () => {
     reset({
       name: playlist?.name,
       user: playlist?.user?.name,
-      displayedOwner: {
-        value: playlist?.displayedOwner?.id ?? -1,
-        label: getUserName(playlist?.displayedOwner),
-      },
+      /**
+       * set displayedOwner
+       * for admins always show displayedOwner
+       * for normal users show displayedOwner, if doesn't exists, show user
+       */
+      displayedOwner: isUserAdmin
+        ? {
+            value: playlist?.displayedOwner?.id ?? -1,
+            label: getUserName(playlist?.displayedOwner),
+          }
+        : {
+            value: playlist?.displayedOwner?.id ?? playlist?.user?.id ?? -1,
+            label: getUserName(playlist?.displayedOwner ?? playlist?.user),
+          },
       featureRank: playlist?.featureRank,
       created_at: moment(playlist?.created_at).format(FORMAT),
     });
-  }, [reset, playlist]);
+  }, [reset, playlist, isUserAdmin]);
 
   /**
    * Setting api values to form

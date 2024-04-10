@@ -41,7 +41,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { DreamStatusType } from "@/types/dream.types";
 import { Video } from "./view-dream.styled";
-import { getUserName } from "@/utils/user.util";
+import { getUserName, isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { generateImageURLFromResource } from "@/utils/image-handler";
 import useSocket from "@/hooks/useSocket";
@@ -50,6 +50,7 @@ import { bytesToMegabytes } from "@/utils/file.util";
 import { framesToSeconds, secondsToTimeFormat } from "@/utils/video.utils";
 import { truncateString } from "@/utils/string.util";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
+import { User } from "@/types/auth.types";
 
 type Params = { uuid: string };
 
@@ -115,6 +116,8 @@ const ViewDreamPage: React.FC = () => {
       dream?.status === DreamStatusType.PROCESSING,
     [dream],
   );
+
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
 
   const isOwner: boolean = useMemo(
     () => (user?.id ? user?.id === dream?.user?.id : false),
@@ -258,13 +261,23 @@ const ViewDreamPage: React.FC = () => {
         ? `${dream?.processedVideoFPS} Original FPS`
         : "-",
       user: getUserName(dream?.user),
-      displayedOwner: {
-        value: dream?.displayedOwner?.id ?? -1,
-        label: getUserName(dream?.displayedOwner),
-      },
+      /**
+       * set displayedOwner
+       * for admins always show displayedOwner
+       * for normal users show displayedOwner, if doesn't exists, show user
+       */
+      displayedOwner: isUserAdmin
+        ? {
+            value: dream?.displayedOwner?.id ?? -1,
+            label: getUserName(dream?.displayedOwner),
+          }
+        : {
+            value: dream?.displayedOwner?.id ?? dream?.user?.id ?? -1,
+            label: getUserName(dream?.displayedOwner ?? dream?.user),
+          },
       created_at: moment(dream?.created_at).format(FORMAT),
     });
-  }, [reset, dream]);
+  }, [reset, dream, isUserAdmin]);
 
   const handleRemoveVideo = () => {
     setIsVideoRemoved(true);
