@@ -79,10 +79,13 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
   const { id, name, thumbnail, user, displayedOwner } = item ?? {};
-  const avatarUrl = useImage(displayedOwner?.avatar ?? user?.avatar, {
-    width: 142,
-    fit: "cover",
-  });
+  const avatarUrl = useImage(
+    displayedOwner ? displayedOwner?.avatar : user?.avatar,
+    {
+      width: 142,
+      fit: "cover",
+    },
+  );
   const { t } = useTranslation();
   const theme = useTheme();
   const { socket } = useSocket();
