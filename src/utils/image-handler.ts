@@ -1,16 +1,4 @@
-type ResizeMode = "cover" | "contain" | "fill" | "inside" | "outside";
-
-type ResizeOptions = {
-  width?: number;
-  height?: number;
-  fit: ResizeMode;
-};
-
-type ImageData = {
-  bucket: string;
-  key: string;
-  edits?: { resize?: ResizeOptions };
-};
+import { ImageData, ResizeOptions } from "@/types/image.types";
 
 export const BUCKET_NAME = import.meta.env.VITE_BUCKET_NAME;
 export const BUCKET_URL = import.meta.env.VITE_BUCKET_URL;

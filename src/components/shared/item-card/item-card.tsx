@@ -39,6 +39,7 @@ import { useTheme } from "styled-components";
 import { Avatar } from "@/components/shared/avatar/avatar";
 import { emitPlayDream, emitPlayPlaylist } from "@/utils/socket.util";
 import useSocket from "@/hooks/useSocket";
+import { useImage } from "@/hooks/useImage";
 
 type DNDMode = "local" | "cross-window";
 
@@ -78,6 +79,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
   const { id, name, thumbnail, user } = item ?? {};
+  const avatarUrl = useImage(user?.avatar, {
+    width: 142,
+    fit: "cover",
+  });
   const { t } = useTranslation();
   const theme = useTheme();
   const { socket } = useSocket();
@@ -311,13 +316,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                 </Column>
               )}
               <Column alignItems="center">
-                <Avatar
-                  size={size === "lg" ? "md" : "sm"}
-                  url={generateImageURLFromResource(user?.avatar, {
-                    width: 142,
-                    fit: "cover",
-                  })}
-                />
+                <Avatar size={size === "lg" ? "md" : "sm"} url={avatarUrl} />
                 <UsernameText color={theme.textPrimaryColor} mt="2">
                   {getUserName(user)}
                 </UsernameText>

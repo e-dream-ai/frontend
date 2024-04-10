@@ -1,15 +1,15 @@
 import styled from "styled-components";
 
 export const StyledInput = styled.input`
+  height: 100%;
   width: 100%;
   width: -moz-available; /* WebKit-based browsers will ignore this. */
   width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
   width: fill-available;
-  height: 2.2rem;
-  padding: 6px 12px;
-  background: ${(props) => props.theme.inputBackgroundColor};
-  border-radius: 0;
+  padding: 0.375rem 0.75rem;
   border: 0;
+  border-radius: 0;
+  background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorPrimary};
   font-size: 1rem;
 
@@ -23,15 +23,17 @@ export const StyledInput = styled.input`
 `;
 
 export const DisabledInput = styled.div`
+  display: flex;
+  height: 100%;
   width: 100%;
   width: -moz-available; /* WebKit-based browsers will ignore this. */
   width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
   width: fill-available;
-  height: 2.2rem;
-  padding: 6px 12px;
-  background: ${(props) => props.theme.inputBackgroundColor};
-  border-radius: 0;
+  padding: 0.375rem 0.75rem;
   border: 0;
+  border-radius: 0;
+  align-items: center;
+  background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorPrimary};
   font-size: 1rem;
   cursor: not-allowed;
@@ -44,33 +46,35 @@ export const DisabledInput = styled.div`
 export const InputGroup = styled.div`
   display: flex;
   flex-flow: column;
+  height: 2.375rem;
   margin-bottom: 1rem;
   border-collapse: separate;
 `;
 
 export const InputRow = styled.div`
-  display: inline-flex;
+  display: flex;
+  flex: auto;
   border-collapse: separate;
   align-items: center;
 `;
 
 export const InputBefore = styled.div`
-  display: inline-flex;
+  display: flex;
+  height: 100%;
+  min-width: 40px;
   align-items: center;
   justify-content: center;
-  height: 2.2rem;
-  min-width: 40px;
   background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorSecondary};
   text-align: center;
 `;
 
 export const InputAfter = styled.div`
-  display: inline-flex;
+  display: flex;
+  height: 100%;
+  min-width: 40px;
   align-items: center;
   justify-content: center;
-  height: 2.2rem;
-  min-width: 40px;
   background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorPrimary};
   text-align: center;

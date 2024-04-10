@@ -18,14 +18,13 @@ import { Section } from "@/components/shared/section/section";
 import { FORMAT } from "@/constants/moment.constants";
 import moment from "moment";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import UpdatePlaylistSchema, {
   UpdatePlaylistFormValues,
 } from "@/schemas/update-playlist.schema";
-
 import { useDeletePlaylist } from "@/api/playlist/mutation/useDeletePlaylist";
 import { useDeletePlaylistItem } from "@/api/playlist/mutation/useDeletePlaylistItem";
 import { useOrderPlaylist } from "@/api/playlist/mutation/useOrderPlaylist";
@@ -60,9 +59,11 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserName } from "@/utils/user.util";
-import { generateImageURLFromResource } from "@/utils/image-handler";
 import { emitPlayPlaylist } from "@/utils/socket.util";
 import useSocket from "@/hooks/useSocket";
+import { Select } from "@/components/shared/select/select";
+import { useUsers } from "@/api/user/query/useUsers";
+import { useImage } from "@/hooks/useImage";
 
 type Params = { id: string };
 
@@ -76,14 +77,29 @@ export const ViewPlaylistPage = () => {
   const playlistId = Number(id) ?? 0;
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [userSearch, setUserSearch] = useState<string>("");
   const { data, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
+  const { data: usersData, isLoading: isUsersLoading } = useUsers({
+    search: userSearch,
+  });
   const { socket } = useSocket();
-
   const playlist = data?.data?.playlist;
+  const thumbnailUrl = useImage(playlist?.thumbnail, {
+    width: 500,
+    fit: "cover",
+  });
+  const usersOptions = (usersData?.data?.users ?? []).map((user) => ({
+    label: user?.name ?? "-",
+    value: user?.id,
+  }));
   const isOwner = user?.id === playlist?.user?.id;
   const allowedEditPlaylist = usePermission({
     permission: PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST,
     isOwner: isOwner,
+  });
+
+  const allowedEditOwner = usePermission({
+    permission: PLAYLIST_PERMISSIONS.CAN_EDIT_OWNER,
   });
 
   const items = useMemo(
@@ -121,6 +137,7 @@ export const ViewPlaylistPage = () => {
     formState: { errors },
     reset,
     getValues,
+    control,
   } = useForm<UpdatePlaylistFormValues>({
     resolver: yupResolver(UpdatePlaylistSchema),
     defaultValues: { name: "" },
@@ -156,7 +173,11 @@ export const ViewPlaylistPage = () => {
 
   const handleMutatePlaylist = (data: UpdatePlaylistFormValues) => {
     mutate(
-      { name: data.name, featureRank: data?.featureRank },
+      {
+        name: data.name,
+        featureRank: data?.featureRank,
+        user: data?.user?.value,
+      },
       {
         onSuccess: (response) => {
           if (response.success) {
@@ -389,7 +410,10 @@ export const ViewPlaylistPage = () => {
   const resetRemotePlaylistForm = useCallback(() => {
     reset({
       name: playlist?.name,
-      owner: getUserName(playlist?.user),
+      user: {
+        value: playlist?.user.id ?? -1,
+        label: getUserName(playlist?.user),
+      },
       featureRank: playlist?.featureRank,
       created_at: moment(playlist?.created_at).format(FORMAT),
     });
@@ -522,10 +546,7 @@ export const ViewPlaylistPage = () => {
                 flex={["1 1 320px", "1", "1"]}
               >
                 <ThumbnailInput
-                  thumbnail={generateImageURLFromResource(playlist?.thumbnail, {
-                    width: 500,
-                    fit: "cover",
-                  })}
+                  thumbnail={thumbnailUrl}
                   localMultimedia={thumbnail}
                   editMode={editMode}
                   isRemoved={isThumbnailRemoved}
@@ -553,16 +574,23 @@ export const ViewPlaylistPage = () => {
                   value={values.featureRank}
                   {...register("featureRank")}
                 />
-                <Input
-                  disabled
-                  placeholder={t("page.view_playlist.owner")}
-                  type="text"
-                  before={<FontAwesomeIcon icon={faUser} />}
-                  value={values.owner}
-                  anchor={() =>
-                    navigate(`${ROUTES.PROFILE}/${playlist?.user.id ?? 0}`)
-                  }
-                  {...register("owner")}
+                <Controller
+                  name="user"
+                  control={control}
+                  rules={{ required: "Please select an option" }} // Example validation rule
+                  render={({ field }) => (
+                    <Select
+                      {...field}
+                      isDisabled={!editMode || !allowedEditOwner}
+                      isLoading={isUsersLoading}
+                      before={<FontAwesomeIcon icon={faUser} />}
+                      anchor={() =>
+                        navigate(`${ROUTES.PROFILE}/${playlist?.user.id ?? 0}`)
+                      }
+                      options={usersOptions}
+                      onInputChange={(newValue) => setUserSearch(newValue)}
+                    />
+                  )}
                 />
                 <Input
                   disabled
