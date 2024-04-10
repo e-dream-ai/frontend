@@ -44,7 +44,11 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
       route: ROUTES.CREATE,
       showSlash: true,
     },
-    { component: t("header.ranked"), route: ROUTES.RANKED, showSlash: true },
+    {
+      component: t("header.playlists"),
+      route: ROUTES.PLAYLISTS,
+      showSlash: true,
+    },
     { component: t("header.feed"), route: ROUTES.FEED, showSlash: false },
     {
       component: (

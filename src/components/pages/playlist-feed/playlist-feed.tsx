@@ -19,7 +19,7 @@ import { useRankedFeed } from "@/api/feed/query/useRankedFeed";
 
 const SECTION_ID = "ranked";
 
-export const RankedFeedPage: React.FC = () => {
+export const PlaylistsFeedPage: React.FC = () => {
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(0);
   const { width } = useWindowSize();
@@ -47,7 +47,7 @@ export const RankedFeedPage: React.FC = () => {
   return (
     <Container>
       <Section id={SECTION_ID}>
-        <h2>{t("page.ranked.title")}</h2>
+        <h2>{t("page.playlists.title")}</h2>
 
         <Column flex="auto">
           {isLoading ? (
@@ -82,7 +82,7 @@ const FeedList: React.FC<{ feed?: FeedItem[] }> = ({ feed }) => {
   return (
     <>
       <Row separator pb="1rem" mb="1rem">
-        {t("page.ranked.feed")}
+        {t("page.playlists.feed")}
       </Row>
       {feed?.length ? (
         <ItemCardList grid>
@@ -112,10 +112,10 @@ const FeedList: React.FC<{ feed?: FeedItem[] }> = ({ feed }) => {
           })}
         </ItemCardList>
       ) : (
-        <Text mb={4}>{t("page.ranked.empty_feed")}</Text>
+        <Text mb={4}>{t("page.playlists.empty_feed")}</Text>
       )}
     </>
   );
 };
 
-export default RankedFeedPage;
+export default PlaylistsFeedPage;

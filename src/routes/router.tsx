@@ -20,7 +20,7 @@ import { Footer, Row } from "@/components/shared";
 import { LoginPage } from "@/components/pages/login/login.page";
 import { SignupPage } from "@/components/pages/signup/signup.page";
 import PublicRoute from "@/routes/public-route";
-import RankedFeedPage from "@/components/pages/ranked-feed/ranked-feed";
+import PlaylistsFeedPage from "@/components/pages/playlist-feed/playlist-feed";
 
 export const RootElement = () => (
   <>
@@ -82,10 +82,10 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: ROUTES.RANKED,
+        path: ROUTES.PLAYLISTS,
         element: (
           <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
-            <RankedFeedPage />
+            <PlaylistsFeedPage />
           </ProtectedRoute>
         ),
       },
