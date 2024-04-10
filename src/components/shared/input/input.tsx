@@ -1,4 +1,5 @@
 import React from "react";
+import { Tooltip } from "react-tooltip";
 import StyledInput, {
   DisabledInput,
   InputAfter,
@@ -19,11 +20,23 @@ export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(
   (
-    { before, after, onClickAfter, error, disabled, value, anchor, ...props },
+    {
+      before,
+      after,
+      onClickAfter,
+      error,
+      disabled,
+      value,
+      anchor,
+      name,
+      placeholder,
+      ...props
+    },
     ref,
   ) => {
     return (
-      <InputGroup>
+      <InputGroup data-tooltip-id={name}>
+        <Tooltip id={name} place="right-end" content={placeholder} />
         <InputRow>
           {before && <InputBefore>{before}</InputBefore>}
           {disabled ? (
@@ -37,7 +50,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
               )}
             </DisabledInput>
           ) : (
-            <StyledInput ref={ref} disabled={disabled} {...props} />
+            <StyledInput
+              ref={ref}
+              disabled={disabled}
+              name={name}
+              placeholder={placeholder}
+              {...props}
+            />
           )}
           {after && <InputAfter onClick={onClickAfter}>{after}</InputAfter>}
         </InputRow>
