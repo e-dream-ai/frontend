@@ -360,6 +360,7 @@ export const ViewPlaylistPage = () => {
 
   const handleCancel = (event: React.MouseEvent) => {
     event.preventDefault();
+    resetRemotePlaylistForm();
     setEditMode(false);
     setIsThumbnailRemoved(false);
     setTumbnail(undefined);
@@ -585,15 +586,17 @@ export const ViewPlaylistPage = () => {
                   value={values.name}
                   {...register("name")}
                 />
-                <Input
-                  disabled={!editMode}
-                  placeholder={t("page.view_playlist.feature_rank")}
-                  type="text"
-                  before={<FontAwesomeIcon icon={faRankingStar} />}
-                  error={errors.featureRank?.message}
-                  value={values.featureRank}
-                  {...register("featureRank")}
-                />
+                <Restricted to={PLAYLIST_PERMISSIONS.CAN_VIEW_FEATURE_RANK}>
+                  <Input
+                    disabled={!editMode}
+                    placeholder={t("page.view_playlist.feature_rank")}
+                    type="text"
+                    before={<FontAwesomeIcon icon={faRankingStar} />}
+                    error={errors.featureRank?.message}
+                    value={values.featureRank}
+                    {...register("featureRank")}
+                  />
+                </Restricted>
                 <Restricted
                   to={PLAYLIST_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
                   isOwner={user?.id === playlist?.user?.id}
