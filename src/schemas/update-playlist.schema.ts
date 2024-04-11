@@ -6,7 +6,7 @@ export type UpdatePlaylistFormValues = {
   user?: string;
   displayedOwner: {
     label?: string;
-    value: number;
+    value?: number;
   };
   created_at?: string;
 };
@@ -24,7 +24,7 @@ export const UpdatePlaylistSchema = yup
     user: yup.string(),
     displayedOwner: yup.object({
       label: yup.string(),
-      value: yup.number().required(),
+      value: yup.number(),
     }),
     created_at: yup.string(),
   })

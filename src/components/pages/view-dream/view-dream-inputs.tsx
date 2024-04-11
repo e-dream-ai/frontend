@@ -154,7 +154,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
       <Controller
         name="displayedOwner"
         control={control}
-        rules={{ required: "Please select an option" }} // Example validation rule
         render={({ field }) => (
           <Select
             {...field}
