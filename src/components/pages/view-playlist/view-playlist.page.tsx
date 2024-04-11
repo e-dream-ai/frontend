@@ -649,25 +649,31 @@ export const ViewPlaylistPage = () => {
                 <Row mb={2} justifyContent="flex-end">
                   <Text>{t("page.view_playlist.sort_by")}</Text>
                 </Row>
-                <Row mb={0}>
-                  <Button
-                    type="button"
-                    size="sm"
-                    buttonType="tertiary"
-                    mr={2}
-                    onClick={handleOrderPlaylistBy("name")}
-                  >
-                    {t("page.view_playlist.name")}
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    buttonType="tertiary"
-                    onClick={handleOrderPlaylistBy("date")}
-                  >
-                    {t("page.view_playlist.date")}
-                  </Button>
-                </Row>
+
+                <Restricted
+                  to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
+                  isOwner={user?.id === playlist?.user?.id}
+                >
+                  <Row mb={0}>
+                    <Button
+                      type="button"
+                      size="sm"
+                      buttonType="tertiary"
+                      mr={2}
+                      onClick={handleOrderPlaylistBy("name")}
+                    >
+                      {t("page.view_playlist.name")}
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      buttonType="tertiary"
+                      onClick={handleOrderPlaylistBy("date")}
+                    >
+                      {t("page.view_playlist.date")}
+                    </Button>
+                  </Row>
+                </Restricted>
               </Column>
             </Row>
             <Row flex="auto">
