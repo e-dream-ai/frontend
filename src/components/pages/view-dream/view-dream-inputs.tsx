@@ -40,9 +40,11 @@ import {
 import Restricted from "@/components/shared/restricted/restricted";
 import Select from "@/components/shared/select/select";
 import usePermission from "@/hooks/usePermission";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useUsers } from "@/api/user/query/useUsers";
 import useAuth from "@/hooks/useAuth";
+import { isAdmin } from "@/utils/user.util";
+import { User } from "@/types/auth.types";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -65,6 +67,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const navigate = useNavigate();
   const [userSearch, setUserSearch] = useState<string>("");
   const { user } = useAuth();
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
   });
@@ -157,7 +160,11 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         render={({ field }) => (
           <Select
             {...field}
-            placeholder={t("page.view_dream.owner")}
+            placeholder={
+              isUserAdmin
+                ? t("page.view_dream.displayed_owner")
+                : t("page.view_dream.owner")
+            }
             isDisabled={!editMode || !allowedEditOwner}
             isLoading={isUsersLoading}
             before={<FontAwesomeIcon icon={faUser} />}

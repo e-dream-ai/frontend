@@ -620,7 +620,11 @@ export const ViewPlaylistPage = () => {
                   render={({ field }) => (
                     <Select
                       {...field}
-                      placeholder={t("page.view_playlist.owner")}
+                      placeholder={
+                        isUserAdmin
+                          ? t("page.view_dream.displayed_owner")
+                          : t("page.view_dream.owner")
+                      }
                       isDisabled={!editMode || !allowedEditOwner}
                       isLoading={isUsersLoading}
                       before={<FontAwesomeIcon icon={faUser} />}
@@ -645,15 +649,15 @@ export const ViewPlaylistPage = () => {
             </Row>
             <Row justifyContent="space-between" alignItems="center">
               <h3>{t("page.view_playlist.items")}</h3>
-              <Column>
-                <Row mb={2} justifyContent="flex-end">
-                  <Text>{t("page.view_playlist.sort_by")}</Text>
-                </Row>
+              <Restricted
+                to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
+                isOwner={user?.id === playlist?.user?.id}
+              >
+                <Column>
+                  <Row mb={2} justifyContent="flex-end">
+                    <Text>{t("page.view_playlist.sort_by")}</Text>
+                  </Row>
 
-                <Restricted
-                  to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
-                  isOwner={user?.id === playlist?.user?.id}
-                >
                   <Row mb={0}>
                     <Button
                       type="button"
@@ -673,8 +677,8 @@ export const ViewPlaylistPage = () => {
                       {t("page.view_playlist.date")}
                     </Button>
                   </Row>
-                </Restricted>
-              </Column>
+                </Column>
+              </Restricted>
             </Row>
             <Row flex="auto">
               <ItemCardList>
