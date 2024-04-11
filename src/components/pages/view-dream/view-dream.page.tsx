@@ -75,6 +75,8 @@ const ViewDreamPage: React.FC = () => {
   const [thumbnail, setTumbnail] = useState<MultiMediaState>();
   const [isVideoRemoved, setIsVideoRemoved] = useState<boolean>(false);
   const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
+  const [showConfirmProcessModal, setShowConfirmProcessModal] =
+    useState<boolean>(false);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
     useState<boolean>(false);
 
@@ -207,21 +209,6 @@ const ViewDreamPage: React.FC = () => {
     );
   };
 
-  const handleProcessDream = async (event: React.MouseEvent) => {
-    event.preventDefault();
-    try {
-      const response = await processDreamMutation.mutateAsync();
-      if (response?.success) {
-        toast.success(`${t("page.view_dream.dream_processing_successfully")}`);
-        refetch();
-      } else {
-        toast.error(`${t("page.view_dream.error_processing_dream")}`);
-      }
-    } catch (_) {
-      toast.error(`${t("page.view_dream.error_processing_dream")}`);
-    }
-  };
-
   const onSubmit = (data: UpdateDreamFormValues) => {
     handleMutateVideoDream(data);
   };
@@ -241,6 +228,8 @@ const ViewDreamPage: React.FC = () => {
     setEditMode(false);
   };
 
+  const onShowConfirmProcessModal = () => setShowConfirmProcessModal(true);
+  const onHideConfirmProcessModal = () => setShowConfirmProcessModal(false);
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
 
@@ -268,11 +257,11 @@ const ViewDreamPage: React.FC = () => {
        */
       displayedOwner: isUserAdmin
         ? {
-            value: dream?.displayedOwner?.id ?? -1,
+            value: dream?.displayedOwner?.id,
             label: getUserName(dream?.displayedOwner),
           }
         : {
-            value: dream?.displayedOwner?.id ?? dream?.user?.id ?? -1,
+            value: dream?.displayedOwner?.id ?? dream?.user?.id,
             label: getUserName(dream?.displayedOwner ?? dream?.user),
           },
       created_at: moment(dream?.created_at).format(FORMAT),
@@ -303,6 +292,21 @@ const ViewDreamPage: React.FC = () => {
       setTumbnail({ file: files, url: URL.createObjectURL(files) });
     }
     setIsThumbnailRemoved(false);
+  };
+
+  const onConfirmProcessDream = async () => {
+    try {
+      const response = await processDreamMutation.mutateAsync();
+      if (response?.success) {
+        toast.success(`${t("page.view_dream.dream_processing_successfully")}`);
+        refetch();
+        onHideConfirmProcessModal();
+      } else {
+        toast.error(`${t("page.view_dream.error_processing_dream")}`);
+      }
+    } catch (_) {
+      toast.error(`${t("page.view_dream.error_processing_dream")}`);
+    }
   };
 
   const onConfirmDeleteDream = () => {
@@ -361,6 +365,25 @@ const ViewDreamPage: React.FC = () => {
         text={
           <Text>
             {t("page.view_dream.confirm_delete_modal_body")}{" "}
+            <em>
+              <strong>{truncateString(dream?.name, 30)}</strong>
+            </em>
+          </Text>
+        }
+      />
+
+      {/**
+       * Confirm rerun process dream modal
+       */}
+      <ConfirmModal
+        isOpen={showConfirmProcessModal}
+        onCancel={onHideConfirmProcessModal}
+        onConfirm={onConfirmProcessDream}
+        isConfirming={processDreamMutation.isLoading}
+        title={t("page.view_dream.confirm_process_modal_title")}
+        text={
+          <Text>
+            {t("page.view_dream.confirm_process_modal_body")}{" "}
             <em>
               <strong>{truncateString(dream?.name, 30)}</strong>
             </em>
@@ -429,7 +452,7 @@ const ViewDreamPage: React.FC = () => {
                         mr="2"
                         after={<FontAwesomeIcon icon={faGears} />}
                         isLoading={processDreamMutation.isLoading}
-                        onClick={handleProcessDream}
+                        onClick={onShowConfirmProcessModal}
                       >
                         {t("page.view_dream.rerun")}{" "}
                       </Button>

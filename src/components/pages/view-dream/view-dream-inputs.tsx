@@ -158,6 +158,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         render={({ field }) => (
           <Select
             {...field}
+            placeholder={t("page.view_dream.owner")}
             isDisabled={!editMode || !allowedEditOwner}
             isLoading={isUsersLoading}
             before={<FontAwesomeIcon icon={faUser} />}

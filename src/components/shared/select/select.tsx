@@ -1,4 +1,5 @@
 import React from "react";
+import { Tooltip } from "react-tooltip";
 import ReactSelect, { Props } from "react-select";
 import { GroupBase } from "react-select";
 import styled from "styled-components";
@@ -65,41 +66,59 @@ type SelectProps = Props<unknown, boolean, GroupBase<unknown>> & {
 export const Select = React.forwardRef<
   Props<unknown, boolean, GroupBase<unknown>>,
   SelectProps
-  /* @ts-expect-error ref is expected to being declared but not needed to make component work */
->(({ anchor, before, after, error, isDisabled, value, ...props }, ref) => {
-  const v = value as Option;
+>(
+  (
+    {
+      anchor,
+      before,
+      after,
+      error,
+      isDisabled,
+      value,
+      name,
+      placeholder,
+      ...props
+    },
+    /* @ts-expect-error ref is expected to being declared but not needed to make component work */
+    ref,
+  ) => {
+    const v = value as Option;
 
-  const label = v?.label;
+    const label = v?.label;
 
-  return (
-    <InputGroup>
-      <InputRow>
-        {before && <InputBefore>{before}</InputBefore>}
-        {isDisabled ? (
-          <DisabledInput>
-            {anchor ? (
-              <Anchor onClick={anchor}>{label}</Anchor>
-            ) : typeof label === "string" ? (
-              truncateString(label, 30)
-            ) : (
-              label ?? "-"
-            )}
-          </DisabledInput>
-        ) : (
-          <StyledSelect
-            className="select"
-            classNamePrefix="select"
-            isDisabled={isDisabled}
-            value={value}
-            {...props}
-            theme={undefined}
-          />
-        )}
-        {after && <InputAfter />}
-      </InputRow>
-      {error && <InputError>{error}</InputError>}
-    </InputGroup>
-  );
-});
+    return (
+      <InputGroup data-tooltip-id={name}>
+        <Tooltip id={name} place="right-end" content={placeholder as string} />
+        <InputRow>
+          {before && <InputBefore>{before}</InputBefore>}
+          {isDisabled ? (
+            <DisabledInput>
+              {anchor ? (
+                <Anchor onClick={anchor}>{label}</Anchor>
+              ) : typeof label === "string" ? (
+                truncateString(label, 30)
+              ) : (
+                label ?? "-"
+              )}
+            </DisabledInput>
+          ) : (
+            <StyledSelect
+              className="select"
+              classNamePrefix="select"
+              isDisabled={isDisabled}
+              value={value}
+              name={name}
+              placeholder={placeholder}
+              {...props}
+              theme={undefined}
+            />
+          )}
+          {after && <InputAfter />}
+        </InputRow>
+        {error && <InputError>{error}</InputError>}
+      </InputGroup>
+    );
+  },
+);
 
 export default Select;

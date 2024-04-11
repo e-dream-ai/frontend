@@ -104,6 +104,8 @@
       "original_fps": "Original FPS",
       "thumbnail": "Thumbnail",
       "play_dream_client": "Dream sent to play on client.",
+      "confirm_process_modal_title": "Confirm process dream",
+      "confirm_process_modal_body": "Are you sure to process this dream?",
       "confirm_delete_modal_title": "Confirm delete dream",
       "confirm_delete_modal_body": "Are you sure to delete this dream?",
       "dream_updated_successfully": "Dream updated successfully.",

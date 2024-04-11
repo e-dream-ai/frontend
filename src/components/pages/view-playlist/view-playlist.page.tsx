@@ -428,11 +428,11 @@ export const ViewPlaylistPage = () => {
        */
       displayedOwner: isUserAdmin
         ? {
-            value: playlist?.displayedOwner?.id ?? -1,
+            value: playlist?.displayedOwner?.id,
             label: getUserName(playlist?.displayedOwner),
           }
         : {
-            value: playlist?.displayedOwner?.id ?? playlist?.user?.id ?? -1,
+            value: playlist?.displayedOwner?.id ?? playlist?.user?.id,
             label: getUserName(playlist?.displayedOwner ?? playlist?.user),
           },
       featureRank: playlist?.featureRank,
@@ -621,6 +621,7 @@ export const ViewPlaylistPage = () => {
                   render={({ field }) => (
                     <Select
                       {...field}
+                      placeholder={t("page.view_playlist.owner")}
                       isDisabled={!editMode || !allowedEditOwner}
                       isLoading={isUsersLoading}
                       before={<FontAwesomeIcon icon={faUser} />}
