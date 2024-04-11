@@ -64,7 +64,7 @@ export const CreatePlaylist: React.FC = () => {
     0,
   );
   const totalUploadedVideosPercentage = Math.round(
-    (totalUploadedVideos / totalVideos) * 100,
+    (totalUploadedVideos / (totalVideos === 0 ? 1 : totalVideos)) * 100,
   );
 
   const handleChange: HandleChangeFile = (files) => {
