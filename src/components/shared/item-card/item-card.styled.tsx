@@ -12,26 +12,42 @@ const ItemCardSizes = {
 
 const ImageSizes = {
   sm: css`
-    max-width: 160px;
+    max-width: 200px;
   `,
   md: css``,
   lg: css``,
 };
 
 export const UsernameText = styled(Text)`
-  display: block;
-  max-width: 100px;
-  white-space: nowrap;
+  display: flex;
+  display: -ms-flexbox;
+  display: -webkit-box;
+
+  -webkit-box-orient: vertical;
+  -ms-flex-direction: column;
+  flex-direction: column;
+
+  -webkit-line-clamp: 1;
+  -ms-line-clamp: 1;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: normal;
 `;
 
 export const ItemTitleText = styled(Text)`
-  display: block;
-  max-height: 40px;
-  white-space: wrap;
+  display: flex;
+  display: -ms-flexbox;
+  display: -webkit-box;
+
+  -webkit-box-orient: vertical;
+  -ms-flex-direction: column;
+  flex-direction: column;
+
+  -webkit-line-clamp: 2;
+  -ms-line-clamp: 2;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: normal;
 `;
 
 export const StyledItemCardList = styled.ul<{
@@ -129,7 +145,10 @@ export const ItemCardImage = styled.img<{ size: Sizes }>`
 
   @media (max-width: ${DEVICES.TABLET}) {
     width: auto;
-    max-width: 300px;
+    /* 
+    * use max-width if image gets too large
+    * max-width: 400px;
+    */
   }
 
   @media (max-width: ${DEVICES.MOBILE_L}) {
@@ -154,7 +173,10 @@ export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`
   ${(props) => ImageSizes[props.size]}
 
   @media (max-width: ${DEVICES.TABLET}) {
-    max-width: 300px;
+    /* 
+    * use max-width if image gets too large
+    * max-width: 400px;
+    */
     width: auto;
   }
 

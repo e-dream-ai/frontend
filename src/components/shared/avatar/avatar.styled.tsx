@@ -4,16 +4,19 @@ import { SpaceProps, space } from "styled-system";
 
 const AvatarSizes = {
   sm: css`
-    width: 60px;
-    height: 60px;
+    width: 42px;
+    height: 42px;
+    font-size: 1.6rem;
   `,
   md: css`
-    width: 80px;
-    height: 80px;
+    width: 60px;
+    height: 60px;
+    font-size: 2.6rem;
   `,
   lg: css`
     width: 200px;
     height: 200px;
+    font-size: 3rem;
   `,
 };
 
@@ -36,5 +39,4 @@ export const AvatarPlaceholder = styled.div<
   display: flex;
   justify-content: center;
   align-items: center;
-  font-size: 3rem;
 `;

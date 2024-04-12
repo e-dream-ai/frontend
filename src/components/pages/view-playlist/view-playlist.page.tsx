@@ -686,6 +686,7 @@ export const ViewPlaylistPage = () => {
                   <ItemCard
                     key={i.id}
                     itemId={i.id}
+                    inline
                     dndMode="local"
                     size="sm"
                     type={i.type}

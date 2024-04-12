@@ -60,6 +60,7 @@ type ItemCardProps = {
   order?: number;
   deleteDisabled?: boolean;
   showPlayButton?: boolean;
+  inline?: boolean;
   onOrder?: (dropItem: SetItemOrder) => void;
   onDelete?: (event: React.MouseEvent) => void;
 };
@@ -73,6 +74,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   dndMode = DND_MODES.CROSS_WINDOW,
   order = 0,
   showPlayButton = false,
+  inline = false,
   onOrder,
   onDelete,
 }) => {
@@ -255,6 +257,22 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     return () => unregisterEvents();
   }, [registerEvents, unregisterEvents]);
 
+  const Thumbnail = () =>
+    thumbnail ? (
+      <ItemCardImage
+        size={size}
+        draggable="false"
+        src={generateImageURLFromResource(thumbnail, {
+          width: 420,
+          fit: "cover",
+        })}
+      />
+    ) : (
+      <ThumbnailPlaceholder size={size}>
+        <FontAwesomeIcon icon={faPhotoFilm} />
+      </ThumbnailPlaceholder>
+    );
+
   return (
     <StyledItemCard
       ref={cardRef}
@@ -264,15 +282,41 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       isMovedOnUpperHalf={isMovedOnUpperHalf}
     >
       <ItemCardAnchor to={navigateRoute} isDragEntered={isDragEntered}>
-        <Row flex="auto" margin="0" padding="3" justifyContent="space-between">
-          <Row
-            flex="auto"
-            margin="0"
-            padding="0"
-            justifyContent="space-between"
-          >
-            <Column mr={["2", "2", "3", "3"]} flex="auto">
-              <Row flex="auto" margin="0" mb="3">
+        <Row
+          flex="auto"
+          margin="0"
+          padding="3"
+          justifyContent="space-between"
+          flexWrap={["wrap", "nowrap", "nowrap", "nowrap"]}
+        >
+          {inline && (
+            <Column mr="3" mb="3">
+              <Thumbnail />
+            </Column>
+          )}
+          <Column flex="auto" margin="0" padding="0" justifyContent="center">
+            {showPlayButton && (
+              <Row justifyContent="flex-end" mb="2">
+                <Button
+                  type="button"
+                  buttonType="default"
+                  transparent
+                  after={<FontAwesomeIcon icon={faPlay} />}
+                  onClick={handlePlay}
+                />
+              </Row>
+            )}
+            {!inline && (
+              <Row mb="3" flex="auto">
+                <Thumbnail />
+              </Row>
+            )}
+            <Row>
+              <Column mr="3">
+                <Avatar size="sm" url={avatarUrl} />
+              </Column>
+              <Column justifyContent="center">
+                {/* card title */}
                 <ItemTitleText
                   ref={tooltipRef}
                   color={
@@ -284,48 +328,16 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                   ) : (
                     <FontAwesomeIcon icon={faFilm} />
                   )}{" "}
-                  {/* {truncateString(name, 60, true) ||
-                    t("components.item_card.unnamed")} */}
                   {name || t("components.item_card.unnamed")}
                 </ItemTitleText>
-              </Row>
-              <Row margin="0">
-                {thumbnail ? (
-                  <ItemCardImage
-                    size={size}
-                    draggable="false"
-                    src={generateImageURLFromResource(thumbnail, {
-                      width: 420,
-                      fit: "cover",
-                    })}
-                  />
-                ) : (
-                  <ThumbnailPlaceholder size={size}>
-                    <FontAwesomeIcon icon={faPhotoFilm} />
-                  </ThumbnailPlaceholder>
-                )}
-              </Row>
-            </Column>
-            <Column justifyContent="center">
-              {showPlayButton && (
-                <Column alignItems="flex-end" mb="3">
-                  <Button
-                    type="button"
-                    buttonType="default"
-                    transparent
-                    after={<FontAwesomeIcon icon={faPlay} />}
-                    onClick={handlePlay}
-                  />
-                </Column>
-              )}
-              <Column alignItems="center">
-                <Avatar size={size === "lg" ? "md" : "sm"} url={avatarUrl} />
+
+                {/* user name */}
                 <UsernameText color={theme.textPrimaryColor} mt="2">
                   {getUserName(displayedOwner ?? user)}
                 </UsernameText>
               </Column>
-            </Column>
-          </Row>
+            </Row>
+          </Column>
           {onDelete && (
             <Column justifyContent="flex-start" ml="4">
               {!deleteDisabled && (
