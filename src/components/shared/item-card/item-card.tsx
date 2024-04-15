@@ -294,9 +294,19 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               <Thumbnail />
             </Column>
           )}
-          <Column flex="auto" margin="0" padding="0" justifyContent="center">
+          <Column
+            flex="auto"
+            margin="0"
+            padding="0"
+            justifyContent="center"
+            style={{ position: "relative" }}
+          >
             {showPlayButton && (
-              <Row justifyContent="flex-end" mb="2">
+              <Row
+                justifyContent="flex-end"
+                mb="2"
+                style={{ position: "absolute", top: 0, right: 0 }}
+              >
                 <Button
                   type="button"
                   buttonType="default"
