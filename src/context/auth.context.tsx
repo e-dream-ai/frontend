@@ -14,6 +14,7 @@ import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
+import { useCurrentUser } from "@/api/user/query/useCurrentUser";
 
 type AuthContextType = {
   user: UserWithToken | null;
@@ -29,10 +30,12 @@ export const AuthContext = createContext<AuthContextType>(
 export const AuthProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
+  const currentUserQuery = useCurrentUser();
   const logoutMutation = useLogout();
   const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isUserFetched, setIsUserFetched] = useState<boolean>(false);
   const { setItem, getItem, removeItem } = useLocalStorage(
     AUTH_LOCAL_STORAGE_KEY,
   );
@@ -65,10 +68,6 @@ export const AuthProvider: React.FC<{
     setIsLoading(false);
   }, [getItem, setLoggedUser]);
 
-  useEffect(() => {
-    verifySession();
-  }, [verifySession]);
-
   const login: (user: UserWithToken) => void = useCallback(
     (user: UserWithToken) => {
       setLoggedUser(user);
@@ -99,6 +98,31 @@ export const AuthProvider: React.FC<{
     await fetchLogout();
     setLoggedUser(null);
   }, [setLoggedUser, fetchLogout]);
+
+  const fetchUser = useCallback(async () => {
+    try {
+      const currentUserRequest = await currentUserQuery.refetch();
+      const fetchedUser = currentUserRequest.data?.data?.user;
+      setLoggedUser({ ...user, ...fetchedUser } as UserWithToken);
+      setIsUserFetched(true);
+    } catch (error) {
+      logout();
+    }
+  }, [user, setLoggedUser, currentUserQuery, logout]);
+
+  useEffect(() => {
+    /**
+     * if there's no user and is not fetched, verify session
+     */
+    if (!user && !isUserFetched) verifySession();
+    /**
+     * if there's user and is not fetched, fetchUser
+     */
+    if (user && !isUserFetched) fetchUser();
+    /**
+     * else: do nothing
+     */
+  }, [user, isUserFetched, verifySession, fetchUser]);
 
   const memoedValue = useMemo(
     () => ({

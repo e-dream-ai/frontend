@@ -7,7 +7,7 @@ import { PROFILE_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROLES_NAMES } from "@/constants/role.constants";
 import useAuth from "@/hooks/useAuth";
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import Linkify from "react-linkify";
 import { toast } from "react-toastify";
@@ -28,6 +28,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAlignJustify, faUser } from "@fortawesome/free-solid-svg-icons";
 import { getUserEmail, getUserName } from "@/utils/user.util";
 import { useImage } from "@/hooks/useImage";
+import Select from "@/components/shared/select/select";
+import { useRoles } from "@/api/user/query/useRoles";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -88,10 +90,23 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   onDisableEditMode,
 }) => {
   const { t } = useTranslation();
+  const [roleSearch, setRoleSearch] = useState<string>("");
+
   const { isLoading: isLoadingUpdateUser, mutate: mutateUpdateUser } =
     useUpdateUser({ id: user?.id });
   const { isLoading: isLoadingUpdateAvatar, mutate: mutateUpdateAvatar } =
     useUpdateUserAvatar({ id: user?.id });
+
+  const { data: rolesData, isLoading: isRolesLoading } = useRoles({
+    search: roleSearch,
+  });
+
+  const rolesOptions = (rolesData?.data?.roles ?? [])
+    .filter((role) => role.name)
+    .map((role) => ({
+      label: role?.name ?? "-",
+      value: role?.id,
+    }));
 
   const isLoading = isLoadingUpdateUser || isLoadingUpdateAvatar;
   const [avatar, setAvatar] = useState<MultiMediaState>();
@@ -106,9 +121,19 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     handleSubmit,
     formState: { errors },
     reset,
+    control,
   } = useForm<ProfileFormValues>({
     resolver: yupResolver(ProfileSchema),
-    values: { name: user?.name ?? "", description: user?.description ?? "" },
+    values: {
+      name: user?.name ?? "",
+      description: user?.description ?? "",
+      role: user?.role
+        ? {
+            value: user.role?.id,
+            label: user.role?.name,
+          }
+        : {},
+    },
   });
 
   const handleAvatarChange: HandleChangeFile = (files) => {
@@ -146,28 +171,35 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   };
 
   const handleMutateUpdateUser = (formData: ProfileFormValues) => {
-    mutateUpdateUser(formData, {
-      onSuccess: (response) => {
-        if (response.success) {
-          queryClient.setQueryData([USER_QUERY_KEY, user?.id], response);
-          toast.success(
-            `${t("components.profile_card.profile_successfully_updated")}`,
-          );
-          setAvatar(undefined);
-          onDisableEditMode();
-          reset();
-        } else {
-          toast.error(
-            `${t("components.profile_card.error_updating_profile")} ${
-              response.message
-            }`,
-          );
-        }
+    mutateUpdateUser(
+      {
+        name: formData?.name,
+        description: formData?.description,
+        role: formData?.role?.value,
       },
-      onError: () => {
-        toast.error(t("components.profile_card.error_updating_profile"));
+      {
+        onSuccess: (response) => {
+          if (response.success) {
+            queryClient.setQueryData([USER_QUERY_KEY, user?.id], response);
+            toast.success(
+              `${t("components.profile_card.profile_successfully_updated")}`,
+            );
+            setAvatar(undefined);
+            onDisableEditMode();
+            reset();
+          } else {
+            toast.error(
+              `${t("components.profile_card.error_updating_profile")} ${
+                response.message
+              }`,
+            );
+          }
+        },
+        onError: () => {
+          toast.error(t("components.profile_card.error_updating_profile"));
+        },
       },
-    });
+    );
   };
 
   const onSubmit = (formData: ProfileFormValues) => {
@@ -193,6 +225,22 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         error={errors.name?.message}
         {...register("name")}
       />
+      <Restricted to={PROFILE_PERMISSIONS.CAN_EDIT_ROLE}>
+        <Controller
+          name="role"
+          control={control}
+          render={({ field }) => (
+            <Select
+              {...field}
+              placeholder={t("components.profile_card.role")}
+              isLoading={isRolesLoading}
+              before={<FontAwesomeIcon icon={faUser} />}
+              options={rolesOptions}
+              onInputChange={(newValue) => setRoleSearch(newValue)}
+            />
+          )}
+        />
+      </Restricted>
       <TextArea
         placeholder={t("components.profile_card.description")}
         before={<FontAwesomeIcon icon={faAlignJustify} />}

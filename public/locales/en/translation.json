@@ -241,6 +241,7 @@
     },
     "profile_card": {
       "name": "Name",
+      "role": "Role",
       "description": "Description",
       "no_description": "No description",
       "save": "Save",

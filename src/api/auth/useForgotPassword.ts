@@ -7,7 +7,7 @@ import { axiosClient } from "@/client/axios.client";
 
 export const FORGOT_PASSWORD_MUTATION_KEY = "forgotPassword";
 
-const forgotPassowrd = async (values: ForgotPasswordFormValues) => {
+const forgotPassword = async (values: ForgotPasswordFormValues) => {
   return axiosClient
     .post(`/auth/forgot-password`, values, {
       headers: getRequestHeaders({
@@ -21,7 +21,7 @@ const forgotPassowrd = async (values: ForgotPasswordFormValues) => {
 
 export const useForgotPassword = () => {
   return useMutation<ApiResponse<User>, Error, ForgotPasswordFormValues>(
-    forgotPassowrd,
+    forgotPassword,
     {
       mutationKey: [FORGOT_PASSWORD_MUTATION_KEY],
     },
