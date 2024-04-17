@@ -681,23 +681,27 @@ export const ViewPlaylistPage = () => {
               </Restricted>
             </Row>
             <Row flex="auto">
-              <ItemCardList>
-                {items.map((i) => (
-                  <ItemCard
-                    key={i.id}
-                    itemId={i.id}
-                    inline
-                    dndMode="local"
-                    size="sm"
-                    type={i.type}
-                    item={i.type === "dream" ? i.dreamItem : i.playlistItem}
-                    order={i.order}
-                    deleteDisabled={!allowedEditPlaylist}
-                    onDelete={handleDeletePlaylistItem(i.id)}
-                    onOrder={handleOrderPlaylist}
-                  />
-                ))}
-              </ItemCardList>
+              {items.length ? (
+                <ItemCardList>
+                  {items.map((i) => (
+                    <ItemCard
+                      key={i.id}
+                      itemId={i.id}
+                      inline
+                      dndMode="local"
+                      size="sm"
+                      type={i.type}
+                      item={i.type === "dream" ? i.dreamItem : i.playlistItem}
+                      order={i.order}
+                      deleteDisabled={!allowedEditPlaylist}
+                      onDelete={handleDeletePlaylistItem(i.id)}
+                      onOrder={handleOrderPlaylist}
+                    />
+                  ))}
+                </ItemCardList>
+              ) : (
+                <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
+              )}
             </Row>
             <Restricted
               to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}

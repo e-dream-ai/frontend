@@ -131,6 +131,7 @@
       "feature_rank": "Feature Rank",
       "thumbnail": "Thumbnail",
       "items": "Playlist items",
+      "empty_playlist": "No items to show",
       "sort_by": "Sort by",
       "play_playlist_client": "Playlist sent to play on client.",
       "confirm_delete_modal_title": "Confirm delete playlist",
@@ -301,7 +302,8 @@
   },
   "roles": {
     "user_group": "User",
-    "admin_group": "Admin"
+    "admin_group": "Admin",
+    "creator_group": "Creator"
   },
   "toasts": {
     "play_dream": "Played dream: {{name}}",

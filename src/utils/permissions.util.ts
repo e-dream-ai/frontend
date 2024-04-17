@@ -5,5 +5,7 @@ import { Permission, RoleType } from "@/types/role.types";
 export const getRolePermissions = (role?: RoleType): Permission[] => {
   if (role === ROLES.ADMIN_GROUP) return ROLE_PERMISSIONS[ROLES.ADMIN_GROUP];
   else if (role === ROLES.USER_GROUP) return ROLE_PERMISSIONS[ROLES.USER_GROUP];
+  else if (role === ROLES.CREATOR_GROUP)
+    return ROLE_PERMISSIONS[ROLES.CREATOR_GROUP];
   return [];
 };

@@ -29,6 +29,8 @@ import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { Playlist } from "@/types/playlist.types";
 import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
+import Restricted from "@/components/shared/restricted/restricted";
+import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 export const CreatePlaylist: React.FC = () => {
   const { t } = useTranslation();
   const [videos, setVideos] = useState<FileState[]>([]);
@@ -141,55 +143,58 @@ export const CreatePlaylist: React.FC = () => {
           error={errors.name?.message}
           {...register("name")}
         />
-        <>
-          {Boolean(videos.length) && (
-            <h3>{t("page.create.playlist_dreams")}</h3>
-          )}
-          {videos.map((v, i) => (
-            <Row key={i} alignItems="center">
-              <Text>{v.name}</Text>
-              {!isLoading && (
-                <Button
-                  type="button"
-                  buttonType="danger"
-                  transparent
-                  ml="1rem"
-                  onClick={onDeleteVideo(i)}
-                >
-                  <FontAwesomeIcon icon={faTrash} />
-                </Button>
-              )}
-            </Row>
-          ))}
-        </>
-        <Text my={3}>{t("page.create.playlist_file_instructions")}</Text>
-        <FileUploader
-          multiple
-          maxSize={MAX_FILE_SIZE_MB}
-          handleChange={handleChange}
-          onSizeError={handleFileUploaderSizeError(t)}
-          onTypeError={handleFileUploaderTypeError(t)}
-          name="file"
-          types={ALLOWED_VIDEO_TYPES}
-        />
 
-        {isUploadingFiles && (
+        <Restricted to={DREAM_PERMISSIONS.CAN_CREATE_DREAM}>
           <>
-            <Text my={3}>
-              {t("page.create.playlist_file_count", {
-                current: totalUploadedVideos,
-                total: totalVideos,
-              })}
-            </Text>
-            <ProgressBar completed={totalUploadedVideosPercentage} />
-            <Text my={3}>
-              {t("page.create.playlist_uploading_current_file", {
-                current: currentUploadFile + 1,
-              })}
-            </Text>
-            <ProgressBar completed={uploadProgress} />
+            {Boolean(videos.length) && (
+              <h3>{t("page.create.playlist_dreams")}</h3>
+            )}
+            {videos.map((v, i) => (
+              <Row key={i} alignItems="center">
+                <Text>{v.name}</Text>
+                {!isLoading && (
+                  <Button
+                    type="button"
+                    buttonType="danger"
+                    transparent
+                    ml="1rem"
+                    onClick={onDeleteVideo(i)}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </Button>
+                )}
+              </Row>
+            ))}
           </>
-        )}
+          <Text my={3}>{t("page.create.playlist_file_instructions")}</Text>
+          <FileUploader
+            multiple
+            maxSize={MAX_FILE_SIZE_MB}
+            handleChange={handleChange}
+            onSizeError={handleFileUploaderSizeError(t)}
+            onTypeError={handleFileUploaderTypeError(t)}
+            name="file"
+            types={ALLOWED_VIDEO_TYPES}
+          />
+
+          {isUploadingFiles && (
+            <>
+              <Text my={3}>
+                {t("page.create.playlist_file_count", {
+                  current: totalUploadedVideos,
+                  total: totalVideos,
+                })}
+              </Text>
+              <ProgressBar completed={totalUploadedVideosPercentage} />
+              <Text my={3}>
+                {t("page.create.playlist_uploading_current_file", {
+                  current: currentUploadFile + 1,
+                })}
+              </Text>
+              <ProgressBar completed={uploadProgress} />
+            </>
+          )}
+        </Restricted>
 
         <Row mt={4} justifyContent="flex-end">
           <Button isLoading={isLoading}>

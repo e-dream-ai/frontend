@@ -6,6 +6,8 @@ import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import { CreateDream } from "./create-dream";
 import { CreatePlaylist } from "./create-playlist";
+import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
+import usePermission from "@/hooks/usePermission";
 
 enum CREATE_TYPE {
   DREAM = 0,
@@ -16,7 +18,13 @@ const SECTION_ID = "page";
 
 export const CreatePage: React.FC = () => {
   const { t } = useTranslation();
-  const [tabIndex, setTabIndex] = useState<CREATE_TYPE>(CREATE_TYPE.DREAM);
+  const allowedCreateDream = usePermission({
+    permission: DREAM_PERMISSIONS.CAN_CREATE_DREAM,
+  });
+
+  const [tabIndex, setTabIndex] = useState<CREATE_TYPE>(
+    allowedCreateDream ? CREATE_TYPE.DREAM : CREATE_TYPE.PLAYLIST,
+  );
 
   return (
     <Container>
@@ -24,13 +32,19 @@ export const CreatePage: React.FC = () => {
       <Section id={SECTION_ID}>
         <Tabs selectedIndex={tabIndex} onSelect={(index) => setTabIndex(index)}>
           <TabList>
-            <Tab>{t("page.create.dream_tab_title")}</Tab>
-            <Tab>{t("page.create.playlist_tab_title")}</Tab>
+            <Tab tabIndex={`${CREATE_TYPE.DREAM}`} hidden={!allowedCreateDream}>
+              {t("page.create.dream_tab_title")}
+            </Tab>
+            <Tab tabIndex={`${CREATE_TYPE.PLAYLIST}`}>
+              {t("page.create.playlist_tab_title")}
+            </Tab>
           </TabList>
-          <TabPanel>
+
+          <TabPanel tabIndex={CREATE_TYPE.DREAM}>
             <CreateDream />
           </TabPanel>
-          <TabPanel>
+
+          <TabPanel tabIndex={CREATE_TYPE.PLAYLIST}>
             <CreatePlaylist />
           </TabPanel>
         </Tabs>

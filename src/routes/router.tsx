@@ -40,7 +40,13 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.ROOT,
         element: (
-          <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
             <ProfilePage isMyProfile />
           </ProtectedRoute>
         ),
@@ -52,7 +58,13 @@ export const router = createBrowserRouter([
       {
         path: `${ROUTES.CREATE}`,
         element: (
-          <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
             <CreatePage />
           </ProtectedRoute>
         ),
@@ -60,7 +72,13 @@ export const router = createBrowserRouter([
       {
         path: `${ROUTES.VIEW_DREAM}/:uuid`,
         element: (
-          <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
             <ViewDreamPage />
           </ProtectedRoute>
         ),
@@ -68,7 +86,13 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.MY_DREAMS,
         element: (
-          <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
             <MyDreamsPage />
           </ProtectedRoute>
         ),
@@ -76,7 +100,13 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.FEED,
         element: (
-          <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
             <FeedPage />
           </ProtectedRoute>
         ),
@@ -84,7 +114,13 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.PLAYLISTS,
         element: (
-          <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
             <PlaylistsFeedPage />
           </ProtectedRoute>
         ),
@@ -92,7 +128,13 @@ export const router = createBrowserRouter([
       {
         path: `${ROUTES.VIEW_PLAYLIST}/:id`,
         element: (
-          <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
             <ViewPlaylistPage />
           </ProtectedRoute>
         ),
@@ -100,7 +142,13 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.MY_PROFILE,
         element: (
-          <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
             <ProfilePage isMyProfile />
           </ProtectedRoute>
         ),
@@ -108,7 +156,13 @@ export const router = createBrowserRouter([
       {
         path: `${ROUTES.PROFILE}/:id`,
         element: (
-          <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
             <ProfilePage />
           </ProtectedRoute>
         ),
@@ -116,7 +170,13 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.HELP,
         element: (
-          <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
             <HelpPage />
           </ProtectedRoute>
         ),
@@ -124,7 +184,13 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.LEARN_MORE,
         element: (
-          <ProtectedRoute allowedRoles={[ROLES.USER_GROUP, ROLES.ADMIN_GROUP]}>
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
             <LearnMorePage />
           </ProtectedRoute>
         ),
