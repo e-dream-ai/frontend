@@ -89,6 +89,7 @@ export const CreateDream: React.FC = () => {
         <AnchorLink to={ROUTES.TERMS_OF_SERVICE}>
           {t("page.create.terms_of_service")}
         </AnchorLink>
+        .
       </Text>
 
       {isFailed && (

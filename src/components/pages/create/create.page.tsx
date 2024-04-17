@@ -8,6 +8,9 @@ import { CreateDream } from "./create-dream";
 import { CreatePlaylist } from "./create-playlist";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import usePermission from "@/hooks/usePermission";
+import Restricted from "@/components/shared/restricted/restricted";
+import Text from "@/components/shared/text/text";
+import { Anchor } from "@/components/shared";
 
 enum CREATE_TYPE {
   DREAM = 0,
@@ -32,7 +35,7 @@ export const CreatePage: React.FC = () => {
       <Section id={SECTION_ID}>
         <Tabs selectedIndex={tabIndex} onSelect={(index) => setTabIndex(index)}>
           <TabList>
-            <Tab tabIndex={`${CREATE_TYPE.DREAM}`} hidden={!allowedCreateDream}>
+            <Tab tabIndex={`${CREATE_TYPE.DREAM}`}>
               {t("page.create.dream_tab_title")}
             </Tab>
             <Tab tabIndex={`${CREATE_TYPE.PLAYLIST}`}>
@@ -41,7 +44,18 @@ export const CreatePage: React.FC = () => {
           </TabList>
 
           <TabPanel tabIndex={CREATE_TYPE.DREAM}>
-            <CreateDream />
+            <Restricted to={DREAM_PERMISSIONS.CAN_CREATE_DREAM}>
+              <CreateDream />
+            </Restricted>
+            <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_BECOME_CREATOR}>
+              <Text>
+                {t("page.create.become_creator")}{" "}
+                <Anchor href="mailto:support@e-dream.ai">
+                  support@e-dream.ai
+                </Anchor>
+                .
+              </Text>
+            </Restricted>
           </TabPanel>
 
           <TabPanel tabIndex={CREATE_TYPE.PLAYLIST}>
