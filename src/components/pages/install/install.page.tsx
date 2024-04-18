@@ -24,15 +24,19 @@ export const InstallPage: React.FC = () => {
 	    {" "} folder, and then:
             <ul>
 	      <li>
-                Drag the e-dream native app to your Applications folder then run it. Open the settings, log in, then close the settings.
-		The app will automatically download and play visuals. Press F1 key for help and F2 key for status. Use the A and D keys
-		to adjust the speed of the experience.
+                Drag the e-dream native app to your Applications
+		folder then run it. Open the settings, log in, then
+		close the settings.  The app will automatically
+		download and play visuals. Press F1 key for help and
+		F2 key for status. Use the A and D keys to adjust the
+		speed of the experience.
 	      </li>
 	      <li>
-	        Double click the screen saver to install it. Then to enable it, go into
+	        Control-click the screen saver and select 'open' from
+	        the menu to install it. Then to enable it, go into
 	        System Settings, select the "Screen Saver" panel, and
-	        then in the "Other" section click on "Show More" and then
-	        click on "e-dream".
+	        then in the "Other" section click on "Show More" and
+	        then click on "e-dream".
 	      </li>
 	    </ul>
           </p>
