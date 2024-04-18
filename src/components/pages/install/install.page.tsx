@@ -32,7 +32,7 @@ export const InstallPage: React.FC = () => {
 		speed of the experience.
 	      </li>
 	      <li>
-	        Control-click the screen saver and select 'open' from
+	        Control-click the screen saver and select "open" from
 	        the menu to install it. Then to enable it, go into
 	        System Settings, select the "Screen Saver" panel, and
 	        then in the "Other" section click on "Show More" and
