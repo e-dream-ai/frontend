@@ -19,6 +19,7 @@ import {
   ItemCardAnchor,
   ItemCardImage,
   ItemTitleText,
+  PlayButton,
   StyledItemCard,
   StyledItemCardList,
   ThumbnailPlaceholder,
@@ -304,7 +305,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                 mb="2"
                 style={{ position: "absolute", top: 0, right: 0 }}
               >
-                <Button
+                <PlayButton
                   type="button"
                   buttonType="default"
                   transparent

@@ -3,6 +3,7 @@ import { Sizes } from "@/types/sizes.types";
 import { Link } from "react-router-dom";
 import { DEVICES } from "@/constants/devices.constants";
 import Text from "@/components/shared/text/text";
+import { Button } from "../button/button";
 
 const ItemCardSizes = {
   sm: css``,
@@ -183,5 +184,11 @@ export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`
   @media (max-width: ${DEVICES.MOBILE_L}) {
     max-width: 100%;
     width: auto;
+  }
+`;
+
+export const PlayButton = styled(Button)`
+  svg {
+    filter: drop-shadow(0.2rem 0.2rem 0.2rem #000);
   }
 `;
