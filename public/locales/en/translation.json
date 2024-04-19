@@ -61,7 +61,7 @@
       "dream_tab_title": "Create dream",
       "dream_preview": "Dream Preview",
       "dream_instructions": "Upload or drop your dream here.",
-      "nsfw": "NSFW Content",
+      "nsfw": "Mark NSFW Dream",
       "content_policy": "Be sure to follow the Content Policy and User Generated Content section of the",
       "terms_of_service": "Terms of Service",
       "become_creator": "To become a creator and upload your own dreams, email",
@@ -105,6 +105,7 @@
       "video": "Video",
       "original_video": "Original Video",
       "original_fps": "Original FPS",
+      "nsfw": "Content Rating",
       "thumbnail": "Thumbnail",
       "play_dream_client": "Dream sent to play on client.",
       "confirm_process_modal_title": "Confirm process dream",
@@ -243,10 +244,12 @@
     },
     "profile_card": {
       "name": "Name",
-      "role": "Role",
-      "nsfw": "NSFW",
-      "description": "Description",
+      "role": "role",
+      "nsfw": "Content Rating",
+      "description": "description",
       "no_description": "No description",
+      "email": "email",
+      "settings": "settings",
       "save": "Save",
       "cancel": "Cancel",
       "edit_profile": "Edit Profile",
@@ -306,14 +309,14 @@
   },
   "user": {
     "nsfw": {
-      "active": "Active",
-      "inactive": "Inactive"
+      "nsfw": "NSFW",
+      "sfw": "SFW"
     }
   },
   "roles": {
-    "user_group": "User",
-    "admin_group": "Admin",
-    "creator_group": "Creator"
+    "user_group": "user",
+    "admin_group": "admin",
+    "creator_group": "creator"
   },
   "toasts": {
     "play_dream": "Played dream: {{name}}",

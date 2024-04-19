@@ -85,7 +85,7 @@ const ButtonTransparentTypes = {
   danger: css`
     color: ${(props) => props.theme.colorDanger};
     &:hover {
-      color: ${(props) => props.theme.colorSecondary};
+      color: ${(props) => props.theme.anchorHoverColor};
     }
   `,
 };

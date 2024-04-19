@@ -70,41 +70,51 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
       <Row mb="2rem">
         <Avatar size="lg" url={avatarUrl} />
       </Row>
-      <Text fontSize="1rem" color={theme.colorPrimary}>
-        {t(ROLES_NAMES[user?.role?.name ?? ""]) ?? "-"}
-      </Text>
-      <Text mb="0.5rem" fontSize="1rem" color={theme.textSecondaryColor}>
+
+      <Text mb={2} fontSize="1rem" color={theme.textPrimaryColor}>
         {getUserName(user) ?? "-"}
       </Text>
 
+      <Row my={1}>{t("components.profile_card.role")}</Row>
+      <Text mb={2} fontSize="1rem" color={theme.colorPrimary}>
+        {t(ROLES_NAMES[user?.role?.name ?? ""]) ?? "-"}
+      </Text>
+
+      <Row my={1}>{t("components.profile_card.description")}</Row>
+      <Row>
+        <Text
+          fontSize="1rem"
+          fontStyle="italic"
+          color={theme.textSecondaryColor}
+        >
+          <Linkify
+            componentDecorator={(decoratedHref, decoratedText, key) => (
+              <Anchor target="_blank" href={decoratedHref} key={key}>
+                {decoratedText}
+              </Anchor>
+            )}
+          >
+            {user?.description ?? t("components.profile_card.no_description")}
+          </Linkify>
+        </Text>
+      </Row>
+
       {allowedViewRestrictedInfo && (
         <>
-          <Text mb="0.5rem" fontSize="1rem" color={theme.textPrimaryColor}>
-            {getUserEmail(user) ?? "-"}
-          </Text>
-
-          <Text mb="0.5rem" fontSize="1rem" color={theme.textSecondaryColor}>
-            NSFW {user?.nsfw ? t("user.nsfw.active") : t("user.nsfw.inactive")}
-          </Text>
+          <Row my={1}>{t("components.profile_card.email")}</Row>
+          <Row>
+            <Text fontSize="1rem" color={theme.textSecondaryColor}>
+              {getUserEmail(user) ?? "-"}
+            </Text>
+          </Row>
+          <Row my={1}>{t("components.profile_card.settings")}</Row>
+          <Row>
+            <Text fontSize="1rem" color={theme.textSecondaryColor}>
+              {user?.nsfw ? t("user.nsfw.nsfw") : t("user.nsfw.sfw")}
+            </Text>
+          </Row>
         </>
       )}
-
-      <Text
-        mb="1rem"
-        fontSize="1rem"
-        fontStyle="italic"
-        color={theme.textSecondaryColor}
-      >
-        <Linkify
-          componentDecorator={(decoratedHref, decoratedText, key) => (
-            <Anchor target="_blank" href={decoratedHref} key={key}>
-              {decoratedText}
-            </Anchor>
-          )}
-        >
-          {user?.description ?? t("components.profile_card.no_description")}
-        </Linkify>
-      </Text>
     </>
   );
 };
@@ -246,9 +256,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           types={["JPG", "JPEG"]}
         />
       </Row>
-      <Text mb="0.5rem" fontSize="1rem" fontWeight={600}>
-        {user?.email}
-      </Text>
       <Input
         placeholder={t("components.profile_card.name")}
         type="text"
@@ -273,6 +280,15 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         />
       </Restricted>
 
+      <TextArea
+        placeholder={t("components.profile_card.description")}
+        before={<FontAwesomeIcon icon={faAlignJustify} />}
+        error={errors.description?.message}
+        {...register("description")}
+      />
+
+      <Row mb={2}>{t("components.profile_card.settings")}</Row>
+
       <Controller
         name="nsfw"
         control={control}
@@ -286,13 +302,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         )}
       />
 
-      <TextArea
-        placeholder={t("components.profile_card.description")}
-        before={<FontAwesomeIcon icon={faAlignJustify} />}
-        error={errors.description?.message}
-        {...register("description")}
-      />
-      <Row>
+      <Row mt={2}>
         <Button
           type="button"
           mr="1rem"

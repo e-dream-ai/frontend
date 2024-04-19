@@ -6,11 +6,11 @@ export const NSFW = {
 };
 
 export const getNsfwOptions = (t: TFunction) => [
-  { value: NSFW.TRUE, label: t("user.nsfw.active") },
-  { value: NSFW.FALSE, label: t("user.nsfw.inactive") },
+  { value: NSFW.TRUE, label: t("user.nsfw.nsfw") },
+  { value: NSFW.FALSE, label: t("user.nsfw.sfw") },
 ];
 
 export const filterNsfwOption = (value: boolean = false, t: TFunction) =>
   getNsfwOptions(t).find(
     (option) => option.value === Boolean(value).toString(),
-  ) ?? { value: NSFW.FALSE, label: t("user.nsfw.inactive") };
+  ) ?? { value: NSFW.FALSE, label: t("user.nsfw.sfw") };
