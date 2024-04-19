@@ -3,6 +3,7 @@ export type CreateMultipartUploadFormValues = {
   name?: string;
   extension?: string;
   parts?: number;
+  nsfw?: boolean;
 };
 
 export type CompletedPart = { ETag?: string; PartNumber?: number };

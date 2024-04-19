@@ -6,7 +6,7 @@ import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import { PROFILE_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROLES_NAMES } from "@/constants/role.constants";
 import useAuth from "@/hooks/useAuth";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import Linkify from "react-linkify";
@@ -25,11 +25,21 @@ import TextArea from "../text-area/text-area";
 import Text from "../text/text";
 import { Avatar } from "@/components/shared/avatar/avatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAlignJustify, faUser } from "@fortawesome/free-solid-svg-icons";
+import {
+  faAlignJustify,
+  faShield,
+  faUser,
+} from "@fortawesome/free-solid-svg-icons";
 import { getUserEmail, getUserName } from "@/utils/user.util";
 import Select from "@/components/shared/select/select";
 import { useRoles } from "@/api/user/query/useRoles";
 import { useImage } from "@/hooks/useImage";
+import {
+  NSFW,
+  filterNsfwOption,
+  getNsfwOptions,
+} from "@/constants/dream.constants";
+import usePermission from "@/hooks/usePermission";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -38,6 +48,17 @@ type ProfileDetailsProps = {
 const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const { user: authUser } = useAuth();
+
+  const isOwner: boolean = useMemo(
+    () => user?.id === authUser?.id,
+    [user, authUser],
+  );
+
+  const allowedViewRestrictedInfo = usePermission({
+    permission: PROFILE_PERMISSIONS.CAN_VIEW_RESTRICTED_INFO,
+    isOwner,
+  });
 
   const avatarUrl = useImage(user?.avatar, {
     width: 142,
@@ -55,11 +76,19 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
       <Text mb="0.5rem" fontSize="1rem" color={theme.textSecondaryColor}>
         {getUserName(user) ?? "-"}
       </Text>
-      {Boolean(user?.email) && (
-        <Text mb="0.5rem" fontSize="1rem" color={theme.textPrimaryColor}>
-          {getUserEmail(user) ?? "-"}
-        </Text>
+
+      {allowedViewRestrictedInfo && (
+        <>
+          <Text mb="0.5rem" fontSize="1rem" color={theme.textPrimaryColor}>
+            {getUserEmail(user) ?? "-"}
+          </Text>
+
+          <Text mb="0.5rem" fontSize="1rem" color={theme.textSecondaryColor}>
+            NSFW {user?.nsfw ? t("user.nsfw.active") : t("user.nsfw.inactive")}
+          </Text>
+        </>
       )}
+
       <Text
         mb="1rem"
         fontSize="1rem"
@@ -81,7 +110,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
 };
 
 type ProfileFormProps = {
-  user?: Omit<User, "token">;
+  user?: User;
   onDisableEditMode: () => void;
 };
 
@@ -133,6 +162,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
             label: user.role?.name,
           }
         : {},
+      nsfw: filterNsfwOption(user?.nsfw, t),
     },
   });
 
@@ -176,6 +206,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         name: formData?.name,
         description: formData?.description,
         role: formData?.role?.value,
+        nsfw: formData?.nsfw.value === NSFW.TRUE,
       },
       {
         onSuccess: (response) => {
@@ -241,6 +272,20 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           )}
         />
       </Restricted>
+
+      <Controller
+        name="nsfw"
+        control={control}
+        render={({ field }) => (
+          <Select
+            {...field}
+            placeholder={t("components.profile_card.nsfw")}
+            before={<FontAwesomeIcon icon={faShield} />}
+            options={getNsfwOptions(t)}
+          />
+        )}
+      />
+
       <TextArea
         placeholder={t("components.profile_card.description")}
         before={<FontAwesomeIcon icon={faAlignJustify} />}

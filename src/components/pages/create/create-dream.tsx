@@ -2,7 +2,13 @@ import { useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
 import { faRotateRight, faUpload } from "@fortawesome/free-solid-svg-icons";
-import { AnchorLink, Button, FileUploader, Row } from "@/components/shared";
+import {
+  AnchorLink,
+  Button,
+  Checkbox,
+  FileUploader,
+  Row,
+} from "@/components/shared";
 import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { HandleChangeFile } from "@/types/media.types";
 import { Column } from "@/components/shared/row/row";
@@ -22,6 +28,12 @@ import { Video } from "./create.styled";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { toast } from "react-toastify";
 import { useTheme } from "styled-components";
+import { useForm } from "react-hook-form";
+import {
+  CreateDreamFormValues,
+  CreateDreamSchema,
+} from "@/schemas/dream.schema";
+import { yupResolver } from "@hookform/resolvers/yup";
 
 export const CreateDream: React.FC = () => {
   const { t } = useTranslation();
@@ -29,13 +41,13 @@ export const CreateDream: React.FC = () => {
   const theme = useTheme();
   const [video, setVideo] = useState<FileState>();
 
-  const handleChange: HandleChangeFile = (files) => {
-    if (files instanceof FileList) {
-      return;
-    } else {
-      setVideo(getFileState(files));
-    }
-  };
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<CreateDreamFormValues>({
+    resolver: yupResolver(CreateDreamSchema),
+  });
 
   const {
     isLoading,
@@ -47,9 +59,17 @@ export const CreateDream: React.FC = () => {
     reset,
   } = useUploadDreamVideo();
 
-  const handleUploadDream = async () => {
+  const handleChange: HandleChangeFile = (files) => {
+    if (files instanceof FileList) {
+      return;
+    } else {
+      setVideo(getFileState(files));
+    }
+  };
+
+  const onSubmit = async (formData: CreateDreamFormValues) => {
     try {
-      await mutateAsync({ file: video?.fileBlob });
+      await mutateAsync({ file: video?.fileBlob, nsfw: formData.nsfw });
     } catch (error) {
       toast.error(t("page.create.error_uploading_dream"));
     }
@@ -64,82 +84,92 @@ export const CreateDream: React.FC = () => {
   };
 
   return (
-    <Column>
-      {video ? (
-        <>
-          <Text my={3}>{t("page.create.dream_preview")}</Text>
-          <Video ref={videoRef} id="dream" controls src={video?.url ?? ""} />
-        </>
-      ) : (
-        <>
-          <Text my={3}>{t("page.create.dream_instructions")}</Text>
-          <FileUploader
-            maxSize={MAX_FILE_SIZE_MB}
-            handleChange={handleChange}
-            onSizeError={handleFileUploaderSizeError(t)}
-            onTypeError={handleFileUploaderTypeError(t)}
-            name="file"
-            types={ALLOWED_VIDEO_TYPES}
-          />
-        </>
-      )}
+    <form onSubmit={handleSubmit(onSubmit)}>
+      <Column>
+        {video ? (
+          <>
+            <Text my={3}>{t("page.create.dream_preview")}</Text>
+            <Video ref={videoRef} id="dream" controls src={video?.url ?? ""} />
+          </>
+        ) : (
+          <>
+            <Text my={3}>{t("page.create.dream_instructions")}</Text>
+            <FileUploader
+              maxSize={MAX_FILE_SIZE_MB}
+              handleChange={handleChange}
+              onSizeError={handleFileUploaderSizeError(t)}
+              onTypeError={handleFileUploaderTypeError(t)}
+              name="file"
+              types={ALLOWED_VIDEO_TYPES}
+            />
+          </>
+        )}
 
-      <Text my={2}>
-        {t("page.create.content_policy")} {""}
-        <AnchorLink to={ROUTES.TERMS_OF_SERVICE}>
-          {t("page.create.terms_of_service")}
-        </AnchorLink>
-        .
-      </Text>
-
-      {isFailed && (
-        <Row>
-          <Text color={theme.colorDanger}>{t("page.create.retry_upload")}</Text>
+        <Row my={3}>
+          <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
+            {t("page.create.nsfw")}
+          </Checkbox>
         </Row>
-      )}
 
-      <Row mt={1} justifyContent="space-between">
-        <Column pr={4} justifyContent="center" style={{ width: "100%" }}>
-          {isLoading && <ProgressBar completed={uploadProgress} />}
-        </Column>
+        <Text>
+          {t("page.create.content_policy")} {""}
+          <AnchorLink to={ROUTES.TERMS_OF_SERVICE}>
+            {t("page.create.terms_of_service")}
+          </AnchorLink>
+          .
+        </Text>
 
-        <Column>
-          {!!video && (
-            <Row>
-              <Button
-                mr={2}
-                isLoading={isAborting}
-                disabled={isAborting}
-                onClick={handleCancelCreateDream}
-              >
-                {t("page.create.cancel")}
-              </Button>
-              {!isFailed && (
+        {isFailed && (
+          <Row>
+            <Text color={theme.colorDanger}>
+              {t("page.create.retry_upload")}
+            </Text>
+          </Row>
+        )}
+
+        <Row mt={1} justifyContent="space-between">
+          <Column pr={4} justifyContent="center" style={{ width: "100%" }}>
+            {isLoading && <ProgressBar completed={uploadProgress} />}
+          </Column>
+
+          <Column>
+            {!!video && (
+              <Row>
                 <Button
-                  after={<FontAwesomeIcon icon={faUpload} />}
-                  onClick={handleUploadDream}
-                  isLoading={isLoading}
-                  disabled={!video || isAborting || isLoading}
+                  mr={2}
+                  isLoading={isAborting}
+                  disabled={isAborting}
+                  onClick={handleCancelCreateDream}
                 >
-                  {isLoading
-                    ? t("page.create.creating")
-                    : t("page.create.create")}
+                  {t("page.create.cancel")}
                 </Button>
-              )}
-              {isFailed && (
-                <Button
-                  after={<FontAwesomeIcon icon={faRotateRight} />}
-                  onClick={retryUploadFailedParts}
-                  isLoading={isLoading}
-                  disabled={isAborting || isLoading}
-                >
-                  {t("page.create.retry")}
-                </Button>
-              )}
-            </Row>
-          )}
-        </Column>
-      </Row>
-    </Column>
+                {!isFailed && (
+                  <Button
+                    after={<FontAwesomeIcon icon={faUpload} />}
+                    onClick={handleSubmit(onSubmit)}
+                    isLoading={isLoading}
+                    disabled={!video || isAborting || isLoading}
+                  >
+                    {isLoading
+                      ? t("page.create.creating")
+                      : t("page.create.create")}
+                  </Button>
+                )}
+                {isFailed && (
+                  <Button
+                    after={<FontAwesomeIcon icon={faRotateRight} />}
+                    onClick={retryUploadFailedParts}
+                    isLoading={isLoading}
+                    disabled={isAborting || isLoading}
+                  >
+                    {t("page.create.retry")}
+                  </Button>
+                )}
+              </Row>
+            )}
+          </Column>
+        </Row>
+      </Column>
+    </form>
   );
 };

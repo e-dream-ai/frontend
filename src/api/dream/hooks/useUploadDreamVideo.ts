@@ -34,6 +34,7 @@ import { TFunction } from "i18next";
 type AsyncMutationProps = (params?: {
   file?: File;
   dream?: Dream;
+  nsfw?: boolean;
 }) => Promise<Dream | undefined>;
 
 type UseUploadDreamVideoProps = {
@@ -167,12 +168,14 @@ const calculateTotalParts = (fileSize: number) => {
 const initiateUpload = async ({
   file,
   dream,
+  nsfw,
   totalNumberOfParts,
   createMultipartUploadMutation,
 }: {
   file?: File;
   dream?: Dream;
   totalNumberOfParts?: number;
+  nsfw?: boolean;
   createMultipartUploadMutation: UseMutationResult<
     ApiResponse<MultipartUpload>,
     Error,
@@ -187,6 +190,7 @@ const initiateUpload = async ({
       extension,
       parts: totalNumberOfParts,
       uuid: dream?.uuid,
+      nsfw,
     });
 
   return {
@@ -703,7 +707,11 @@ export const useUploadDreamVideo = ({
    * @param props Object containing optional `file` and `dream` details.
    * @returns A promise resolving to the updated dream object on successful upload or `undefined` on failure.
    */
-  const mutateAsync: AsyncMutationProps = async ({ file, dream } = {}) => {
+  const mutateAsync: AsyncMutationProps = async ({
+    file,
+    dream,
+    nsfw,
+  } = {}) => {
     if (!file) {
       toast.error(t("page.create.error_uploading_dream"));
       return undefined;
@@ -731,6 +739,7 @@ export const useUploadDreamVideo = ({
         file,
         dream,
         totalNumberOfParts,
+        nsfw,
         createMultipartUploadMutation,
       });
 

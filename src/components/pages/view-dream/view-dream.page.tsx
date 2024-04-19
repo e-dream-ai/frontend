@@ -51,6 +51,7 @@ import { truncateString } from "@/utils/string.util";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 import { User } from "@/types/auth.types";
 import { useImage } from "@/hooks/useImage";
+import { NSFW, filterNsfwOption } from "@/constants/dream.constants";
 
 type Params = { uuid: string };
 
@@ -185,6 +186,7 @@ const ViewDreamPage: React.FC = () => {
         activityLevel: data.activityLevel,
         featureRank: data.featureRank,
         displayedOwner: data?.displayedOwner?.value,
+        nsfw: data?.nsfw.value === NSFW.TRUE,
       },
       {
         onSuccess: (data) => {
@@ -269,9 +271,10 @@ const ViewDreamPage: React.FC = () => {
             value: dream?.displayedOwner?.id ?? dream?.user?.id,
             label: getUserName(dream?.displayedOwner ?? dream?.user),
           },
+      nsfw: filterNsfwOption(dream?.nsfw, t),
       created_at: moment(dream?.created_at).format(FORMAT),
     });
-  }, [reset, dream, isUserAdmin]);
+  }, [reset, dream, isUserAdmin, t]);
 
   const handleRemoveVideo = () => {
     setIsVideoRemoved(true);

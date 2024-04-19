@@ -29,6 +29,7 @@ import {
   faPhotoVideo,
   faRankingStar,
   faSave,
+  faShield,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
@@ -45,6 +46,7 @@ import { useUsers } from "@/api/user/query/useUsers";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
+import { getNsfwOptions } from "@/constants/dream.constants";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -68,6 +70,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const [userSearch, setUserSearch] = useState<string>("");
   const { user } = useAuth();
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
+  const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
   });
@@ -140,9 +143,25 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         {...register("processedVideoFPS")}
       />
 
+      <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_NSFW} isOwner={isOwner}>
+        <Controller
+          name="nsfw"
+          control={control}
+          render={({ field }) => (
+            <Select
+              {...field}
+              isDisabled={!editMode || !allowedEditOwner}
+              placeholder={t("components.profile_card.nsfw")}
+              before={<FontAwesomeIcon icon={faShield} />}
+              options={getNsfwOptions(t)}
+            />
+          )}
+        />
+      </Restricted>
+
       <Restricted
         to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
-        isOwner={user?.id === dream?.user?.id}
+        isOwner={isOwner}
       >
         <Input
           disabled

@@ -20,6 +20,7 @@ export type User = {
   role?: Role;
   currentDream?: Dream;
   currentPlaylist?: Playlist;
+  nsfw?: boolean;
 };
 
 export type Role = {

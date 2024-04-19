@@ -12,6 +12,10 @@ export type UpdateDreamFormValues = {
     label?: string;
     value?: number;
   };
+  nsfw: {
+    label?: string;
+    value?: string;
+  };
   created_at?: string;
 };
 
@@ -20,6 +24,7 @@ export type UpdateDreamRequestValues = {
   activityLevel?: number;
   featureRank?: number;
   displayedOwner?: number;
+  nsfw?: boolean;
 };
 
 export const UpdateDreamSchema = yup
@@ -33,6 +38,10 @@ export const UpdateDreamSchema = yup
     displayedOwner: yup.object({
       label: yup.string(),
       value: yup.number(),
+    }),
+    nsfw: yup.object({
+      label: yup.string(),
+      value: yup.string(),
     }),
     created_at: yup.string(),
   })
