@@ -45,12 +45,21 @@ const ButtonTypes = {
   `,
   primary: css`
     background-color: ${(props) => props.theme.colorPrimary};
+    &:hover {
+      filter: brightness(150%);
+    }
   `,
   secondary: css`
     background-color: ${(props) => props.theme.colorSecondary};
+    &:hover {
+      filter: brightness(150%);
+    }
   `,
   tertiary: css`
     background-color: ${(props) => props.theme.inputBackgroundColor};
+    &:hover {
+      filter: brightness(150%);
+    }
   `,
   success: css``,
   danger: css`
@@ -61,6 +70,9 @@ const ButtonTypes = {
 const ButtonTransparentTypes = {
   default: css`
     color: ${(props) => props.theme.textPrimaryColor};
+    &:hover {
+      color: ${(props) => props.theme.anchorHoverColor};
+    }
   `,
   primary: css`
     color: ${(props) => props.theme.colorPrimary};
@@ -72,6 +84,9 @@ const ButtonTransparentTypes = {
   success: css``,
   danger: css`
     color: ${(props) => props.theme.colorDanger};
+    &:hover {
+      color: ${(props) => props.theme.colorSecondary};
+    }
   `,
 };
 
@@ -112,9 +127,6 @@ export const StyledButton = styled.button<
       : ButtonTypes[props.buttonType]}
   ${(props) => ButtonSizes[props.size]}
 
-  &:hover {
-    filter: brightness(150%);
-  }
   &:disabled {
     background-color: ${(props) => props.theme.colorLightPrimary};
     cursor: not-allowed;

@@ -16,6 +16,7 @@ declare module "styled-components" {
     textSecondaryColor: string;
     textTertiaryColor: string;
     colorDanger: string;
+    anchorHoverColor: string;
     inputTextColorPrimary: string;
     inputTextColorSecondary: string;
     inputBackgroundColor: string;

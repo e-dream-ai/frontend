@@ -34,7 +34,7 @@ const commonStyles = css`
     border-color linear 0.4s;
 
   &:hover {
-    color: ${(props) => props.theme.textPrimaryColor};
+    color: ${(props) => props.theme.anchorHoverColor};
   }
 `;
 
