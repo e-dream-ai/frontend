@@ -15,3 +15,5 @@ export const getUserNameOrEmail = (user?: Omit<User, "token">) =>
  */
 export const isAdmin = (user?: User): boolean =>
   user?.role?.name === ROLES.ADMIN_GROUP;
+
+export const formatRoleName = (name?: string) => name?.replace("-group", "");

@@ -30,7 +30,7 @@ import {
   faShield,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { getUserEmail, getUserName } from "@/utils/user.util";
+import { formatRoleName, getUserEmail, getUserName } from "@/utils/user.util";
 import Select from "@/components/shared/select/select";
 import { useRoles } from "@/api/user/query/useRoles";
 import { useImage } from "@/hooks/useImage";
@@ -143,7 +143,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   const rolesOptions = (rolesData?.data?.roles ?? [])
     .filter((role) => role.name)
     .map((role) => ({
-      label: role?.name ?? "-",
+      label: formatRoleName(role?.name),
       value: role?.id,
     }));
 
@@ -169,7 +169,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       role: user?.role
         ? {
             value: user.role?.id,
-            label: user.role?.name,
+            label: formatRoleName(user?.role?.name),
           }
         : {},
       nsfw: filterNsfwOption(user?.nsfw, t),
