@@ -25,13 +25,13 @@ const commonStyles = css`
   text-decoration: none;
   cursor: pointer;
   -webkit-transition:
-    color linear 0.4s,
-    background-color linear 0.4s,
-    border-color linear 0.4s;
+    color linear 0.2s,
+    background-color linear 0.2s,
+    border-color linear 0.2s;
   transition:
-    color linear 0.4s,
-    background-color linear 0.4s,
-    border-color linear 0.4s;
+    color linear 0.2s,
+    background-color linear 0.2s,
+    border-color linear 0.2s;
 
   &:hover {
     color: ${(props) => props.theme.anchorHoverColor};
