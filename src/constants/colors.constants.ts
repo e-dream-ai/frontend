@@ -12,7 +12,7 @@ export const COLORS = {
   GRAY_4: "#252525",
   GRAY_5: "#ccc",
   BLUE: "#00d0db",
-  LIGHT_BLUE: "#297bff",
+  LIGHT_BLUE: "#69bbff",
   ORANGE: "#e4683a",
   DARK_ORANGE: "#ff5d20",
   LIGHT_ORANGE: "#ff7d4d",
