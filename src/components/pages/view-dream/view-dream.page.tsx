@@ -43,7 +43,6 @@ import { DreamStatusType } from "@/types/dream.types";
 import { Video } from "./view-dream.styled";
 import { getUserName, isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
-import { generateImageURLFromResource } from "@/utils/image-handler";
 import useSocket from "@/hooks/useSocket";
 import { emitPlayDream } from "@/utils/socket.util";
 import { bytesToMegabytes } from "@/utils/file.util";
@@ -51,6 +50,7 @@ import { framesToSeconds, secondsToTimeFormat } from "@/utils/video.utils";
 import { truncateString } from "@/utils/string.util";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 import { User } from "@/types/auth.types";
+import { useImage } from "@/hooks/useImage";
 
 type Params = { uuid: string };
 
@@ -128,6 +128,11 @@ const ViewDreamPage: React.FC = () => {
 
   const showEditButton = !editMode && !isDreamProcessing;
   const showSaveAndCancelButtons = editMode && !isDreamProcessing;
+
+  const thumbnailUrl = useImage(dream?.thumbnail, {
+    width: 500,
+    fit: "cover",
+  });
 
   // Handlers
 
@@ -502,10 +507,7 @@ const ViewDreamPage: React.FC = () => {
               >
                 <ThumbnailInput
                   localMultimedia={thumbnail}
-                  thumbnail={generateImageURLFromResource(dream?.thumbnail, {
-                    width: 500,
-                    fit: "cover",
-                  })}
+                  thumbnail={thumbnailUrl}
                   editMode={editMode}
                   isProcessing={isDreamProcessing}
                   isRemoved={isThumbnailRemoved}

@@ -7,22 +7,21 @@ import { Column, Row } from "@/components/shared";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import { getUserName } from "@/utils/user.util";
-import { generateImageURLFromResource } from "@/utils/image-handler";
+import { useImage } from "@/hooks/useImage";
 
 const UserCard: React.FC<{ user: User; size: Sizes }> = ({ user, size }) => {
   const navigate = useNavigate();
 
   const navigateToProfile = () => navigate(`${ROUTES.PROFILE}/${user.id ?? 0}`);
 
+  const avatarUrl = useImage(user?.avatar, {
+    width: 142,
+    fit: "cover",
+  });
+
   return (
     <StyledUserCard onClick={navigateToProfile}>
-      <Avatar
-        size={size}
-        url={generateImageURLFromResource(user?.avatar, {
-          width: 142,
-          fit: "cover",
-        })}
-      />
+      <Avatar size={size} url={avatarUrl} />
       <Row>
         <Column>
           <Text

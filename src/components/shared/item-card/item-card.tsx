@@ -34,7 +34,6 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserName } from "@/utils/user.util";
-import { generateImageURLFromResource } from "@/utils/image-handler";
 import { useTheme } from "styled-components";
 import { Avatar } from "@/components/shared/avatar/avatar";
 import { emitPlayDream, emitPlayPlaylist } from "@/utils/socket.util";
@@ -95,6 +94,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const [isDragEntered, setIsDragEntered] = useState<boolean>(false);
   const [isMovedOnUpperHalf, setIsMovedOnUpperHalf] = useState<boolean>(false);
   const [height, setHeight] = useState<number>(0);
+
+  const thumbnailUrl = useImage(thumbnail, {
+    width: 420,
+    fit: "cover",
+  });
 
   const navigateRoute = (item as Dream)?.uuid
     ? `${ROUTES.VIEW_DREAM}/${(item as Dream)?.uuid}`
@@ -259,14 +263,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
   const Thumbnail = () =>
     thumbnail ? (
-      <ItemCardImage
-        size={size}
-        draggable="false"
-        src={generateImageURLFromResource(thumbnail, {
-          width: 420,
-          fit: "cover",
-        })}
-      />
+      <ItemCardImage size={size} draggable="false" src={thumbnailUrl} />
     ) : (
       <ThumbnailPlaceholder size={size}>
         <FontAwesomeIcon icon={faPhotoFilm} />

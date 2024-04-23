@@ -27,7 +27,7 @@ import { Avatar } from "@/components/shared/avatar/avatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAlignJustify, faUser } from "@fortawesome/free-solid-svg-icons";
 import { getUserEmail, getUserName } from "@/utils/user.util";
-import { generateImageURLFromResource } from "@/utils/image-handler";
+import { useImage } from "@/hooks/useImage";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -37,16 +37,15 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
   const { t } = useTranslation();
   const theme = useTheme();
 
+  const avatarUrl = useImage(user?.avatar, {
+    width: 142,
+    fit: "cover",
+  });
+
   return (
     <>
       <Row mb="2rem">
-        <Avatar
-          size="lg"
-          url={generateImageURLFromResource(user?.avatar, {
-            width: 142,
-            fit: "cover",
-          })}
-        />
+        <Avatar size="lg" url={avatarUrl} />
       </Row>
       <Text fontSize="1rem" color={theme.colorPrimary}>
         {t(ROLES_NAMES[user?.role?.name ?? ""]) ?? "-"}
@@ -97,7 +96,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   const isLoading = isLoadingUpdateUser || isLoadingUpdateAvatar;
   const [avatar, setAvatar] = useState<MultiMediaState>();
 
-  const avatarUrl = generateImageURLFromResource(user?.avatar, {
+  const avatarUrl = useImage(user?.avatar, {
     width: 142,
     fit: "cover",
   });

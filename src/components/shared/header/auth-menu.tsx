@@ -18,7 +18,7 @@ import {
 import { Menu, MenuButton, MenuItem } from "@/components/shared/menu/menu";
 import { User } from "@/types/auth.types";
 import { getUserNameOrEmail } from "@/utils/user.util";
-import { generateImageURLFromResource } from "@/utils/image-handler";
+import { useImage } from "@/hooks/useImage";
 
 const AuthAnchor: React.FC<{
   text: string;
@@ -38,6 +38,11 @@ export const AuthMenu: React.FC = () => {
   const { user, logout, isLoading } = useAuth();
   const userWithoutToken = user as Omit<User, "token">;
 
+  const avatarUrl = useImage(userWithoutToken?.avatar, {
+    width: 30,
+    fit: "cover",
+  });
+
   if (isLoading) return <StyledHeader />;
 
   return (
@@ -48,15 +53,7 @@ export const AuthMenu: React.FC = () => {
             <MenuButton>
               <HeaderProfileMenu>
                 {userWithoutToken?.avatar ? (
-                  <HeaderAvatar
-                    url={generateImageURLFromResource(
-                      userWithoutToken?.avatar,
-                      {
-                        width: 30,
-                        fit: "cover",
-                      },
-                    )}
-                  />
+                  <HeaderAvatar url={avatarUrl} />
                 ) : (
                   <HeaderAvatarPlaceholder>
                     <FontAwesomeIcon icon={faUser} />
