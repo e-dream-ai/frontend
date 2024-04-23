@@ -27,9 +27,9 @@ import { Avatar } from "@/components/shared/avatar/avatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAlignJustify, faUser } from "@fortawesome/free-solid-svg-icons";
 import { getUserEmail, getUserName } from "@/utils/user.util";
-import { useImage } from "@/hooks/useImage";
 import Select from "@/components/shared/select/select";
 import { useRoles } from "@/api/user/query/useRoles";
+import { useImage } from "@/hooks/useImage";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
