@@ -7,6 +7,7 @@ import {
   TextAreaGroup,
   TextAreaRow,
 } from "./text-area.styled";
+import { Tooltip } from "react-tooltip";
 
 export type TextAreaProps =
   React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
@@ -17,9 +18,20 @@ export type TextAreaProps =
     onKeyDown?: KeyboardEventHandler<HTMLTextAreaElement>;
   };
 
-// eslint-disable-next-line react/display-name
 export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
-  ({ before, after, onKeyDown, onClickAfter, error, ...props }, ref) => {
+  (
+    {
+      before,
+      after,
+      onKeyDown,
+      onClickAfter,
+      error,
+      name,
+      placeholder,
+      ...props
+    },
+    ref,
+  ) => {
     const handleOnKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (
       event,
     ) => {
@@ -29,13 +41,16 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
       onKeyDown?.(event);
     };
     return (
-      <TextAreaGroup>
+      <TextAreaGroup data-tooltip-id={name}>
+        <Tooltip id={name} place="right-end" content={placeholder} />
         <TextAreaRow>
           {before && <TextAreaBefore>{before}</TextAreaBefore>}
           <StyledTextArea
             ref={ref}
             maxLength={150}
             onKeyDown={handleOnKeyDown}
+            name={name}
+            placeholder={placeholder}
             {...props}
           />
           {after && (

@@ -245,9 +245,9 @@
     "profile_card": {
       "name": "Name",
       "role": "role",
-      "nsfw": "Content Rating",
+      "nsfw": "content rating",
       "description": "description",
-      "no_description": "No description",
+      "no_description": "no description",
       "email": "email",
       "settings": "settings",
       "save": "Save",

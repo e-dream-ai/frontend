@@ -71,12 +71,12 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
         <Avatar size="lg" url={avatarUrl} />
       </Row>
 
-      <Text mb={2} fontSize="1rem" color={theme.textPrimaryColor}>
+      <Text mb={2} fontSize="1.2rem" color={theme.textPrimaryColor}>
         {getUserName(user) ?? "-"}
       </Text>
 
       <Row my={1}>{t("components.profile_card.role")}</Row>
-      <Text mb={2} fontSize="1rem" color={theme.colorPrimary}>
+      <Text mb={2} fontSize="1rem" color={theme.textSecondaryColor}>
         {t(ROLES_NAMES[user?.role?.name ?? ""]) ?? "-"}
       </Text>
 
@@ -107,9 +107,16 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
               {getUserEmail(user) ?? "-"}
             </Text>
           </Row>
-          <Row my={1}>{t("components.profile_card.settings")}</Row>
+
+          <Row my={3}>
+            <Text fontSize="1rem" color={theme.textPrimaryColor}>
+              {t("components.profile_card.settings")}
+            </Text>
+          </Row>
+
+          <Row my={1}>{t("components.profile_card.nsfw")}</Row>
           <Row>
-            <Text fontSize="1rem" color={theme.textSecondaryColor}>
+            <Text fontSize="1rem" mb={2} color={theme.textSecondaryColor}>
               {user?.nsfw ? t("user.nsfw.nsfw") : t("user.nsfw.sfw")}
             </Text>
           </Row>
@@ -130,6 +137,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 }) => {
   const { t } = useTranslation();
   const [roleSearch, setRoleSearch] = useState<string>("");
+  const theme = useTheme();
 
   const { isLoading: isLoadingUpdateUser, mutate: mutateUpdateUser } =
     useUpdateUser({ id: user?.id });
@@ -287,7 +295,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         {...register("description")}
       />
 
-      <Row mb={2}>{t("components.profile_card.settings")}</Row>
+      <Row my={3}>
+        <Text fontSize="1rem" color={theme.textPrimaryColor}>
+          {t("components.profile_card.settings")}
+        </Text>
+      </Row>
 
       <Controller
         name="nsfw"
