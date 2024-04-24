@@ -109,7 +109,11 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
           </Row>
 
           <Row my={3}>
-            <Text fontSize="1rem" color={theme.textPrimaryColor}>
+            <Text
+              fontSize="1rem"
+              color={theme.textPrimaryColor}
+              style={{ textTransform: "uppercase", fontStyle: "italic" }}
+            >
               {t("components.profile_card.settings")}
             </Text>
           </Row>
@@ -296,7 +300,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       />
 
       <Row my={3}>
-        <Text fontSize="1rem" color={theme.textPrimaryColor}>
+        <Text
+          fontSize="1rem"
+          color={theme.textPrimaryColor}
+          style={{ textTransform: "uppercase", fontStyle: "italic" }}
+        >
           {t("components.profile_card.settings")}
         </Text>
       </Row>
