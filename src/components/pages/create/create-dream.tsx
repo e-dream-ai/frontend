@@ -107,7 +107,7 @@ export const CreateDream: React.FC = () => {
 
         <Row my={3}>
           <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
-            {t("page.create.nsfw")}
+            {t("page.create.nsfw_dream")}
           </Checkbox>
         </Row>
 

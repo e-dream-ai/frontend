@@ -8,6 +8,10 @@ export type UpdatePlaylistFormValues = {
     label?: string;
     value?: number;
   };
+  nsfw: {
+    label?: string;
+    value?: string;
+  };
   created_at?: string;
 };
 
@@ -15,6 +19,7 @@ export type UpdatePlaylistRequestValues = {
   name: string;
   featureRank?: number;
   displayedOwner?: number;
+  nsfw?: boolean;
 };
 
 export const UpdatePlaylistSchema = yup
@@ -25,6 +30,10 @@ export const UpdatePlaylistSchema = yup
     displayedOwner: yup.object({
       label: yup.string(),
       value: yup.number(),
+    }),
+    nsfw: yup.object({
+      label: yup.string(),
+      value: yup.string(),
     }),
     created_at: yup.string(),
   })

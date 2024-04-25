@@ -3,7 +3,13 @@ import { toast } from "react-toastify";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { faList, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
-import { Button, FileUploader, Input, Row } from "@/components/shared";
+import {
+  Button,
+  Checkbox,
+  FileUploader,
+  Input,
+  Row,
+} from "@/components/shared";
 import { Column } from "@/components/shared/row/row";
 import Text from "@/components/shared/text/text";
 import { ROUTES } from "@/constants/routes.constants";
@@ -143,6 +149,12 @@ export const CreatePlaylist: React.FC = () => {
           error={errors.name?.message}
           {...register("name")}
         />
+
+        <Row my={0}>
+          <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
+            {t("page.create.nsfw_playlist")}
+          </Checkbox>
+        </Row>
 
         <Restricted to={DREAM_PERMISSIONS.CAN_CREATE_DREAM}>
           <>

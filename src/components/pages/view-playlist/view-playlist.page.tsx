@@ -55,6 +55,7 @@ import {
   faPlay,
   faRankingStar,
   faSave,
+  faShield,
   faTrash,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
@@ -65,6 +66,11 @@ import { Select } from "@/components/shared/select/select";
 import { useUsers } from "@/api/user/query/useUsers";
 import { useImage } from "@/hooks/useImage";
 import { User } from "@/types/auth.types";
+import {
+  NSFW,
+  filterNsfwOption,
+  getNsfwOptions,
+} from "@/constants/dream.constants";
 
 type Params = { id: string };
 
@@ -186,6 +192,7 @@ export const ViewPlaylistPage = () => {
         name: data.name,
         featureRank: data?.featureRank,
         displayedOwner: data?.displayedOwner?.value,
+        nsfw: data?.nsfw.value === NSFW.TRUE,
       },
       {
         onSuccess: (response) => {
@@ -436,9 +443,10 @@ export const ViewPlaylistPage = () => {
             label: getUserName(playlist?.displayedOwner ?? playlist?.user),
           },
       featureRank: playlist?.featureRank,
+      nsfw: filterNsfwOption(playlist?.nsfw, t),
       created_at: moment(playlist?.created_at).format(FORMAT),
     });
-  }, [reset, playlist, isUserAdmin]);
+  }, [reset, playlist, isUserAdmin, t]);
 
   /**
    * Setting api values to form
@@ -597,6 +605,26 @@ export const ViewPlaylistPage = () => {
                     {...register("featureRank")}
                   />
                 </Restricted>
+
+                <Restricted
+                  to={PLAYLIST_PERMISSIONS.CAN_VIEW_NSFW}
+                  isOwner={isOwner}
+                >
+                  <Controller
+                    name="nsfw"
+                    control={control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        isDisabled={!editMode || !allowedEditOwner}
+                        placeholder={t("page.view_playlist.nsfw")}
+                        before={<FontAwesomeIcon icon={faShield} />}
+                        options={getNsfwOptions(t)}
+                      />
+                    )}
+                  />
+                </Restricted>
+
                 <Restricted
                   to={PLAYLIST_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
                   isOwner={user?.id === playlist?.user?.id}

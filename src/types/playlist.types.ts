@@ -23,6 +23,7 @@ export type Playlist = {
   items?: PlaylistItem[];
   itemCount?: number;
   featureRank?: number;
+  nsfw?: boolean;
 };
 
 export type PlaylistMediaState =
