@@ -41,7 +41,7 @@ export const useUsers = ({
   search,
   take = PAGINATION.TAKE,
 }: HookParams) => {
-  take = Math.min(take, PAGINATION.TAKE);
+  take = PAGINATION.TAKE;
   const skip = page * take;
   const { user } = useAuth();
   return useQuery<ApiResponse<{ users: User[]; count: number }>, Error>(
