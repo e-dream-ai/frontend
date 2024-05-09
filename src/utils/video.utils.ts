@@ -1,5 +1,5 @@
-export const framesToSeconds = (frames: number) => {
-  return frames / 30;
+export const framesToSeconds = (frames: number, activityLevel: number) => {
+  return (activityLevel * frames) / 30;
 };
 
 export const secondsToTimeFormat = (seconds: number) => {
