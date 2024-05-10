@@ -5,6 +5,8 @@ import { DEVICES } from "@/constants/devices.constants";
 import Text from "@/components/shared/text/text";
 import { Button } from "../button/button";
 
+const DEFAULT_GRID_COLUMNS = 3;
+
 const ItemCardSizes = {
   sm: css``,
   md: css``,
@@ -51,6 +53,7 @@ export const ItemTitleText = styled(Text)`
 
 export const StyledItemCardList = styled.ul<{
   grid?: boolean;
+  columns?: number;
 }>`
   display: flex;
   flex-flow: ${(props) => (props.grid ? "wrap" : "column")};
@@ -62,15 +65,14 @@ export const StyledItemCardList = styled.ul<{
   gap: ${(props) => (props?.grid ? "10px" : "0")};
 
   li {
-    width: calc(1 / 3 * 100% - 20px / 3);
-    max-width: calc(1 / 3 * 100% - 20px / 3);
-  }
-
-  @media (max-width: ${DEVICES.LAPTOP}) {
-    li {
-      width: calc(1 / 3 * 100% - 20px / 3);
-      max-width: calc(1 / 3 * 100% - 20px / 3);
-    }
+    width: ${(props) =>
+      `calc(1 / ${props.columns || DEFAULT_GRID_COLUMNS} * 100% - 20px / ${
+        props.columns || DEFAULT_GRID_COLUMNS
+      })`};
+    max-width: ${(props) =>
+      `calc(1 / ${props.columns || DEFAULT_GRID_COLUMNS} * 100% - 20px / ${
+        props.columns || DEFAULT_GRID_COLUMNS
+      })`};
   }
 
   @media (max-width: ${DEVICES.TABLET}) {

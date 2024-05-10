@@ -102,7 +102,7 @@ export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
               <FontAwesomeIcon icon={faTrash} />
             </Button>
           </Row>
-          <ItemCardList>
+          <ItemCardList columns={2}>
             <ItemCard type="playlist" item={playlist} size="sm" />
           </ItemCardList>
         </>

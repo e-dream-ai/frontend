@@ -66,7 +66,7 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
           <Spinner />
         </Row>
       ) : (
-        <ItemCardList>
+        <ItemCardList grid columns={2}>
           <ItemCard type="dream" item={dream} size="sm" />
         </ItemCardList>
       )}

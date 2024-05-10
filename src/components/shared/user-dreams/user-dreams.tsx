@@ -34,7 +34,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({ userId, grid }) => {
             <Spinner />
           </Row>
         ) : feed?.length ? (
-          <ItemCardList grid={grid}>
+          <ItemCardList grid={grid} columns={2}>
             {feed?.map((feedItem) => {
               let item;
               if (feedItem.type === "dream") {
