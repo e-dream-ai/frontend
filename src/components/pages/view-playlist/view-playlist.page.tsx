@@ -715,13 +715,13 @@ export const ViewPlaylistPage = () => {
                     <ItemCard
                       key={i.id}
                       itemId={i.id}
-                      inline
                       dndMode="local"
                       size="sm"
                       type={i.type}
                       item={i.type === "dream" ? i.dreamItem : i.playlistItem}
                       order={i.order}
                       deleteDisabled={!allowedEditPlaylist}
+                      showPlayButton
                       onDelete={handleDeletePlaylistItem(i.id)}
                       onOrder={handleOrderPlaylist}
                     />

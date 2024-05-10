@@ -32,7 +32,7 @@ import {
   faListUl,
   faPhotoFilm,
   faPlay,
-  faTrash,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserName } from "@/utils/user.util";
 import { useTheme } from "styled-components";
@@ -71,10 +71,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   item,
   size = "md",
   deleteDisabled = false,
+  showPlayButton = false,
   dndMode = DND_MODES.CROSS_WINDOW,
   order = 0,
-  showPlayButton = false,
-  inline = false,
   onOrder,
   onDelete,
 }) => {
@@ -280,45 +279,47 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       isMovedOnUpperHalf={isMovedOnUpperHalf}
     >
       <ItemCardAnchor to={navigateRoute} isDragEntered={isDragEntered}>
-        <Row
+        <Column
           flex="auto"
           margin="0"
           padding="3"
           justifyContent="space-between"
           flexWrap={["wrap", "nowrap", "nowrap", "nowrap"]}
         >
-          {inline && (
-            <Column mr="3" mb="3">
-              <Thumbnail />
-            </Column>
-          )}
-          <Column
-            flex="auto"
-            margin="0"
-            padding="0"
-            justifyContent="center"
-            style={{ position: "relative" }}
-          >
-            {showPlayButton && (
-              <Row
-                justifyContent="flex-end"
-                mb="2"
-                style={{ position: "absolute", top: 0, right: 0 }}
-              >
-                <PlayButton
+          {onDelete && (
+            <Row justifyContent="flex-end" mb={2}>
+              {!deleteDisabled && (
+                <Button
                   type="button"
-                  buttonType="default"
+                  buttonType="danger"
+                  after={<FontAwesomeIcon icon={faXmark} />}
                   transparent
-                  after={<FontAwesomeIcon icon={faPlay} />}
-                  onClick={handlePlay}
+                  onClick={onDelete}
                 />
-              </Row>
-            )}
-            {!inline && (
-              <Row mb="3" flex="auto">
-                <Thumbnail />
-              </Row>
-            )}
+              )}
+            </Row>
+          )}
+          <Column flex="auto" margin="0" padding="0" justifyContent="center">
+            <Row mb="3" flex="auto" style={{ position: "relative" }}>
+              <Thumbnail />
+
+              {showPlayButton && (
+                <Row
+                  justifyContent="flex-end"
+                  mb="2"
+                  style={{ position: "absolute", top: 0, right: 0 }}
+                >
+                  <PlayButton
+                    type="button"
+                    buttonType="default"
+                    transparent
+                    after={<FontAwesomeIcon icon={faPlay} />}
+                    onClick={handlePlay}
+                  />
+                </Row>
+              )}
+            </Row>
+
             <Row>
               <Column mr="3">
                 <Avatar size="sm" url={avatarUrl} />
@@ -346,20 +347,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               </Column>
             </Row>
           </Column>
-          {onDelete && (
-            <Column justifyContent="flex-start" ml="4">
-              {!deleteDisabled && (
-                <Button
-                  type="button"
-                  buttonType="danger"
-                  after={<FontAwesomeIcon icon={faTrash} />}
-                  transparent
-                  onClick={onDelete}
-                />
-              )}
-            </Column>
-          )}
-        </Row>
+        </Column>
       </ItemCardAnchor>
     </StyledItemCard>
   );

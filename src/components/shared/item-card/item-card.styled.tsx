@@ -12,9 +12,7 @@ const ItemCardSizes = {
 };
 
 const ImageSizes = {
-  sm: css`
-    max-width: 200px;
-  `,
+  sm: css``,
   md: css``,
   lg: css``,
 };
@@ -55,6 +53,7 @@ export const StyledItemCardList = styled.ul<{
   grid?: boolean;
 }>`
   display: flex;
+  flex-flow: ${(props) => (props.grid ? "wrap" : "column")};
   flex-wrap: wrap;
   flex: auto;
   list-style-type: none;
@@ -63,15 +62,14 @@ export const StyledItemCardList = styled.ul<{
   gap: ${(props) => (props?.grid ? "10px" : "0")};
 
   li {
-    width: ${(props) => (props?.grid ? "calc(1/3 * 100% - 20px/3)" : "100%")};
-    max-width: ${(props) =>
-      props?.grid ? "calc(1/3 * 100% - 20px/3)" : "100%"};
+    width: calc(1 / 3 * 100% - 20px / 3);
+    max-width: calc(1 / 3 * 100% - 20px / 3);
   }
 
   @media (max-width: ${DEVICES.LAPTOP}) {
     li {
-      width: ${(props) => (props?.grid ? "calc(50% - 5px)" : "100%")};
-      max-width: ${(props) => (props?.grid ? "calc(50% - 5px)" : "100%")};
+      width: calc(1 / 3 * 100% - 20px / 3);
+      max-width: calc(1 / 3 * 100% - 20px / 3);
     }
   }
 
