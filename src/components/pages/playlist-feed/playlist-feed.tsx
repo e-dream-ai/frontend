@@ -1,9 +1,6 @@
 import { Column, Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
-import {
-  ItemCard,
-  ItemCardList,
-} from "@/components/shared/item-card/item-card";
+import { ItemCard, ItemCardList } from "@/components/shared";
 import { Paginate } from "@/components/shared/paginate/paginate";
 import { Section } from "@/components/shared/section/section";
 import { Spinner } from "@/components/shared/spinner/spinner";

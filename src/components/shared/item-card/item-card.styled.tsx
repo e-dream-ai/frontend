@@ -5,8 +5,6 @@ import { DEVICES } from "@/constants/devices.constants";
 import Text from "@/components/shared/text/text";
 import { Button } from "../button/button";
 
-const DEFAULT_GRID_COLUMNS = 3;
-
 const ItemCardSizes = {
   sm: css``,
   md: css``,
@@ -14,7 +12,9 @@ const ItemCardSizes = {
 };
 
 const ImageSizes = {
-  sm: css``,
+  sm: css`
+    max-width: 200px;
+  `,
   md: css``,
   lg: css``,
 };
@@ -51,41 +51,8 @@ export const ItemTitleText = styled(Text)`
   white-space: normal;
 `;
 
-export const StyledItemCardList = styled.ul<{
-  grid?: boolean;
-  columns?: number;
-}>`
-  display: flex;
-  flex-flow: ${(props) => (props.grid ? "wrap" : "column")};
-  flex-wrap: wrap;
-  flex: auto;
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
-  gap: ${(props) => (props?.grid ? "10px" : "0")};
-
-  li {
-    width: ${(props) =>
-      `calc(1 / ${props.columns || DEFAULT_GRID_COLUMNS} * 100% - 20px / ${
-        props.columns || DEFAULT_GRID_COLUMNS
-      })`};
-    max-width: ${(props) =>
-      `calc(1 / ${props.columns || DEFAULT_GRID_COLUMNS} * 100% - 20px / ${
-        props.columns || DEFAULT_GRID_COLUMNS
-      })`};
-  }
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    li {
-      width: 100%;
-      max-width: 100%;
-    }
-  }
-`;
-
 export const StyledItemCard = styled.li<{
   isDragEntered?: boolean;
-  isMovedOnUpperHalf?: boolean;
   size: Sizes;
   grid?: boolean;
 }>`
@@ -96,15 +63,6 @@ export const StyledItemCard = styled.li<{
   ${(props) => ItemCardSizes[props.size]}
 
   background-color: ${(props) => props.theme.colorBackgroundQuaternary};
-  border-top: ${(props) =>
-    props.isDragEntered && props.isMovedOnUpperHalf
-      ? `3px solid ${props.theme.colorPrimary}`
-      : `3px solid ${props.theme.colorBackgroundTertiary}`};
-  border-bottom: ${(props) =>
-    props.isDragEntered && !props.isMovedOnUpperHalf
-      ? `3px solid ${props.theme.colorPrimary}`
-      : `3px solid ${props.theme.colorBackgroundTertiary}`};
-  user-select: none;
 
   -webkit-transition:
     color linear 0.4s,
@@ -124,11 +82,22 @@ export const ItemCardAnchor = styled(Link).withConfig({
   shouldForwardProp: (prop, defaultValidatorFn) =>
     !["isDragEntered"].includes(prop) && defaultValidatorFn(prop),
 })<{
+  isDragging?: boolean;
   isDragEntered?: boolean;
+  isMovedOnUpperHalf?: boolean;
 }>`
   display: flex;
   flex: auto;
-  pointer-events: ${(props) => (props.isDragEntered ? "none" : "all")};
+  /* pointer-events: none; */
+  /* touch-action: none; */
+  border-top: ${(props) =>
+    props.isDragEntered && props.isMovedOnUpperHalf
+      ? `3px solid ${props.theme.colorPrimary}`
+      : `3px solid ${props.theme.colorBackgroundTertiary}`};
+  border-bottom: ${(props) =>
+    props.isDragEntered && !props.isMovedOnUpperHalf
+      ? `3px solid ${props.theme.colorPrimary}`
+      : `3px solid ${props.theme.colorBackgroundTertiary}`};
   color: ${(props) => props.theme.textBodyColor};
   text-decoration: none;
 `;
