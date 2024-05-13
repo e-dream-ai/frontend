@@ -94,6 +94,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const { socket } = useSocket();
   const { isDragging, setDragging } = useItemCardListState();
 
+  const [isThumbnailLoaded, setIsThumbnailLoaded] = useState<boolean>(false);
   const [isDragEntered, setIsDragEntered] = useState<boolean>(false);
   const [isMovedOnUpperHalf, setIsMovedOnUpperHalf] = useState<boolean>(false);
   const [height, setHeight] = useState<number>(0);
@@ -289,9 +290,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     handleDragOver,
   ]);
 
+  /**
+   * update height when thumbnail is loaded
+   */
   useLayoutEffect(() => {
     setHeight(cardRef.current?.clientHeight ?? 0);
-  }, [cardRef]);
+  }, [cardRef, isThumbnailLoaded]);
 
   useEffect(() => {
     registerEvents();
@@ -302,7 +306,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const Thumbnail = useMemo(
     () => () =>
       thumbnail ? (
-        <ItemCardImage size={size} draggable="false" src={thumbnailUrl} />
+        <ItemCardImage
+          size={size}
+          draggable="false"
+          src={thumbnailUrl}
+          onLoad={() => setIsThumbnailLoaded(true)}
+        />
       ) : (
         <ThumbnailPlaceholder size={size}>
           <FontAwesomeIcon icon={faPhotoFilm} />
