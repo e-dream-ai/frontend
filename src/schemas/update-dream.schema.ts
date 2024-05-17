@@ -16,6 +16,8 @@ export type UpdateDreamFormValues = {
     label?: string;
     value?: string;
   };
+  upvotes?: number;
+  downvotes?: number;
   created_at?: string;
 };
 

@@ -30,6 +30,8 @@ import {
   faRankingStar,
   faSave,
   faShield,
+  faThumbsDown,
+  faThumbsUp,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
@@ -194,6 +196,22 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             onInputChange={(newValue) => setUserSearch(newValue)}
           />
         )}
+      />
+      <Input
+        disabled
+        placeholder={t("page.view_dream.upvotes")}
+        type="text"
+        before={<FontAwesomeIcon icon={faThumbsUp} />}
+        value={values.upvotes}
+        {...register("upvotes")}
+      />
+      <Input
+        disabled
+        placeholder={t("page.view_dream.downvotes")}
+        type="text"
+        before={<FontAwesomeIcon icon={faThumbsDown} />}
+        value={values.downvotes}
+        {...register("downvotes")}
       />
       <Input
         disabled

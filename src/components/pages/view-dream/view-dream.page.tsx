@@ -52,6 +52,11 @@ import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 import { User } from "@/types/auth.types";
 import { useImage } from "@/hooks/useImage";
 import { NSFW, filterNsfwOption } from "@/constants/dream.constants";
+import { useUpvoteDream } from "@/api/dream/mutation/useUpvoteDream";
+import { useDownvoteDream } from "@/api/dream/mutation/useDownvoteDream";
+import { useUnvoteDream } from "@/api/dream/mutation/useUnvoteDream";
+import { useDreamVote } from "@/api/dream/query/useDreamVote";
+import { VoteType } from "@/types/vote.types";
 
 type Params = { uuid: string };
 
@@ -68,6 +73,14 @@ const ViewDreamPage: React.FC = () => {
   } = useDream(uuid, {
     activeRefetchInterval: true,
   });
+
+  const { data: voteData, refetch: refetchVote } = useDreamVote(uuid);
+  const vote = voteData?.data?.vote;
+
+  const upvoteMutation = useUpvoteDream(uuid);
+  const downvoteMutation = useDownvoteDream(uuid);
+  const unvoteMutation = useUnvoteDream(uuid);
+
   const { socket } = useSocket();
   const dream = data?.data?.dream;
 
@@ -250,7 +263,12 @@ const ViewDreamPage: React.FC = () => {
         : "-",
       processedVideoFrames: dream?.processedVideoFrames
         ? secondsToTimeFormat(
-            Math.round(framesToSeconds(dream?.processedVideoFrames, dream?.activityLevel)),
+            Math.round(
+              framesToSeconds(
+                dream?.processedVideoFrames,
+                dream?.activityLevel,
+              ),
+            ),
           )
         : "-",
       processedVideoFPS: dream?.processedVideoFPS
@@ -272,6 +290,8 @@ const ViewDreamPage: React.FC = () => {
             label: getUserName(dream?.displayedOwner ?? dream?.user),
           },
       nsfw: filterNsfwOption(dream?.nsfw, t),
+      upvotes: dream?.upvotes,
+      downvotes: dream?.downvotes,
       created_at: moment(dream?.created_at).format(FORMAT),
     });
   }, [reset, dream, isUserAdmin, t]);
@@ -338,6 +358,24 @@ const ViewDreamPage: React.FC = () => {
 
   const handlePlayDream = () => {
     emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
+  };
+
+  const handleThumbsUpDream = async () => {
+    if (vote?.vote === VoteType.UPVOTE) {
+      await unvoteMutation.mutateAsync();
+    } else {
+      await upvoteMutation.mutateAsync();
+    }
+    await refetchVote();
+  };
+
+  const handleThumbsDownDream = async () => {
+    if (vote?.vote === VoteType.DOWNVOTE) {
+      await unvoteMutation.mutateAsync();
+    } else {
+      await downvoteMutation.mutateAsync();
+    }
+    await refetchVote();
   };
 
   /**
@@ -423,10 +461,26 @@ const ViewDreamPage: React.FC = () => {
                   >
                     <FontAwesomeIcon icon={faPlay} />
                   </Button>
-                  <Button type="button" buttonType="default" transparent mr="2">
+                  <Button
+                    type="button"
+                    buttonType={
+                      vote?.vote === VoteType.UPVOTE ? "primary" : "default"
+                    }
+                    transparent
+                    mr="2"
+                    onClick={handleThumbsUpDream}
+                  >
                     <FontAwesomeIcon icon={faThumbsUp} />
                   </Button>
-                  <Button type="button" buttonType="default" transparent mr="2">
+                  <Button
+                    type="button"
+                    buttonType={
+                      vote?.vote === VoteType.DOWNVOTE ? "primary" : "default"
+                    }
+                    transparent
+                    mr="2"
+                    onClick={handleThumbsDownDream}
+                  >
                     <FontAwesomeIcon icon={faThumbsDown} />
                   </Button>
 
@@ -532,10 +586,6 @@ const ViewDreamPage: React.FC = () => {
             </Row>
             {!isDreamProcessing ? (
               <React.Fragment>
-                <Row justifyContent="space-between">
-                  <Text>0 {t("page.view_dream.votes")}</Text>
-                  <Text>0 {t("page.view_dream.downvotes")}</Text>
-                </Row>
                 <Restricted
                   to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
                   isOwner={isOwner}
