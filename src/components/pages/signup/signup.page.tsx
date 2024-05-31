@@ -21,6 +21,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAngleRight,
   faEnvelope,
+  faKey,
   faLock,
 } from "@fortawesome/free-solid-svg-icons";
 import InputPassword from "@/components/shared/input-password/input-password";
@@ -54,6 +55,7 @@ export const SignupPage: React.FC = () => {
         username: data.username,
         email: data.username,
         password: data.password,
+        code: data.code,
       },
       {
         onSuccess: (data) => {
@@ -102,6 +104,13 @@ export const SignupPage: React.FC = () => {
               before={<FontAwesomeIcon icon={faLock} />}
               error={errors.confirmPassword?.message}
               {...register("confirmPassword")}
+            />
+            <Input
+              placeholder={t("page.signup.code")}
+              type="text"
+              before={<FontAwesomeIcon icon={faKey} />}
+              error={errors.code?.message}
+              {...register("code")}
             />
 
             <Row mb="0.4rem">

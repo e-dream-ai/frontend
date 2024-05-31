@@ -8,6 +8,7 @@ import InstallPage from "@/components/pages/install/install.page";
 import LearnMorePage from "@/components/pages/learn-more/learn-more.page";
 import MyDreamsPage from "@/components/pages/my-dreams/my-dreams.page";
 import ProfilePage from "@/components/pages/profile/profile.page";
+import InvitesPage from "@/components/pages/invites/invites.page";
 import TermsOfServicePage from "@/components/pages/terms-of-service/terms-of-service.page";
 import ViewDreamPage from "@/components/pages/view-dream/view-dream.page";
 import { ViewPlaylistPage } from "@/components/pages/view-playlist/view-playlist.page";
@@ -150,6 +151,14 @@ export const router = createBrowserRouter([
             ]}
           >
             <ProfilePage isMyProfile />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.INVITES,
+        element: (
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN_GROUP]}>
+            <InvitesPage />
           </ProtectedRoute>
         ),
       },

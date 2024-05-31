@@ -11,6 +11,7 @@ export const ROUTES = {
   VIEW_PLAYLIST: "/playlist",
   PROFILE: "/profile",
   MY_PROFILE: "/my-profile",
+  INVITES: "/invites",
   HELP: "/help",
   LEARN_MORE: "/learn-more",
   ABOUT: "/about",

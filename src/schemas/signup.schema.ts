@@ -4,6 +4,7 @@ export type SignupFormValues = {
   username: string;
   password: string;
   confirmPassword: string;
+  code: string;
   terms?: boolean;
 };
 
@@ -11,6 +12,7 @@ export type SignupRequestValues = {
   username: string;
   email: string;
   password: string;
+  code: string;
 };
 
 const getCharacterValidationError = (str: string) => {
@@ -35,6 +37,7 @@ export const SignupSchema = yup
     username: yup.string().email().required("Email is required."),
     password: passwordSchemaProperty,
     confirmPassword: confirmPasswordSchemaProperty,
+    code: yup.string().required("Signup code is required."),
     terms: yup.boolean().oneOf([true], "You have to accept Terms of Service"),
   })
   .required();
