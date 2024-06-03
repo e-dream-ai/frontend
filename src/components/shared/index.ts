@@ -10,3 +10,4 @@ export { Modal } from "./modal/modal";
 export { AddItemPlaylistDropzone } from "./playlist-dropzone/playlist-dropzone";
 export { Column, Row } from "./row/row";
 export { Thumbnail, ThumbnailPlaceholder } from "./thumbnail/thumbnail";
+export { TextArea } from "./text-area/text-area";

@@ -182,7 +182,17 @@
       "current_playlist": "Current Playlist"
     },
     "invites": {
-      "title": "Invites"
+      "title": "Invites",
+      "create_invites": "Create invites",
+      "invites_sent_email_tab_title": "Sent Email",
+      "invites_custom_code_tab_title": "Custom Code",
+      "sent_email_email": "Email",
+      "sent_email_code_length": "Code Length",
+      "custom_code_code": "Code",
+      "custom_code_size": "Redeem Size",
+      "generate": "Generate",
+      "invite_created_successfully": "Invite created successfully.",
+      "error_creating_invite": "Error creating invite."
     },
     "help": {
       "title": "Help"
@@ -302,6 +312,14 @@
     },
     "current_playlist": {
       "no_current_playlist": "No current playlist"
+    },
+    "invites_list": {
+      "empty": "No invites to show",
+      "copy_signup_url": "Signup url",
+      "invalidate_invite": "Invalidate",
+      "signup_url_copied_successfully": "Invite signup url copied successfully.",
+      "invite_invalidated_successfully": "Invite invalidated successfully.",
+      "error_invalidating_invite": "Error invalidating invite."
     }
   },
   "hooks": {
