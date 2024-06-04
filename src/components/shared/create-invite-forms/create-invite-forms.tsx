@@ -1,16 +1,18 @@
 import { TabList } from "@/components/shared/tabs/tabs";
-import { Button, Column, Input } from "@/components/shared";
+import { Button, Column, Input, Row } from "@/components/shared";
 import { Tab, TabPanel, Tabs } from "react-tabs";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faAngleRight,
   faEnvelope,
   faHashtag,
   faTextWidth,
   faTicket,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
   InviteByEmailFormValues,
@@ -20,14 +22,20 @@ import {
 } from "@/schemas/invite.schema";
 import { useCreateInvite } from "@/api/invites/mutation/useCreateInvite";
 import { toast } from "react-toastify";
+import Select from "../select/select";
+import { useRoles } from "@/api/user/query/useRoles";
+import { formatRoleName } from "@/utils/user.util";
 
 enum CREATE_INVITE {
   EMAIL = 0,
   CUSTOM = 1,
 }
 
-const InviteByEmailForm: React.FC = () => {
+export const InviteByEmailForm: React.FC<{ onSucess?: () => void }> = ({
+  onSucess,
+}) => {
   const { t } = useTranslation();
+  const [roleSearch, setRoleSearch] = useState<string>("");
 
   const { mutateAsync, isLoading } = useCreateInvite();
 
@@ -36,20 +44,35 @@ const InviteByEmailForm: React.FC = () => {
     handleSubmit,
     formState: { errors },
     reset,
+    control,
   } = useForm<InviteByEmailFormValues>({
     resolver: yupResolver(InviteByEmailSchema),
   });
 
+  const { data: rolesData, isLoading: isRolesLoading } = useRoles({
+    search: roleSearch,
+  });
+
+  const rolesOptions = (rolesData?.data?.roles ?? [])
+    .filter((role) => role.name)
+    .map((role) => ({
+      label: formatRoleName(role?.name),
+      value: role?.id,
+    }));
+
   const onSubmit = async (formData: InviteByEmailFormValues) => {
+    console.log({ formData });
     try {
       const data = await mutateAsync({
         emails: [formData.email],
         codeLength: formData.codeLength,
+        roleId: formData?.role?.value,
       });
 
       if (data.success) {
         toast.success(t("page.invites.invite_created_successfully"));
         reset();
+        onSucess?.();
       } else {
         toast.error(
           `${t("page.invites.error_creating_invite")} ${data.message}`,
@@ -62,30 +85,55 @@ const InviteByEmailForm: React.FC = () => {
 
   return (
     <form id="invite-by-email" onSubmit={handleSubmit(onSubmit)}>
-      <Input
-        placeholder={t("page.invites.sent_email_email")}
-        type="text"
-        before={<FontAwesomeIcon icon={faEnvelope} />}
-        error={errors.email?.message}
-        {...register("email")}
-      />
-      <Input
-        placeholder={t("page.invites.sent_email_code_length")}
-        type="text"
-        before={<FontAwesomeIcon icon={faTextWidth} />}
-        error={errors.codeLength?.message}
-        {...register("codeLength")}
-      />
-      <Button type="submit" isLoading={isLoading} size="sm">
-        {t("page.invites.generate")}
-      </Button>
+      <Column>
+        <Controller
+          name="role"
+          control={control}
+          render={({ field }) => (
+            <Select
+              {...field}
+              placeholder={t("page.invites.signup_role")}
+              isLoading={isRolesLoading}
+              before={<FontAwesomeIcon icon={faUser} />}
+              options={rolesOptions}
+              onInputChange={(newValue) => setRoleSearch(newValue)}
+              error={errors.role?.label?.message}
+            />
+          )}
+        />
+        <Input
+          placeholder={t("page.invites.sent_email_email")}
+          type="text"
+          before={<FontAwesomeIcon icon={faEnvelope} />}
+          error={errors.email?.message}
+          {...register("email")}
+        />
+        <Input
+          placeholder={t("page.invites.sent_email_code_length")}
+          type="number"
+          before={<FontAwesomeIcon icon={faTextWidth} />}
+          error={errors.codeLength?.message}
+          {...register("codeLength")}
+        />
+      </Column>
+      <Row justifyContent="flex-end">
+        <Button
+          type="submit"
+          isLoading={isLoading}
+          after={<FontAwesomeIcon icon={faAngleRight} />}
+        >
+          {t("page.invites.create")}
+        </Button>
+      </Row>
     </form>
   );
 };
 
-const InviteCustomCodeForm: React.FC = () => {
+export const InviteCustomCodeForm: React.FC<{ onSucess?: () => void }> = ({
+  onSucess,
+}) => {
   const { t } = useTranslation();
-
+  const [roleSearch, setRoleSearch] = useState<string>("");
   const { mutateAsync, isLoading } = useCreateInvite();
 
   const {
@@ -93,20 +141,34 @@ const InviteCustomCodeForm: React.FC = () => {
     handleSubmit,
     formState: { errors },
     reset,
+    control,
   } = useForm<InviteCustomCodeFormValues>({
     resolver: yupResolver(InviteCustomCodeSchema),
   });
+
+  const { data: rolesData, isLoading: isRolesLoading } = useRoles({
+    search: roleSearch,
+  });
+
+  const rolesOptions = (rolesData?.data?.roles ?? [])
+    .filter((role) => role.name)
+    .map((role) => ({
+      label: formatRoleName(role?.name),
+      value: role?.id,
+    }));
 
   const onSubmit = async (formData: InviteCustomCodeFormValues) => {
     try {
       const data = await mutateAsync({
         code: formData.code,
         size: formData.size,
+        roleId: formData?.role?.value,
       });
 
       if (data.success) {
         toast.success(t("page.invites.invite_created_successfully"));
         reset();
+        onSucess?.();
       } else {
         toast.error(
           `${t("page.invites.error_creating_invite")} ${data.message}`,
@@ -120,6 +182,21 @@ const InviteCustomCodeForm: React.FC = () => {
   return (
     <form id="invite-custom-code" onSubmit={handleSubmit(onSubmit)}>
       <Column>
+        <Controller
+          name="role"
+          control={control}
+          render={({ field }) => (
+            <Select
+              {...field}
+              placeholder={t("page.invites.signup_role")}
+              isLoading={isRolesLoading}
+              before={<FontAwesomeIcon icon={faUser} />}
+              options={rolesOptions}
+              onInputChange={(newValue) => setRoleSearch(newValue)}
+              error={errors.role?.label?.message}
+            />
+          )}
+        />
         <Input
           placeholder={t("page.invites.custom_code_code")}
           type="text"
@@ -129,15 +206,22 @@ const InviteCustomCodeForm: React.FC = () => {
         />
         <Input
           placeholder={t("page.invites.custom_code_size")}
-          type="text"
+          type="number"
           before={<FontAwesomeIcon icon={faTicket} />}
           error={errors.size?.message}
           {...register("size")}
         />
-        <Button type="submit" isLoading={isLoading} size="sm">
-          {t("page.invites.generate")}
-        </Button>
       </Column>
+
+      <Row justifyContent="flex-end">
+        <Button
+          type="submit"
+          isLoading={isLoading}
+          after={<FontAwesomeIcon icon={faAngleRight} />}
+        >
+          {t("page.invites.create")}
+        </Button>
+      </Row>
     </form>
   );
 };

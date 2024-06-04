@@ -132,6 +132,10 @@ export const StyledButton = styled.button<
     cursor: not-allowed;
   }
 
+  .react-tooltip {
+    text-transform: none;
+  }
+
   ${space}
   ${typography}
 `;

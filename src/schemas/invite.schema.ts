@@ -2,25 +2,47 @@ import * as yup from "yup";
 
 export type InviteByEmailFormValues = {
   email: string;
-  codeLength?: number;
+  codeLength: number;
+  role: {
+    label: string;
+    value: number;
+  };
 };
 
 export const InviteByEmailSchema = yup
-  .object({
-    email: yup.string().required(),
-    codeLength: yup.number(),
+  .object()
+  .shape({
+    email: yup.string().email().required("Email is required."),
+    codeLength: yup.number().required("Code length is required."),
+    role: yup
+      .object({
+        label: yup.string().required("Role is required."),
+        value: yup.number().required(),
+      })
+      .required("Role is required."),
   })
   .required();
 
 export type InviteCustomCodeFormValues = {
   code: string;
-  size?: number;
+  size: number;
+  role: {
+    label: string;
+    value: number;
+  };
 };
 
 export const InviteCustomCodeSchema = yup
-  .object({
-    code: yup.string().required(),
-    size: yup.number(),
+  .object()
+  .shape({
+    code: yup.string().required("Code is required."),
+    size: yup.number().required("Redeem size is required."),
+    role: yup
+      .object({
+        label: yup.string().required("Role is required."),
+        value: yup.number().required(),
+      })
+      .required("Role is required."),
   })
   .required();
 
@@ -29,4 +51,5 @@ export type InviteRequestValues = {
   code?: string;
   size?: number;
   codeLength?: number;
+  roleId?: number;
 };

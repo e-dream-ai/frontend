@@ -10,13 +10,15 @@ import { Invite } from "@/types/invite.types";
 import { useInvalidateInvite } from "@/api/invites/mutation/useInvalidateInvite";
 import { CopyToClipboard } from "react-copy-to-clipboard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faClipboard, faRemove } from "@fortawesome/free-solid-svg-icons";
+import { faClipboard, faEraser } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
+import { Tooltip } from "react-tooltip";
+import { StyledList } from "./invites-list.styled";
 
 const List: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
-  return <ul>{children}</ul>;
+  return <StyledList>{children}</StyledList>;
 };
 
 const InviteItem: React.FC<{
@@ -49,29 +51,45 @@ const InviteItem: React.FC<{
   return (
     <li>
       <Row justifyContent="space-between">
-        <Column>
+        <Column flex={["2"]}>
           <Text>{invite?.code}</Text>
         </Column>
-        <Column>
+        <Column flex={["1"]}>
           <Text>{invite?.size}</Text>
         </Column>
-        <Column>
-          <CopyToClipboard text={invite?.signupUrl}>
+        <Column flex={["1"]} alignItems="flex-end">
+          <Row>
+            <CopyToClipboard text={invite?.signupUrl}>
+              <Button
+                data-tooltip-id="copy-invite-url"
+                buttonType="tertiary"
+                size="sm"
+                onClick={handleCopySignupUrl}
+                before={<FontAwesomeIcon icon={faClipboard} />}
+                mr="3"
+              >
+                <Tooltip
+                  id="copy-invite-url"
+                  place="right-end"
+                  content={t("components.invites_list.copy_signup_url")}
+                />
+              </Button>
+            </CopyToClipboard>
+
             <Button
-              onClick={handleCopySignupUrl}
-              before={<FontAwesomeIcon icon={faClipboard} />}
+              data-tooltip-id="invalidate-invite"
+              buttonType="danger"
+              size="sm"
+              onClick={handleInvalidateInvite}
+              before={<FontAwesomeIcon icon={faEraser} />}
             >
-              {t("components.invites_list.copy_signup_url")}
+              <Tooltip
+                id="invalidate-invite"
+                place="right-end"
+                content={t("components.invites_list.invalidate_invite")}
+              />
             </Button>
-          </CopyToClipboard>
-        </Column>
-        <Column>
-          <Button
-            onClick={handleInvalidateInvite}
-            before={<FontAwesomeIcon icon={faRemove} />}
-          >
-            {t("components.invites_list.invalidate_invite")}
-          </Button>
+          </Row>
         </Column>
       </Row>
     </li>

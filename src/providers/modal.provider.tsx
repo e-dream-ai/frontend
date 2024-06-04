@@ -1,4 +1,4 @@
-import { ForgotPasswordModal } from "@/components/modals";
+import { ForgotPasswordModal, CreateInviteModal } from "@/components/modals";
 import { ModalProvider as StateModalProvider } from "@/context/modal.context";
 import useModal from "@/hooks/useModal";
 import styled from "styled-components";
@@ -36,6 +36,9 @@ export const StyledModalProviderWrapper: React.FC<{
       <>
         {state.forgotPasswordModal && (
           <ForgotPasswordModal isOpen={state.forgotPasswordModal} />
+        )}
+        {state.createInviteModal && (
+          <CreateInviteModal isOpen={state.createInviteModal} />
         )}
       </>
       {children}

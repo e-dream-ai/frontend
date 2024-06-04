@@ -1,5 +1,6 @@
 export enum ModalsKeys {
   FORGOT_PASSWORD_MODAL = "forgotPasswordModal",
+  CREATE_INVITE_MODAL = "createInviteModal",
 }
 
 export enum ModalActionKind {
