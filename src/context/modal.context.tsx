@@ -9,6 +9,7 @@ import React, { createContext, useCallback, useMemo, useReducer } from "react";
 
 const initialState: ModalState = {
   forgotPasswordModal: false,
+  createInviteModal: false,
 };
 
 export const ModalContext = createContext<ModalContextType>({
