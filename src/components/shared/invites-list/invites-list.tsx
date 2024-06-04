@@ -14,6 +14,7 @@ import { faClipboard, faEraser } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
 import { StyledList } from "./invites-list.styled";
+import { useTheme } from "styled-components";
 
 const List: React.FC<{
   children?: React.ReactNode;
@@ -98,6 +99,7 @@ const InviteItem: React.FC<{
 
 export const InvitesList: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching } = useInvites({
@@ -117,11 +119,26 @@ export const InvitesList: React.FC = () => {
             <Spinner />
           </Row>
         ) : invites?.length ? (
-          <List>
-            {invites?.map((invite) => (
-              <InviteItem key={invite?.id} invite={invite} />
-            ))}
-          </List>
+          <>
+            <Row justifyContent="space-between">
+              <Column flex={["2"]}>
+                <Text color={theme.colorSecondary}>
+                  {t("components.invites_list.code")}
+                </Text>
+              </Column>
+              <Column flex={["1"]}>
+                <Text color={theme.colorSecondary}>
+                  {t("components.invites_list.size")}
+                </Text>
+              </Column>
+              <Column flex={["1"]} alignItems="flex-end"></Column>
+            </Row>
+            <List>
+              {invites?.map((invite) => (
+                <InviteItem key={invite?.id} invite={invite} />
+              ))}
+            </List>
+          </>
         ) : (
           <Text>{t("components.invites_list.empty")}</Text>
         )}

@@ -85,6 +85,7 @@ export const InputAfter = styled.div`
 export const InputError = styled.span`
   font-size: 0.875rem;
   color: ${(props) => props.theme.colorDanger};
+  margin-bottom: 1rem;
 `;
 
 export default StyledInput;

@@ -107,6 +107,12 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
               {getUserEmail(user) ?? "-"}
             </Text>
           </Row>
+          <Row my={1}>{t("components.profile_card.signup_code")}</Row>
+          <Row>
+            <Text fontSize="1rem" color={theme.textSecondaryColor}>
+              {user?.signupInvite?.code ?? "-"}
+            </Text>
+          </Row>
 
           <Row my={3}>
             <Text

@@ -1,4 +1,5 @@
 import { Dream } from "./dream.types";
+import { Invite } from "./invite.types";
 import { Playlist } from "./playlist.types";
 import { RoleType } from "./role.types";
 
@@ -21,6 +22,7 @@ export type User = {
   currentDream?: Dream;
   currentPlaylist?: Playlist;
   nsfw?: boolean;
+  signupInvite?: Invite;
 };
 
 export type Role = {

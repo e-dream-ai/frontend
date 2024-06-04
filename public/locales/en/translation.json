@@ -270,6 +270,7 @@
       "description": "description",
       "no_description": "no description",
       "email": "email",
+      "signup_code": "signup code",
       "settings": "settings",
       "save": "Save",
       "cancel": "Cancel",
@@ -321,6 +322,8 @@
     },
     "invites_list": {
       "empty": "No invites to show",
+      "code": "Code",
+      "size": "Size",
       "copy_signup_url": "Copy signup url",
       "invalidate_invite": "Invalidate invite",
       "signup_url_copied_successfully": "Invite signup url copied successfully.",

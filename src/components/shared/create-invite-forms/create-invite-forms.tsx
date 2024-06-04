@@ -61,7 +61,6 @@ export const InviteByEmailForm: React.FC<{ onSucess?: () => void }> = ({
     }));
 
   const onSubmit = async (formData: InviteByEmailFormValues) => {
-    console.log({ formData });
     try {
       const data = await mutateAsync({
         emails: [formData.email],

@@ -27,12 +27,19 @@ import {
 import InputPassword from "@/components/shared/input-password/input-password";
 import { ROUTES } from "@/constants/routes.constants";
 import { StyledSignup } from "./signup.styled";
+import { useSearchParams } from "react-router-dom";
 
 const SECTION_ID = "signup";
 
 export const SignupPage: React.FC = () => {
   const { t } = useTranslation();
   const { showModal } = useModal();
+
+  const [searchParams] = useSearchParams();
+
+  // Get specific search parameters
+  const code = searchParams.get("invite") ?? "";
+  const email = searchParams.get("email") ?? "";
 
   const handleOpenForgotPasswordModal = () => {
     showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
@@ -45,6 +52,12 @@ export const SignupPage: React.FC = () => {
     reset,
   } = useForm<SignupFormValues>({
     resolver: yupResolver(SignupSchema),
+    values: {
+      code,
+      username: email,
+      password: "",
+      confirmPassword: "",
+    },
   });
 
   const { mutate, isLoading } = useSignup();

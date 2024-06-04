@@ -51,6 +51,12 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
     },
     { component: t("header.feed"), route: ROUTES.FEED, showSlash: false },
     {
+      component: t("header.invites"),
+      route: ROUTES.INVITES,
+      onlyMobile: true,
+      showSlash: false,
+    },
+    {
       component: (
         <>
           {t("header.logout")}
