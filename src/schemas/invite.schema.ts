@@ -2,7 +2,7 @@ import * as yup from "yup";
 
 export type InviteByEmailFormValues = {
   email: string;
-  codeLength: number;
+  codeLength?: number | null;
   role: {
     label: string;
     value: number;
@@ -15,11 +15,14 @@ export const InviteByEmailSchema = yup
     email: yup.string().email().required("Email is required."),
     codeLength: yup
       .number()
+      .nullable()
+      .transform((value, originalValue) =>
+        originalValue === "" ? undefined : value,
+      )
       .typeError("Code length must be a number.")
-      .required("Code length is required.")
       .positive("Code length must be a positive number.")
       .integer("Code length must be an integer.")
-      .moreThan(3, "Code length must be 4 at least."),
+      .min(4, "Code length must be 4 at least."),
     role: yup
       .object({
         label: yup.string().required("Role is required."),
@@ -54,7 +57,7 @@ export const InviteCustomCodeSchema = yup
       .required("Redeem size is required.")
       .positive("Redeem size must be a positive number.")
       .integer("Redeem size must be an integer.")
-      .moreThan(0, "Redeem size must be 1 at least."),
+      .min(1, "Redeem size must be 1 at least."),
     role: yup
       .object({
         label: yup.string().required("Role is required."),
@@ -65,7 +68,7 @@ export const InviteCustomCodeSchema = yup
   .required();
 
 export type InviteRequestValues = {
-  emails?: string[];
+  email?: string;
   code?: string;
   size?: number;
   codeLength?: number;

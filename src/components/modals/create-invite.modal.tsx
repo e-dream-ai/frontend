@@ -36,7 +36,7 @@ export const CreateInviteModal: React.FC<
       <Tabs selectedIndex={tabIndex} onSelect={(index) => setTabIndex(index)}>
         <TabList>
           <Tab tabIndex={`${CREATE_INVITE.EMAIL}`}>
-            {t("modal.create_invite.invites_sent_email_tab_title")}
+            {t("modal.create_invite.invites_send_email_tab_title")}
           </Tab>
           <Tab tabIndex={`${CREATE_INVITE.CUSTOM}`}>
             {t("modal.create_invite.invites_custom_code_tab_title")}

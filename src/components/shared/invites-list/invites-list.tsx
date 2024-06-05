@@ -15,6 +15,7 @@ import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
 import { StyledList } from "./invites-list.styled";
 import { useTheme } from "styled-components";
+import { formatRoleName } from "@/utils/user.util";
 
 const List: React.FC<{
   children?: React.ReactNode;
@@ -57,6 +58,9 @@ const InviteItem: React.FC<{
         </Column>
         <Column flex={["1"]}>
           <Text>{invite?.size}</Text>
+        </Column>
+        <Column flex={["1"]}>
+          <Text>{formatRoleName(invite?.signupRole?.name)}</Text>
         </Column>
         <Column flex={["1"]} alignItems="flex-end">
           <Row>
@@ -129,6 +133,11 @@ export const InvitesList: React.FC = () => {
               <Column flex={["1"]}>
                 <Text color={theme.colorSecondary}>
                   {t("components.invites_list.size")}
+                </Text>
+              </Column>
+              <Column flex={["1"]}>
+                <Text color={theme.colorSecondary}>
+                  {t("components.invites_list.role")}
                 </Text>
               </Column>
               <Column flex={["1"]} alignItems="flex-end"></Column>

@@ -1,7 +1,5 @@
-import { TabList } from "@/components/shared/tabs/tabs";
 import { Button, Column, Input, Row } from "@/components/shared";
-import { Tab, TabPanel, Tabs } from "react-tabs";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -25,11 +23,7 @@ import { toast } from "react-toastify";
 import Select from "../select/select";
 import { useRoles } from "@/api/user/query/useRoles";
 import { formatRoleName } from "@/utils/user.util";
-
-enum CREATE_INVITE {
-  EMAIL = 0,
-  CUSTOM = 1,
-}
+import { ROLES } from "@/constants/role.constants";
 
 export const InviteByEmailForm: React.FC<{ onSucess?: () => void }> = ({
   onSucess,
@@ -38,6 +32,25 @@ export const InviteByEmailForm: React.FC<{ onSucess?: () => void }> = ({
   const [roleSearch, setRoleSearch] = useState<string>("");
 
   const { mutateAsync, isLoading } = useCreateInvite();
+
+  const { data: rolesData, isLoading: isRolesLoading } = useRoles({
+    search: roleSearch,
+  });
+
+  const rolesOptions = useMemo(() => {
+    return (
+      (rolesData?.data?.roles ?? [])
+        .filter((role) => role.name)
+        /**
+         * filter roles to exclude ADMIN_GROUP
+         */
+        .filter((role) => role.name !== ROLES.ADMIN_GROUP)
+        .map((role) => ({
+          label: formatRoleName(role?.name),
+          value: role?.id,
+        }))
+    );
+  }, [rolesData]);
 
   const {
     register,
@@ -49,22 +62,20 @@ export const InviteByEmailForm: React.FC<{ onSucess?: () => void }> = ({
     resolver: yupResolver(InviteByEmailSchema),
   });
 
-  const { data: rolesData, isLoading: isRolesLoading } = useRoles({
-    search: roleSearch,
-  });
+  useEffect(() => {
+    const defaultRole = rolesOptions.find(
+      (role) => role.label === formatRoleName(ROLES.USER_GROUP),
+    );
 
-  const rolesOptions = (rolesData?.data?.roles ?? [])
-    .filter((role) => role.name)
-    .map((role) => ({
-      label: formatRoleName(role?.name),
-      value: role?.id,
-    }));
+    reset({ role: defaultRole });
+  }, [reset, rolesOptions]);
 
   const onSubmit = async (formData: InviteByEmailFormValues) => {
     try {
       const data = await mutateAsync({
-        emails: [formData.email],
-        codeLength: formData.codeLength,
+        email: formData.email,
+        codeLength:
+          formData.codeLength !== null ? formData.codeLength : undefined,
         roleId: formData?.role?.value,
       });
 
@@ -135,6 +146,25 @@ export const InviteCustomCodeForm: React.FC<{ onSucess?: () => void }> = ({
   const [roleSearch, setRoleSearch] = useState<string>("");
   const { mutateAsync, isLoading } = useCreateInvite();
 
+  const { data: rolesData, isLoading: isRolesLoading } = useRoles({
+    search: roleSearch,
+  });
+
+  const rolesOptions = useMemo(() => {
+    return (
+      (rolesData?.data?.roles ?? [])
+        .filter((role) => role.name)
+        /**
+         * filter roles to exclude ADMIN_GROUP
+         */
+        .filter((role) => role.name !== ROLES.ADMIN_GROUP)
+        .map((role) => ({
+          label: formatRoleName(role?.name),
+          value: role?.id,
+        }))
+    );
+  }, [rolesData]);
+
   const {
     register,
     handleSubmit,
@@ -145,16 +175,13 @@ export const InviteCustomCodeForm: React.FC<{ onSucess?: () => void }> = ({
     resolver: yupResolver(InviteCustomCodeSchema),
   });
 
-  const { data: rolesData, isLoading: isRolesLoading } = useRoles({
-    search: roleSearch,
-  });
+  useEffect(() => {
+    const defaultRole = rolesOptions.find(
+      (role) => role.label === formatRoleName(ROLES.USER_GROUP),
+    );
 
-  const rolesOptions = (rolesData?.data?.roles ?? [])
-    .filter((role) => role.name)
-    .map((role) => ({
-      label: formatRoleName(role?.name),
-      value: role?.id,
-    }));
+    reset({ role: defaultRole });
+  }, [reset, rolesOptions]);
 
   const onSubmit = async (formData: InviteCustomCodeFormValues) => {
     try {
@@ -224,32 +251,3 @@ export const InviteCustomCodeForm: React.FC<{ onSucess?: () => void }> = ({
     </form>
   );
 };
-
-export const CreateInviteForms: React.FC = () => {
-  const { t } = useTranslation();
-
-  const [tabIndex, setTabIndex] = useState<CREATE_INVITE>(CREATE_INVITE.EMAIL);
-
-  return (
-    <Tabs selectedIndex={tabIndex} onSelect={(index) => setTabIndex(index)}>
-      <TabList>
-        <Tab tabIndex={`${CREATE_INVITE.EMAIL}`}>
-          {t("page.invites.invites_sent_email_tab_title")}
-        </Tab>
-        <Tab tabIndex={`${CREATE_INVITE.CUSTOM}`}>
-          {t("page.invites.invites_custom_code_tab_title")}
-        </Tab>
-      </TabList>
-
-      <TabPanel tabIndex={CREATE_INVITE.EMAIL}>
-        <InviteByEmailForm />
-      </TabPanel>
-
-      <TabPanel tabIndex={CREATE_INVITE.CUSTOM}>
-        <InviteCustomCodeForm />
-      </TabPanel>
-    </Tabs>
-  );
-};
-
-export default CreateInviteForms;
