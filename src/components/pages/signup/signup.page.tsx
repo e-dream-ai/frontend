@@ -43,11 +43,13 @@ export const SignupPage: React.FC = () => {
     ObjectSchema<SignupFormValues, AnyObject, unknown, "">
   >(getSignupSchema(false));
 
-  // Get specific search parameters
-  const code = searchParams.get("invite") ?? "";
-  const email = searchParams.get("email") ?? "";
-
   const isSignupFeatureActive = useSignupFeature();
+
+  // Get specific search parameters
+  const code = isSignupFeatureActive
+    ? searchParams.get("invite") ?? ""
+    : undefined;
+  const email = searchParams.get("email") ?? "";
 
   const handleOpenForgotPasswordModal = () => {
     showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
