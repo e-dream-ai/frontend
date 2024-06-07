@@ -16,7 +16,7 @@ import useModal from "@/hooks/useModal";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import SignupSchema, { SignupFormValues } from "@/schemas/signup.schema";
+import { SignupFormValues, getSignupSchema } from "@/schemas/signup.schema";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAngleRight,
@@ -28,6 +28,9 @@ import InputPassword from "@/components/shared/input-password/input-password";
 import { ROUTES } from "@/constants/routes.constants";
 import { StyledSignup } from "./signup.styled";
 import { useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { AnyObject, ObjectSchema } from "yup";
+import useSignupFeature from "@/api/feature/hook/useSignupFeature";
 
 const SECTION_ID = "signup";
 
@@ -36,10 +39,15 @@ export const SignupPage: React.FC = () => {
   const { showModal } = useModal();
 
   const [searchParams] = useSearchParams();
+  const [signupSchema, setSignupSchema] = useState<
+    ObjectSchema<SignupFormValues, AnyObject, unknown, "">
+  >(getSignupSchema(false));
 
   // Get specific search parameters
   const code = searchParams.get("invite") ?? "";
   const email = searchParams.get("email") ?? "";
+
+  const isSignupFeatureActive = useSignupFeature();
 
   const handleOpenForgotPasswordModal = () => {
     showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
@@ -51,7 +59,7 @@ export const SignupPage: React.FC = () => {
     formState: { errors },
     reset,
   } = useForm<SignupFormValues>({
-    resolver: yupResolver(SignupSchema),
+    resolver: yupResolver(signupSchema),
     values: {
       code,
       username: email,
@@ -89,6 +97,11 @@ export const SignupPage: React.FC = () => {
     );
   };
 
+  useEffect(() => {
+    const generatedSignupSchema = getSignupSchema(isSignupFeatureActive);
+    setSignupSchema(generatedSignupSchema);
+  }, [isSignupFeatureActive]);
+
   return (
     <Container>
       <Section id={SECTION_ID}>
@@ -118,13 +131,15 @@ export const SignupPage: React.FC = () => {
               error={errors.confirmPassword?.message}
               {...register("confirmPassword")}
             />
-            <Input
-              placeholder={t("page.signup.code")}
-              type="text"
-              before={<FontAwesomeIcon icon={faKey} />}
-              error={errors.code?.message}
-              {...register("code")}
-            />
+            {isSignupFeatureActive && (
+              <Input
+                placeholder={t("page.signup.code")}
+                type="text"
+                before={<FontAwesomeIcon icon={faKey} />}
+                error={errors.code?.message}
+                {...register("code")}
+              />
+            )}
 
             <Row mb="0.4rem">
               <Checkbox {...register("terms")} error={errors.terms?.message}>

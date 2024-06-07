@@ -6,7 +6,7 @@ import {
   faAngleRight,
   faEnvelope,
   faHashtag,
-  faTextWidth,
+  // faTextWidth,
   faTicket,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
@@ -74,8 +74,8 @@ export const InviteByEmailForm: React.FC<{ onSucess?: () => void }> = ({
     try {
       const data = await mutateAsync({
         email: formData.email,
-        codeLength:
-          formData.codeLength !== null ? formData.codeLength : undefined,
+        // codeLength:
+        //   formData.codeLength !== null ? formData.codeLength : undefined,
         roleId: formData?.role?.value,
       });
 
@@ -118,13 +118,13 @@ export const InviteByEmailForm: React.FC<{ onSucess?: () => void }> = ({
           error={errors.email?.message}
           {...register("email")}
         />
-        <Input
+        {/* <Input
           placeholder={t("page.invites.sent_email_code_length")}
           type="number"
           before={<FontAwesomeIcon icon={faTextWidth} />}
           error={errors.codeLength?.message}
           {...register("codeLength")}
-        />
+        /> */}
       </Column>
       <Row justifyContent="flex-end">
         <Button

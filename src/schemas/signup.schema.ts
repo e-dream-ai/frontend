@@ -4,7 +4,7 @@ export type SignupFormValues = {
   username: string;
   password: string;
   confirmPassword: string;
-  code: string;
+  code?: string;
   terms?: boolean;
 };
 
@@ -12,7 +12,7 @@ export type SignupRequestValues = {
   username: string;
   email: string;
   password: string;
-  code: string;
+  code?: string;
 };
 
 const getCharacterValidationError = (str: string) => {
@@ -32,14 +32,15 @@ export const confirmPasswordSchemaProperty = yup
   .required()
   .oneOf([yup.ref("password"), ""], "Passwords must match");
 
-export const SignupSchema = yup
-  .object({
+export const getSignupSchema = (isSignupCodeActive: boolean) =>
+  yup.object({
     username: yup.string().email().required("Email is required."),
     password: passwordSchemaProperty,
     confirmPassword: confirmPasswordSchemaProperty,
-    code: yup.string().required("Signup code is required."),
+    code: isSignupCodeActive
+      ? yup.string().required("Code is required.")
+      : yup.string().optional(),
     terms: yup.boolean().oneOf([true], "You have to accept Terms of Service"),
-  })
-  .required();
+  });
 
-export default SignupSchema;
+export default getSignupSchema;
