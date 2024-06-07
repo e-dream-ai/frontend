@@ -13,9 +13,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboard, faEraser } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
-import { StyledList } from "./invites-list.styled";
+import { StyledLi, StyledList } from "./invites-list.styled";
 import { useTheme } from "styled-components";
 import { formatRoleName } from "@/utils/user.util";
+import useHighlight from "@/hooks/useHighlight";
+import { HighlightKeys } from "@/constants/highlight.constants";
 
 const List: React.FC<{
   children?: React.ReactNode;
@@ -28,6 +30,8 @@ const InviteItem: React.FC<{
 }> = ({ invite }) => {
   const { t } = useTranslation();
   const { mutateAsync } = useInvalidateInvite(invite.id);
+  const { state } = useHighlight();
+  const isNew = state[HighlightKeys.NEW_INVITE] === invite.id;
 
   const handleCopySignupUrl = () => {
     toast.success(t("components.invites_list.signup_url_copied_successfully"));
@@ -51,8 +55,13 @@ const InviteItem: React.FC<{
   };
 
   return (
-    <li>
-      <Row justifyContent="space-between">
+    <StyledLi isNew={isNew}>
+      <Row
+        flex="auto"
+        margin="0"
+        justifyContent="space-between"
+        alignItems="center"
+      >
         <Column flex={["2"]}>
           <Text>{invite?.code}</Text>
         </Column>
@@ -63,7 +72,7 @@ const InviteItem: React.FC<{
           <Text>{formatRoleName(invite?.signupRole?.name)}</Text>
         </Column>
         <Column flex={["1"]} alignItems="flex-end">
-          <Row>
+          <Row margin="0">
             <CopyToClipboard text={invite?.signupUrl}>
               <Button
                 data-tooltip-id="copy-invite-url"
@@ -97,7 +106,7 @@ const InviteItem: React.FC<{
           </Row>
         </Column>
       </Row>
-    </li>
+    </StyledLi>
   );
 };
 

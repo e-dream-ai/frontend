@@ -24,13 +24,15 @@ import Select from "../select/select";
 import { useRoles } from "@/api/user/query/useRoles";
 import { formatRoleName } from "@/utils/user.util";
 import { ROLES } from "@/constants/role.constants";
+import useHighlight from "@/hooks/useHighlight";
+import { HighlightKeys } from "@/constants/highlight.constants";
 
 export const InviteByEmailForm: React.FC<{ onSucess?: () => void }> = ({
   onSucess,
 }) => {
   const { t } = useTranslation();
   const [roleSearch, setRoleSearch] = useState<string>("");
-
+  const { setHighlightValue } = useHighlight();
   const { mutateAsync, isLoading } = useCreateInvite();
 
   const { data: rolesData, isLoading: isRolesLoading } = useRoles({
@@ -81,6 +83,8 @@ export const InviteByEmailForm: React.FC<{ onSucess?: () => void }> = ({
 
       if (data.success) {
         toast.success(t("page.invites.invite_created_successfully"));
+        const newInviteId = data?.data?.invite?.id;
+        setHighlightValue(HighlightKeys.NEW_INVITE, newInviteId);
         reset();
         onSucess?.();
       } else {
@@ -144,6 +148,7 @@ export const InviteCustomCodeForm: React.FC<{ onSucess?: () => void }> = ({
 }) => {
   const { t } = useTranslation();
   const [roleSearch, setRoleSearch] = useState<string>("");
+  const { setHighlightValue } = useHighlight();
   const { mutateAsync, isLoading } = useCreateInvite();
 
   const { data: rolesData, isLoading: isRolesLoading } = useRoles({
@@ -193,6 +198,8 @@ export const InviteCustomCodeForm: React.FC<{ onSucess?: () => void }> = ({
 
       if (data.success) {
         toast.success(t("page.invites.invite_created_successfully"));
+        const newInviteId = data?.data?.invite?.id;
+        setHighlightValue(HighlightKeys.NEW_INVITE, newInviteId);
         reset();
         onSucess?.();
       } else {

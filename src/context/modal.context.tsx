@@ -1,6 +1,6 @@
 import {
   ModalAction,
-  ModalActionKind,
+  ModalActionType,
   ModalContextType,
   ModalState,
   ModalsKeys,
@@ -17,11 +17,11 @@ export const ModalContext = createContext<ModalContextType>({
 } as ModalContextType);
 
 const reducer = (state: ModalState, action: ModalAction): ModalState => {
-  if (action.type === ModalActionKind.SHOW) {
+  if (action.type === ModalActionType.SHOW) {
     return { ...state, [action.target]: true };
   }
 
-  if (action.type === ModalActionKind.HIDE) {
+  if (action.type === ModalActionType.HIDE) {
     return { ...state, [action.target]: false };
   }
 
@@ -38,11 +38,11 @@ export const ModalProvider: React.FC<{
   );
 
   const showModal = useCallback((modal: ModalsKeys) => {
-    dispatch({ type: ModalActionKind.SHOW, target: modal });
+    dispatch({ type: ModalActionType.SHOW, target: modal });
   }, []);
 
   const hideModal = useCallback((modal: ModalsKeys) => {
-    dispatch({ type: ModalActionKind.HIDE, target: modal });
+    dispatch({ type: ModalActionType.HIDE, target: modal });
   }, []);
 
   const memoedValue = useMemo(

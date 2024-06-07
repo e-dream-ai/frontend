@@ -3,7 +3,7 @@ export enum ModalsKeys {
   CREATE_INVITE_MODAL = "createInviteModal",
 }
 
-export enum ModalActionKind {
+export enum ModalActionType {
   SHOW = "show",
   HIDE = "hide",
 }
@@ -20,7 +20,7 @@ export type ModalContextType = {
 export type ModalState = Record<ModalsKeys, boolean>;
 
 export type ModalAction = {
-  type: ModalActionKind;
+  type: ModalActionType;
   payload?: object;
   target: ModalsKeys;
 };
