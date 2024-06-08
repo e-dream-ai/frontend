@@ -41,7 +41,7 @@
       "email": "Email",
       "password": "Password",
       "confirm_password": "Confirm Password",
-      "code": "Code",
+      "code": "Invitation Code",
       "agree_to": "I agree to the",
       "terms_of_service": "Terms of Service",
       "next": "Next",
