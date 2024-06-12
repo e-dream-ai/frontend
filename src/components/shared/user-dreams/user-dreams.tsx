@@ -12,9 +12,14 @@ import { Playlist } from "@/types/playlist.types";
 type UserDreamsProps = {
   userId?: number;
   grid?: boolean;
+  columns?: number;
 };
 
-const UserDreams: React.FC<UserDreamsProps> = ({ userId, grid }) => {
+const UserDreams: React.FC<UserDreamsProps> = ({
+  userId,
+  grid,
+  columns = 2,
+}) => {
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching } = useFeed({
@@ -34,7 +39,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({ userId, grid }) => {
             <Spinner />
           </Row>
         ) : feed?.length ? (
-          <ItemCardList grid={grid} columns={2}>
+          <ItemCardList grid={grid} columns={columns}>
             {feed?.map((feedItem) => {
               let item;
               if (feedItem.type === "dream") {

@@ -11,7 +11,7 @@ export const ItemCardList: React.FC<{
   children: React.ReactNode;
   grid?: boolean;
   columns?: number;
-}> = ({ grid, columns, children }) => {
+}> = ({ grid, columns = 2, children }) => {
   /**
    * this value determines if some child card item is dragging
    */

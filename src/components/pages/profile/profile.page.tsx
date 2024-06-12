@@ -76,6 +76,7 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
               <UserDreams
                 key={Boolean(user?.nsfw).toString()}
                 userId={userId}
+                columns={2}
                 grid
               />
             </Row>
