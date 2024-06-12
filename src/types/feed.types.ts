@@ -7,9 +7,14 @@ export enum FeedItemType {
   PLAYLIST = "playlist",
   DREAM = "dream",
   USER = "user",
+  CREATOR = "creator",
+  ADMIN = "admin",
 }
 
-export type FeedItemServerType = Omit<FeedItemType, "all" | "user">;
+export type FeedItemServerType = Omit<
+  FeedItemType,
+  "all" | "user" | "creator" | "admin"
+>;
 
 export type FeedItem = {
   id: number;

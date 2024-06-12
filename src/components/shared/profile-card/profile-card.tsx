@@ -40,6 +40,7 @@ import {
   getNsfwOptions,
 } from "@/constants/dream.constants";
 import usePermission from "@/hooks/usePermission";
+import { formatDateToYYYYMMDD } from "@/utils/date.util";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -111,6 +112,14 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
           <Row>
             <Text fontSize="1rem" color={theme.textSecondaryColor}>
               {user?.signupInvite?.code ?? "-"}
+            </Text>
+          </Row>
+          <Row my={1}>{t("components.profile_card.last_login")}</Row>
+          <Row>
+            <Text fontSize="1rem" color={theme.textSecondaryColor}>
+              {user?.last_login_at
+                ? formatDateToYYYYMMDD(new Date(user?.last_login_at))
+                : "-"}
             </Text>
           </Row>
 

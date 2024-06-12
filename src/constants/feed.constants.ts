@@ -6,6 +6,8 @@ export const FEED_FILTERS: { [key: string]: FeedItemServerType } = {
   DREAM: "dream",
   PLAYLIST: "playlist",
   USER: "user",
+  CREATOR: "creator",
+  ADMIN: "admin",
 };
 
 export const FEED_FILTERS_NAMES = {
@@ -13,6 +15,8 @@ export const FEED_FILTERS_NAMES = {
   DREAM: "page.feed.dream",
   PLAYLIST: "page.feed.playlist",
   USER: "page.feed.user",
+  CREATOR: "page.feed.creator",
+  ADMIN: "page.feed.admin",
 };
 
 export const getFilterData: (
@@ -25,4 +29,9 @@ export const getFilterData: (
     value: FEED_FILTERS.PLAYLIST.toString(),
   },
   { key: t(FEED_FILTERS_NAMES.USER), value: FEED_FILTERS.USER.toString() },
+  {
+    key: t(FEED_FILTERS_NAMES.CREATOR),
+    value: FEED_FILTERS.CREATOR.toString(),
+  },
+  { key: t(FEED_FILTERS_NAMES.ADMIN), value: FEED_FILTERS.ADMIN.toString() },
 ];

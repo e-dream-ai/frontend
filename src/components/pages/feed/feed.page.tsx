@@ -19,6 +19,8 @@ import { FeedItem, FeedItemServerType } from "@/types/feed.types";
 import { User } from "@/types/auth.types";
 import Text from "@/components/shared/text/text";
 import { useWindowSize } from "@/hooks/useWindowSize";
+import { ROLES } from "@/constants/role.constants";
+import { RoleType } from "@/types/role.types";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -51,6 +53,18 @@ export const FeedPage: React.FC = () => {
     return undefined;
   }, []);
 
+  const getUserFeedType: (type?: FeedItemServerType) => RoleType | undefined =
+    useCallback((type) => {
+      if (type === FEED_FILTERS.ALL) return undefined;
+      if (type === FEED_FILTERS.DREAM) return undefined;
+      if (type === FEED_FILTERS.PLAYLIST) return undefined;
+      if (type === FEED_FILTERS.USER) return ROLES.USER_GROUP;
+      if (type === FEED_FILTERS.CREATOR) return ROLES.CREATOR_GROUP;
+      if (type === FEED_FILTERS.ADMIN) return ROLES.ADMIN_GROUP;
+
+      return undefined;
+    }, []);
+
   const {
     data: feedData,
     isLoading: isFeedLoading,
@@ -74,6 +88,7 @@ export const FeedPage: React.FC = () => {
       radioGroupState === FEED_FILTERS.USER
         ? USER_TAKE.USER_FILTER
         : USER_TAKE.SEARCH,
+    role: getUserFeedType(radioGroupState),
   });
   const users = usersData?.data?.users;
   const usersPageCount = Math.ceil(
@@ -83,9 +98,11 @@ export const FeedPage: React.FC = () => {
   const isLoading =
     isFeedLoading || isFeedRefetching || isUsersLoading || isUsersRefetching;
 
-  const showUserList =
-    radioGroupState === FEED_FILTERS.USER ||
-    (search && radioGroupState === FEED_FILTERS.ALL);
+  const showUserList = [
+    FEED_FILTERS.USER,
+    FEED_FILTERS.CREATOR,
+    FEED_FILTERS.ADMIN,
+  ].includes(radioGroupState ?? "");
 
   const showUserListTab = radioGroupState === FEED_FILTERS.USER;
 
@@ -138,9 +155,7 @@ export const FeedPage: React.FC = () => {
           ) : (
             <>
               {showUserList && <UserList users={users} />}
-              {radioGroupState !== FEED_FILTERS.USER && (
-                <FeedList feed={feed} />
-              )}
+              {!showUserList && <FeedList feed={feed} />}
             </>
           )}
         </Column>

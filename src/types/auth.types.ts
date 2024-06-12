@@ -23,6 +23,9 @@ export type User = {
   currentPlaylist?: Playlist;
   nsfw?: boolean;
   signupInvite?: Invite;
+  created_at?: string;
+  updated_at?: string;
+  last_login_at?: string;
 };
 
 export type Role = {
