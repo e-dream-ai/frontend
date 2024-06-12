@@ -14,13 +14,15 @@ import { Playlist } from "@/types/playlist.types";
 import UserCard, { UserCardList } from "../user-card/user-card";
 import { FEED_FILTERS, getFilterData } from "@/constants/feed.constants";
 import { useUsers } from "@/api/user/query/useUsers";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { FeedItem, FeedItemServerType } from "@/types/feed.types";
 import { User } from "@/types/auth.types";
 import Text from "@/components/shared/text/text";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { ROLES } from "@/constants/role.constants";
 import { RoleType } from "@/types/role.types";
+import useAuth from "@/hooks/useAuth";
+import { isAdmin } from "@/utils/user.util";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -31,6 +33,8 @@ const SECTION_ID = "feed";
 
 export const FeedPage: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const [page, setPage] = useState<number>(0);
   const [usersPage, setUsersPage] = useState<number>(0);
   const [search, setSearch] = useState<string | undefined>();
@@ -104,7 +108,7 @@ export const FeedPage: React.FC = () => {
     FEED_FILTERS.ADMIN,
   ].includes(radioGroupState ?? "");
 
-  const showUserListTab = radioGroupState === FEED_FILTERS.USER;
+  const showUserListTab = showUserList;
 
   const handleRadioButtonGroupChange = (value?: string) => {
     setRadioGroupState(value);
@@ -145,7 +149,7 @@ export const FeedPage: React.FC = () => {
           <RadioButtonGroup
             name="search-filter"
             value={radioGroupState as string}
-            data={getFilterData(t)}
+            data={getFilterData(t, isUserAdmin)}
             onChange={handleRadioButtonGroupChange}
           />
           {isLoading ? (
