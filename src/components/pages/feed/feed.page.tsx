@@ -192,7 +192,7 @@ const FeedList: React.FC<{ feed?: FeedItem[] }> = ({ feed }) => {
         {t("page.feed.feed")}
       </Row>
       {feed?.length ? (
-        <ItemCardList grid>
+        <ItemCardList grid columns={3}>
           {feed?.map((feedItem) => {
             let item;
             if (feedItem.type === "dream") {
