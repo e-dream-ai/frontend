@@ -103,6 +103,7 @@
       "owner": "Owner",
       "displayed_owner": "Displayed Owner",
       "created": "Created",
+      "processed": "Processed",
       "video": "Video",
       "original_video": "Original Video",
       "original_fps": "Original FPS",

@@ -14,7 +14,6 @@ export type Dream = {
   activityLevel: number;
   featureRank: number;
   thumbnail: string;
-  updated_at: string;
   displayedOwner: Omit<User, "token">;
   user: Omit<User, "token">;
   uuid: string;
@@ -27,7 +26,9 @@ export type Dream = {
   nsfw?: boolean;
   upvotes?: number;
   downvotes?: number;
+  processed_at?: string;
   created_at: string;
+  updated_at: string;
 };
 
 export type PresignedPost = {

@@ -293,6 +293,9 @@ const ViewDreamPage: React.FC = () => {
       upvotes: dream?.upvotes,
       downvotes: dream?.downvotes,
       created_at: moment(dream?.created_at).format(FORMAT),
+      processed_at: dream?.processed_at
+        ? moment(dream?.processed_at).format(FORMAT)
+        : "-",
     });
   }, [reset, dream, isUserAdmin, t]);
 

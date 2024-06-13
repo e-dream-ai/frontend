@@ -26,6 +26,7 @@ import {
   faFileVideo,
   faFilm,
   faFire,
+  faMicrochip,
   faPhotoVideo,
   faRankingStar,
   faSave,
@@ -221,6 +222,17 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         value={values.created_at}
         {...register("created_at")}
       />
+
+      <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_PROCESSED_AT}>
+        <Input
+          disabled
+          placeholder={t("page.view_dream.processed")}
+          type="text"
+          before={<FontAwesomeIcon icon={faMicrochip} />}
+          value={values.processed_at}
+          {...register("processed_at")}
+        />
+      </Restricted>
     </>
   );
 };
