@@ -82,7 +82,7 @@ const FeedList: React.FC<{ feed?: FeedItem[] }> = ({ feed }) => {
         {t("page.playlists.feed")}
       </Row>
       {feed?.length ? (
-        <ItemCardList grid>
+        <ItemCardList grid columns={3}>
           {feed?.map((feedItem) => {
             let item;
             if (feedItem.type === "dream") {

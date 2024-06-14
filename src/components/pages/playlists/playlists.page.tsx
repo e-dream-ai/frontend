@@ -31,7 +31,7 @@ export const PlaylistsPage: React.FC = () => {
             <Spinner />
           </Row>
         ) : (
-          <ItemCardList grid>
+          <ItemCardList grid columns={3}>
             {playlists?.map((playlist) => (
               <ItemCard
                 type="playlist"
