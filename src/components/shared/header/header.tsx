@@ -8,6 +8,8 @@ import StyledHeader, {
   LogoContainer,
   LogoIcon,
   Nav,
+  AuthMenuContainer,
+  BarsButtonContainer,
 } from "./header.styled";
 import { AuthMenu } from "./auth-menu";
 import { ROUTES } from "@/constants/routes.constants";
@@ -33,19 +35,26 @@ export const Header: React.FC = () => {
                 alt={t("header.e_dream")}
               />
               <HeaderTitle>{t("header.e_dream")}</HeaderTitle>
-            </LogoAnchor>{" "}
+            </LogoAnchor>
+          </LogoContainer>
+
+          <AuthMenuContainer>
+            <AuthMenu />
+          </AuthMenuContainer>
+
+          <BarsButtonContainer>
             <Button
               transparent
               size="lg"
               before={<FontAwesomeIcon icon={isNavOpen ? faClose : faBars} />}
               onClick={toggleNav}
             />
-          </LogoContainer>
-          <MenuContainer>
+          </BarsButtonContainer>
+
+          <MenuContainer isNavOpen={isNavOpen}>
             <Nav isNavOpen={isNavOpen}>
               <NavList onClickMenuItem={toggleNav} />
             </Nav>
-            <AuthMenu />
           </MenuContainer>
         </StyledHeader>
       </HeaderContainer>

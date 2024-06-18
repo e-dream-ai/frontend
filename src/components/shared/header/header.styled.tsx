@@ -52,21 +52,17 @@ export const HeaderTitle = styled.h1`
   }
 
   @media (max-width: ${DEVICES.MOBILE_L}) {
-    font-size: 1.6rem;
+    font-size: 1.4rem;
   }
 `;
 
 export const LogoContainer = styled.div`
+  order: 1;
   display: inline-flex;
   flex-flow: row;
   justify-content: space-between;
   align-items: center;
   margin-right: 2rem;
-
-  p,
-  button {
-    display: none;
-  }
 
   button {
     width: 60px;
@@ -74,8 +70,6 @@ export const LogoContainer = styled.div`
   }
 
   @media (max-width: ${DEVICES.TABLET}) {
-    width: -webkit-fill-available;
-    width: fill-available;
     margin: 0;
 
     p,
@@ -92,32 +86,67 @@ export const LogoIcon = styled.img`
   cursor: pointer;
 
   @media (max-width: ${DEVICES.LAPTOP}) {
-    height: 4rem;
+    height: 3rem;
   }
 
   @media (max-width: ${DEVICES.MOBILE_L}) {
-    height: 3rem;
+    height: 2rem;
   }
 `;
 
 export const Nav = styled.nav<{ isNavOpen?: boolean }>`
   overflow: hidden;
   @media (max-width: ${DEVICES.TABLET}) {
+    display: ${(props) => (props.isNavOpen ? "flex" : "none")};
     width: 100vw;
     height: ${(props) => (props.isNavOpen ? "100vh" : "0px")};
     background-color: ${(props) => props.theme.colorBackgroundTertiary};
   }
 `;
 
-export const MenuContainer = styled.div`
+export const MenuContainer = styled.div<{ isNavOpen?: boolean }>`
+  order: 2;
   display: flex;
-  flex: auto;
   justify-content: space-between;
   align-items: center;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    display: ${(props) => (props.isNavOpen ? "flex" : "none")};
+    order: 4;
+  }
+`;
+
+export const AuthMenuContainer = styled.div`
+  order: 3;
+  display: flex;
+  flex: auto;
+  justify-content: flex-end;
+  align-items: center;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    order: 2;
+  }
+`;
+
+export const BarsButtonContainer = styled.div`
+  order: 4;
+  display: none;
+  justify-content: flex-end;
+  align-items: center;
+
+  button {
+    padding: 0 0 0 20px;
+  }
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    order: 3;
+    display: flex;
+  }
 `;
 
 export const StyledNavList = styled.ul`
-  display: inline-flex;
+  display: flex;
+  flex-flow: row;
   list-style: none;
   white-space: nowrap;
   padding: 0;
@@ -156,6 +185,12 @@ export const HeaderProfileMenu = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+`;
+
+export const HeaderUserName = styled.span`
+  @media (max-width: ${DEVICES.TABLET}) {
+    display: none;
+  }
 `;
 
 export const HeaderAvatar = styled.div<{ url?: string }>`

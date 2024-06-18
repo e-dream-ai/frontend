@@ -3,23 +3,28 @@ import styled from "styled-components";
 
 export const Divider = styled.div`
   color: ${(props) => props.theme.textPrimaryColor};
-  padding: 0 12px;
+  padding: 0 1.2rem;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    padding: 0 0.6rem;
+  }
 `;
 
 export const AnchorIcon = styled.span`
   margin: 0 10px 0 0;
   font-size: 1.2rem;
   color: ${(props) => props.theme.textPrimaryColor};
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    display: none;
+  }
 `;
 
 export const StyledAuthHeader = styled.div`
   display: flex;
   justify-content: flex-end;
   flex-direction: row;
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    display: none;
-  }
+  text-wrap: nowrap;
 `;
 
 export const HelloMessageHeader = styled.span`

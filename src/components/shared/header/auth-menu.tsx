@@ -7,6 +7,7 @@ import StyledHeader, {
   HeaderAvatar,
   HeaderAvatarPlaceholder,
   HeaderProfileMenu,
+  HeaderUserName,
 } from "./header.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -59,7 +60,7 @@ export const AuthMenu: React.FC = () => {
                     <FontAwesomeIcon icon={faUser} />
                   </HeaderAvatarPlaceholder>
                 )}
-                {getUserNameOrEmail(user)}{" "}
+                <HeaderUserName>{getUserNameOrEmail(user)}</HeaderUserName>
                 <FontAwesomeIcon icon={faCaretDown} />
               </HeaderProfileMenu>
             </MenuButton>

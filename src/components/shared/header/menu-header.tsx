@@ -3,9 +3,9 @@ import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { StyledNavList, NavListItem } from "./header.styled";
 import { AnchorLink } from "../anchor/anchor";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons";
-import Text from "../text/text";
+// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons";
+// import Text from "../text/text";
 import { MouseEventHandler } from "react";
 
 type RouteLink = {
@@ -19,16 +19,16 @@ type RouteLink = {
 export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
   onClickMenuItem,
 }) => {
-  const { user, logout } = useAuth();
+  const { user /* ,logout */ } = useAuth();
   const { t } = useTranslation();
 
   const USER_NAV_ROUTES: Array<RouteLink> = [
-    {
-      component: t("header.profile"),
-      route: ROUTES.MY_PROFILE,
-      onlyMobile: true,
-      showSlash: true,
-    },
+    // {
+    //   component: t("header.profile"),
+    //   route: ROUTES.MY_PROFILE,
+    //   onlyMobile: true,
+    //   showSlash: true,
+    // },
     {
       component: t("header.about"),
       route: ROUTES.ABOUT,
@@ -50,28 +50,28 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
       showSlash: true,
     },
     { component: t("header.feed"), route: ROUTES.FEED, showSlash: false },
-    {
-      component: t("header.invites"),
-      route: ROUTES.INVITES,
-      onlyMobile: true,
-      showSlash: false,
-    },
-    {
-      component: (
-        <>
-          {t("header.logout")}
-          <Text mr="1rem" />
-          <FontAwesomeIcon icon={faArrowRightFromBracket} />
-        </>
-      ),
-      route: ROUTES.ROOT,
-      onlyMobile: true,
-      showSlash: false,
-      onClick: (event) => {
-        event.stopPropagation();
-        logout();
-      },
-    },
+    // {
+    //   component: t("header.invites"),
+    //   route: ROUTES.INVITES,
+    //   onlyMobile: true,
+    //   showSlash: false,
+    // },
+    // {
+    //   component: (
+    //     <>
+    //       {t("header.logout")}
+    //       <Text mr="1rem" />
+    //       <FontAwesomeIcon icon={faArrowRightFromBracket} />
+    //     </>
+    //   ),
+    //   route: ROUTES.ROOT,
+    //   onlyMobile: true,
+    //   showSlash: false,
+    //   onClick: (event) => {
+    //     event.stopPropagation();
+    //     logout();
+    //   },
+    // },
   ];
 
   const NAV_ROUTES: Array<RouteLink> = [
