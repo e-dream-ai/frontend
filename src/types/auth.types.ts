@@ -22,6 +22,7 @@ export type User = {
   currentDream?: Dream;
   currentPlaylist?: Playlist;
   nsfw?: boolean;
+  enableMarketingEmails?: boolean;
   signupInvite?: Invite;
   created_at?: string;
   updated_at?: string;

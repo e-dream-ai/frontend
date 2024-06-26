@@ -27,6 +27,7 @@ import { Avatar } from "@/components/shared/avatar/avatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAlignJustify,
+  faMailBulk,
   faShield,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
@@ -41,6 +42,11 @@ import {
 } from "@/constants/dream.constants";
 import usePermission from "@/hooks/usePermission";
 import { formatDateToYYYYMMDD } from "@/utils/date.util";
+import {
+  ENABLE_MARKETING_EMAILS,
+  filterMarketingEmailOption,
+  getEnableMarketingEmailsOptions,
+} from "@/constants/user.constants";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -139,6 +145,15 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
               {user?.nsfw ? t("user.nsfw.nsfw") : t("user.nsfw.sfw")}
             </Text>
           </Row>
+
+          <Row my={1}>{t("components.profile_card.marketing_emails")}</Row>
+          <Row>
+            <Text fontSize="1rem" mb={2} color={theme.textSecondaryColor}>
+              {user?.enableMarketingEmails
+                ? t("user.marketing_emails.active")
+                : t("user.marketing_emails.inactive")}
+            </Text>
+          </Row>
         </>
       )}
     </>
@@ -200,6 +215,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           }
         : {},
       nsfw: filterNsfwOption(user?.nsfw, t),
+      enableMarketingEmails: filterMarketingEmailOption(
+        user?.enableMarketingEmails,
+        t,
+      ),
     },
   });
 
@@ -244,6 +263,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         description: formData?.description,
         role: formData?.role?.value,
         nsfw: formData?.nsfw.value === NSFW.TRUE,
+        enableMarketingEmails:
+          formData?.enableMarketingEmails.value ===
+          ENABLE_MARKETING_EMAILS.TRUE,
       },
       {
         onSuccess: (response) => {
@@ -333,6 +355,19 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
             placeholder={t("components.profile_card.nsfw")}
             before={<FontAwesomeIcon icon={faShield} />}
             options={getNsfwOptions(t)}
+          />
+        )}
+      />
+
+      <Controller
+        name="enableMarketingEmails"
+        control={control}
+        render={({ field }) => (
+          <Select
+            {...field}
+            placeholder={t("components.profile_card.marketing_emails")}
+            before={<FontAwesomeIcon icon={faMailBulk} />}
+            options={getEnableMarketingEmailsOptions(t)}
           />
         )}
       />

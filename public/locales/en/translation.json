@@ -270,6 +270,7 @@
       "name": "Name",
       "role": "role",
       "nsfw": "content rating",
+      "marketing_emails": "marketing emails",
       "description": "description",
       "no_description": "no description",
       "email": "email",
@@ -348,6 +349,10 @@
     "nsfw": {
       "nsfw": "NSFW",
       "sfw": "SFW"
+    },
+    "marketing_emails": {
+      "active": "active",
+      "inactive": "inactive"
     }
   },
   "roles": {

@@ -5,6 +5,7 @@ export type ProfileFormRequest = {
   description?: string;
   role?: number;
   nsfw?: boolean;
+  enableMarketingEmails?: boolean;
 };
 
 export type ProfileFormValues = {
@@ -15,6 +16,10 @@ export type ProfileFormValues = {
     value?: number;
   };
   nsfw: {
+    label?: string;
+    value?: string;
+  };
+  enableMarketingEmails: {
     label?: string;
     value?: string;
   };
@@ -29,6 +34,10 @@ export const ProfileSchema = yup
       value: yup.number(),
     }),
     nsfw: yup.object({
+      label: yup.string(),
+      value: yup.string(),
+    }),
+    enableMarketingEmails: yup.object({
       label: yup.string(),
       value: yup.string(),
     }),
