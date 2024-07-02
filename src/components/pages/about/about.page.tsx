@@ -27,7 +27,7 @@ export const AboutPage: React.FC = () => {
 	    playback.
           </p>
           <p>
-            Install the web app on your phone to control your e-dream
+            Install the web app on your phone to remote-control your e-dream
             from anywhere.
 	  </p>
           <p>
