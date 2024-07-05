@@ -33,8 +33,11 @@ export type UpdateDreamRequestValues = {
 export const UpdateDreamSchema = yup
   .object({
     name: yup.string().required(),
-    activityLevel: yup.number(),
-    featureRank: yup.number(),
+    activityLevel: yup.number().typeError("Activity level must be a number"),
+    featureRank: yup
+      .number()
+      .typeError("Activity level must be a integer")
+      .integer(),
     processedVideoSize: yup.string(),
     processedVideoFrames: yup.string(),
     user: yup.string(),

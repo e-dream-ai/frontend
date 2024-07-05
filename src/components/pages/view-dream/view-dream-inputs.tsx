@@ -116,7 +116,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           type="number"
           step="0.01"
           before={<FontAwesomeIcon icon={faRankingStar} />}
-          error={errors.activityLevel?.message}
+          error={errors.featureRank?.message}
           value={values.featureRank}
           {...register("featureRank")}
         />

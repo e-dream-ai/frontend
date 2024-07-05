@@ -25,7 +25,10 @@ export type UpdatePlaylistRequestValues = {
 export const UpdatePlaylistSchema = yup
   .object({
     name: yup.string().required(),
-    featureRank: yup.number(),
+    featureRank: yup
+      .number()
+      .typeError("Activity level must be a integer")
+      .integer(),
     user: yup.string(),
     displayedOwner: yup.object({
       label: yup.string(),
