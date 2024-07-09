@@ -589,15 +589,15 @@ const ViewDreamPage: React.FC = () => {
               </Column>
             </Row>
 
-            <Row>
-              <h3>{t("page.view_dream.filmstrip")}</h3>
-            </Row>
-            <Row flexWrap="wrap">
-              <Filmstrip filmstrip={dream?.filmstrip} />
-            </Row>
-
             {!isDreamProcessing ? (
               <React.Fragment>
+                <Row>
+                  <h3>{t("page.view_dream.filmstrip")}</h3>
+                </Row>
+                <Row flexWrap="wrap">
+                  <Filmstrip filmstrip={dream?.filmstrip} />
+                </Row>
+
                 <Restricted
                   to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
                   isOwner={isOwner}
