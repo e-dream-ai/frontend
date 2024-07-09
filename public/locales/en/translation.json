@@ -109,6 +109,7 @@
       "original_fps": "Original FPS",
       "nsfw": "Content Rating",
       "thumbnail": "Thumbnail",
+      "filmstrip": "Filmstrip",
       "play_dream_client": "Dream sent to play on client.",
       "confirm_process_modal_title": "Confirm process dream",
       "confirm_process_modal_body": "Are you sure to process this dream?",

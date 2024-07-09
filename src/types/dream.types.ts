@@ -24,6 +24,7 @@ export type Dream = {
   processedVideoFPS?: number;
   status: DreamStatusType;
   nsfw?: boolean;
+  filmstrip?: string[];
   upvotes?: number;
   downvotes?: number;
   processed_at?: string;

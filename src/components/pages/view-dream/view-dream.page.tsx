@@ -587,6 +587,18 @@ const ViewDreamPage: React.FC = () => {
                 />
               </Column>
             </Row>
+
+            <Row>
+              <h3>{t("page.view_dream.filmstrip")}</h3>
+            </Row>
+            <Row flexWrap="wrap">
+              {dream?.filmstrip?.map((image) => (
+                <Column>
+                  <img src={image} />
+                </Column>
+              ))}
+            </Row>
+
             {!isDreamProcessing ? (
               <React.Fragment>
                 <Restricted
