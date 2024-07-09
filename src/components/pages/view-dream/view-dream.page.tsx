@@ -57,6 +57,7 @@ import { useDownvoteDream } from "@/api/dream/mutation/useDownvoteDream";
 import { useUnvoteDream } from "@/api/dream/mutation/useUnvoteDream";
 import { useDreamVote } from "@/api/dream/query/useDreamVote";
 import { VoteType } from "@/types/vote.types";
+import { Filmstrip } from "@/components/shared/filmstrip/filmstrip";
 
 type Params = { uuid: string };
 
@@ -592,11 +593,7 @@ const ViewDreamPage: React.FC = () => {
               <h3>{t("page.view_dream.filmstrip")}</h3>
             </Row>
             <Row flexWrap="wrap">
-              {dream?.filmstrip?.map((image) => (
-                <Column>
-                  <img src={image} />
-                </Column>
-              ))}
+              <Filmstrip filmstrip={dream?.filmstrip} />
             </Row>
 
             {!isDreamProcessing ? (

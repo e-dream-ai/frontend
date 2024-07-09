@@ -336,6 +336,9 @@
       "signup_url_copied_successfully": "Invite signup url copied successfully.",
       "invite_invalidated_successfully": "Invite invalidated successfully.",
       "error_invalidating_invite": "Error invalidating invite."
+    },
+    "filmstrip": {
+      "empty": "No filmstrip"
     }
   },
   "hooks": {
