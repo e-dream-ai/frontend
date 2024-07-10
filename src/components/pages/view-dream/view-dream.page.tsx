@@ -75,7 +75,9 @@ const ViewDreamPage: React.FC = () => {
     activeRefetchInterval: true,
   });
 
-  const { data: voteData, refetch: refetchVote } = useDreamVote(uuid);
+  const { data: voteData, refetch: refetchVote } = useDreamVote(uuid, {
+    activeRefetchInterval: true,
+  });
   const vote = voteData?.data?.vote;
 
   const upvoteMutation = useUpvoteDream(uuid);
