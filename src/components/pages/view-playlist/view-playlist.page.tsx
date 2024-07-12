@@ -10,6 +10,7 @@ import {
   Button,
   Input,
   ItemCardList,
+  FileUploader,
   Row,
 } from "@/components/shared";
 import Container from "@/components/shared/container/container";
@@ -63,6 +64,7 @@ import { getUserName, isAdmin } from "@/utils/user.util";
 import { emitPlayPlaylist } from "@/utils/socket.util";
 import useSocket from "@/hooks/useSocket";
 import { Select } from "@/components/shared/select/select";
+import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { useUsers } from "@/api/user/query/useUsers";
 import { useImage } from "@/hooks/useImage";
 import { User } from "@/types/auth.types";
@@ -71,6 +73,19 @@ import {
   filterNsfwOption,
   getNsfwOptions,
 } from "@/constants/dream.constants";
+import {
+  ALLOWED_VIDEO_TYPES,
+  FileState,
+  MAX_FILE_SIZE_MB,
+} from "@/constants/file.constants";
+import {
+  getFileNameWithoutExtension,
+  getFileState,
+  handleFileUploaderSizeError,
+  handleFileUploaderTypeError,
+} from "@/utils/file-uploader.util";
+import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
+import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 
 type Params = { id: string };
 
@@ -85,6 +100,9 @@ export const ViewPlaylistPage = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [userSearch, setUserSearch] = useState<string>("");
+  const [videos, setVideos] = useState<FileState[]>([]);
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
+  const [currentUploadFile, setCurrentUploadFile] = useState(0);
   const { data, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
@@ -143,8 +161,18 @@ export const ViewPlaylistPage = () => {
   const { mutate: mutateDeletePlaylistItem } =
     useDeletePlaylistItem(playlistId);
 
+  const {
+    isLoading: isUploadingSingleFile,
+    uploadProgress,
+    mutateAsync: uploadDreamVideoMutateAsync,
+  } = useUploadDreamVideo({ navigateToDream: false });
+
+  const addPlaylistItemMutation = useAddPlaylistItem(playlist?.id);
+
   const isLoading =
-    isLoadingPlaylistMutation || isLoadingThumbnailPlaylistMutation;
+    isLoadingPlaylistMutation ||
+    isLoadingThumbnailPlaylistMutation ||
+    isUploadingSingleFile;
 
   const {
     register,
@@ -360,6 +388,59 @@ export const ViewPlaylistPage = () => {
     }
   };
 
+  const handleFileUploaderChange: HandleChangeFile = (files) => {
+    if (files instanceof FileList) {
+      const filesArray = Array.from(files);
+      console.log({ filesArray });
+      setVideos((v) => [...v, ...filesArray.map((f) => getFileState(f))]);
+    } else {
+      setVideos((v) => [...v, getFileState(files)]);
+    }
+  };
+
+  const setVideoUploaded = (index: number) => {
+    setVideos((videos) =>
+      videos.map((v, i) => ({
+        ...v,
+        uploaded: i === index ? true : v.uploaded,
+      })),
+    );
+  };
+
+  const handleUploadVideos = async () => {
+    const playlistDreamItemsNames = playlist?.items
+      ?.filter((item) => Boolean(item?.dreamItem?.name))
+      ?.map((item) => item.dreamItem!.name);
+
+    for (let i = 0; i < videos.length; i++) {
+      setCurrentUploadFile(i);
+
+      const fileName = getFileNameWithoutExtension(videos[i]?.fileBlob);
+
+      if (playlistDreamItemsNames?.includes(fileName)) {
+        toast.warning(
+          `"${fileName}" ${t("page.view_playlist.dream_already_exists")}`,
+        );
+        continue;
+      }
+
+      const createdDream = await uploadDreamVideoMutateAsync({
+        file: videos[i]?.fileBlob,
+      });
+      setVideoUploaded(i);
+      if (createdDream) {
+        await addPlaylistItemMutation.mutateAsync({
+          type: "dream",
+          id: String(createdDream.id),
+        });
+      }
+    }
+    setIsUploadingFiles(false);
+  };
+
+  const onDeleteVideo = (index: number) => () =>
+    setVideos((videos) => videos.filter((_, i) => i !== index));
+
   const handleEdit = (event: React.MouseEvent) => {
     event.preventDefault();
     setEditMode(true);
@@ -386,8 +467,13 @@ export const ViewPlaylistPage = () => {
     setIsThumbnailRemoved(false);
   };
 
-  const onSubmit = (data: UpdatePlaylistFormValues) => {
-    handleMutateThumbnailPlaylist(data);
+  const onSubmit = async (data: UpdatePlaylistFormValues) => {
+    if (totalVideos === 0) {
+      setIsUploadingFiles(false);
+    } else {
+      await handleUploadVideos();
+    }
+    await handleMutateThumbnailPlaylist(data);
   };
 
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
@@ -447,6 +533,18 @@ export const ViewPlaylistPage = () => {
       created_at: moment(playlist?.created_at).format(FORMAT),
     });
   }, [reset, playlist, isUserAdmin, t]);
+
+  /**
+   * videos data
+   */
+  const totalVideos: number = videos.length;
+  const totalUploadedVideos: number = videos.reduce(
+    (prev, video) => prev + (video.uploaded ? 1 : 0),
+    0,
+  );
+  const totalUploadedVideosPercentage = Math.round(
+    (totalUploadedVideos / (totalVideos === 0 ? 1 : totalVideos)) * 100,
+  );
 
   /**
    * Setting api values to form
@@ -736,6 +834,77 @@ export const ViewPlaylistPage = () => {
               to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
               isOwner={user?.id === playlist?.user?.id}
             >
+              {/* upload file */}
+              {editMode && (
+                <>
+                  <Row>
+                    <Text
+                      style={{
+                        textTransform: "uppercase",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {t("page.view_playlist.upload_file")}
+                    </Text>
+                  </Row>
+                  {videos.map((v, i) => (
+                    <Row key={i} alignItems="center">
+                      <Text>{v.name}</Text>
+                      {!isLoading && (
+                        <Button
+                          type="button"
+                          buttonType="danger"
+                          transparent
+                          ml="1rem"
+                          onClick={onDeleteVideo(i)}
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </Button>
+                      )}
+                    </Row>
+                  ))}
+                  <Row flex="auto">
+                    <Column flex="auto">
+                      <FileUploader
+                        multiple
+                        maxSize={MAX_FILE_SIZE_MB}
+                        handleChange={handleFileUploaderChange}
+                        onSizeError={handleFileUploaderSizeError(t)}
+                        onTypeError={handleFileUploaderTypeError(t)}
+                        name="file"
+                        types={ALLOWED_VIDEO_TYPES}
+                      />
+                    </Column>
+                  </Row>
+                </>
+              )}
+
+              {isUploadingFiles && (
+                <>
+                  <Text my={3}>
+                    {t("page.create.playlist_file_count", {
+                      current: totalUploadedVideos,
+                      total: totalVideos,
+                    })}
+                  </Text>
+                  <ProgressBar completed={totalUploadedVideosPercentage} />
+                  <Text my={3}>
+                    {t("page.create.playlist_uploading_current_file", {
+                      current: currentUploadFile + 1,
+                    })}
+                  </Text>
+                  <ProgressBar completed={uploadProgress} />
+                </>
+              )}
+
+              {/* add playlist item */}
+              <Row>
+                <Text
+                  style={{ textTransform: "uppercase", fontStyle: "italic" }}
+                >
+                  {t("page.view_playlist.add_item")}
+                </Text>
+              </Row>
               <Row>
                 <AddItemPlaylistDropzone show playlistId={playlist?.id} />
               </Row>
