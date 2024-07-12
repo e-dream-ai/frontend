@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { faList, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faList } from "@fortawesome/free-solid-svg-icons";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
 import {
   Button,
@@ -33,10 +33,11 @@ import {
 import { HandleChangeFile } from "@/types/media.types";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { Playlist } from "@/types/playlist.types";
-import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import Restricted from "@/components/shared/restricted/restricted";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
+import { VideoList } from "@/components/shared/video-list/video-list";
+import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
 export const CreatePlaylist: React.FC = () => {
   const { t } = useTranslation();
   const [videos, setVideos] = useState<FileState[]>([]);
@@ -161,22 +162,12 @@ export const CreatePlaylist: React.FC = () => {
             {Boolean(videos.length) && (
               <h3>{t("page.create.playlist_dreams")}</h3>
             )}
-            {videos.map((v, i) => (
-              <Row key={i} alignItems="center">
-                <Text>{v.name}</Text>
-                {!isLoading && (
-                  <Button
-                    type="button"
-                    buttonType="danger"
-                    transparent
-                    ml="1rem"
-                    onClick={onDeleteVideo(i)}
-                  >
-                    <FontAwesomeIcon icon={faTrash} />
-                  </Button>
-                )}
-              </Row>
-            ))}
+
+            <VideoList
+              videos={videos}
+              isUploadingVideos={isLoading}
+              handleDeleteVideo={onDeleteVideo}
+            />
           </>
           <Text my={3}>{t("page.create.playlist_file_instructions")}</Text>
           <FileUploader
@@ -189,23 +180,14 @@ export const CreatePlaylist: React.FC = () => {
             types={ALLOWED_VIDEO_TYPES}
           />
 
-          {isUploadingFiles && (
-            <>
-              <Text my={3}>
-                {t("page.create.playlist_file_count", {
-                  current: totalUploadedVideos,
-                  total: totalVideos,
-                })}
-              </Text>
-              <ProgressBar completed={totalUploadedVideosPercentage} />
-              <Text my={3}>
-                {t("page.create.playlist_uploading_current_file", {
-                  current: currentUploadFile + 1,
-                })}
-              </Text>
-              <ProgressBar completed={uploadProgress} />
-            </>
-          )}
+          <UploadVideosProgress
+            isUploading={isUploadingFiles}
+            totalVideos={totalVideos}
+            totalUploadedVideos={totalUploadedVideos}
+            totalUploadedVideosPercentage={totalUploadedVideosPercentage}
+            currentUploadFile={currentUploadFile}
+            uploadProgress={uploadProgress}
+          />
         </Restricted>
 
         <Row mt={4} justifyContent="flex-end">

@@ -42,7 +42,6 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserName } from "@/utils/user.util";
 import { Select } from "@/components/shared/select/select";
-import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { filterNsfwOption, getNsfwOptions } from "@/constants/dream.constants";
 import {
   ALLOWED_VIDEO_TYPES,
@@ -54,6 +53,9 @@ import {
 } from "@/utils/file-uploader.util";
 import { usePlaylistState } from "./usePlaylistState";
 import { usePlaylistHandlers } from "./usePlaylistHandlers";
+import { VideoList } from "@/components/shared/video-list/video-list";
+import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
+import { toast } from "react-toastify";
 
 const SectionID = "playlist";
 
@@ -162,12 +164,18 @@ export const ViewPlaylistPage = () => {
   };
 
   const onSubmit = async (data: UpdatePlaylistFormValues) => {
-    if (totalVideos === 0) {
+    try {
+      if (totalVideos === 0) {
+        setIsUploadingFiles(false);
+      } else {
+        setIsUploadingFiles(true);
+        await handleUploadVideos();
+      }
+      await handleMutateThumbnailPlaylist(data);
+    } catch (error) {
       setIsUploadingFiles(false);
-    } else {
-      await handleUploadVideos();
+      toast.error(t("page.view_playlist.error_updating_playlist"));
     }
-    await handleMutateThumbnailPlaylist(data);
   };
 
   const resetRemotePlaylistForm = useCallback(() => {
@@ -495,22 +503,13 @@ export const ViewPlaylistPage = () => {
                       {t("page.view_playlist.upload_file")}
                     </Text>
                   </Row>
-                  {videos.map((v, i) => (
-                    <Row key={i} alignItems="center">
-                      <Text>{v.name}</Text>
-                      {!isLoading && (
-                        <Button
-                          type="button"
-                          buttonType="danger"
-                          transparent
-                          ml="1rem"
-                          onClick={handleDeleteVideo(i)}
-                        >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </Button>
-                      )}
-                    </Row>
-                  ))}
+
+                  <VideoList
+                    videos={videos}
+                    isUploadingVideos={isLoading}
+                    handleDeleteVideo={handleDeleteVideo}
+                  />
+
                   <Row flex="auto">
                     <Column flex="auto">
                       <FileUploader
@@ -527,35 +526,34 @@ export const ViewPlaylistPage = () => {
                 </>
               )}
 
-              {isUploadingFiles && (
-                <>
-                  <Text my={3}>
-                    {t("page.create.playlist_file_count", {
-                      current: totalUploadedVideos,
-                      total: totalVideos,
-                    })}
-                  </Text>
-                  <ProgressBar completed={totalUploadedVideosPercentage} />
-                  <Text my={3}>
-                    {t("page.create.playlist_uploading_current_file", {
-                      current: currentUploadFile + 1,
-                    })}
-                  </Text>
-                  <ProgressBar completed={uploadProgress} />
-                </>
-              )}
+              <UploadVideosProgress
+                isUploading={isUploadingFiles}
+                totalVideos={totalVideos}
+                totalUploadedVideos={totalUploadedVideos}
+                totalUploadedVideosPercentage={totalUploadedVideosPercentage}
+                currentUploadFile={currentUploadFile}
+                uploadProgress={uploadProgress}
+              />
 
               {/* add playlist item */}
-              <Row>
-                <Text
-                  style={{ textTransform: "uppercase", fontStyle: "italic" }}
-                >
-                  {t("page.view_playlist.add_item")}
-                </Text>
-              </Row>
-              <Row>
-                <AddItemPlaylistDropzone show playlistId={playlist?.id} />
-              </Row>
+
+              {!editMode && (
+                <>
+                  <Row>
+                    <Text
+                      style={{
+                        textTransform: "uppercase",
+                        fontStyle: "italic",
+                      }}
+                    >
+                      {t("page.view_playlist.add_item")}
+                    </Text>
+                  </Row>
+                  <Row>
+                    <AddItemPlaylistDropzone show playlistId={playlist?.id} />
+                  </Row>
+                </>
+              )}
             </Restricted>
           </form>
         </Container>
