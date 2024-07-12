@@ -18,10 +18,10 @@ import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
 import { FORMAT } from "@/constants/moment.constants";
 import moment from "moment";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate, useParams } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import UpdatePlaylistSchema, {
   UpdatePlaylistFormValues,
@@ -43,7 +43,7 @@ import useAuth from "@/hooks/useAuth";
 import usePermission from "@/hooks/usePermission";
 import router from "@/routes/router";
 import { ItemOrder, SetItemOrder } from "@/types/dnd.types";
-import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
+import { HandleChangeFile } from "@/types/media.types";
 import {
   getOrderedItemsPlaylistRequest,
   sortPlaylistItemsByDate,
@@ -75,7 +75,6 @@ import {
 } from "@/constants/dream.constants";
 import {
   ALLOWED_VIDEO_TYPES,
-  FileState,
   MAX_FILE_SIZE_MB,
 } from "@/constants/file.constants";
 import {
@@ -86,8 +85,7 @@ import {
 } from "@/utils/file-uploader.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
-
-type Params = { id: string };
+import { usePlaylistState } from "./usePlaylistState";
 
 type SortType = "name" | "date";
 
@@ -95,19 +93,32 @@ const SectionID = "playlist";
 
 export const ViewPlaylistPage = () => {
   const { t } = useTranslation();
-  const { id } = useParams<Params>();
-  const playlistId = Number(id) ?? 0;
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [userSearch, setUserSearch] = useState<string>("");
-  const [videos, setVideos] = useState<FileState[]>([]);
-  const [isUploadingFiles, setIsUploadingFiles] = useState(false);
-  const [currentUploadFile, setCurrentUploadFile] = useState(0);
+  const { socket } = useSocket();
+  const {
+    playlistId,
+    userSearch,
+    setUserSearch,
+    videos,
+    setVideos,
+    isUploadingFiles,
+    setIsUploadingFiles,
+    currentUploadFile,
+    setCurrentUploadFile,
+    editMode,
+    setEditMode,
+    isThumbnailRemoved,
+    setIsThumbnailRemoved,
+    thumbnail,
+    setTumbnail,
+    showConfirmDeleteModal,
+    setShowConfirmDeleteModal,
+  } = usePlaylistState();
   const { data, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
   });
-  const { socket } = useSocket();
   const playlist = data?.data?.playlist;
   const thumbnailUrl = useImage(playlist?.thumbnail, {
     width: 500,
@@ -139,12 +150,6 @@ export const ViewPlaylistPage = () => {
     () => playlist?.items?.sort((a, b) => a.order - b.order) ?? [],
     [playlist?.items],
   );
-
-  const [editMode, setEditMode] = useState<boolean>(false);
-  const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
-  const [thumbnail, setTumbnail] = useState<MultiMediaState>();
-  const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
-    useState<boolean>(false);
 
   const { mutate, isLoading: isLoadingPlaylistMutation } =
     useUpdatePlaylist(playlistId);
@@ -553,7 +558,7 @@ export const ViewPlaylistPage = () => {
     resetRemotePlaylistForm();
   }, [reset, resetRemotePlaylistForm]);
 
-  if (!id || !playlistId) {
+  if (!playlistId) {
     return <Navigate to={ROUTES.ROOT} replace />;
   }
 
