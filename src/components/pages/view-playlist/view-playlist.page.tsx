@@ -1,10 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useUpdatePlaylist } from "@/api/playlist/mutation/useUpdatePlaylist";
-import {
-  PLAYLIST_QUERY_KEY,
-  usePlaylist,
-} from "@/api/playlist/query/usePlaylist";
-import queryClient from "@/api/query-client";
 import {
   AddItemPlaylistDropzone,
   Button,
@@ -18,18 +12,13 @@ import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
 import { FORMAT } from "@/constants/moment.constants";
 import moment from "moment";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
 import UpdatePlaylistSchema, {
   UpdatePlaylistFormValues,
 } from "@/schemas/update-playlist.schema";
-import { useDeletePlaylist } from "@/api/playlist/mutation/useDeletePlaylist";
-import { useDeletePlaylistItem } from "@/api/playlist/mutation/useDeletePlaylistItem";
-import { useOrderPlaylist } from "@/api/playlist/mutation/useOrderPlaylist";
-import { useUpdateThumbnailPlaylist } from "@/api/playlist/mutation/useUpdateThumbnailPlaylist";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { ItemCard } from "@/components/shared";
 import Restricted from "@/components/shared/restricted/restricted";
@@ -38,17 +27,8 @@ import Text from "@/components/shared/text/text";
 import { ThumbnailInput } from "@/components/shared/thumbnail-input/thumbnail-input";
 import { PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
-import { TOAST_DEFAULT_CONFIG } from "@/constants/toast.constants";
 import useAuth from "@/hooks/useAuth";
-import usePermission from "@/hooks/usePermission";
-import router from "@/routes/router";
-import { ItemOrder, SetItemOrder } from "@/types/dnd.types";
 import { HandleChangeFile } from "@/types/media.types";
-import {
-  getOrderedItemsPlaylistRequest,
-  sortPlaylistItemsByDate,
-  sortPlaylistItemsByName,
-} from "@/utils/playlist.util";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendar,
@@ -60,34 +40,20 @@ import {
   faTrash,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { getUserName, isAdmin } from "@/utils/user.util";
-import { emitPlayPlaylist } from "@/utils/socket.util";
-import useSocket from "@/hooks/useSocket";
+import { getUserName } from "@/utils/user.util";
 import { Select } from "@/components/shared/select/select";
 import ProgressBar from "@/components/shared/progress-bar/progress-bar";
-import { useUsers } from "@/api/user/query/useUsers";
-import { useImage } from "@/hooks/useImage";
-import { User } from "@/types/auth.types";
-import {
-  NSFW,
-  filterNsfwOption,
-  getNsfwOptions,
-} from "@/constants/dream.constants";
+import { filterNsfwOption, getNsfwOptions } from "@/constants/dream.constants";
 import {
   ALLOWED_VIDEO_TYPES,
   MAX_FILE_SIZE_MB,
 } from "@/constants/file.constants";
 import {
-  getFileNameWithoutExtension,
-  getFileState,
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
 } from "@/utils/file-uploader.util";
-import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
-import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import { usePlaylistState } from "./usePlaylistState";
-
-type SortType = "name" | "date";
+import { usePlaylistHandlers } from "./usePlaylistHandlers";
 
 const SectionID = "playlist";
 
@@ -95,10 +61,19 @@ export const ViewPlaylistPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const { socket } = useSocket();
+
   const {
     playlistId,
-    userSearch,
+    playlist,
+    isPlaylistLoading,
+    thumbnailUrl,
+    usersOptions,
+    isUsersLoading,
+    isOwner,
+    isUserAdmin,
+    allowedEditPlaylist,
+    allowedEditOwner,
+    items,
     setUserSearch,
     videos,
     setVideos,
@@ -114,70 +89,10 @@ export const ViewPlaylistPage = () => {
     setTumbnail,
     showConfirmDeleteModal,
     setShowConfirmDeleteModal,
+    totalVideos,
+    totalUploadedVideos,
+    totalUploadedVideosPercentage,
   } = usePlaylistState();
-  const { data, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
-  const { data: usersData, isLoading: isUsersLoading } = useUsers({
-    search: userSearch,
-  });
-  const playlist = data?.data?.playlist;
-  const thumbnailUrl = useImage(playlist?.thumbnail, {
-    width: 500,
-    fit: "cover",
-  });
-  const usersOptions = (usersData?.data?.users ?? [])
-    .filter((user) => user.name)
-    .map((user) => ({
-      label: user?.name ?? "-",
-      value: user?.id,
-    }));
-
-  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
-  const isOwner: boolean = useMemo(
-    () => (user?.id ? user?.id === playlist?.user?.id : false),
-    [playlist, user],
-  );
-  const allowedEditPlaylist = usePermission({
-    permission: PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST,
-    isOwner: isOwner,
-  });
-
-  const allowedEditOwner = usePermission({
-    permission: PLAYLIST_PERMISSIONS.CAN_EDIT_OWNER,
-    isOwner,
-  });
-
-  const items = useMemo(
-    () => playlist?.items?.sort((a, b) => a.order - b.order) ?? [],
-    [playlist?.items],
-  );
-
-  const { mutate, isLoading: isLoadingPlaylistMutation } =
-    useUpdatePlaylist(playlistId);
-  const {
-    mutate: mutateThumbnailPlaylist,
-    isLoading: isLoadingThumbnailPlaylistMutation,
-  } = useUpdateThumbnailPlaylist(playlistId);
-  const {
-    mutate: mutateDeletePlaylist,
-    isLoading: isLoadingDeletePlaylistMutation,
-  } = useDeletePlaylist(playlistId);
-  const orderPlaylistMutation = useOrderPlaylist(playlistId);
-
-  const { mutate: mutateDeletePlaylistItem } =
-    useDeletePlaylistItem(playlistId);
-
-  const {
-    isLoading: isUploadingSingleFile,
-    uploadProgress,
-    mutateAsync: uploadDreamVideoMutateAsync,
-  } = useUploadDreamVideo({ navigateToDream: false });
-
-  const addPlaylistItemMutation = useAddPlaylistItem(playlist?.id);
-
-  const isLoading =
-    isLoadingPlaylistMutation ||
-    isLoadingThumbnailPlaylistMutation ||
-    isUploadingSingleFile;
 
   const {
     register,
@@ -193,263 +108,37 @@ export const ViewPlaylistPage = () => {
 
   const values = getValues();
 
-  const handleMutateThumbnailPlaylist = (data: UpdatePlaylistFormValues) => {
-    if (isThumbnailRemoved || thumbnail?.file) {
-      mutateThumbnailPlaylist(
-        { file: thumbnail?.file as Blob },
-        {
-          onSuccess: (response) => {
-            if (response.success) {
-              handleMutatePlaylist(data);
-            } else {
-              toast.error(
-                `${t("page.view_playlist.error_updating_playlist")} ${
-                  response.message
-                }`,
-              );
-            }
-          },
-          onError: () => {
-            toast.error(t("page.view_playlist.error_updating_playlist"));
-          },
-        },
-      );
-    } else {
-      handleMutatePlaylist(data);
-    }
-  };
+  const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
+  const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
 
-  const handleMutatePlaylist = (data: UpdatePlaylistFormValues) => {
-    mutate(
-      {
-        name: data.name,
-        featureRank: data?.featureRank,
-        displayedOwner: data?.displayedOwner?.value,
-        nsfw: data?.nsfw.value === NSFW.TRUE,
-      },
-      {
-        onSuccess: (response) => {
-          if (response.success) {
-            queryClient.setQueryData(
-              [PLAYLIST_QUERY_KEY, playlistId],
-              response,
-            );
-            reset({ name: response?.data?.playlist.name });
-            toast.success(
-              `${t("page.view_playlist.playlist_updated_successfully")}`,
-            );
-            setEditMode(false);
-          } else {
-            toast.error(
-              `${t("page.view_playlist.error_updating_playlist")} ${
-                response.message
-              }`,
-            );
-          }
-        },
-        onError: () => {
-          toast.error(t("page.view_playlist.error_updating_playlist"));
-        },
-      },
-    );
-  };
-
-  const handleDeletePlaylistItem =
-    (itemId: number) => (event: React.MouseEvent) => {
-      event.stopPropagation();
-      event.preventDefault();
-      const toastId = toast.loading(
-        t("page.view_playlist.deleting_playlist_item"),
-      );
-      mutateDeletePlaylistItem(
-        { itemId },
-        {
-          onSuccess: (response) => {
-            if (response.success) {
-              queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
-              toast.update(toastId, {
-                render: t(
-                  "page.view_playlist.playlist_item_deleted_successfully",
-                ),
-                type: "success",
-                isLoading: false,
-                ...TOAST_DEFAULT_CONFIG,
-              });
-            } else {
-              toast.update(toastId, {
-                render: `${t(
-                  "page.view_playlist.error_deleting_playlist_item",
-                )} ${response.message}`,
-                type: "error",
-                isLoading: false,
-                ...TOAST_DEFAULT_CONFIG,
-              });
-            }
-          },
-          onError: () => {
-            toast.update(toastId, {
-              render: `${t("page.view_playlist.error_deleting_playlist_item")}`,
-              type: "error",
-              isLoading: false,
-              ...TOAST_DEFAULT_CONFIG,
-            });
-          },
-        },
-      );
-    };
-
-  const handleOrderPlaylist = async (dropItem: SetItemOrder) => {
-    /**
-     * Validate new index value
-     */
-    if (dropItem.newIndex < 0) {
-      dropItem.newIndex = 0;
-    } else if (dropItem.newIndex > items.length - 1) {
-      dropItem.newIndex = items.length - 1;
-    }
-
-    const requestPlaylistItems: ItemOrder[] = getOrderedItemsPlaylistRequest({
-      items: items.map((i) => ({ id: i.id, order: i.order }) as ItemOrder),
-      dropItem,
-    });
-
-    const toastId = toast.loading(
-      t("page.view_playlist.ordering_playlist_items"),
-    );
-    try {
-      const response = await orderPlaylistMutation.mutateAsync({
-        order: requestPlaylistItems,
-      });
-
-      if (response.success) {
-        toast.update(toastId, {
-          render: t("page.view_playlist.playlist_items_ordered_successfully"),
-          type: "success",
-          isLoading: false,
-          ...TOAST_DEFAULT_CONFIG,
-        });
-      } else {
-        toast.update(toastId, {
-          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
-            response.message
-          }`,
-          type: "error",
-          isLoading: false,
-          ...TOAST_DEFAULT_CONFIG,
-        });
-      }
-    } catch (_) {
-      toast.update(toastId, {
-        render: `${t("page.view_playlist.error_ordering_playlist_items")}`,
-        type: "error",
-        isLoading: false,
-        ...TOAST_DEFAULT_CONFIG,
-      });
-    }
-  };
-
-  const handleOrderPlaylistBy = (type: SortType) => async () => {
-    const items = playlist?.items;
-    let orderedItems;
-    if (type === "name") orderedItems = sortPlaylistItemsByName(items);
-    else orderedItems = sortPlaylistItemsByDate(items);
-
-    if (!orderedItems) {
-      return;
-    }
-
-    const toastId = toast.loading(
-      t("page.view_playlist.ordering_playlist_items"),
-    );
-    try {
-      const response = await orderPlaylistMutation.mutateAsync({
-        order: orderedItems,
-      });
-
-      if (response.success) {
-        toast.update(toastId, {
-          render: t("page.view_playlist.playlist_items_ordered_successfully"),
-          type: "success",
-          isLoading: false,
-          ...TOAST_DEFAULT_CONFIG,
-        });
-      } else {
-        toast.update(toastId, {
-          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
-            response.message
-          }`,
-          type: "error",
-          isLoading: false,
-          ...TOAST_DEFAULT_CONFIG,
-        });
-      }
-    } catch (_) {
-      toast.update(toastId, {
-        render: `${t("page.view_playlist.error_ordering_playlist_items")}`,
-        type: "error",
-        isLoading: false,
-        ...TOAST_DEFAULT_CONFIG,
-      });
-    }
-  };
-
-  const handleFileUploaderChange: HandleChangeFile = (files) => {
-    if (files instanceof FileList) {
-      const filesArray = Array.from(files);
-      console.log({ filesArray });
-      setVideos((v) => [...v, ...filesArray.map((f) => getFileState(f))]);
-    } else {
-      setVideos((v) => [...v, getFileState(files)]);
-    }
-  };
-
-  const setVideoUploaded = (index: number) => {
-    setVideos((videos) =>
-      videos.map((v, i) => ({
-        ...v,
-        uploaded: i === index ? true : v.uploaded,
-      })),
-    );
-  };
-
-  const handleUploadVideos = async () => {
-    const playlistDreamItemsNames = playlist?.items
-      ?.filter((item) => Boolean(item?.dreamItem?.name))
-      ?.map((item) => item.dreamItem!.name);
-
-    for (let i = 0; i < videos.length; i++) {
-      setCurrentUploadFile(i);
-
-      const fileName = getFileNameWithoutExtension(videos[i]?.fileBlob);
-
-      if (playlistDreamItemsNames?.includes(fileName)) {
-        toast.warning(
-          `"${fileName}" ${t("page.view_playlist.dream_already_exists")}`,
-        );
-        continue;
-      }
-
-      const createdDream = await uploadDreamVideoMutateAsync({
-        file: videos[i]?.fileBlob,
-      });
-      setVideoUploaded(i);
-      if (createdDream) {
-        await addPlaylistItemMutation.mutateAsync({
-          type: "dream",
-          id: String(createdDream.id),
-        });
-      }
-    }
-    setIsUploadingFiles(false);
-  };
-
-  const onDeleteVideo = (index: number) => () =>
-    setVideos((videos) => videos.filter((_, i) => i !== index));
-
-  const handleEdit = (event: React.MouseEvent) => {
-    event.preventDefault();
-    setEditMode(true);
-  };
+  const {
+    isLoading,
+    uploadProgress,
+    isLoadingDeletePlaylist,
+    handleEdit,
+    handleMutateThumbnailPlaylist,
+    handleDeletePlaylistItem,
+    handleOrderPlaylist,
+    handleOrderPlaylistBy,
+    handleFileUploaderChange,
+    handleUploadVideos,
+    handleDeleteVideo,
+    handleConfirmDeletePlaylist,
+    handlePlayPlaylist,
+  } = usePlaylistHandlers({
+    playlistId,
+    playlist,
+    items,
+    thumbnail,
+    isThumbnailRemoved,
+    videos,
+    reset,
+    setEditMode,
+    setCurrentUploadFile,
+    setVideos,
+    setIsUploadingFiles,
+    onHideConfirmDeleteModal,
+  });
 
   const handleCancel = (event: React.MouseEvent) => {
     event.preventDefault();
@@ -481,40 +170,6 @@ export const ViewPlaylistPage = () => {
     await handleMutateThumbnailPlaylist(data);
   };
 
-  const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
-  const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
-
-  const onConfirmDeletePlaylist = () => {
-    mutateDeletePlaylist(null, {
-      onSuccess: (response) => {
-        if (response.success) {
-          toast.success(
-            `${t("page.view_playlist.playlist_deleted_successfully")}`,
-          );
-          onHideConfirmDeleteModal();
-          router.navigate(ROUTES.FEED);
-        } else {
-          toast.error(
-            `${t("page.view_playlist.error_deleting_playlist")} ${
-              response.message
-            }`,
-          );
-        }
-      },
-      onError: () => {
-        toast.error(t("page.view_playlist.error_deleting_playlist"));
-      },
-    });
-  };
-
-  const handlePlayPlaylist = () => {
-    emitPlayPlaylist(
-      socket,
-      playlist,
-      t("toasts.play_playlist", { name: playlist?.name }),
-    );
-  };
-
   const resetRemotePlaylistForm = useCallback(() => {
     reset({
       name: playlist?.name,
@@ -540,18 +195,6 @@ export const ViewPlaylistPage = () => {
   }, [reset, playlist, isUserAdmin, t]);
 
   /**
-   * videos data
-   */
-  const totalVideos: number = videos.length;
-  const totalUploadedVideos: number = videos.reduce(
-    (prev, video) => prev + (video.uploaded ? 1 : 0),
-    0,
-  );
-  const totalUploadedVideosPercentage = Math.round(
-    (totalUploadedVideos / (totalVideos === 0 ? 1 : totalVideos)) * 100,
-  );
-
-  /**
    * Setting api values to form
    */
   useEffect(() => {
@@ -575,8 +218,8 @@ export const ViewPlaylistPage = () => {
       <ConfirmModal
         isOpen={showConfirmDeleteModal}
         onCancel={onHideConfirmDeleteModal}
-        onConfirm={onConfirmDeletePlaylist}
-        isConfirming={isLoadingDeletePlaylistMutation}
+        onConfirm={handleConfirmDeletePlaylist}
+        isConfirming={isLoadingDeletePlaylist}
         title={t("page.view_playlist.confirm_delete_modal_title")}
         text={
           <Text>
@@ -658,7 +301,7 @@ export const ViewPlaylistPage = () => {
                 ) : (
                   <Restricted
                     to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
-                    isOwner={user?.id === playlist?.user?.id}
+                    isOwner={isOwner}
                   >
                     <Button
                       type="button"
@@ -861,7 +504,7 @@ export const ViewPlaylistPage = () => {
                           buttonType="danger"
                           transparent
                           ml="1rem"
-                          onClick={onDeleteVideo(i)}
+                          onClick={handleDeleteVideo(i)}
                         >
                           <FontAwesomeIcon icon={faTrash} />
                         </Button>
