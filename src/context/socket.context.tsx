@@ -31,8 +31,8 @@ export const SocketProvider: React.FC<{
 
   const generateSocketInstance = useCallback((user: UserWithToken) => {
     const newSocket = socketIO(`${SOCKET_URL}/${REMOTE_CONTROL_NAMESPACE}`, {
-      query: {
-        token: user?.token?.AccessToken
+      extraHeaders: {
+        authorization: user?.token?.AccessToken
           ? `Bearer ${user?.token?.AccessToken}`
           : "",
       },
