@@ -15,6 +15,13 @@ export type UpdatePlaylistFormValues = {
   created_at?: string;
 };
 
+export type UpdateVideoPlaylistFormValues = {
+  playlist: {
+    label: string;
+    value: number;
+  };
+};
+
 export type UpdatePlaylistRequestValues = {
   name: string;
   featureRank?: number;
@@ -39,6 +46,17 @@ export const UpdatePlaylistSchema = yup
       value: yup.string(),
     }),
     created_at: yup.string(),
+  })
+  .required();
+
+export const UpdateVideoPlaylistSchema = yup
+  .object({
+    playlist: yup
+      .object({
+        label: yup.string().required("Playlist is required."),
+        value: yup.number().required(),
+      })
+      .required("Playlist is required."),
   })
   .required();
 

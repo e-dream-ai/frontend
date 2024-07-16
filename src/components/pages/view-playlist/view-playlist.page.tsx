@@ -4,7 +4,6 @@ import {
   Button,
   Input,
   ItemCardList,
-  FileUploader,
   Row,
 } from "@/components/shared";
 import Container from "@/components/shared/container/container";
@@ -43,18 +42,8 @@ import {
 import { getUserName } from "@/utils/user.util";
 import { Select } from "@/components/shared/select/select";
 import { filterNsfwOption, getNsfwOptions } from "@/constants/dream.constants";
-import {
-  ALLOWED_VIDEO_TYPES,
-  MAX_FILE_SIZE_MB,
-} from "@/constants/file.constants";
-import {
-  handleFileUploaderSizeError,
-  handleFileUploaderTypeError,
-} from "@/utils/file-uploader.util";
 import { usePlaylistState } from "./usePlaylistState";
 import { usePlaylistHandlers } from "./usePlaylistHandlers";
-import { VideoList } from "@/components/shared/video-list/video-list";
-import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
 import { toast } from "react-toastify";
 
 const SectionID = "playlist";
@@ -79,9 +68,7 @@ export const ViewPlaylistPage = () => {
     setUserSearch,
     videos,
     setVideos,
-    isUploadingFiles,
     setIsUploadingFiles,
-    currentUploadFile,
     setCurrentUploadFile,
     editMode,
     setEditMode,
@@ -92,8 +79,6 @@ export const ViewPlaylistPage = () => {
     showConfirmDeleteModal,
     setShowConfirmDeleteModal,
     totalVideos,
-    totalUploadedVideos,
-    totalUploadedVideosPercentage,
   } = usePlaylistState();
 
   const {
@@ -115,16 +100,13 @@ export const ViewPlaylistPage = () => {
 
   const {
     isLoading,
-    uploadProgress,
     isLoadingDeletePlaylist,
     handleEdit,
     handleMutateThumbnailPlaylist,
     handleDeletePlaylistItem,
     handleOrderPlaylist,
     handleOrderPlaylistBy,
-    handleFileUploaderChange,
     handleUploadVideos,
-    handleDeleteVideo,
     handleConfirmDeletePlaylist,
     handlePlayPlaylist,
   } = usePlaylistHandlers({
@@ -486,74 +468,24 @@ export const ViewPlaylistPage = () => {
                 <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
               )}
             </Row>
+
             <Restricted
               to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
               isOwner={user?.id === playlist?.user?.id}
             >
-              {/* upload file */}
-              {editMode && (
-                <>
-                  <Row>
-                    <Text
-                      style={{
-                        textTransform: "uppercase",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      {t("page.view_playlist.upload_file")}
-                    </Text>
-                  </Row>
-
-                  <VideoList
-                    videos={videos}
-                    isUploadingVideos={isLoading}
-                    handleDeleteVideo={handleDeleteVideo}
-                  />
-
-                  <Row flex="auto">
-                    <Column flex="auto">
-                      <FileUploader
-                        multiple
-                        maxSize={MAX_FILE_SIZE_MB}
-                        handleChange={handleFileUploaderChange}
-                        onSizeError={handleFileUploaderSizeError(t)}
-                        onTypeError={handleFileUploaderTypeError(t)}
-                        name="file"
-                        types={ALLOWED_VIDEO_TYPES}
-                      />
-                    </Column>
-                  </Row>
-                </>
-              )}
-
-              <UploadVideosProgress
-                isUploading={isUploadingFiles}
-                totalVideos={totalVideos}
-                totalUploadedVideos={totalUploadedVideos}
-                totalUploadedVideosPercentage={totalUploadedVideosPercentage}
-                currentUploadFile={currentUploadFile}
-                uploadProgress={uploadProgress}
-              />
-
-              {/* add playlist item */}
-
-              {!editMode && (
-                <>
-                  <Row>
-                    <Text
-                      style={{
-                        textTransform: "uppercase",
-                        fontStyle: "italic",
-                      }}
-                    >
-                      {t("page.view_playlist.add_item")}
-                    </Text>
-                  </Row>
-                  <Row>
-                    <AddItemPlaylistDropzone show playlistId={playlist?.id} />
-                  </Row>
-                </>
-              )}
+              <Row>
+                <Text
+                  style={{
+                    textTransform: "uppercase",
+                    fontStyle: "italic",
+                  }}
+                >
+                  {t("page.view_playlist.add_item")}
+                </Text>
+              </Row>
+              <Row>
+                <AddItemPlaylistDropzone show playlistId={playlist?.id} />
+              </Row>
             </Restricted>
           </form>
         </Container>

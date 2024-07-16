@@ -76,6 +76,7 @@
       "dream_successfully_uploaded": "Dream successfully uploaded.",
       "error_uploading_dream": "Error uploading dream.",
       "playlist_tab_title": "Create playlist",
+      "update_playlist_tab_title": "Update playlist",
       "playlist_instructions": "Create your playlist here.",
       "playlist_file_instructions": "Upload or drop one or more dreams here.",
       "playlist_name": "Name",
@@ -344,6 +345,16 @@
     },
     "filmstrip": {
       "empty": "No filmstrip"
+    },
+    "update_playlist": {
+      "playlist": "Playlist",
+      "upload_file": "Upload file",
+      "save": "Save",
+      "saving": "Saving",
+      "update_playlist_instructions": "Select a playlist and drop files that you want to add to it.",
+      "playlist_updated_successfully": "Playlist updated successfully.",
+      "dream_already_exists": "Dream alrady exists.",
+      "error_updating_playlist": "Error updating playlist."
     }
   },
   "hooks": {

@@ -6,6 +6,7 @@ import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import { CreateDream } from "./create-dream";
 import { CreatePlaylist } from "./create-playlist";
+import { UpdatePlaylist } from "./update-playlist/update-playlist";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import usePermission from "@/hooks/usePermission";
 import Restricted from "@/components/shared/restricted/restricted";
@@ -15,6 +16,7 @@ import { Anchor } from "@/components/shared";
 enum CREATE_TYPE {
   DREAM = 0,
   PLAYLIST = 1,
+  UPDATE_PLAYLIST = 2,
 }
 
 const SECTION_ID = "page";
@@ -41,6 +43,9 @@ export const CreatePage: React.FC = () => {
             <Tab tabIndex={`${CREATE_TYPE.PLAYLIST}`}>
               {t("page.create.playlist_tab_title")}
             </Tab>
+            <Tab tabIndex={`${CREATE_TYPE.UPDATE_PLAYLIST}`}>
+              {t("page.create.update_playlist_tab_title")}
+            </Tab>
           </TabList>
 
           <TabPanel tabIndex={CREATE_TYPE.DREAM}>
@@ -60,6 +65,10 @@ export const CreatePage: React.FC = () => {
 
           <TabPanel tabIndex={CREATE_TYPE.PLAYLIST}>
             <CreatePlaylist />
+          </TabPanel>
+
+          <TabPanel tabIndex={CREATE_TYPE.UPDATE_PLAYLIST}>
+            <UpdatePlaylist />
           </TabPanel>
         </Tabs>
       </Section>

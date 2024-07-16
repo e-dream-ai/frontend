@@ -11,15 +11,19 @@ export const PLAYLISTS_QUERY_KEY = "getPlaylists";
 type QueryFunctionParams = {
   take: number;
   skip: number;
+  userId?: number;
+  search?: string;
 };
 
-const getPlaylists = ({ take, skip }: QueryFunctionParams) => {
+const getPlaylists = ({ take, skip, userId, search }: QueryFunctionParams) => {
   return async () =>
     axiosClient
       .get(`/playlist`, {
         params: {
           take,
           skip,
+          userId,
+          search,
         },
         headers: getRequestHeaders({
           contentType: ContentType.json,
@@ -30,15 +34,17 @@ const getPlaylists = ({ take, skip }: QueryFunctionParams) => {
 
 type HookParams = {
   page?: number;
+  search?: string;
 };
 
-export const usePlaylists = ({ page = 0 }: HookParams) => {
+export const usePlaylists = ({ page = 0, search }: HookParams) => {
   const take = PAGINATION.TAKE;
   const skip = page * take;
   const { user } = useAuth();
+  const userId = user?.id;
   return useQuery<ApiResponse<{ playlists: Playlist[]; count: number }>, Error>(
-    [PLAYLISTS_QUERY_KEY, page],
-    getPlaylists({ take, skip }),
+    [PLAYLISTS_QUERY_KEY, userId, page, search, take],
+    getPlaylists({ take, skip, userId, search }),
     {
       refetchOnWindowFocus: false,
       enabled: Boolean(user),
