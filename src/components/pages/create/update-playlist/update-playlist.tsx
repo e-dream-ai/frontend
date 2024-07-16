@@ -32,6 +32,7 @@ export const UpdatePlaylist: React.FC = () => {
     reset,
     control,
     getValues,
+    setValue,
   } = useForm<UpdateVideoPlaylistFormValues>({
     resolver: yupResolver(UpdateVideoPlaylistSchema),
   });
@@ -50,7 +51,7 @@ export const UpdatePlaylist: React.FC = () => {
     totalVideos,
     totalUploadedVideos,
     totalUploadedVideosPercentage,
-  } = usePlaylistState({ getValues });
+  } = usePlaylistState({ getValues, setValue });
 
   const {
     isLoading,
@@ -105,14 +106,7 @@ export const UpdatePlaylist: React.FC = () => {
           />
 
           <Row mt={4}>
-            <Text
-              style={{
-                textTransform: "uppercase",
-                fontStyle: "italic",
-              }}
-            >
-              {t("components.update_playlist.upload_file")}
-            </Text>
+            <Text>{t("components.update_playlist.upload_file")}</Text>
           </Row>
 
           <VideoList

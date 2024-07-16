@@ -23,7 +23,7 @@ import { useDeletePlaylist } from "@/api/playlist/mutation/useDeletePlaylist";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import router from "@/routes/router";
-import { ROUTES } from "@/constants/routes.constants";
+import { FULL_CREATE_ROUTES, ROUTES } from "@/constants/routes.constants";
 import { FileState } from "@/constants/file.constants";
 import {
   getFileNameWithoutExtension,
@@ -383,6 +383,15 @@ export const usePlaylistHandlers = ({
     );
   };
 
+  const handleNavigateAddToPlaylist = () => {
+    const queryParams = new URLSearchParams({
+      playlistId: String(playlist?.id ?? ""),
+      playlistName: String(playlist?.name ?? ""),
+    }).toString();
+
+    router.navigate(`${FULL_CREATE_ROUTES.ADD_TO_PLAYLIST}?${queryParams}`);
+  };
+
   return {
     isLoading,
     uploadProgress,
@@ -398,5 +407,6 @@ export const usePlaylistHandlers = ({
     handleDeleteVideo,
     handleConfirmDeletePlaylist,
     handlePlayPlaylist,
+    handleNavigateAddToPlaylist,
   };
 };

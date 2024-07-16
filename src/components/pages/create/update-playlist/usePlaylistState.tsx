@@ -1,16 +1,22 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import { FileState } from "@/constants/file.constants";
 import { User } from "@/types/auth.types";
 import { isAdmin } from "@/utils/user.util";
 import useAuth from "@/hooks/useAuth";
 import { usePlaylists } from "@/api/playlist/query/usePlaylists";
-import { UseFormGetValues } from "react-hook-form";
+import { UseFormGetValues, UseFormSetValue } from "react-hook-form";
 import { UpdateVideoPlaylistFormValues } from "@/schemas/update-playlist.schema";
+import { useLocation } from "react-router-dom";
 
-type Props = { getValues: UseFormGetValues<UpdateVideoPlaylistFormValues> };
+type Props = {
+  getValues: UseFormGetValues<UpdateVideoPlaylistFormValues>;
+  setValue: UseFormSetValue<UpdateVideoPlaylistFormValues>;
+};
 
-export const usePlaylistState = ({ getValues }: Props) => {
+export const usePlaylistState = ({ getValues, setValue }: Props) => {
   const { user } = useAuth();
+  const location = useLocation();
+
   const [playlistSearch, setPlaylistSearch] = useState<string>("");
   const [videos, setVideos] = useState<FileState[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
@@ -37,12 +43,40 @@ export const usePlaylistState = ({ getValues }: Props) => {
     search: playlistSearch,
   });
 
-  const playlistsOptions = (playlistsData?.data?.playlists ?? [])
-    .filter((playlist) => playlist.name)
-    .map((playlist) => ({
-      label: playlist?.name ?? "-",
-      value: playlist?.id,
-    }));
+  const getLocationParamPlaylist = useCallback(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const param1 = searchParams.get("playlistId");
+    const param2 = searchParams.get("playlistName");
+
+    if (param1 && !Number.isNaN(Number(param1))) {
+      return {
+        label: param2 ?? "",
+        value: Number(param1),
+      };
+    }
+
+    return undefined;
+  }, [location.search]);
+
+  const playlistsOptions = useMemo(() => {
+    const options = (playlistsData?.data?.playlists ?? [])
+      .filter((playlist) => playlist.name)
+      .map((playlist) => ({
+        label: playlist?.name ?? "-",
+        value: playlist?.id,
+      }));
+
+    const paramPlaylist = getLocationParamPlaylist();
+
+    if (
+      paramPlaylist &&
+      !options.find((o) => o.value === paramPlaylist.value)
+    ) {
+      options.push(paramPlaylist);
+    }
+
+    return options;
+  }, [playlistsData, getLocationParamPlaylist]);
 
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
 
@@ -51,6 +85,13 @@ export const usePlaylistState = ({ getValues }: Props) => {
       playlistsData?.data?.playlists?.find((p) => p.id === selectedPlaylistId),
     [playlistsData, selectedPlaylistId],
   );
+
+  useEffect(() => {
+    const paramPlaylist = getLocationParamPlaylist();
+    if (paramPlaylist) {
+      setValue("playlist", paramPlaylist);
+    }
+  }, [getLocationParamPlaylist, setValue]);
 
   return {
     playlist,

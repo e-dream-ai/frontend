@@ -33,6 +33,7 @@ import {
   faCalendar,
   faFileVideo,
   faPlay,
+  faPlus,
   faRankingStar,
   faSave,
   faShield,
@@ -109,6 +110,7 @@ export const ViewPlaylistPage = () => {
     handleUploadVideos,
     handleConfirmDeletePlaylist,
     handlePlayPlaylist,
+    handleNavigateAddToPlaylist,
   } = usePlaylistHandlers({
     playlistId,
     playlist,
@@ -235,6 +237,20 @@ export const ViewPlaylistPage = () => {
 
             <Column flex="1" alignSelf="flex-end" alignItems="flex-end">
               <Row marginBottom={0}>
+                <Restricted
+                  to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
+                  isOwner={isOwner}
+                >
+                  <Button
+                    type="button"
+                    buttonType="default"
+                    transparent
+                    ml="1rem"
+                    onClick={handleNavigateAddToPlaylist}
+                  >
+                    <FontAwesomeIcon icon={faPlus} />
+                  </Button>
+                </Restricted>
                 <Button
                   type="button"
                   buttonType="default"

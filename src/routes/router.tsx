@@ -57,7 +57,7 @@ export const router = createBrowserRouter([
         element: <ConfirmForgotPassword />,
       },
       {
-        path: `${ROUTES.CREATE}`,
+        path: `${ROUTES.CREATE}/*`,
         element: (
           <ProtectedRoute
             allowedRoles={[

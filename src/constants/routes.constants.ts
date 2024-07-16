@@ -18,3 +18,15 @@ export const ROUTES = {
   INSTALL: "/install",
   TERMS_OF_SERVICE: "/tos",
 };
+
+export const CREATE_ROUTES = {
+  DREAM: "dream",
+  PLAYLIST: "playlist",
+  ADD_TO_PLAYLIST: "add-to-playlist",
+};
+
+export const FULL_CREATE_ROUTES = {
+  DREAM: `${ROUTES.CREATE}/dream`,
+  PLAYLIST: `${ROUTES.CREATE}/playlist`,
+  ADD_TO_PLAYLIST: `${ROUTES.CREATE}/add-to-playlist`,
+};
