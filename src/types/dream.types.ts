@@ -1,4 +1,5 @@
 import { User } from "./auth.types";
+import { PlaylistItem } from "./playlist.types";
 
 export enum DreamStatusType {
   NONE = "none",
@@ -24,6 +25,7 @@ export type Dream = {
   processedVideoFPS?: number;
   status: DreamStatusType;
   nsfw?: boolean;
+  playlistItems?: PlaylistItem[];
   filmstrip?: string[];
   upvotes?: number;
   downvotes?: number;

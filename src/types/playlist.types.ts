@@ -5,7 +5,14 @@ export type PlaylistItem = {
   id: number;
   type: "dream" | "playlist";
   order: number;
+  /**
+   * playlist where belongs
+   */
+  playlist?: Omit<Playlist, "items">;
   dreamItem?: Dream;
+  /**
+   * playlist item
+   */
   playlistItem?: Omit<Playlist, "items">;
   created_at: string;
   updated_at: string;

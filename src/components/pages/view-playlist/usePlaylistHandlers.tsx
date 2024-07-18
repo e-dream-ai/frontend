@@ -76,8 +76,7 @@ export const usePlaylistHandlers = ({
 
   const orderPlaylistMutation = useOrderPlaylist(playlistId);
 
-  const { mutate: mutateDeletePlaylistItem } =
-    useDeletePlaylistItem(playlistId);
+  const { mutate: mutateDeletePlaylistItem } = useDeletePlaylistItem();
 
   const { mutate: mutateDeletePlaylist, isLoading: isLoadingDeletePlaylist } =
     useDeletePlaylist(playlistId);
@@ -88,7 +87,7 @@ export const usePlaylistHandlers = ({
     mutateAsync: uploadDreamVideoMutateAsync,
   } = useUploadDreamVideo({ navigateToDream: false });
 
-  const addPlaylistItemMutation = useAddPlaylistItem(playlist?.id);
+  const addPlaylistItemMutation = useAddPlaylistItem();
 
   const isLoading =
     isLoadingPlaylistMutation ||
@@ -169,7 +168,7 @@ export const usePlaylistHandlers = ({
         t("page.view_playlist.deleting_playlist_item"),
       );
       mutateDeletePlaylistItem(
-        { itemId },
+        { itemId, playlistId },
         {
           onSuccess: (response) => {
             if (response.success) {
@@ -342,7 +341,8 @@ export const usePlaylistHandlers = ({
       if (createdDream) {
         await addPlaylistItemMutation.mutateAsync({
           type: "dream",
-          id: String(createdDream.id),
+          id: createdDream.id,
+          playlistId: playlist?.id,
         });
       }
     }

@@ -5,16 +5,13 @@ import { ApiResponse } from "@/types/api.types";
 import { Playlist } from "@/types/playlist.types";
 import { axiosClient } from "@/client/axios.client";
 
-type MutateFunctionParams = {
-  id?: number;
-};
-
 export const ADD_PLAYLIST_ITEM_MUTATION_KEY = "addPlaylistItem";
 
-const addPlaylistItem = ({ id }: MutateFunctionParams) => {
+const addPlaylistItem = () => {
   return async (values: AddPlaylistItemFormValues) => {
+    const { playlistId, ...requestValues } = values;
     return axiosClient
-      .put(`/playlist/${id ?? "0"}/add-item`, values, {
+      .put(`/playlist/${playlistId}/add-item`, requestValues, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),
@@ -25,12 +22,12 @@ const addPlaylistItem = ({ id }: MutateFunctionParams) => {
   };
 };
 
-export const useAddPlaylistItem = (id?: number) => {
+export const useAddPlaylistItem = () => {
   return useMutation<
     ApiResponse<{ playlist: Playlist }>,
     Error,
     AddPlaylistItemFormValues
-  >(addPlaylistItem({ id }), {
+  >(addPlaylistItem(), {
     mutationKey: [ADD_PLAYLIST_ITEM_MUTATION_KEY],
   });
 };

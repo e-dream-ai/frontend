@@ -41,7 +41,6 @@ import { UploadVideosProgress } from "@/components/shared/upload-videos-progress
 export const CreatePlaylist: React.FC = () => {
   const { t } = useTranslation();
   const [videos, setVideos] = useState<FileState[]>([]);
-  const [playlist, setPlaylist] = useState<Playlist>();
   const [currentUploadFile, setCurrentUploadFile] = useState(0);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const {
@@ -54,7 +53,7 @@ export const CreatePlaylist: React.FC = () => {
     uploadProgress,
     mutateAsync,
   } = useUploadDreamVideo({ navigateToDream: false });
-  const addPlaylistItemMutation = useAddPlaylistItem(playlist?.id);
+  const addPlaylistItemMutation = useAddPlaylistItem();
 
   const isLoading =
     isUploadingFiles || isLoadingCreatePlaylist || isUploadingSingleFile;
@@ -97,7 +96,7 @@ export const CreatePlaylist: React.FC = () => {
   const onDeleteVideo = (index: number) => () =>
     setVideos((videos) => videos.filter((_, i) => i !== index));
 
-  const handleUploadVideos = async (playlist?: Playlist) => {
+  const handleUploadVideos = async (playlist: Playlist) => {
     for (let i = 0; i < videos.length; i++) {
       setCurrentUploadFile(i);
       const createdDream = await mutateAsync({ file: videos[i]?.fileBlob });
@@ -105,7 +104,8 @@ export const CreatePlaylist: React.FC = () => {
       if (createdDream) {
         await addPlaylistItemMutation.mutateAsync({
           type: "dream",
-          id: String(createdDream.id),
+          id: createdDream.id,
+          playlistId: playlist!.id,
         });
       }
     }
@@ -118,13 +118,13 @@ export const CreatePlaylist: React.FC = () => {
       setIsUploadingFiles(true);
       const playlistResponse = await mutateCreatePlaylist(data);
       const playlist = playlistResponse?.data?.playlist;
-      setPlaylist(playlist);
 
-      if (playlistResponse.success) {
+      if (playlistResponse.success && playlist) {
         toast.success(t("page.create.playlist_successfully_created"));
       } else {
         setIsUploadingFiles(false);
         toast.error(t("page.create.error_creating_playlist"));
+        return;
       }
 
       if (totalVideos === 0) {

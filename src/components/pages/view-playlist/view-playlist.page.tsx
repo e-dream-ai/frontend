@@ -237,20 +237,6 @@ export const ViewPlaylistPage = () => {
 
             <Column flex="1" alignSelf="flex-end" alignItems="flex-end">
               <Row marginBottom={0}>
-                <Restricted
-                  to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
-                  isOwner={isOwner}
-                >
-                  <Button
-                    type="button"
-                    buttonType="default"
-                    transparent
-                    ml="1rem"
-                    onClick={handleNavigateAddToPlaylist}
-                  >
-                    <FontAwesomeIcon icon={faPlus} />
-                  </Button>
-                </Restricted>
                 <Button
                   type="button"
                   buttonType="default"
@@ -428,7 +414,11 @@ export const ViewPlaylistPage = () => {
               </Column>
             </Row>
             <Row justifyContent="space-between" alignItems="center">
-              <h3>{t("page.view_playlist.items")}</h3>
+              <Column>
+                <Row>
+                  <h3>{t("page.view_playlist.items")}</h3>
+                </Row>
+              </Column>
               <Restricted
                 to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
                 isOwner={user?.id === playlist?.user?.id}
@@ -439,23 +429,38 @@ export const ViewPlaylistPage = () => {
                   </Row>
 
                   <Row mb={0}>
-                    <Button
-                      type="button"
-                      size="sm"
-                      buttonType="tertiary"
-                      mr={2}
-                      onClick={handleOrderPlaylistBy("name")}
-                    >
-                      {t("page.view_playlist.name")}
-                    </Button>
-                    <Button
-                      type="button"
-                      size="sm"
-                      buttonType="tertiary"
-                      onClick={handleOrderPlaylistBy("date")}
-                    >
-                      {t("page.view_playlist.date")}
-                    </Button>
+                    <Column mr="2">
+                      <Button
+                        type="button"
+                        buttonType="default"
+                        transparent
+                        ml="1rem"
+                        onClick={handleNavigateAddToPlaylist}
+                      >
+                        <FontAwesomeIcon icon={faPlus} />
+                      </Button>
+                    </Column>
+                    <Column>
+                      <Row alignItems="center" flex="auto" mb="0">
+                        <Button
+                          type="button"
+                          size="sm"
+                          buttonType="tertiary"
+                          mr={2}
+                          onClick={handleOrderPlaylistBy("name")}
+                        >
+                          {t("page.view_playlist.name")}
+                        </Button>
+                        <Button
+                          type="button"
+                          size="sm"
+                          buttonType="tertiary"
+                          onClick={handleOrderPlaylistBy("date")}
+                        >
+                          {t("page.view_playlist.date")}
+                        </Button>
+                      </Row>
+                    </Column>
                   </Row>
                 </Column>
               </Restricted>

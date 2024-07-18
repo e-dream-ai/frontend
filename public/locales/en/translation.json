@@ -111,6 +111,7 @@
       "nsfw": "Content Rating",
       "thumbnail": "Thumbnail",
       "filmstrip": "Filmstrip",
+      "playlists": "Playlists",
       "play_dream_client": "Dream sent to play on client.",
       "confirm_process_modal_title": "Confirm process dream",
       "confirm_process_modal_body": "Are you sure to process this dream?",
@@ -355,6 +356,13 @@
       "playlist_updated_successfully": "Playlist updated successfully.",
       "dream_already_exists": "Dream alrady exists.",
       "error_updating_playlist": "Error updating playlist."
+    },
+    "playlist_checkbox_menu": {
+      "placeholder": "Type to filter playlist",
+      "playlist_item_successfully_added": "Playlist item added successfully.",
+      "playlist_item_successfully_removed": "Playlist item removed successfully.",
+      "error_adding_playlist_item": "Error adding item to playlist.",
+      "error_removing_playlist_item": "Error removing item from playlist."
     }
   },
   "hooks": {

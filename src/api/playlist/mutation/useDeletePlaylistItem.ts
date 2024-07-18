@@ -4,16 +4,13 @@ import { DeletePlaylistItemFormValues } from "@/schemas/delete-playlist-item.sch
 import { ApiResponse } from "@/types/api.types";
 import { axiosClient } from "@/client/axios.client";
 
-type MutateFunctionParams = {
-  id?: number;
-};
-
 export const DELETE_PLAYLIST_ITEM_MUTATION_KEY = "deletePlaylistItem";
 
-const deletePlaylistItem = ({ id }: MutateFunctionParams) => {
+const deletePlaylistItem = () => {
   return async (values: DeletePlaylistItemFormValues) => {
+    const { playlistId, itemId } = values;
     return axiosClient
-      .delete(`/playlist/${id ?? "0"}/remove-item/${values?.itemId ?? "0"}`, {
+      .delete(`/playlist/${playlistId}/remove-item/${itemId}`, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),
@@ -24,9 +21,9 @@ const deletePlaylistItem = ({ id }: MutateFunctionParams) => {
   };
 };
 
-export const useDeletePlaylistItem = (id?: number) => {
+export const useDeletePlaylistItem = () => {
   return useMutation<ApiResponse<unknown>, Error, DeletePlaylistItemFormValues>(
-    deletePlaylistItem({ id }),
+    deletePlaylistItem(),
     {
       mutationKey: [DELETE_PLAYLIST_ITEM_MUTATION_KEY],
     },

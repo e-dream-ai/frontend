@@ -26,8 +26,8 @@ export const Filmstrip: React.FC<FilmstripProps> = ({ filmstrip }) => {
 
   return (
     <>
-      {filmstrip.map((frame) => (
-        <FilmstripItem url={frame} src="/images/blank.gif" />
+      {filmstrip.map((frame, index) => (
+        <FilmstripItem key={index} url={frame} src="/images/blank.gif" />
       ))}
     </>
   );

@@ -5,7 +5,7 @@ import { useUpdateThumbnailDream } from "@/api/dream/mutation/useUpdateThumbnail
 import { DREAM_QUERY_KEY, useDream } from "@/api/dream/query/useDream";
 import queryClient from "@/api/query-client";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
-import { Button, Row } from "@/components/shared";
+import { Button, ItemCard, ItemCardList, Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import Restricted from "@/components/shared/restricted/restricted";
 import { Column } from "@/components/shared/row/row";
@@ -58,6 +58,8 @@ import { useUnvoteDream } from "@/api/dream/mutation/useUnvoteDream";
 import { useDreamVote } from "@/api/dream/query/useDreamVote";
 import { VoteType } from "@/types/vote.types";
 import { Filmstrip } from "@/components/shared/filmstrip/filmstrip";
+import { FeedItemType } from "@/types/feed.types";
+import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 
 type Params = { uuid: string };
 
@@ -86,6 +88,7 @@ const ViewDreamPage: React.FC = () => {
 
   const { socket } = useSocket();
   const dream = data?.data?.dream;
+  const playlistItems = dream?.playlistItems;
 
   const [editMode, setEditMode] = useState<boolean>(false);
   const [video, setVideo] = useState<MultiMediaState>();
@@ -457,7 +460,10 @@ const ViewDreamPage: React.FC = () => {
 
             <Column flex="1" alignSelf="flex-end" alignItems="flex-end">
               {!editMode && (
-                <Row margin={0}>
+                <Row margin={0} alignItems="center">
+                  <Column mr="3">
+                    <PlaylistCheckboxMenu dream={dream} />
+                  </Column>
                   <Button
                     type="button"
                     buttonType="default"
@@ -631,6 +637,22 @@ const ViewDreamPage: React.FC = () => {
                 </Row>
                 <Row justifyContent={["center", "center", "flex-start"]}>
                   <Video controls src={video?.url || dream?.video} />
+                </Row>
+                <Row>
+                  <h3>{t("page.view_dream.playlists")}</h3>
+                </Row>
+                <Row flex="auto">
+                  <ItemCardList grid columns={1}>
+                    {playlistItems?.map((pi) => (
+                      <ItemCard
+                        key={pi.id}
+                        type={FeedItemType.PLAYLIST}
+                        item={pi.playlist}
+                        inline
+                        size="sm"
+                      />
+                    ))}
+                  </ItemCardList>
                 </Row>
               </React.Fragment>
             ) : (

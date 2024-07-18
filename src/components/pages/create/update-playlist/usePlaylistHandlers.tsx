@@ -52,7 +52,7 @@ export const usePlaylistHandlers = ({
     mutateAsync: uploadDreamVideoMutateAsync,
   } = useUploadDreamVideo({ navigateToDream: false });
 
-  const addPlaylistItemMutation = useAddPlaylistItem(playlist?.id);
+  const addPlaylistItemMutation = useAddPlaylistItem();
 
   const isLoading = isLoadingPlaylistMutation || isUploadingSingleFile;
 
@@ -136,7 +136,8 @@ export const usePlaylistHandlers = ({
       if (createdDream) {
         await addPlaylistItemMutation.mutateAsync({
           type: "dream",
-          id: String(createdDream.id),
+          id: createdDream.id,
+          playlistId: playlist?.id,
         });
       }
     }
