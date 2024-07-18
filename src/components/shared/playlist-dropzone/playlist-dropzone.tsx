@@ -30,7 +30,7 @@ export const AddItemPlaylistDropzone: React.FC<
   const dropzoneRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const [isDragEnter, setIsDragEnter] = useState<boolean>(false);
-  const { mutate } = useAddPlaylistItem(playlistId);
+  const { mutate } = useAddPlaylistItem();
 
   const handleAddPlaylistItemMutation = useCallback(
     ({ type, id }: { type?: string; id?: string }) => {
@@ -43,7 +43,11 @@ export const AddItemPlaylistDropzone: React.FC<
       );
 
       mutate(
-        { type: type as "dream" | "playlist", id: id },
+        {
+          type: type as "dream" | "playlist",
+          playlistId: playlistId,
+          id: Number(id),
+        },
         {
           onSuccess: (data) => {
             if (data.success) {
