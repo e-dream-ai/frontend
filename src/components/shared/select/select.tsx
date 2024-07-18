@@ -29,6 +29,7 @@ const StyledSelect = styled(ReactSelect)`
     background: ${(props) => props.theme.inputBackgroundColor};
     border-radius: 0;
     border: 0;
+    box-shadow: none;
   }
 
   .select__control--is-focused {
@@ -53,6 +54,28 @@ const StyledSelect = styled(ReactSelect)`
   .select__single-value {
     color: ${(props) => props.theme.inputTextColorPrimary} !important;
     font-size: 1rem;
+  }
+
+  .select__menu {
+    background-color: ${(props) => props.theme.inputTextColorSecondary};
+  }
+
+  .select__option {
+    background-color: ${(props) => props.theme.inputTextColorSecondary};
+    color: white;
+    &:hover {
+      background-color: ${(props) => props.theme.inputTextColorPrimary};
+      color: black;
+    }
+  }
+
+  .select__option--is-selected {
+    background-color: ${(props) => props.theme.colorPrimary};
+    color: white;
+  }
+
+  .select__option--is-focused {
+    background-color: ${(props) => props.theme.inputTextColorSecondary};
   }
 `;
 
