@@ -248,6 +248,9 @@
     }
   },
   "components": {
+    "item_card_list": {
+      "empty": "No items to show."
+    },
     "item_card": {
       "created_at": "Created At",
       "owner": "Owner",

@@ -9,10 +9,13 @@ import { useTheme } from "styled-components";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import { useDeletePlaylistItem } from "@/api/playlist/mutation/useDeletePlaylistItem";
 import { Dream } from "@/types/dream.types";
-import { Playlist } from "@/types/playlist.types";
+import { Playlist, PlaylistItem } from "@/types/playlist.types";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import Text from "../text/text";
+import queryClient from "@/api/query-client";
+import { DREAM_QUERY_KEY } from "@/api/dream/query/useDream";
+import { ClickEvent, EventHandler } from "@szhsin/react-menu";
 
 const StyledInput = styled.input`
   background: ${(props) => props.theme.inputBackgroundColor};
@@ -43,11 +46,10 @@ export const PlaylistCheckboxMenu = ({ dream }: PlaylistCheckboxMenuProps) => {
     search: playlistSearch,
   });
 
-  const includedPlaylists: number[] = useMemo(() => {
-    return (dream?.playlistItems ?? [])
-      .filter((pi) => Boolean(pi?.playlist?.id))
-      .map((pi) => pi.playlist!.id);
-  }, [dream]);
+  const dreamPlaylistItems: PlaylistItem[] = useMemo(
+    () => dream?.playlistItems ?? [],
+    [dream],
+  );
 
   const menuPlaylists = useMemo(() => {
     return (playlistsData?.data?.playlists ?? [])
@@ -93,41 +95,55 @@ export const PlaylistCheckboxMenu = ({ dream }: PlaylistCheckboxMenuProps) => {
           </Row>
         )}
       </FocusableItem>
-      {menuPlaylists.map((pl) => (
-        <PlaylistMenuItem
-          key={pl.id}
-          playlist={pl}
-          dreamId={dream?.id}
-          checked={includedPlaylists.includes(pl.id)}
-        />
-      ))}
+      {menuPlaylists.map((pl) => {
+        const playlistItem = dreamPlaylistItems.find(
+          (pi) => pi?.playlist?.id === pl.id,
+        );
+
+        return (
+          <PlaylistMenuItem
+            key={pl.id}
+            playlist={pl}
+            playlistItem={playlistItem}
+            dream={dream}
+            checked={Boolean(playlistItem)}
+          />
+        );
+      })}
     </Menu>
   );
 };
 
 type PlaylistMenuItemProps = {
   playlist: Playlist;
-  dreamId?: number;
+  playlistItem?: PlaylistItem;
+  dream?: Dream;
   checked: boolean;
 };
 
 const PlaylistMenuItem = ({
   playlist,
-  dreamId,
+  playlistItem,
+  dream,
   checked = false,
 }: PlaylistMenuItemProps) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const addPlaylistItemMutation = useAddPlaylistItem();
   const deletePlaylistItemMutation = useDeletePlaylistItem();
+
+  const isLoading =
+    addPlaylistItemMutation.isLoading || deletePlaylistItemMutation.isLoading;
 
   const handleAddPlaylistItem = async () => {
     try {
       const data = await addPlaylistItemMutation.mutateAsync({
         type: "dream",
-        id: dreamId,
-        playlistId: playlist.id,
+        id: dream?.id,
+        playlistId: playlist?.id,
       });
       if (data.success) {
+        queryClient.refetchQueries([DREAM_QUERY_KEY, { uuid: dream?.uuid }]);
         toast.success(
           t(
             "components.playlist_checkbox_menu.playlist_item_successfully_added",
@@ -148,11 +164,13 @@ const PlaylistMenuItem = ({
   const handleDeletePlaylistItemMutation = async () => {
     try {
       const data = await deletePlaylistItemMutation.mutateAsync({
-        itemId: dreamId,
-        playlistId: playlist.id,
+        itemId: playlistItem?.id,
+        playlistId: playlist?.id,
       });
 
       if (data.success) {
+        queryClient.refetchQueries([DREAM_QUERY_KEY, { uuid: dream?.uuid }]);
+
         toast.success(
           t(
             "components.playlist_checkbox_menu.playlist_item_successfully_removed",
@@ -170,7 +188,9 @@ const PlaylistMenuItem = ({
     }
   };
 
-  const handleMenuItemClick = async () => {
+  const handleMenuItemClick: EventHandler<ClickEvent> = async (e) => {
+    e.keepOpen = true;
+
     if (checked) {
       await handleDeletePlaylistItemMutation();
     } else {
@@ -179,8 +199,22 @@ const PlaylistMenuItem = ({
   };
 
   return (
-    <MenuItem type="checkbox" checked={checked} onClick={handleMenuItemClick}>
-      {playlist.name}
+    <MenuItem
+      type="checkbox"
+      checked={checked}
+      onClick={handleMenuItemClick}
+      disabled={isLoading}
+    >
+      <Row mb="0">
+        <Column>{playlist?.name}</Column>
+        <Column ml="2">
+          <FontAwesomeIcon
+            icon={faSpinner}
+            spin
+            color={isLoading ? theme.textSecondaryColor : "transparent"}
+          />
+        </Column>
+      </Row>
     </MenuItem>
   );
 };

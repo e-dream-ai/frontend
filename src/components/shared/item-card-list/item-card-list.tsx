@@ -1,5 +1,6 @@
+import React, { createContext, useContext, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { StyledItemCardList } from "@/components/shared/item-card-list/item-card-list.styled";
-import { createContext, useContext, useState } from "react";
 
 // Create a Context
 const ItemCardListContext = createContext({
@@ -12,6 +13,7 @@ export const ItemCardList: React.FC<{
   grid?: boolean;
   columns?: number;
 }> = ({ grid, columns = 2, children }) => {
+  const { t } = useTranslation();
   /**
    * this value determines if some child card item is dragging
    */
@@ -21,10 +23,12 @@ export const ItemCardList: React.FC<{
     return value;
   };
 
+  const isChildrenEmpty = React.Children.count(children) === 0;
+
   return (
     <ItemCardListContext.Provider value={{ isDragging, setDragging }}>
       <StyledItemCardList grid={grid} columns={columns}>
-        {children}
+        {isChildrenEmpty ? t("components.item_card_list.empty") : children}
       </StyledItemCardList>
     </ItemCardListContext.Provider>
   );

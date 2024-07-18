@@ -367,19 +367,22 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           flex="auto"
           margin="0"
           padding="3"
-          paddingLeft={inline ? 0 : "3"}
           justifyContent="space-between"
           flexWrap={["wrap", "nowrap", "nowrap", "nowrap"]}
         >
           {onDelete && (
-            <Row justifyContent="flex-start" m={0}>
+            <Row alignItems="flex-start" m={0}>
               {!deleteDisabled && (
                 <Button
                   type="button"
                   buttonType="danger"
                   transparent
                   onClick={onDelete}
-                  style={{ fontSize: "1.6rem" }}
+                  style={{
+                    fontSize: "1.6rem",
+                    alignItems: "flex-start",
+                    padding: "0rem 1rem 0rem 0rem",
+                  }}
                 >
                   <FontAwesomeIcon icon={faXmark} style={{ paddingTop: 0 }} />
                 </Button>
