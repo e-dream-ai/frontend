@@ -46,6 +46,7 @@ import { filterNsfwOption, getNsfwOptions } from "@/constants/dream.constants";
 import { usePlaylistState } from "./usePlaylistState";
 import { usePlaylistHandlers } from "./usePlaylistHandlers";
 import { toast } from "react-toastify";
+import { Tooltip } from "react-tooltip";
 
 const SectionID = "playlist";
 
@@ -436,7 +437,15 @@ export const ViewPlaylistPage = () => {
                         transparent
                         ml="1rem"
                         onClick={handleNavigateAddToPlaylist}
+                        data-tooltip-id="add-dreams"
                       >
+                        <Tooltip
+                          id="add-dreams"
+                          place="right-end"
+                          content={t(
+                            "page.view_playlist.add_dreams_to_playlist",
+                          )}
+                        />
                         <FontAwesomeIcon icon={faPlus} />
                       </Button>
                     </Column>

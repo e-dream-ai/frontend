@@ -144,6 +144,7 @@
       "sort_by": "Sort by",
       "add_item": "Add item",
       "upload_file": "Upload file(s)",
+      "add_dreams_to_playlist": "Add dreams to this playlist",
       "dream_already_exists": "dream already exists, omitted.",
       "play_playlist_client": "Playlist sent to play on client.",
       "confirm_delete_modal_title": "Confirm delete playlist",
@@ -362,6 +363,7 @@
     },
     "playlist_checkbox_menu": {
       "placeholder": "Type to filter playlist",
+      "add_dream_to_playlist": "Add dream to playlist",
       "playlist_item_successfully_added": "Playlist item added successfully.",
       "playlist_item_successfully_removed": "Playlist item removed successfully.",
       "error_adding_playlist_item": "Error adding item to playlist.",

@@ -16,6 +16,7 @@ import Text from "../text/text";
 import queryClient from "@/api/query-client";
 import { DREAM_QUERY_KEY } from "@/api/dream/query/useDream";
 import { ClickEvent, EventHandler } from "@szhsin/react-menu";
+import { Tooltip } from "react-tooltip";
 
 const StyledInput = styled.input`
   background: ${(props) => props.theme.inputBackgroundColor};
@@ -62,7 +63,14 @@ export const PlaylistCheckboxMenu = ({ dream }: PlaylistCheckboxMenuProps) => {
   return (
     <Menu
       menuButton={
-        <MenuButton>
+        <MenuButton data-tooltip-id="add-dream-to-playlist">
+          <Tooltip
+            id="add-dream-to-playlist"
+            place="right-end"
+            content={t(
+              "components.playlist_checkbox_menu.add_dream_to_playlist",
+            )}
+          />
           <Text color={theme.textPrimaryColor} fontSize="1.2rem">
             <FontAwesomeIcon icon={faPlus} />
           </Text>
