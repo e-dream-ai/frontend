@@ -21,7 +21,5 @@ export const removePlaylistItemFromDream = ({
       (pi) => pi.id !== playlistItemId,
     );
   }
-
-  console.log({ dream, playlistItemId });
   return dream;
 };

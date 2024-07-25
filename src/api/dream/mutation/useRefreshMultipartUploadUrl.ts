@@ -2,7 +2,7 @@ import { useMutation } from "@tanstack/react-query";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { ApiResponse } from "@/types/api.types";
 import { axiosClient } from "@/client/axios.client";
-import { RefresgMultipartUpload } from "@/types/dream.types";
+import { RefreshMultipartUpload } from "@/types/dream.types";
 import { CancelTokenSource } from "axios";
 import { RefreshMultipartUploadUrlFormValues } from "@/schemas/multipart-upload";
 
@@ -40,7 +40,7 @@ export const useRefreshMultipartUploadUrl = ({
   cancelTokenSource?: CancelTokenSource;
 }) => {
   return useMutation<
-    ApiResponse<RefresgMultipartUpload>,
+    ApiResponse<RefreshMultipartUpload>,
     Error,
     RefreshMultipartUploadUrlFormValues
   >(refreshMultipartUploadUrl({ cancelTokenSource }), {

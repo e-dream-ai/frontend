@@ -7,7 +7,7 @@ import {
   Dream,
   MultipartUpload,
   MultipartUploadRequest,
-  RefresgMultipartUpload,
+  RefreshMultipartUpload,
 } from "@/types/dream.types";
 import {
   getFileExtension,
@@ -248,7 +248,7 @@ const refreshPresignedUrl = async ({
   extension?: string;
   partNumber: number;
   refreshMultipartUploadUrlMutation: UseMutationResult<
-    ApiResponse<RefresgMultipartUpload>,
+    ApiResponse<RefreshMultipartUpload>,
     Error,
     RefreshMultipartUploadUrlFormValues
   >;
@@ -292,7 +292,7 @@ const uploadFilePart = async ({
     MultipartUploadRequest
   >;
   refreshMultipartUploadUrlMutation: UseMutationResult<
-    ApiResponse<RefresgMultipartUpload>,
+    ApiResponse<RefreshMultipartUpload>,
     Error,
     RefreshMultipartUploadUrlFormValues
   >;
@@ -444,7 +444,7 @@ async function uploadParts({
     MultipartUploadRequest
   >;
   refreshMultipartUploadUrlMutation: UseMutationResult<
-    ApiResponse<RefresgMultipartUpload>,
+    ApiResponse<RefreshMultipartUpload>,
     Error,
     RefreshMultipartUploadUrlFormValues
   >;

@@ -53,7 +53,7 @@ export type MultipartUpload = {
   uploadId?: string;
 };
 
-export type RefresgMultipartUpload = {
+export type RefreshMultipartUpload = {
   url?: string;
   dream: Dream;
   uploadId?: string;
