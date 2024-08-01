@@ -57,6 +57,7 @@ import {
   getEnableMarketingEmailsOptions,
 } from "@/constants/user.constants";
 import { bytesToGB, GBToBytes } from "@/utils/file.util";
+import { toFixedNumber } from "@/utils/number.util";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -119,7 +120,9 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
       <Restricted to={PROFILE_PERMISSIONS.CAN_VIEW_QUOTA}>
         <Row my={1}>{t("components.profile_card.quota")}</Row>
         <Text mb={2} fontSize="1rem" color={theme.textSecondaryColor}>
-          {user?.quota ? `${bytesToGB(user.quota)} ${t("units.gb")}` : "-"}
+          {user?.quota
+            ? `${toFixedNumber(bytesToGB(user.quota), 2)} ${t("units.gb")}`
+            : "-"}
         </Text>
       </Restricted>
 
@@ -237,7 +240,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         user?.enableMarketingEmails,
         t,
       ),
-      quota: user?.quota ? bytesToGB(user.quota) : 0,
+      quota: user?.quota ? toFixedNumber(bytesToGB(user.quota), 2) : 0,
     },
   });
 
@@ -283,7 +286,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       nsfw: formData?.nsfw.value === NSFW.TRUE,
       enableMarketingEmails:
         formData?.enableMarketingEmails.value === ENABLE_MARKETING_EMAILS.TRUE,
-      quota: formData?.quota ? GBToBytes(formData.quota) : undefined,
+      quota: formData?.quota
+        ? Math.round(GBToBytes(formData.quota))
+        : undefined,
     };
 
     if (!isUserAdmin) {
@@ -360,7 +365,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 
       <Restricted to={PROFILE_PERMISSIONS.CAN_VIEW_QUOTA}>
         <Input
-          placeholder={t("components.profile_card.quota")}
+          placeholder={t("components.profile_card.quota_placeholder")}
           type="text"
           before={<FontAwesomeIcon icon={faHardDrive} />}
           error={errors.quota?.message}

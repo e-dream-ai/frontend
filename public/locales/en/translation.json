@@ -284,6 +284,7 @@
       "description": "description",
       "no_description": "no description",
       "quota": "quota",
+      "quota_placeholder": "download quota in GB",
       "email": "email",
       "signup_code": "signup code",
       "last_login": "last login",

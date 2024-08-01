@@ -46,8 +46,16 @@ export const ProfileSchema = yup
     quota: yup
       .number()
       .typeError("quota must be a number.")
-      .integer()
-      .positive(),
+      .positive()
+      .test(
+        "decimal-places",
+        "quota must have 1 or 2 decimal places.",
+        (value) => {
+          if (value === undefined || value === null) return false;
+          const stringValue = value.toFixed(2);
+          return /^\d+(\.\d{1,2})?$/.test(stringValue);
+        },
+      ),
   })
   .required();
 
