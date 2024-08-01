@@ -56,6 +56,7 @@ import {
   filterMarketingEmailOption,
   getEnableMarketingEmailsOptions,
 } from "@/constants/user.constants";
+import { bytesToGB, GBToBytes } from "@/utils/file.util";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -118,7 +119,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
       <Restricted to={PROFILE_PERMISSIONS.CAN_VIEW_QUOTA}>
         <Row my={1}>{t("components.profile_card.quota")}</Row>
         <Text mb={2} fontSize="1rem" color={theme.textSecondaryColor}>
-          {user?.quota ?? "-"}
+          {user?.quota ? `${bytesToGB(user.quota)} ${t("units.gb")}` : "-"}
         </Text>
       </Restricted>
 
@@ -236,7 +237,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         user?.enableMarketingEmails,
         t,
       ),
-      quota: user?.quota,
+      quota: user?.quota ? bytesToGB(user.quota) : 0,
     },
   });
 
@@ -282,7 +283,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       nsfw: formData?.nsfw.value === NSFW.TRUE,
       enableMarketingEmails:
         formData?.enableMarketingEmails.value === ENABLE_MARKETING_EMAILS.TRUE,
-      quota: formData?.quota,
+      quota: formData?.quota ? GBToBytes(formData.quota) : undefined,
     };
 
     if (!isUserAdmin) {

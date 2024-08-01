@@ -371,6 +371,9 @@
       "error_removing_playlist_item": "Error removing item from playlist."
     }
   },
+  "units": {
+    "gb": "GB"
+  },
   "hooks": {
     "use_create_dream": {
       "upload_in_progress": "Upload dream in progress."
