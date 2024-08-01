@@ -6,6 +6,7 @@ export type ProfileFormRequest = {
   role?: number;
   nsfw?: boolean;
   enableMarketingEmails?: boolean;
+  quota?: number;
 };
 
 export type ProfileFormValues = {
@@ -23,6 +24,7 @@ export type ProfileFormValues = {
     label?: string;
     value?: string;
   };
+  quota?: number;
 };
 
 export const ProfileSchema = yup
@@ -41,6 +43,11 @@ export const ProfileSchema = yup
       label: yup.string(),
       value: yup.string(),
     }),
+    quota: yup
+      .number()
+      .typeError("quota must be a number.")
+      .integer()
+      .positive(),
   })
   .required();
 

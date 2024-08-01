@@ -11,7 +11,10 @@ import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import Linkify from "react-linkify";
 import { toast } from "react-toastify";
-import ProfileSchema, { ProfileFormValues } from "@/schemas/profile.schema";
+import ProfileSchema, {
+  ProfileFormRequest,
+  ProfileFormValues,
+} from "@/schemas/profile.schema";
 import { useTheme } from "styled-components";
 import { User } from "@/types/auth.types";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
@@ -27,11 +30,17 @@ import { Avatar } from "@/components/shared/avatar/avatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAlignJustify,
+  faHardDrive,
   faMailBulk,
   faShield,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { formatRoleName, getUserEmail, getUserName } from "@/utils/user.util";
+import {
+  formatRoleName,
+  getUserEmail,
+  getUserName,
+  isAdmin,
+} from "@/utils/user.util";
 import Select from "@/components/shared/select/select";
 import { useRoles } from "@/api/user/query/useRoles";
 import { useImage } from "@/hooks/useImage";
@@ -106,6 +115,13 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
         </Text>
       </Row>
 
+      <Restricted to={PROFILE_PERMISSIONS.CAN_VIEW_QUOTA}>
+        <Row my={1}>{t("components.profile_card.quota")}</Row>
+        <Text mb={2} fontSize="1rem" color={theme.textSecondaryColor}>
+          {user?.quota ?? "-"}
+        </Text>
+      </Restricted>
+
       {allowedViewRestrictedInfo && (
         <>
           <Row my={1}>{t("components.profile_card.email")}</Row>
@@ -172,6 +188,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   const { t } = useTranslation();
   const [roleSearch, setRoleSearch] = useState<string>("");
   const theme = useTheme();
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
 
   const { isLoading: isLoadingUpdateUser, mutate: mutateUpdateUser } =
     useUpdateUser({ id: user?.id });
@@ -219,6 +236,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         user?.enableMarketingEmails,
         t,
       ),
+      quota: user?.quota,
     },
   });
 
@@ -257,39 +275,42 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   };
 
   const handleMutateUpdateUser = (formData: ProfileFormValues) => {
-    mutateUpdateUser(
-      {
-        name: formData?.name,
-        description: formData?.description,
-        role: formData?.role?.value,
-        nsfw: formData?.nsfw.value === NSFW.TRUE,
-        enableMarketingEmails:
-          formData?.enableMarketingEmails.value ===
-          ENABLE_MARKETING_EMAILS.TRUE,
+    const data: ProfileFormRequest = {
+      name: formData?.name,
+      description: formData?.description,
+      role: formData?.role?.value,
+      nsfw: formData?.nsfw.value === NSFW.TRUE,
+      enableMarketingEmails:
+        formData?.enableMarketingEmails.value === ENABLE_MARKETING_EMAILS.TRUE,
+      quota: formData?.quota,
+    };
+
+    if (!isUserAdmin) {
+      delete data.quota;
+    }
+
+    mutateUpdateUser(data, {
+      onSuccess: (response) => {
+        if (response.success) {
+          queryClient.setQueryData([USER_QUERY_KEY, user?.id], response);
+          toast.success(
+            `${t("components.profile_card.profile_successfully_updated")}`,
+          );
+          setAvatar(undefined);
+          onDisableEditMode();
+          reset();
+        } else {
+          toast.error(
+            `${t("components.profile_card.error_updating_profile")} ${
+              response.message
+            }`,
+          );
+        }
       },
-      {
-        onSuccess: (response) => {
-          if (response.success) {
-            queryClient.setQueryData([USER_QUERY_KEY, user?.id], response);
-            toast.success(
-              `${t("components.profile_card.profile_successfully_updated")}`,
-            );
-            setAvatar(undefined);
-            onDisableEditMode();
-            reset();
-          } else {
-            toast.error(
-              `${t("components.profile_card.error_updating_profile")} ${
-                response.message
-              }`,
-            );
-          }
-        },
-        onError: () => {
-          toast.error(t("components.profile_card.error_updating_profile"));
-        },
+      onError: () => {
+        toast.error(t("components.profile_card.error_updating_profile"));
       },
-    );
+    });
   };
 
   const onSubmit = (formData: ProfileFormValues) => {
@@ -335,6 +356,16 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         error={errors.description?.message}
         {...register("description")}
       />
+
+      <Restricted to={PROFILE_PERMISSIONS.CAN_VIEW_QUOTA}>
+        <Input
+          placeholder={t("components.profile_card.quota")}
+          type="text"
+          before={<FontAwesomeIcon icon={faHardDrive} />}
+          error={errors.quota?.message}
+          {...register("quota")}
+        />
+      </Restricted>
 
       <Row my={3}>
         <Text

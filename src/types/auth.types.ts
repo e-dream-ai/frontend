@@ -24,6 +24,7 @@ export type User = {
   nsfw?: boolean;
   enableMarketingEmails?: boolean;
   signupInvite?: Invite;
+  quota?: number;
   created_at?: string;
   updated_at?: string;
   last_login_at?: string;
