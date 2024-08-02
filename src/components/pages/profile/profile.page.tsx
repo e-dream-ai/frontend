@@ -17,6 +17,7 @@ import {
 import { RemoteControl } from "@/components/shared/remote-control/remote-control";
 import { CurrentDream } from "@/components/shared/current-dream/current-dream";
 import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
+import ApiKeyCard from "@/components/shared/apikey-card/ApiKeyCard";
 
 const SECTION_ID = "my-profile";
 
@@ -48,6 +49,7 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
         <ProfilePageContainer>
           <LeftProfilePage>
             <ProfileCard user={user} />
+            <ApiKeyCard />
           </LeftProfilePage>
           <RightProfilePage>
             {isMyProfile && (

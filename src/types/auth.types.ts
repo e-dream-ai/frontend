@@ -30,6 +30,12 @@ export type User = {
   last_login_at?: string;
 };
 
+export type ApiKey = {
+  apikey: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type Role = {
   id: number;
   name: RoleType;
