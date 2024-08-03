@@ -1,9 +1,20 @@
+import { useTranslation } from "react-i18next";
+import { useTheme } from "styled-components";
 import { User } from "@/types/auth.types";
 import { Button, Column, Row, Text } from "@/components/shared";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faKey, faRemove } from "@fortawesome/free-solid-svg-icons";
-import { useTheme } from "styled-components";
-import { useApiKey } from "@/api/user/query/useApiKey";
+import {
+  faClipboard,
+  faKey,
+  faRemove,
+} from "@fortawesome/free-solid-svg-icons";
+import { APIKEY_QUERY_KEY, useApiKey } from "@/api/user/query/useApiKey";
+import { useGenerateApiKey } from "@/api/user/mutation/useGenerateApiKey";
+import { useRevokeApiKey } from "@/api/user/mutation/useRevokeApiKey";
+import { toast } from "react-toastify";
+import queryClient from "@/api/query-client";
+import CopyToClipboard from "react-copy-to-clipboard";
+import { Tooltip } from "react-tooltip";
 
 type ApiKeyCardProps = {
   user?: Omit<User, "token">;
@@ -11,7 +22,47 @@ type ApiKeyCardProps = {
 
 const ApiKeyCard: React.FC<ApiKeyCardProps> = ({ user }) => {
   const theme = useTheme();
+  const { t } = useTranslation();
   const { data } = useApiKey({ id: user?.id });
+  const generateApiKeyMutation = useGenerateApiKey({ id: user?.id });
+  const revokeApiKeyMutation = useRevokeApiKey({ id: user?.id });
+
+  const handleGenerateApiKey = async () => {
+    try {
+      const response = await generateApiKeyMutation.mutateAsync();
+      if (response?.success) {
+        toast.success(
+          `${t("components.apikey_card.apikey_successfully_generated")}`,
+        );
+        await queryClient.refetchQueries([APIKEY_QUERY_KEY]);
+      } else {
+        toast.error(`${t("components.apikey_card.error_generating_apikey")}`);
+      }
+    } catch (_) {
+      toast.error(`${t("components.apikey_card.error_generating_apikey")}`);
+    }
+  };
+
+  const handleRevokeApiKey = async () => {
+    try {
+      const response = await revokeApiKeyMutation.mutateAsync();
+      await queryClient.refetchQueries([APIKEY_QUERY_KEY]);
+      if (response?.success) {
+        toast.success(
+          `${t("components.apikey_card.apikey_successfully_revoked")}`,
+        );
+      } else {
+        toast.error(`${t("components.apikey_card.error_revoking_apikey")}`);
+      }
+    } catch (_) {
+      toast.error(`${t("components.apikey_card.error_revoking_apikey")}`);
+    }
+  };
+
+  const handleCopyClipboard = () => {
+    toast.success(t("components.apikey_card.apikey_copied_successfully"));
+  };
+
   const apikey = data?.data?.apikey;
   return (
     <Row mb="2rem" mr="1rem">
@@ -22,30 +73,47 @@ const ApiKeyCard: React.FC<ApiKeyCardProps> = ({ user }) => {
             color={theme.textPrimaryColor}
             style={{ textTransform: "uppercase", fontStyle: "italic" }}
           >
-            ApiKey
+            {t("components.apikey_card.apikey")}
           </Text>
         </Row>
         <Row>
-          <Text color={theme.textBodyColor}>
-            {apikey?.apikey ?? "no apikey generated"}
-          </Text>
+          {apikey?.apikey ? (
+            <CopyToClipboard text={apikey.apikey}>
+              <Button
+                data-tooltip-id="copy-apikey"
+                size="sm"
+                onClick={handleCopyClipboard}
+                before={<FontAwesomeIcon icon={faClipboard} />}
+                mr="3"
+              >
+                {t("components.apikey_card.copy_apikey")}
+                <Tooltip
+                  id="copy-apikey"
+                  place="right-end"
+                  content={t("components.apikey_card.copy_apikey")}
+                />
+              </Button>
+            </CopyToClipboard>
+          ) : (
+            t("components.apikey_card.no_apikey")
+          )}
         </Row>
         <Row>
           <Button
             size="sm"
             before={<FontAwesomeIcon icon={faKey} />}
-            //   onClick={onClick}
+            onClick={handleGenerateApiKey}
           >
-            Generate new
+            {t("components.apikey_card.generate_new")}
           </Button>
         </Row>
         <Row>
           <Button
             size="sm"
             before={<FontAwesomeIcon icon={faRemove} />}
-            //   onClick={onClick}
+            onClick={handleRevokeApiKey}
           >
-            Revoke
+            {t("components.apikey_card.revoke")}
           </Button>
         </Row>
       </Column>

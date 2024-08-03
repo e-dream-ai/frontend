@@ -29,11 +29,10 @@ type HookProps = {
 };
 
 export const useGenerateApiKey = ({ id }: HookProps) => {
-  return useMutation<
-    ApiResponse<{ apikey: ApiKey }>,
-    Error,
-    ApiResponse<unknown>
-  >(generateApiKey({ id }), {
-    mutationKey: [GENERATE_APIKEY_MUTATION_KEY],
-  });
+  return useMutation<ApiResponse<{ apikey: ApiKey }>, Error>(
+    generateApiKey({ id }),
+    {
+      mutationKey: [GENERATE_APIKEY_MUTATION_KEY],
+    },
+  );
 };

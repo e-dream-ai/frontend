@@ -18,6 +18,9 @@ import { RemoteControl } from "@/components/shared/remote-control/remote-control
 import { CurrentDream } from "@/components/shared/current-dream/current-dream";
 import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
 import ApiKeyCard from "@/components/shared/apikey-card/ApiKeyCard";
+import { useMemo } from "react";
+import { isAdmin } from "@/utils/user.util";
+import { User } from "@/types/auth.types";
 
 const SECTION_ID = "my-profile";
 
@@ -28,14 +31,20 @@ type ProfileProps = {
 const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
   const { t } = useTranslation();
   const location = useLocation();
+  const { user: loggedUser } = useAuth();
   const isMyProfilePage =
     isMyProfile || location.pathname.includes(ROUTES.MY_PROFILE);
+  const isLoggedUserAdmin = useMemo(
+    () => isAdmin(loggedUser as User),
+    [loggedUser],
+  );
   const { id } = useParams<{ id: string }>();
   const paramId = Number(id) || 0;
   const { user: authUser } = useAuth();
   const userId = isMyProfilePage ? authUser?.id : paramId;
   const { data } = useUser({ id: userId });
   const user = data?.data?.user;
+  const showApiKeyCard = isMyProfilePage || isLoggedUserAdmin;
 
   return (
     <Container>
@@ -49,7 +58,7 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
         <ProfilePageContainer>
           <LeftProfilePage>
             <ProfileCard user={user} />
-            <ApiKeyCard />
+            {showApiKeyCard && <ApiKeyCard user={user} />}
           </LeftProfilePage>
           <RightProfilePage>
             {isMyProfile && (

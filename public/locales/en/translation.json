@@ -370,6 +370,18 @@
       "playlist_item_successfully_removed": "Playlist item removed successfully.",
       "error_adding_playlist_item": "Error adding item to playlist.",
       "error_removing_playlist_item": "Error removing item from playlist."
+    },
+    "apikey_card": {
+      "apikey": "Apikey",
+      "no_apikey": "No apikey generated",
+      "generate_new": "Generate new",
+      "revoke": "Revoke",
+      "copy_apikey": "Copy ApiKey",
+      "apikey_successfully_generated": "ApiKey successfully generated.",
+      "error_generating_apikey": "Error generating ApiKey",
+      "apikey_successfully_revoked": "Apikey successfully revoked.",
+      "error_revoking_apikey": "Error revoking ApiKey.",
+      "apikey_copied_successfully": "ApiKey copied successfully."
     }
   },
   "units": {
