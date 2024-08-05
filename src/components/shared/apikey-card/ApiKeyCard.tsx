@@ -15,6 +15,8 @@ import { toast } from "react-toastify";
 import queryClient from "@/api/query-client";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { Tooltip } from "react-tooltip";
+import Restricted from "../restricted/restricted";
+import { PROFILE_PERMISSIONS } from "@/constants/permissions.constants";
 
 type ApiKeyCardProps = {
   user?: Omit<User, "token">;
@@ -107,15 +109,18 @@ const ApiKeyCard: React.FC<ApiKeyCardProps> = ({ user }) => {
             {t("components.apikey_card.generate_new")}
           </Button>
         </Row>
-        <Row>
-          <Button
-            size="sm"
-            before={<FontAwesomeIcon icon={faRemove} />}
-            onClick={handleRevokeApiKey}
-          >
-            {t("components.apikey_card.revoke")}
-          </Button>
-        </Row>
+
+        <Restricted to={PROFILE_PERMISSIONS.CAN_REVOKE_APIKEY}>
+          <Row>
+            <Button
+              size="sm"
+              before={<FontAwesomeIcon icon={faRemove} />}
+              onClick={handleRevokeApiKey}
+            >
+              {t("components.apikey_card.revoke")}
+            </Button>
+          </Row>
+        </Restricted>
       </Column>
     </Row>
   );
