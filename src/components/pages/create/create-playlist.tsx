@@ -103,14 +103,16 @@ export const CreatePlaylist: React.FC = () => {
       setVideoUploaded(i);
       if (createdDream) {
         await addPlaylistItemMutation.mutateAsync({
-          type: "dream",
-          id: createdDream.id,
-          playlistId: playlist!.id,
+          playlistUUID: playlist!.uuid,
+          values: {
+            type: "dream",
+            uuid: createdDream.uuid,
+          },
         });
       }
     }
     setIsUploadingFiles(false);
-    router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist?.id}`);
+    router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist.uuid}`);
   };
 
   const onSubmit = async (data: CreatePlaylistFormValues) => {
@@ -129,7 +131,7 @@ export const CreatePlaylist: React.FC = () => {
 
       if (totalVideos === 0) {
         setIsUploadingFiles(false);
-        router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist?.id}`);
+        router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist?.uuid}`);
       } else {
         handleUploadVideos(playlist);
       }

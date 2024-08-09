@@ -25,31 +25,31 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 type CurrentPlaylistProps = {
-  id?: number;
+  uuid?: string;
   user?: User;
 };
 
-export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
+export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
   const { socket } = useSocket();
   const { t } = useTranslation();
-  const [stateId, setStateId] = useState<number | undefined>(id);
-  const { data, isLoading, isRefetching, refetch } = usePlaylist(stateId);
+  const [stateUUID, setStateUUID] = useState<string | undefined>(uuid);
+  const { data, isLoading, isRefetching, refetch } = usePlaylist(stateUUID);
   const playlist = data?.data?.playlist;
 
   const onRemoveCurrentPlaylist = () => {
     socket?.emit(NEW_REMOTE_CONTROL_EVENT, {
       event: REMOTE_CONTROLS.RESET_PLAYLIST.event,
     });
-    setStateId(undefined);
+    setStateUUID(undefined);
   };
 
   useEffect(() => {
-    if (stateId) refetch();
-  }, [stateId, refetch]);
+    if (stateUUID) refetch();
+  }, [stateUUID, refetch]);
 
   useEffect(() => {
-    setStateId(id);
-  }, [id]);
+    setStateUUID(uuid);
+  }, [uuid]);
 
   const handleRemoteControlEvent = (data?: RemoteControlEvent): void => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
@@ -61,12 +61,12 @@ export const CurrentPlaylist = ({ id }: CurrentPlaylistProps) => {
     }
 
     if (event.event === REMOTE_CONTROLS.PLAY_PLAYLIST.event) {
-      const newId = data?.id;
-      setStateId(newId);
+      const newUUID = data?.uuid;
+      setStateUUID(newUUID);
     }
 
     if (event.event === REMOTE_CONTROLS.RESET_PLAYLIST.event) {
-      setStateId(undefined);
+      setStateUUID(undefined);
     }
   };
 

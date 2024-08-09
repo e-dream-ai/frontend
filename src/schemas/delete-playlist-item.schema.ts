@@ -1,4 +1,4 @@
 export type DeletePlaylistItemFormValues = {
   itemId?: number;
-  playlistId?: number;
+  playlistUUID?: string;
 };

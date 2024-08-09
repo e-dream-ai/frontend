@@ -33,7 +33,7 @@ import useSocket from "@/hooks/useSocket";
 import { emitPlayPlaylist } from "@/utils/socket.util";
 
 type HookParams = {
-  playlistId?: number;
+  uuid?: string;
   playlist: Playlist | undefined;
   items: PlaylistItem[];
   thumbnail: MultiMediaState;
@@ -50,7 +50,7 @@ type HookParams = {
 type SortType = "name" | "date";
 
 export const usePlaylistHandlers = ({
-  playlistId,
+  uuid,
   playlist,
   items,
   thumbnail,
@@ -67,19 +67,19 @@ export const usePlaylistHandlers = ({
   const { socket } = useSocket();
 
   const { mutate: mutatePlaylist, isLoading: isLoadingPlaylistMutation } =
-    useUpdatePlaylist(playlistId);
+    useUpdatePlaylist();
 
   const {
     mutate: mutateThumbnailPlaylist,
     isLoading: isLoadingThumbnailPlaylistMutation,
-  } = useUpdateThumbnailPlaylist(playlistId);
+  } = useUpdateThumbnailPlaylist(playlist?.uuid);
 
-  const orderPlaylistMutation = useOrderPlaylist(playlistId);
+  const orderPlaylistMutation = useOrderPlaylist(uuid);
 
   const { mutate: mutateDeletePlaylistItem } = useDeletePlaylistItem();
 
   const { mutate: mutateDeletePlaylist, isLoading: isLoadingDeletePlaylist } =
-    useDeletePlaylist(playlistId);
+    useDeletePlaylist();
 
   const {
     isLoading: isUploadingSingleFile,
@@ -102,18 +102,18 @@ export const usePlaylistHandlers = ({
   const handleMutatePlaylist = (data: UpdatePlaylistFormValues) => {
     mutatePlaylist(
       {
-        name: data.name,
-        featureRank: data?.featureRank,
-        displayedOwner: data?.displayedOwner?.value,
-        nsfw: data?.nsfw.value === NSFW.TRUE,
+        uuid: uuid!,
+        values: {
+          name: data.name,
+          featureRank: data?.featureRank,
+          displayedOwner: data?.displayedOwner?.value,
+          nsfw: data?.nsfw.value === NSFW.TRUE,
+        },
       },
       {
         onSuccess: (response) => {
           if (response.success) {
-            queryClient.setQueryData(
-              [PLAYLIST_QUERY_KEY, playlistId],
-              response,
-            );
+            queryClient.setQueryData([PLAYLIST_QUERY_KEY, uuid], response);
             reset({ name: response?.data?.playlist.name });
             toast.success(
               `${t("page.view_playlist.playlist_updated_successfully")}`,
@@ -168,11 +168,11 @@ export const usePlaylistHandlers = ({
         t("page.view_playlist.deleting_playlist_item"),
       );
       mutateDeletePlaylistItem(
-        { itemId, playlistId },
+        { playlistUUID: playlist!.uuid, itemId },
         {
           onSuccess: (response) => {
             if (response.success) {
-              queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
+              queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
               toast.update(toastId, {
                 render: t(
                   "page.view_playlist.playlist_item_deleted_successfully",
@@ -224,7 +224,10 @@ export const usePlaylistHandlers = ({
     );
     try {
       const response = await orderPlaylistMutation.mutateAsync({
-        order: requestPlaylistItems,
+        uuid: playlist!.uuid,
+        values: {
+          order: requestPlaylistItems,
+        },
       });
 
       if (response.success) {
@@ -269,7 +272,10 @@ export const usePlaylistHandlers = ({
     );
     try {
       const response = await orderPlaylistMutation.mutateAsync({
-        order: orderedItems,
+        uuid: playlist!.uuid,
+        values: {
+          order: orderedItems,
+        },
       });
 
       if (response.success) {
@@ -340,9 +346,11 @@ export const usePlaylistHandlers = ({
       setVideoUploaded(i);
       if (createdDream) {
         await addPlaylistItemMutation.mutateAsync({
-          type: "dream",
-          id: createdDream.id,
-          playlistId: playlist?.id,
+          playlistUUID: playlist!.uuid,
+          values: {
+            type: "dream",
+            uuid: createdDream.uuid,
+          },
         });
       }
     }
@@ -353,7 +361,7 @@ export const usePlaylistHandlers = ({
     setVideos((videos) => videos.filter((_, i) => i !== index));
 
   const handleConfirmDeletePlaylist = () => {
-    mutateDeletePlaylist(null, {
+    mutateDeletePlaylist(uuid!, {
       onSuccess: (response) => {
         if (response.success) {
           toast.success(

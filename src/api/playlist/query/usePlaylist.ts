@@ -8,13 +8,13 @@ import { axiosClient } from "@/client/axios.client";
 export const PLAYLIST_QUERY_KEY = "getPlaylist";
 
 type QueryFunctionParams = {
-  id?: number;
+  uuid?: string;
 };
 
-const getPlaylist = ({ id }: QueryFunctionParams) => {
+const getPlaylist = ({ uuid }: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/playlist/${id ?? ""}`, {
+      .get(`/playlist/${uuid}`, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),
@@ -22,14 +22,14 @@ const getPlaylist = ({ id }: QueryFunctionParams) => {
       .then((res) => res.data);
 };
 
-export const usePlaylist = (id?: number) => {
+export const usePlaylist = (uuid?: string) => {
   const { user } = useAuth();
   return useQuery<ApiResponse<{ playlist: Playlist }>, Error>(
-    [PLAYLIST_QUERY_KEY, id],
-    getPlaylist({ id }),
+    [PLAYLIST_QUERY_KEY, uuid],
+    getPlaylist({ uuid }),
     {
       refetchOnWindowFocus: false,
-      enabled: Boolean(user) && Boolean(id),
+      enabled: Boolean(user) && Boolean(uuid),
     },
   );
 };

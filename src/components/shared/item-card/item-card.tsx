@@ -25,7 +25,7 @@ import {
   ThumbnailPlaceholder,
   UsernameText,
 } from "./item-card.styled";
-import { FeedItemServerType } from "@/types/feed.types";
+import { FeedItemServerType, FeedItemType } from "@/types/feed.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFilm,
@@ -81,7 +81,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
-  const { id, name, thumbnail, user, displayedOwner } = item ?? {};
+  const { uuid, name, thumbnail, user, displayedOwner } = item ?? {};
   const avatarUrl = useImage(
     displayedOwner ? displayedOwner?.avatar : user?.avatar,
     {
@@ -109,9 +109,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     fit: "cover",
   });
 
-  const navigateRoute = (item as Dream)?.uuid
-    ? `${ROUTES.VIEW_DREAM}/${(item as Dream)?.uuid}`
-    : `${ROUTES.VIEW_PLAYLIST}/${item?.id}`;
+  const navigateRoute =
+    type === FeedItemType.DREAM
+      ? `${ROUTES.VIEW_DREAM}/${item?.uuid}`
+      : `${ROUTES.VIEW_PLAYLIST}/${item?.uuid}`;
 
   const handlePlay: MouseEventHandler<HTMLButtonElement> = useCallback(
     (event) => {
@@ -143,13 +144,13 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         dndMode === DND_MODES.LOCAL ? DND_ACTIONS.ORDER : DND_ACTIONS.ADD,
       );
       event?.dataTransfer?.setData(DND_METADATA.TYPE, type as string);
-      event?.dataTransfer?.setData(DND_METADATA.ID, String(id));
+      event?.dataTransfer?.setData(DND_METADATA.UUID, uuid!);
       event?.dataTransfer?.setData(DND_METADATA.ITEM_ID, String(itemId));
       event?.dataTransfer?.setData(DND_METADATA.ORDER, String(order));
       event.dataTransfer?.setDragImage(tooltipRef.current as HTMLElement, 0, 0);
       return false;
     },
-    [itemId, id, type, order, dndMode, setDragging],
+    [itemId, uuid, type, order, dndMode, setDragging],
   );
 
   const handleDragEnter = useCallback(

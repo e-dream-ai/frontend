@@ -6,14 +6,10 @@ import { axiosClient } from "@/client/axios.client";
 
 export const DELETE_PLAYLIST_MUTATION_KEY = "deletePlaylist";
 
-type MutateFunctionParams = {
-  id?: number;
-};
-
-const deletePlaylist = ({ id }: MutateFunctionParams) => {
-  return async () => {
+const deletePlaylist = () => {
+  return async (uuid: string) => {
     return axiosClient
-      .delete(`/playlist/${id}`, {
+      .delete(`/playlist/${uuid}`, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),
@@ -24,9 +20,9 @@ const deletePlaylist = ({ id }: MutateFunctionParams) => {
   };
 };
 
-export const useDeletePlaylist = (id?: number) => {
-  return useMutation<ApiResponse<{ playlist: Playlist }>, Error, unknown>(
-    deletePlaylist({ id }),
+export const useDeletePlaylist = () => {
+  return useMutation<ApiResponse<{ playlist: Playlist }>, Error, string>(
+    deletePlaylist(),
     {
       mutationKey: [DELETE_PLAYLIST_MUTATION_KEY],
     },

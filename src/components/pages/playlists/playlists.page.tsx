@@ -36,7 +36,7 @@ export const PlaylistsPage: React.FC = () => {
               <ItemCard
                 type="playlist"
                 item={playlist}
-                key={playlist.id}
+                key={playlist.uuid}
                 size="lg"
               />
             ))}

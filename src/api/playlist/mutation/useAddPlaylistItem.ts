@@ -8,10 +8,10 @@ import { axiosClient } from "@/client/axios.client";
 export const ADD_PLAYLIST_ITEM_MUTATION_KEY = "addPlaylistItem";
 
 const addPlaylistItem = () => {
-  return async (values: AddPlaylistItemFormValues) => {
-    const { playlistId, ...requestValues } = values;
+  return async (data: AddPlaylistItemFormValues) => {
+    const { playlistUUID, values } = data;
     return axiosClient
-      .put(`/playlist/${playlistId}/add-item`, requestValues, {
+      .put(`/playlist/${playlistUUID}/add-item`, values, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

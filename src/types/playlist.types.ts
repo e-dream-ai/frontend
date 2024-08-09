@@ -21,6 +21,7 @@ export type PlaylistItem = {
 
 export type Playlist = {
   id: number;
+  uuid: string;
   name: string;
   thumbnail: string;
   updated_at: string;

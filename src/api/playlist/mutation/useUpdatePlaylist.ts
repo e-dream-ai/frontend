@@ -5,16 +5,13 @@ import { ApiResponse } from "@/types/api.types";
 import { Playlist } from "@/types/playlist.types";
 import { axiosClient } from "@/client/axios.client";
 
-type MutateFunctionParams = {
-  id?: number;
-};
-
 export const UPDATE_PLAYLIST_MUTATION_KEY = "updatePlaylist";
 
-const updatePlaylist = ({ id }: MutateFunctionParams) => {
-  return async (values: UpdatePlaylistRequestValues) => {
+const updatePlaylist = () => {
+  return async (data: UpdatePlaylistRequestValues) => {
+    const { uuid, values } = data;
     return axiosClient
-      .put(`/playlist/${id ?? ""}`, values, {
+      .put(`/playlist/${uuid}`, values, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),
@@ -25,12 +22,12 @@ const updatePlaylist = ({ id }: MutateFunctionParams) => {
   };
 };
 
-export const useUpdatePlaylist = (id?: number) => {
+export const useUpdatePlaylist = () => {
   return useMutation<
     ApiResponse<{ playlist: Playlist }>,
     Error,
     UpdatePlaylistRequestValues
-  >(updatePlaylist({ id }), {
+  >(updatePlaylist(), {
     mutationKey: [UPDATE_PLAYLIST_MUTATION_KEY],
   });
 };

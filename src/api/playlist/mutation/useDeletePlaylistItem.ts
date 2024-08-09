@@ -8,9 +8,9 @@ export const DELETE_PLAYLIST_ITEM_MUTATION_KEY = "deletePlaylistItem";
 
 const deletePlaylistItem = () => {
   return async (values: DeletePlaylistItemFormValues) => {
-    const { playlistId, itemId } = values;
+    const { playlistUUID, itemId } = values;
     return axiosClient
-      .delete(`/playlist/${playlistId}/remove-item/${itemId}`, {
+      .delete(`/playlist/${playlistUUID}/remove-item/${itemId}`, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

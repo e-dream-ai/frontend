@@ -44,7 +44,7 @@ export const usePlaylistHandlers = ({
   const { t } = useTranslation();
 
   const { mutate: mutatePlaylist, isLoading: isLoadingPlaylistMutation } =
-    useUpdatePlaylist(playlistId);
+    useUpdatePlaylist();
 
   const {
     isLoading: isUploadingSingleFile,
@@ -59,10 +59,13 @@ export const usePlaylistHandlers = ({
   const handleMutatePlaylist = (data: UpdatePlaylistFormValues) => {
     mutatePlaylist(
       {
-        name: data.name,
-        featureRank: data?.featureRank,
-        displayedOwner: data?.displayedOwner?.value,
-        nsfw: data?.nsfw.value === NSFW.TRUE,
+        uuid: playlist!.uuid,
+        values: {
+          name: data.name,
+          featureRank: data?.featureRank,
+          displayedOwner: data?.displayedOwner?.value,
+          nsfw: data?.nsfw.value === NSFW.TRUE,
+        },
       },
       {
         onSuccess: (response) => {
@@ -135,14 +138,16 @@ export const usePlaylistHandlers = ({
       setVideoUploaded(i);
       if (createdDream) {
         await addPlaylistItemMutation.mutateAsync({
-          type: "dream",
-          id: createdDream.id,
-          playlistId: playlist?.id,
+          playlistUUID: playlist!.uuid,
+          values: {
+            type: "dream",
+            uuid: createdDream.uuid,
+          },
         });
       }
     }
 
-    router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist?.id}`);
+    router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist?.uuid}`);
     setIsUploadingFiles(false);
   };
 

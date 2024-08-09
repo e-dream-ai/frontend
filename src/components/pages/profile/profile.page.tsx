@@ -71,7 +71,10 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
                 <Text mb="1rem" fontSize="1rem" fontWeight={600}>
                   {t("page.profile.current_playlist")}
                 </Text>
-                <CurrentPlaylist user={user} id={user?.currentPlaylist?.id} />
+                <CurrentPlaylist
+                  user={user}
+                  uuid={user?.currentPlaylist?.uuid}
+                />
 
                 <Text mb="1rem" fontSize="1rem" fontWeight={600}>
                   {t("page.profile.remote_control")}

@@ -7,19 +7,19 @@ import { Playlist } from "@/types/playlist.types";
 import { axiosClient } from "@/client/axios.client";
 
 type MutateFunctionParams = {
-  id?: number;
+  uuid?: string;
 };
 
 export const UPDATE_THUMBNAIL_PLAYLIST_MUTATION_KEY = "updateThumbnailPlaylist";
 
-const updateThumbnailPlaylist = ({ id }: MutateFunctionParams) => {
+const updateThumbnailPlaylist = ({ uuid }: MutateFunctionParams) => {
   return async (params: FileFormValues) => {
     const formData = new FormData();
 
     formData.append(FILE_FORM.FILE, params?.file ?? "");
 
     return axiosClient
-      .put(`/playlist/${id}/thumbnail`, formData, {
+      .put(`/playlist/${uuid}/thumbnail`, formData, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),
@@ -30,12 +30,12 @@ const updateThumbnailPlaylist = ({ id }: MutateFunctionParams) => {
   };
 };
 
-export const useUpdateThumbnailPlaylist = (id?: number) => {
+export const useUpdateThumbnailPlaylist = (uuid?: string) => {
   return useMutation<
     ApiResponse<{ playlist: Playlist }>,
     Error,
     FileFormValues
-  >(updateThumbnailPlaylist({ id }), {
+  >(updateThumbnailPlaylist({ uuid }), {
     mutationKey: [UPDATE_THUMBNAIL_PLAYLIST_MUTATION_KEY],
   });
 };

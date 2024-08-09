@@ -34,7 +34,7 @@ export const emitPlayPlaylist = (
 ) => {
   socket?.emit(NEW_REMOTE_CONTROL_EVENT, {
     event: REMOTE_CONTROLS.PLAY_PLAYLIST.event,
-    id: playlist?.id,
+    uuid: playlist?.uuid,
     name: playlist?.name,
   });
   if (message) toast.success(message);

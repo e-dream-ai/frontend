@@ -56,7 +56,7 @@ export const ViewPlaylistPage = () => {
   const navigate = useNavigate();
 
   const {
-    playlistId,
+    uuid,
     playlist,
     isPlaylistLoading,
     thumbnailUrl,
@@ -113,7 +113,7 @@ export const ViewPlaylistPage = () => {
     handlePlayPlaylist,
     handleNavigateAddToPlaylist,
   } = usePlaylistHandlers({
-    playlistId,
+    uuid,
     playlist,
     items,
     thumbnail,
@@ -194,7 +194,7 @@ export const ViewPlaylistPage = () => {
     resetRemotePlaylistForm();
   }, [reset, resetRemotePlaylistForm]);
 
-  if (!playlistId) {
+  if (!uuid) {
     return <Navigate to={ROUTES.ROOT} replace />;
   }
 
@@ -514,7 +514,7 @@ export const ViewPlaylistPage = () => {
                 </Text>
               </Row>
               <Row>
-                <AddItemPlaylistDropzone show playlistId={playlist?.id} />
+                <AddItemPlaylistDropzone show uuid={playlist?.uuid} />
               </Row>
             </Restricted>
           </form>

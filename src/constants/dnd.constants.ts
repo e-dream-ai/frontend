@@ -1,7 +1,7 @@
 export const DND_METADATA = {
   ACTION: "action",
   TYPE: "type",
-  ID: "id",
+  UUID: "uuid",
   ITEM_ID: "itemId",
   ORDER: "order",
 };

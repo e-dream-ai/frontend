@@ -20,21 +20,21 @@ import {
 // };
 
 type AddItemPlaylistDropzoneProps = {
-  playlistId?: number;
+  uuid?: string;
   show?: boolean;
 };
 
 export const AddItemPlaylistDropzone: React.FC<
   AddItemPlaylistDropzoneProps
-> = ({ playlistId, show = false }) => {
+> = ({ uuid, show = false }) => {
   const dropzoneRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
   const [isDragEnter, setIsDragEnter] = useState<boolean>(false);
   const { mutate } = useAddPlaylistItem();
 
   const handleAddPlaylistItemMutation = useCallback(
-    ({ type, id }: { type?: string; id?: string }) => {
-      if (!id) {
+    ({ type, itemUUID }: { type?: string; itemUUID?: string }) => {
+      if (!itemUUID) {
         toast.error(t("modal.forgot_password.error_sending_instructions"));
         return;
       }
@@ -44,14 +44,16 @@ export const AddItemPlaylistDropzone: React.FC<
 
       mutate(
         {
-          type: type as "dream" | "playlist",
-          playlistId: playlistId,
-          id: Number(id),
+          playlistUUID: uuid!,
+          values: {
+            type: type as "dream" | "playlist",
+            uuid: itemUUID,
+          },
         },
         {
           onSuccess: (data) => {
             if (data.success) {
-              queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistId]);
+              queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
               toast.update(toastId, {
                 render: t(
                   "components.playlist_dropzone.playlist_item_successfully_added",
@@ -84,7 +86,7 @@ export const AddItemPlaylistDropzone: React.FC<
         },
       );
     },
-    [mutate, t, playlistId],
+    [mutate, t, uuid],
   );
 
   const handleDragEnter = () => {
@@ -103,18 +105,18 @@ export const AddItemPlaylistDropzone: React.FC<
       const dt = event.dataTransfer;
       const action = dt?.getData(DND_METADATA.ACTION);
       const type = dt?.getData(DND_METADATA.TYPE);
-      const id = dt?.getData(DND_METADATA.ID);
+      const itemUUID = dt?.getData(DND_METADATA.UUID);
 
       if (action === DND_ACTIONS.ADD) {
         /**
          * Item added from feed
          */
-        handleAddPlaylistItemMutation({ type, id });
+        handleAddPlaylistItemMutation({ type, itemUUID });
       } else if (action === DND_ACTIONS.ORDER) {
         /**
          * Item added from playlist
          */
-        handleAddPlaylistItemMutation({ type, id });
+        handleAddPlaylistItemMutation({ type, itemUUID });
       }
 
       setIsDragEnter(false);

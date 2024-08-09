@@ -146,9 +146,11 @@ const PlaylistMenuItem = ({
   const handleAddPlaylistItem = async () => {
     try {
       const data = await addPlaylistItemMutation.mutateAsync({
-        type: "dream",
-        id: dream?.id,
-        playlistId: playlist?.id,
+        playlistUUID: playlist!.uuid,
+        values: {
+          type: "dream",
+          uuid: dream!.uuid,
+        },
       });
       if (data.success) {
         queryClient.refetchQueries([DREAM_QUERY_KEY, { uuid: dream?.uuid }]);
@@ -172,8 +174,8 @@ const PlaylistMenuItem = ({
   const handleDeletePlaylistItemMutation = async () => {
     try {
       const data = await deletePlaylistItemMutation.mutateAsync({
+        playlistUUID: playlist!.uuid,
         itemId: playlistItem?.id,
-        playlistId: playlist?.id,
       });
 
       if (data.success) {

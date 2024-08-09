@@ -8,16 +8,13 @@ import { getOrderedPlaylist } from "@/utils/playlist.util";
 import { PLAYLIST_QUERY_KEY } from "../query/usePlaylist";
 import { axiosClient } from "@/client/axios.client";
 
-type MutateFunctionParams = {
-  id?: number;
-};
-
 export const ORDER_PLAYLIST_MUTATION_KEY = "orderPlaylist";
 
-const orderPlaylist = ({ id }: MutateFunctionParams) => {
-  return async (values: OrderPlaylistFormValues) => {
+const orderPlaylist = () => {
+  return async (data: OrderPlaylistFormValues) => {
+    const { uuid, values } = data;
     return axiosClient
-      .put(`/playlist/${id ?? ""}/order`, values, {
+      .put(`/playlist/${uuid}/order`, values, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),
@@ -28,38 +25,39 @@ const orderPlaylist = ({ id }: MutateFunctionParams) => {
   };
 };
 
-export const useOrderPlaylist = (id?: number) => {
+export const useOrderPlaylist = (uuid?: string) => {
   return useMutation<
     ApiResponse<unknown>,
     Error,
     OrderPlaylistFormValues,
     PlaylistApiResponse
-  >(orderPlaylist({ id }), {
+  >(orderPlaylist(), {
     mutationKey: [ORDER_PLAYLIST_MUTATION_KEY],
-    onMutate: async (orderedItems) => {
+    onMutate: async (variables) => {
+      const orderedItems = variables.values.order;
+
       // invalidateQueries
-      await queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, id]);
+      await queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
 
       // Snapshot the previous playlist value
       const previousPlaylist = queryClient.getQueryData<PlaylistApiResponse>([
         PLAYLIST_QUERY_KEY,
-        id,
+        uuid,
       ]);
 
+      const orderedPlaylist = getOrderedPlaylist({
+        previousPlaylist,
+        orderedItems: orderedItems,
+      });
+
       // Optimistically update to the new value
-      queryClient.setQueryData(
-        [PLAYLIST_QUERY_KEY, id],
-        getOrderedPlaylist({
-          previousPlaylist,
-          orderedItems: orderedItems.order,
-        }),
-      );
+      queryClient.setQueryData([PLAYLIST_QUERY_KEY, uuid], orderedPlaylist);
 
       // Return a context with the old value
       return previousPlaylist;
     },
     onError: (_, __, context) => {
-      queryClient.setQueryData([PLAYLIST_QUERY_KEY, id], context);
+      queryClient.setQueryData([PLAYLIST_QUERY_KEY, uuid], context);
     },
   });
 };

@@ -11,12 +11,11 @@ import { isAdmin } from "@/utils/user.util";
 import { PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
 import useAuth from "@/hooks/useAuth";
 
-type Params = { id: string };
+type Params = { uuid: string };
 
 export const usePlaylistState = () => {
   const { user } = useAuth();
-  const { id } = useParams<Params>();
-  const playlistId = id ? Number(id) : undefined;
+  const { uuid } = useParams<Params>();
   const [userSearch, setUserSearch] = useState<string>("");
   const [videos, setVideos] = useState<FileState[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
@@ -42,8 +41,7 @@ export const usePlaylistState = () => {
   /**
    *
    */
-
-  const { data, isLoading: isPlaylistLoading } = usePlaylist(playlistId);
+  const { data, isLoading: isPlaylistLoading } = usePlaylist(uuid);
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
   });
@@ -80,7 +78,7 @@ export const usePlaylistState = () => {
   );
 
   return {
-    playlistId,
+    uuid,
     playlist,
     isPlaylistLoading,
     isUsersLoading,

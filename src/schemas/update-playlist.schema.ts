@@ -23,10 +23,13 @@ export type UpdateVideoPlaylistFormValues = {
 };
 
 export type UpdatePlaylistRequestValues = {
-  name: string;
-  featureRank?: number;
-  displayedOwner?: number;
-  nsfw?: boolean;
+  uuid: string;
+  values: {
+    name: string;
+    featureRank?: number;
+    displayedOwner?: number;
+    nsfw?: boolean;
+  };
 };
 
 export const UpdatePlaylistSchema = yup
