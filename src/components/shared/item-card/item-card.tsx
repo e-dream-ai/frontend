@@ -119,7 +119,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       event.preventDefault();
       event.stopPropagation();
 
-      if ((item as Dream)?.uuid) {
+      if (type === FeedItemType.DREAM) {
         emitPlayDream(
           socket,
           item as Dream,
@@ -133,7 +133,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         );
       }
     },
-    [t, socket, item],
+    [t, socket, item, type],
   );
 
   const handleDragStart = useCallback(
