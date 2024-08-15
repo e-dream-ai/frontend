@@ -1,5 +1,5 @@
 import { DEVICES } from "@/constants/devices.constants";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 
 const StyledHeader = styled.header`
   display: flex;
@@ -193,25 +193,60 @@ export const HeaderUserName = styled.span`
   }
 `;
 
-export const HeaderAvatar = styled.div<{ url?: string }>`
+const AvatarStyle = css`
+  display: flex;
+  /* Align dot to the bottom */
+  align-items: flex-end;
+  /* Align dot to the left */
+  justify-content: flex-start;
+
   width: 30px;
   height: 30px;
   border-radius: 100%;
+`;
+
+export const HeaderAvatar = styled.div<{ url?: string; connected?: boolean }>`
+  ${AvatarStyle}
+
   background-color: rgba(30, 30, 30, 1);
   background-image: ${(props) => `url(${props?.url})`};
   background-size: contain;
+
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: ${(props) =>
+      props.connected ? "greenyellow" : "gainsboro"};
+    border-radius: 50%;
+    vertical-align: middle;
+  }
 `;
 
-export const HeaderAvatarPlaceholder = styled.div<{ url?: string }>`
-  width: 30px;
-  height: 30px;
-  border-radius: 100%;
+export const HeaderAvatarPlaceholder = styled.div<{
+  url?: string;
+  connected?: boolean;
+}>`
+  ${AvatarStyle}
+
   color: ${(props) => props.theme.textBodyColor};
   background-color: rgba(30, 30, 30, 1);
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 1rem;
+
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-color: ${(props) =>
+      props.connected ? "greenyellow" : "gainsboro"};
+    border-radius: 50%;
+    vertical-align: middle;
+  }
 `;
 
 export default StyledHeader;
