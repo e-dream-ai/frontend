@@ -27,3 +27,7 @@ export const getRequestHeaders = ({
     "Access-Control-Allow-Origin": "*",
   };
 };
+
+export const SOCKET_AUTH_ERROR_MESSAGES = {
+  UNAUTHORIZED: "UNAUTHORIZED",
+};

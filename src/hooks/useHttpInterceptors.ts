@@ -76,7 +76,7 @@ const generateResponseInterceptor = async ({
   );
 };
 
-const refreshAccessToken = async ({
+export const refreshAccessToken = async ({
   user,
   handleRefreshUser,
 }: {

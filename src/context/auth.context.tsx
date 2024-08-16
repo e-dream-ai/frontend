@@ -21,6 +21,7 @@ type AuthContextType = {
   login: (user: UserWithToken) => void;
   logout: () => void;
   isLoading: boolean;
+  setLoggedUser: (user: UserWithToken | null) => void;
 };
 
 export const AuthContext = createContext<AuthContextType>(
@@ -130,8 +131,9 @@ export const AuthProvider: React.FC<{
       login,
       logout,
       isLoading,
+      setLoggedUser,
     }),
-    [user, login, logout, isLoading],
+    [user, login, logout, isLoading, setLoggedUser],
   );
 
   return (
