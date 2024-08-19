@@ -5,6 +5,7 @@ import { toast, Id as ToastId } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import {
   Dream,
+  DreamFileType,
   MultipartUpload,
   MultipartUploadRequest,
   RefreshMultipartUpload,
@@ -259,6 +260,7 @@ const refreshPresignedUrl = async ({
       extension,
       part: partNumber,
       uploadId,
+      type: DreamFileType.DREAM,
     });
     return response?.data?.url;
   } catch (error) {
@@ -400,6 +402,7 @@ const completeMultipartUpload = async ({
       extension,
       parts,
       uploadId,
+      type: DreamFileType.DREAM,
     });
 
     toast.success(t("page.create.dream_successfully_uploaded"));

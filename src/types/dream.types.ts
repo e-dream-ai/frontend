@@ -9,6 +9,12 @@ export enum DreamStatusType {
   PROCESSED = "processed",
 }
 
+export enum DreamFileType {
+  DREAM = "dream",
+  THUMBNAIL = "thumbnail",
+  FILMSTRIP = "filmstrip",
+}
+
 export type Dream = {
   id: number;
   name: string;

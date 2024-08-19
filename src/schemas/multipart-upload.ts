@@ -1,3 +1,5 @@
+import { DreamFileType } from "@/types/dream.types";
+
 export type CreateMultipartUploadFormValues = {
   uuid?: string;
   name?: string;
@@ -13,6 +15,7 @@ export type RefreshMultipartUploadUrlFormValues = {
   extension?: string;
   uploadId?: string;
   part?: number;
+  type: DreamFileType;
 };
 
 export type CompleteMultipartUploadFormValues = {
@@ -21,6 +24,7 @@ export type CompleteMultipartUploadFormValues = {
   extension?: string;
   parts?: Array<CompletedPart>;
   uploadId?: string;
+  type: DreamFileType;
 };
 
 export type AbortMultipartUploadFormValues = {
