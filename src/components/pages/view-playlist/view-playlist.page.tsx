@@ -47,6 +47,7 @@ import { usePlaylistState } from "./usePlaylistState";
 import { usePlaylistHandlers } from "./usePlaylistHandlers";
 import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
+import { ALLOWED_IMAGE_TYPES } from "@/constants/file.constants";
 
 const SectionID = "playlist";
 
@@ -320,7 +321,7 @@ export const ViewPlaylistPage = () => {
                   isRemoved={isThumbnailRemoved}
                   handleChange={handleThumbnailChange}
                   handleRemove={handleRemoveThumbnail}
-                  types={["JPG", "JPEG"]}
+                  types={ALLOWED_IMAGE_TYPES}
                 />
               </Column>
               <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>

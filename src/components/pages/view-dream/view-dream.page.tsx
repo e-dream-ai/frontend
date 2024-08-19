@@ -60,6 +60,7 @@ import { VoteType } from "@/types/vote.types";
 import { Filmstrip } from "@/components/shared/filmstrip/filmstrip";
 import { FeedItemType } from "@/types/feed.types";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
+import { ALLOWED_IMAGE_TYPES } from "@/constants/file.constants";
 
 type Params = { uuid: string };
 
@@ -582,7 +583,7 @@ const ViewDreamPage: React.FC = () => {
                   isRemoved={isThumbnailRemoved}
                   handleChange={handleThumbnailChange}
                   handleRemove={handleRemoveThumbnail}
-                  types={["JPG", "JPEG"]}
+                  types={ALLOWED_IMAGE_TYPES}
                 />
               </Column>
               <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>

@@ -6,22 +6,36 @@ export const FILE_FORM = {
 };
 
 export const ALLOWED_VIDEO_TYPES = [
-  "MP4",
-  "AVI",
-  "MOV",
-  "WMV",
-  "MKV",
-  "FLV",
-  "MPEG",
-  "WEBM",
-  "OGV",
-  "3GP",
-  "3G2",
-  "H264",
-  "HEVC",
-  "DIVX",
-  "XVID",
-  "AVCHD",
+  "mp4",
+  "avi",
+  "mov",
+  "wmv",
+  "mkv",
+  "flv",
+  "mpeg",
+  "webm",
+  "ogv",
+  "3gp",
+  "3g2",
+  "h264",
+  "hevc",
+  "divx",
+  "xvid",
+  "avchd",
+];
+
+export const ALLOWED_IMAGE_TYPES = [
+  "jpg",
+  "jpeg",
+  "png",
+  "gif",
+  "bmp",
+  "webp",
+  "tiff",
+  "svg",
+  "ico",
+  "heif",
+  "heic",
 ];
 
 export type FileState = {

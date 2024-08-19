@@ -58,6 +58,7 @@ import {
 } from "@/constants/user.constants";
 import { bytesToGB, GBToBytes } from "@/utils/file.util";
 import { toFixedNumber } from "@/utils/number.util";
+import { ALLOWED_IMAGE_TYPES } from "@/constants/file.constants";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -329,7 +330,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         <AvatarUploader
           handleChange={handleAvatarChange}
           src={avatar?.url ? avatar?.url : avatarUrl}
-          types={["JPG", "JPEG"]}
+          types={ALLOWED_IMAGE_TYPES}
         />
       </Row>
       <Input
