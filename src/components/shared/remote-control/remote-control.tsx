@@ -299,6 +299,21 @@ export const RemoteControl: React.FC = () => {
               `components.remote_control.${REMOTE_CONTROLS.GO_NEXT_DREAM.event}`,
             )}
         </Button>
+
+        {/* ROW 7 */}
+        <Button
+          buttonType="tertiary"
+          size="sm"
+          fontSize="0.6rem"
+          textTransform="none"
+          onClick={sendMessage(REMOTE_CONTROLS.DESKTOP_CLIENT.event)}
+        >
+          {REMOTE_CONTROLS.DESKTOP_CLIENT.key +
+            " " +
+            t(
+              `components.remote_control.${REMOTE_CONTROLS.DESKTOP_CLIENT.event}`,
+            )}
+        </Button>
       </RemoteControlContainer>
     </Row>
   );

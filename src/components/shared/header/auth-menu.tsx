@@ -20,7 +20,7 @@ import { Menu, MenuButton, MenuItem } from "@/components/shared/menu/menu";
 import { User } from "@/types/auth.types";
 import { getUserNameOrEmail } from "@/utils/user.util";
 import { useImage } from "@/hooks/useImage";
-import useSocket from "@/hooks/useSocket";
+import { useDesktopClientStatus } from "@/hooks/useDesktopClientStatus";
 
 const AuthAnchor: React.FC<{
   text: string;
@@ -37,7 +37,6 @@ const AuthAnchor: React.FC<{
 
 export const AuthMenu: React.FC = () => {
   const { t } = useTranslation();
-  const { isConnected } = useSocket();
   const { user, logout, isLoading } = useAuth();
   const userWithoutToken = user as Omit<User, "token">;
 
@@ -45,6 +44,8 @@ export const AuthMenu: React.FC = () => {
     width: 30,
     fit: "cover",
   });
+
+  const { isActive } = useDesktopClientStatus();
 
   if (isLoading) return <StyledHeader />;
 
@@ -56,9 +57,9 @@ export const AuthMenu: React.FC = () => {
             <MenuButton>
               <HeaderProfileMenu>
                 {userWithoutToken?.avatar ? (
-                  <HeaderAvatar url={avatarUrl} connected={isConnected} />
+                  <HeaderAvatar url={avatarUrl} connected={isActive} />
                 ) : (
-                  <HeaderAvatarPlaceholder connected={isConnected}>
+                  <HeaderAvatarPlaceholder connected={isActive}>
                     <FontAwesomeIcon icon={faUser} />
                   </HeaderAvatarPlaceholder>
                 )}
