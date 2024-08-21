@@ -393,7 +393,7 @@ export const usePlaylistHandlers = ({
 
   const handleNavigateAddToPlaylist = () => {
     const queryParams = new URLSearchParams({
-      playlistId: String(playlist?.id ?? ""),
+      playlist: String(playlist?.uuid ?? ""),
       playlistName: String(playlist?.name ?? ""),
     }).toString();
 

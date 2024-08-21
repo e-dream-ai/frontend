@@ -21,7 +21,7 @@ export const usePlaylistState = ({ getValues, setValue }: Props) => {
   const [videos, setVideos] = useState<FileState[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [currentUploadFile, setCurrentUploadFile] = useState(0);
-  const selectedPlaylistId = getValues()?.playlist?.value;
+  const selectedPlaylistUUID = getValues()?.playlist?.value;
 
   /**
    * videos data
@@ -45,13 +45,13 @@ export const usePlaylistState = ({ getValues, setValue }: Props) => {
 
   const getLocationParamPlaylist = useCallback(() => {
     const searchParams = new URLSearchParams(location.search);
-    const param1 = searchParams.get("playlistId");
+    const param1 = searchParams.get("playlist");
     const param2 = searchParams.get("playlistName");
 
-    if (param1 && !Number.isNaN(Number(param1))) {
+    if (param1 && param2) {
       return {
-        label: param2 ?? "",
-        value: Number(param1),
+        label: param2,
+        value: param1,
       };
     }
 
@@ -63,7 +63,7 @@ export const usePlaylistState = ({ getValues, setValue }: Props) => {
       .filter((playlist) => playlist.name)
       .map((playlist) => ({
         label: playlist?.name ?? "-",
-        value: playlist?.id,
+        value: playlist?.uuid,
       }));
 
     const paramPlaylist = getLocationParamPlaylist();
@@ -82,8 +82,10 @@ export const usePlaylistState = ({ getValues, setValue }: Props) => {
 
   const playlist = useMemo(
     () =>
-      playlistsData?.data?.playlists?.find((p) => p.id === selectedPlaylistId),
-    [playlistsData, selectedPlaylistId],
+      playlistsData?.data?.playlists?.find(
+        (p) => p.uuid === selectedPlaylistUUID,
+      ),
+    [playlistsData, selectedPlaylistUUID],
   );
 
   useEffect(() => {

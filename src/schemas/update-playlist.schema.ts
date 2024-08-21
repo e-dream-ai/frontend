@@ -18,7 +18,7 @@ export type UpdatePlaylistFormValues = {
 export type UpdateVideoPlaylistFormValues = {
   playlist: {
     label: string;
-    value: number;
+    value: string;
   };
 };
 
@@ -57,7 +57,7 @@ export const UpdateVideoPlaylistSchema = yup
     playlist: yup
       .object({
         label: yup.string().required("Playlist is required."),
-        value: yup.number().required(),
+        value: yup.string().uuid().required(),
       })
       .required("Playlist is required."),
   })

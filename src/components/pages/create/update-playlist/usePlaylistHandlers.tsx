@@ -23,7 +23,6 @@ import {
 } from "@/utils/file-uploader.util";
 
 type HookParams = {
-  playlistId?: number;
   playlist: Playlist | undefined;
   videos: FileState[];
   reset: UseFormReset<UpdateVideoPlaylistFormValues>;
@@ -33,7 +32,6 @@ type HookParams = {
 };
 
 export const usePlaylistHandlers = ({
-  playlistId,
   playlist,
   videos,
   reset,
@@ -71,7 +69,7 @@ export const usePlaylistHandlers = ({
         onSuccess: (response) => {
           if (response.success) {
             queryClient.setQueryData(
-              [PLAYLIST_QUERY_KEY, playlistId],
+              [PLAYLIST_QUERY_KEY, playlist?.uuid],
               response,
             );
             reset({ playlist: undefined });
