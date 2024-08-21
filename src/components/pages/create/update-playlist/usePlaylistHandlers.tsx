@@ -23,7 +23,8 @@ import {
 } from "@/utils/file-uploader.util";
 
 type HookParams = {
-  playlist: Playlist | undefined;
+  playlistUUID?: string;
+  playlist?: Playlist;
   videos: FileState[];
   reset: UseFormReset<UpdateVideoPlaylistFormValues>;
   setCurrentUploadFile: (value: SetStateAction<number>) => void;
@@ -32,6 +33,7 @@ type HookParams = {
 };
 
 export const usePlaylistHandlers = ({
+  playlistUUID,
   playlist,
   videos,
   reset,
@@ -69,7 +71,7 @@ export const usePlaylistHandlers = ({
         onSuccess: (response) => {
           if (response.success) {
             queryClient.setQueryData(
-              [PLAYLIST_QUERY_KEY, playlist?.uuid],
+              [PLAYLIST_QUERY_KEY, playlistUUID],
               response,
             );
             reset({ playlist: undefined });
@@ -136,7 +138,7 @@ export const usePlaylistHandlers = ({
       setVideoUploaded(i);
       if (createdDream) {
         await addPlaylistItemMutation.mutateAsync({
-          playlistUUID: playlist!.uuid,
+          playlistUUID: playlistUUID!,
           values: {
             type: "dream",
             uuid: createdDream.uuid,
@@ -145,7 +147,7 @@ export const usePlaylistHandlers = ({
       }
     }
 
-    router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist?.uuid}`);
+    router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlistUUID}`);
     setIsUploadingFiles(false);
   };
 

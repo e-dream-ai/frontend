@@ -96,6 +96,7 @@ export const usePlaylistState = ({ getValues, setValue }: Props) => {
   }, [getLocationParamPlaylist, setValue]);
 
   return {
+    playlistUUID: selectedPlaylistUUID,
     playlist,
     isPlaylistsLoading,
     playlistsOptions,

@@ -38,6 +38,7 @@ export const UpdatePlaylist: React.FC = () => {
   });
 
   const {
+    playlistUUID,
     playlist,
     playlistsOptions,
     isPlaylistsLoading,
@@ -60,6 +61,7 @@ export const UpdatePlaylist: React.FC = () => {
     handleUploadVideos,
     handleDeleteVideo,
   } = usePlaylistHandlers({
+    playlistUUID,
     playlist,
     videos,
     reset,
@@ -77,6 +79,7 @@ export const UpdatePlaylist: React.FC = () => {
         await handleUploadVideos();
       }
     } catch (error) {
+      console.error(error);
       setIsUploadingFiles(false);
       toast.error(t("components.update_playlist.error_updating_playlist"));
     }
@@ -101,6 +104,7 @@ export const UpdatePlaylist: React.FC = () => {
                 options={playlistsOptions}
                 onInputChange={(newValue) => setPlaylistSearch(newValue)}
                 error={errors.playlist?.label?.message}
+                isDisabled={isUploadingFiles}
               />
             )}
           />
