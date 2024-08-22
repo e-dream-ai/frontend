@@ -48,6 +48,7 @@ import { usePlaylistHandlers } from "./usePlaylistHandlers";
 import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
 import { ALLOWED_IMAGE_TYPES } from "@/constants/file.constants";
+import { NotFound } from "@/components/shared/not-found/not-found";
 
 const SectionID = "playlist";
 
@@ -57,6 +58,7 @@ export const ViewPlaylistPage = () => {
   const navigate = useNavigate();
 
   const {
+    isError,
     uuid,
     playlist,
     isPlaylistLoading,
@@ -197,6 +199,10 @@ export const ViewPlaylistPage = () => {
 
   if (!uuid) {
     return <Navigate to={ROUTES.ROOT} replace />;
+  }
+
+  if (isError) {
+    return <NotFound />;
   }
 
   if (isPlaylistLoading) {

@@ -383,6 +383,10 @@
       "apikey_successfully_revoked": "Api Key successfully revoked.",
       "error_revoking_apikey": "Error revoking Api Key.",
       "apikey_copied_successfully": "Api Key copied successfully."
+    },
+    "not_found": {
+      "title": "Not found",
+      "go_home": "go home"
     }
   },
   "units": {

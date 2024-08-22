@@ -41,7 +41,7 @@ export const usePlaylistState = () => {
   /**
    *
    */
-  const { data, isLoading: isPlaylistLoading } = usePlaylist(uuid);
+  const { data, isLoading: isPlaylistLoading, isError } = usePlaylist(uuid);
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
   });
@@ -78,6 +78,7 @@ export const usePlaylistState = () => {
   );
 
   return {
+    isError,
     uuid,
     playlist,
     isPlaylistLoading,

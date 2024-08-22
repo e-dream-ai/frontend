@@ -61,6 +61,7 @@ import { Filmstrip } from "@/components/shared/filmstrip/filmstrip";
 import { FeedItemType } from "@/types/feed.types";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 import { ALLOWED_IMAGE_TYPES } from "@/constants/file.constants";
+import { NotFound } from "@/components/shared/not-found/not-found";
 
 type Params = { uuid: string };
 
@@ -74,6 +75,7 @@ const ViewDreamPage: React.FC = () => {
     data,
     isLoading: isDreamLoading,
     refetch,
+    isError,
   } = useDream(uuid, {
     activeRefetchInterval: true,
   });
@@ -405,6 +407,10 @@ const ViewDreamPage: React.FC = () => {
         <Spinner />
       </Row>
     );
+  }
+
+  if (isError) {
+    return <NotFound />;
   }
 
   return (
