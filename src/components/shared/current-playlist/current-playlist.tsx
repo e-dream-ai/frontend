@@ -12,7 +12,7 @@ import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
 } from "@/constants/remote-control.constants";
-import useRemoteControlSocket from "@/hooks/useRemoteControlSocket";
+import useSocketEventListener from "@/hooks/useSocketEventListener";
 import useSocket from "@/hooks/useSocket";
 import { User } from "@/types/auth.types";
 import {
@@ -41,6 +41,7 @@ export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
     socket?.emit(NEW_REMOTE_CONTROL_EVENT, {
       event: REMOTE_CONTROLS.RESET_PLAYLIST.event,
     });
+
     setStateUUID(undefined);
   };
 
@@ -74,7 +75,10 @@ export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
   /**
    * Handle new remote control events from the server for dream on profile
    */
-  useRemoteControlSocket(handleRemoteControlEvent);
+  useSocketEventListener<RemoteControlEvent>(
+    NEW_REMOTE_CONTROL_EVENT,
+    handleRemoteControlEvent,
+  );
 
   return (
     <Column mb="2rem">

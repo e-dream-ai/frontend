@@ -1,8 +1,11 @@
 import { useDream } from "@/api/dream/query/useDream";
 import { Row, Column, ItemCardList, ItemCard, Text } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
-import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
-import useRemoteControlSocket from "@/hooks/useRemoteControlSocket";
+import {
+  NEW_REMOTE_CONTROL_EVENT,
+  REMOTE_CONTROLS,
+} from "@/constants/remote-control.constants";
+import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { User } from "@/types/auth.types";
 import {
   RemoteControlAction,
@@ -49,7 +52,10 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
   /**
    * Handle new remote control events from the server for dream on profile
    */
-  useRemoteControlSocket(handleRemoteControlEvent);
+  useSocketEventListener<RemoteControlEvent>(
+    NEW_REMOTE_CONTROL_EVENT,
+    handleRemoteControlEvent,
+  );
 
   return (
     <Column mb="2rem">

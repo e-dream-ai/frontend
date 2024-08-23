@@ -8,7 +8,8 @@ import { useTranslation } from "react-i18next";
 import useSocket from "@/hooks/useSocket";
 import { RemoteControlContainer } from "./remote-control.styled";
 import { onNewRemoteControlEvent } from "@/utils/socket.util";
-import useRemoteControlSocket from "@/hooks/useRemoteControlSocket";
+import useSocketEventListener from "@/hooks/useSocketEventListener";
+import { RemoteControlEvent } from "@/types/remote-control.types";
 
 const ROW_1 = [REMOTE_CONTROLS.HELP, REMOTE_CONTROLS.STATUS];
 
@@ -34,7 +35,10 @@ export const RemoteControl: React.FC = () => {
   /**
    * Listen new remote control events from the server
    */
-  useRemoteControlSocket(handleRemoteControlEvent);
+  useSocketEventListener<RemoteControlEvent>(
+    NEW_REMOTE_CONTROL_EVENT,
+    handleRemoteControlEvent,
+  );
 
   // Emit an event to the server
   const sendMessage = (event: string) => () => {
@@ -301,19 +305,6 @@ export const RemoteControl: React.FC = () => {
         </Button>
 
         {/* ROW 7 */}
-        <Button
-          buttonType="tertiary"
-          size="sm"
-          fontSize="0.6rem"
-          textTransform="none"
-          onClick={sendMessage(REMOTE_CONTROLS.DESKTOP_CLIENT.event)}
-        >
-          {REMOTE_CONTROLS.DESKTOP_CLIENT.key +
-            " " +
-            t(
-              `components.remote_control.${REMOTE_CONTROLS.DESKTOP_CLIENT.event}`,
-            )}
-        </Button>
       </RemoteControlContainer>
     </Row>
   );

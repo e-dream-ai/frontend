@@ -336,8 +336,7 @@
       "pause": "Pause",
       "capture": "Capture",
       "report": "Report",
-      "reset_playlist": "Reset Playlist",
-      "desktop_client": "Desktop"
+      "reset_playlist": "Reset Playlist"
     },
     "current_dream": {
       "title": "Current dream",

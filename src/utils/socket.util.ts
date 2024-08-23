@@ -72,11 +72,9 @@ export const onNewRemoteControlEvent =
       return;
     }
 
-    if (event.event !== REMOTE_CONTROLS.DESKTOP_CLIENT.event) {
-      toast.info(
-        `${t("components.remote_control.event")}: ${key ? `${key}` : ""} ${t(
-          REMOTE_CONTROLS_TRANSLATIONS[event?.event],
-        )}`,
-      );
-    }
+    toast.info(
+      `${t("components.remote_control.event")}: ${key ? `${key}` : ""} ${t(
+        REMOTE_CONTROLS_TRANSLATIONS[event?.event],
+      )}`,
+    );
   };
