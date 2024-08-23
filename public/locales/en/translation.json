@@ -21,8 +21,13 @@
   },
   "page": {
     "error": {
-      "404_not_found": "404 not found",
-      "page_not_found": "Page not found",
+      "title": "Error",
+      "message": "Something went wrong",
+      "go_home": "go home"
+    },
+    "not_found": {
+      "title": "Not found",
+      "message": "Page not found",
       "go_home": "go home"
     },
     "login": {
@@ -335,9 +340,11 @@
       "desktop_client": "Desktop"
     },
     "current_dream": {
+      "title": "Current dream",
       "no_current_dream": "No current dream"
     },
     "current_playlist": {
+      "title": "Current playlist",
       "no_current_playlist": "No current playlist"
     },
     "invites_list": {

@@ -1,5 +1,5 @@
 import { useDream } from "@/api/dream/query/useDream";
-import { Row, Column, ItemCardList, ItemCard } from "@/components/shared";
+import { Row, Column, ItemCardList, ItemCard, Text } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
 import useRemoteControlSocket from "@/hooks/useRemoteControlSocket";
@@ -51,24 +51,21 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
    */
   useRemoteControlSocket(handleRemoteControlEvent);
 
-  if (!dream) {
-    return (
-      <Column mb="2rem">
-        {t("components.current_dream.no_current_dream")}
-      </Column>
-    );
-  }
-
   return (
     <Column mb="2rem">
+      <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+        {t("components.current_dream.title")}
+      </Text>
       {isLoading || isRefetching ? (
         <Row justifyContent="center">
           <Spinner />
         </Row>
-      ) : (
-        <ItemCardList grid columns={2}>
-          <ItemCard type="dream" item={dream} size="sm" />
+      ) : dream ? (
+        <ItemCardList>
+          <ItemCard type="dream" item={dream} size="sm" inline />
         </ItemCardList>
+      ) : (
+        <Text>{t("components.current_dream.no_current_dream")}</Text>
       )}
     </Column>
   );

@@ -17,6 +17,7 @@ import CopyToClipboard from "react-copy-to-clipboard";
 import { Tooltip } from "react-tooltip";
 import Restricted from "../restricted/restricted";
 import { PROFILE_PERMISSIONS } from "@/constants/permissions.constants";
+import { Spinner } from "../spinner/spinner";
 
 type ApiKeyCardProps = {
   user?: Omit<User, "token">;
@@ -25,7 +26,7 @@ type ApiKeyCardProps = {
 const ApiKeyCard: React.FC<ApiKeyCardProps> = ({ user }) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { data } = useApiKey({ id: user?.id });
+  const { data, isLoading: isLoadingApiKey } = useApiKey({ id: user?.id });
   const generateApiKeyMutation = useGenerateApiKey({ id: user?.id });
   const revokeApiKeyMutation = useRevokeApiKey({ id: user?.id });
 
@@ -79,7 +80,9 @@ const ApiKeyCard: React.FC<ApiKeyCardProps> = ({ user }) => {
           </Text>
         </Row>
         <Row>
-          {apikey?.apikey ? (
+          {isLoadingApiKey ? (
+            <Spinner />
+          ) : apikey?.apikey ? (
             <CopyToClipboard text={apikey.apikey}>
               <Button
                 data-tooltip-id="copy-apikey"

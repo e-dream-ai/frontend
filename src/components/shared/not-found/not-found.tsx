@@ -30,10 +30,13 @@ export const NotFound = () => {
         </Row>
 
         <Row flex="1">
-          <Text>{t("page.error.page_not_found")}, </Text>
-          <Anchor onClick={handleGoHome}>
-            {t("components.not_found.go_home")}
-          </Anchor>
+          <Text>
+            {t("page.not_found.message")},{" "}
+            <Anchor onClick={handleGoHome}>
+              {t("components.not_found.go_home")}
+            </Anchor>
+            .
+          </Text>
         </Row>
       </Container>
     </Section>

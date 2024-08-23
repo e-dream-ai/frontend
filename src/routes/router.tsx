@@ -1,7 +1,6 @@
 import { Header } from "@/components/shared/header/header";
 import AboutPage from "@/components/pages/about/about.page";
 import ConfirmForgotPassword from "@/components/pages/confirm-forgot-password/confirm-forgot-password.page";
-import ErrorPage from "@/components/pages/error/error.page";
 import FeedPage from "@/components/pages/feed/feed.page";
 import HelpPage from "@/components/pages/help/help.page";
 import InstallPage from "@/components/pages/install/install.page";
@@ -22,6 +21,7 @@ import { LoginPage } from "@/components/pages/login/login.page";
 import { SignupPage } from "@/components/pages/signup/signup.page";
 import PublicRoute from "@/routes/public-route";
 import PlaylistsFeedPage from "@/components/pages/playlist-feed/playlist-feed";
+import NotFoundPage from "@/components/pages/not-found/not-found.page";
 
 export const RootElement = () => (
   <>
@@ -36,7 +36,7 @@ export const router = createBrowserRouter([
   {
     path: ROUTES.ROOT,
     element: <RootElement />,
-    errorElement: <ErrorPage />,
+    errorElement: <NotFoundPage />,
     children: [
       {
         path: ROUTES.ROOT,

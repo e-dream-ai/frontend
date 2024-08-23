@@ -1,12 +1,12 @@
-import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
+import Header from "@/components/shared/header/header";
 import { Anchor, Footer, Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
-import Header from "@/components/shared/header/header";
 import Text from "@/components/shared/text/text";
 import { ROUTES } from "@/constants/routes.constants";
 
-export const ErrorPage: React.FC = () => {
+export const NotFoundPage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const handleGoHome = () => navigate(ROUTES.ROOT);
@@ -14,11 +14,14 @@ export const ErrorPage: React.FC = () => {
     <>
       <Header />
       <Container>
-        <h2>{t("page.error.title")}</h2>
+        <h2>{t("page.not_found.title")}</h2>
         <>
           <Text>
-            {t("page.error.message")},{" "}
-            <Anchor onClick={handleGoHome}>{t("page.error.go_home")}</Anchor>.
+            {t("page.not_found.message")},{" "}
+            <Anchor onClick={handleGoHome}>
+              {t("page.not_found.go_home")}
+            </Anchor>
+            .
           </Text>
         </>
       </Container>
@@ -28,4 +31,4 @@ export const ErrorPage: React.FC = () => {
   );
 };
 
-export default ErrorPage;
+export default NotFoundPage;

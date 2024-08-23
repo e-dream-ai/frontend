@@ -5,6 +5,7 @@ import {
   ItemCardList,
   ItemCard,
   Button,
+  Text,
 } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import {
@@ -75,37 +76,38 @@ export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
    */
   useRemoteControlSocket(handleRemoteControlEvent);
 
-  if (!playlist) {
-    return (
-      <Column mb="2rem">
-        {t("components.current_playlist.no_current_playlist")}
-      </Column>
-    );
-  }
-
   return (
     <Column mb="2rem">
+      <Row justifyContent="space-between" mb="0">
+        <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+          {t("components.current_playlist.title")}
+        </Text>
+        {playlist ? (
+          <Button
+            type="button"
+            buttonType="danger"
+            size="md"
+            transparent
+            onClick={onRemoveCurrentPlaylist}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+          </Button>
+        ) : (
+          <></>
+        )}
+      </Row>
       {isLoading || isRefetching ? (
         <Row justifyContent="center">
           <Spinner />
         </Row>
+      ) : playlist ? (
+        <ItemCardList>
+          <ItemCard type="playlist" item={playlist} size="sm" inline />
+        </ItemCardList>
       ) : (
-        <>
-          <Row justifyContent="flex-end">
-            <Button
-              type="button"
-              buttonType="danger"
-              transparent
-              ml="1rem"
-              onClick={onRemoveCurrentPlaylist}
-            >
-              <FontAwesomeIcon icon={faTrash} />
-            </Button>
-          </Row>
-          <ItemCardList columns={2}>
-            <ItemCard type="playlist" item={playlist} size="sm" />
-          </ItemCardList>
-        </>
+        <Column mb="2rem">
+          {t("components.current_playlist.no_current_playlist")}
+        </Column>
       )}
     </Column>
   );

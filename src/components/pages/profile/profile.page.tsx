@@ -21,6 +21,8 @@ import ApiKeyCard from "@/components/shared/apikey-card/ApiKeyCard";
 import { useMemo } from "react";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
+import { NotFound } from "@/components/shared/not-found/not-found";
+import { Spinner } from "@/components/shared/spinner/spinner";
 
 const SECTION_ID = "my-profile";
 
@@ -42,9 +44,21 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
   const paramId = Number(id) || 0;
   const { user: authUser } = useAuth();
   const userId = isMyProfilePage ? authUser?.id : paramId;
-  const { data } = useUser({ id: userId });
+  const { data, isError, isLoading: isUserLoading } = useUser({ id: userId });
   const user = data?.data?.user;
   const showApiKeyCard = isMyProfilePage || isLoggedUserAdmin;
+
+  if (isUserLoading) {
+    return (
+      <Row justifyContent="center">
+        <Spinner />
+      </Row>
+    );
+  }
+
+  if (isError) {
+    return <NotFound />;
+  }
 
   return (
     <Container>
@@ -63,14 +77,8 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
           <RightProfilePage>
             {isMyProfile && (
               <>
-                <Text mb="1rem" fontSize="1rem" fontWeight={600}>
-                  {t("page.profile.current_dream")}
-                </Text>
                 <CurrentDream user={user} uuid={user?.currentDream?.uuid} />
 
-                <Text mb="1rem" fontSize="1rem" fontWeight={600}>
-                  {t("page.profile.current_playlist")}
-                </Text>
                 <CurrentPlaylist
                   user={user}
                   uuid={user?.currentPlaylist?.uuid}
