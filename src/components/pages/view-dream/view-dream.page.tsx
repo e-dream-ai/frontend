@@ -214,10 +214,7 @@ const ViewDreamPage: React.FC = () => {
         onSuccess: (data) => {
           const dream = data?.data?.dream;
           if (data.success) {
-            queryClient.setQueryData(
-              [DREAM_QUERY_KEY, { uuid: dream?.uuid }],
-              data,
-            );
+            queryClient.setQueryData([DREAM_QUERY_KEY, dream?.uuid], data);
             reset({
               name: dream?.name,
               activityLevel: dream?.activityLevel,

@@ -153,7 +153,7 @@ const PlaylistMenuItem = ({
         },
       });
       if (data.success) {
-        queryClient.refetchQueries([DREAM_QUERY_KEY, { uuid: dream?.uuid }]);
+        queryClient.refetchQueries([DREAM_QUERY_KEY, dream?.uuid]);
         toast.success(
           t(
             "components.playlist_checkbox_menu.playlist_item_successfully_added",
@@ -179,7 +179,7 @@ const PlaylistMenuItem = ({
       });
 
       if (data.success) {
-        queryClient.refetchQueries([DREAM_QUERY_KEY, { uuid: dream?.uuid }]);
+        queryClient.refetchQueries([DREAM_QUERY_KEY, dream?.uuid]);
 
         toast.success(
           t(

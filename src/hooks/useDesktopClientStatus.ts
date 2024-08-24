@@ -13,8 +13,7 @@ export const useDesktopClientStatus = (
   const [lastEventTime, setLastEventTime] = useState<number>(Date.now());
 
   const [isActive, setIsActive] = useState<boolean>(false);
-  const handlePingEvent = (data: unknown): void => {
-    console.log(PING_EVENT, data);
+  const handlePingEvent = (): void => {
     setIsActive(true);
     setLastEventTime(Date.now());
   };
