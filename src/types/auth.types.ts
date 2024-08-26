@@ -28,6 +28,7 @@ export type User = {
   created_at?: string;
   updated_at?: string;
   last_login_at?: string;
+  last_client_ping_at?: string;
 };
 
 export type ApiKey = {
