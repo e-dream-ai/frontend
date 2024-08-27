@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { DEVICES } from "@/constants/devices.constants";
 import Text from "@/components/shared/text/text";
 import { Button } from "../button/button";
+import { HighlightPosition } from "@/types/item-card.types";
 
 const ItemCardSizes = {
   sm: css``,
@@ -19,6 +20,8 @@ const ImageSizes = {
   md: css``,
   lg: css``,
 };
+
+const HighlightBorderHeightPx = 4;
 
 export const UsernameText = styled(Text)`
   display: flex;
@@ -53,13 +56,15 @@ export const ItemTitleText = styled(Text)`
 `;
 
 export const StyledItemCard = styled.li<{
-  isDragEntered?: boolean;
   size: Sizes;
   grid?: boolean;
 }>`
   display: flex;
   flex-wrap: wrap;
   flex: auto;
+  position: relative;
+  margin: 2px 0;
+  border: 0;
 
   ${(props) => ItemCardSizes[props.size]}
 
@@ -79,26 +84,15 @@ export const StyledItemCard = styled.li<{
   }
 `;
 
-export const ItemCardAnchor = styled(Link).withConfig({
-  shouldForwardProp: (prop, defaultValidatorFn) =>
-    !["isDragEntered"].includes(prop) && defaultValidatorFn(prop),
-})<{
+export const ItemCardAnchor = styled(Link)<{
   isDragging?: boolean;
-  isDragEntered?: boolean;
-  isMovedOnUpperHalf?: boolean;
+  highlightPosition?: "top" | "bottom";
 }>`
   display: flex;
   flex: auto;
   /* pointer-events: none; */
   /* touch-action: none; */
-  border-top: ${(props) =>
-    props.isDragEntered && props.isMovedOnUpperHalf
-      ? `3px solid ${props.theme.colorPrimary}`
-      : `3px solid ${props.theme.colorBackgroundTertiary}`};
-  border-bottom: ${(props) =>
-    props.isDragEntered && !props.isMovedOnUpperHalf
-      ? `3px solid ${props.theme.colorPrimary}`
-      : `3px solid ${props.theme.colorBackgroundTertiary}`};
+
   color: ${(props) => props.theme.textBodyColor};
   text-decoration: none;
 `;
@@ -162,3 +156,30 @@ export const PlayButton = styled(Button)`
     filter: drop-shadow(0.2rem 0.2rem 0.2rem #000);
   }
 `;
+
+const ICStyledBorder = styled.div<{ position: HighlightPosition }>`
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: ${HighlightBorderHeightPx}px;
+  background-color: ${(props) => props.theme.colorPrimary};
+  pointer-events: none;
+  ${({ position }) =>
+    position === "top"
+      ? `top: -${HighlightBorderHeightPx}px;`
+      : `bottom: -${HighlightBorderHeightPx}px;`}
+`;
+
+interface HighlightBorderProps {
+  isHighlighted: boolean;
+  position: HighlightPosition;
+}
+
+export const HighlightBorder: React.FC<HighlightBorderProps> = ({
+  isHighlighted,
+  position,
+}) => {
+  if (!isHighlighted) return null;
+
+  return <ICStyledBorder position={position} />;
+};

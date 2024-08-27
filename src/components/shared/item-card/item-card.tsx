@@ -5,7 +5,6 @@ import {
   useMemo,
   useCallback,
   useEffect,
-  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -17,6 +16,7 @@ import { Sizes } from "@/types/sizes.types";
 import { Button } from "../button/button";
 import Row, { Column } from "../row/row";
 import {
+  HighlightBorder,
   ItemCardAnchor,
   ItemCardImage,
   ItemTitleText,
@@ -41,6 +41,7 @@ import { emitPlayDream, emitPlayPlaylist } from "@/utils/socket.util";
 import useSocket from "@/hooks/useSocket";
 import { useImage } from "@/hooks/useImage";
 import { useItemCardListState } from "../item-card-list/item-card-list";
+import { HighlightPosition } from "@/types/item-card.types";
 
 type DNDMode = "local" | "cross-window";
 
@@ -62,6 +63,7 @@ type ItemCardProps = {
   deleteDisabled?: boolean;
   showPlayButton?: boolean;
   inline?: boolean;
+  droppable?: boolean;
   onOrder?: (dropItem: SetItemOrder) => void;
   onDelete?: (event: React.MouseEvent) => void;
 };
@@ -76,6 +78,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   showPlayButton = false,
   dndMode = DND_MODES.CROSS_WINDOW,
   order = 0,
+  droppable = false,
   onOrder,
   onDelete,
 }) => {
@@ -94,15 +97,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const { socket } = useSocket();
   const { isDragging, setDragging } = useItemCardListState();
 
-  const [isThumbnailLoaded, setIsThumbnailLoaded] = useState<boolean>(false);
-  const [isDragEntered, setIsDragEntered] = useState<boolean>(false);
-  const [isMovedOnUpperHalf, setIsMovedOnUpperHalf] = useState<boolean>(false);
-  const [height, setHeight] = useState<number>(0);
   /**
-   * Counter to handle rerendering trigger events issues
-   * if counter is 0, leave event should be considered as triggered
+   * Handles highligth position 'top' or 'bottom'
    */
-  const [, setDragOverCounter] = useState(0);
+  const [highlightPosition, setHighlightPosition] =
+    useState<HighlightPosition>();
 
   const thumbnailUrl = useImage(thumbnail, {
     width: 420,
@@ -157,52 +156,45 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     (event: DragEvent) => {
       event.preventDefault();
       event.stopPropagation();
-      setDragOverCounter((prev) => prev + 1);
+
       if (!isDragging) {
         return false;
       }
-      if (dndMode === DND_MODES.LOCAL) {
-        setIsDragEntered(true);
-      }
       return false;
     },
-    [dndMode, isDragging, setDragOverCounter],
+    [isDragging],
   );
 
-  const handleDragLeave = useCallback(
-    (event: DragEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      setDragOverCounter((prev) => {
-        // Only react when completely leaving the parent and all children
-        // Completely left the drag area
-        if (prev === 1 && dndMode === DND_MODES.LOCAL) {
-          setIsDragEntered(false);
-        }
-        return Math.max(0, prev - 1);
-      });
-      return false;
-    },
-    [dndMode, setDragOverCounter],
-  );
+  const handleDragLeave = useCallback((event: DragEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+    /**
+     * reset highlight position
+     */
+    setHighlightPosition(undefined);
+
+    return false;
+  }, []);
 
   const handleDragEnd = useCallback(
     (event: DragEvent) => {
       event.preventDefault();
       event.stopPropagation();
-      if (dndMode === DND_MODES.LOCAL) {
-        setIsDragEntered(false);
-      }
+
       setDragging(false);
       return false;
     },
-    [dndMode, setDragging],
+    [setDragging],
   );
 
   const handleDrop = useCallback(
     (event: DragEvent) => {
       event.preventDefault();
       event.stopPropagation();
+      /**
+       * reset highlight position
+       */
+      setHighlightPosition(undefined);
       const dt = event.dataTransfer;
       const action = dt?.getData(DND_METADATA.ACTION);
       const dropOrder = Number(dt?.getData(DND_METADATA.ORDER)) ?? 0;
@@ -222,7 +214,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           /**
            * if item was drag upperhalf, set current order, else increase one to current order
            */
-          (isMovedOnUpperHalf ? order : order + 1) -
+          (highlightPosition === "top" ? order : order + 1) -
           /**
            * if drop order is over current order, not decrease one, else, decrease one to set correct order
            */
@@ -235,27 +227,31 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         onOrder?.(dropItem);
       }
 
-      setIsDragEntered(false);
       return false;
     },
-    [order, dndMode, onOrder, isMovedOnUpperHalf, itemId],
+    [order, dndMode, onOrder, highlightPosition, itemId],
   );
 
-  const handleDragOver = useCallback(
-    (event: MouseEvent) => {
-      event.preventDefault();
-      event.stopPropagation();
-      const y = event.pageY - (cardRef?.current?.offsetTop ?? 0);
-      /**
-       * Define if drag is on the upperhalf of the card
-       */
-      const value = y / height < 0.5;
-      if (value !== isMovedOnUpperHalf) {
-        setIsMovedOnUpperHalf(value);
-      }
-    },
-    [height, isMovedOnUpperHalf],
-  );
+  const handleDragOver = useCallback((event: MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    /**
+     *
+     */
+    const componentRect = (
+      event?.currentTarget as HTMLDivElement
+    ).getBoundingClientRect();
+
+    const mouseY = event.clientY - componentRect.top;
+    const newHighlightPosition =
+      mouseY < componentRect.height / 2 ? "top" : "bottom";
+
+    /**
+     * set new highlight position
+     */
+    setHighlightPosition(newHighlightPosition);
+  }, []);
 
   const registerEvents = useCallback(() => {
     cardRef.current?.addEventListener("dragstart", handleDragStart);
@@ -291,13 +287,6 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     handleDragOver,
   ]);
 
-  /**
-   * update height when thumbnail is loaded
-   */
-  useLayoutEffect(() => {
-    setHeight(cardRef.current?.clientHeight ?? 0);
-  }, [cardRef, isThumbnailLoaded]);
-
   useEffect(() => {
     registerEvents();
 
@@ -307,12 +296,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const Thumbnail = useMemo(
     () => () =>
       thumbnail ? (
-        <ItemCardImage
-          size={size}
-          draggable="false"
-          src={thumbnailUrl}
-          onLoad={() => setIsThumbnailLoaded(true)}
-        />
+        <ItemCardImage size={size} draggable="false" src={thumbnailUrl} />
       ) : (
         <ThumbnailPlaceholder size={size}>
           <FontAwesomeIcon icon={faPhotoFilm} />
@@ -352,76 +336,76 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   );
 
   return (
-    <StyledItemCard
-      ref={cardRef}
-      size={size}
-      draggable="true"
-      isDragEntered={isDragEntered}
-    >
-      <ItemCardAnchor
-        to={navigateRoute}
-        isDragging={isDragging}
-        isDragEntered={isDragEntered}
-        isMovedOnUpperHalf={isMovedOnUpperHalf}
-      >
-        <Row
-          flex="auto"
-          margin="0"
-          padding="3"
-          justifyContent="space-between"
-          flexWrap={["wrap", "nowrap", "nowrap", "nowrap"]}
-        >
-          {onDelete && (
-            <Row alignItems="flex-start" m={0}>
-              {!deleteDisabled && (
-                <Button
-                  type="button"
-                  buttonType="danger"
-                  transparent
-                  onClick={onDelete}
-                  style={{
-                    fontSize: "1.6rem",
-                    alignItems: "flex-start",
-                    padding: "0rem 1rem 0rem 0rem",
-                  }}
-                >
-                  <FontAwesomeIcon icon={faXmark} style={{ paddingTop: 0 }} />
-                </Button>
-              )}
-            </Row>
-          )}
-          {inline && <ThumbnailAndPlayButton />}
-          <Column flex="auto" margin="0" padding="0" justifyContent="center">
-            {!inline && <ThumbnailAndPlayButton />}
-            <Row mb={0}>
-              <Column mr="3">
-                <Avatar size="sm" url={avatarUrl} />
-              </Column>
-              <Column justifyContent="center">
-                {/* card title */}
-                <ItemTitleText
-                  ref={tooltipRef}
-                  color={
-                    type === "dream" ? theme.colorPrimary : theme.colorSecondary
-                  }
-                >
-                  {type === "playlist" ? (
-                    <FontAwesomeIcon icon={faListUl} />
-                  ) : (
-                    <FontAwesomeIcon icon={faFilm} />
-                  )}{" "}
-                  {name || t("components.item_card.unnamed")}
-                </ItemTitleText>
+    <StyledItemCard ref={cardRef} size={size} draggable="true">
+      <>
+        <ItemCardAnchor to={navigateRoute}>
+          <Row
+            flex="auto"
+            margin="0"
+            padding="3"
+            justifyContent="space-between"
+            flexWrap={["wrap", "nowrap", "nowrap", "nowrap"]}
+          >
+            {onDelete && (
+              <Row alignItems="flex-start" m={0}>
+                {!deleteDisabled && (
+                  <Button
+                    type="button"
+                    buttonType="danger"
+                    transparent
+                    onClick={onDelete}
+                    style={{
+                      fontSize: "1.6rem",
+                      alignItems: "flex-start",
+                      padding: "0rem 1rem 0rem 0rem",
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faXmark} style={{ paddingTop: 0 }} />
+                  </Button>
+                )}
+              </Row>
+            )}
+            {inline && <ThumbnailAndPlayButton />}
+            <Column flex="auto" margin="0" padding="0" justifyContent="center">
+              {!inline && <ThumbnailAndPlayButton />}
+              <Row mb={0}>
+                <Column mr="3">
+                  <Avatar size="sm" url={avatarUrl} />
+                </Column>
+                <Column justifyContent="center">
+                  {/* card title */}
+                  <ItemTitleText
+                    ref={tooltipRef}
+                    color={
+                      type === "dream"
+                        ? theme.colorPrimary
+                        : theme.colorSecondary
+                    }
+                  >
+                    {type === "playlist" ? (
+                      <FontAwesomeIcon icon={faListUl} />
+                    ) : (
+                      <FontAwesomeIcon icon={faFilm} />
+                    )}{" "}
+                    {name || t("components.item_card.unnamed")}
+                  </ItemTitleText>
 
-                {/* user name */}
-                <UsernameText color={theme.textPrimaryColor} mt="2">
-                  {getUserName(displayedOwner ?? user)}
-                </UsernameText>
-              </Column>
-            </Row>
-          </Column>
-        </Row>
-      </ItemCardAnchor>
+                  {/* user name */}
+                  <UsernameText color={theme.textPrimaryColor} mt="2">
+                    {getUserName(displayedOwner ?? user)}
+                  </UsernameText>
+                </Column>
+              </Row>
+            </Column>
+          </Row>
+        </ItemCardAnchor>
+        {droppable && (
+          <HighlightBorder
+            isHighlighted={!!highlightPosition}
+            position={highlightPosition}
+          />
+        )}
+      </>
     </StyledItemCard>
   );
 };

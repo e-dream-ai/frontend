@@ -496,6 +496,7 @@ export const ViewPlaylistPage = () => {
                       deleteDisabled={!allowedEditPlaylist}
                       showPlayButton
                       inline
+                      droppable
                       onDelete={handleDeletePlaylistItem(i.id)}
                       onOrder={handleOrderPlaylist}
                     />
