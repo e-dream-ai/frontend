@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
-import { PING_EVENT } from "@/constants/remote-control.constants";
+import {
+  GOOD_BYE_EVENT,
+  PING_EVENT,
+} from "@/constants/remote-control.constants";
 import useSocketEventListener from "./useSocketEventListener";
 import useAuth from "./useAuth";
 
@@ -26,9 +29,18 @@ export const useDesktopClientStatus = (
   };
 
   /**
+   * Handle goodbye event, set to inactive status when it arrives
+   */
+  const handleGoodbyeEvent = (): void => {
+    setIsActive(false);
+    setLastEventTime(undefined);
+  };
+
+  /**
    * Handle new remote control events from the server for dream on profile
    */
   useSocketEventListener(PING_EVENT, handlePingEvent);
+  useSocketEventListener(GOOD_BYE_EVENT, handleGoodbyeEvent);
 
   /**
    * Setup timer from socket
