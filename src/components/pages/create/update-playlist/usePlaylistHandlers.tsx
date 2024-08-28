@@ -147,6 +147,11 @@ export const usePlaylistHandlers = ({
       }
     }
 
+    /**
+     * Reset playlist query
+     */
+    await queryClient.resetQueries([PLAYLIST_QUERY_KEY, playlistUUID]);
+
     router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlistUUID}`);
     setIsUploadingFiles(false);
   };
