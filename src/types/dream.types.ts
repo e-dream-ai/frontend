@@ -32,12 +32,17 @@ export type Dream = {
   status: DreamStatusType;
   nsfw?: boolean;
   playlistItems?: PlaylistItem[];
-  filmstrip?: string[];
+  filmstrip?: Frame[];
   upvotes?: number;
   downvotes?: number;
   processed_at?: string;
   created_at: string;
   updated_at: string;
+};
+
+export type Frame = {
+  frameNumber: number;
+  url: string;
 };
 
 export type PresignedPost = {

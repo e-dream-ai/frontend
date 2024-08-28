@@ -57,7 +57,7 @@ import { useDownvoteDream } from "@/api/dream/mutation/useDownvoteDream";
 import { useUnvoteDream } from "@/api/dream/mutation/useUnvoteDream";
 import { useDreamVote } from "@/api/dream/query/useDreamVote";
 import { VoteType } from "@/types/vote.types";
-import { Filmstrip } from "@/components/shared/filmstrip/filmstrip";
+import { FilmstripGallery } from "@/components/shared/filmstrip-gallery/filmstrip-gallery";
 import { FeedItemType } from "@/types/feed.types";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 import { ALLOWED_IMAGE_TYPES } from "@/constants/file.constants";
@@ -607,7 +607,7 @@ const ViewDreamPage: React.FC = () => {
                   <h3>{t("page.view_dream.filmstrip")}</h3>
                 </Row>
                 <Row flexWrap="wrap">
-                  <Filmstrip filmstrip={dream?.filmstrip} />
+                  <FilmstripGallery dream={dream} />
                 </Row>
 
                 <Restricted
