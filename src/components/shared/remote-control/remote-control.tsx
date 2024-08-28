@@ -2,8 +2,6 @@ import React from "react";
 import { Button, Row } from "@/components/shared";
 import {
   NEW_REMOTE_CONTROL_EVENT,
-  PING_EVENT,
-  GOOD_BYE_EVENT,
   REMOTE_CONTROLS,
 } from "@/constants/remote-control.constants";
 import { useTranslation } from "react-i18next";
@@ -46,9 +44,6 @@ export const RemoteControl: React.FC = () => {
   const sendMessage = (event: string) => () => {
     socket?.emit(NEW_REMOTE_CONTROL_EVENT, { event: event });
   };
-
-  const sendClientPing = () => socket?.emit(PING_EVENT);
-  const sendClientBoodbye = () => socket?.emit(GOOD_BYE_EVENT);
 
   return (
     <Row flexWrap="wrap" style={{ gap: "4px" }}>
@@ -310,24 +305,6 @@ export const RemoteControl: React.FC = () => {
         </Button>
 
         {/* ROW 7 */}
-        <Button
-          buttonType="tertiary"
-          size="sm"
-          fontSize="0.6rem"
-          textTransform="none"
-          onClick={sendClientPing}
-        >
-          ping
-        </Button>
-        <Button
-          buttonType="tertiary"
-          size="sm"
-          fontSize="0.6rem"
-          textTransform="none"
-          onClick={sendClientBoodbye}
-        >
-          goodbye
-        </Button>
       </RemoteControlContainer>
     </Row>
   );
