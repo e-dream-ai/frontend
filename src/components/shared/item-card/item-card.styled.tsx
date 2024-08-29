@@ -57,7 +57,6 @@ export const ItemTitleText = styled(Text)`
 
 export const StyledItemCard = styled.li<{
   size: Sizes;
-  grid?: boolean;
 }>`
   display: flex;
   flex-wrap: wrap;
@@ -65,6 +64,7 @@ export const StyledItemCard = styled.li<{
   position: relative;
   margin: 2px 0;
   border: 0;
+  min-height: 150px;
 
   ${(props) => ItemCardSizes[props.size]}
 
@@ -82,6 +82,24 @@ export const StyledItemCard = styled.li<{
   :hover {
     background-color: ${(props) => props.theme.colorBackgroundSecondary};
   }
+`;
+
+export const StyledItemCardSkeleton = styled.li<{
+  size: Sizes;
+}>`
+  display: flex;
+  flex-wrap: wrap;
+  flex: auto;
+  position: relative;
+  margin: 2px 0;
+  border: 0;
+  min-height: 150px;
+  justify-content: center;
+  align-items: center;
+
+  ${(props) => ItemCardSizes[props.size]}
+
+  background-color: ${(props) => props.theme.colorBackgroundQuaternary};
 `;
 
 export const ItemCardAnchor = styled(Link)<{

@@ -1,5 +1,5 @@
 import { useDream } from "@/api/dream/query/useDream";
-import { Row, Column, ItemCardList, ItemCard, Text } from "@/components/shared";
+import { Column, ItemCardList, ItemCard, Text } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import {
   NEW_REMOTE_CONTROL_EVENT,
@@ -14,6 +14,8 @@ import {
 import { getRemoteControlEvent } from "@/utils/remote-control.util";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ItemCardSkeleton } from "../item-card/item-card";
+import { useTheme } from "styled-components";
 
 type CurrentDreamProps = {
   uuid?: string;
@@ -22,6 +24,7 @@ type CurrentDreamProps = {
 
 export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
   const { t } = useTranslation();
+  const theme = useTheme();
   const [stateUUID, setStateUUID] = useState<string | undefined>(uuid);
   const { data, isLoading, isRefetching, refetch } = useDream(stateUUID);
   const dream = data?.data?.dream;
@@ -63,15 +66,19 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
         {t("components.current_dream.title")}
       </Text>
       {isLoading || isRefetching ? (
-        <Row justifyContent="center">
+        <ItemCardSkeleton>
           <Spinner />
-        </Row>
+        </ItemCardSkeleton>
       ) : dream ? (
         <ItemCardList>
           <ItemCard type="dream" item={dream} size="sm" inline />
         </ItemCardList>
       ) : (
-        <Text>{t("components.current_dream.no_current_dream")}</Text>
+        <ItemCardSkeleton>
+          <Text color={theme.textBodyColor}>
+            {t("components.current_dream.no_current_dream")}
+          </Text>
+        </ItemCardSkeleton>
       )}
     </Column>
   );

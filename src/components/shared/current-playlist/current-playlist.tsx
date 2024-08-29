@@ -24,6 +24,8 @@ import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { ItemCardSkeleton } from "../item-card/item-card";
+import { useTheme } from "styled-components";
 
 type CurrentPlaylistProps = {
   uuid?: string;
@@ -33,6 +35,7 @@ type CurrentPlaylistProps = {
 export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
   const { socket } = useSocket();
   const { t } = useTranslation();
+  const theme = useTheme();
   const [stateUUID, setStateUUID] = useState<string | undefined>(uuid);
   const { data, isLoading, isRefetching, refetch } = usePlaylist(stateUUID);
   const playlist = data?.data?.playlist;
@@ -101,17 +104,19 @@ export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
         )}
       </Row>
       {isLoading || isRefetching ? (
-        <Row justifyContent="center">
+        <ItemCardSkeleton>
           <Spinner />
-        </Row>
+        </ItemCardSkeleton>
       ) : playlist ? (
         <ItemCardList>
           <ItemCard type="playlist" item={playlist} size="sm" inline />
         </ItemCardList>
       ) : (
-        <Column mb="2rem">
-          {t("components.current_playlist.no_current_playlist")}
-        </Column>
+        <ItemCardSkeleton>
+          <Text color={theme.textBodyColor}>
+            {t("components.current_playlist.no_current_playlist")}
+          </Text>
+        </ItemCardSkeleton>
       )}
     </Column>
   );

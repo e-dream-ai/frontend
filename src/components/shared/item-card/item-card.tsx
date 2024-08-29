@@ -22,6 +22,7 @@ import {
   ItemTitleText,
   PlayButton,
   StyledItemCard,
+  StyledItemCardSkeleton,
   ThumbnailPlaceholder,
   UsernameText,
 } from "./item-card.styled";
@@ -409,5 +410,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     </StyledItemCard>
   );
 };
+
+type ItemCardSkeletonProps = {
+  size?: Sizes;
+  children?: React.ReactNode;
+};
+export const ItemCardSkeleton: React.FC<ItemCardSkeletonProps> = ({
+  size = "md",
+  children,
+}) => <StyledItemCardSkeleton size={size}>{children}</StyledItemCardSkeleton>;
 
 export default ItemCard;
