@@ -47,13 +47,13 @@ export const SocketProvider: React.FC<{
           token: accessToken ? `Bearer ${accessToken}` : "",
         },
         /**
-         * 3 seconds timeout
+         * 5 seconds timeout
          */
-        timeout: 3 * 1000,
+        timeout: 5 * 1000,
         /**
          * no attemps
          */
-        reconnectionAttempts: 0,
+        // reconnectionAttempts: 0,
       });
 
       // Listen to connect event only once
@@ -108,11 +108,35 @@ export const SocketProvider: React.FC<{
     // Update the ref to the current token
     prevTokenRef.current = accessToken;
 
+    // Handle reconnection
+    const handleReconnect = () => {
+      if (socketRef.current) {
+        // Tab focused and checking connection
+        if (!socketRef.current.connected) {
+          // Attempting to reconnect
+          socketRef.current.connect();
+        } else {
+          // Socket already connected
+        }
+      }
+    };
+
+    // Add event listener for when the tab becomes visible
+    document.addEventListener("visibilitychange", () => {
+      if (!document.hidden) {
+        handleReconnect();
+      }
+    });
+
     return () => {
+      // Disconnect socket and set socketRef to undefined when accessToken or generateSocketInstance change
       if (socketRef.current && socketRef.current.connected) {
         socketRef.current?.disconnect();
         socketRef.current = undefined;
       }
+
+      // Clean up function
+      document.removeEventListener("visibilitychange", handleReconnect);
     };
   }, [accessToken, generateSocketInstance]);
 
