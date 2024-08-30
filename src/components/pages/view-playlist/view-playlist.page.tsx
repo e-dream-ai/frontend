@@ -1,6 +1,6 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
-  AddItemPlaylistDropzone,
+  // AddItemPlaylistDropzone,
   Button,
   Input,
   ItemCardList,
@@ -487,6 +487,7 @@ export const ViewPlaylistPage = () => {
                   {items.map((i) => (
                     <ItemCard
                       key={i.id}
+                      draggable
                       itemId={i.id}
                       dndMode="local"
                       size="sm"
@@ -507,7 +508,8 @@ export const ViewPlaylistPage = () => {
               )}
             </Row>
 
-            <Restricted
+            {/* Removing add item playlist dropzone, probably next to be deprecated  */}
+            {/* <Restricted
               to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
               isOwner={user?.id === playlist?.user?.id}
             >
@@ -524,7 +526,7 @@ export const ViewPlaylistPage = () => {
               <Row>
                 <AddItemPlaylistDropzone show uuid={playlist?.uuid} />
               </Row>
-            </Restricted>
+            </Restricted> */}
           </form>
         </Container>
       </Section>

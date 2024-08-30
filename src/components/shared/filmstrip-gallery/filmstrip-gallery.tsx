@@ -7,10 +7,13 @@ import { Dream, Frame } from "@/types/dream.types";
 import { useTranslation } from "react-i18next";
 import {
   ImageContainer,
+  OverlayIcon,
   OverlayText,
   StyledFrameImage,
 } from "./filmstrip-gallery.styled";
 import { calculateTimeFromFrames } from "@/utils/dream.util";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlay } from "@fortawesome/free-solid-svg-icons";
 
 const FrameImage: React.FC<{ frame: Frame; dream?: Dream }> = ({
   frame,
@@ -37,6 +40,9 @@ const FrameImage: React.FC<{ frame: Frame; dream?: Dream }> = ({
           fps: dream?.processedVideoFPS,
         })}
       </OverlayText>
+      <OverlayIcon className="filmstrip-icon">
+        <FontAwesomeIcon icon={faPlay} />
+      </OverlayIcon>
     </ImageContainer>
   );
 };

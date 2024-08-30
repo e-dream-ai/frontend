@@ -58,6 +58,7 @@ type ItemCardProps = {
   itemId?: number;
   type?: FeedItemServerType;
   item?: Dream | Omit<Playlist, "items">;
+  draggable?: boolean;
   size?: Sizes;
   dndMode?: DNDMode;
   order?: number;
@@ -73,6 +74,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   itemId = 0,
   type = "dream",
   item,
+  draggable = false,
   size = "md",
   deleteDisabled = false,
   inline = false,
@@ -138,6 +140,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 
   const handleDragStart = useCallback(
     (event: DragEvent) => {
+      /**
+       * prevent drag
+       */
+      if (!draggable) {
+        event.preventDefault();
+        return;
+      }
+
       setDragging(true);
       event?.dataTransfer?.setData(
         DND_METADATA.ACTION,
@@ -150,7 +160,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       event.dataTransfer?.setDragImage(tooltipRef.current as HTMLElement, 0, 0);
       return false;
     },
-    [itemId, uuid, type, order, dndMode, setDragging],
+    [draggable, itemId, uuid, type, order, dndMode, setDragging],
   );
 
   const handleDragEnter = useCallback(
@@ -297,7 +307,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const Thumbnail = useMemo(
     () => () =>
       thumbnail ? (
-        <ItemCardImage size={size} draggable="false" src={thumbnailUrl} />
+        <ItemCardImage size={size} src={thumbnailUrl} />
       ) : (
         <ThumbnailPlaceholder size={size}>
           <FontAwesomeIcon icon={faPhotoFilm} />
@@ -337,7 +347,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   );
 
   return (
-    <StyledItemCard ref={cardRef} size={size} draggable="true">
+    <StyledItemCard ref={cardRef} size={size} draggable={draggable}>
       <>
         <ItemCardAnchor to={navigateRoute}>
           <Row
