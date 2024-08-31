@@ -34,27 +34,31 @@ export const useOrderPlaylist = (uuid?: string) => {
   >(orderPlaylist(), {
     mutationKey: [ORDER_PLAYLIST_MUTATION_KEY],
     onMutate: async (variables) => {
-      const orderedItems = variables.values.order;
-
-      // Snapshot the previous playlist value
-      const previousPlaylist = queryClient.getQueryData<PlaylistApiResponse>([
+      // Snapshot that represents the server state before any optimistic updates
+      const snapshotPlaylist = queryClient.getQueryData<PlaylistApiResponse>([
         PLAYLIST_QUERY_KEY,
         uuid,
       ]);
 
-      const orderedPlaylist = getOrderedPlaylist({
-        previousPlaylist,
-        orderedItems: orderedItems,
-      });
-
       // Optimistically update to the new value
       await queryClient.setQueryData(
         [PLAYLIST_QUERY_KEY, uuid],
-        orderedPlaylist,
+
+        // 'oldPlaylist' here is the current state of playlist
+        (oldPlaylist: PlaylistApiResponse) => {
+          const orderedItems = variables.values.order;
+
+          const orderedPlaylist = getOrderedPlaylist({
+            previousPlaylist: oldPlaylist,
+            orderedItems: orderedItems,
+          });
+
+          return orderedPlaylist;
+        },
       );
 
       // Return a context with the old value
-      return previousPlaylist;
+      return snapshotPlaylist;
     },
     onError: (_, __, context) => {
       queryClient.setQueryData([PLAYLIST_QUERY_KEY, uuid], context);

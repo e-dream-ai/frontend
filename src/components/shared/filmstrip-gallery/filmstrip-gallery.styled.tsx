@@ -29,7 +29,7 @@ export const OverlayText = styled(Text)`
   position: absolute;
   top: 8px;
   left: 8px;
-  background-color: rgba(0, 0, 0, 0.8);
+  background-color: rgba(0, 0, 0, 0.5);
   padding: 6px 12px;
   font-size: 12px;
   border-radius: 4px;
