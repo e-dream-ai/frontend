@@ -60,18 +60,23 @@ export const sortPlaylistItemsByName = (
     return undefined;
   }
 
-  return items
-    .slice()
-    .sort((a, b) => {
-      // Determine the names based on the item type
-      const nameA =
-        (a.type === "dream" ? a.dreamItem?.name : a.playlistItem?.name) || "";
-      const nameB =
-        (b.type === "dream" ? b.dreamItem?.name : b.playlistItem?.name) || "";
+  return (
+    items
+      .slice()
+      .sort((a, b) => {
+        // Determine the names based on the item type
+        const nameA =
+          (a.type === "dream" ? a.dreamItem?.name : a.playlistItem?.name) || "";
+        const nameB =
+          (b.type === "dream" ? b.dreamItem?.name : b.playlistItem?.name) || "";
 
-      return nameA.localeCompare(nameB);
-    })
-    .map((item, index) => ({ id: item.id, order: index + 1 }));
+        return nameA.localeCompare(nameB);
+      })
+      /**
+       * Set order with zero-based indexing
+       */
+      .map((item, index) => ({ id: item.id, order: index }))
+  );
 };
 
 export const sortPlaylistItemsByDate = (
@@ -82,20 +87,25 @@ export const sortPlaylistItemsByDate = (
     return undefined;
   }
 
-  return items
-    .slice()
-    .sort((a, b) => {
-      // Direct comparison of date strings assuming ISO format
-      const dateA = a.created_at;
-      const dateB = b.created_at;
+  return (
+    items
+      .slice()
+      .sort((a, b) => {
+        // Direct comparison of date strings assuming ISO format
+        const dateA = a.created_at;
+        const dateB = b.created_at;
 
-      if (dateA < dateB) {
-        return -1;
-      }
-      if (dateA > dateB) {
-        return 1;
-      }
-      return 0;
-    })
-    .map((item, index) => ({ id: item.id, order: index + 1 }));
+        if (dateA < dateB) {
+          return -1;
+        }
+        if (dateA > dateB) {
+          return 1;
+        }
+        return 0;
+      })
+      /**
+       * Set order with zero-based indexing
+       */
+      .map((item, index) => ({ id: item.id, order: index }))
+  );
 };
