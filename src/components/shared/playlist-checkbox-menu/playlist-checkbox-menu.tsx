@@ -17,6 +17,7 @@ import queryClient from "@/api/query-client";
 import { DREAM_QUERY_KEY } from "@/api/dream/query/useDream";
 import { ClickEvent, EventHandler } from "@szhsin/react-menu";
 import { Tooltip } from "react-tooltip";
+import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
 
 const StyledInput = styled.input`
   background: ${(props) => props.theme.inputBackgroundColor};
@@ -153,7 +154,16 @@ const PlaylistMenuItem = ({
         },
       });
       if (data.success) {
+        /**
+         * Refetch queries
+         */
         queryClient.refetchQueries([DREAM_QUERY_KEY, dream?.uuid]);
+
+        /**
+         * Reset queries
+         */
+        queryClient.resetQueries([PLAYLIST_QUERY_KEY, playlist?.uuid]);
+
         toast.success(
           t(
             "components.playlist_checkbox_menu.playlist_item_successfully_added",
@@ -179,7 +189,15 @@ const PlaylistMenuItem = ({
       });
 
       if (data.success) {
+        /**
+         * Refetch queries
+         */
         queryClient.refetchQueries([DREAM_QUERY_KEY, dream?.uuid]);
+
+        /**
+         * Reset queries
+         */
+        queryClient.resetQueries([PLAYLIST_QUERY_KEY, playlist?.uuid]);
 
         toast.success(
           t(
