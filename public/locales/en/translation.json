@@ -30,6 +30,12 @@
       "message": "Page not found",
       "go_home": "go home"
     },
+    "playground": {
+      "title": "Playground",
+      "client": "Client",
+      "ping": "Ping",
+      "goodbye": "Goodbye"
+    },
     "login": {
       "title": "Login",
       "email": "Email",

@@ -21,6 +21,7 @@ import { LoginPage } from "@/components/pages/login/login.page";
 import { SignupPage } from "@/components/pages/signup/signup.page";
 import PublicRoute from "@/routes/public-route";
 import PlaylistsFeedPage from "@/components/pages/playlist-feed/playlist-feed";
+import PlaygroundPage from "@/components/pages/playground/playground.page";
 import NotFoundPage from "@/components/pages/not-found/not-found.page";
 
 export const RootElement = () => (
@@ -55,6 +56,14 @@ export const router = createBrowserRouter([
       {
         path: ROUTES.CONFIRM_FORGOT_PASSWORD,
         element: <ConfirmForgotPassword />,
+      },
+      {
+        path: `${ROUTES.PLAYGROUND}/*`,
+        element: (
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN_GROUP]}>
+            <PlaygroundPage />
+          </ProtectedRoute>
+        ),
       },
       {
         path: `${ROUTES.CREATE}/*`,

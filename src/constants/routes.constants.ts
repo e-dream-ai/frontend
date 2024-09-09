@@ -17,6 +17,7 @@ export const ROUTES = {
   ABOUT: "/about",
   INSTALL: "/install",
   TERMS_OF_SERVICE: "/tos",
+  PLAYGROUND: "/playground",
 };
 
 export const CREATE_ROUTES = {
