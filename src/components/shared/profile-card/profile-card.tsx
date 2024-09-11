@@ -191,9 +191,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   onDisableEditMode,
 }) => {
   const { t } = useTranslation();
-  const [roleSearch, setRoleSearch] = useState<string>("");
+  const { user: authUser } = useAuth();
   const theme = useTheme();
-  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
+  const isUserAdmin = useMemo(() => isAdmin(authUser as User), [authUser]);
+  const [roleSearch, setRoleSearch] = useState<string>("");
 
   const { isLoading: isLoadingUpdateUser, mutate: mutateUpdateUser } =
     useUpdateUser({ id: user?.id });
