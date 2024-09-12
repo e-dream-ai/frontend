@@ -10,7 +10,7 @@ export const ABORT_MULTIPART_UPLOAD_MUTATION_KEY = "abortMultipartUpload";
 const abortMultipartUpload = () => {
   return async ({ uuid, ...params }: AbortMultipartUploadFormValues) => {
     return axiosClient
-      .post(`/dream/${uuid}/abort-multipart-upload`, params, {
+      .post(`/v1/dream/${uuid}/abort-multipart-upload`, params, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

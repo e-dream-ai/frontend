@@ -19,7 +19,7 @@ const updateThumbnailPlaylist = ({ uuid }: MutateFunctionParams) => {
     formData.append(FILE_FORM.FILE, params?.file ?? "");
 
     return axiosClient
-      .put(`/playlist/${uuid}/thumbnail`, formData, {
+      .put(`/v1/playlist/${uuid}/thumbnail`, formData, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

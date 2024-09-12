@@ -36,10 +36,8 @@ export const AuthProvider: React.FC<{
   const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [isUserFetched, setIsUserFetched] = useState<boolean>(false);
-  const { setItem, getItem, removeItem } = useLocalStorage(
-    AUTH_LOCAL_STORAGE_KEY,
-  );
+  const [isSessionVerified, setIsSessionVerified] = useState<boolean>(false);
+  const { setItem, removeItem } = useLocalStorage(AUTH_LOCAL_STORAGE_KEY);
   const [user, setUser] = useState<UserWithToken | null>(null);
 
   const setLoggedUser = useCallback(
@@ -55,19 +53,6 @@ export const AuthProvider: React.FC<{
   );
 
   useHttpInterceptors({ handleRefreshUser: setLoggedUser }, [user]);
-
-  const verifySession = useCallback(() => {
-    const storagedUser = getItem();
-
-    if (!storagedUser) {
-      setIsLoading(false);
-      return;
-    }
-
-    const user: UserWithToken = JSON.parse(storagedUser);
-    setLoggedUser(user);
-    setIsLoading(false);
-  }, [getItem, setLoggedUser]);
 
   const login: (user: UserWithToken) => void = useCallback(
     (user: UserWithToken) => {
@@ -102,28 +87,31 @@ export const AuthProvider: React.FC<{
 
   const fetchUser = useCallback(async () => {
     try {
+      setIsLoading(true);
       const currentUserRequest = await currentUserQuery.refetch();
       const fetchedUser = currentUserRequest.data?.data?.user;
-      setLoggedUser({ ...user, ...fetchedUser } as UserWithToken);
-      setIsUserFetched(true);
+
+      if (fetchedUser) {
+        setLoggedUser({ ...fetchedUser } as UserWithToken);
+      }
+      setIsLoading(false);
+      setIsSessionVerified(true);
     } catch (error) {
       logout();
+      setIsLoading(false);
+      setIsSessionVerified(true);
     }
-  }, [user, setLoggedUser, currentUserQuery, logout]);
+  }, [currentUserQuery, setLoggedUser, logout]);
 
   useEffect(() => {
     /**
-     * if there's no user and is not fetched, verify session
+     * If sesion is not verified, fetchUser
      */
-    if (!user && !isUserFetched) verifySession();
-    /**
-     * if there's user and is not fetched, fetchUser
-     */
-    if (user && !isUserFetched) fetchUser();
-    /**
-     * else: do nothing
-     */
-  }, [user, isUserFetched, verifySession, fetchUser]);
+
+    if (!isSessionVerified) {
+      fetchUser();
+    }
+  }, [isSessionVerified, setIsSessionVerified, fetchUser]);
 
   const memoedValue = useMemo(
     () => ({

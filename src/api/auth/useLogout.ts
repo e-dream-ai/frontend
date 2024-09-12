@@ -8,10 +8,11 @@ export const LOGOUT_MUTATION_KEY = "logout";
 
 const logout = async (values: LogoutRequestValues) => {
   return axiosClient
-    .post(`/auth/logout`, values, {
+    .post(`/v2/auth/logout`, values, {
       headers: getRequestHeaders({
         contentType: ContentType.json,
       }),
+      validateStatus: (status) => status >= 200 && status < 303, // Consider 302 as success on logout redirection
     })
     .then((res) => {
       return res.data;

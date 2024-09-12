@@ -9,7 +9,7 @@ export const REVOKE_APIKEY_MUTATION_KEY = "revokeApiKey";
 const revokeApiKey = ({ id }: { id?: number }) => {
   return async () => {
     return axiosClient
-      .delete(`/user/${id}/apikey`, {
+      .delete(`/v1/user/${id}/apikey`, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

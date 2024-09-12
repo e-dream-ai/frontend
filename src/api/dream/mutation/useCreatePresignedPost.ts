@@ -10,7 +10,7 @@ export const CREATE_PRESIGNED_POST_MUTATION_KEY = "createPresignedPost";
 const createPresignedPost = () => {
   return async (params: CreatePresignedDreamFormValues) => {
     return axiosClient
-      .post(`/dream/create-presigned-post`, params, {
+      .post(`/v1/dream/create-presigned-post`, params, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

@@ -48,7 +48,7 @@ export const LoginPage: React.FC = () => {
 
   const onSubmit = (data: LoginFormValues) => {
     mutate(
-      { username: data.username, password: data.password },
+      { email: data.email, password: data.password },
       {
         onSuccess: (data) => {
           if (data.success) {
@@ -84,8 +84,8 @@ export const LoginPage: React.FC = () => {
               placeholder={t("page.login.email")}
               type="email"
               before={<FontAwesomeIcon icon={faEnvelope} />}
-              error={errors.username?.message}
-              {...register("username")}
+              error={errors.email?.message}
+              {...register("email")}
             />
             <InputPassword
               placeholder={t("page.login.password")}

@@ -19,7 +19,7 @@ type QueryFunctionParams = {
 const getUsers = ({ take, skip, search, role }: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/user`, {
+      .get(`/v1/user`, {
         params: {
           take,
           skip,

@@ -16,7 +16,7 @@ type QueryFunctionParams = {
 const getRankedFeed = ({ take, skip }: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/feed/ranked`, {
+      .get(`/v1/feed/ranked`, {
         params: {
           take,
           skip,

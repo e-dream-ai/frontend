@@ -10,7 +10,7 @@ const deletePlaylistItem = () => {
   return async (values: DeletePlaylistItemFormValues) => {
     const { playlistUUID, itemId } = values;
     return axiosClient
-      .delete(`/playlist/${playlistUUID}/remove-item/${itemId}`, {
+      .delete(`/v1/playlist/${playlistUUID}/remove-item/${itemId}`, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

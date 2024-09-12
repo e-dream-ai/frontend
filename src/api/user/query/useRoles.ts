@@ -17,7 +17,7 @@ type QueryFunctionParams = {
 const getRoles = ({ take, skip, search }: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/user/roles`, {
+      .get(`/v1/user/roles`, {
         params: {
           take,
           skip,

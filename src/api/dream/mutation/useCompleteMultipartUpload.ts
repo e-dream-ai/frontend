@@ -17,7 +17,7 @@ const completeMultipartUpload = ({
 }: CompleteMultipartUploadProps) => {
   return async ({ uuid, ...params }: CompleteMultipartUploadFormValues) => {
     return axiosClient
-      .post(`/dream/${uuid}/complete-multipart-upload`, params, {
+      .post(`/v1/dream/${uuid}/complete-multipart-upload`, params, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

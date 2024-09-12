@@ -14,7 +14,7 @@ export const UPDATE_DREAM_MUTATION_KEY = "updateDream";
 const updateDream = ({ uuid }: MutateFunctionParams) => {
   return async (values: UpdateDreamRequestValues) => {
     return axiosClient
-      .put(`/dream/${uuid ?? ""}`, values, {
+      .put(`/v1/dream/${uuid ?? ""}`, values, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

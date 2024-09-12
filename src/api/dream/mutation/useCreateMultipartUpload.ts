@@ -17,7 +17,7 @@ const createMultipartUpload = ({
 }: CreateMultipartUploadProps) => {
   return async (params: CreateMultipartUploadFormValues) => {
     return axiosClient
-      .post(`/dream/create-multipart-upload`, params, {
+      .post(`/v1/dream/create-multipart-upload`, params, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

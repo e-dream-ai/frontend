@@ -11,7 +11,7 @@ export const CREATE_INVITE_MUTATION_KEY = "createInvite";
 const createInvite = () => {
   return async (params: InviteRequestValues) => {
     return axiosClient
-      .post(`/invite`, params, {
+      .post(`/v1/invite`, params, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

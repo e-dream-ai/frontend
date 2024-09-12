@@ -56,7 +56,7 @@ const generateRequestInterceptor = async ({
 
 const generateResponseInterceptor = async ({
   getItem,
-  handleRefreshUser,
+  // handleRefreshUser,
 }: InterceptorGenerator) => {
   /**
    * Axios response middleware
@@ -66,9 +66,10 @@ const generateResponseInterceptor = async ({
     async (error) => {
       const storagedUser = getItem();
       if (error.response.status === 401 && storagedUser) {
-        const user: UserWithToken = JSON.parse(storagedUser);
-        await refreshAccessToken({ user, handleRefreshUser });
-        return axiosClient.request(error.config);
+        // console.log("401 unauthorized");
+        // const user: UserWithToken = JSON.parse(storagedUser);
+        // await refreshAccessToken({ user, handleRefreshUser });
+        // return axiosClient.request(error.config);
       }
 
       return error.response;

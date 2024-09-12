@@ -10,7 +10,7 @@ export const UPDATE_USER_MUTATION_KEY = "updateUser";
 const updateUser = ({ id }: { id?: number }) => {
   return async (params: ProfileFormRequest) => {
     return axiosClient
-      .put(`/user/${id}`, params, {
+      .put(`/v1/user/${id}`, params, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

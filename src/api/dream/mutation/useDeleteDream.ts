@@ -13,7 +13,7 @@ type MutateFunctionParams = {
 const deleteDream = ({ uuid }: MutateFunctionParams) => {
   return async () => {
     return axiosClient
-      .delete(`/dream/${uuid}`, {
+      .delete(`/v1/dream/${uuid}`, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

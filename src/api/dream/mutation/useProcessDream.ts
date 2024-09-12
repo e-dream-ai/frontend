@@ -14,7 +14,7 @@ const processDream = ({ uuid }: MutateFunctionParams) => {
   return async () => {
     return axiosClient
       .post(
-        `/dream/${uuid ?? ""}/process-dream`,
+        `/v1/dream/${uuid ?? ""}/process-dream`,
         {},
         {
           headers: getRequestHeaders({

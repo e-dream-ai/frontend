@@ -16,7 +16,7 @@ type QueryFunctionParams = {
 const getDreams = ({ take, skip }: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/dream`, {
+      .get(`/v1/dream`, {
         params: {
           take,
           skip,

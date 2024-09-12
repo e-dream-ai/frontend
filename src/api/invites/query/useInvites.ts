@@ -16,7 +16,7 @@ type QueryFunctionParams = {
 const getInvites = ({ take, skip }: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/invite`, {
+      .get(`/v1/invite`, {
         params: {
           take,
           skip,

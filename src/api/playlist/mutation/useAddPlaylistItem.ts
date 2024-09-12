@@ -11,7 +11,7 @@ const addPlaylistItem = () => {
   return async (data: AddPlaylistItemFormValues) => {
     const { playlistUUID, values } = data;
     return axiosClient
-      .put(`/playlist/${playlistUUID}/add-item`, values, {
+      .put(`/v1/playlist/${playlistUUID}/add-item`, values, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

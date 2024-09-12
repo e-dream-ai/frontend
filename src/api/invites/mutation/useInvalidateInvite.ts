@@ -14,7 +14,7 @@ export const INVALIDATE_INVITE_MUTATION_KEY = "invalidateInvite";
 const invalidateInvite = ({ id }: MutateFunctionParams) => {
   return async () => {
     return axiosClient
-      .put(`/invite/${id ?? ""}/invalidate`, undefined, {
+      .put(`/v1/invite/${id ?? ""}/invalidate`, undefined, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

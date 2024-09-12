@@ -9,7 +9,7 @@ export const FORGOT_PASSWORD_MUTATION_KEY = "forgotPassword";
 
 const forgotPassword = async (values: ForgotPasswordFormValues) => {
   return axiosClient
-    .post(`/auth/forgot-password`, values, {
+    .post(`/v1/auth/forgot-password`, values, {
       headers: getRequestHeaders({
         contentType: ContentType.json,
       }),

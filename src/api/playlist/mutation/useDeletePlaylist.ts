@@ -9,7 +9,7 @@ export const DELETE_PLAYLIST_MUTATION_KEY = "deletePlaylist";
 const deletePlaylist = () => {
   return async (uuid: string) => {
     return axiosClient
-      .delete(`/playlist/${uuid}`, {
+      .delete(`/v1/playlist/${uuid}`, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

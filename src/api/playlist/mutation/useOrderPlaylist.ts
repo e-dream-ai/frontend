@@ -14,7 +14,7 @@ const orderPlaylist = () => {
   return async (data: OrderPlaylistFormValues) => {
     const { uuid, values } = data;
     return axiosClient
-      .put(`/playlist/${uuid}/order`, values, {
+      .put(`/v1/playlist/${uuid}/order`, values, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

@@ -13,7 +13,7 @@ type VoteResponse = { vote: Vote };
 export const useDreamVote = (uuid?: string, options?: HookOptions) => {
   return useApiQuery<VoteResponse>(
     [DREAM_VOTE_QUERY_KEY, { uuid }],
-    `/dream/${uuid ?? ""}/vote`,
+    `/v1/dream/${uuid ?? ""}/vote`,
     {
       headers: getRequestHeaders({
         contentType: ContentType.json,

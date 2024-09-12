@@ -19,7 +19,7 @@ type DreamResponse = {
 export const useDream = (uuid?: string, options?: HookOptions) => {
   return useApiQuery<DreamResponse>(
     [DREAM_QUERY_KEY, uuid],
-    `/dream/${uuid ?? ""}`,
+    `/v1/dream/${uuid ?? ""}`,
     {
       headers: getRequestHeaders({
         contentType: ContentType.json,

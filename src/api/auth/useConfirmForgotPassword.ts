@@ -11,7 +11,7 @@ const confirmForgotPassowrd = async (
   values: ConfirmForgotPasswordRequestValues,
 ) => {
   return axiosClient
-    .post(`/auth/confirm-forgot-password`, values, {
+    .post(`/v1/auth/confirm-forgot-password`, values, {
       headers: getRequestHeaders({
         contentType: ContentType.json,
       }),

@@ -14,7 +14,7 @@ const upvoteDream = ({ uuid }: MutateFunctionParams) => {
   return async () => {
     return axiosClient
       .put(
-        `/dream/${uuid ?? ""}/upvote`,
+        `/v1/dream/${uuid ?? ""}/upvote`,
         {},
         {
           headers: getRequestHeaders({

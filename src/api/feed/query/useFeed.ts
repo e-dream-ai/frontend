@@ -19,7 +19,7 @@ type QueryFunctionParams = {
 const getFeed = ({ take, skip, userId, search, type }: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/feed`, {
+      .get(`/v1/feed`, {
         params: {
           take,
           skip,

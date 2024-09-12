@@ -13,7 +13,7 @@ type UserResponse = { user: Omit<User, "token"> };
 export const useUser = ({ id }: HookParams) => {
   return useApiQuery<UserResponse>(
     [USER_QUERY_KEY, id],
-    `/user/${id}`,
+    `/v1/user/${id}`,
     {
       headers: getRequestHeaders({
         contentType: ContentType.json,

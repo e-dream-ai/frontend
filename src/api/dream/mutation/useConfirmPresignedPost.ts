@@ -11,7 +11,7 @@ const confirmPresignedPost = () => {
   return async ({ uuid, name, extension }: ConfirmDreamFormValues) => {
     return axiosClient
       .post(
-        `/dream/${uuid}/confirm-presigned-post`,
+        `/v1/dream/${uuid}/confirm-presigned-post`,
         { name, extension },
         {
           headers: getRequestHeaders({

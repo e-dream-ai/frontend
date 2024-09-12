@@ -9,7 +9,7 @@ export const FEATURES_QUERY_KEY = "getFeatures";
 const getFeatures = () => {
   return async () =>
     axiosClient
-      .get(`/feature`, {
+      .get(`/v1/feature`, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

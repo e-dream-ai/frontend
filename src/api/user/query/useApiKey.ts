@@ -13,7 +13,7 @@ type QueryFunctionParams = {
 const getApiKey = ({ id }: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/user/${id}/apikey`, {
+      .get(`/v1/user/${id}/apikey`, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

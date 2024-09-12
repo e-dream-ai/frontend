@@ -16,7 +16,7 @@ type QueryFunctionParams = {
 const getFeedMyDreams = ({ take, skip }: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/feed/my-dreams`, {
+      .get(`/v1/feed/my-dreams`, {
         params: {
           take,
           skip,

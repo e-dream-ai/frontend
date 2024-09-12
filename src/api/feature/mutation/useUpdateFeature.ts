@@ -11,7 +11,7 @@ export const UPDATE_FEATURE_MUTATION_KEY = "updateFeature";
 const updateFeature = () => {
   return async (values: UpdateFeatureRequestValues) => {
     return axiosClient
-      .put(`/feature`, values, {
+      .put(`/v1/feature`, values, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

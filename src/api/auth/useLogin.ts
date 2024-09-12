@@ -9,7 +9,7 @@ export const LOGIN_MUTATION_KEY = "login";
 
 const login = async (values: LoginFormValues) => {
   return axiosClient
-    .post(`/auth/login`, values, {
+    .post(`/v2/auth/login`, values, {
       headers: getRequestHeaders({
         contentType: ContentType.json,
       }),

@@ -26,7 +26,7 @@ const createDream = ({ t, onChangeUploadProgress }: CreateDreamProps) => {
     });
 
     return axiosClient
-      .post(`/dream`, formData, {
+      .post(`/v1/dream`, formData, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

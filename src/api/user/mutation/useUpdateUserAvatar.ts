@@ -19,7 +19,7 @@ const updateUserAvatar = ({ id }: MutateFunctionParams) => {
     formData.append(FILE_FORM.FILE, params?.file ?? "");
 
     return axiosClient
-      .put(`/user/${id}/avatar`, formData, {
+      .put(`/v1/user/${id}/avatar`, formData, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

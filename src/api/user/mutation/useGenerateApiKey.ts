@@ -10,7 +10,7 @@ const generateApiKey = ({ id }: { id?: number }) => {
   return async () => {
     return axiosClient
       .put(
-        `/user/${id}/apikey`,
+        `/v1/user/${id}/apikey`,
         {},
         {
           headers: getRequestHeaders({

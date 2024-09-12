@@ -11,7 +11,7 @@ const updatePlaylist = () => {
   return async (data: UpdatePlaylistRequestValues) => {
     const { uuid, values } = data;
     return axiosClient
-      .put(`/playlist/${uuid}`, values, {
+      .put(`/v1/playlist/${uuid}`, values, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

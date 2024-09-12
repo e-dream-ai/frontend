@@ -19,7 +19,7 @@ type RouteLink = {
 export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
   onClickMenuItem,
 }) => {
-  const { user /* ,logout */ } = useAuth();
+  const { user, isLoading /* ,logout */ } = useAuth();
   const { t } = useTranslation();
 
   const USER_NAV_ROUTES: Array<RouteLink> = [
@@ -98,6 +98,8 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
       showSlash: false,
     },
   ];
+
+  if (isLoading) return <></>;
 
   return (
     <StyledNavList>

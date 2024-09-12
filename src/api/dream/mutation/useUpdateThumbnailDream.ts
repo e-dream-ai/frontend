@@ -19,7 +19,7 @@ const updateThumbnailDream = ({ uuid }: MutateFunctionParams) => {
     formData.append(FILE_FORM.FILE, params?.file ?? "");
 
     return axiosClient
-      .put(`/dream/${uuid}/thumbnail`, formData, {
+      .put(`/v1/dream/${uuid}/thumbnail`, formData, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),

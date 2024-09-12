@@ -16,7 +16,7 @@ type QueryFunctionParams = {
 const getPlaylists = ({ take, skip }: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/playlist/my-playlists`, {
+      .get(`/v1/playlist/my-playlists`, {
         params: {
           take,
           skip,

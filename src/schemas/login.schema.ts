@@ -1,13 +1,13 @@
 import * as yup from "yup";
 
 export type LoginFormValues = {
-  username: string;
+  email: string;
   password: string;
 };
 
 export const LoginSchema = yup
   .object({
-    username: yup.string().email().required("Email is required."),
+    email: yup.string().email().required("Email is required."),
     password: yup.string().required("Password is required."),
   })
   .required();

@@ -9,7 +9,7 @@ export const VERIFY_EMAIL_MUTATION_KEY = "verifyEmail";
 
 const verifyEmail = async (values: VerifyEmailRequestValues) => {
   return axiosClient
-    .post(`/auth/code`, values, {
+    .post(`/v1/auth/code`, values, {
       headers: getRequestHeaders({
         contentType: ContentType.json,
       }),

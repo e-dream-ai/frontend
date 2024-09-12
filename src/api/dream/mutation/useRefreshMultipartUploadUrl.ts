@@ -18,7 +18,7 @@ const refreshMultipartUploadUrl = ({
 }: RefreshMultipartUploadUrlProps) => {
   return async ({ uuid, ...params }: RefreshMultipartUploadUrlFormValues) => {
     return axiosClient
-      .post(`/dream/${uuid}/refresh-multipart-upload-url`, params, {
+      .post(`/v1/dream/${uuid}/refresh-multipart-upload-url`, params, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),

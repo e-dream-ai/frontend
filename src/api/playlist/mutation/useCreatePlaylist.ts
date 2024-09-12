@@ -10,7 +10,7 @@ export const CREATE_PLAYLIST_MUTATION_KEY = "createPlaylist";
 const createPlaylist = () => {
   return async (params: CreatePlaylistFormValues) => {
     return axiosClient
-      .post(`/playlist`, params, {
+      .post(`/v1/playlist`, params, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),
