@@ -10,42 +10,20 @@ import { ApiResponse } from "@/types/api.types";
 import { Token, UserWithToken } from "@/types/auth.types";
 import { axiosClient } from "@/client/axios.client";
 
-type InterceptorGenerator = {
-  getItem: () => string | null;
-  handleRefreshUser: (user: UserWithToken | null) => void;
-};
+// type InterceptorGenerator = {
+//   getItem: () => string | null;
+//   handleRefreshUser: (user: UserWithToken | null) => void;
+// };
 
-const generateRequestInterceptor = async ({
-  getItem,
-}: InterceptorGenerator) => {
+const generateRequestInterceptor = async () => {
   /**
    * Axios request middleware
    */
   return axiosClient.interceptors.request.use(
     async (config) => {
-      const storagedUser = getItem();
-      if (!storagedUser) {
-        return config;
-      }
-      const user: UserWithToken = JSON.parse(storagedUser);
-      const accessToken: string = user.token?.AccessToken ?? "";
-
       /**
-       * refresh token before request
+       * No needs extra config since auth changed to cookies
        */
-      /*
-        const decoded = jwt_decode<{ exp?: number }>(accessToken ?? "");
-        const exp = decoded?.exp;
-        if (Boolean(exp) && Date.now() >= (exp || 0) * 1000) {
-          accessToken = await refreshAccessToken({ user, handleRefreshUser });
-        }
-      */
-
-      /**
-       * Config headers
-       */
-      config.headers.set("Access-Control-Allow-Origin", "*");
-      config.headers.set("Authorization", `Bearer ${accessToken}`);
       return config;
     },
     (error) => {
@@ -54,22 +32,16 @@ const generateRequestInterceptor = async ({
   );
 };
 
-const generateResponseInterceptor = async ({
-  getItem,
-  // handleRefreshUser,
-}: InterceptorGenerator) => {
+const generateResponseInterceptor = async () => {
   /**
    * Axios response middleware
    */
   return axiosClient.interceptors.response.use(
     (response) => response,
     async (error) => {
-      const storagedUser = getItem();
-      if (error.response.status === 401 && storagedUser) {
+      if (error.response.status === 401) {
+        // Handle unauthorized error
         // console.log("401 unauthorized");
-        // const user: UserWithToken = JSON.parse(storagedUser);
-        // await refreshAccessToken({ user, handleRefreshUser });
-        // return axiosClient.request(error.config);
       }
 
       return error.response;
@@ -129,19 +101,13 @@ export const useHttpInterceptors = (
   const responseInterceptorRef = useRef<number>();
 
   const generateInterceptors = useCallback(async () => {
-    const requestInterceptor = await generateRequestInterceptor({
-      getItem,
-      handleRefreshUser,
-    });
+    const requestInterceptor = await generateRequestInterceptor();
 
-    const responseInterceptor = await generateResponseInterceptor({
-      getItem,
-      handleRefreshUser,
-    });
+    const responseInterceptor = await generateResponseInterceptor();
 
     requestInterceptorRef.current = requestInterceptor;
     responseInterceptorRef.current = responseInterceptor;
-  }, [getItem, handleRefreshUser]);
+  }, []); // [getItem, handleRefreshUser]
 
   const cleanInterceptors = () => {
     if (requestInterceptorRef.current) {

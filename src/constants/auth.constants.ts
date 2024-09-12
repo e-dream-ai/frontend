@@ -24,7 +24,6 @@ export const getRequestHeaders = ({
   }
   return {
     ...contentTypeHeader,
-    "Access-Control-Allow-Origin": "*",
   };
 };
 
