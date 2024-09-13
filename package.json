@@ -42,7 +42,7 @@
   },
   "scripts": {
     "start": "vite --mode development",
-    "dev": "vite",
+    "dev": "vite --mode development",
     "build": "tsc && vite build --mode prod",
     "build:stage": "tsc && vite build --mode stage",
     "serve": "vite preview",

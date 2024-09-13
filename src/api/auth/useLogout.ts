@@ -1,6 +1,4 @@
 import { useMutation } from "@tanstack/react-query";
-// import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
-import { LogoutRequestValues } from "@/schemas/logout.schema";
 import { ApiResponse } from "@/types/api.types";
 import { axiosClient } from "@/client/axios.client";
 
@@ -13,7 +11,7 @@ const logout = async () => {
 };
 
 export const useLogout = () => {
-  return useMutation<ApiResponse<unknown>, Error, LogoutRequestValues>(logout, {
+  return useMutation<ApiResponse<unknown>, Error>(logout, {
     mutationKey: [LOGOUT_MUTATION_KEY],
   });
 };
