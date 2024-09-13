@@ -13,10 +13,11 @@ import ViewDreamPage from "@/components/pages/view-dream/view-dream.page";
 import { ViewPlaylistPage } from "@/components/pages/view-playlist/view-playlist.page";
 import { ROLES } from "@/constants/role.constants";
 import { ROUTES } from "@/constants/routes.constants";
-import { Outlet, createBrowserRouter } from "react-router-dom";
+import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
 import ProtectedRoute from "./protected-route";
 import { CreatePage } from "@/components/pages/create/create.page";
 import { Footer, Row } from "@/components/shared";
+import { AuthenticatePage } from "@/components/pages/authenticate/authenticate.page";
 import { LoginPage } from "@/components/pages/login/login.page";
 import { SignupPage } from "@/components/pages/signup/signup.page";
 import PublicRoute from "@/routes/public-route";
@@ -49,7 +50,7 @@ export const router = createBrowserRouter([
               ROLES.ADMIN_GROUP,
             ]}
           >
-            <ProfilePage isMyProfile />
+            <Navigate to={ROUTES.MY_PROFILE} replace />;
           </ProtectedRoute>
         ),
       },
@@ -211,6 +212,14 @@ export const router = createBrowserRouter([
           >
             <LearnMorePage />
           </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.AUTHENTICATE,
+        element: (
+          <PublicRoute>
+            <AuthenticatePage />
+          </PublicRoute>
         ),
       },
       {

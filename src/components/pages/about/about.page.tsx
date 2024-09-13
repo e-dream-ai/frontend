@@ -20,24 +20,25 @@ export const AboutPage: React.FC = () => {
             greatest artists.
           </p>
           <p>
-            Install e-dream on your Mac to get the best experience,
-            including interaction and screensaver integration.
-            The e-dream native client provides unsurpassed support for
-            ambient situations, including adjustable slow and smooth
-	    playback.
+            Install e-dream on your Mac to get the best experience, including
+            interaction and screensaver integration. The e-dream native client
+            provides unsurpassed support for ambient situations, including
+            adjustable slow and smooth playback.
           </p>
           <p>
             Install the web app on your phone to remote-control your e-dream
             from anywhere.
-	  </p>
+          </p>
           <p>
             Curate playlists, connect and learn from other fans on Discord or
             social media. Become a creator yourself!
           </p>
           <p>
-            <Anchor href="/signup">Sign up</Anchor>, then{" "}
-            <Anchor href="/install">install</Anchor> the native client, and
-            begin the experience.
+            <Anchor href={import.meta.env.VITE_WORKOS_FORGOT_PASSWORD_URL}>
+              Sign up
+            </Anchor>
+            , then <Anchor href="/install">install</Anchor> the native client,
+            and begin the experience.
           </p>
         </Text>
       </Section>

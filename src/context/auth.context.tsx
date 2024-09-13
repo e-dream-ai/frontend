@@ -8,20 +8,20 @@ import React, {
   useMemo,
   useState,
 } from "react";
-import { UserWithToken } from "@/types/auth.types";
+import { User } from "@/types/auth.types";
 import useLogout from "@/api/auth/useLogout";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
-import { useCurrentUser } from "@/api/user/query/useCurrentUser";
+import { useAuthenticateUser } from "@/api/user/query/useAuthenticateUser";
 
 type AuthContextType = {
-  user: UserWithToken | null;
-  login: (user: UserWithToken) => void;
+  user: User | null;
+  login: (user: User) => void;
   logout: () => void;
   isLoading: boolean;
-  setLoggedUser: (user: UserWithToken | null) => void;
+  setLoggedUser: (user: User | null) => void;
 };
 
 export const AuthContext = createContext<AuthContextType>(
@@ -31,17 +31,17 @@ export const AuthContext = createContext<AuthContextType>(
 export const AuthProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
-  const currentUserQuery = useCurrentUser();
+  const currentUserQuery = useAuthenticateUser();
   const logoutMutation = useLogout();
   const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSessionVerified, setIsSessionVerified] = useState<boolean>(false);
   const { setItem, removeItem } = useLocalStorage(AUTH_LOCAL_STORAGE_KEY);
-  const [user, setUser] = useState<UserWithToken | null>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   const setLoggedUser = useCallback(
-    (user: UserWithToken | null) => {
+    (user: User | null) => {
       setUser(user);
       if (user) {
         setItem(JSON.stringify(user));
@@ -54,8 +54,8 @@ export const AuthProvider: React.FC<{
 
   useHttpInterceptors({ handleRefreshUser: setLoggedUser }, [user]);
 
-  const login: (user: UserWithToken) => void = useCallback(
-    (user: UserWithToken) => {
+  const login: (user: User) => void = useCallback(
+    (user: User) => {
       setLoggedUser(user);
     },
     [setLoggedUser],
@@ -63,9 +63,7 @@ export const AuthProvider: React.FC<{
 
   const fetchLogout = useCallback(async () => {
     try {
-      const data = await logoutMutation.mutateAsync({
-        refreshToken: user?.token?.RefreshToken ?? "",
-      });
+      const data = await logoutMutation.mutateAsync();
 
       if (data.success) {
         toast.success(t("modal.logout.user_logged_out_successfully"));
@@ -78,7 +76,7 @@ export const AuthProvider: React.FC<{
     } catch (error) {
       toast.error(t("modal.logout.error_signingout_user"));
     }
-  }, [t, user, logoutMutation]);
+  }, [t, logoutMutation]);
 
   const logout = useCallback(async () => {
     await fetchLogout();
@@ -92,7 +90,7 @@ export const AuthProvider: React.FC<{
       const fetchedUser = currentUserRequest.data?.data?.user;
 
       if (fetchedUser) {
-        setLoggedUser({ ...fetchedUser } as UserWithToken);
+        setLoggedUser({ ...fetchedUser } as User);
       }
       setIsLoading(false);
       setIsSessionVerified(true);

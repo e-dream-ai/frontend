@@ -5,10 +5,8 @@ import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import { Anchor, Button, Column, Input, Row } from "@/components/shared";
 import InputPassword from "@/components/shared/input-password/input-password";
-import { ModalsKeys } from "@/constants/modal.constants";
 import { ROLES_NAMES } from "@/constants/role.constants";
 import { useAuth } from "@/hooks/useAuth";
-import useModal from "@/hooks/useModal";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -27,11 +25,6 @@ const SECTION_ID = "login";
 
 export const LoginPage: React.FC = () => {
   const { t } = useTranslation();
-  const { showModal } = useModal();
-
-  const handleOpenForgotPasswordModal = () => {
-    showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
-  };
 
   const { login } = useAuth();
 
@@ -97,12 +90,14 @@ export const LoginPage: React.FC = () => {
             <Row justifyContent="space-between" mb="0.4rem">
               <Column>
                 <Row mb="0.6rem">
-                  <Anchor href="/signup">
+                  <Anchor href={import.meta.env.VITE_WORKOS_SIGNUP_URL}>
                     {t("page.login.dont_have_account")}
                   </Anchor>
                 </Row>
                 <Row mb="0.4rem">
-                  <Anchor onClick={handleOpenForgotPasswordModal}>
+                  <Anchor
+                    href={import.meta.env.VITE_WORKOS_FORGOT_PASSWORD_URL}
+                  >
                     {t("page.login.forgot_your_password")}
                   </Anchor>
                 </Row>

@@ -4,12 +4,12 @@ import { ApiResponse } from "@/types/api.types";
 import { User } from "@/types/auth.types";
 import { axiosClient } from "@/client/axios.client";
 
-export const CURRENT_USER_QUERY_KEY = "getCurrentUser";
+export const AUTHENTICATE_USER_QUERY_KEY = "getAuthenticatedUser";
 
-const getCurrentUser = () => {
+const getAuthenticatedUser = () => {
   return async () =>
     axiosClient
-      .get(`/v1/user/current`, {
+      .get(`/v2/auth/authenticate`, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),
@@ -17,10 +17,10 @@ const getCurrentUser = () => {
       .then((res) => res.data);
 };
 
-export const useCurrentUser = () => {
+export const useAuthenticateUser = () => {
   return useQuery<ApiResponse<{ user: User }>, Error>(
-    [CURRENT_USER_QUERY_KEY],
-    getCurrentUser(),
+    [AUTHENTICATE_USER_QUERY_KEY],
+    getAuthenticatedUser(),
     {
       refetchOnReconnect: false,
       refetchOnWindowFocus: false,
