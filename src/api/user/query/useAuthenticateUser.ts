@@ -22,9 +22,12 @@ export const useAuthenticateUser = () => {
     [AUTHENTICATE_USER_QUERY_KEY],
     getAuthenticatedUser(),
     {
-      refetchOnReconnect: false,
+      /**
+       * Make sure is only called on page load and with no retries
+       */
       refetchOnWindowFocus: false,
       enabled: false,
+      retry: false,
     },
   );
 };

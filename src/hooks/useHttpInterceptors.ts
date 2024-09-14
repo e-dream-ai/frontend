@@ -1,53 +1,9 @@
 import { URL } from "@/constants/api.constants";
-import {
-  AUTH_LOCAL_STORAGE_KEY,
-  ContentType,
-  getRequestHeaders,
-} from "@/constants/auth.constants";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { useCallback, useEffect, useRef } from "react";
 import { ApiResponse } from "@/types/api.types";
 import { Token, UserWithToken } from "@/types/auth.types";
 import { axiosClient } from "@/client/axios.client";
-
-// type InterceptorGenerator = {
-//   getItem: () => string | null;
-//   handleRefreshUser: (user: UserWithToken | null) => void;
-// };
-
-const generateRequestInterceptor = async () => {
-  /**
-   * Axios request middleware
-   */
-  return axiosClient.interceptors.request.use(
-    async (config) => {
-      /**
-       * No needs extra config since auth changed to cookies
-       */
-      return config;
-    },
-    (error) => {
-      console.error(error);
-    },
-  );
-};
-
-const generateResponseInterceptor = async () => {
-  /**
-   * Axios response middleware
-   */
-  return axiosClient.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-      if (error.response.status === 401) {
-        // Handle unauthorized error
-        // console.log("401 unauthorized");
-      }
-
-      return error.response;
-    },
-  );
-};
 
 export const refreshAccessToken = async ({
   user,
@@ -88,15 +44,48 @@ export const refreshAccessToken = async ({
   }
 };
 
+const generateRequestInterceptor = async () => {
+  /**
+   * Axios request middleware
+   */
+  return axiosClient.interceptors.request.use(
+    async (config) => {
+      /**
+       * No needs extra config since auth changed to cookies
+       */
+      return config;
+    },
+    (error) => {
+      console.error(error);
+    },
+  );
+};
+
+const generateResponseInterceptor = async () => {
+  /**
+   * Axios response middleware
+   */
+  return axiosClient.interceptors.response.use(
+    (response) => response,
+    async (error) => {
+      if (error.response.status === 401) {
+        // Handle unauthorized error
+        // console.log("401 unauthorized");
+      }
+
+      return error.response;
+    },
+  );
+};
+
 type UseHttpInterceptorsProps = {
   handleRefreshUser: (user: UserWithToken | null) => void;
 };
 
 export const useHttpInterceptors = (
-  { handleRefreshUser }: UseHttpInterceptorsProps,
+  _: UseHttpInterceptorsProps,
   deps: Array<unknown>,
 ) => {
-  const { getItem } = useLocalStorage(AUTH_LOCAL_STORAGE_KEY);
   const requestInterceptorRef = useRef<number>();
   const responseInterceptorRef = useRef<number>();
 
@@ -107,7 +96,7 @@ export const useHttpInterceptors = (
 
     requestInterceptorRef.current = requestInterceptor;
     responseInterceptorRef.current = responseInterceptor;
-  }, []); // [getItem, handleRefreshUser]
+  }, []);
 
   const cleanInterceptors = () => {
     if (requestInterceptorRef.current) {
@@ -123,7 +112,7 @@ export const useHttpInterceptors = (
     return () => {
       cleanInterceptors();
     };
-  }, [getItem, handleRefreshUser, generateInterceptors, deps]);
+  }, [generateInterceptors, deps]);
 
   return [];
 };

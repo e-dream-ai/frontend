@@ -31,7 +31,7 @@ export const AuthContext = createContext<AuthContextType>(
 export const AuthProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
-  const currentUserQuery = useAuthenticateUser();
+  const authenticateUserQuery = useAuthenticateUser();
   const logoutMutation = useLogout();
   const { t } = useTranslation();
 
@@ -86,8 +86,8 @@ export const AuthProvider: React.FC<{
   const fetchUser = useCallback(async () => {
     try {
       setIsLoading(true);
-      const currentUserRequest = await currentUserQuery.refetch();
-      const fetchedUser = currentUserRequest.data?.data?.user;
+      const authenticateUserRequest = await authenticateUserQuery.refetch();
+      const fetchedUser = authenticateUserRequest.data?.data?.user;
 
       if (fetchedUser) {
         setLoggedUser({ ...fetchedUser } as User);
@@ -99,7 +99,7 @@ export const AuthProvider: React.FC<{
       setIsLoading(false);
       setIsSessionVerified(true);
     }
-  }, [currentUserQuery, setLoggedUser, logout]);
+  }, [authenticateUserQuery, setLoggedUser, logout]);
 
   useEffect(() => {
     /**
