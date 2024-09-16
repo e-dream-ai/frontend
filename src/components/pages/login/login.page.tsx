@@ -90,7 +90,7 @@ export const LoginPage: React.FC = () => {
             <Row justifyContent="space-between" mb="0.4rem">
               <Column>
                 <Row mb="0.6rem">
-                  <Anchor href={import.meta.env.VITE_WORKOS_SIGNUP_URL}>
+                  <Anchor href={ROUTES.SIGNUP}>
                     {t("page.login.dont_have_account")}
                   </Anchor>
                 </Row>

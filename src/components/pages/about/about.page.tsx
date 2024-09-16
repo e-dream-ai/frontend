@@ -3,6 +3,7 @@ import { Anchor } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import Text from "@/components/shared/text/text";
+import { ROUTES } from "@/constants/routes.constants";
 import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "about";
@@ -34,7 +35,7 @@ export const AboutPage: React.FC = () => {
             social media. Become a creator yourself!
           </p>
           <p>
-            <Anchor href={import.meta.env.VITE_WORKOS_FORGOT_PASSWORD_URL}>
+            <Anchor href={ROUTES.SIGNUP}>
               Sign up
             </Anchor>
             , then <Anchor href="/install">install</Anchor> the native client,

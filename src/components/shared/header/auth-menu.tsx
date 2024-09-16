@@ -89,7 +89,7 @@ export const AuthMenu: React.FC = () => {
           <AuthAnchor
             text={t("header.signup")}
             icon={<FontAwesomeIcon icon={faPencil} />}
-            href={import.meta.env.VITE_WORKOS_SIGNUP_URL}
+            href={ROUTES.SIGNUP}
           />
           <Divider>/</Divider>
           <AuthAnchor
