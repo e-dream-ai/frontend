@@ -9,7 +9,6 @@ export type SignupFormValues = {
 };
 
 export type SignupRequestValues = {
-  username: string;
   email: string;
   password: string;
   code?: string;

@@ -8,7 +8,7 @@ export const SIGNUP_MUTATION_KEY = "signup";
 
 const signup = async (values: SignupRequestValues) => {
   return axiosClient
-    .post(`/v1/auth/signup`, values, {
+    .post(`/v2/auth/signup`, values, {
       headers: getRequestHeaders({
         contentType: ContentType.json,
       }),

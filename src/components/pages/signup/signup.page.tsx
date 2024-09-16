@@ -75,7 +75,6 @@ export const SignupPage: React.FC = () => {
   const onSubmit = (data: SignupFormValues) => {
     mutate(
       {
-        username: data.username,
         email: data.username,
         password: data.password,
         code: data.code,
