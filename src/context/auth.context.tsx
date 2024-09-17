@@ -1,6 +1,4 @@
-import { AUTH_LOCAL_STORAGE_KEY } from "@/constants/auth.constants";
 import { useHttpInterceptors } from "@/hooks/useHttpInterceptors";
-import { useLocalStorage } from "@/hooks/useLocalStorage";
 import React, {
   createContext,
   useCallback,
@@ -37,19 +35,14 @@ export const AuthProvider: React.FC<{
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSessionVerified, setIsSessionVerified] = useState<boolean>(false);
-  const { setItem, removeItem } = useLocalStorage(AUTH_LOCAL_STORAGE_KEY);
+
   const [user, setUser] = useState<User | null>(null);
 
   const setLoggedUser = useCallback(
     (user: User | null) => {
       setUser(user);
-      if (user) {
-        setItem(JSON.stringify(user));
-      } else {
-        removeItem();
-      }
     },
-    [setUser, setItem, removeItem],
+    [setUser],
   );
 
   useHttpInterceptors({ handleRefreshUser: setLoggedUser }, [user]);
