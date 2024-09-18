@@ -17,9 +17,14 @@ import { useAuthenticateUser } from "@/api/user/query/useAuthenticateUser";
 type AuthContextType = {
   user: User | null;
   login: (user: User) => void;
-  logout: () => void;
+  authenticateUser: () => Promise<void>;
+  logout: (options?: LogoutOptions) => Promise<void>;
   isLoading: boolean;
   setLoggedUser: (user: User | null) => void;
+};
+
+type LogoutOptions = {
+  callFetchLogout?: boolean;
 };
 
 export const AuthContext = createContext<AuthContextType>(
@@ -45,8 +50,6 @@ export const AuthProvider: React.FC<{
     [setUser],
   );
 
-  useHttpInterceptors({ handleRefreshUser: setLoggedUser }, [user]);
-
   const login: (user: User) => void = useCallback(
     (user: User) => {
       setLoggedUser(user);
@@ -71,19 +74,27 @@ export const AuthProvider: React.FC<{
     }
   }, [t, logoutMutation]);
 
-  const logout = useCallback(async () => {
-    await fetchLogout();
-    setLoggedUser(null);
-  }, [setLoggedUser, fetchLogout]);
+  const logout = useCallback(
+    async (options: LogoutOptions = { callFetchLogout: false }) => {
+      const { callFetchLogout = true } = options;
 
-  const fetchUser = useCallback(async () => {
+      if (callFetchLogout) {
+        await fetchLogout();
+      }
+
+      setLoggedUser(null);
+    },
+    [setLoggedUser, fetchLogout],
+  );
+
+  const authenticateUser = useCallback(async () => {
     try {
       setIsLoading(true);
       const authenticateUserRequest = await authenticateUserQuery.refetch();
       const fetchedUser = authenticateUserRequest.data?.data?.user;
 
       if (fetchedUser) {
-        setLoggedUser({ ...fetchedUser } as User);
+        login(fetchedUser);
       }
       setIsLoading(false);
       setIsSessionVerified(true);
@@ -92,27 +103,29 @@ export const AuthProvider: React.FC<{
       setIsLoading(false);
       setIsSessionVerified(true);
     }
-  }, [authenticateUserQuery, setLoggedUser, logout]);
+  }, [authenticateUserQuery, login, logout]);
+
+  useHttpInterceptors({ logout }, [user]);
 
   useEffect(() => {
     /**
-     * If sesion is not verified, fetchUser
+     * If sesion is not verified, authenticateUser
      */
-
     if (!isSessionVerified) {
-      fetchUser();
+      authenticateUser();
     }
-  }, [isSessionVerified, setIsSessionVerified, fetchUser]);
+  }, [isSessionVerified, setIsSessionVerified, authenticateUser]);
 
   const memoedValue = useMemo(
     () => ({
       user,
       login,
+      authenticateUser,
       logout,
       isLoading,
       setLoggedUser,
     }),
-    [user, login, logout, isLoading, setLoggedUser],
+    [user, login, authenticateUser, logout, isLoading, setLoggedUser],
   );
 
   return (
