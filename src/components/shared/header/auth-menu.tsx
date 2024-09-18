@@ -82,7 +82,7 @@ export const AuthMenu: React.FC = () => {
           <AnchorLink type="tertiary" to={ROUTES.INVITES}>
             <MenuItem onClick={() => ({})}>{t("header.invites")}</MenuItem>
           </AnchorLink>
-          <MenuItem onClick={logout}>{t("header.logout")}</MenuItem>
+          <MenuItem onClick={() => logout()}>{t("header.logout")}</MenuItem>
         </Menu>
       ) : (
         <>
