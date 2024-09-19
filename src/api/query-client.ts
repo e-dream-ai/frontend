@@ -4,14 +4,18 @@ import axios from "axios";
 export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
+      /**
+       * Disables refetch on focus
+       * This refetch affects authentication after socket reconnection and is not needed
+       */
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: false,
       retry: (failureCount, error) => {
         // Check if the error is an AxiosError
         if (axios.isAxiosError(error)) {
-          console.log({ error });
           if (error.response) {
             // Don't retry on 401 errors
             if (error.response.status === 401) {
-              console.log("401 not retry");
               return false;
             }
             // Retry on 5xx errors

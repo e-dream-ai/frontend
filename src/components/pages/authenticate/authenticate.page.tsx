@@ -35,7 +35,6 @@ export const AuthenticatePage: React.FC = () => {
                 role: t(ROLES_NAMES[user?.role?.name ?? ""]),
               })} ${t("page.login.welcome_user", { username: user.email })}`,
             );
-            console.log("redirecting playlist");
             router.navigate(ROUTES.PLAYLISTS);
           } else {
             toast.error(`${t("page.login.error_logging_in")} ${data.message}`);
