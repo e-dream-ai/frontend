@@ -40,7 +40,6 @@ export const useDreams = ({ page = 0 }: HookParams) => {
     [DREAMS_QUERY_KEY, page],
     getDreams({ take, skip }),
     {
-      refetchOnWindowFocus: false,
       enabled: Boolean(user),
     },
   );

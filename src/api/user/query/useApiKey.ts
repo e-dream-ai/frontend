@@ -30,7 +30,6 @@ export const useApiKey = ({ id }: HookParams) => {
     [APIKEY_QUERY_KEY],
     getApiKey({ id }),
     {
-      refetchOnWindowFocus: false,
       enabled: Boolean(id),
     },
   );

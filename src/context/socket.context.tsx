@@ -92,6 +92,7 @@ export const SocketProvider: React.FC<{
         // Tab focused and checking connection
         if (!socketRef.current.connected) {
           // Attempting to reconnect
+          socketRef.current.disconnect();
           await authenticateUser();
           socketRef.current.connect();
         } else {

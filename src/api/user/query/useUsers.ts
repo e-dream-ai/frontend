@@ -53,7 +53,6 @@ export const useUsers = ({
     [USERS_QUERY_KEY, page, search, take, role],
     getUsers({ take, skip, search, role }),
     {
-      refetchOnWindowFocus: false,
       enabled: Boolean(user),
     },
   );

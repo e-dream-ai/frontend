@@ -40,7 +40,6 @@ export const useInvites = ({ page = 0 }: HookParams) => {
     [INVITES_QUERY_KEY, page],
     getInvites({ take, skip }),
     {
-      refetchOnWindowFocus: false,
       enabled: Boolean(user),
     },
   );

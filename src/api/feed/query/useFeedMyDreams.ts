@@ -40,7 +40,6 @@ export const useFeedMyDreams = ({ page = 0 }: HookParams) => {
     [FEED_MY_DREAMS_QUERY_KEY, page],
     getFeedMyDreams({ take, skip }),
     {
-      refetchOnWindowFocus: false,
       enabled: Boolean(user),
     },
   );

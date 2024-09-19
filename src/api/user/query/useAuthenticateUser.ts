@@ -25,7 +25,6 @@ export const useAuthenticateUser = () => {
       /**
        * Make sure is only called on page load and with no retries
        */
-      refetchOnWindowFocus: false,
       enabled: false,
       retry: false,
     },

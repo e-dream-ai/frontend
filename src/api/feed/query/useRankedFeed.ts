@@ -40,7 +40,6 @@ export const useRankedFeed = ({ page = 0 }: HookParams) => {
     [RANKED_FEED_QUERY_KEY, page],
     getRankedFeed({ take, skip }),
     {
-      refetchOnWindowFocus: false,
       enabled: Boolean(user),
     },
   );

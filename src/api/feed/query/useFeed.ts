@@ -49,7 +49,6 @@ export const useFeed = ({ page = 0, userId, search, type }: HookParams) => {
     [FEED_QUERY_KEY, page, search, type],
     getFeed({ take, skip, userId, search, type }),
     {
-      refetchOnWindowFocus: false,
       enabled: Boolean(user),
     },
   );

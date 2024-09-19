@@ -40,7 +40,6 @@ export const useMyPlaylists = ({ page = 0 }: HookParams) => {
     [MY_PLAYLISTS_QUERY_KEY, page],
     getPlaylists({ take, skip }),
     {
-      refetchOnWindowFocus: false,
       enabled: Boolean(user),
     },
   );

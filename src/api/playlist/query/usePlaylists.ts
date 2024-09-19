@@ -46,7 +46,6 @@ export const usePlaylists = ({ page = 0, search }: HookParams) => {
     [PLAYLISTS_QUERY_KEY, userId, page, search, take],
     getPlaylists({ take, skip, userId, search }),
     {
-      refetchOnWindowFocus: false,
       enabled: Boolean(user),
     },
   );

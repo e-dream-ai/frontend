@@ -48,7 +48,6 @@ export const useRoles = ({
     [ROLES_QUERY_KEY, page, search, take],
     getRoles({ take, skip, search }),
     {
-      refetchOnWindowFocus: false,
       enabled: Boolean(user),
     },
   );

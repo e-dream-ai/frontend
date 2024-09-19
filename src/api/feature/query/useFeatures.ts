@@ -21,8 +21,5 @@ export const useFeatures = () => {
   return useQuery<ApiResponse<{ features: Feature[] }>, Error>(
     [FEATURES_QUERY_KEY],
     getFeatures(),
-    {
-      refetchOnWindowFocus: false,
-    },
   );
 };
