@@ -12,8 +12,8 @@ export type SignupFormValues = {
 
 export type SignupRequestValues = {
   email: string;
-  firstName: string;
-  lastName: string;
+  firstname: string;
+  lastname: string;
   password: string;
   code?: string;
 };

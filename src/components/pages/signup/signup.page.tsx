@@ -79,8 +79,8 @@ export const SignupPage: React.FC = () => {
     mutate(
       {
         email: data.email,
-        firstName: data.firstName,
-        lastName: data.lastName,
+        firstname: data.firstName,
+        lastname: data.lastName,
         password: data.password,
         code: data.code,
       },
