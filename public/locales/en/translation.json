@@ -50,6 +50,8 @@
     "signup": {
       "title": "Sign up",
       "email": "Email",
+      "first_name": "First name",
+      "last_name": "Last name",
       "password": "Password",
       "confirm_password": "Confirm Password",
       "code": "Invitation Code",

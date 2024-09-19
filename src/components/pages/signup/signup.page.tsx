@@ -23,6 +23,7 @@ import {
   faEnvelope,
   faKey,
   faLock,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import InputPassword from "@/components/shared/input-password/input-password";
 import { ROUTES } from "@/constants/routes.constants";
@@ -64,7 +65,9 @@ export const SignupPage: React.FC = () => {
     resolver: yupResolver(signupSchema),
     values: {
       code,
-      username: email,
+      email: email,
+      firstName: "",
+      lastName: "",
       password: "",
       confirmPassword: "",
     },
@@ -75,7 +78,9 @@ export const SignupPage: React.FC = () => {
   const onSubmit = (data: SignupFormValues) => {
     mutate(
       {
-        email: data.username,
+        email: data.email,
+        firstName: data.firstName,
+        lastName: data.lastName,
         password: data.password,
         code: data.code,
       },
@@ -115,8 +120,22 @@ export const SignupPage: React.FC = () => {
               placeholder={t("page.signup.email")}
               type="email"
               before={<FontAwesomeIcon icon={faEnvelope} />}
-              error={errors.username?.message}
-              {...register("username")}
+              error={errors.email?.message}
+              {...register("email")}
+            />
+            <Input
+              placeholder={t("page.signup.first_name")}
+              type="text"
+              before={<FontAwesomeIcon icon={faUser} />}
+              error={errors.firstName?.message}
+              {...register("firstName")}
+            />
+            <Input
+              placeholder={t("page.signup.last_name")}
+              type="lastName"
+              before={<FontAwesomeIcon icon={faUser} />}
+              error={errors.lastName?.message}
+              {...register("lastName")}
             />
             <InputPassword
               placeholder={t("page.signup.password")}

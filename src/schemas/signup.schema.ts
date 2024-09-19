@@ -1,7 +1,9 @@
 import * as yup from "yup";
 
 export type SignupFormValues = {
-  username: string;
+  email: string;
+  firstName: string;
+  lastName: string;
   password: string;
   confirmPassword: string;
   code?: string;
@@ -10,6 +12,8 @@ export type SignupFormValues = {
 
 export type SignupRequestValues = {
   email: string;
+  firstName: string;
+  lastName: string;
   password: string;
   code?: string;
 };
@@ -33,7 +37,9 @@ export const confirmPasswordSchemaProperty = yup
 
 export const getSignupSchema = (isSignupCodeActive: boolean) =>
   yup.object({
-    username: yup.string().email().required("Email is required."),
+    email: yup.string().email().required("Email is required."),
+    firstName: yup.string().required().max(50),
+    lastName: yup.string().required().max(50),
     password: passwordSchemaProperty,
     confirmPassword: confirmPasswordSchemaProperty,
     code: isSignupCodeActive
