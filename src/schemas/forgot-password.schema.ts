@@ -1,13 +1,11 @@
 import * as yup from "yup";
 
-export type ForgotPasswordFormValues = {
-  username: string;
+export type CreatePasswordResetFormValues = {
+  email: string;
 };
 
-export const ForgotPasswordSchema = yup
+export const CreatePasswordResetSchema = yup
   .object({
-    username: yup.string().email().required(),
+    email: yup.string().email().required(),
   })
   .required();
-
-export default ForgotPasswordSchema;
