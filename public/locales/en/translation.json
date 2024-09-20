@@ -244,7 +244,7 @@
       "title": "Forgot your password?",
       "email": "Email",
       "send": "Send",
-      "sent_instructions_successfully": "Successfully sent instructions.",
+      "sent_instructions_successfully": "Password reset created, wait for email instructions.",
       "error_sending_instructions": "Error sending instructions."
     },
     "create": {

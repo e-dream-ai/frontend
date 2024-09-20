@@ -20,12 +20,14 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 import { StyledLogin } from "./login.styled";
+import useModal from "@/hooks/useModal";
+import { ModalsKeys } from "@/constants/modal.constants";
 
 const SECTION_ID = "login";
 
 export const LoginPage: React.FC = () => {
   const { t } = useTranslation();
-
+  const { showModal } = useModal();
   const { login } = useAuth();
 
   const {
@@ -38,6 +40,10 @@ export const LoginPage: React.FC = () => {
   });
 
   const { mutate, isLoading } = useLogin();
+
+  const handleOpenForgotPasswordModal = () => {
+    showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
+  };
 
   const onSubmit = (data: LoginFormValues) => {
     mutate(
@@ -95,9 +101,7 @@ export const LoginPage: React.FC = () => {
                   </Anchor>
                 </Row>
                 <Row mb="0.4rem">
-                  <Anchor
-                    href={import.meta.env.VITE_WORKOS_FORGOT_PASSWORD_URL}
-                  >
+                  <Anchor onClick={handleOpenForgotPasswordModal}>
                     {t("page.login.forgot_your_password")}
                   </Anchor>
                 </Row>

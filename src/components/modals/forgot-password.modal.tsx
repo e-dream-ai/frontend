@@ -1,15 +1,14 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import useForgotPassword from "@/api/auth/useForgotPassword";
+import useCreatePasswordReset from "@/api/auth/useCreatePasswordReset";
 import { Button, Input, Modal, Row } from "@/components/shared";
 import { ModalsKeys } from "@/constants/modal.constants";
-import { ROUTES } from "@/constants/routes.constants";
 import useModal from "@/hooks/useModal";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { router } from "@/routes/router";
-import ForgotPasswordSchema, {
-  ForgotPasswordFormValues,
+import  {
+  CreatePasswordResetSchema,
+  CreatePasswordResetFormValues,
 } from "@/schemas/forgot-password.schema";
 import { ModalComponent } from "@/types/modal.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -23,20 +22,20 @@ export const ForgotPasswordModal: React.FC<
   const { t } = useTranslation();
   const { hideModal } = useModal();
   const handleHideModal = () => hideModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
-  const { mutate, isLoading } = useForgotPassword();
+  const { mutate, isLoading } = useCreatePasswordReset();
 
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<ForgotPasswordFormValues>({
-    resolver: yupResolver(ForgotPasswordSchema),
+  } = useForm<CreatePasswordResetFormValues>({
+    resolver: yupResolver(CreatePasswordResetSchema),
   });
 
-  const onSubmit = (formData: ForgotPasswordFormValues) => {
+  const onSubmit = (formData: CreatePasswordResetFormValues) => {
     mutate(
-      { username: formData.username },
+      { email: formData.email },
       {
         onSuccess: (data) => {
           if (data.success) {
@@ -45,9 +44,6 @@ export const ForgotPasswordModal: React.FC<
             );
             reset();
             handleHideModal();
-            router.navigate(ROUTES.CONFIRM_FORGOT_PASSWORD, {
-              state: { username: formData.username },
-            });
           } else {
             toast.error(
               `${t("modal.forgot_password.error_sending_instructions")} ${
@@ -74,8 +70,8 @@ export const ForgotPasswordModal: React.FC<
           placeholder={t("modal.forgot_password.email")}
           type="email"
           before={<FontAwesomeIcon icon={faEnvelope} />}
-          error={errors.username?.message}
-          {...register("username")}
+          error={errors.email?.message}
+          {...register("email")}
         />
 
         <Row justifyContent="flex-end">
