@@ -6,6 +6,7 @@ import {
   ModalsKeys,
 } from "@/constants/modal.constants";
 import React, { createContext, useCallback, useMemo, useReducer } from "react";
+import ReactGA from 'react-ga';
 
 const initialState: ModalState = {
   forgotPasswordModal: false,
@@ -39,6 +40,7 @@ export const ModalProvider: React.FC<{
 
   const showModal = useCallback((modal: ModalsKeys) => {
     dispatch({ type: ModalActionType.SHOW, target: modal });
+    ReactGA.modalview(modal);
   }, []);
 
   const hideModal = useCallback((modal: ModalsKeys) => {

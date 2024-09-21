@@ -37,6 +37,13 @@ export const SocketProvider: React.FC<{
   const socketRef = useRef<Socket>();
 
   const generateSocketInstance = useCallback(() => {
+    /**
+     * If there's no user don't create instance
+     */
+    if (!user) {
+      return;
+    }
+
     const newSocket = socketIO(`${SOCKET_URL}/${REMOTE_CONTROL_NAMESPACE}`, {
       /**
        * 5 seconds timeout
@@ -66,6 +73,7 @@ export const SocketProvider: React.FC<{
        */
       if (user && error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED) {
         // Handle unauthorized error
+        console.log("REDIRECT TO LOGIN FROM SOCKET", { error });
         queryClient.clear();
         await logout();
         router.navigate(ROUTES.LOGIN);
@@ -84,6 +92,7 @@ export const SocketProvider: React.FC<{
   }, [user, logout]);
 
   useEffect(() => {
+    console.log("generating new socket intance", { user });
     socketRef.current = generateSocketInstance();
 
     // Handle reconnection
@@ -93,8 +102,9 @@ export const SocketProvider: React.FC<{
         if (!socketRef.current.connected) {
           // Attempting to reconnect
           socketRef.current.disconnect();
+          console.log("AUTHENTICATE USER FROM SOCKET RECONNECTION");
           await authenticateUser();
-          socketRef.current.connect();
+          // socketRef.current.connect();
         } else {
           // Socket already connected
         }
@@ -110,8 +120,8 @@ export const SocketProvider: React.FC<{
 
     return () => {
       // Disconnect socket and set socketRef to undefined
-      if (socketRef.current && socketRef.current.connected) {
-        socketRef.current?.disconnect();
+      if (socketRef.current) {
+        socketRef.current.disconnect();
         socketRef.current = undefined;
       }
 

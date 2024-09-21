@@ -13,7 +13,7 @@ import ViewDreamPage from "@/components/pages/view-dream/view-dream.page";
 import { ViewPlaylistPage } from "@/components/pages/view-playlist/view-playlist.page";
 import { ROLES } from "@/constants/role.constants";
 import { ROUTES } from "@/constants/routes.constants";
-import { Navigate, Outlet, createBrowserRouter } from "react-router-dom";
+import { Navigate, Outlet, createBrowserRouter, useLocation } from "react-router-dom";
 import ProtectedRoute from "./protected-route";
 import { CreatePage } from "@/components/pages/create/create.page";
 import { Footer, Row } from "@/components/shared";
@@ -24,15 +24,29 @@ import PublicRoute from "@/routes/public-route";
 import PlaylistsFeedPage from "@/components/pages/playlist-feed/playlist-feed";
 import PlaygroundPage from "@/components/pages/playground/playground.page";
 import NotFoundPage from "@/components/pages/not-found/not-found.page";
+import { useEffect } from "react";
+import ReactGA from 'react-ga';
 
-export const RootElement = () => (
-  <>
-    <Header />
-    <Outlet />
-    <Row mb={["180px", "120px", "100px"]} />
-    <Footer />
-  </>
-);
+
+export const RootElement = () => {
+  const location = useLocation();
+
+  /**
+   * Register pageview on location changes
+   */
+  useEffect(() => {
+    ReactGA.pageview(location.pathname + location.search);
+  }, [location]);
+
+  return (
+    <>
+      <Header />
+      <Outlet />
+      <Row mb={["180px", "120px", "100px"]} />
+      <Footer />
+    </>
+  );
+};
 
 export const router = createBrowserRouter([
   {

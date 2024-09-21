@@ -13,6 +13,7 @@ import { useTranslation } from "react-i18next";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAuthenticateUser } from "@/api/user/query/useAuthenticateUser";
+import ReactGA from "react-ga";
 
 type AuthContextType = {
   user: User | null;
@@ -45,6 +46,14 @@ export const AuthProvider: React.FC<{
 
   const setLoggedUser = useCallback(
     (user: User | null) => {
+      if (user) {
+        /**
+         * GA set user id
+         */
+        ReactGA.set({
+          userId: String(user.id),
+        });
+      }
       setUser(user);
     },
     [setUser],
