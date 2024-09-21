@@ -14,17 +14,7 @@ const signup = async (values: SignupRequestValues) => {
       }),
     })
     .then((res) => {
-      const data = res.data;
-
-      if (data.success) {
-        await axiosClient.post(`/v2/auth/login`, values, {
-          headers: getRequestHeaders({
-            contentType: ContentType.json,
-          }),
-        })
-      }
-
-      return data
+      return res.data;
     });
 };
 
