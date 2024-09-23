@@ -14,6 +14,7 @@ import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAuthenticateUser } from "@/api/user/query/useAuthenticateUser";
 import ReactGA from "react-ga";
+import Cookies from "js-cookie";
 
 type AuthContextType = {
   user: User | null;
@@ -117,6 +118,8 @@ export const AuthProvider: React.FC<{
   useHttpInterceptors({ logout }, [user]);
 
   useEffect(() => {
+    const cookies = Cookies.get();
+    console.log({ cookies });
     /**
      * If sesion is not verified, authenticateUser
      */

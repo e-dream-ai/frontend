@@ -32,12 +32,15 @@ import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AnyObject, ObjectSchema } from "yup";
 import useSignupFeature from "@/api/feature/hook/useSignupFeature";
+import useLogin from "@/api/auth/useLogin";
+import useAuth from "@/hooks/useAuth";
 
 const SECTION_ID = "signup";
 
 export const SignupPage: React.FC = () => {
   const { t } = useTranslation();
   const { showModal } = useModal();
+  const { login } = useAuth();
 
   const [searchParams] = useSearchParams();
   const [signupSchema, setSignupSchema] = useState<
@@ -73,15 +76,20 @@ export const SignupPage: React.FC = () => {
     },
   });
 
-  const { mutate, isLoading } = useSignup();
+  const { mutate: mutateSignup, isLoading: isSignupLoading } = useSignup();
+  const { mutate: mutateLogin, isLoading: isLoginLoading } = useLogin();
+
+  const isLoading = isSignupLoading || isLoginLoading;
 
   const onSubmit = (data: SignupFormValues) => {
-    mutate(
+    const email = data.email;
+    const password = data.password;
+    mutateSignup(
       {
-        email: data.email,
+        email: email,
         firstname: data.firstName,
         lastname: data.lastName,
-        password: data.password,
+        password: password,
         code: data.code,
       },
       {
@@ -89,7 +97,7 @@ export const SignupPage: React.FC = () => {
           if (data.success) {
             toast.success(t("page.signup.user_signup_successfully"));
             reset();
-            router.navigate(ROUTES.LOGIN);
+            handleLogin(email, password);
           } else {
             toast.error(
               `${t("page.signup.error_signingup_user")} ${data.message}`,
@@ -98,6 +106,29 @@ export const SignupPage: React.FC = () => {
         },
         onError: () => {
           toast.error(t("page.signup.error_signingup_user"));
+        },
+      },
+    );
+  };
+
+  const handleLogin = (email: string, password: string) => {
+    mutateLogin(
+      { email: email, password: password },
+      {
+        onSuccess: (data) => {
+          if (data.success) {
+            const user = data?.data;
+            login(user!);
+            toast.success(
+              `${t("page.login.welcome_user", { username: email })}`,
+            );
+            router.navigate(ROUTES.PLAYLISTS);
+          } else {
+            toast.error(`${t("page.login.error_logging_in")} ${data.message}`);
+          }
+        },
+        onError: () => {
+          toast.error(t("page.login.error_logging_in"));
         },
       },
     );
