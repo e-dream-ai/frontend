@@ -63,6 +63,14 @@
       "user_signup_successfully": "User signed up successfully. Check your email to verify user.",
       "error_signingup_user": "Error signing up user."
     },
+    "magic": {
+      "title": "Code",
+      "email": "Email",
+      "code": "Code",
+      "submit": "Submit",
+      "welcome_user": "Welcome {{username}}",
+      "error_verifying_code": "Error logging in."
+    },
     "confirm_forgot_password": {
       "code": "Code",
       "new_password": "New Password",

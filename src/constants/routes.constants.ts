@@ -2,6 +2,7 @@ export const ROUTES = {
   ROOT: "/",
   AUTHENTICATE: "/authenticate",
   LOGIN: "/login",
+  MAGIC: "/magic",
   SIGNUP: "/signup",
   CONFIRM_FORGOT_PASSWORD: "/confirm-forgot-password",
   CREATE: "/create",

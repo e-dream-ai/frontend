@@ -73,7 +73,6 @@ export const SocketProvider: React.FC<{
        */
       if (user && error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED) {
         // Handle unauthorized error
-        console.log("REDIRECT TO LOGIN FROM SOCKET", { error });
         queryClient.clear();
         await logout();
         router.navigate(ROUTES.LOGIN);
@@ -92,7 +91,6 @@ export const SocketProvider: React.FC<{
   }, [user, logout]);
 
   useEffect(() => {
-    console.log("generating new socket intance", { user });
     socketRef.current = generateSocketInstance();
 
     // Handle reconnection
@@ -102,7 +100,6 @@ export const SocketProvider: React.FC<{
         if (!socketRef.current.connected) {
           // Attempting to reconnect
           socketRef.current.disconnect();
-          console.log("AUTHENTICATE USER FROM SOCKET RECONNECTION");
           await authenticateUser();
           // socketRef.current.connect();
         } else {

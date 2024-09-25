@@ -1,5 +1,4 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import router from "@/routes/router";
 import useSignup from "@/api/auth/useSignup";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
@@ -26,12 +25,13 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import InputPassword from "@/components/shared/input-password/input-password";
-import { ROUTES } from "@/constants/routes.constants";
 import { StyledSignup } from "./signup.styled";
 import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { AnyObject, ObjectSchema } from "yup";
 import useSignupFeature from "@/api/feature/hook/useSignupFeature";
+import { ROUTES } from "@/constants/routes.constants";
+import router from "@/routes/router";
 
 const SECTION_ID = "signup";
 
@@ -73,12 +73,15 @@ export const SignupPage: React.FC = () => {
     },
   });
 
-  const { mutate, isLoading } = useSignup();
+  const { mutate: mutateSignup, isLoading: isSignupLoading } = useSignup();
+
+  const isLoading = isSignupLoading;
 
   const onSubmit = (data: SignupFormValues) => {
-    mutate(
+    const email = data.email;
+    mutateSignup(
       {
-        email: data.email,
+        email,
         firstname: data.firstName,
         lastname: data.lastName,
         password: data.password,
@@ -89,7 +92,11 @@ export const SignupPage: React.FC = () => {
           if (data.success) {
             toast.success(t("page.signup.user_signup_successfully"));
             reset();
-            router.navigate(ROUTES.LOGIN);
+            router.navigate(ROUTES.MAGIC, {
+              state: {
+                email,
+              },
+            });
           } else {
             toast.error(
               `${t("page.signup.error_signingup_user")} ${data.message}`,

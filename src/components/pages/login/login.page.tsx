@@ -5,7 +5,6 @@ import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import { Anchor, Button, Column, Input, Row } from "@/components/shared";
 import InputPassword from "@/components/shared/input-password/input-password";
-import { ROLES_NAMES } from "@/constants/role.constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -46,17 +45,19 @@ export const LoginPage: React.FC = () => {
   };
 
   const onSubmit = (data: LoginFormValues) => {
+    const email = data.email;
+    const password = data.password;
     mutate(
-      { email: data.email, password: data.password },
+      { email, password },
       {
         onSuccess: (data) => {
           if (data.success) {
             const user: UserWithToken = data.data as UserWithToken;
             login(user);
             toast.success(
-              `${t("page.login.user_logged_successfully", {
-                role: t(ROLES_NAMES[user?.role?.name ?? ""]),
-              })} ${t("page.login.welcome_user", { username: user.email })}`,
+              `${t("page.login.welcome_user", {
+                username: user.name ?? user.email,
+              })}`,
             );
             reset();
             router.navigate(ROUTES.PLAYLISTS);

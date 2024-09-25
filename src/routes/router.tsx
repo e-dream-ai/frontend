@@ -19,6 +19,7 @@ import { CreatePage } from "@/components/pages/create/create.page";
 import { Footer, Row } from "@/components/shared";
 import { AuthenticatePage } from "@/components/pages/authenticate/authenticate.page";
 import { LoginPage } from "@/components/pages/login/login.page";
+import { MagicPage } from "@/components/pages/magic/magic.page";
 import { SignupPage } from "@/components/pages/signup/signup.page";
 import PublicRoute from "@/routes/public-route";
 import PlaylistsFeedPage from "@/components/pages/playlist-feed/playlist-feed";
@@ -26,7 +27,6 @@ import PlaygroundPage from "@/components/pages/playground/playground.page";
 import NotFoundPage from "@/components/pages/not-found/not-found.page";
 import { useEffect } from "react";
 import ReactGA from 'react-ga';
-
 
 export const RootElement = () => {
   const location = useLocation();
@@ -241,6 +241,14 @@ export const router = createBrowserRouter([
         element: (
           <PublicRoute>
             <LoginPage />
+          </PublicRoute>
+        ),
+      },
+      {
+        path: ROUTES.MAGIC,
+        element: (
+          <PublicRoute>
+            <MagicPage />
           </PublicRoute>
         ),
       },

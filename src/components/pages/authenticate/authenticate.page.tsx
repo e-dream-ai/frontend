@@ -1,7 +1,6 @@
 import router from "@/routes/router";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
-import { ROLES_NAMES } from "@/constants/role.constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -31,9 +30,9 @@ export const AuthenticatePage: React.FC = () => {
             const user: User = data.data as User;
             login(user);
             toast.success(
-              `${t("page.login.user_logged_successfully", {
-                role: t(ROLES_NAMES[user?.role?.name ?? ""]),
-              })} ${t("page.login.welcome_user", { username: user.email })}`,
+              `${t("page.login.welcome_user", {
+                username: user.name ?? user.email,
+              })}`,
             );
             router.navigate(ROUTES.PLAYLISTS);
           } else {
