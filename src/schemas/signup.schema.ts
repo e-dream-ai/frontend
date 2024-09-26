@@ -22,15 +22,22 @@ const getCharacterValidationError = (str: string) => {
   return `Your password must have at least 1 ${str} character`;
 };
 
+/**
+ * Match password rules with workos
+ */
 export const passwordSchemaProperty = yup
   .string()
-  .min(8, "Password must be at least 8 characters.")
+  .min(10, "Password must be at least 10 characters.")
+  .matches(/[0-9]/, getCharacterValidationError("number"))
+  .matches(/[a-z]/, getCharacterValidationError("lowercase"))
   .matches(/[A-Z]/, getCharacterValidationError("uppercase"))
   .required();
 
 export const confirmPasswordSchemaProperty = yup
   .string()
-  .min(8, "Confirm password must be at least 8 characters.")
+  .min(10, "Confirm password must be at least 10 characters.")
+  .matches(/[0-9]/, getCharacterValidationError("number"))
+  .matches(/[a-z]/, getCharacterValidationError("lowercase"))
   .matches(/[A-Z]/, getCharacterValidationError("uppercase"))
   .required()
   .oneOf([yup.ref("password"), ""], "Passwords must match");
