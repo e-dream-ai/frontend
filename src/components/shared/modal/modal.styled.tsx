@@ -4,7 +4,7 @@ import { Sizes } from "@/types/sizes.types";
 
 const ModalSizes = {
   sm: css`
-    min-width: 320px;
+    min-width: 360px;
   `,
   md: css`
     min-width: 480px;

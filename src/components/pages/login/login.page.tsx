@@ -1,26 +1,29 @@
-import { yupResolver } from "@hookform/resolvers/yup";
 import router from "@/routes/router";
 import useLogin from "@/api/auth/useLogin";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
-import { Anchor, Button, Column, Input, Row } from "@/components/shared";
+import { Anchor, Button, Input, Row } from "@/components/shared";
 import InputPassword from "@/components/shared/input-password/input-password";
 import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import LoginSchema, { LoginFormValues } from "@/schemas/login.schema";
-import { UserWithToken } from "@/types/auth.types";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import * as yup from "yup";
 import {
-  faEnvelope,
-  faLock,
-  faAngleRight,
-} from "@fortawesome/free-solid-svg-icons";
+  LoginFormValues,
+  LoginSchema,
+  MagicLoginFormValues,
+  MagicLoginSchema,
+} from "@/schemas/login.schema";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEnvelope, faLock } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 import { StyledLogin } from "./login.styled";
 import useModal from "@/hooks/useModal";
 import { ModalsKeys } from "@/constants/modal.constants";
+import useMagic from "@/api/auth/useMagic";
+
+type SubmitType = "login" | "magic";
 
 const SECTION_ID = "login";
 
@@ -30,34 +33,63 @@ export const LoginPage: React.FC = () => {
   const { login } = useAuth();
 
   const {
-    register,
-    handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<LoginFormValues>({
-    resolver: yupResolver(LoginSchema),
-  });
+    register,
+    handleSubmit,
+    clearErrors,
+    setError,
+  } = useForm<LoginFormValues>({});
 
   const { mutate, isLoading } = useLogin();
+  const { mutate: mutateMagic, isLoading: isMagicLoading } = useMagic();
 
   const handleOpenForgotPasswordModal = () => {
     showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
   };
 
-  const onSubmit = (data: LoginFormValues) => {
-    const email = data.email;
-    const password = data.password;
+  const onSubmit =
+    (submitType: SubmitType) =>
+    async (data: LoginFormValues | MagicLoginFormValues) => {
+      clearErrors();
+      const schema = submitType === "login" ? LoginSchema : MagicLoginSchema;
+
+      try {
+        await schema.validate(data, { abortEarly: false });
+
+        if (submitType === "login" && "password" in data) {
+          handleLogin(data.email, data.password);
+        } else {
+          handleMagicLogin(data.email);
+        }
+      } catch (error) {
+        if (error instanceof yup.ValidationError) {
+          error.inner.forEach((err) => {
+            if (err.path) {
+              setError(err.path as keyof LoginFormValues, {
+                type: "manual",
+                message: err.message,
+              });
+            }
+          });
+        } else {
+          // Handle unexpected errors
+        }
+      }
+    };
+
+  const handleLogin = (email: string, password: string) => {
     mutate(
       { email, password },
       {
         onSuccess: (data) => {
           if (data.success) {
-            const user: UserWithToken = data.data as UserWithToken;
+            const user = data.data!;
             login(user);
             toast.success(
               `${t("page.login.welcome_user", {
                 username: user.name ?? user.email,
-              })}`,
+              })}.`,
             );
             reset();
             router.navigate(ROUTES.PLAYLISTS);
@@ -72,6 +104,32 @@ export const LoginPage: React.FC = () => {
     );
   };
 
+  const handleMagicLogin = async (email: string) => {
+    mutateMagic(
+      { email },
+      {
+        onSuccess: (data) => {
+          if (data.success) {
+            toast.success(t("page.login.email_code_sent"));
+            reset();
+            router.navigate(ROUTES.MAGIC, {
+              state: {
+                email,
+              },
+            });
+          } else {
+            toast.error(
+              `${t("page.login.error_sending_code")} ${data.message}`,
+            );
+          }
+        },
+        onError: () => {
+          toast.error(t("page.login.error_sending_code"));
+        },
+      },
+    );
+  };
+
   return (
     <Container>
       <Section id={SECTION_ID}>
@@ -79,7 +137,8 @@ export const LoginPage: React.FC = () => {
           <Row alignContent="flex-start">
             <h2>{t("page.login.title")}</h2>
           </Row>
-          <form onSubmit={handleSubmit(onSubmit)}>
+
+          <form onSubmit={handleSubmit(onSubmit("login"))}>
             <Input
               placeholder={t("page.login.email")}
               type="email"
@@ -94,30 +153,44 @@ export const LoginPage: React.FC = () => {
               {...register("password")}
             />
 
-            <Row justifyContent="space-between" mb="0.4rem">
-              <Column>
-                <Row mb="0.6rem">
-                  <Anchor href={ROUTES.SIGNUP}>
-                    {t("page.login.dont_have_account")}
-                  </Anchor>
-                </Row>
-                <Row mb="0.4rem">
-                  <Anchor onClick={handleOpenForgotPasswordModal}>
-                    {t("page.login.forgot_your_password")}
-                  </Anchor>
-                </Row>
-              </Column>
-
+            <Row flex="auto">
               <Button
-                type="submit"
-                after={<FontAwesomeIcon icon={faAngleRight} />}
+                style={{ width: "-webkit-fill-available" }}
+                onClick={handleSubmit(onSubmit("login"))}
                 isLoading={isLoading}
+                disabled={isMagicLoading}
               >
                 {t("page.login.login")}
               </Button>
             </Row>
 
-            <Row justifyContent="flex-end"></Row>
+            <Row flex="auto" justifyContent="center">
+              {t("page.login.or")}
+            </Row>
+
+            <Row flex="auto">
+              <Button
+                buttonType="tertiary"
+                style={{ width: "-webkit-fill-available" }}
+                onClick={handleSubmit(onSubmit("magic"))}
+                isLoading={isMagicLoading}
+                disabled={isLoading}
+              >
+                {t("page.login.magic_login")}
+              </Button>
+            </Row>
+
+            <Row justifyContent="space-between" mb="0.4rem">
+              <Anchor href={ROUTES.SIGNUP}>
+                {t("page.login.dont_have_account")}
+              </Anchor>
+            </Row>
+
+            <Row justifyContent="space-between" mb="0.4rem">
+              <Anchor onClick={handleOpenForgotPasswordModal}>
+                {t("page.login.forgot_your_password")}
+              </Anchor>
+            </Row>
           </form>
         </StyledLogin>
       </Section>

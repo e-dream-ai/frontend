@@ -102,6 +102,7 @@ export const StyledButton = styled.button<
   display: inline-flex;
   height: fit-content;
   align-items: center;
+  justify-content: center;
   text-transform: ${(props) => props.textTransform ?? "uppercase"};
   padding: 6px 12px;
   margin-bottom: 0;
@@ -128,7 +129,6 @@ export const StyledButton = styled.button<
   ${(props) => ButtonSizes[props.size]}
 
   &:disabled {
-    background-color: ${(props) => props.theme.colorLightPrimary};
     cursor: not-allowed;
   }
 

@@ -4,10 +4,13 @@ import { MagicFormValues } from "@/schemas/magic.schema";
 import { ApiResponse } from "@/types/api.types";
 import { User } from "@/types/auth.types";
 import { axiosClient } from "@/client/axios.client";
+import { MagicLoginFormValues } from "@/schemas/login.schema";
 
 export const MAGIC_MUTATION_KEY = "magic";
 
-const magic = async (values: MagicFormValues) => {
+const magic = async (
+  values: Partial<MagicFormValues | MagicLoginFormValues>,
+) => {
   return axiosClient
     .post(`/v2/auth/magic`, values, {
       headers: getRequestHeaders({
@@ -20,12 +23,13 @@ const magic = async (values: MagicFormValues) => {
 };
 
 export const useMagic = () => {
-  return useMutation<ApiResponse<{ user: User }>, Error, MagicFormValues>(
-    magic,
-    {
-      mutationKey: [MAGIC_MUTATION_KEY],
-    },
-  );
+  return useMutation<
+    ApiResponse<{ user: User }>,
+    Error,
+    Partial<MagicFormValues | MagicLoginFormValues>
+  >(magic, {
+    mutationKey: [MAGIC_MUTATION_KEY],
+  });
 };
 
 export default useMagic;

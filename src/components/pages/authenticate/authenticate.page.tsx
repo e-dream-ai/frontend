@@ -32,7 +32,7 @@ export const AuthenticatePage: React.FC = () => {
             toast.success(
               `${t("page.login.welcome_user", {
                 username: user.name ?? user.email,
-              })}`,
+              })}.`,
             );
             router.navigate(ROUTES.PLAYLISTS);
           } else {

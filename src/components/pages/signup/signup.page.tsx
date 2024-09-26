@@ -95,6 +95,7 @@ export const SignupPage: React.FC = () => {
             router.navigate(ROUTES.MAGIC, {
               state: {
                 email,
+                isEmailVerification: true
               },
             });
           } else {

@@ -12,4 +12,14 @@ export const LoginSchema = yup
   })
   .required();
 
+export type MagicLoginFormValues = {
+  email: string;
+};
+
+export const MagicLoginSchema = yup
+  .object({
+    email: yup.string().email().required("Email is required."),
+  })
+  .required();
+
 export default LoginSchema;

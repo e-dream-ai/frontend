@@ -8,10 +8,7 @@ import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faLock,
-  faAngleRight,
-} from "@fortawesome/free-solid-svg-icons";
+import { faLock, faEnvelope } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 import { StyledMagic } from "./magic.styled";
 import useMagic from "@/api/auth/useMagic";
@@ -23,6 +20,7 @@ const SECTION_ID = "magic";
 
 type LocationState = {
   email?: string;
+  isEmailVerification?: boolean;
 };
 
 export const MagicPage: React.FC = () => {
@@ -32,7 +30,8 @@ export const MagicPage: React.FC = () => {
   const theme = useTheme();
 
   const state = location.state as LocationState;
-  const email = state?.email;
+  const email = state.email!;
+  const isEmailVerification = state.isEmailVerification;
 
   const {
     register,
@@ -42,7 +41,7 @@ export const MagicPage: React.FC = () => {
   } = useForm<MagicFormValues>({
     resolver: yupResolver(MagicSchema),
     values: {
-      email: email ?? "",
+      email: email,
       code: "",
     },
   });
@@ -60,7 +59,7 @@ export const MagicPage: React.FC = () => {
             toast.success(
               `${t("page.magic.welcome_user", {
                 username: user.name ?? user.email,
-              })}`,
+              })}.`,
             );
             reset();
             router.navigate(ROUTES.PLAYLISTS);
@@ -86,12 +85,25 @@ export const MagicPage: React.FC = () => {
       <Section id={SECTION_ID}>
         <StyledMagic>
           <Row alignContent="flex-start">
-            <h2>{t("page.magic.title")}</h2>
+            <h2>
+              {isEmailVerification
+                ? t("page.magic.title_verification")
+                : t("page.magic.title_login")}
+            </h2>
           </Row>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Text mb={3} fontSize="1rem" color={theme.textSecondaryColor}>
-              {email}
+              {t("page.magic.instructions")}
             </Text>
+
+            <Input
+              disabled
+              value={email}
+              placeholder={t("page.magic.email")}
+              before={<FontAwesomeIcon icon={faEnvelope} />}
+              error={errors.email?.message}
+              {...register("email")}
+            />
             <Input
               placeholder={t("page.magic.code")}
               before={<FontAwesomeIcon icon={faLock} />}
@@ -99,13 +111,15 @@ export const MagicPage: React.FC = () => {
               {...register("code")}
             />
 
-            <Row justifyContent="space-between" mb="0.4rem">
+            <Row flex="auto">
               <Button
                 type="submit"
-                after={<FontAwesomeIcon icon={faAngleRight} />}
                 isLoading={isLoading}
+                style={{ width: "-webkit-fill-available" }}
               >
-                {t("page.magic.submit")}
+                {isEmailVerification
+                  ? t("page.magic.verify_email")
+                  : t("page.magic.login")}
               </Button>
             </Row>
           </form>

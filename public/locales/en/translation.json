@@ -41,11 +41,15 @@
       "email": "Email",
       "password": "Password",
       "login": "Login",
+      "magic_login": "Email login code",
+      "or": "OR",
       "dont_have_account": "Don't have an account?",
       "forgot_your_password": "Forgot your password?",
       "user_logged_successfully": "{{role}} logged in successfully.",
       "welcome_user": "Welcome {{username}}",
-      "error_logging_in": "Error logging in."
+      "error_logging_in": "Error logging in.",
+      "email_code_sent": "Email verification code sent. Please check your email.",
+      "error_sending_code": "Error sending code."
     },
     "signup": {
       "title": "Sign up",
@@ -64,10 +68,13 @@
       "error_signingup_user": "Error signing up user."
     },
     "magic": {
-      "title": "Code",
+      "title_login": "Login",
+      "title_verification": "Email verification",
+      "instructions": "Verify your email to get the code.",
       "email": "Email",
       "code": "Code",
-      "submit": "Submit",
+      "login": "Login",
+      "verify_email": "Verify email",
       "welcome_user": "Welcome {{username}}",
       "error_verifying_code": "Error logging in."
     },
