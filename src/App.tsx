@@ -7,6 +7,7 @@ import { RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { router } from "@/routes/router";
 import ReactGA from "react-ga";
+import TagManager from "react-gtm-module";
 import "react-toastify/dist/ReactToastify.css";
 
 const App = () => {
@@ -27,6 +28,11 @@ const App = () => {
       debug: true,
       titleCase: false,
     });
+
+    /**
+     * Initialize TagManager
+     */
+    TagManager.initialize({ gtmId: import.meta.env.VITE_GTM_ID });
 
     unregisterDocumentEvents();
   }, []);
