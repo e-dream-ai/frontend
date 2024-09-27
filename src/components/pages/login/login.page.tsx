@@ -3,7 +3,7 @@ import useLogin from "@/api/auth/useLogin";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import { Anchor, Button, Input, Row } from "@/components/shared";
-import InputPassword from "@/components/shared/input-password/input-password";
+// import InputPassword from "@/components/shared/input-password/input-password";
 import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -16,7 +16,7 @@ import {
   MagicLoginSchema,
 } from "@/schemas/login.schema";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEnvelope, faLock } from "@fortawesome/free-solid-svg-icons";
+import { faEnvelope /* , faLock */ } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 import { StyledLogin } from "./login.styled";
 import useModal from "@/hooks/useModal";
@@ -84,7 +84,7 @@ export const LoginPage: React.FC = () => {
       {
         onSuccess: (data) => {
           if (data.success) {
-            const user = data.data!;
+            const user = data.data!.user;
             login(user);
             toast.success(
               `${t("page.login.welcome_user", {
@@ -146,14 +146,14 @@ export const LoginPage: React.FC = () => {
               error={errors.email?.message}
               {...register("email")}
             />
-            <InputPassword
+            {/* <InputPassword
               placeholder={t("page.login.password")}
               before={<FontAwesomeIcon icon={faLock} />}
               error={errors.password?.message}
               {...register("password")}
-            />
+            /> */}
 
-            <Row flex="auto">
+            {/* <Row flex="auto">
               <Button
                 style={{ width: "-webkit-fill-available" }}
                 onClick={handleSubmit(onSubmit("login"))}
@@ -162,15 +162,15 @@ export const LoginPage: React.FC = () => {
               >
                 {t("page.login.login")}
               </Button>
-            </Row>
+            </Row> */}
 
-            <Row flex="auto" justifyContent="center">
+            {/* <Row flex="auto" justifyContent="center">
               {t("page.login.or")}
-            </Row>
+            </Row> */}
 
             <Row flex="auto">
               <Button
-                buttonType="tertiary"
+                buttonType="primary"
                 style={{ width: "-webkit-fill-available" }}
                 onClick={handleSubmit(onSubmit("magic"))}
                 isLoading={isMagicLoading}

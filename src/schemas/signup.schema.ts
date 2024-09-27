@@ -4,8 +4,8 @@ export type SignupFormValues = {
   email: string;
   firstName: string;
   lastName: string;
-  password: string;
-  confirmPassword: string;
+  // password: string;
+  // confirmPassword: string;
   code?: string;
   terms?: boolean;
 };
@@ -14,7 +14,7 @@ export type SignupRequestValues = {
   email: string;
   firstname: string;
   lastname: string;
-  password: string;
+  // password: string;
   code?: string;
 };
 
@@ -47,8 +47,8 @@ export const getSignupSchema = (isSignupCodeActive: boolean) =>
     email: yup.string().email().required("Email is required."),
     firstName: yup.string().required().max(50),
     lastName: yup.string().required().max(50),
-    password: passwordSchemaProperty,
-    confirmPassword: confirmPasswordSchemaProperty,
+    // password: passwordSchemaProperty,
+    // confirmPassword: confirmPasswordSchemaProperty,
     code: isSignupCodeActive
       ? yup.string().required("Code is required.")
       : yup.string().optional(),

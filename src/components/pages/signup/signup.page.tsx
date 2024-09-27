@@ -21,10 +21,10 @@ import {
   faAngleRight,
   faEnvelope,
   faKey,
-  faLock,
+  // faLock,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import InputPassword from "@/components/shared/input-password/input-password";
+// import InputPassword from "@/components/shared/input-password/input-password";
 import { StyledSignup } from "./signup.styled";
 import { useSearchParams } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -68,8 +68,8 @@ export const SignupPage: React.FC = () => {
       email: email,
       firstName: "",
       lastName: "",
-      password: "",
-      confirmPassword: "",
+      // password: "",
+      // confirmPassword: "",
     },
   });
 
@@ -84,7 +84,7 @@ export const SignupPage: React.FC = () => {
         email,
         firstname: data.firstName,
         lastname: data.lastName,
-        password: data.password,
+        // password: data.password,
         code: data.code,
       },
       {
@@ -145,7 +145,7 @@ export const SignupPage: React.FC = () => {
               error={errors.lastName?.message}
               {...register("lastName")}
             />
-            <InputPassword
+            {/* <InputPassword
               placeholder={t("page.signup.password")}
               type="password"
               before={<FontAwesomeIcon icon={faLock} />}
@@ -158,7 +158,7 @@ export const SignupPage: React.FC = () => {
               before={<FontAwesomeIcon icon={faLock} />}
               error={errors.confirmPassword?.message}
               {...register("confirmPassword")}
-            />
+            /> */}
             {isSignupFeatureActive && (
               <Input
                 placeholder={t("page.signup.code")}

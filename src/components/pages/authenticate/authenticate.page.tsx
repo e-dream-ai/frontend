@@ -27,7 +27,7 @@ export const AuthenticatePage: React.FC = () => {
       {
         onSuccess: (data) => {
           if (data.success) {
-            const user: User = data.data as User;
+            const user: User = data.data!.user;
             login(user);
             toast.success(
               `${t("page.login.welcome_user", {

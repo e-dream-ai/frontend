@@ -23,7 +23,7 @@ const authenticate = async (values: AuthenticateValues) => {
 };
 
 export const useAuthenticate = () => {
-  return useMutation<ApiResponse<User>, Error, AuthenticateValues>(
+  return useMutation<ApiResponse<{ user: User }>, Error, AuthenticateValues>(
     authenticate,
     {
       mutationKey: [AUTHENTICATE_MUTATION_KEY],
