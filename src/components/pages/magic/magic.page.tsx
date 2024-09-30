@@ -106,6 +106,8 @@ export const MagicPage: React.FC = () => {
             />
             <Input
               type="number"
+              inputMode="numeric"
+              pattern="[0-9]*"
               placeholder={t("page.magic.code")}
               before={<FontAwesomeIcon icon={faLock} />}
               error={errors.code?.message}
