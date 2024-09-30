@@ -105,6 +105,7 @@ export const MagicPage: React.FC = () => {
               {...register("email")}
             />
             <Input
+              type="number"
               placeholder={t("page.magic.code")}
               before={<FontAwesomeIcon icon={faLock} />}
               error={errors.code?.message}
