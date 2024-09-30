@@ -19,8 +19,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope /* , faLock */ } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 import { StyledLogin } from "./login.styled";
-import useModal from "@/hooks/useModal";
-import { ModalsKeys } from "@/constants/modal.constants";
+// import useModal from "@/hooks/useModal";
+// import { ModalsKeys } from "@/constants/modal.constants";
 import useMagic from "@/api/auth/useMagic";
 
 type SubmitType = "login" | "magic";
@@ -29,7 +29,7 @@ const SECTION_ID = "login";
 
 export const LoginPage: React.FC = () => {
   const { t } = useTranslation();
-  const { showModal } = useModal();
+  // const { showModal } = useModal();
   const { login } = useAuth();
 
   const {
@@ -44,9 +44,9 @@ export const LoginPage: React.FC = () => {
   const { mutate, isLoading } = useLogin();
   const { mutate: mutateMagic, isLoading: isMagicLoading } = useMagic();
 
-  const handleOpenForgotPasswordModal = () => {
-    showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
-  };
+  // const handleOpenForgotPasswordModal = () => {
+  //   showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
+  // };
 
   const onSubmit =
     (submitType: SubmitType) =>
@@ -186,11 +186,11 @@ export const LoginPage: React.FC = () => {
               </Anchor>
             </Row>
 
-            <Row justifyContent="space-between" mb="0.4rem">
+            {/* <Row justifyContent="space-between" mb="0.4rem">
               <Anchor onClick={handleOpenForgotPasswordModal}>
                 {t("page.login.forgot_your_password")}
               </Anchor>
-            </Row>
+            </Row> */}
           </form>
         </StyledLogin>
       </Section>

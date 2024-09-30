@@ -10,8 +10,8 @@ import {
   Input,
   Row,
 } from "@/components/shared";
-import { ModalsKeys } from "@/constants/modal.constants";
-import useModal from "@/hooks/useModal";
+// import { ModalsKeys } from "@/constants/modal.constants";
+// import useModal from "@/hooks/useModal";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
@@ -37,7 +37,7 @@ const SECTION_ID = "signup";
 
 export const SignupPage: React.FC = () => {
   const { t } = useTranslation();
-  const { showModal } = useModal();
+  // const { showModal } = useModal();
 
   const [searchParams] = useSearchParams();
   const [signupSchema, setSignupSchema] = useState<
@@ -52,9 +52,9 @@ export const SignupPage: React.FC = () => {
     : undefined;
   const email = searchParams.get("email") ?? "";
 
-  const handleOpenForgotPasswordModal = () => {
-    showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
-  };
+  // const handleOpenForgotPasswordModal = () => {
+  //   showModal(ModalsKeys.FORGOT_PASSWORD_MODAL);
+  // };
 
   const {
     register,
@@ -185,11 +185,11 @@ export const SignupPage: React.FC = () => {
                     {t("page.signup.already_have_account")}
                   </Anchor>
                 </Row>
-                <Row mb="0.4rem">
+                {/* <Row mb="0.4rem">
                   <Anchor onClick={handleOpenForgotPasswordModal}>
                     {t("page.signup.forgot_your_password")}
                   </Anchor>
-                </Row>
+                </Row> */}
               </Column>
 
               <Button
