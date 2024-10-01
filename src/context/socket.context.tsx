@@ -8,11 +8,11 @@ import React, {
 } from "react";
 import socketIO, { Socket } from "socket.io-client";
 import useAuth from "@/hooks/useAuth";
-import queryClient from "@/api/query-client";
-import router from "@/routes/router";
-import { ROUTES } from "@/constants/routes.constants";
+// import queryClient from "@/api/query-client";
+// import router from "@/routes/router";
+// import { ROUTES } from "@/constants/routes.constants";
 import { SOCKET_URL } from "@/constants/api.constants";
-import { SOCKET_AUTH_ERROR_MESSAGES } from "@/constants/auth.constants";
+// import { SOCKET_AUTH_ERROR_MESSAGES } from "@/constants/auth.constants";
 
 type SocketContextType = {
   socket?: Socket;
@@ -28,7 +28,7 @@ const REMOTE_CONTROL_NAMESPACE = "remote-control";
 export const SocketProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
-  const { user, authenticateUser, logout } = useAuth();
+  const { user, authenticateUser /* , logout */ } = useAuth();
 
   const [isConnected, setIsConnected] = useState<boolean>(false);
   /**
@@ -65,18 +65,23 @@ export const SocketProvider: React.FC<{
     });
 
     // Handle connection error
-    newSocket.on("connect_error", async (error) => {
+    newSocket.on("connect_error", async (/* error */) => {
       // Connection error {error}
       setIsConnected(false);
       /**
-       * if there's user and received unauthorized
+       * If there's user and receives unauthorized handle logout
+       *
+       * Temporarily commented, after online status is activated or visibilitychange is triggered,
+       * an attempt will be made to make a request to the v2/auth/authenticate endpoint to validate the session.
+       * If backend sends a 401 using authenticateUser, axios interceptor is in charge of logout and redirect to login.
        */
-      if (user && error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED) {
-        // Handle unauthorized error
-        queryClient.clear();
-        await logout();
-        router.navigate(ROUTES.LOGIN);
-      }
+
+      // if (user && error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED) {
+      //   // Handle unauthorized error
+      //   queryClient.clear();
+      //   await logout();
+      //   router.navigate(ROUTES.LOGIN);
+      // }
     });
 
     // Handle reconnecting attempts
@@ -88,7 +93,7 @@ export const SocketProvider: React.FC<{
     });
 
     return newSocket;
-  }, [user, logout]);
+  }, [user /* , logout */]);
 
   useEffect(() => {
     socketRef.current = generateSocketInstance();
@@ -108,12 +113,20 @@ export const SocketProvider: React.FC<{
       }
     };
 
-    // Add event listener for when the tab becomes visible
-    document.addEventListener("visibilitychange", () => {
+    const handleVisibilityChange = () => {
       if (!document.hidden) {
         handleReconnect();
       }
-    });
+    };
+
+    const handleOnline = () => {
+      handleReconnect();
+    };
+
+    // Add event listener for when the tab becomes visible or focus
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    // Add event listener for when window online status is active
+    window.addEventListener("online", handleOnline);
 
     return () => {
       // Disconnect socket and set socketRef to undefined
@@ -123,7 +136,8 @@ export const SocketProvider: React.FC<{
       }
 
       // Clean up function
-      document.removeEventListener("visibilitychange", handleReconnect);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("online", handleOnline);
     };
   }, [user, authenticateUser, generateSocketInstance]);
 
