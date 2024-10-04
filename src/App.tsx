@@ -9,6 +9,7 @@ import { router } from "@/routes/router";
 import ReactGA from "react-ga";
 import TagManager from "react-gtm-module";
 import "react-toastify/dist/ReactToastify.css";
+import { IS_DEV } from "./constants/env.constantes";
 
 const App = () => {
   /**
@@ -25,7 +26,7 @@ const App = () => {
      * Initialize GA
      */
     ReactGA.initialize(import.meta.env.VITE_GA_MEASUREMENT_ID, {
-      debug: true,
+      debug: IS_DEV,
       titleCase: false,
     });
 

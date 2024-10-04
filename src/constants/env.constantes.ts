@@ -8,4 +8,4 @@ export const MODE = import.meta.env.MODE;
 
 export const IS_PRODUCTION = import.meta.env.MODE === "prod";
 export const IS_STAGE = import.meta.env.MODE === "stage";
-export const IS_DEV = import.meta.env.MODE !== "development";
+export const IS_DEV = import.meta.env.MODE === "development";
