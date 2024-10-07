@@ -40,11 +40,10 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
     () => isAdmin(loggedUser as User),
     [loggedUser],
   );
-  const { id } = useParams<{ id: string }>();
-  const paramId = Number(id) || 0;
+  const { uuid } = useParams<{ uuid: string }>();
   const { user: authUser } = useAuth();
-  const userId = isMyProfilePage ? authUser?.id : paramId;
-  const { data, isError, isLoading: isUserLoading } = useUser({ id: userId });
+  const userUUID = isMyProfilePage ? authUser?.uuid : uuid;
+  const { data, isError, isLoading: isUserLoading } = useUser({ uuid: userUUID });
   const user = data?.data?.user;
   const showApiKeyCard = isMyProfilePage || isLoggedUserAdmin;
 
@@ -97,7 +96,7 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
             <Row>
               <UserDreams
                 key={Boolean(user?.nsfw).toString()}
-                userId={userId}
+                userUUID={userUUID}
                 columns={2}
                 grid
               />

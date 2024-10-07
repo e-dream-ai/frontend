@@ -172,7 +172,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           type="text"
           before={<FontAwesomeIcon icon={faSave} />}
           value={values.user}
-          anchor={() => navigate(`${ROUTES.PROFILE}/${dream?.user.id ?? 0}`)}
+          anchor={() => navigate(`${ROUTES.PROFILE}/${dream?.user.uuid}`)}
           {...register("user")}
         />
       </Restricted>
@@ -191,7 +191,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             isLoading={isUsersLoading}
             before={<FontAwesomeIcon icon={faUser} />}
             anchor={() =>
-              navigate(`${ROUTES.PROFILE}/${dream?.displayedOwner.id ?? 0}`)
+              navigate(`${ROUTES.PROFILE}/${dream?.displayedOwner.uuid}`)
             }
             options={usersOptions}
             onInputChange={(newValue) => setUserSearch(newValue)}

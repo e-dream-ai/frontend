@@ -12,18 +12,24 @@ type QueryFunctionParams = {
   take: number;
   skip: number;
   search?: string;
-  userId?: number;
+  userUUID?: string;
   type?: FeedItemServerType;
 };
 
-const getFeed = ({ take, skip, userId, search, type }: QueryFunctionParams) => {
+const getFeed = ({
+  take,
+  skip,
+  userUUID,
+  search,
+  type,
+}: QueryFunctionParams) => {
   return async () =>
     axiosClient
       .get(`/v1/feed`, {
         params: {
           take,
           skip,
-          userId,
+          userUUID,
           search,
           type,
         },
@@ -36,18 +42,18 @@ const getFeed = ({ take, skip, userId, search, type }: QueryFunctionParams) => {
 
 type HookParams = {
   page?: number;
-  userId?: number;
+  userUUID?: string;
   search?: string;
   type?: FeedItemServerType;
 };
 
-export const useFeed = ({ page = 0, userId, search, type }: HookParams) => {
+export const useFeed = ({ page = 0, userUUID, search, type }: HookParams) => {
   const take = PAGINATION.TAKE;
   const skip = page * take;
   const { user } = useAuth();
   return useQuery<ApiResponse<{ feed: FeedItem[]; count: number }>, Error>(
     [FEED_QUERY_KEY, page, search, type],
-    getFeed({ take, skip, userId, search, type }),
+    getFeed({ take, skip, userUUID, search, type }),
     {
       enabled: Boolean(user),
     },

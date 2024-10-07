@@ -12,7 +12,7 @@ import { useImage } from "@/hooks/useImage";
 const UserCard: React.FC<{ user: User; size: Sizes }> = ({ user, size }) => {
   const navigate = useNavigate();
 
-  const navigateToProfile = () => navigate(`${ROUTES.PROFILE}/${user.id ?? 0}`);
+  const navigateToProfile = () => navigate(`${ROUTES.PROFILE}/${user.uuid}`);
 
   const avatarUrl = useImage(user?.avatar, {
     width: 142,

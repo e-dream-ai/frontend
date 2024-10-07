@@ -5,15 +5,15 @@ import useApiQuery from "@/api/shared/useApiQuery";
 export const USER_QUERY_KEY = "getUser";
 
 type HookParams = {
-  id?: string | number;
+  uuid?: string;
 };
 
-type UserResponse = { user: Omit<User, "token"> };
+type UserResponse = { user: User };
 
-export const useUser = ({ id }: HookParams) => {
+export const useUser = ({ uuid }: HookParams) => {
   return useApiQuery<UserResponse>(
-    [USER_QUERY_KEY, id],
-    `/v1/user/${id}`,
+    [USER_QUERY_KEY, uuid],
+    `/v1/user/${uuid}`,
     {
       headers: getRequestHeaders({
         contentType: ContentType.json,

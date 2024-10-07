@@ -13,6 +13,7 @@ export type Token = {
 
 export type User = {
   id: number;
+  uuid: string;
   email: string;
   name?: string;
   description?: string;

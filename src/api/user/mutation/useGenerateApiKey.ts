@@ -6,11 +6,11 @@ import { axiosClient } from "@/client/axios.client";
 
 export const GENERATE_APIKEY_MUTATION_KEY = "generateApiKey";
 
-const generateApiKey = ({ id }: { id?: number }) => {
+const generateApiKey = ({ uuid }: { uuid?: string }) => {
   return async () => {
     return axiosClient
       .put(
-        `/v1/user/${id}/apikey`,
+        `/v1/user/${uuid}/apikey`,
         {},
         {
           headers: getRequestHeaders({
@@ -25,12 +25,12 @@ const generateApiKey = ({ id }: { id?: number }) => {
 };
 
 type HookProps = {
-  id?: number;
+  uuid?: string;
 };
 
-export const useGenerateApiKey = ({ id }: HookProps) => {
+export const useGenerateApiKey = ({ uuid }: HookProps) => {
   return useMutation<ApiResponse<{ apikey: ApiKey }>, Error>(
-    generateApiKey({ id }),
+    generateApiKey({ uuid }),
     {
       mutationKey: [GENERATE_APIKEY_MUTATION_KEY],
     },

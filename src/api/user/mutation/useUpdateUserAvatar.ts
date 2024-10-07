@@ -7,19 +7,19 @@ import { User } from "@/types/auth.types";
 import { axiosClient } from "@/client/axios.client";
 
 type MutateFunctionParams = {
-  id?: number;
+  uuid?: string;
 };
 
 export const UPDATE_USER_AVATAR_MUTATION_KEY = "updateUserAvatar";
 
-const updateUserAvatar = ({ id }: MutateFunctionParams) => {
+const updateUserAvatar = ({ uuid }: MutateFunctionParams) => {
   return async (params: FileFormValues) => {
     const formData = new FormData();
 
     formData.append(FILE_FORM.FILE, params?.file ?? "");
 
     return axiosClient
-      .put(`/v1/user/${id}/avatar`, formData, {
+      .put(`/v1/user/${uuid}/avatar`, formData, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),
@@ -30,9 +30,9 @@ const updateUserAvatar = ({ id }: MutateFunctionParams) => {
   };
 };
 
-export const useUpdateUserAvatar = ({ id }: { id?: number }) => {
+export const useUpdateUserAvatar = ({ uuid }: { uuid?: string }) => {
   return useMutation<ApiResponse<{ user: User }>, Error, FileFormValues>(
-    updateUserAvatar({ id }),
+    updateUserAvatar({ uuid }),
     {
       mutationKey: [UPDATE_USER_AVATAR_MUTATION_KEY],
     },

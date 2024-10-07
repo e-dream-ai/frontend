@@ -11,18 +11,23 @@ export const PLAYLISTS_QUERY_KEY = "getPlaylists";
 type QueryFunctionParams = {
   take: number;
   skip: number;
-  userId?: number;
+  userUUID?: string;
   search?: string;
 };
 
-const getPlaylists = ({ take, skip, userId, search }: QueryFunctionParams) => {
+const getPlaylists = ({
+  take,
+  skip,
+  userUUID,
+  search,
+}: QueryFunctionParams) => {
   return async () =>
     axiosClient
       .get(`/v1/playlist`, {
         params: {
           take,
           skip,
-          userId,
+          userUUID,
           search,
         },
         headers: getRequestHeaders({
@@ -41,10 +46,10 @@ export const usePlaylists = ({ page = 0, search }: HookParams) => {
   const take = PAGINATION.TAKE;
   const skip = page * take;
   const { user } = useAuth();
-  const userId = user?.id;
+  const userUUID = user?.uuid;
   return useQuery<ApiResponse<{ playlists: Playlist[]; count: number }>, Error>(
-    [PLAYLISTS_QUERY_KEY, userId, page, search, take],
-    getPlaylists({ take, skip, userId, search }),
+    [PLAYLISTS_QUERY_KEY, userUUID, page, search, take],
+    getPlaylists({ take, skip, userUUID, search }),
     {
       enabled: Boolean(user),
     },
