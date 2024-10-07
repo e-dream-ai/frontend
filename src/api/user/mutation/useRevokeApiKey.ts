@@ -6,10 +6,10 @@ import { axiosClient } from "@/client/axios.client";
 
 export const REVOKE_APIKEY_MUTATION_KEY = "revokeApiKey";
 
-const revokeApiKey = ({ id }: { id?: number }) => {
+const revokeApiKey = ({ uuid }: { uuid?: string }) => {
   return async () => {
     return axiosClient
-      .delete(`/v1/user/${id}/apikey`, {
+      .delete(`/v1/user/${uuid}/apikey`, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),
@@ -21,12 +21,12 @@ const revokeApiKey = ({ id }: { id?: number }) => {
 };
 
 type HookProps = {
-  id?: number;
+  uuid?: string;
 };
 
-export const useRevokeApiKey = ({ id }: HookProps) => {
+export const useRevokeApiKey = ({ uuid }: HookProps) => {
   return useMutation<ApiResponse<{ apikey: ApiKey }>, Error>(
-    revokeApiKey({ id }),
+    revokeApiKey({ uuid }),
     {
       mutationKey: [REVOKE_APIKEY_MUTATION_KEY],
     },

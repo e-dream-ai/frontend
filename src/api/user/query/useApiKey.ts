@@ -7,13 +7,13 @@ import { axiosClient } from "@/client/axios.client";
 export const APIKEY_QUERY_KEY = "getApiKey";
 
 type QueryFunctionParams = {
-  id?: string | number;
+  uuid?: string;
 };
 
-const getApiKey = ({ id }: QueryFunctionParams) => {
+const getApiKey = ({ uuid }: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/v1/user/${id}/apikey`, {
+      .get(`/v1/user/${uuid}/apikey`, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),
@@ -22,15 +22,15 @@ const getApiKey = ({ id }: QueryFunctionParams) => {
 };
 
 type HookParams = {
-  id?: string | number;
+  uuid?: string;
 };
 
-export const useApiKey = ({ id }: HookParams) => {
+export const useApiKey = ({ uuid }: HookParams) => {
   return useQuery<ApiResponse<{ apikey: ApiKey }>, Error>(
     [APIKEY_QUERY_KEY],
-    getApiKey({ id }),
+    getApiKey({ uuid }),
     {
-      enabled: Boolean(id),
+      enabled: Boolean(uuid),
     },
   );
 };

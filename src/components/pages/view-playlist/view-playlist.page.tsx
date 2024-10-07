@@ -382,7 +382,7 @@ export const ViewPlaylistPage = () => {
                     before={<FontAwesomeIcon icon={faSave} />}
                     value={values.user}
                     anchor={() =>
-                      navigate(`${ROUTES.PROFILE}/${playlist?.user.id ?? 0}`)
+                      navigate(`${ROUTES.PROFILE}/${playlist?.user.uuid}`)
                     }
                     {...register("user")}
                   />
@@ -403,7 +403,7 @@ export const ViewPlaylistPage = () => {
                       isLoading={isUsersLoading}
                       before={<FontAwesomeIcon icon={faUser} />}
                       anchor={() =>
-                        navigate(`${ROUTES.PROFILE}/${playlist?.user.id ?? 0}`)
+                        navigate(`${ROUTES.PROFILE}/${playlist?.user.uuid}`)
                       }
                       options={usersOptions}
                       onInputChange={(newValue) => setUserSearch(newValue)}

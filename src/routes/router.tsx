@@ -187,7 +187,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: `${ROUTES.PROFILE}/:id`,
+        path: `${ROUTES.PROFILE}/:uuid`,
         element: (
           <ProtectedRoute
             allowedRoles={[

@@ -10,13 +10,13 @@ import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 
 type UserDreamsProps = {
-  userId?: number;
+  userUUID?: string;
   grid?: boolean;
   columns?: number;
 };
 
 const UserDreams: React.FC<UserDreamsProps> = ({
-  userId,
+  userUUID,
   grid,
   columns = 2,
 }) => {
@@ -24,7 +24,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({
   const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching } = useFeed({
     page,
-    userId,
+    userUUID,
   });
   const feed = data?.data?.feed;
   const pageCount = Math.ceil((data?.data?.count ?? 1) / PAGINATION.TAKE);

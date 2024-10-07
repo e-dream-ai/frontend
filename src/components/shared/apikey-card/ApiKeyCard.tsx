@@ -20,15 +20,15 @@ import { PROFILE_PERMISSIONS } from "@/constants/permissions.constants";
 import { Spinner } from "../spinner/spinner";
 
 type ApiKeyCardProps = {
-  user?: Omit<User, "token">;
+  user?: User;
 };
 
 const ApiKeyCard: React.FC<ApiKeyCardProps> = ({ user }) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { data, isLoading: isLoadingApiKey } = useApiKey({ id: user?.id });
-  const generateApiKeyMutation = useGenerateApiKey({ id: user?.id });
-  const revokeApiKeyMutation = useRevokeApiKey({ id: user?.id });
+  const { data, isLoading: isLoadingApiKey } = useApiKey({ uuid: user?.uuid });
+  const generateApiKeyMutation = useGenerateApiKey({ uuid: user?.uuid });
+  const revokeApiKeyMutation = useRevokeApiKey({ uuid: user?.uuid });
 
   const handleGenerateApiKey = async () => {
     try {

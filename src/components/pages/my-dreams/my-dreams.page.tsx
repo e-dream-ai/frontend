@@ -14,7 +14,7 @@ export const MyDreamsPage: React.FC = () => {
     <Container>
       <h2>{t("page.my_dreams.title")}</h2>
       <Section id={SECTION_ID}>
-        <UserDreams userId={user?.id} grid columns={3} />
+        <UserDreams userUUID={user?.uuid} grid columns={3} />
       </Section>
     </Container>
   );

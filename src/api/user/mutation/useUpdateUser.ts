@@ -7,10 +7,10 @@ import { axiosClient } from "@/client/axios.client";
 
 export const UPDATE_USER_MUTATION_KEY = "updateUser";
 
-const updateUser = ({ id }: { id?: number }) => {
+const updateUser = ({ uuid }: { uuid?: string }) => {
   return async (params: ProfileFormRequest) => {
     return axiosClient
-      .put(`/v1/user/${id}`, params, {
+      .put(`/v1/user/${uuid}`, params, {
         headers: getRequestHeaders({
           contentType: ContentType.none,
         }),
@@ -22,12 +22,12 @@ const updateUser = ({ id }: { id?: number }) => {
 };
 
 type HookProps = {
-  id?: number;
+  uuid?: string;
 };
 
-export const useUpdateUser = ({ id }: HookProps) => {
+export const useUpdateUser = ({ uuid }: HookProps) => {
   return useMutation<ApiResponse<{ user: User }>, Error, ProfileFormRequest>(
-    updateUser({ id }),
+    updateUser({ uuid }),
     {
       mutationKey: [UPDATE_USER_MUTATION_KEY],
     },

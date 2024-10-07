@@ -197,9 +197,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   const [roleSearch, setRoleSearch] = useState<string>("");
 
   const { isLoading: isLoadingUpdateUser, mutate: mutateUpdateUser } =
-    useUpdateUser({ id: user?.id });
+    useUpdateUser({ uuid: user?.uuid });
   const { isLoading: isLoadingUpdateAvatar, mutate: mutateUpdateAvatar } =
-    useUpdateUserAvatar({ id: user?.id });
+    useUpdateUserAvatar({ uuid: user?.uuid });
 
   const { data: rolesData, isLoading: isRolesLoading } = useRoles({
     search: roleSearch,
@@ -300,7 +300,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     mutateUpdateUser(data, {
       onSuccess: (response) => {
         if (response.success) {
-          queryClient.setQueryData([USER_QUERY_KEY, user?.id], response);
+          queryClient.setQueryData([USER_QUERY_KEY, user?.uuid], response);
           toast.success(
             `${t("components.profile_card.profile_successfully_updated")}`,
           );
