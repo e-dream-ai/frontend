@@ -288,7 +288,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       nsfw: formData?.nsfw.value === NSFW.TRUE,
       enableMarketingEmails:
         formData?.enableMarketingEmails.value === ENABLE_MARKETING_EMAILS.TRUE,
-      quota: formData?.quota
+      quota: formData?.quota !== undefined
         ? Math.round(GBToBytes(formData.quota))
         : undefined,
     };

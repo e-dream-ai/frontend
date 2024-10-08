@@ -46,7 +46,7 @@ export const ProfileSchema = yup
     quota: yup
       .number()
       .typeError("quota must be a number.")
-      .positive()
+      .min(0)
       .test(
         "decimal-places",
         "quota must have 1 or 2 decimal places.",
