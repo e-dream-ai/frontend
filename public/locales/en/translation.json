@@ -329,10 +329,10 @@
     "remote_control": {
       "event": "Event",
       "playing": "Playing",
-      "play_dream": "Now dream",
-      "play_playlist": "Now playlist",
-      "like": "Like",
-      "dislike": "Dislike",
+      "play_dream": "Dream {{name}} played.",
+      "play_playlist": "Playlist {{name}} played.",
+      "like": "Dream {{name}} liked.",
+      "dislike": "Dream {{name}} disliked.",
       "like_current_dream": "Like",
       "dislike_current_dream": "Dislike",
       "previous": "Previous",
@@ -445,7 +445,7 @@
     "creator_group": "creator"
   },
   "toasts": {
-    "play_dream": "Played dream: {{name}}",
-    "play_playlist": "Played playlist: {{name}}"
+    "play_dream": "Dream {{name}} played.",
+    "play_playlist": "Playlist {{name}} played."
   }
 }
