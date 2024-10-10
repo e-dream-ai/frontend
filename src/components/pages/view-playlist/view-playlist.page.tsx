@@ -49,6 +49,7 @@ import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
 import { ALLOWED_IMAGE_TYPES } from "@/constants/file.constants";
 import { NotFound } from "@/components/shared/not-found/not-found";
+import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 
 const SectionID = "playlist";
 
@@ -244,7 +245,11 @@ export const ViewPlaylistPage = () => {
             </Column>
 
             <Column flex="1" alignSelf="flex-end" alignItems="flex-end">
-              <Row marginBottom={0}>
+              <Row marginBottom={0} alignItems="center">
+                <PlaylistCheckboxMenu
+                  type="playlist"
+                  childPlaylist={playlist}
+                />
                 <Button
                   type="button"
                   buttonType="default"

@@ -466,7 +466,7 @@ const ViewDreamPage: React.FC = () => {
               {!editMode && (
                 <Row margin={0} alignItems="center">
                   <Column mr="3">
-                    <PlaylistCheckboxMenu dream={dream} />
+                    <PlaylistCheckboxMenu type="dream" childDream={dream} />
                   </Column>
                   <Button
                     type="button"

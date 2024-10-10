@@ -396,6 +396,7 @@
     "playlist_checkbox_menu": {
       "placeholder": "Type to filter playlist",
       "add_dream_to_playlist": "Add dream to playlist",
+      "add_playlist_to_playlist": "Add dream to playlist",
       "playlist_item_successfully_added": "Playlist item added successfully.",
       "playlist_item_successfully_removed": "Playlist item removed successfully.",
       "error_adding_playlist_item": "Error adding item to playlist.",

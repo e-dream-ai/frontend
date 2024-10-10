@@ -29,6 +29,7 @@ export type Playlist = {
   displayedOwner: User;
   created_at: string;
   items?: PlaylistItem[];
+  playlistItems?: PlaylistItem[];
   itemCount?: number;
   featureRank?: number;
   nsfw?: boolean;

@@ -36,10 +36,16 @@ const StyledInput = styled.input`
 `;
 
 type PlaylistCheckboxMenuProps = {
-  dream?: Dream;
+  childDream?: Dream;
+  childPlaylist?: Playlist;
+  type: "dream" | "playlist";
 };
 
-export const PlaylistCheckboxMenu = ({ dream }: PlaylistCheckboxMenuProps) => {
+export const PlaylistCheckboxMenu = ({
+  type,
+  childDream,
+  childPlaylist,
+}: PlaylistCheckboxMenuProps) => {
   const theme = useTheme();
   const { t } = useTranslation();
 
@@ -48,12 +54,15 @@ export const PlaylistCheckboxMenu = ({ dream }: PlaylistCheckboxMenuProps) => {
     search: playlistSearch,
   });
 
-  const dreamPlaylistItems: PlaylistItem[] = useMemo(
-    () => dream?.playlistItems ?? [],
-    [dream],
+  const currentItemPlaylistItems: PlaylistItem[] = useMemo(
+    () =>
+      (type === "dream"
+        ? childDream?.playlistItems
+        : childPlaylist?.playlistItems) ?? [],
+    [type, childDream, childPlaylist],
   );
 
-  const menuPlaylists = useMemo(() => {
+  const menuPlaylistsList = useMemo(() => {
     return (playlistsData?.data?.playlists ?? [])
       .filter((playlist) => playlist.name)
       .filter((pl) =>
@@ -69,7 +78,9 @@ export const PlaylistCheckboxMenu = ({ dream }: PlaylistCheckboxMenuProps) => {
             id="add-dream-to-playlist"
             place="right-end"
             content={t(
-              "components.playlist_checkbox_menu.add_dream_to_playlist",
+              type === "dream"
+                ? "components.playlist_checkbox_menu.add_dream_to_playlist"
+                : "components.playlist_checkbox_menu.add_playlist_to_playlist",
             )}
           />
           <Text color={theme.textPrimaryColor} fontSize="1.2rem">
@@ -104,17 +115,19 @@ export const PlaylistCheckboxMenu = ({ dream }: PlaylistCheckboxMenuProps) => {
           </Row>
         )}
       </FocusableItem>
-      {menuPlaylists.map((pl) => {
-        const playlistItem = dreamPlaylistItems.find(
-          (pi) => pi?.playlist?.id === pl.id,
+      {menuPlaylistsList.map((mipl) => {
+        const playlistItem = currentItemPlaylistItems.find(
+          (pi) => pi?.playlist?.id === mipl.id,
         );
 
         return (
           <PlaylistMenuItem
-            key={pl.id}
-            playlist={pl}
+            type={type}
+            key={mipl.id}
+            menuItemPlaylist={mipl}
             playlistItem={playlistItem}
-            dream={dream}
+            childDream={childDream}
+            childPlaylist={childPlaylist}
             checked={Boolean(playlistItem)}
           />
         );
@@ -124,16 +137,20 @@ export const PlaylistCheckboxMenu = ({ dream }: PlaylistCheckboxMenuProps) => {
 };
 
 type PlaylistMenuItemProps = {
-  playlist: Playlist;
+  type: "dream" | "playlist";
+  menuItemPlaylist: Playlist;
   playlistItem?: PlaylistItem;
-  dream?: Dream;
+  childDream?: Dream;
+  childPlaylist?: Playlist;
   checked: boolean;
 };
 
 const PlaylistMenuItem = ({
-  playlist,
+  type,
+  menuItemPlaylist,
   playlistItem,
-  dream,
+  childDream,
+  childPlaylist,
   checked = false,
 }: PlaylistMenuItemProps) => {
   const { t } = useTranslation();
@@ -147,22 +164,26 @@ const PlaylistMenuItem = ({
   const handleAddPlaylistItem = async () => {
     try {
       const data = await addPlaylistItemMutation.mutateAsync({
-        playlistUUID: playlist!.uuid,
+        playlistUUID: menuItemPlaylist!.uuid,
         values: {
-          type: "dream",
-          uuid: dream!.uuid,
+          type,
+          uuid: type === "dream" ? childDream!.uuid : childPlaylist!.uuid,
         },
       });
       if (data.success) {
         /**
          * Refetch queries
          */
-        queryClient.refetchQueries([DREAM_QUERY_KEY, dream?.uuid]);
+        if (type === "dream") {
+          queryClient.refetchQueries([DREAM_QUERY_KEY, childDream?.uuid]);
+        } else {
+          queryClient.refetchQueries([PLAYLIST_QUERY_KEY, childPlaylist?.uuid]);
+        }
 
         /**
          * Reset queries
          */
-        queryClient.resetQueries([PLAYLIST_QUERY_KEY, playlist?.uuid]);
+        queryClient.resetQueries([PLAYLIST_QUERY_KEY, menuItemPlaylist?.uuid]);
 
         toast.success(
           t(
@@ -184,7 +205,7 @@ const PlaylistMenuItem = ({
   const handleDeletePlaylistItemMutation = async () => {
     try {
       const data = await deletePlaylistItemMutation.mutateAsync({
-        playlistUUID: playlist!.uuid,
+        playlistUUID: menuItemPlaylist!.uuid,
         itemId: playlistItem?.id,
       });
 
@@ -192,12 +213,16 @@ const PlaylistMenuItem = ({
         /**
          * Refetch queries
          */
-        queryClient.refetchQueries([DREAM_QUERY_KEY, dream?.uuid]);
+        if (type === "dream") {
+          queryClient.refetchQueries([DREAM_QUERY_KEY, childDream?.uuid]);
+        } else {
+          queryClient.refetchQueries([PLAYLIST_QUERY_KEY, childPlaylist?.uuid]);
+        }
 
         /**
          * Reset queries
          */
-        queryClient.resetQueries([PLAYLIST_QUERY_KEY, playlist?.uuid]);
+        queryClient.resetQueries([PLAYLIST_QUERY_KEY, menuItemPlaylist?.uuid]);
 
         toast.success(
           t(
@@ -234,7 +259,7 @@ const PlaylistMenuItem = ({
       disabled={isLoading}
     >
       <Row mb="0">
-        <Column>{playlist?.name}</Column>
+        <Column>{menuItemPlaylist?.name}</Column>
         <Column ml="2">
           <FontAwesomeIcon
             icon={faSpinner}
