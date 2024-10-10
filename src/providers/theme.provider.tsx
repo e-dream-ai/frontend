@@ -10,6 +10,7 @@ const Style = createGlobalStyle`
     margin: 0;
     font-family: "Lato", sans-serif;
     font-size: 16px;
+    overflow-x: hidden;
   }
 `;
 
