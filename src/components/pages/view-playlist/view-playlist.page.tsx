@@ -248,7 +248,7 @@ export const ViewPlaylistPage = () => {
               <Row marginBottom={0} alignItems="center">
                 <PlaylistCheckboxMenu
                   type="playlist"
-                  childPlaylist={playlist}
+                  targetItem={playlist}
                 />
                 <Button
                   type="button"

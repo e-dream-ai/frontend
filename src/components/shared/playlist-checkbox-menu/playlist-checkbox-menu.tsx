@@ -36,15 +36,13 @@ const StyledInput = styled.input`
 `;
 
 type PlaylistCheckboxMenuProps = {
-  childDream?: Dream;
-  childPlaylist?: Playlist;
+  targetItem?: Dream | Playlist;
   type: "dream" | "playlist";
 };
 
 export const PlaylistCheckboxMenu = ({
   type,
-  childDream,
-  childPlaylist,
+  targetItem,
 }: PlaylistCheckboxMenuProps) => {
   const theme = useTheme();
   const { t } = useTranslation();
@@ -54,21 +52,34 @@ export const PlaylistCheckboxMenu = ({
     search: playlistSearch,
   });
 
-  const currentItemPlaylistItems: PlaylistItem[] = useMemo(
-    () =>
-      (type === "dream"
-        ? childDream?.playlistItems
-        : childPlaylist?.playlistItems) ?? [],
-    [type, childDream, childPlaylist],
+  const targetItemPlaylistItems: PlaylistItem[] = useMemo(
+    () => targetItem?.playlistItems ?? [],
+    [targetItem],
   );
 
   const menuPlaylistsList = useMemo(() => {
-    return (playlistsData?.data?.playlists ?? [])
-      .filter((playlist) => playlist.name)
-      .filter((pl) =>
-        pl.name.toUpperCase().includes(playlistSearch.trim().toUpperCase()),
-      );
-  }, [playlistsData, playlistSearch]);
+    return (
+      (playlistsData?.data?.playlists ?? [])
+      /**
+       * Remove empty name playlists
+       */
+        .filter((playlist) => playlist.name)
+        /**
+         * Filter list by search
+         */
+        .filter((pl) =>
+          pl.name.toUpperCase().includes(playlistSearch.trim().toUpperCase()),
+        )
+        /**
+         * Remove target playlist if is listed on the menu
+         */
+        .filter(
+          (pl) =>
+            type === "dream" ||
+            (type === "playlist" && pl.id !== targetItem?.id),
+        )
+    );
+  }, [type, targetItem, playlistsData, playlistSearch]);
 
   return (
     <Menu
@@ -116,7 +127,10 @@ export const PlaylistCheckboxMenu = ({
         )}
       </FocusableItem>
       {menuPlaylistsList.map((mipl) => {
-        const playlistItem = currentItemPlaylistItems.find(
+        /**
+         * If target item is added in one of the listed playlist, will found a playlist item to check the playlist in the menu
+         */
+        const foundPlaylistItem = targetItemPlaylistItems.find(
           (pi) => pi?.playlist?.id === mipl.id,
         );
 
@@ -125,10 +139,9 @@ export const PlaylistCheckboxMenu = ({
             type={type}
             key={mipl.id}
             menuItemPlaylist={mipl}
-            playlistItem={playlistItem}
-            childDream={childDream}
-            childPlaylist={childPlaylist}
-            checked={Boolean(playlistItem)}
+            playlistItem={foundPlaylistItem}
+            targetItem={targetItem}
+            checked={Boolean(foundPlaylistItem)}
           />
         );
       })}
@@ -140,7 +153,7 @@ type PlaylistMenuItemProps = {
   type: "dream" | "playlist";
   menuItemPlaylist: Playlist;
   playlistItem?: PlaylistItem;
-  childDream?: Dream;
+  targetItem?: Dream | Playlist;
   childPlaylist?: Playlist;
   checked: boolean;
 };
@@ -149,8 +162,7 @@ const PlaylistMenuItem = ({
   type,
   menuItemPlaylist,
   playlistItem,
-  childDream,
-  childPlaylist,
+  targetItem,
   checked = false,
 }: PlaylistMenuItemProps) => {
   const { t } = useTranslation();
@@ -167,7 +179,7 @@ const PlaylistMenuItem = ({
         playlistUUID: menuItemPlaylist!.uuid,
         values: {
           type,
-          uuid: type === "dream" ? childDream!.uuid : childPlaylist!.uuid,
+          uuid: targetItem!.uuid,
         },
       });
       if (data.success) {
@@ -175,9 +187,9 @@ const PlaylistMenuItem = ({
          * Refetch queries
          */
         if (type === "dream") {
-          queryClient.refetchQueries([DREAM_QUERY_KEY, childDream?.uuid]);
+          queryClient.refetchQueries([DREAM_QUERY_KEY, targetItem?.uuid]);
         } else {
-          queryClient.refetchQueries([PLAYLIST_QUERY_KEY, childPlaylist?.uuid]);
+          queryClient.refetchQueries([PLAYLIST_QUERY_KEY, targetItem?.uuid]);
         }
 
         /**
@@ -214,9 +226,9 @@ const PlaylistMenuItem = ({
          * Refetch queries
          */
         if (type === "dream") {
-          queryClient.refetchQueries([DREAM_QUERY_KEY, childDream?.uuid]);
+          queryClient.refetchQueries([DREAM_QUERY_KEY, targetItem?.uuid]);
         } else {
-          queryClient.refetchQueries([PLAYLIST_QUERY_KEY, childPlaylist?.uuid]);
+          queryClient.refetchQueries([PLAYLIST_QUERY_KEY, targetItem?.uuid]);
         }
 
         /**
