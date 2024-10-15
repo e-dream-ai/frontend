@@ -27,7 +27,7 @@ export default defineConfig({
         ],
       },
       manifest: {
-        name: "e-dreamm",
+        name: "e-dream",
         short_name: "e-dream",
         description: "e-dream app",
         theme_color: "#000000",
