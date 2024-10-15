@@ -1,8 +1,60 @@
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
+import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  plugins: [
+    react(),
+    tsconfigPaths(),
+    VitePWA({
+      registerType: "autoUpdate",
+      devOptions: {
+        enabled: true,
+      },
+      workbox: {
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,json,jpeg}"],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.origin === self.location.origin,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "site-cache",
+            },
+          },
+        ],
+      },
+      manifest: {
+        name: "e-dreamm",
+        short_name: "e-dream",
+        description: "e-dream app",
+        theme_color: "#000000",
+        screenshots: [
+          {
+            src: "screenshot-1.jpeg",
+            sizes: "3016x2020",
+            form_factor: "wide",
+          },
+          {
+            src: "screenshot-2.jpeg",
+            sizes: "850x1852",
+            form_factor: "narrow",
+          },
+        ],
+        icons: [
+          {
+            src: "favicon/favicon-128x128.png",
+            sizes: "128x128",
+            type: "image/png",
+          },
+          {
+            src: "favicon/favicon-196x196.png",
+            sizes: "196x196",
+            type: "image/png",
+          },
+        ],
+      },
+    }),
+  ],
 });

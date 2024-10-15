@@ -51,7 +51,7 @@ export const AuthProvider: React.FC<{
          * GA set user id
          */
         ReactGA.set({
-          userId: String(user.uuid),
+          user_uuid: String(user.uuid),
         });
       }
       setUser(user);

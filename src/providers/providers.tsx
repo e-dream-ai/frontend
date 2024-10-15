@@ -4,7 +4,6 @@ import ModalProvider from "@/providers/modal.provider";
 import QueryClientProvider from "@/providers/query-client.provider";
 import HighlightContext from "@/providers/highlight.provider";
 import PermissionProvider from "./permission.provider";
-import ThemeProvider from "./theme.provider";
 import SocketProvider from "./socket.provider";
 
 export const withProviders = (
@@ -21,7 +20,6 @@ export const withProviders = (
 };
 
 export const Providers = [
-  ThemeProvider,
   QueryClientProvider,
   AuthProvider,
   HighlightContext,
