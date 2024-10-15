@@ -1,9 +1,0 @@
-{
-  "short_name": "e-dream",
-  "name": "e-dream",
-  "icons": [],
-  "start_url": ".",
-  "display": "standalone",
-  "theme_color": "#000",
-  "background_color": "#000"
-}

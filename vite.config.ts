@@ -13,6 +13,7 @@ export default defineConfig({
       devOptions: {
         enabled: true,
       },
+      manifestFilename: "manifest.json",
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,json,jpeg}"],
         runtimeCaching: [
