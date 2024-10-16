@@ -16,13 +16,18 @@ import { ROUTES } from "@/constants/routes.constants";
 import { Button } from "@/components/shared";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faClose } from "@fortawesome/free-solid-svg-icons";
-import { useState } from "react";
+import { useRef, useState } from "react";
+import useOutsideClick from "@/hooks/useOutsideClick";
 
 export const Header: React.FC = () => {
   const { t } = useTranslation();
   const [isNavOpen, setNavOpen] = useState<boolean>(false);
+  const menuContainerRef = useRef(null);
+  const barsButtonRef = useRef(null);
 
   const toggleNav = () => setNavOpen(!isNavOpen);
+
+  useOutsideClick(menuContainerRef, () => setNavOpen(false), [barsButtonRef]);
 
   return (
     <>
@@ -44,6 +49,7 @@ export const Header: React.FC = () => {
 
           <BarsButtonContainer>
             <Button
+              ref={barsButtonRef}
               transparent
               size="lg"
               before={<FontAwesomeIcon icon={isNavOpen ? faClose : faBars} />}
@@ -51,7 +57,7 @@ export const Header: React.FC = () => {
             />
           </BarsButtonContainer>
 
-          <MenuContainer isNavOpen={isNavOpen}>
+          <MenuContainer ref={menuContainerRef} isNavOpen={isNavOpen}>
             <Nav isNavOpen={isNavOpen}>
               <NavList onClickMenuItem={toggleNav} />
             </Nav>

@@ -1,3 +1,4 @@
+import React from "react";
 import { SpaceProps, TypographyProps } from "styled-system";
 import { Sizes } from "@/types/sizes.types";
 import { TextTransform, Types } from "@/types/style-types.types";
@@ -17,33 +18,41 @@ type ButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
 } & SpaceProps &
   TypographyProps;
 
-export const Button: React.FC<ButtonProps> = ({
-  children,
-  before,
-  after,
-  isLoading,
-  size = "md",
-  buttonType = "primary",
-  transparent,
-  ...props
-}) => (
-  <StyledButton
-    size={size}
-    disabled={isLoading}
-    buttonType={buttonType}
-    transparent={transparent}
-    {...props}
-  >
-    {before && <ButtonBefore className="button-before">{before}</ButtonBefore>}
-    {children}
-    {after && !isLoading && (
-      <ButtonAfter className="button-after">{after}</ButtonAfter>
-    )}
-    {isLoading && (
-      <ButtonAfter>
-        <FontAwesomeIcon icon={faSpinner} spin />
-      </ButtonAfter>
-    )}
-    <div className="overlay" />
-  </StyledButton>
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      children,
+      before,
+      after,
+      isLoading,
+      size = "md",
+      buttonType = "primary",
+      transparent,
+      ...props
+    },
+    ref,
+  ) => (
+    <StyledButton
+      ref={ref}
+      size={size}
+      disabled={isLoading}
+      buttonType={buttonType}
+      transparent={transparent}
+      {...props}
+    >
+      {before && (
+        <ButtonBefore className="button-before">{before}</ButtonBefore>
+      )}
+      {children}
+      {after && !isLoading && (
+        <ButtonAfter className="button-after">{after}</ButtonAfter>
+      )}
+      {isLoading && (
+        <ButtonAfter>
+          <FontAwesomeIcon icon={faSpinner} spin />
+        </ButtonAfter>
+      )}
+      <div className="overlay" />
+    </StyledButton>
+  ),
 );

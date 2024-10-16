@@ -136,6 +136,8 @@ export const BarsButtonContainer = styled.div`
 
   button {
     padding: 0 0 0 20px;
+    width: 55px;
+    height: 55px;
   }
 
   @media (max-width: ${DEVICES.TABLET}) {
