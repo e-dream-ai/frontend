@@ -226,29 +226,33 @@ export const HeaderAvatar = styled.div<{ url?: string; connected?: boolean }>`
   }
 `;
 
-export const HeaderAvatarPlaceholder = styled.div<{
-  url?: string;
-  connected?: boolean;
-}>`
-  ${AvatarStyle}
+export const HeaderAvatarPlaceholder = styled.div`
+  display: flex;
+  position: relative;
+`;
 
+export const HeaderAvatarPlaceholderIcon = styled.div`
+  ${AvatarStyle}
   color: ${(props) => props.theme.textBodyColor};
   background-color: rgba(30, 30, 30, 1);
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 1rem;
+`;
 
-  &::before {
-    content: "";
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    background-color: ${(props) =>
-      props.connected ? "greenyellow" : "gainsboro"};
-    border-radius: 50%;
-    vertical-align: middle;
-  }
+export const HeaderAvatarPlaceholderDot = styled.div<{
+  connected?: boolean;
+}>`
+  display: inline-block;
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background-color: ${(props) =>
+    props.connected ? "greenyellow" : "gainsboro"};
+  border-radius: 50%;
+  bottom: 0;
+  left: 0;
 `;
 
 export default StyledHeader;

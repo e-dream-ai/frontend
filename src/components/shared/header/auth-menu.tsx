@@ -6,6 +6,8 @@ import { AnchorIcon, Divider, StyledAuthHeader } from "./auth-menu.styled";
 import StyledHeader, {
   HeaderAvatar,
   HeaderAvatarPlaceholder,
+  HeaderAvatarPlaceholderDot,
+  HeaderAvatarPlaceholderIcon,
   HeaderProfileMenu,
   HeaderUserName,
 } from "./header.styled";
@@ -17,7 +19,6 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { Menu, MenuButton, MenuItem } from "@/components/shared/menu/menu";
-import { User } from "@/types/auth.types";
 import { getUserNameOrEmail } from "@/utils/user.util";
 import { useImage } from "@/hooks/useImage";
 import { useDesktopClientStatus } from "@/hooks/useDesktopClientStatus";
@@ -38,9 +39,8 @@ const AuthAnchor: React.FC<{
 export const AuthMenu: React.FC = () => {
   const { t } = useTranslation();
   const { user, logout, isLoading } = useAuth();
-  const userWithoutToken = user as Omit<User, "token">;
 
-  const avatarUrl = useImage(userWithoutToken?.avatar, {
+  const avatarUrl = useImage(user?.avatar, {
     width: 30,
     fit: "cover",
   });
@@ -56,11 +56,14 @@ export const AuthMenu: React.FC = () => {
           menuButton={
             <MenuButton>
               <HeaderProfileMenu>
-                {userWithoutToken?.avatar ? (
+                {user?.avatar ? (
                   <HeaderAvatar url={avatarUrl} connected={isActive} />
                 ) : (
-                  <HeaderAvatarPlaceholder connected={isActive}>
-                    <FontAwesomeIcon icon={faUser} />
+                  <HeaderAvatarPlaceholder>
+                    <HeaderAvatarPlaceholderIcon>
+                      <FontAwesomeIcon icon={faUser} />
+                    </HeaderAvatarPlaceholderIcon>
+                    <HeaderAvatarPlaceholderDot connected={isActive} />
                   </HeaderAvatarPlaceholder>
                 )}
                 <HeaderUserName>{getUserNameOrEmail(user)}</HeaderUserName>
