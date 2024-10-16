@@ -15,6 +15,7 @@ export default defineConfig({
       },
       manifestFilename: "manifest.json",
       workbox: {
+        mode: "production",
         globPatterns: ["**/*.{js,css,html,ico,png,svg,json,jpeg}"],
         runtimeCaching: [
           {
