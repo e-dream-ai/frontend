@@ -14,6 +14,7 @@ import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAuthenticateUser } from "@/api/user/query/useAuthenticateUser";
 import ReactGA from "react-ga";
+import Bugsnag from "@bugsnag/js";
 
 type AuthContextType = {
   user: User | null;
@@ -62,6 +63,7 @@ export const AuthProvider: React.FC<{
   const login: (user: User) => void = useCallback(
     (user: User) => {
       setLoggedUser(user);
+      Bugsnag.setUser(user.uuid, user.email, user?.name);
     },
     [setLoggedUser],
   );
