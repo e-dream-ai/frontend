@@ -15,12 +15,12 @@ const root = ReactDOM.createRoot(
 );
 
 Bugsnag.start({
-  apiKey: "7743b75d16aa1c3b8ef18de27aa35e30",
+  apiKey: import.meta.env.VITE_BUGSNAG_API_KEY,
   plugins: [new BugsnagPluginReact()],
   enabledReleaseStages: ["production", "development"],
   releaseStage: getReleaseStage(),
 });
-BugsnagPerformance.start({ apiKey: "7743b75d16aa1c3b8ef18de27aa35e30" });
+BugsnagPerformance.start({ apiKey: import.meta.env.VITE_BUGSNAG_API_KEY });
 
 export const ErrorBoundary =
   Bugsnag.getPlugin("react")!.createErrorBoundary(React);
