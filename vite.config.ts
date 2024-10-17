@@ -59,4 +59,13 @@ export default defineConfig({
       },
     }),
   ],
+  define: {
+    "import.meta.env.VITE_COMMIT_REF": JSON.stringify(
+      process.env.VITE_COMMIT_REF,
+    ),
+    "import.meta.env.VITE_BRANCH": JSON.stringify(process.env.VITE_BRANCH),
+    "import.meta.env.VITE_BUILD_DATE": JSON.stringify(
+      process.env.VITE_BUILD_DATE,
+    ),
+  },
 });

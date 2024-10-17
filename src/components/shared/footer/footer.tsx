@@ -83,7 +83,11 @@ export const Footer: React.FC = () => {
           <FooterIcons />
         </FooterCol>
         <FooterCol>
-          <p>© e-dream, inc</p>
+          <p>
+            © e-dream, inc {import.meta.env.VITE_COMMIT_REF || ""}{" "}
+            {import.meta.env.VITE_BRANCH || ""}{" "}
+            {import.meta.env.VITE_BUILD_DATE || ""}
+          </p>
         </FooterCol>
       </FooterRow>
     </StyledFooter>

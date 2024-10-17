@@ -1,0 +1,4 @@
+[build.environment]
+  VITE_COMMIT_REF = "git rev-parse --short HEAD"
+  VITE_BRANCH = "git rev-parse --abbrev-ref HEAD"
+  VITE_BUILD_DATE = "date -u +'%Y-%m-%d'"
