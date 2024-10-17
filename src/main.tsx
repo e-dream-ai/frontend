@@ -19,6 +19,25 @@ Bugsnag.start({
   plugins: [new BugsnagPluginReact()],
   enabledReleaseStages: ["production", "development"],
   releaseStage: getReleaseStage(),
+  onError: function (event) {
+    if (event.originalError && event.originalError.stack) {
+      const stack = event.originalError.stack?.toLowerCase();
+      // Check for various types of browser extensions
+      if (
+        stack?.includes("chrome-extension://") ||
+        stack?.includes("moz-extension://") ||
+        stack?.includes("safari-extension://") ||
+        stack?.includes("safari-web-extension://") ||
+        stack?.includes("ms-browser-extension://") ||
+        stack?.includes("edge-extension://")
+      ) {
+        // Don't send event if comes from an extension
+        return false;
+      }
+    }
+
+    return true;
+  },
 });
 BugsnagPerformance.start({ apiKey: import.meta.env.VITE_BUGSNAG_API_KEY });
 
