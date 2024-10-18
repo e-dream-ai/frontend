@@ -45,8 +45,8 @@
   "scripts": {
     "start": "vite --mode development",
     "dev": "vite --mode development",
-    "build": "tsc && vite build --mode prod",
-    "build:stage": "tsc && vite build --mode stage",
+    "build": "node generate-git-info.js && tsc && vite build --mode prod",
+    "build:stage": "node generate-git-info.js && tsc && vite build --mode stage",
     "serve": "vite preview",
     "lint": "eslint . --ext .js,.ts",
     "lint-staged": "lint-staged",

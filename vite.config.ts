@@ -2,6 +2,7 @@ import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { VitePWA } from "vite-plugin-pwa";
+import gitInfo from "./git-info.json";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -60,12 +61,8 @@ export default defineConfig({
     }),
   ],
   define: {
-    "import.meta.env.VITE_COMMIT_REF": JSON.stringify(
-      process.env.VITE_COMMIT_REF,
-    ),
-    "import.meta.env.VITE_BRANCH": JSON.stringify(process.env.VITE_BRANCH),
-    "import.meta.env.VITE_BUILD_DATE": JSON.stringify(
-      process.env.VITE_BUILD_DATE,
-    ),
+    "import.meta.env.VITE_COMMIT_REF": JSON.stringify(gitInfo?.VITE_COMMIT_REF),
+    "import.meta.env.VITE_BRANCH": JSON.stringify(gitInfo?.VITE_BRANCH),
+    "import.meta.env.VITE_BUILD_DATE": JSON.stringify(gitInfo?.VITE_BUILD_DATE),
   },
 });
