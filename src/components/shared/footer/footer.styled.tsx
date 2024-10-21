@@ -3,12 +3,10 @@ import styled from "styled-components";
 
 export const StyledFooter = styled.footer`
   display: flex;
-  flex: auto;
   justify-content: center;
   width: 100%;
   z-index: 2;
   overflow: hidden;
-  position: fixed;
   bottom: 0;
   font-size: 0.875rem;
   color: ${(props) => props.theme.textPrimaryColor};
@@ -18,10 +16,6 @@ export const StyledFooter = styled.footer`
 
   .reverse {
     color: ${(props) => props.theme.textTertiaryColor};
-  }
-
-  @media only screen and (max-width: ${DEVICES.LAPTOP}) {
-    position: static;
   }
 `;
 

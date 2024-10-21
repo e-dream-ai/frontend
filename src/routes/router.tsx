@@ -16,7 +16,7 @@ import { ROUTES } from "@/constants/routes.constants";
 import { Navigate, Outlet, createBrowserRouter, useLocation } from "react-router-dom";
 import ProtectedRoute from "./protected-route";
 import { CreatePage } from "@/components/pages/create/create.page";
-import { Footer, Row } from "@/components/shared";
+import { Footer } from "@/components/shared";
 import { AuthenticatePage } from "@/components/pages/authenticate/authenticate.page";
 import { LoginPage } from "@/components/pages/login/login.page";
 import { MagicPage } from "@/components/pages/magic/magic.page";
@@ -27,6 +27,7 @@ import PlaygroundPage from "@/components/pages/playground/playground.page";
 import NotFoundPage from "@/components/pages/not-found/not-found.page";
 import { useEffect } from "react";
 import ReactGA from 'react-ga';
+import { PageContainer } from "@/components/shared/container/page-container";
 
 export const RootElement = () => {
   const location = useLocation();
@@ -39,12 +40,11 @@ export const RootElement = () => {
   }, [location]);
 
   return (
-    <>
+    <PageContainer>
       <Header />
       <Outlet />
-      <Row mb={["180px", "120px", "100px"]} />
       <Footer />
-    </>
+    </PageContainer>
   );
 };
 
