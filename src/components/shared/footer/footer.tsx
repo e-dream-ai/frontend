@@ -1,4 +1,4 @@
-import { Anchor, AnchorLink } from "@/components/shared";
+import { Anchor, AnchorLink, Column, Row, Text } from "@/components/shared";
 import { ROUTES } from "@/constants/routes.constants";
 import { useTranslation } from "react-i18next";
 import { FooterCol, FooterRow, StyledFooter } from "./footer.styled";
@@ -11,6 +11,7 @@ import {
   faTwitter,
 } from "@fortawesome/free-brands-svg-icons";
 import { faCircle } from "@fortawesome/free-solid-svg-icons";
+import { useTheme } from "styled-components";
 
 const FooterIcons: React.FC = () => (
   <>
@@ -68,6 +69,7 @@ const FooterIcons: React.FC = () => (
 
 export const Footer: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   return (
     <StyledFooter id="footer">
@@ -83,11 +85,18 @@ export const Footer: React.FC = () => {
           <FooterIcons />
         </FooterCol>
         <FooterCol>
-          <p>
-            © e-dream, inc {import.meta.env.VITE_COMMIT_REF || ""}{" "}
-            {import.meta.env.VITE_BRANCH || ""}{" "}
-            {import.meta.env.VITE_BUILD_DATE || ""}
-          </p>
+          <Column>
+            <Row justifyContent="center" mb="0">
+              <p>© e-dream, inc</p>
+            </Row>
+            <Row justifyContent="center" mb="0">
+              <Text fontSize="0.8rem" color={theme.textBodyColor}>
+                {import.meta.env.VITE_COMMIT_REF || ""}{" "}
+                {import.meta.env.VITE_BRANCH || ""}{" "}
+                {import.meta.env.VITE_BUILD_DATE || ""}
+              </Text>
+            </Row>
+          </Column>
         </FooterCol>
       </FooterRow>
     </StyledFooter>
