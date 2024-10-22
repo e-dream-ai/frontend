@@ -17,7 +17,7 @@ type RowProps = {
 export const Row = styled.div<RowProps>`
   display: flex;
   border-bottom: ${(props) =>
-    props.separator ? `1px solid ${props.theme.colorPrimary}` : "0"};
+    props.separator ? `1px solid ${props.theme.textPrimaryColor}` : "0"};
   justify-content: ${(props) => props.justifyContent};
   align-items: ${(props) => props.alignItems};
   margin-bottom: 1rem;

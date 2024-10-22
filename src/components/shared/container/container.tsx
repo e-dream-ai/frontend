@@ -24,7 +24,7 @@ const StyledChildren = styled.div`
     font-size: 1.25rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: ${(props) => props.theme.textPrimaryColor};
+    color: ${(props) => props.theme.textAccentColor};
     margin: 0;
     margin-bottom: 1rem;
   }
@@ -33,7 +33,7 @@ const StyledChildren = styled.div`
     font-size: 1rem;
     font-weight: 700;
     text-transform: uppercase;
-    color: ${(props) => props.theme.textPrimaryColor};
+    color: ${(props) => props.theme.textAccentColor};
     margin: 0;
     margin-bottom: 1rem;
   }

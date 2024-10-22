@@ -20,7 +20,7 @@ export const ImageContainer = styled.div`
 
   &:hover {
     .filmstrip-icon {
-      color: ${(props) => props.theme.colorSecondary};
+      filter: brightness(140%);
     }
   }
 `;
@@ -29,6 +29,7 @@ export const OverlayText = styled(Text)`
   position: absolute;
   top: 8px;
   left: 8px;
+  color: ${(props) => props.theme.textAccentColor};
   background-color: rgba(0, 0, 0, 0.5);
   padding: 6px 12px;
   font-size: 12px;
@@ -41,7 +42,7 @@ export const OverlayIcon = styled.div`
   right: 8px;
   padding: 0px 0.6rem;
   font-size: 1.2rem;
-  color: ${(props) => props.theme.textPrimaryColor};
+  color: ${(props) => props.theme.textAccentColor};
 
   svg {
     filter: drop-shadow(0.2rem 0.2rem 0.2rem #000);

@@ -13,10 +13,14 @@ export const MenuButton = styled(MenuButtonComponent)`
   border: 0;
   color: ${(props) => props.theme.colorPrimary};
   font-size: 1rem;
+  
+  &:hover {
+    filter: brightness(140%);
+  }
 `;
 
 export const MenuItem = styled(MenuItemComponent)`
-  color: ${(props) => props.theme.textPrimaryColor};
+  color: ${(props) => props.theme.colorPrimary};
   background-color: ${(props) => props.theme.inputTextColorSecondary};
   &:hover {
     background-color: ${(props) => props.theme.inputTextColorPrimary};

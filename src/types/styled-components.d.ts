@@ -11,6 +11,7 @@ declare module "styled-components" {
     colorBackgroundTertiary: string;
     colorBackgroundQuaternary: string;
     colorBackgroundModalHeader: string;
+    textAccentColor: string;
     textBodyColor: string;
     textPrimaryColor: string;
     textSecondaryColor: string;

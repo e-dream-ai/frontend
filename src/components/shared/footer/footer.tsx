@@ -87,7 +87,9 @@ export const Footer: React.FC = () => {
         <FooterCol>
           <Column>
             <Row justifyContent="center" mb="0">
-              <p>© e-dream, inc</p>
+              <Text fontSize="0.8rem" color={theme.colorPrimary}>
+                <p>© e-dream, inc</p>
+              </Text>
             </Row>
             <Row justifyContent="center" mb="0">
               <Text fontSize="0.8rem" color={theme.textBodyColor}>

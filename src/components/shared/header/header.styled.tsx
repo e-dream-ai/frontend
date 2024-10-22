@@ -43,7 +43,7 @@ export const LogoAnchor = styled.a`
 export const HeaderTitle = styled.h1`
   font-family: "Comfortaa", sans-serif;
   font-size: 2.2rem;
-  color: ${(props) => props.theme.textPrimaryColor};
+  color: ${(props) => props.theme.colorPrimary};
   margin: 0.4rem 1rem;
   white-space: nowrap;
 
@@ -173,7 +173,7 @@ export const NavListItem = styled.li<{
   }
 
   &::after {
-    content: ${(props) => (props.showSlash ? `"/"` : "none")};
+    content: ${(props) => (props.showSlash ? `"•"` : "none")};
     color: ${(props) => props.theme.textPrimaryColor};
     margin: 0 12px;
 

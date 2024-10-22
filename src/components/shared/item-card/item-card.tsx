@@ -385,14 +385,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
                 </Column>
                 <Column justifyContent="center">
                   {/* card title */}
-                  <ItemTitleText
-                    ref={tooltipRef}
-                    color={
-                      type === "dream"
-                        ? theme.colorPrimary
-                        : theme.colorSecondary
-                    }
-                  >
+                  <ItemTitleText ref={tooltipRef} color={theme.colorPrimary}>
                     {type === "playlist" ? (
                       <FontAwesomeIcon icon={faListUl} />
                     ) : (
