@@ -2,6 +2,8 @@ import { DEVICES } from "@/constants/devices.constants";
 import styled from "styled-components";
 
 export const Divider = styled.div`
+  display: flex;
+  align-items: center;
   color: ${(props) => props.theme.textPrimaryColor};
   padding: 0 1.2rem;
 

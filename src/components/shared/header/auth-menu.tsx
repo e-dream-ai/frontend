@@ -96,7 +96,7 @@ export const AuthMenu: React.FC = () => {
             icon={<FontAwesomeIcon icon={faPencil} />}
             href={ROUTES.SIGNUP}
           />
-          <Divider>/</Divider>
+          <Divider>•</Divider>
           <AuthAnchor
             text={t("header.login")}
             icon={<FontAwesomeIcon icon={faLock} />}

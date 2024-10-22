@@ -94,7 +94,7 @@ export const PlaylistCheckboxMenu = ({
                 : "components.playlist_checkbox_menu.add_playlist_to_playlist",
             )}
           />
-          <Text color={theme.textAccentColor} fontSize="1.2rem">
+          <Text fontSize="1.2rem">
             <FontAwesomeIcon icon={faPlus} />
           </Text>
         </MenuButton>

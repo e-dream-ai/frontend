@@ -192,6 +192,7 @@ export const HeaderProfileMenu = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
+  color: ${(props) => props.theme.textAccentColor};
 `;
 
 export const HeaderUserName = styled.span`

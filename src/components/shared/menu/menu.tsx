@@ -13,24 +13,20 @@ export const MenuButton = styled(MenuButtonComponent)`
   border: 0;
   color: ${(props) => props.theme.colorPrimary};
   font-size: 1rem;
-  
-  &:hover {
-    filter: brightness(140%);
-  }
 `;
 
 export const MenuItem = styled(MenuItemComponent)`
-  color: ${(props) => props.theme.colorPrimary};
-  background-color: ${(props) => props.theme.inputTextColorSecondary};
+  color: ${(props) => props.theme.textAccentColor};
+  background-color: ${(props) => props.theme.inputBackgroundColor};
   &:hover {
-    background-color: ${(props) => props.theme.inputTextColorPrimary};
-    color: black;
+    background-color: ${(props) => props.theme.inputBackgroundColor};
+    color: ${(props) => props.theme.colorSecondary};
   }
 `;
 
 export const Menu = styled(MenuComponent)`
   .my-menu {
-    background-color: ${(props) => props.theme.inputTextColorSecondary};
+    background-color: ${(props) => props.theme.inputBackgroundColor};
   }
 `;
 
