@@ -34,7 +34,7 @@ const commonStyles = css`
     border-color linear 0.2s;
 
   &:hover {
-    filter: brightness(140%);
+    color: ${(props) => props.theme.colorSecondary};
   }
 `;
 

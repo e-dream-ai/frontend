@@ -21,6 +21,8 @@ export const AnchorIcon = styled.span`
 `;
 
 export const StyledAuthHeader = styled.div`
+  font-family: "Comfortaa", sans-serif;
+  text-transform: lowercase;
   display: flex;
   justify-content: flex-end;
   flex-direction: row;

@@ -10,7 +10,7 @@ import {
 
 export const Text = styled.span<TypographyProps & SpaceProps & ColorProps>`
   ${space}
-  color: ${(props) => props.theme.textPrimaryColor};
+  color: ${(props) => props.theme.textAccentColor};
   ${color}
   ${typography}
 `;

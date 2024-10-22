@@ -43,7 +43,7 @@ export const LogoAnchor = styled.a`
 export const HeaderTitle = styled.h1`
   font-family: "Comfortaa", sans-serif;
   font-size: 2.2rem;
-  color: ${(props) => props.theme.colorPrimary};
+  color: ${(props) => props.theme.textAccentColor};
   margin: 0.4rem 1rem;
   white-space: nowrap;
 
@@ -165,7 +165,8 @@ export const NavListItem = styled.li<{
 }>`
   display: ${(props) => (props.onlyMobile ? "none" : " inline-flex")};
   font-size: 1.2rem;
-  text-transform: uppercase;
+  font-family: "Comfortaa", sans-serif;
+  text-transform: lowercase;
 
   @media (max-width: ${DEVICES.TABLET}) {
     display: inline-flex;
@@ -181,6 +182,10 @@ export const NavListItem = styled.li<{
       content: "";
     }
   }
+
+  a {
+    color: ${(props) => props.theme.textAccentColor};
+  }
 `;
 
 export const HeaderProfileMenu = styled.div`
@@ -190,6 +195,8 @@ export const HeaderProfileMenu = styled.div`
 `;
 
 export const HeaderUserName = styled.span`
+  font-family: "Comfortaa", sans-serif;
+  text-transform: lowercase;
   @media (max-width: ${DEVICES.TABLET}) {
     display: none;
   }

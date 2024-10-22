@@ -21,18 +21,20 @@ const StyledChildren = styled.div`
   background-color: ${(props) => props.theme.colorBackgroundTertiary};
 
   h2 {
-    font-size: 1.25rem;
+    font-family: "Comfortaa", sans-serif;
+    text-transform: lowercase;
+    font-size: 1.6rem;
     font-weight: 700;
-    text-transform: uppercase;
     color: ${(props) => props.theme.textAccentColor};
     margin: 0;
     margin-bottom: 1rem;
   }
 
   h3 {
+    font-family: "Comfortaa", sans-serif;
+    text-transform: lowercase;
     font-size: 1rem;
     font-weight: 700;
-    text-transform: uppercase;
     color: ${(props) => props.theme.textAccentColor};
     margin: 0;
     margin-bottom: 1rem;
