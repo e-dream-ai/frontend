@@ -14,7 +14,7 @@ export const Paginate = styled(ReactPaginate)`
     cursor: pointer;
 
     &:hover {
-      color: ${(props) => props.theme.textPrimaryColor};
+      color: ${(props) => props.theme.colorSecondary};
     }
 
     &.disabled {

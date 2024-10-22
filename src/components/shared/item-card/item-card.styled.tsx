@@ -113,6 +113,16 @@ export const ItemCardAnchor = styled(Link)<{
 
   color: ${(props) => props.theme.textBodyColor};
   text-decoration: none;
+
+  .itemCard__title {
+    color: ${(props) => props.theme.colorPrimary};
+  }
+
+  &:hover {
+    .itemCard__title {
+      color: ${(props) => props.theme.colorSecondary};
+    }
+  }
 `;
 
 export const ItemCardImage = styled.img<{ size: Sizes }>`
