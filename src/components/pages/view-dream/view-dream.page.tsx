@@ -400,9 +400,11 @@ const ViewDreamPage: React.FC = () => {
 
   if (isDreamLoading) {
     return (
-      <Row justifyContent="center">
-        <Spinner />
-      </Row>
+      <Container>
+        <Row justifyContent="center">
+          <Spinner />
+        </Row>
+      </Container>
     );
   }
 
@@ -449,8 +451,8 @@ const ViewDreamPage: React.FC = () => {
           </Text>
         }
       />
-      <Section id={SectionID}>
-        <Container>
+      <Container>
+        <Section id={SectionID}>
           <Row
             justifyContent="space-between"
             alignItems="center"
@@ -663,8 +665,8 @@ const ViewDreamPage: React.FC = () => {
               false
             )}
           </form>
-        </Container>
-      </Section>
+        </Section>
+      </Container>
     </React.Fragment>
   );
 };

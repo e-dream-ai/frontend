@@ -43,15 +43,21 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
   const { uuid } = useParams<{ uuid: string }>();
   const { user: authUser } = useAuth();
   const userUUID = isMyProfilePage ? authUser?.uuid : uuid;
-  const { data, isError, isLoading: isUserLoading } = useUser({ uuid: userUUID });
+  const {
+    data,
+    isError,
+    isLoading: isUserLoading,
+  } = useUser({ uuid: userUUID });
   const user = data?.data?.user;
   const showApiKeyCard = isMyProfilePage || isLoggedUserAdmin;
 
   if (isUserLoading) {
     return (
-      <Row justifyContent="center">
-        <Spinner />
-      </Row>
+      <Container>
+        <Row justifyContent="center">
+          <Spinner />
+        </Row>
+      </Container>
     );
   }
 

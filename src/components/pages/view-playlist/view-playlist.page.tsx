@@ -208,9 +208,11 @@ export const ViewPlaylistPage = () => {
 
   if (isPlaylistLoading) {
     return (
-      <Row justifyContent="center">
-        <Spinner />
-      </Row>
+      <Container>
+        <Row justifyContent="center">
+          <Spinner />
+        </Row>
+      </Container>
     );
   }
 
@@ -231,8 +233,8 @@ export const ViewPlaylistPage = () => {
           </Text>
         }
       />
-      <Section id={SectionID}>
-        <Container>
+      <Container>
+        <Section id={SectionID}>
           <Row
             justifyContent="space-between"
             alignItems="center"
@@ -246,10 +248,7 @@ export const ViewPlaylistPage = () => {
 
             <Column flex="1" alignSelf="flex-end" alignItems="flex-end">
               <Row marginBottom={0} alignItems="center">
-                <PlaylistCheckboxMenu
-                  type="playlist"
-                  targetItem={playlist}
-                />
+                <PlaylistCheckboxMenu type="playlist" targetItem={playlist} />
                 <Button
                   type="button"
                   buttonType="default"
@@ -533,8 +532,8 @@ export const ViewPlaylistPage = () => {
               </Row>
             </Restricted> */}
           </form>
-        </Container>
-      </Section>
+        </Section>
+      </Container>
     </>
   );
 };
