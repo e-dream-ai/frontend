@@ -1,4 +1,4 @@
-import { Button, FileUploader, Row, Text, Column } from "@/components/shared";
+import { Button, FileUploader, Row, Text, Column, AnchorLink } from "@/components/shared";
 import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
 import { VideoList } from "@/components/shared/video-list/video-list";
 import {
@@ -22,6 +22,7 @@ import { toast } from "react-toastify";
 import Select from "@/components/shared/select/select";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faList, faSave } from "@fortawesome/free-solid-svg-icons";
+import { ROUTES } from "@/constants/routes.constants";
 
 export const UpdatePlaylist: React.FC = () => {
   const { t } = useTranslation();
@@ -142,6 +143,19 @@ export const UpdatePlaylist: React.FC = () => {
             uploadProgress={uploadProgress}
           />
         </Column>
+
+        <Row my={4}>
+          <Text>
+            {t("page.create.content_policy")} {""}
+            <AnchorLink
+              style={{ textDecoration: "underline" }}
+              to={ROUTES.TERMS_OF_SERVICE}
+            >
+              {t("page.create.terms_of_service")}
+            </AnchorLink>
+            .
+          </Text>
+        </Row>
 
         <Row justifyContent="flex-end" mt={4}>
           <Button

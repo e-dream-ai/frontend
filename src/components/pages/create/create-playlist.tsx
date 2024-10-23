@@ -4,6 +4,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { faList } from "@fortawesome/free-solid-svg-icons";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
 import {
+  AnchorLink,
   Button,
   Checkbox,
   FileUploader,
@@ -192,7 +193,20 @@ export const CreatePlaylist: React.FC = () => {
           />
         </Restricted>
 
-        <Row mt={4} justifyContent="flex-end">
+        <Row my={4}>
+          <Text>
+            {t("page.create.content_policy")} {""}
+            <AnchorLink
+              style={{ textDecoration: "underline" }}
+              to={ROUTES.TERMS_OF_SERVICE}
+            >
+              {t("page.create.terms_of_service")}
+            </AnchorLink>
+            .
+          </Text>
+        </Row>
+
+        <Row my={4} justifyContent="flex-end">
           <Button isLoading={isLoading}>
             {isLoading ? t("page.create.creating") : t("page.create.create")}
           </Button>

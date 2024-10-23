@@ -113,7 +113,10 @@ export const CreateDream: React.FC = () => {
 
         <Text>
           {t("page.create.content_policy")} {""}
-          <AnchorLink to={ROUTES.TERMS_OF_SERVICE}>
+          <AnchorLink
+            style={{ textDecoration: "underline" }}
+            to={ROUTES.TERMS_OF_SERVICE}
+          >
             {t("page.create.terms_of_service")}
           </AnchorLink>
           .
