@@ -19,6 +19,7 @@ Bugsnag.start({
   plugins: [new BugsnagPluginReact()],
   enabledReleaseStages: ["production", "development"],
   releaseStage: getReleaseStage(),
+  appVersion: import.meta.env.VITE_COMMIT_REF,
   onError: function (event) {
     if (event.originalError && event.originalError.stack) {
       const stack = event.originalError.stack?.toLowerCase();
