@@ -183,14 +183,16 @@ export const CreatePlaylist: React.FC = () => {
             types={ALLOWED_VIDEO_TYPES}
           />
 
-          <UploadVideosProgress
-            isUploading={isUploadingFiles}
-            totalVideos={totalVideos}
-            totalUploadedVideos={totalUploadedVideos}
-            totalUploadedVideosPercentage={totalUploadedVideosPercentage}
-            currentUploadFile={currentUploadFile}
-            uploadProgress={uploadProgress}
-          />
+          {Boolean(totalVideos) && isUploadingFiles && (
+            <UploadVideosProgress
+              isUploading={isUploadingFiles}
+              totalVideos={totalVideos}
+              totalUploadedVideos={totalUploadedVideos}
+              totalUploadedVideosPercentage={totalUploadedVideosPercentage}
+              currentUploadFile={currentUploadFile}
+              uploadProgress={uploadProgress}
+            />
+          )}
         </Restricted>
 
         <Row my={4}>

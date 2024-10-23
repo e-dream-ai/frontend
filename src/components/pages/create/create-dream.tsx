@@ -76,7 +76,9 @@ export const CreateDream: React.FC = () => {
   };
 
   const handleCancelCreateDream = async () => {
-    await reset();
+    if (video && isLoading) {
+      await reset();
+    }
     setVideo(undefined);
     toast.success(
       `${t("page.create.multipart_dream_upload_cancelled_successfully")}`,
@@ -136,40 +138,40 @@ export const CreateDream: React.FC = () => {
           </Column>
 
           <Column>
-            {!!video && (
-              <Row>
+            <Row>
+              <Button
+                type="button"
+                mr={2}
+                isLoading={isAborting}
+                disabled={!video || isAborting}
+                onClick={handleCancelCreateDream}
+              >
+                {t("page.create.cancel")}
+              </Button>
+              {!isFailed && (
                 <Button
-                  mr={2}
-                  isLoading={isAborting}
-                  disabled={isAborting}
-                  onClick={handleCancelCreateDream}
+                  after={<FontAwesomeIcon icon={faUpload} />}
+                  onClick={handleSubmit(onSubmit)}
+                  isLoading={isLoading}
+                  disabled={!video || isAborting || isLoading}
                 >
-                  {t("page.create.cancel")}
+                  {isLoading
+                    ? t("page.create.creating")
+                    : t("page.create.create")}
                 </Button>
-                {!isFailed && (
-                  <Button
-                    after={<FontAwesomeIcon icon={faUpload} />}
-                    onClick={handleSubmit(onSubmit)}
-                    isLoading={isLoading}
-                    disabled={!video || isAborting || isLoading}
-                  >
-                    {isLoading
-                      ? t("page.create.creating")
-                      : t("page.create.create")}
-                  </Button>
-                )}
-                {isFailed && (
-                  <Button
-                    after={<FontAwesomeIcon icon={faRotateRight} />}
-                    onClick={retryUploadFailedParts}
-                    isLoading={isLoading}
-                    disabled={isAborting || isLoading}
-                  >
-                    {t("page.create.retry")}
-                  </Button>
-                )}
-              </Row>
-            )}
+              )}
+              {isFailed && (
+                <Button
+                  type="button"
+                  after={<FontAwesomeIcon icon={faRotateRight} />}
+                  onClick={retryUploadFailedParts}
+                  isLoading={isLoading}
+                  disabled={isAborting || isLoading}
+                >
+                  {t("page.create.retry")}
+                </Button>
+              )}
+            </Row>
           </Column>
         </Row>
       </Column>
