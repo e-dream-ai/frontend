@@ -5,13 +5,16 @@ import { Link } from "react-router-dom";
 
 const AnchorType = {
   default: css`
-    color: ${(props) => props.theme.colorPrimary};
+    color: ${(props) => props.theme.textAccentColor};
+    text-decoration: underline;
   `,
   primary: css`
-    color: ${(props) => props.theme.colorPrimary};
+    color: ${(props) => props.theme.textAccentColor};
+    text-decoration: underline;
   `,
   secondary: css`
-    color: ${(props) => props.theme.colorSecondary};
+    color: ${(props) => props.theme.colorPrimary};
+    text-decoration: none;
   `,
   tertiary: css`
     color: ${(props) => props.theme.textPrimaryColor};
@@ -22,7 +25,6 @@ const AnchorType = {
 
 const commonStyles = css`
   ${space}
-  text-decoration: none;
   cursor: pointer;
   -webkit-transition:
     color linear 0.2s,
@@ -54,6 +56,7 @@ export const AnchorLink = styled(Link)<
 >`
   ${(props) => AnchorType[props.type || "primary"]}
   ${commonStyles}
+  text-decoration: none;
 `;
 
 export default Anchor;

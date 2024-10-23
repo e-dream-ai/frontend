@@ -117,7 +117,9 @@ export const Select = React.forwardRef<
           {isDisabled ? (
             <DisabledInput>
               {anchor ? (
-                <Anchor onClick={anchor}>{label}</Anchor>
+                <Anchor type="secondary" onClick={anchor}>
+                  {label}
+                </Anchor>
               ) : typeof label === "string" ? (
                 truncateString(label, 30)
               ) : (

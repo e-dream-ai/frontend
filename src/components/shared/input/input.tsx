@@ -42,7 +42,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {disabled ? (
             <DisabledInput>
               {anchor ? (
-                <Anchor onClick={anchor}>{value}</Anchor>
+                <Anchor type="secondary" onClick={anchor}>
+                  {value}
+                </Anchor>
               ) : typeof value === "string" ? (
                 value
               ) : (

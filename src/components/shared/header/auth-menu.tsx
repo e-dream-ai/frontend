@@ -29,7 +29,7 @@ const AuthAnchor: React.FC<{
   href: string;
 }> = ({ text, icon, href }) => {
   return (
-    <Anchor href={href}>
+    <Anchor type="secondary" href={href}>
       <AnchorIcon>{icon}</AnchorIcon>
       <span>{text}</span>
     </Anchor>
