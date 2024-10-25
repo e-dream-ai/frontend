@@ -17,14 +17,14 @@ export const InstallPage: React.FC = () => {
         <Text>
           <p><em>Requirements:</em> macOS version 11+, x86 or Apple Silicon.</p>
           <p>
-            Download and unzip the app and/or screen saver from the {" "}
+            Download and unzip the app and/or screensaver from the {" "}
 	    <Anchor target="_blank" href="https://drive.google.com/drive/folders/1I2SHmq6eRuN836c13GWyaq4kGC3aiLZM">
 	      release
 	    </Anchor>
 	    {" "} folder, and then:
             <ul>
 	      <li>
-                Drag the e-dream native app to your Applications
+                Drag the e-dream app to your Applications
 		folder then run it. Open the settings, log in, then
 		close the settings.  The app will automatically
 		download and play visuals. Press F1 key for help and

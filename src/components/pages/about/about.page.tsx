@@ -17,14 +17,17 @@ export const AboutPage: React.FC = () => {
         <Row justifyContent="space-between" separator />
         <Text>
           <p>
-            Discover and experience the latest generative AI animations from the
+            Discover and experience the latest generative AI visuals from the
             greatest artists.
           </p>
           <p>
-            Install e-dream on your Mac to get the best experience, including
-            interaction and screensaver integration. The e-dream native client
-            provides unsurpassed support for ambient situations, including
-            adjustable slow and smooth playback.
+            Install e-dream on your Mac to get the best experience. The e-dream
+	    app provides unsurpassed support for ambient interaction,
+	    including adjustable slow and smooth playback.
+          </p>
+          <p>
+            Install the screensaver so it runs automatically when you're not
+	    at your computer.
           </p>
           <p>
             Install the web app on your phone to remote-control your e-dream
@@ -38,7 +41,7 @@ export const AboutPage: React.FC = () => {
             <Anchor href={ROUTES.SIGNUP}>
               Sign up
             </Anchor>
-            , then <Anchor href="/install">install</Anchor> the native client,
+            , then <Anchor href="/install">install</Anchor> the app,
             and begin the experience.
           </p>
         </Text>
