@@ -109,7 +109,7 @@ export const Footer: React.FC = () => {
               </Text>
             </Row>
             <Row justifyContent="center" mb="0">
-              <Text fontSize="0.8rem" color={theme.textBodyColor}>
+              <Text fontSize="0.6rem" color={theme.textBodyColor}>
                 {import.meta.env.VITE_COMMIT_REF || ""}{" "}
                 {import.meta.env.VITE_BRANCH || ""}{" "}
                 {import.meta.env.VITE_BUILD_DATE || ""}
