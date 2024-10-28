@@ -1,7 +1,7 @@
 ## Requeriments
 
 - node 20.x.x
-- pnpm 8.x.x
+- pnpm 9.x.x
 
 ## Project structure
 
@@ -25,7 +25,7 @@
 
 ## Run locally
 
-Install pnpm, follow next [instructions](https://pnpm.io/installation). Using npm
+Install pnpm:
 
 ```bash
 npm install -g pnpm
