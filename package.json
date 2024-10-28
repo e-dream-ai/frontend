@@ -51,7 +51,7 @@
     "lint": "eslint . --ext .js,.ts",
     "lint-staged": "lint-staged",
     "lint:fix": "eslint . --fix --ext .js,.ts",
-    "prepare": "if [ -pz \"$HUSKY_SKIP_INSTALL\" ]; then husky install; fi"
+    "prepare": "if [ -z \"$HUSKY_SKIP_INSTALL\" ]; then husky install; fi"
   },
   "eslintConfig": {
     "extends": [
