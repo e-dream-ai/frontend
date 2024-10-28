@@ -113,7 +113,7 @@ export const usePlaylistHandlers = ({
     }
   };
 
-  const handleUploadVideos = async () => {
+  const handleUploadVideos = async ({ nsfw }: { nsfw?: boolean } = {}) => {
     const playlistDreamItemsNames = playlist?.items
       ?.filter((item) => Boolean(item?.dreamItem?.name))
       ?.map((item) => item.dreamItem!.name);
@@ -134,6 +134,7 @@ export const usePlaylistHandlers = ({
 
       const createdDream = await uploadDreamVideoMutateAsync({
         file: videos[i]?.fileBlob,
+        nsfw,
       });
       setVideoUploaded(i);
       if (createdDream) {

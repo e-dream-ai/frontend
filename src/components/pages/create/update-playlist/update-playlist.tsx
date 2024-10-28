@@ -1,4 +1,12 @@
-import { Button, FileUploader, Row, Text, Column, AnchorLink } from "@/components/shared";
+import {
+  Button,
+  FileUploader,
+  Row,
+  Text,
+  Column,
+  AnchorLink,
+  Checkbox,
+} from "@/components/shared";
 import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
 import { VideoList } from "@/components/shared/video-list/video-list";
 import {
@@ -34,6 +42,7 @@ export const UpdatePlaylist: React.FC = () => {
     control,
     getValues,
     setValue,
+    register,
   } = useForm<UpdateVideoPlaylistFormValues>({
     resolver: yupResolver(UpdateVideoPlaylistSchema),
   });
@@ -71,13 +80,13 @@ export const UpdatePlaylist: React.FC = () => {
     setIsUploadingFiles,
   });
 
-  const onSubmit = async () => {
+  const onSubmit = async (formData: UpdateVideoPlaylistFormValues) => {
     try {
       if (totalVideos === 0) {
         setIsUploadingFiles(false);
       } else {
         setIsUploadingFiles(true);
-        await handleUploadVideos();
+        await handleUploadVideos({ nsfw: formData?.nsfw });
       }
     } catch (error) {
       console.error(error);
@@ -109,6 +118,12 @@ export const UpdatePlaylist: React.FC = () => {
               />
             )}
           />
+
+          <Row my={3}>
+            <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
+              {t("page.create.nsfw_dream")}
+            </Checkbox>
+          </Row>
 
           <Row mt={4}>
             <Text>{t("components.update_playlist.upload_file")}</Text>
