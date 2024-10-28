@@ -2,9 +2,9 @@
   "header": {
     "e_dream": "e-dream",
     "hello": "Hello",
-    "signup": "Sign up",
-    "login": "Login",
-    "logout": "Logout",
+    "signup": "Create account",
+    "login": "Sign in",
+    "logout": "Sign out",
     "profile": "Profile",
     "about": "About",
     "install": "Install",
@@ -37,11 +37,11 @@
       "goodbye": "Goodbye"
     },
     "login": {
-      "title": "Login",
+      "title": "Sign in",
       "email": "Email",
       "password": "Password",
       "login": "Login",
-      "magic_login": "Email login code",
+      "magic_login": "Email a code",
       "or": "OR",
       "dont_have_account": "Don't have an account?",
       "forgot_your_password": "Forgot your password?",
@@ -52,7 +52,7 @@
       "error_sending_code": "Error sending code."
     },
     "signup": {
-      "title": "Sign up",
+      "title": "Create account",
       "email": "Email",
       "first_name": "First name",
       "last_name": "Last name",
@@ -64,8 +64,8 @@
       "next": "Next",
       "already_have_account": "Already have an account?",
       "forgot_your_password": "Forgot your password?",
-      "user_signup_successfully": "User signed up successfully. Check your email to verify user.",
-      "error_signingup_user": "Error signing up user."
+      "user_signup_successfully": "Account created successfully. Check your email for the verification code.",
+      "error_signingup_user": "Error creating account."
     },
     "magic": {
       "title_login": "Login",
@@ -225,7 +225,7 @@
       "create_invites": "Create invites",
       "invites_send_email_tab_title": "Send Email",
       "invites_custom_code_tab_title": "Custom Code",
-      "signup_role": "Signup Role",
+      "signup_role": "New Account Role",
       "sent_email_email": "Email",
       "sent_email_code_length": "Code Length",
       "custom_code_code": "Code",
