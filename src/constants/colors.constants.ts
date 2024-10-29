@@ -22,6 +22,7 @@ export const COLORS = {
 };
 
 export const PrimaryTheme: DefaultTheme = {
+  black: COLORS.BLACK,
   colorPrimary: COLORS.PRINCIPAL_GRAY,
   colorLightPrimary: COLORS.LIGHT_ORANGE,
   colorDarkPrimary: COLORS.DARK_ORANGE,
