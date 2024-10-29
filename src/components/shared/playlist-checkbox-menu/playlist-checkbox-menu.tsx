@@ -18,6 +18,9 @@ import { DREAM_QUERY_KEY } from "@/api/dream/query/useDream";
 import { ClickEvent, EventHandler } from "@szhsin/react-menu";
 import { Tooltip } from "react-tooltip";
 import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
+import useAuth from "@/hooks/useAuth";
+import { isAdmin } from "@/utils/user.util";
+import { User } from "@/types/auth.types";
 
 const StyledInput = styled.input`
   background: ${(props) => props.theme.inputBackgroundColor};
@@ -44,12 +47,15 @@ export const PlaylistCheckboxMenu = ({
   type,
   targetItem,
 }: PlaylistCheckboxMenuProps) => {
+  const { user } = useAuth();
   const theme = useTheme();
   const { t } = useTranslation();
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
 
   const [playlistSearch, setPlaylistSearch] = useState<string>("");
   const { data: playlistsData, isLoading: isPlaylistsLoading } = usePlaylists({
     search: playlistSearch,
+    scope: isUserAdmin ? "all-on-search" : "user-only",
   });
 
   const targetItemPlaylistItems: PlaylistItem[] = useMemo(
@@ -60,9 +66,9 @@ export const PlaylistCheckboxMenu = ({
   const menuPlaylistsList = useMemo(() => {
     return (
       (playlistsData?.data?.playlists ?? [])
-      /**
-       * Remove empty name playlists
-       */
+        /**
+         * Remove empty name playlists
+         */
         .filter((playlist) => playlist.name)
         /**
          * Filter list by search

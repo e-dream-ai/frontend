@@ -37,16 +37,31 @@ const getPlaylists = ({
       .then((res) => res.data);
 };
 
+type PlaylistHookScope = "user-only" | "all-on-search";
+
 type HookParams = {
   page?: number;
   search?: string;
+  scope?: PlaylistHookScope;
 };
 
-export const usePlaylists = ({ page = 0, search }: HookParams) => {
+export const usePlaylists = ({
+  page = 0,
+  search,
+  scope = "user-only",
+}: HookParams) => {
   const take = PAGINATION.TAKE;
   const skip = page * take;
   const { user } = useAuth();
-  const userUUID = user?.uuid;
+
+  // Determine if we should include userUUID based on the option
+  let userUUID: string | undefined;
+  if (scope === "user-only") {
+    userUUID = user?.uuid;
+  } else if (scope === "all-on-search" && !search) {
+    userUUID = user?.uuid;
+  }
+
   return useQuery<ApiResponse<{ playlists: Playlist[]; count: number }>, Error>(
     [PLAYLISTS_QUERY_KEY, userUUID, page, search, take],
     getPlaylists({ take, skip, userUUID, search }),
