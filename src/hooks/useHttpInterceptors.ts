@@ -38,7 +38,7 @@ const generateResponseInterceptor = async ({
         // Handle unauthorized error
         queryClient.clear();
         await logout();
-        router.navigate(ROUTES.LOGIN);
+        router.navigate(ROUTES.SIGNIN);
         return Promise.reject(error);
       }
 

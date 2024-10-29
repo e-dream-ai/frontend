@@ -51,7 +51,7 @@ export const AuthenticatePage: React.FC = () => {
   }, [onAuthenticate]);
 
   if (!code) {
-    return <Navigate to={ROUTES.LOGIN} replace />;
+    return <Navigate to={ROUTES.SIGNIN} replace />;
   }
 
   return (

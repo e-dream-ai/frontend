@@ -77,7 +77,7 @@ export const MagicPage: React.FC = () => {
   };
 
   if (!email) {
-    return <Navigate to={ROUTES.LOGIN} />;
+    return <Navigate to={ROUTES.SIGNIN} />;
   }
 
   return (

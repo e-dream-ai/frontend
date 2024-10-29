@@ -87,7 +87,7 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
     },
     {
       component: t("header.login"),
-      route: ROUTES.LOGIN,
+      route: ROUTES.SIGNIN,
       onlyMobile: true,
       showSlash: false,
     },

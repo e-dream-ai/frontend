@@ -1,9 +1,9 @@
 export const ROUTES = {
   ROOT: "/",
   AUTHENTICATE: "/authenticate",
-  LOGIN: "/login",
+  SIGNIN: "/signin",
   MAGIC: "/magic",
-  SIGNUP: "/signup",
+  SIGNUP: "/account",
   CONFIRM_FORGOT_PASSWORD: "/confirm-forgot-password",
   CREATE: "/create",
   VIEW_DREAM: "/dream",

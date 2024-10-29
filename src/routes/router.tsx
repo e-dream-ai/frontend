@@ -237,7 +237,7 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: ROUTES.LOGIN,
+        path: ROUTES.SIGNIN,
         element: (
           <PublicRoute>
             <LoginPage />

@@ -181,7 +181,7 @@ export const SignupPage: React.FC = () => {
             <Row justifyContent="space-between">
               <Column>
                 <Row justifyContent="space-between" mb="0.4rem">
-                  <Anchor href="/login">
+                  <Anchor href={ROUTES.SIGNIN}>
                     {t("page.signup.already_have_account")}
                   </Anchor>
                 </Row>

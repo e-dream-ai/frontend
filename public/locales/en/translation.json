@@ -45,9 +45,9 @@
       "or": "OR",
       "dont_have_account": "Don't have an account?",
       "forgot_your_password": "Forgot your password?",
-      "user_logged_successfully": "{{role}} logged in successfully.",
+      "user_logged_successfully": "{{role}} signed in successfully.",
       "welcome_user": "Welcome {{username}}",
-      "error_logging_in": "Error logging in.",
+      "error_logging_in": "Error signing in.",
       "email_code_sent": "Email verification code sent. Please check your email.",
       "error_sending_code": "Error sending code."
     },
@@ -76,7 +76,7 @@
       "login": "Login",
       "verify_email": "Verify email",
       "welcome_user": "Welcome {{username}}",
-      "error_verifying_code": "Error logging in."
+      "error_verifying_code": "Error signing in."
     },
     "confirm_forgot_password": {
       "code": "Code",
@@ -252,7 +252,7 @@
   },
   "modal": {
     "logout": {
-      "user_logged_out_successfully": "User logged out successfully.",
+      "user_logged_out_successfully": "User signed out successfully.",
       "error_signingout_user": "Error signing out user."
     },
     "forgot_password": {
