@@ -1,5 +1,5 @@
 import React from "react";
-import { Button, Row } from "@/components/shared";
+import { Button } from "@/components/shared";
 import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
