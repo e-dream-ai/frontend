@@ -4,7 +4,7 @@ import styled from "styled-components";
 export const RemoteControlContainer = styled.div`
   display: grid;
   grid-template-rows: repeat(6, auto);
-  grid-template-columns: repeat(11, 60px);
+  grid-template-columns: repeat(11, 70px);
   gap: 0.2rem;
 
   @media (max-width: ${DEVICES.TABLET}) {

@@ -14,9 +14,6 @@ import {
   ProfilePageContainer,
   RightProfilePage,
 } from "./profile.styled";
-import { RemoteControl } from "@/components/shared/remote-control/remote-control";
-import { CurrentDream } from "@/components/shared/current-dream/current-dream";
-import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
 import ApiKeyCard from "@/components/shared/apikey-card/ApiKeyCard";
 import { useMemo } from "react";
 import { isAdmin } from "@/utils/user.util";
@@ -33,15 +30,15 @@ type ProfileProps = {
 const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
   const { t } = useTranslation();
   const location = useLocation();
-  const { user: loggedUser } = useAuth();
+  const { user: authUser } = useAuth();
+
   const isMyProfilePage =
     isMyProfile || location.pathname.includes(ROUTES.MY_PROFILE);
   const isLoggedUserAdmin = useMemo(
-    () => isAdmin(loggedUser as User),
-    [loggedUser],
+    () => isAdmin(authUser as User),
+    [authUser],
   );
   const { uuid } = useParams<{ uuid: string }>();
-  const { user: authUser } = useAuth();
   const userUUID = isMyProfilePage ? authUser?.uuid : uuid;
   const {
     data,
@@ -80,22 +77,6 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
             {showApiKeyCard && <ApiKeyCard user={user} />}
           </LeftProfilePage>
           <RightProfilePage>
-            {isMyProfile && (
-              <>
-                <CurrentDream user={user} uuid={user?.currentDream?.uuid} />
-
-                <CurrentPlaylist
-                  user={user}
-                  uuid={user?.currentPlaylist?.uuid}
-                />
-
-                <Text mb="1rem" fontSize="1rem" fontWeight={600}>
-                  {t("page.profile.remote_control")}
-                </Text>
-                <RemoteControl />
-              </>
-            )}
-
             <Text mb="1rem" fontSize="1rem" fontWeight={600}>
               {t("page.profile.dreams")}
             </Text>

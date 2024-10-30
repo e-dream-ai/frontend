@@ -13,7 +13,12 @@ import ViewDreamPage from "@/components/pages/view-dream/view-dream.page";
 import { ViewPlaylistPage } from "@/components/pages/view-playlist/view-playlist.page";
 import { ROLES } from "@/constants/role.constants";
 import { ROUTES } from "@/constants/routes.constants";
-import { Navigate, Outlet, createBrowserRouter, useLocation } from "react-router-dom";
+import {
+  Navigate,
+  Outlet,
+  createBrowserRouter,
+  useLocation,
+} from "react-router-dom";
 import ProtectedRoute from "./protected-route";
 import { CreatePage } from "@/components/pages/create/create.page";
 import { Footer } from "@/components/shared";
@@ -26,8 +31,9 @@ import PlaylistsFeedPage from "@/components/pages/playlist-feed/playlist-feed";
 import PlaygroundPage from "@/components/pages/playground/playground.page";
 import NotFoundPage from "@/components/pages/not-found/not-found.page";
 import { useEffect } from "react";
-import ReactGA from 'react-ga';
+import ReactGA from "react-ga";
 import { PageContainer } from "@/components/shared/container/page-container";
+import RemoteControlPage from "@/components/pages/remote-control/remote-control.page";
 
 export const RootElement = () => {
   const location = useLocation();
@@ -175,6 +181,20 @@ export const router = createBrowserRouter([
             ]}
           >
             <ProfilePage isMyProfile />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.REMOTE_CONTROL,
+        element: (
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
+            <RemoteControlPage />
           </ProtectedRoute>
         ),
       },

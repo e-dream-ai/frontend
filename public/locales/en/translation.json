@@ -6,6 +6,7 @@
     "login": "Sign in",
     "logout": "Sign out",
     "profile": "Profile",
+    "remote_control": "Remote Control",
     "about": "About",
     "install": "Install",
     "forum": "Forum",
@@ -214,10 +215,11 @@
     "profile": {
       "title": "Profile",
       "my_profile": "My Profile",
-      "dreams": "Dreams",
-      "remote_control": "Remote Control",
-      "current_dream": "Current Dream",
-      "current_playlist": "Current Playlist"
+      "dreams": "Dreams"
+    },
+    "remote_control": {
+      "title": "Remote Control",
+      "remote_control": "Remote Control"
     },
     "invites": {
       "title": "Invites",

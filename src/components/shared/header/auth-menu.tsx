@@ -82,6 +82,9 @@ export const AuthMenu: React.FC = () => {
           <AnchorLink type="tertiary" to={ROUTES.MY_DREAMS}>
             <MenuItem onClick={() => ({})}>{t("header.my_dreams")}</MenuItem>
           </AnchorLink>
+          <AnchorLink type="tertiary" to={ROUTES.REMOTE_CONTROL}>
+            <MenuItem onClick={() => ({})}>{t("header.remote_control")}</MenuItem>
+          </AnchorLink>
           <AnchorLink type="tertiary" to={ROUTES.INVITES}>
             <MenuItem onClick={() => ({})}>{t("header.invites")}</MenuItem>
           </AnchorLink>
