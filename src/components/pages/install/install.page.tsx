@@ -32,10 +32,11 @@ export const InstallPage: React.FC = () => {
 		D keys to adjust the speed of the experience.
               </li>
 	      <li>
-                Double-click the screensaver to install it. Then to
-	        enable it, go into System Settings, select the "Screen
-	        Saver" panel, and then in the "Other" section click on
-	        "Show More" and then click on "e-dream". Whew!
+                Run the screensaver to install it. If prompted,
+	        install for all users. Then to enable it, go into
+	        System Settings, select the "Screen Saver" panel, and
+	        then in the "Other" section click on "Show More" and
+	        then click on "e-dream". Whew!
 	      </li>
 	    </ul>
 	    The screensaver shares its settings and account with the app,
