@@ -51,7 +51,7 @@ export const InstallPage: React.FC = () => {
         <Text>
           <p>
 	    Install <Anchor target="_blank" href="/">this web app</Anchor>
-	    on your phone or tablet to use it as a remote control.
+	    {" "} on your phone or tablet to use it as a remote control.
 	    <ul>
 	      <li>
 	        On iOS, share the app to your Home Screen.
