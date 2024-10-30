@@ -28,18 +28,18 @@ export const InstallPage: React.FC = () => {
 		run it and open the settings. Sign-in by entering your
 		e-mail, then enter the code e-mailed to you, and close
 		the settings.  The app will automatically download and
-		play visuals. Press F1 key for help and F2 key for
-		status. Use the A and D keys to adjust the speed of
-		the experience.
+		play visuals. Press the F1 key for help, and the A and
+		D keys to adjust the speed of the experience.
               </li>
 	      <li>
-	        Control-click the screen saver and select "open" from
-	        the menu to install it. Then to enable it, go into
-	        System Settings, select the "Screen Saver" panel, and
-	        then in the "Other" section click on "Show More" and
-	        then click on "e-dream".
+                Double-click the screensaver to install it. Then to
+	        enable it, go into System Settings, select the "Screen
+	        Saver" panel, and then in the "Other" section click on
+	        "Show More" and then click on "e-dream". Whew!
 	      </li>
 	    </ul>
+	    The screensaver shares its settings and account with the app,
+	    and we recommend using the app to configure it.
           </p>
         </Text>
       </Section>
@@ -49,7 +49,8 @@ export const InstallPage: React.FC = () => {
         <Row justifyContent="space-between" separator />
         <Text>
           <p>
-	    Install <Anchor target="_blank" href="/">this web app</Anchor> on your phone or tablet to use as a remote control.
+	    Install <Anchor target="_blank" href="/">this web app</Anchor>
+	    on your phone or tablet to use it as a remote control.
 	    <ul>
 	      <li>
 	        On iOS, share the app to your Home Screen.
@@ -58,7 +59,8 @@ export const InstallPage: React.FC = () => {
 	        On Android, use the "Install App" menu item in Chrome.
 	      </li>
 	    </ul>
-	    Run the app, log in, and then enjoy complete control of your laptop or computer from a distance.
+	    Run the app, sign in, and enjoy complete control of e-dream
+	    on your laptop or computer from a distance.
 	  </p>
 	</Text>
       </Section>
