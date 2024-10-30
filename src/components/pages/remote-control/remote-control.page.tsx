@@ -2,7 +2,6 @@ import { useUser } from "@/api/user/query/useUser";
 import { Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
-import Text from "@/components/shared/text/text";
 import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { RemoteControl } from "@/components/shared/remote-control/remote-control";
