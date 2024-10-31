@@ -18,9 +18,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBars, faClose } from "@fortawesome/free-solid-svg-icons";
 import { useRef, useState } from "react";
 import useOutsideClick from "@/hooks/useOutsideClick";
+import useAuth from "@/hooks/useAuth";
 
 export const Header: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
   const [isNavOpen, setNavOpen] = useState<boolean>(false);
   const menuContainerRef = useRef(null);
   const barsButtonRef = useRef(null);
@@ -34,7 +36,7 @@ export const Header: React.FC = () => {
       <HeaderContainer isNavOpen={isNavOpen}>
         <StyledHeader>
           <LogoContainer>
-            <LogoAnchor href={ROUTES.ROOT}>
+            <LogoAnchor href={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
               <LogoIcon
                 src="/images/edream-logo-512x512.png"
                 alt={t("header.e_dream")}
