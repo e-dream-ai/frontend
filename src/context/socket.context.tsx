@@ -50,6 +50,10 @@ export const SocketProvider: React.FC<{
        */
       timeout: 5 * 1000,
       withCredentials: true,
+      extraHeaders: {
+        "Edream-Client-Type": "react",
+        "Edream-Client-Version": import.meta.env.VITE_COMMIT_REF,
+      },
     });
 
     // Listen to connect event only once
