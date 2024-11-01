@@ -13,6 +13,9 @@ const generateRequestInterceptor = async () => {
       /**
        * No needs extra config since auth changed to cookies
        */
+      config.headers["Edream-Client-Type"] = "react";
+      config.headers["Edream-Client-Version"] = import.meta.env.VITE_COMMIT_REF;
+
       return config;
     },
     () => {
