@@ -80,6 +80,9 @@ const ButtonTransparentTypes = {
   `,
   primary: css`
     color: ${(props) => props.theme.colorPrimary};
+    &:hover {
+      color: ${(props) => props.theme.colorSecondary};
+    }
   `,
   secondary: css`
     color: ${(props) => props.theme.colorSecondary};

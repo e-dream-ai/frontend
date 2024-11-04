@@ -15,7 +15,7 @@ import { AuthMenu } from "./auth-menu";
 import { ROUTES } from "@/constants/routes.constants";
 import { Button } from "@/components/shared";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faClose } from "@fortawesome/free-solid-svg-icons";
+import { faEllipsisV, faClose } from "@fortawesome/free-solid-svg-icons";
 import { useRef, useState } from "react";
 import useOutsideClick from "@/hooks/useOutsideClick";
 import useAuth from "@/hooks/useAuth";
@@ -54,7 +54,7 @@ export const Header: React.FC = () => {
               ref={barsButtonRef}
               transparent
               size="lg"
-              before={<FontAwesomeIcon icon={isNavOpen ? faClose : faBars} />}
+              before={<FontAwesomeIcon icon={isNavOpen ? faClose : faEllipsisV} />}
               onClick={toggleNav}
             />
           </BarsButtonContainer>
