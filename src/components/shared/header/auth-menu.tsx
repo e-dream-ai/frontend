@@ -8,6 +8,7 @@ import StyledHeader, {
   HeaderAvatarPlaceholder,
   HeaderAvatarPlaceholderDot,
   HeaderAvatarPlaceholderIcon,
+  HeaderAvatarPlaceholderX,
   HeaderProfileMenu,
   HeaderUserName,
 } from "./header.styled";
@@ -22,6 +23,7 @@ import { Menu, MenuButton, MenuItem } from "@/components/shared/menu/menu";
 import { getUserNameOrEmail } from "@/utils/user.util";
 import { useImage } from "@/hooks/useImage";
 import { useDesktopClientStatus } from "@/hooks/useDesktopClientStatus";
+import useSocket from "@/hooks/useSocket";
 
 const AuthAnchor: React.FC<{
   text: string;
@@ -46,6 +48,7 @@ export const AuthMenu: React.FC = () => {
   });
 
   const { isActive } = useDesktopClientStatus();
+  const { isConnected } = useSocket();
 
   if (isLoading) return <StyledHeader />;
 
@@ -57,13 +60,24 @@ export const AuthMenu: React.FC = () => {
             <MenuButton>
               <HeaderProfileMenu>
                 {user?.avatar ? (
-                  <HeaderAvatar url={avatarUrl} connected={isActive} />
+                  <HeaderAvatar
+                    url={avatarUrl}
+                    desktopClientConnected={isActive}
+                    socketConnected={isConnected}
+                  />
                 ) : (
                   <HeaderAvatarPlaceholder>
                     <HeaderAvatarPlaceholderIcon>
                       <FontAwesomeIcon icon={faUser} />
                     </HeaderAvatarPlaceholderIcon>
-                    <HeaderAvatarPlaceholderDot connected={isActive} />
+                    <HeaderAvatarPlaceholderDot
+                      desktopClientConnected={isActive}
+                    />
+                    <HeaderAvatarPlaceholderX
+                      socketConnected={isConnected}
+                    >
+                      x
+                    </HeaderAvatarPlaceholderX>
                   </HeaderAvatarPlaceholder>
                 )}
                 <HeaderUserName>{getUserNameOrEmail(user)}</HeaderUserName>
@@ -83,7 +97,9 @@ export const AuthMenu: React.FC = () => {
             <MenuItem onClick={() => ({})}>{t("header.my_dreams")}</MenuItem>
           </AnchorLink>
           <AnchorLink type="tertiary" to={ROUTES.REMOTE_CONTROL}>
-            <MenuItem onClick={() => ({})}>{t("header.remote_control")}</MenuItem>
+            <MenuItem onClick={() => ({})}>
+              {t("header.remote_control")}
+            </MenuItem>
           </AnchorLink>
           <AnchorLink type="tertiary" to={ROUTES.INVITES}>
             <MenuItem onClick={() => ({})}>{t("header.invites")}</MenuItem>

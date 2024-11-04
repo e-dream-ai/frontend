@@ -215,22 +215,40 @@ const AvatarStyle = css`
   border-radius: 100%;
 `;
 
-export const HeaderAvatar = styled.div<{ url?: string; connected?: boolean }>`
+export const HeaderAvatar = styled.div<{
+  url?: string;
+  socketConnected?: boolean;
+  desktopClientConnected?: boolean;
+}>`
   ${AvatarStyle}
 
   background-color: rgba(30, 30, 30, 1);
   background-image: ${(props) => `url(${props?.url})`};
   background-size: contain;
+  position: relative;
 
   &::before {
     content: "";
-    display: inline-block;
-    width: 10px;
-    height: 10px;
+    position: absolute;
+    width: 0.8rem;
+    height: 0.8rem;
+    left: 0;
+    bottom: 0;
     background-color: ${(props) =>
-      props.connected ? "greenyellow" : "gainsboro"};
+      props.desktopClientConnected ? "greenyellow" : "gainsboro"};
     border-radius: 50%;
-    vertical-align: middle;
+  }
+
+  &::after {
+    content: "x";
+    display: ${(props) => (props.socketConnected ? "none" : "block")};
+    position: absolute;
+    transform: translate(0.18rem, 0rem);
+    left: 0;
+    bottom: 0;
+    font-size: 0.8rem;
+    font-weight: bold;
+    color: red;
   }
 `;
 
@@ -250,17 +268,31 @@ export const HeaderAvatarPlaceholderIcon = styled.div`
 `;
 
 export const HeaderAvatarPlaceholderDot = styled.div<{
-  connected?: boolean;
+  desktopClientConnected?: boolean;
 }>`
   display: inline-block;
   position: absolute;
-  width: 10px;
-  height: 10px;
+  width: 0.8rem;
+  height: 0.8rem;
   background-color: ${(props) =>
-    props.connected ? "greenyellow" : "gainsboro"};
+    props.desktopClientConnected ? "greenyellow" : "gainsboro"};
   border-radius: 50%;
   bottom: 0;
   left: 0;
+`;
+
+export const HeaderAvatarPlaceholderX = styled.div<{
+  socketConnected?: boolean;
+}>`
+  content: "x";
+  display: ${(props) => (props.socketConnected ? "none" : "block")};
+  position: absolute;
+  transform: translate(0.18rem, 0rem);
+  left: 0;
+  bottom: 0;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: red;
 `;
 
 export default StyledHeader;
