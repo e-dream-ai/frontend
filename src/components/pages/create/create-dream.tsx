@@ -107,23 +107,6 @@ export const CreateDream: React.FC = () => {
           </>
         )}
 
-        <Row my={3}>
-          <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
-            {t("page.create.nsfw_dream")}
-          </Checkbox>
-        </Row>
-
-        <Text>
-          {t("page.create.content_policy")} {""}
-          <AnchorLink
-            style={{ textDecoration: "underline" }}
-            to={ROUTES.TERMS_OF_SERVICE}
-          >
-            {t("page.create.terms_of_service")}
-          </AnchorLink>
-          .
-        </Text>
-
         {isFailed && (
           <Row>
             <Text color={theme.colorDanger}>
@@ -132,22 +115,31 @@ export const CreateDream: React.FC = () => {
           </Row>
         )}
 
-        <Row mt={1} justifyContent="space-between">
-          <Column pr={4} justifyContent="center" style={{ width: "100%" }}>
-            {isLoading && <ProgressBar completed={uploadProgress} />}
-          </Column>
+        {isLoading && (
+          <Row mt={1} justifyContent="space-between">
+            <ProgressBar completed={uploadProgress} />
+          </Row>
+        )}
 
+        <Row my={4} justifyContent="space-between">
+          <Column>
+            <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
+              {t("page.create.nsfw_dream")}
+            </Checkbox>
+          </Column>
           <Column>
             <Row>
-              <Button
-                type="button"
-                mr={2}
-                isLoading={isAborting}
-                disabled={!video || isAborting}
-                onClick={handleCancelCreateDream}
-              >
-                {t("page.create.cancel")}
-              </Button>
+              {Boolean(video) && (
+                <Button
+                  type="button"
+                  mr={2}
+                  isLoading={isAborting}
+                  disabled={!video || isAborting}
+                  onClick={handleCancelCreateDream}
+                >
+                  {t("page.create.cancel")}
+                </Button>
+              )}
               {!isFailed && (
                 <Button
                   after={<FontAwesomeIcon icon={faUpload} />}
@@ -173,6 +165,18 @@ export const CreateDream: React.FC = () => {
               )}
             </Row>
           </Column>
+        </Row>
+        <Row>
+          <Text>
+            {t("page.create.content_policy")} {""}
+            <AnchorLink
+              style={{ textDecoration: "underline" }}
+              to={ROUTES.TERMS_OF_SERVICE}
+            >
+              {t("page.create.terms_of_service")}
+            </AnchorLink>
+            .
+          </Text>
         </Row>
       </Column>
     </form>

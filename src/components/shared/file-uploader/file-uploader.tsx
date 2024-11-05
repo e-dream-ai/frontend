@@ -10,7 +10,7 @@ const StyledFileUploaderDropzone = styled.p`
   display: inline-flex;
   width: 100%;
   min-width: 322px;
-  min-height: 300px;
+  min-height: 150px;
   align-items: center;
   justify-content: space-between;
   padding: 2rem;

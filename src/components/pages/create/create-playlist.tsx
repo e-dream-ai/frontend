@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { faList } from "@fortawesome/free-solid-svg-icons";
+import { faList, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
 import {
   AnchorLink,
@@ -154,12 +154,6 @@ export const CreatePlaylist: React.FC = () => {
           {...register("name")}
         />
 
-        <Row my={0}>
-          <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
-            {t("page.create.nsfw_playlist")}
-          </Checkbox>
-        </Row>
-
         <Restricted to={DREAM_PERMISSIONS.CAN_CREATE_DREAM}>
           <>
             {Boolean(videos.length) && (
@@ -172,7 +166,10 @@ export const CreatePlaylist: React.FC = () => {
               handleDeleteVideo={onDeleteVideo}
             />
           </>
-          <Text my={3}>{t("page.create.playlist_file_instructions")}</Text>
+
+          <Row mt={4}>
+            <Text>{t("page.create.upload_file")}</Text>
+          </Row>
           <FileUploader
             multiple
             maxSize={MAX_FILE_SIZE_MB}
@@ -195,6 +192,22 @@ export const CreatePlaylist: React.FC = () => {
           )}
         </Restricted>
 
+        <Row my={4} justifyContent="space-between">
+          <Column>
+            <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
+              {t("page.create.nsfw_playlist")}
+            </Checkbox>
+          </Column>
+          <Column>
+            <Button
+              isLoading={isLoading}
+              after={<FontAwesomeIcon icon={faUpload} />}
+            >
+              {isLoading ? t("page.create.creating") : t("page.create.create")}
+            </Button>
+          </Column>
+        </Row>
+
         <Row my={4}>
           <Text>
             {t("page.create.content_policy")} {""}
@@ -206,12 +219,6 @@ export const CreatePlaylist: React.FC = () => {
             </AnchorLink>
             .
           </Text>
-        </Row>
-
-        <Row my={4} justifyContent="flex-end">
-          <Button isLoading={isLoading}>
-            {isLoading ? t("page.create.creating") : t("page.create.create")}
-          </Button>
         </Row>
       </Column>
     </form>

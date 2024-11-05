@@ -107,6 +107,7 @@
       "playlist_tab_title": "Create playlist",
       "add_to_playlist_tab_title": "Add to playlist",
       "playlist_instructions": "Create your playlist here.",
+      "upload_file": "Upload file(s)",
       "playlist_file_instructions": "Upload or drop one or more dreams here.",
       "playlist_name": "Name",
       "playlist_dreams": "Playlist dreams",
@@ -388,6 +389,8 @@
     "update_playlist": {
       "playlist": "Playlist",
       "upload_file": "Upload file(s)",
+      "add": "Add",
+      "adding": "Adding",
       "save": "Save",
       "saving": "Saving",
       "update_playlist_instructions": "Select a playlist and drop files that you want to add to it.",

@@ -29,7 +29,7 @@ import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import Select from "@/components/shared/select/select";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faList, faSave } from "@fortawesome/free-solid-svg-icons";
+import { faList, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 
 export const UpdatePlaylist: React.FC = () => {
@@ -119,12 +119,6 @@ export const UpdatePlaylist: React.FC = () => {
             )}
           />
 
-          <Row my={3}>
-            <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
-              {t("page.create.nsfw_dream")}
-            </Checkbox>
-          </Row>
-
           <Row mt={4}>
             <Text>{t("components.update_playlist.upload_file")}</Text>
           </Row>
@@ -135,19 +129,15 @@ export const UpdatePlaylist: React.FC = () => {
             handleDeleteVideo={handleDeleteVideo}
           />
 
-          <Row flex="auto">
-            <Column flex="auto">
-              <FileUploader
-                multiple
-                maxSize={MAX_FILE_SIZE_MB}
-                handleChange={handleFileUploaderChange}
-                onSizeError={handleFileUploaderSizeError(t)}
-                onTypeError={handleFileUploaderTypeError(t)}
-                name="file"
-                types={ALLOWED_VIDEO_TYPES}
-              />
-            </Column>
-          </Row>
+          <FileUploader
+            multiple
+            maxSize={MAX_FILE_SIZE_MB}
+            handleChange={handleFileUploaderChange}
+            onSizeError={handleFileUploaderSizeError(t)}
+            onTypeError={handleFileUploaderTypeError(t)}
+            name="file"
+            types={ALLOWED_VIDEO_TYPES}
+          />
 
           <UploadVideosProgress
             isUploading={isUploadingFiles}
@@ -157,34 +147,40 @@ export const UpdatePlaylist: React.FC = () => {
             currentUploadFile={currentUploadFile}
             uploadProgress={uploadProgress}
           />
+
+          <Row my={4} justifyContent="space-between">
+            <Column>
+              <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
+                {t("page.create.nsfw_dream")}
+              </Checkbox>
+            </Column>
+            <Column>
+              <Button
+                type="submit"
+                after={<FontAwesomeIcon icon={faUpload} />}
+                isLoading={isLoading || isUploadingFiles}
+                disabled={!videos.length}
+              >
+                {isLoading
+                  ? t("components.update_playlist.adding")
+                  : t("components.update_playlist.add")}
+              </Button>
+            </Column>
+          </Row>
+
+          <Row my={4}>
+            <Text>
+              {t("page.create.content_policy")} {""}
+              <AnchorLink
+                style={{ textDecoration: "underline" }}
+                to={ROUTES.TERMS_OF_SERVICE}
+              >
+                {t("page.create.terms_of_service")}
+              </AnchorLink>
+              .
+            </Text>
+          </Row>
         </Column>
-
-        <Row my={4}>
-          <Text>
-            {t("page.create.content_policy")} {""}
-            <AnchorLink
-              style={{ textDecoration: "underline" }}
-              to={ROUTES.TERMS_OF_SERVICE}
-            >
-              {t("page.create.terms_of_service")}
-            </AnchorLink>
-            .
-          </Text>
-        </Row>
-
-        <Row justifyContent="flex-end" mt={4}>
-          <Button
-            type="submit"
-            after={<FontAwesomeIcon icon={faSave} />}
-            isLoading={isLoading || isUploadingFiles}
-            disabled={!videos.length}
-            ml="1rem"
-          >
-            {isLoading
-              ? t("components.update_playlist.saving")
-              : t("components.update_playlist.save")}
-          </Button>
-        </Row>
       </form>
     </>
   );
