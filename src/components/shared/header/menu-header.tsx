@@ -23,12 +23,6 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
   const { t } = useTranslation();
 
   const USER_NAV_ROUTES: Array<RouteLink> = [
-    // {
-    //   component: t("header.profile"),
-    //   route: ROUTES.MY_PROFILE,
-    //   onlyMobile: true,
-    //   showSlash: true,
-    // },
     {
       component: t("header.about"),
       route: ROUTES.ABOUT,
@@ -50,28 +44,6 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
       showSlash: true,
     },
     { component: t("header.feed"), route: ROUTES.FEED, showSlash: false },
-    // {
-    //   component: t("header.invites"),
-    //   route: ROUTES.INVITES,
-    //   onlyMobile: true,
-    //   showSlash: false,
-    // },
-    // {
-    //   component: (
-    //     <>
-    //       {t("header.logout")}
-    //       <Text mr="1rem" />
-    //       <FontAwesomeIcon icon={faArrowRightFromBracket} />
-    //     </>
-    //   ),
-    //   route: ROUTES.ROOT,
-    //   onlyMobile: true,
-    //   showSlash: false,
-    //   onClick: (event) => {
-    //     event.stopPropagation();
-    //     logout();
-    //   },
-    // },
   ];
 
   const NAV_ROUTES: Array<RouteLink> = [

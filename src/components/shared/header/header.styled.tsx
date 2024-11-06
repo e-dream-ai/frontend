@@ -21,7 +21,7 @@ const StyledHeader = styled.header`
   }
 `;
 
-export const HeaderContainer = styled.div<{ isNavOpen?: boolean }>`
+export const HeaderContainer = styled.div`
   display: flex;
   position: sticky;
   justify-content: center;
@@ -94,24 +94,24 @@ export const LogoIcon = styled.img`
   }
 `;
 
-export const Nav = styled.nav<{ isNavOpen?: boolean }>`
+export const Nav = styled.nav`
   overflow: hidden;
   @media (max-width: ${DEVICES.TABLET}) {
-    display: ${(props) => (props.isNavOpen ? "flex" : "none")};
+    display: none;
     width: 100vw;
-    height: ${(props) => (props.isNavOpen ? "100vh" : "0px")};
+    height: 0;
     background-color: ${(props) => props.theme.colorBackgroundTertiary};
   }
 `;
 
-export const MenuContainer = styled.div<{ isNavOpen?: boolean }>`
+export const MenuContainer = styled.div`
   order: 2;
   display: flex;
   justify-content: space-between;
   align-items: center;
 
   @media (max-width: ${DEVICES.TABLET}) {
-    display: ${(props) => (props.isNavOpen ? "flex" : "none")};
+    display: none;
     order: 4;
   }
 `;
@@ -123,21 +123,27 @@ export const AuthMenuContainer = styled.div`
   justify-content: flex-end;
   align-items: center;
 
+  button {
+    height: 55px;
+  }
+
   @media (max-width: ${DEVICES.TABLET}) {
     order: 2;
   }
 `;
 
-export const BarsButtonContainer = styled.div`
+export const MobileMenuContainer = styled.div`
   order: 4;
   display: none;
   justify-content: flex-end;
   align-items: center;
+  margin-left: 1rem;
+  text-transform: lowercase;
 
   button {
-    padding: 0 0 0 20px;
     width: 55px;
     height: 55px;
+    font-size: 2rem;
   }
 
   @media (max-width: ${DEVICES.TABLET}) {

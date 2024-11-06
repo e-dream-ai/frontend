@@ -9,31 +9,20 @@ import StyledHeader, {
   LogoIcon,
   Nav,
   AuthMenuContainer,
-  BarsButtonContainer,
+  MobileMenuContainer,
 } from "./header.styled";
 import { AuthMenu } from "./auth-menu";
 import { ROUTES } from "@/constants/routes.constants";
-import { Button } from "@/components/shared";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEllipsisV, faClose } from "@fortawesome/free-solid-svg-icons";
-import { useRef, useState } from "react";
-import useOutsideClick from "@/hooks/useOutsideClick";
 import useAuth from "@/hooks/useAuth";
+import { MobileMenu } from "./mobile-menu";
 
 export const Header: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const [isNavOpen, setNavOpen] = useState<boolean>(false);
-  const menuContainerRef = useRef(null);
-  const barsButtonRef = useRef(null);
-
-  const toggleNav = () => setNavOpen(!isNavOpen);
-
-  useOutsideClick(menuContainerRef, () => setNavOpen(false), [barsButtonRef]);
 
   return (
     <>
-      <HeaderContainer isNavOpen={isNavOpen}>
+      <HeaderContainer>
         <StyledHeader>
           <LogoContainer>
             <LogoAnchor href={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
@@ -49,19 +38,13 @@ export const Header: React.FC = () => {
             <AuthMenu />
           </AuthMenuContainer>
 
-          <BarsButtonContainer>
-            <Button
-              ref={barsButtonRef}
-              transparent
-              size="lg"
-              before={<FontAwesomeIcon icon={isNavOpen ? faClose : faEllipsisV} />}
-              onClick={toggleNav}
-            />
-          </BarsButtonContainer>
+          <MobileMenuContainer>
+            <MobileMenu />
+          </MobileMenuContainer>
 
-          <MenuContainer ref={menuContainerRef} isNavOpen={isNavOpen}>
-            <Nav isNavOpen={isNavOpen}>
-              <NavList onClickMenuItem={toggleNav} />
+          <MenuContainer>
+            <Nav>
+              <NavList />
             </Nav>
           </MenuContainer>
         </StyledHeader>

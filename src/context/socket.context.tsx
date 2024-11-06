@@ -104,6 +104,7 @@ export const SocketProvider: React.FC<{
 
     // Handle reconnection
     const handleReconnect = async () => {
+      console.log("handleReconnect");
       if (socketRef.current) {
         // Tab focused and checking connection
         if (!socketRef.current.connected) {
@@ -118,19 +119,38 @@ export const SocketProvider: React.FC<{
     };
 
     const handleVisibilityChange = () => {
+      console.log("handleVisibilityChange");
       if (!document.hidden) {
         handleReconnect();
       }
     };
 
     const handleOnline = () => {
+      console.log("handleOnline");
       handleReconnect();
+    };
+
+    const handleOffline = () => {
+      console.log("handleOffline");
+      setIsConnected(false);
+      socketRef.current?.disconnect();
+    };
+
+    const handleFocus = () => {
+      console.log("handleFocus");
+    };
+
+    const handlePageShow = () => {
+      console.log("handlePageShow");
     };
 
     // Add event listener for when the tab becomes visible or focus
     document.addEventListener("visibilitychange", handleVisibilityChange);
     // Add event listener for when window online status is active
     window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+    window.removeEventListener("focus", handleFocus);
+    window.removeEventListener("pageshow", handlePageShow);
 
     return () => {
       // Disconnect socket and set socketRef to undefined
@@ -142,6 +162,9 @@ export const SocketProvider: React.FC<{
       // Clean up function
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("focus", handleFocus);
+      window.removeEventListener("pageshow", handlePageShow);
     };
   }, [user, authenticateUser, generateSocketInstance]);
 
