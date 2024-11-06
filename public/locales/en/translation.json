@@ -106,7 +106,7 @@
       "error_uploading_dream": "Error uploading dream.",
       "playlist_tab_title": "Create playlist",
       "add_to_playlist_tab_title": "Add to playlist",
-      "playlist_instructions": "Create a playlist and upload dreams to it.",
+      "playlist_instructions": "Create a playlist and optionally upload dreams to it.",
       "upload_file": "Upload or drop your dreams here. One or more video files in almost any format should work.",
       "playlist_file_instructions": "Upload or drop one or more dreams here.",
       "playlist_name": "Name",
@@ -294,8 +294,8 @@
       "next": "next"
     },
     "file_uploader": {
-      "dropzone_placeholder": "Upload or drop a file right here.",
-      "size_error": "File size exceed limits allowed",
+      "dropzone_placeholder": "Upload or drop here.",
+      "size_error": "File size exceeds limit",
       "type_error": "File type is not allowed"
     },
     "playlist_dropzone": {
@@ -388,12 +388,12 @@
     },
     "update_playlist": {
       "playlist": "Playlist",
-      "upload_file": "Upload file(s)",
+      "upload_file": "Upload or drop your dreams here. One or more video files in almost any format should work. Any files with duplicate names will be skipped.",
       "add": "Add",
       "adding": "Adding",
       "save": "Save",
       "saving": "Saving",
-      "update_playlist_instructions": "Select a playlist and drop files that you want to add to it.",
+      "update_playlist_instructions": "Select a playlist and upload dreams to it.",
       "playlist_updated_successfully": "Playlist updated successfully.",
       "dream_already_exists": "Dream alrady exists.",
       "error_updating_playlist": "Error updating playlist."
