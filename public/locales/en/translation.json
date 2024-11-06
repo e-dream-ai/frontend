@@ -107,7 +107,7 @@
       "playlist_tab_title": "Create playlist",
       "add_to_playlist_tab_title": "Add to playlist",
       "playlist_instructions": "Create a playlist and optionally upload dreams to it.",
-      "upload_file": "Upload or drop your dreams here. One or more video files in almost any format should work.",
+	"upload_file": "Upload or drop your dreams here. Zero, one, or more video files in almost any format should work.",
       "playlist_file_instructions": "Upload or drop one or more dreams here.",
       "playlist_name": "Name",
       "playlist_dreams": "Playlist dreams",
@@ -388,7 +388,7 @@
     },
     "update_playlist": {
       "playlist": "Playlist",
-      "upload_file": "Upload or drop your dreams here. One or more video files in almost any format should work. Any files with duplicate names will be skipped.",
+      "upload_file": "Upload or drop your dreams here. One or more video files in almost any format should work. Any files with names already present in the playlist will be skipped.",
       "add": "Add",
       "adding": "Adding",
       "save": "Save",
