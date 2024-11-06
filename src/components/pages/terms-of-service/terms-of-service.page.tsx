@@ -98,35 +98,6 @@ export const TermsOfServicePage: React.FC = () => {
               </ol>
             </li>
             <li>
-              <b>Payments</b>
-              <ol type="a">
-                <li>
-                  <b>Subscriptions</b>
-                  <ol type="i">
-                    <li>TBD</li>
-                  </ol>
-                </li>
-                <li>
-                  <b>Credits</b>
-                  <ol type="i">
-                    <li>TBD</li>
-                  </ol>
-                </li>
-                <li>
-                  <b>Creator Bonuses</b>
-                  <ol type="i">
-                    <li>TBD</li>
-                  </ol>
-                </li>
-                <li>
-                  <b>Billing</b>
-                  <ol type="i">
-                    <li>TBD</li>
-                  </ol>
-                </li>
-              </ol>
-            </li>
-            <li>
               <b>Content Policy</b>
               <ol type="a">
                 <li>
@@ -182,7 +153,7 @@ export const TermsOfServicePage: React.FC = () => {
                   permission for the company to create derived works such as
                   changing resolution and re-encoding in different formats,
                   playing back at different speeds, mixing with other visuals,
-                  and otherwise transforming for interactive display.
+                  and otherwise transforming or editing for interactive display.
                 </li>
                 <li>
                   Uploading also grants each other user of the Service a
@@ -216,17 +187,16 @@ export const TermsOfServicePage: React.FC = () => {
                   generative fill to remove a logo or nudity.
                 </li>
                 <li>
-                  If the content comes from another site, declare the source URL
-                  and license that allows crossposting. Many websites such as
-                  archive.org and youtube.com host creative commons licensed
-                  content that we may legally download and then upload to
-                  e-dream. You are encouraged to do this, and record the
-                  original site.
+                  If the content has a source URL or description,
+		  please record this metadata along with the content.
                 </li>
                 <li>
-                  Upload form has optional checkbox to give rights for others to
-                  transform and create derived works by cross-licensing with
-                  creative commons. Choices are none, CC0, CC-BY.
+                  The upload form has an optional checkbox to add a
+		  {" "}<Anchor href="https://creativecommons.org/licenses/by/4.0/">
+		  Creative Commons Attribution</Anchor> license (CC BY).
+		  As long as you are given appropriate credit, this enables
+		  other artists to remix and build on your content, including
+		  training AI models.
                 </li>
               </ol>
             </li>
