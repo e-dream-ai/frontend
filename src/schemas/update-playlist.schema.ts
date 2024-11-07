@@ -21,6 +21,7 @@ export type UpdateVideoPlaylistFormValues = {
     value: string;
   };
   nsfw: boolean;
+  ccaLicense: boolean;
 };
 
 export type UpdatePlaylistRequestValues = {
@@ -62,6 +63,7 @@ export const UpdateVideoPlaylistSchema = yup
       })
       .required("Playlist is required."),
     nsfw: yup.boolean().required(),
+    ccaLicense: yup.boolean().required(),
   })
   .required();
 

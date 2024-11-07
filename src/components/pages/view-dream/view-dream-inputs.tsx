@@ -49,7 +49,7 @@ import { useUsers } from "@/api/user/query/useUsers";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
-import { getNsfwOptions } from "@/constants/dream.constants";
+import { getCcaLicenceOptions, getNsfwOptions } from "@/constants/dream.constants";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -98,6 +98,24 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         error={errors.name?.message}
         value={values.name}
         {...register("name")}
+      />
+      <Input
+        disabled={!editMode}
+        placeholder={t("page.view_dream.description")}
+        type="text"
+        before={<FontAwesomeIcon icon={faFileVideo} />}
+        error={errors.description?.message}
+        value={values.description}
+        {...register("description")}
+      />
+      <Input
+        disabled={!editMode}
+        placeholder={t("page.view_dream.source_url")}
+        type="text"
+        before={<FontAwesomeIcon icon={faFileVideo} />}
+        error={errors.sourceUrl?.message}
+        value={values.sourceUrl}
+        {...register("sourceUrl")}
       />
       <Input
         disabled={!editMode}
@@ -161,6 +179,20 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           )}
         />
       </Restricted>
+
+      <Controller
+        name="ccaLicense"
+        control={control}
+        render={({ field }) => (
+          <Select
+            {...field}
+            isDisabled={!editMode || !allowedEditOwner}
+            placeholder={t("page.view_dream.cca_license")}
+            before={<FontAwesomeIcon icon={faShield} />}
+            options={getCcaLicenceOptions(t)}
+          />
+        )}
+      />
 
       <Restricted
         to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}

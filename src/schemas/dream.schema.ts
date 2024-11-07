@@ -6,10 +6,12 @@ export type DreamRequestValues = {
 
 export type CreateDreamFormValues = {
   nsfw: boolean;
+  ccaLicense: boolean;
 };
 
 export const CreateDreamSchema = yup
   .object({
     nsfw: yup.boolean().required(),
+    ccaLicense: yup.boolean().required(),
   })
   .required();

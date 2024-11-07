@@ -128,6 +128,11 @@ export const CreateDream: React.FC = () => {
             </Checkbox>
           </Column>
           <Column>
+            <Checkbox {...register("ccaLicense")} error={errors.ccaLicense?.message}>
+              {t("page.create.cca_license_dream")}
+            </Checkbox>
+          </Column>
+          <Column>
             <Row>
               {Boolean(video) && (
                 <Button
