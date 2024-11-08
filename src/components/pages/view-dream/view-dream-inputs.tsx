@@ -20,12 +20,15 @@ import {
 import { Video, VideoPlaceholder } from "./view-dream.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faBook,
   faCalendar,
   faClock,
+  faComment,
   faFile,
   faFileVideo,
   faFilm,
   faFire,
+  faLink,
   faMicrochip,
   faPhotoVideo,
   faRankingStar,
@@ -103,7 +106,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         disabled={!editMode}
         placeholder={t("page.view_dream.description")}
         type="text"
-        before={<FontAwesomeIcon icon={faFileVideo} />}
+        before={<FontAwesomeIcon icon={faComment} />}
         error={errors.description?.message}
         value={values.description}
         {...register("description")}
@@ -112,7 +115,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         disabled={!editMode}
         placeholder={t("page.view_dream.source_url")}
         type="text"
-        before={<FontAwesomeIcon icon={faFileVideo} />}
+        before={<FontAwesomeIcon icon={faLink} />}
         error={errors.sourceUrl?.message}
         value={values.sourceUrl}
         {...register("sourceUrl")}
@@ -181,14 +184,14 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
       </Restricted>
 
       <Controller
-        name="ccaLicense"
+        name="ccbyLicense"
         control={control}
         render={({ field }) => (
           <Select
             {...field}
             isDisabled={!editMode || !allowedEditOwner}
-            placeholder={t("page.view_dream.cca_license")}
-            before={<FontAwesomeIcon icon={faShield} />}
+            placeholder={t("page.view_dream.ccby_license")}
+            before={<FontAwesomeIcon icon={faBook} />}
             options={getCcaLicenceOptions(t)}
           />
         )}

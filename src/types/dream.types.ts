@@ -33,7 +33,7 @@ export type Dream = {
   nsfw?: boolean;
   description?: string;
   sourceUrl?: string;
-  ccaLicense?: boolean;
+  ccbyLicense?: boolean;
   playlistItems?: PlaylistItem[];
   filmstrip?: Frame[];
   upvotes?: number;

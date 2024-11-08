@@ -1,13 +1,20 @@
 import { useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
-import { faRotateRight, faUpload } from "@fortawesome/free-solid-svg-icons";
+import {
+  faComment,
+  faLink,
+  faRotateRight,
+  faUpload,
+} from "@fortawesome/free-solid-svg-icons";
 import {
   AnchorLink,
   Button,
   Checkbox,
   FileUploader,
+  Input,
   Row,
+  TextArea,
 } from "@/components/shared";
 import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { HandleChangeFile } from "@/types/media.types";
@@ -34,6 +41,7 @@ import {
   CreateDreamSchema,
 } from "@/schemas/dream.schema";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { Tooltip } from "react-tooltip";
 
 export const CreateDream: React.FC = () => {
   const { t } = useTranslation();
@@ -69,7 +77,13 @@ export const CreateDream: React.FC = () => {
 
   const onSubmit = async (formData: CreateDreamFormValues) => {
     try {
-      await mutateAsync({ file: video?.fileBlob, nsfw: formData.nsfw });
+      await mutateAsync({
+        file: video?.fileBlob,
+        nsfw: formData.nsfw,
+        description: formData.description,
+        sourceUrl: formData.sourceUrl,
+        ccbyLicense: formData.ccbyLicense,
+      });
     } catch (error) {
       toast.error(t("page.create.error_uploading_dream"));
     }
@@ -87,7 +101,20 @@ export const CreateDream: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Column>
+      <Column pt="1rem">
+        <TextArea
+          placeholder={t("page.create.dream_description")}
+          before={<FontAwesomeIcon icon={faComment} />}
+          error={errors.description?.message}
+          {...register("description")}
+        />
+        <Input
+          placeholder={t("page.create.dream_source_url")}
+          type="text"
+          before={<FontAwesomeIcon icon={faLink} />}
+          error={errors.sourceUrl?.message}
+          {...register("sourceUrl")}
+        />
         {video ? (
           <>
             <Text my={3}>{t("page.create.dream_preview")}</Text>
@@ -126,13 +153,21 @@ export const CreateDream: React.FC = () => {
             <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
               {t("page.create.nsfw_dream")}
             </Checkbox>
+            <div data-tooltip-id="ccby-license">
+              <Checkbox
+                {...register("ccbyLicense")}
+                error={errors.ccbyLicense?.message}
+              >
+                <Tooltip
+                  id="ccby-license"
+                  place="right-end"
+                  content={t("page.create.ccby_license_dream_tooltip")}
+                />
+                {t("page.create.ccby_license_dream")}
+              </Checkbox>
+            </div>
           </Column>
-          <Column>
-            <Checkbox {...register("ccaLicense")} error={errors.ccaLicense?.message}>
-              {t("page.create.cca_license_dream")}
-            </Checkbox>
-          </Column>
-          <Column>
+          <Column justifyContent="flex-end">
             <Row>
               {Boolean(video) && (
                 <Button

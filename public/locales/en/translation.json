@@ -92,10 +92,12 @@
       "dream_tab_title": "Create dream",
       "dream_preview": "Dream Preview",
       "dream_instructions": "Upload or drop your dream here. A video file in almost any format should work.",
+      "dream_description": "Description",
+      "dream_source_url": "Source URL",
       "nsfw_dream": "Mark NSFW Dream",
       "nsfw_playlist": "Mark NSFW Playlist",
-      "cca_license_dream": "Allow Training and Remixing with CC BY",
-      "cca_license_dream_tooltip": "Add Creative Commons Attribution License",
+      "ccby_license_dream": "Allow Training and Remixing with CC BY",
+      "ccby_license_dream_tooltip": "Add Creative Commons Attribution License",
       "content_policy": "Be sure to follow the Content Policy and User Generated Content section of the",
       "terms_of_service": "Terms of Service",
       "become_creator": "To become a creator and upload your own dreams, email",
@@ -131,7 +133,7 @@
       "name": "Name",
       "description": "Description",
       "source_url": "Source URL",
-      "cca_license": "Creative Commons Attribution License",
+      "ccby_license": "Creative Commons Attribution License",
       "activity_level": "Activity Level",
       "feature_rank": "Feature Rank",
       "duration": "Duration",
@@ -451,7 +453,7 @@
     }
   },
   "dream": {
-    "cca_license": {
+    "ccby_license": {
       "active": "active",
       "inactive": "inactive"
     }

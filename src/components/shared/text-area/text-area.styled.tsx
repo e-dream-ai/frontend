@@ -5,7 +5,7 @@ export const StyledTextArea = styled.textarea`
   width: -moz-available; /* WebKit-based browsers will ignore this. */
   width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
   width: fill-available;
-  min-height: 12rem;
+  min-height: 8rem;
   resize: none;
   padding: 6px 12px;
   background: ${(props) => props.theme.colorBackgroundSecondary};
@@ -34,22 +34,21 @@ export const TextAreaRow = styled.div`
 `;
 
 export const TextAreaBefore = styled.span`
-  height: 100%;
   min-width: 40px;
   padding: 6px 12px;
   background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorSecondary};
   text-align: center;
+  align-self: stretch;
 `;
 
 export const TextAreaAfter = styled.span`
-  height: 100%;
   min-width: 40px;
   padding: 6px 12px;
   background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorPrimary};
   text-align: center;
-  cursor: pointer;
+  align-self: stretch;
 `;
 
 export const TextAreaError = styled.span`

@@ -5,13 +5,17 @@ export type DreamRequestValues = {
 };
 
 export type CreateDreamFormValues = {
+  description?: string;
+  sourceUrl?: string;
   nsfw: boolean;
-  ccaLicense: boolean;
+  ccbyLicense: boolean;
 };
 
 export const CreateDreamSchema = yup
   .object({
+    description: yup.string(),
+    sourceUrl: yup.string(),
     nsfw: yup.boolean().required(),
-    ccaLicense: yup.boolean().required(),
+    ccbyLicense: yup.boolean().required(),
   })
   .required();

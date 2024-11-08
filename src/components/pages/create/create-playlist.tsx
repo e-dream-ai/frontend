@@ -39,6 +39,7 @@ import Restricted from "@/components/shared/restricted/restricted";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { VideoList } from "@/components/shared/video-list/video-list";
 import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
+import { Tooltip } from "react-tooltip";
 export const CreatePlaylist: React.FC = () => {
   const { t } = useTranslation();
   const [videos, setVideos] = useState<FileState[]>([]);
@@ -197,14 +198,19 @@ export const CreatePlaylist: React.FC = () => {
             <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
               {t("page.create.nsfw_playlist")}
             </Checkbox>
-          </Column>
-          <Column>
-            <Checkbox
-              {...register("ccaLicense")}
-              error={errors.ccaLicense?.message}
-            >
-              {t("page.create.cca_license_dream")}
-            </Checkbox>
+            <div data-tooltip-id="ccby-license">
+              <Checkbox
+                {...register("ccbyLicense")}
+                error={errors.ccbyLicense?.message}
+              >
+                <Tooltip
+                  id="ccby-license"
+                  place="right-end"
+                  content={t("page.create.ccby_license_dream_tooltip")}
+                />
+                {t("page.create.ccby_license_dream")}
+              </Checkbox>
+            </div>
           </Column>
           <Column>
             <Button

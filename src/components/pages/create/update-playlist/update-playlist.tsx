@@ -153,14 +153,14 @@ export const UpdatePlaylist: React.FC = () => {
               <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
                 {t("page.create.nsfw_dream")}
               </Checkbox>
-            </Column>
-            <Column>
-              <Checkbox
-                {...register("ccaLicense")}
-                error={errors.ccaLicense?.message}
-              >
-                {t("page.create.cca_license_dream")}
-              </Checkbox>
+              <div data-tooltip-id="ccby-license">
+                <Checkbox
+                  {...register("ccbyLicense")}
+                  error={errors.ccbyLicense?.message}
+                >
+                  {t("page.create.ccby_license_dream")}
+                </Checkbox>
+              </div>
             </Column>
             <Column>
               <Button

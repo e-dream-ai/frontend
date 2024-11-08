@@ -51,7 +51,7 @@ import { truncateString } from "@/utils/string.util";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 import { User } from "@/types/auth.types";
 import { useImage } from "@/hooks/useImage";
-import { NSFW, filterNsfwOption } from "@/constants/dream.constants";
+import { CCA_LICENSE, NSFW, filterCcaLicenceOption, filterNsfwOption } from "@/constants/dream.constants";
 import { useUpvoteDream } from "@/api/dream/mutation/useUpvoteDream";
 import { useDownvoteDream } from "@/api/dream/mutation/useDownvoteDream";
 import { useUnvoteDream } from "@/api/dream/mutation/useUnvoteDream";
@@ -205,10 +205,13 @@ const ViewDreamPage: React.FC = () => {
     mutateDream(
       {
         name: data.name,
+        description: data.description,
+        sourceUrl: data.sourceUrl,
         activityLevel: data.activityLevel,
         featureRank: data.featureRank,
         displayedOwner: data?.displayedOwner?.value,
         nsfw: data?.nsfw.value === NSFW.TRUE,
+        ccbyLicense: data?.ccbyLicense.value === CCA_LICENSE.TRUE,
       },
       {
         onSuccess: (data) => {
@@ -262,6 +265,8 @@ const ViewDreamPage: React.FC = () => {
   const resetRemoteDreamForm = useCallback(() => {
     reset({
       name: dream?.name,
+      description: dream?.description,
+      sourceUrl: dream?.sourceUrl,
       activityLevel: dream?.activityLevel,
       featureRank: dream?.featureRank,
       processedVideoSize: dream?.processedVideoSize
@@ -296,6 +301,7 @@ const ViewDreamPage: React.FC = () => {
             label: getUserName(dream?.displayedOwner ?? dream?.user),
           },
       nsfw: filterNsfwOption(dream?.nsfw, t),
+      ccbyLicense: filterCcaLicenceOption(dream?.ccbyLicense, t),
       upvotes: dream?.upvotes,
       downvotes: dream?.downvotes,
       created_at: moment(dream?.created_at).format(FORMAT),

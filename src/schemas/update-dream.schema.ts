@@ -18,7 +18,7 @@ export type UpdateDreamFormValues = {
     label?: string;
     value?: string;
   };
-  ccaLicense: {
+  ccbyLicense: {
     label?: string;
     value?: string;
   };
@@ -30,10 +30,13 @@ export type UpdateDreamFormValues = {
 
 export type UpdateDreamRequestValues = {
   name: string;
+  description?: string;
+  sourceUrl?: string;
   activityLevel?: number;
   featureRank?: number;
   displayedOwner?: number;
   nsfw?: boolean;
+  ccbyLicense?: boolean;
 };
 
 export const UpdateDreamSchema = yup
@@ -57,7 +60,7 @@ export const UpdateDreamSchema = yup
       label: yup.string(),
       value: yup.string(),
     }),
-    ccaLicense: yup.object({
+    ccbyLicense: yup.object({
       label: yup.string(),
       value: yup.string(),
     }),
