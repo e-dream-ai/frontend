@@ -39,9 +39,9 @@ export const AboutPage: React.FC = () => {
           </p>
           <p>
             <Anchor href={ROUTES.SIGNUP}>
-              Sign up
+              Create an account
             </Anchor>
-            , <Anchor href="/install">install</Anchor>,
+            , <Anchor href="/install">install the app</Anchor>,
             and begin the experience.
           </p>
         </Text>
