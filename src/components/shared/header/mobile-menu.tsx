@@ -54,7 +54,7 @@ export const MobileMenu: React.FC = () => {
       menuClassName="my-menu"
     >
       {(user ? USER_NAV_ROUTES : NAV_ROUTES).map((route) => (
-        <AnchorLink type="tertiary" to={route.route}>
+        <AnchorLink key={route.route} type="tertiary" to={route.route}>
           <MenuItem onClick={() => ({})}>{route.title}</MenuItem>
         </AnchorLink>
       ))}

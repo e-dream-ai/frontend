@@ -4,6 +4,8 @@ export type CreatePlaylistFormValues = {
   name: string;
   nsfw?: boolean;
   ccbyLicense?: boolean;
+  description?: string;
+  sourceUrl?: string;
 };
 
 export const CreatePlaylistSchema = yup
@@ -11,6 +13,8 @@ export const CreatePlaylistSchema = yup
     name: yup.string().required(),
     nsfw: yup.boolean(),
     ccbyLicense: yup.boolean(),
+    description: yup.string(),
+    sourceUrl: yup.string(),
   })
   .required();
 

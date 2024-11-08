@@ -102,19 +102,6 @@ export const CreateDream: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Column pt="1rem">
-        <TextArea
-          placeholder={t("page.create.dream_description")}
-          before={<FontAwesomeIcon icon={faComment} />}
-          error={errors.description?.message}
-          {...register("description")}
-        />
-        <Input
-          placeholder={t("page.create.dream_source_url")}
-          type="text"
-          before={<FontAwesomeIcon icon={faLink} />}
-          error={errors.sourceUrl?.message}
-          {...register("sourceUrl")}
-        />
         {video ? (
           <>
             <Text my={3}>{t("page.create.dream_preview")}</Text>
@@ -148,8 +135,8 @@ export const CreateDream: React.FC = () => {
           </Row>
         )}
 
-        <Row my={4} justifyContent="space-between">
-          <Column>
+        <Row my={3}>
+          <Column flex="auto">
             <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
               {t("page.create.nsfw_dream")}
             </Checkbox>
@@ -166,45 +153,55 @@ export const CreateDream: React.FC = () => {
                 {t("page.create.ccby_license_dream")}
               </Checkbox>
             </div>
+
+            <TextArea
+              placeholder={t("page.create.dream_description")}
+              before={<FontAwesomeIcon icon={faComment} />}
+              error={errors.description?.message}
+              {...register("description")}
+            />
+            <Input
+              placeholder={t("page.create.dream_source_url")}
+              type="text"
+              before={<FontAwesomeIcon icon={faLink} />}
+              error={errors.sourceUrl?.message}
+              {...register("sourceUrl")}
+            />
           </Column>
-          <Column justifyContent="flex-end">
-            <Row>
-              {Boolean(video) && (
-                <Button
-                  type="button"
-                  mr={2}
-                  isLoading={isAborting}
-                  disabled={!video || isAborting}
-                  onClick={handleCancelCreateDream}
-                >
-                  {t("page.create.cancel")}
-                </Button>
-              )}
-              {!isFailed && (
-                <Button
-                  after={<FontAwesomeIcon icon={faUpload} />}
-                  onClick={handleSubmit(onSubmit)}
-                  isLoading={isLoading}
-                  disabled={!video || isAborting || isLoading}
-                >
-                  {isLoading
-                    ? t("page.create.creating")
-                    : t("page.create.create")}
-                </Button>
-              )}
-              {isFailed && (
-                <Button
-                  type="button"
-                  after={<FontAwesomeIcon icon={faRotateRight} />}
-                  onClick={retryUploadFailedParts}
-                  isLoading={isLoading}
-                  disabled={isAborting || isLoading}
-                >
-                  {t("page.create.retry")}
-                </Button>
-              )}
-            </Row>
-          </Column>
+        </Row>
+        <Row justifyContent="flex-end">
+          {Boolean(video) && (
+            <Button
+              type="button"
+              mr={2}
+              isLoading={isAborting}
+              disabled={!video || isAborting}
+              onClick={handleCancelCreateDream}
+            >
+              {t("page.create.cancel")}
+            </Button>
+          )}
+          {!isFailed && (
+            <Button
+              after={<FontAwesomeIcon icon={faUpload} />}
+              onClick={handleSubmit(onSubmit)}
+              isLoading={isLoading}
+              disabled={!video || isAborting || isLoading}
+            >
+              {isLoading ? t("page.create.creating") : t("page.create.create")}
+            </Button>
+          )}
+          {isFailed && (
+            <Button
+              type="button"
+              after={<FontAwesomeIcon icon={faRotateRight} />}
+              onClick={retryUploadFailedParts}
+              isLoading={isLoading}
+              disabled={isAborting || isLoading}
+            >
+              {t("page.create.retry")}
+            </Button>
+          )}
         </Row>
         <Row>
           <Text>
