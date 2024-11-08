@@ -8,11 +8,17 @@ export type UpdateDreamFormValues = {
   processedVideoFrames?: string;
   processedVideoFPS?: string;
   user?: string;
+  description?: string;
+  sourceUrl?: string;
   displayedOwner: {
     label?: string;
     value?: number;
   };
   nsfw: {
+    label?: string;
+    value?: string;
+  };
+  ccbyLicense: {
     label?: string;
     value?: string;
   };
@@ -24,15 +30,20 @@ export type UpdateDreamFormValues = {
 
 export type UpdateDreamRequestValues = {
   name: string;
+  description?: string;
+  sourceUrl?: string;
   activityLevel?: number;
   featureRank?: number;
   displayedOwner?: number;
   nsfw?: boolean;
+  ccbyLicense?: boolean;
 };
 
 export const UpdateDreamSchema = yup
   .object({
     name: yup.string().required(),
+    description: yup.string(),
+    sourceUrl: yup.string(),
     activityLevel: yup.number().typeError("Activity level must be a number"),
     featureRank: yup
       .number()
@@ -46,6 +57,10 @@ export const UpdateDreamSchema = yup
       value: yup.number(),
     }),
     nsfw: yup.object({
+      label: yup.string(),
+      value: yup.string(),
+    }),
+    ccbyLicense: yup.object({
       label: yup.string(),
       value: yup.string(),
     }),

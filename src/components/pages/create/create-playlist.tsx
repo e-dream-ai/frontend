@@ -1,7 +1,12 @@
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { faList, faUpload } from "@fortawesome/free-solid-svg-icons";
+import {
+  faComment,
+  faLink,
+  faList,
+  faUpload,
+} from "@fortawesome/free-solid-svg-icons";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
 import {
   AnchorLink,
@@ -10,6 +15,7 @@ import {
   FileUploader,
   Input,
   Row,
+  TextArea,
 } from "@/components/shared";
 import { Column } from "@/components/shared/row/row";
 import Text from "@/components/shared/text/text";
@@ -39,6 +45,7 @@ import Restricted from "@/components/shared/restricted/restricted";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { VideoList } from "@/components/shared/video-list/video-list";
 import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
+import { Tooltip } from "react-tooltip";
 export const CreatePlaylist: React.FC = () => {
   const { t } = useTranslation();
   const [videos, setVideos] = useState<FileState[]>([]);
@@ -97,10 +104,24 @@ export const CreatePlaylist: React.FC = () => {
   const onDeleteVideo = (index: number) => () =>
     setVideos((videos) => videos.filter((_, i) => i !== index));
 
-  const handleUploadVideos = async (playlist: Playlist) => {
+  const handleUploadVideos = async (
+    playlist: Playlist,
+    opts?: {
+      nswf?: boolean;
+      ccbyLicense?: boolean;
+      description?: string;
+      sourceUrl?: string;
+    },
+  ) => {
     for (let i = 0; i < videos.length; i++) {
       setCurrentUploadFile(i);
-      const createdDream = await mutateAsync({ file: videos[i]?.fileBlob });
+      const createdDream = await mutateAsync({
+        file: videos[i]?.fileBlob,
+        nsfw: opts?.nswf,
+        ccbyLicense: opts?.ccbyLicense,
+        description: opts?.description,
+        sourceUrl: opts?.sourceUrl,
+      });
       setVideoUploaded(i);
       if (createdDream) {
         await addPlaylistItemMutation.mutateAsync({
@@ -134,7 +155,12 @@ export const CreatePlaylist: React.FC = () => {
         setIsUploadingFiles(false);
         router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist?.uuid}`);
       } else {
-        handleUploadVideos(playlist);
+        handleUploadVideos(playlist, {
+          nswf: data.nsfw,
+          ccbyLicense: data.ccbyLicense,
+          description: data.description,
+          sourceUrl: data.sourceUrl,
+        });
       }
     } catch (error) {
       setIsUploadingFiles(false);
@@ -193,19 +219,45 @@ export const CreatePlaylist: React.FC = () => {
         </Restricted>
 
         <Row my={4} justifyContent="space-between">
-          <Column>
+          <Column flex="auto">
             <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
               {t("page.create.nsfw_playlist")}
             </Checkbox>
+            <div data-tooltip-id="ccby-license">
+              <Checkbox
+                {...register("ccbyLicense")}
+                error={errors.ccbyLicense?.message}
+              >
+                <Tooltip
+                  id="ccby-license"
+                  place="right-end"
+                  content={t("page.create.ccby_license_dream_tooltip")}
+                />
+                {t("page.create.ccby_license_dream")}
+              </Checkbox>
+            </div>
+            <TextArea
+              placeholder={t("page.create.dream_description")}
+              before={<FontAwesomeIcon icon={faComment} />}
+              error={errors.description?.message}
+              {...register("description")}
+            />
+            <Input
+              placeholder={t("page.create.dream_source_url")}
+              type="text"
+              before={<FontAwesomeIcon icon={faLink} />}
+              error={errors.sourceUrl?.message}
+              {...register("sourceUrl")}
+            />
           </Column>
-          <Column>
-            <Button
-              isLoading={isLoading}
-              after={<FontAwesomeIcon icon={faUpload} />}
-            >
-              {isLoading ? t("page.create.creating") : t("page.create.create")}
-            </Button>
-          </Column>
+        </Row>
+        <Row justifyContent="flex-end">
+          <Button
+            isLoading={isLoading}
+            after={<FontAwesomeIcon icon={faUpload} />}
+          >
+            {isLoading ? t("page.create.creating") : t("page.create.create")}
+          </Button>
         </Row>
 
         <Row my={4}>

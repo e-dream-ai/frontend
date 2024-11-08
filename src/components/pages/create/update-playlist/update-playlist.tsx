@@ -6,6 +6,8 @@ import {
   Column,
   AnchorLink,
   Checkbox,
+  TextArea,
+  Input,
 } from "@/components/shared";
 import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
 import { VideoList } from "@/components/shared/video-list/video-list";
@@ -29,7 +31,12 @@ import { useForm, Controller } from "react-hook-form";
 import { toast } from "react-toastify";
 import Select from "@/components/shared/select/select";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faList, faUpload } from "@fortawesome/free-solid-svg-icons";
+import {
+  faComment,
+  faLink,
+  faList,
+  faUpload,
+} from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 
 export const UpdatePlaylist: React.FC = () => {
@@ -86,7 +93,12 @@ export const UpdatePlaylist: React.FC = () => {
         setIsUploadingFiles(false);
       } else {
         setIsUploadingFiles(true);
-        await handleUploadVideos({ nsfw: formData?.nsfw });
+        await handleUploadVideos({
+          nsfw: formData?.nsfw,
+          ccbyLicense: formData?.ccbyLicense,
+          description: formData?.description,
+          sourceUrl: formData?.sourceUrl,
+        });
       }
     } catch (error) {
       console.error(error);
@@ -149,23 +161,45 @@ export const UpdatePlaylist: React.FC = () => {
           />
 
           <Row my={4} justifyContent="space-between">
-            <Column>
+            <Column flex="auto">
               <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
                 {t("page.create.nsfw_dream")}
               </Checkbox>
+              <div data-tooltip-id="ccby-license">
+                <Checkbox
+                  {...register("ccbyLicense")}
+                  error={errors.ccbyLicense?.message}
+                >
+                  {t("page.create.ccby_license_dream")}
+                </Checkbox>
+              </div>
+              <TextArea
+                placeholder={t("page.create.dream_description")}
+                before={<FontAwesomeIcon icon={faComment} />}
+                error={errors.description?.message}
+                {...register("description")}
+              />
+              <Input
+                placeholder={t("page.create.dream_source_url")}
+                type="text"
+                before={<FontAwesomeIcon icon={faLink} />}
+                error={errors.sourceUrl?.message}
+                {...register("sourceUrl")}
+              />
             </Column>
-            <Column>
-              <Button
-                type="submit"
-                after={<FontAwesomeIcon icon={faUpload} />}
-                isLoading={isLoading || isUploadingFiles}
-                disabled={!videos.length}
-              >
-                {isLoading
-                  ? t("components.update_playlist.adding")
-                  : t("components.update_playlist.add")}
-              </Button>
-            </Column>
+          </Row>
+
+          <Row justifyContent="flex-end">
+            <Button
+              type="submit"
+              after={<FontAwesomeIcon icon={faUpload} />}
+              isLoading={isLoading || isUploadingFiles}
+              disabled={!videos.length}
+            >
+              {isLoading
+                ? t("components.update_playlist.adding")
+                : t("components.update_playlist.add")}
+            </Button>
           </Row>
 
           <Row my={4}>

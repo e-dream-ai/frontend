@@ -6,6 +6,9 @@ export type CreateMultipartUploadFormValues = {
   extension?: string;
   parts?: number;
   nsfw?: boolean;
+  ccbyLicense?: boolean;
+  description?: string;
+  sourceUrl?: string;
 };
 
 export type CompletedPart = { ETag?: string; PartNumber?: number };

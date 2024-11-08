@@ -47,7 +47,7 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
           {before && <TextAreaBefore>{before}</TextAreaBefore>}
           <StyledTextArea
             ref={ref}
-            maxLength={150}
+            maxLength={400}
             onKeyDown={handleOnKeyDown}
             name={name}
             placeholder={placeholder}
