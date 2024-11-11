@@ -1,5 +1,6 @@
 import React from "react";
 import { Tooltip } from "react-tooltip";
+import Linkify from "react-linkify";
 import StyledInput, {
   DisabledInput,
   InputAfter,
@@ -11,7 +12,8 @@ import StyledInput, {
 import { Anchor } from "..";
 
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
-  anchor?: React.MouseEventHandler<HTMLAnchorElement>;
+  linkify?: boolean;
+  href?: string;
   before?: React.ReactNode;
   after?: React.ReactNode;
   error?: string;
@@ -27,7 +29,8 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       error,
       disabled,
       value,
-      anchor,
+      linkify,
+      href,
       name,
       placeholder,
       ...props
@@ -41,8 +44,23 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {before && <InputBefore>{before}</InputBefore>}
           {disabled ? (
             <DisabledInput>
-              {anchor ? (
-                <Anchor type="secondary" onClick={anchor}>
+              {linkify ? (
+                <Linkify
+                  componentDecorator={(decoratedHref, decoratedText, key) => (
+                    <Anchor
+                      target="_blank"
+                      type="secondary"
+                      href={decoratedHref}
+                      key={key}
+                    >
+                      {decoratedText}
+                    </Anchor>
+                  )}
+                >
+                  {value}
+                </Linkify>
+              ) : href ? (
+                <Anchor type="secondary" href={href}>
                   {value}
                 </Anchor>
               ) : typeof value === "string" ? (

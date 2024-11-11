@@ -14,7 +14,7 @@ import moment from "moment";
 import { useCallback, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 import UpdatePlaylistSchema, {
   UpdatePlaylistFormValues,
 } from "@/schemas/update-playlist.schema";
@@ -56,7 +56,6 @@ const SectionID = "playlist";
 export const ViewPlaylistPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const navigate = useNavigate();
 
   const {
     isError,
@@ -385,9 +384,7 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     before={<FontAwesomeIcon icon={faSave} />}
                     value={values.user}
-                    anchor={() =>
-                      navigate(`${ROUTES.PROFILE}/${playlist?.user.uuid}`)
-                    }
+                    href={`/${ROUTES.PROFILE}/${playlist?.user.uuid}`}
                     {...register("user")}
                   />
                 </Restricted>
@@ -406,9 +403,7 @@ export const ViewPlaylistPage = () => {
                       isDisabled={!editMode || !allowedEditOwner}
                       isLoading={isUsersLoading}
                       before={<FontAwesomeIcon icon={faUser} />}
-                      anchor={() =>
-                        navigate(`${ROUTES.PROFILE}/${playlist?.user.uuid}`)
-                      }
+                      href={`/${ROUTES.PROFILE}/${playlist?.user.uuid}`}
                       options={usersOptions}
                       onInputChange={(newValue) => setUserSearch(newValue)}
                     />

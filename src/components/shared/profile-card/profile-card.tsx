@@ -108,7 +108,12 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
         >
           <Linkify
             componentDecorator={(decoratedHref, decoratedText, key) => (
-              <Anchor target="_blank" href={decoratedHref} key={key}>
+              <Anchor
+                target="_blank"
+                type="secondary"
+                href={decoratedHref}
+                key={key}
+              >
                 {decoratedText}
               </Anchor>
             )}
@@ -288,9 +293,10 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       nsfw: formData?.nsfw.value === NSFW.TRUE,
       enableMarketingEmails:
         formData?.enableMarketingEmails.value === ENABLE_MARKETING_EMAILS.TRUE,
-      quota: formData?.quota !== undefined
-        ? Math.round(GBToBytes(formData.quota))
-        : undefined,
+      quota:
+        formData?.quota !== undefined
+          ? Math.round(GBToBytes(formData.quota))
+          : undefined,
     };
 
     if (!isUserAdmin) {

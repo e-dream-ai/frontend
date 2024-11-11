@@ -80,7 +80,7 @@ const StyledSelect = styled(ReactSelect)`
 `;
 
 type SelectProps = Props<unknown, boolean, GroupBase<unknown>> & {
-  anchor?: React.MouseEventHandler<HTMLAnchorElement>;
+  href?: string;
   before?: React.ReactNode;
   after?: React.ReactNode;
   error?: string;
@@ -92,7 +92,7 @@ export const Select = React.forwardRef<
 >(
   (
     {
-      anchor,
+      href,
       before,
       after,
       error,
@@ -116,8 +116,8 @@ export const Select = React.forwardRef<
           {before && <InputBefore>{before}</InputBefore>}
           {isDisabled ? (
             <DisabledInput>
-              {anchor ? (
-                <Anchor type="secondary" onClick={anchor}>
+              {href ? (
+                <Anchor type="secondary" href={href}>
                   {label}
                 </Anchor>
               ) : typeof label === "string" ? (

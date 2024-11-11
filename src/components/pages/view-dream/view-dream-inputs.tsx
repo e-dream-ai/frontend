@@ -39,7 +39,6 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
-import { useNavigate } from "react-router-dom";
 import {
   DREAM_PERMISSIONS,
   PLAYLIST_PERMISSIONS,
@@ -52,7 +51,10 @@ import { useUsers } from "@/api/user/query/useUsers";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
-import { getCcaLicenceOptions, getNsfwOptions } from "@/constants/dream.constants";
+import {
+  getCcaLicenceOptions,
+  getNsfwOptions,
+} from "@/constants/dream.constants";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -72,7 +74,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   control,
 }) => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const [userSearch, setUserSearch] = useState<string>("");
   const { user } = useAuth();
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
@@ -103,6 +104,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         {...register("name")}
       />
       <Input
+        linkify
         disabled={!editMode}
         placeholder={t("page.view_dream.description")}
         type="text"
@@ -112,6 +114,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         {...register("description")}
       />
       <Input
+        linkify
         disabled={!editMode}
         placeholder={t("page.view_dream.source_url")}
         type="text"
@@ -207,7 +210,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           type="text"
           before={<FontAwesomeIcon icon={faSave} />}
           value={values.user}
-          anchor={() => navigate(`${ROUTES.PROFILE}/${dream?.user.uuid}`)}
+          href={`${ROUTES.PROFILE}/${dream?.user.uuid}`}
           {...register("user")}
         />
       </Restricted>
@@ -225,9 +228,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             isDisabled={!editMode || !allowedEditOwner}
             isLoading={isUsersLoading}
             before={<FontAwesomeIcon icon={faUser} />}
-            anchor={() =>
-              navigate(`${ROUTES.PROFILE}/${dream?.displayedOwner.uuid}`)
-            }
+            href={`${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`}
             options={usersOptions}
             onInputChange={(newValue) => setUserSearch(newValue)}
           />
