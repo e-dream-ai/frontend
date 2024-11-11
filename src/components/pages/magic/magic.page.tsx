@@ -88,12 +88,14 @@ export const MagicPage: React.FC = () => {
             <h2>
               {isEmailVerification
                 ? t("page.magic.title_verification")
-                : t("page.magic.title_login")}
+                : t("page.magic.title_signin")}
             </h2>
           </Row>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Text mb={3} fontSize="1rem" color={theme.textSecondaryColor}>
-              {t("page.magic.instructions")}
+              {isEmailVerification
+                ? t("page.magic.instructions_verification")
+                : t("page.magic.instructions_signin")}
             </Text>
 
             <Input

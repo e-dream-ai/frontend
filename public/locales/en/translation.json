@@ -69,9 +69,10 @@
       "error_signingup_user": "Error creating account."
     },
     "magic": {
-      "title_login": "Enter code",
+      "title_signin": "Enter code",
       "title_verification": "Email verification",
-      "instructions": "Find the one-time code in your email and enter it below.",
+      "instructions_signin": "Find the one-time code in your email and enter it below.",
+      "instructions_verification": "Find the code in your email and enter it below.",
       "email": "Email",
       "code": "Code",
       "signin": "Sign in",
