@@ -69,12 +69,12 @@
       "error_signingup_user": "Error creating account."
     },
     "magic": {
-      "title_login": "Login",
+      "title_login": "Enter code",
       "title_verification": "Email verification",
-      "instructions": "Verify your email to get the code.",
+      "instructions": "Find the one-time code in your email and enter it below.",
       "email": "Email",
       "code": "Code",
-      "login": "Login",
+      "signin": "Sign in",
       "verify_email": "Verify email",
       "welcome_user": "Welcome {{username}}",
       "error_verifying_code": "Error signing in."

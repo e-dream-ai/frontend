@@ -122,7 +122,7 @@ export const MagicPage: React.FC = () => {
               >
                 {isEmailVerification
                   ? t("page.magic.verify_email")
-                  : t("page.magic.login")}
+                  : t("page.magic.signin")}
               </Button>
             </Row>
           </form>
