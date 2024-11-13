@@ -37,6 +37,7 @@ export const DisabledInput = styled.div`
   color: ${(props) => props.theme.inputTextColorPrimary};
   font-size: 1rem;
   cursor: not-allowed;
+  white-space: pre-wrap;
 
   &:disabled {
     cursor: not-allowed;

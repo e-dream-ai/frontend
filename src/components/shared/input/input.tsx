@@ -57,7 +57,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                     </Anchor>
                   )}
                 >
-                  {value}
+                  {value ?? "-"}
                 </Linkify>
               ) : href ? (
                 <Anchor type="secondary" href={href}>
