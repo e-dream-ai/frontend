@@ -339,7 +339,7 @@
     },
     "remote_control": {
       "event": "Event",
-      "playing": "Playing",
+      "playing": "Playing {{name}} dream.",
       "play_dream": "Dream {{name}} played.",
       "play_playlist": "Playlist {{name}} played.",
       "like": "Dream {{name}} liked.",
