@@ -255,7 +255,13 @@ export const ViewPlaylistPage = () => {
                   ml="1rem"
                   onClick={handlePlayPlaylist}
                 >
-                  <FontAwesomeIcon icon={faPlay} />
+                  <span className="fa-stack">
+                    <FontAwesomeIcon icon={faPlay} />
+                    <FontAwesomeIcon
+                      icon={faPlay}
+                      style={{ transform: "translate(-30%, 0%)" }}
+                    />
+                  </span>
                 </Button>
                 {!editMode && (
                   <Restricted

@@ -336,14 +336,26 @@ export const ItemCard: React.FC<ItemCardProps> = ({
               type="button"
               buttonType="default"
               transparent
-              after={<FontAwesomeIcon icon={faPlay} />}
+              after={
+                type === "dream" ? (
+                  <FontAwesomeIcon icon={faPlay} />
+                ) : (
+                  <span className="fa-stack">
+                    <FontAwesomeIcon icon={faPlay} />
+                    <FontAwesomeIcon
+                      icon={faPlay}
+                      style={{ transform: "translate(-30%, 0%)" }}
+                    />
+                  </span>
+                )
+              }
               onClick={handlePlay}
             />
           </Row>
         )}
       </Row>
     ),
-    [Thumbnail, handlePlay, inline, showPlayButton],
+    [Thumbnail, handlePlay, type, inline, showPlayButton],
   );
 
   return (
