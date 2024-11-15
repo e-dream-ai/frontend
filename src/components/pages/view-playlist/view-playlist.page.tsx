@@ -252,7 +252,7 @@ export const ViewPlaylistPage = () => {
                   type="button"
                   buttonType="default"
                   transparent
-                  ml="1rem"
+                  style={{ width: "3rem" }}
                   onClick={handlePlayPlaylist}
                 >
                   <span className="fa-stack">
@@ -272,7 +272,7 @@ export const ViewPlaylistPage = () => {
                       type="button"
                       buttonType="danger"
                       transparent
-                      ml="1rem"
+                      style={{ width: "3rem" }}
                       onClick={onShowConfirmDeleteModal}
                     >
                       <FontAwesomeIcon icon={faTrash} />

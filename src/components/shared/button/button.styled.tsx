@@ -75,7 +75,7 @@ const ButtonTransparentTypes = {
   default: css`
     color: ${(props) => props.theme.textAccentColor};
     &:hover {
-      filter: brightness(140%);
+      color: ${(props) => props.theme.colorSecondary};
     }
   `,
   primary: css`

@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import styled from "styled-components";
-import { Menu, MenuButton, MenuItem, FocusableItem } from "../menu/menu";
+import { Menu, MenuItem, FocusableItem } from "../menu/menu";
 import Row, { Column } from "../row/row";
 import { usePlaylists } from "@/api/playlist/query/usePlaylists";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,7 +12,6 @@ import { Dream } from "@/types/dream.types";
 import { Playlist, PlaylistItem } from "@/types/playlist.types";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import Text from "../text/text";
 import queryClient from "@/api/query-client";
 import { DREAM_QUERY_KEY } from "@/api/dream/query/useDream";
 import { ClickEvent, EventHandler } from "@szhsin/react-menu";
@@ -21,6 +20,7 @@ import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
+import { Button } from "../button/button";
 
 const StyledInput = styled.input`
   background: ${(props) => props.theme.inputBackgroundColor};
@@ -90,7 +90,13 @@ export const PlaylistCheckboxMenu = ({
   return (
     <Menu
       menuButton={
-        <MenuButton data-tooltip-id="add-dream-to-playlist">
+        <Button
+          type="button"
+          buttonType="default"
+          transparent
+          style={{ width: "3rem" }}
+          data-tooltip-id="add-dream-to-playlist"
+        >
           <Tooltip
             id="add-dream-to-playlist"
             place="right-end"
@@ -100,10 +106,9 @@ export const PlaylistCheckboxMenu = ({
                 : "components.playlist_checkbox_menu.add_playlist_to_playlist",
             )}
           />
-          <Text fontSize="1.2rem">
-            <FontAwesomeIcon icon={faPlus} />
-          </Text>
-        </MenuButton>
+
+          <FontAwesomeIcon icon={faPlus} />
+        </Button>
       }
       onMenuChange={(e) => e.open && setPlaylistSearch("")}
       menuClassName="my-menu"

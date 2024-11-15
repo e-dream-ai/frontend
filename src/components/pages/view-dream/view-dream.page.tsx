@@ -479,14 +479,12 @@ const ViewDreamPage: React.FC = () => {
             <Column flex="1" alignSelf="flex-end" alignItems="flex-end">
               {!editMode && (
                 <Row margin={0} alignItems="center">
-                  <Column mr="3">
-                    <PlaylistCheckboxMenu type="dream" targetItem={dream} />
-                  </Column>
+                  <PlaylistCheckboxMenu type="dream" targetItem={dream} />
                   <Button
                     type="button"
                     buttonType="default"
                     transparent
-                    mr="2"
+                    style={{ width: "3rem" }}
                     onClick={handlePlayDream}
                   >
                     <FontAwesomeIcon icon={faPlay} />
@@ -495,7 +493,7 @@ const ViewDreamPage: React.FC = () => {
                     type="button"
                     buttonType="default"
                     transparent
-                    mr="2"
+                    style={{ width: "3rem" }}
                     onClick={handleThumbsUpDream}
                   >
                     {vote?.vote === VoteType.UPVOTE ? (
@@ -515,7 +513,7 @@ const ViewDreamPage: React.FC = () => {
                     type="button"
                     buttonType="default"
                     transparent
-                    mr="2"
+                    style={{ width: "3rem" }}
                     onClick={handleThumbsDownDream}
                   >
                     {vote?.vote === VoteType.DOWNVOTE ? (
@@ -540,7 +538,7 @@ const ViewDreamPage: React.FC = () => {
                       type="button"
                       buttonType="danger"
                       transparent
-                      mr="2"
+                      style={{ width: "3rem" }}
                       onClick={onShowConfirmDeleteModal}
                     >
                       <FontAwesomeIcon icon={faTrash} />
@@ -559,7 +557,7 @@ const ViewDreamPage: React.FC = () => {
                     <Restricted to={DREAM_PERMISSIONS.CAN_PROCESS_DREAM}>
                       <Button
                         type="button"
-                        mr="2"
+                        mx="2"
                         after={<FontAwesomeIcon icon={faGears} />}
                         isLoading={processDreamMutation.isLoading}
                         onClick={onShowConfirmProcessModal}
