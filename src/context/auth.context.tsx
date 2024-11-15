@@ -15,6 +15,8 @@ import { ROUTES } from "@/constants/routes.constants";
 import { useAuthenticateUser } from "@/api/user/query/useAuthenticateUser";
 import ReactGA from "react-ga";
 import Bugsnag from "@bugsnag/js";
+import { useLocalStorage } from "@/hooks/useLocalStorage";
+import { AUTH_LOCAL_STORAGE_KEY } from "@/constants/auth.constants";
 
 type AuthContextType = {
   user: User | null;
@@ -44,6 +46,7 @@ export const AuthProvider: React.FC<{
   const [isSessionVerified, setIsSessionVerified] = useState<boolean>(false);
 
   const [user, setUser] = useState<User | null>(null);
+  const localStorage = useLocalStorage(AUTH_LOCAL_STORAGE_KEY);
 
   const setLoggedUser = useCallback(
     (user: User | null) => {
@@ -56,8 +59,13 @@ export const AuthProvider: React.FC<{
         });
       }
       setUser(user);
+      if (user) {
+        localStorage.setItem(JSON.stringify(user));
+      } else {
+        localStorage.removeItem();
+      }
     },
-    [setUser],
+    [setUser, localStorage],
   );
 
   const login: (user: User) => void = useCallback(
@@ -116,6 +124,16 @@ export const AuthProvider: React.FC<{
     }
   }, [authenticateUserQuery, login, logout]);
 
+  const verifySession = useCallback(async () => {
+    const lsUser = localStorage.getItem();
+    if (lsUser) {
+      const loggedUser = JSON.parse(lsUser);
+      setLoggedUser(loggedUser);
+    }
+    setIsLoading(false);
+    setIsSessionVerified(true);
+  }, [localStorage, setLoggedUser]);
+
   useHttpInterceptors({ logout }, [user]);
 
   useEffect(() => {
@@ -123,9 +141,15 @@ export const AuthProvider: React.FC<{
      * If sesion is not verified, authenticateUser
      */
     if (!isSessionVerified) {
-      authenticateUser();
+      // authenticateUser();
+      verifySession();
     }
-  }, [isSessionVerified, setIsSessionVerified, authenticateUser]);
+  }, [
+    isSessionVerified,
+    setIsSessionVerified,
+    authenticateUser,
+    verifySession,
+  ]);
 
   const memoedValue = useMemo(
     () => ({
