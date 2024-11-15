@@ -31,6 +31,7 @@ import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import { DreamVideoInput, ViewDreamInputs } from "./view-dream-inputs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faCircle,
   faGears,
   faPencil,
   faPlay,
@@ -51,7 +52,12 @@ import { truncateString } from "@/utils/string.util";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 import { User } from "@/types/auth.types";
 import { useImage } from "@/hooks/useImage";
-import { CCA_LICENSE, NSFW, filterCcaLicenceOption, filterNsfwOption } from "@/constants/dream.constants";
+import {
+  CCA_LICENSE,
+  NSFW,
+  filterCcaLicenceOption,
+  filterNsfwOption,
+} from "@/constants/dream.constants";
 import { useUpvoteDream } from "@/api/dream/mutation/useUpvoteDream";
 import { useDownvoteDream } from "@/api/dream/mutation/useDownvoteDream";
 import { useUnvoteDream } from "@/api/dream/mutation/useUnvoteDream";
@@ -487,25 +493,43 @@ const ViewDreamPage: React.FC = () => {
                   </Button>
                   <Button
                     type="button"
-                    buttonType={
-                      vote?.vote === VoteType.UPVOTE ? "primary" : "default"
-                    }
+                    buttonType="default"
                     transparent
                     mr="2"
                     onClick={handleThumbsUpDream}
                   >
-                    <FontAwesomeIcon icon={faThumbsUp} />
+                    {vote?.vote === VoteType.UPVOTE ? (
+                      <span className="fa-stack fa-sm">
+                        <FontAwesomeIcon icon={faCircle} className="fa-2x" />
+                        <FontAwesomeIcon
+                          icon={faThumbsUp}
+                          className="fa-stack-1x"
+                          style={{ color: "black" }}
+                        />
+                      </span>
+                    ) : (
+                      <FontAwesomeIcon icon={faThumbsUp} />
+                    )}
                   </Button>
                   <Button
                     type="button"
-                    buttonType={
-                      vote?.vote === VoteType.DOWNVOTE ? "primary" : "default"
-                    }
+                    buttonType="default"
                     transparent
                     mr="2"
                     onClick={handleThumbsDownDream}
                   >
-                    <FontAwesomeIcon icon={faThumbsDown} />
+                    {vote?.vote === VoteType.DOWNVOTE ? (
+                      <span className="fa-stack fa-sm">
+                        <FontAwesomeIcon icon={faCircle} className="fa-2x" />
+                        <FontAwesomeIcon
+                          icon={faThumbsDown}
+                          className="fa-stack-1x"
+                          style={{ color: "black" }}
+                        />
+                      </span>
+                    ) : (
+                      <FontAwesomeIcon icon={faThumbsDown} />
+                    )}
                   </Button>
 
                   <Restricted
