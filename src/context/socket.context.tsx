@@ -12,6 +12,7 @@ import useAuth from "@/hooks/useAuth";
 // import router from "@/routes/router";
 // import { ROUTES } from "@/constants/routes.constants";
 import { SOCKET_URL } from "@/constants/api.constants";
+import { SOCKET_AUTH_ERROR_MESSAGES } from "@/constants/auth.constants";
 // import { SOCKET_AUTH_ERROR_MESSAGES } from "@/constants/auth.constants";
 
 type SocketContextType = {
@@ -28,7 +29,7 @@ const REMOTE_CONTROL_NAMESPACE = "remote-control";
 export const SocketProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
-  const { user, authenticateUser /* , logout */ } = useAuth();
+  const { user, authenticateUser } = useAuth();
 
   const [isConnected, setIsConnected] = useState<boolean>(false);
   /**
@@ -56,6 +57,8 @@ export const SocketProvider: React.FC<{
       },
     });
 
+    setIsConnected(newSocket.connected);
+
     // Listen to connect event only once
     newSocket.on("connect", () => {
       // Socket connected
@@ -69,7 +72,7 @@ export const SocketProvider: React.FC<{
     });
 
     // Handle connection error
-    newSocket.on("connect_error", async (/* error */) => {
+    newSocket.on("connect_error", async (error) => {
       // Connection error {error}
       setIsConnected(false);
       /**
@@ -80,12 +83,9 @@ export const SocketProvider: React.FC<{
        * If backend sends a 401 using authenticateUser, axios interceptor is in charge of logout and redirect to login.
        */
 
-      // if (user && error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED) {
-      //   // Handle unauthorized error
-      //   queryClient.clear();
-      //   await logout();
-      //   router.navigate(ROUTES.SIGNIN);
-      // }
+      if (user && error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED) {
+        await authenticateUser();
+      }
     });
 
     // Handle reconnecting attempts
@@ -97,19 +97,19 @@ export const SocketProvider: React.FC<{
     });
 
     return newSocket;
-  }, [user /* , logout */]);
+  }, [user, authenticateUser]);
 
   useEffect(() => {
     socketRef.current = generateSocketInstance();
 
     // Handle reconnection
     const handleReconnect = async () => {
-      console.log("handleReconnect");
       if (socketRef.current) {
         // Tab focused and checking connection
         if (!socketRef.current.connected) {
           // Attempting to reconnect
           socketRef.current.disconnect();
+          socketRef.current = undefined;
           await authenticateUser();
           // socketRef.current.connect();
         } else {
@@ -119,29 +119,18 @@ export const SocketProvider: React.FC<{
     };
 
     const handleVisibilityChange = () => {
-      console.log("handleVisibilityChange");
       if (!document.hidden) {
         handleReconnect();
       }
     };
 
     const handleOnline = () => {
-      console.log("handleOnline");
       handleReconnect();
     };
 
     const handleOffline = () => {
-      console.log("handleOffline");
       setIsConnected(false);
       socketRef.current?.disconnect();
-    };
-
-    const handleFocus = () => {
-      console.log("handleFocus");
-    };
-
-    const handlePageShow = () => {
-      console.log("handlePageShow");
     };
 
     // Add event listener for when the tab becomes visible or focus
@@ -149,9 +138,6 @@ export const SocketProvider: React.FC<{
     // Add event listener for when window online status is active
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
-    window.removeEventListener("focus", handleFocus);
-    window.removeEventListener("pageshow", handlePageShow);
-
     return () => {
       // Disconnect socket and set socketRef to undefined
       if (socketRef.current) {
@@ -163,8 +149,6 @@ export const SocketProvider: React.FC<{
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
-      window.removeEventListener("focus", handleFocus);
-      window.removeEventListener("pageshow", handlePageShow);
     };
   }, [user, authenticateUser, generateSocketInstance]);
 
