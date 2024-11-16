@@ -18,32 +18,35 @@ export const InstallPage: React.FC = () => {
           <p>
             <em>Requirements:</em> macOS version 11+, x86 or Apple Silicon.
           </p>
-          <p />
-          Download and unzip the app and/or screensaver from the{" "}
-          <Anchor
-            target="_blank"
-            href="https://drive.google.com/drive/folders/1I2SHmq6eRuN836c13GWyaq4kGC3aiLZM"
-          >
-            release
-          </Anchor>{" "}
-          folder, and then:
           <ul>
-            <li>
-              Drag the e-dream app to your Applications folder then run it and
-              open the settings. Sign-in by entering your e-mail, then enter the
-              code e-mailed to you, and close the settings. The app will
-              automatically download and play visuals. Press the F1 key for
-              help, and the A and D keys to adjust the speed of the experience.
-            </li>
-            <li>
-              Run the screensaver to install it. If prompted, install for all
-              users. Then to enable it, go into System Settings, select the
-              "Screen Saver" panel, and then in the "Other" section click on
-              "Show More" and then click on "e-dream". Whew!
-            </li>
-          </ul>
-          The screensaver shares its settings and account with the app, and we
-          recommend using the app to configure it.
+	    <li>
+	      <Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases/download/0.4.5/e-dream-app-0.4.5.zip">
+		Download the app
+	      </Anchor>,
+	      unzip, and drag it to your Applications folder. Run it, and
+	      open the app settings. Sign-in by entering your e-mail, then enter the
+	      code e-mailed to you, and close the settings. The app will
+	      automatically download and play visuals. Press the A and D keys to adjust the speed of the experience, or the F1 key for
+	      help with all the commands.
+	    </li>
+	    <li>
+	      <Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases/download/0.4.5/e-dream-saver-0.4.4.zip">
+	      Download the screensaver
+	      </Anchor>,
+	      unzip, and double-click to install. If prompted, install for all
+	      users. Then to enable it, go into System Settings, select the
+	      "Screen Saver" panel, and then in the "Other" section click on
+	      "Show More" and then click on "e-dream". Whew!
+	    </li>
+	  </ul>
+	  <p>
+	    The screensaver shares its settings and account with the app, and we
+	    recommend using the app to configure it.
+	  </p>
+	  <p>
+	    See <Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases">GitHub</Anchor>{' '}
+	    for all the past releases and release notes.
+	  </p>
         </Text>
       </Section>
       <p>&nbsp;</p>
