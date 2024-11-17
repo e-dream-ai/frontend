@@ -30,9 +30,8 @@ export const InstallPage: React.FC = () => {
 	      help with all the commands.
 	    </li>
 	    <li>
-	      <Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases/download/0.4.5/e-dream-saver-0.4.4.zip">
-	      Download the screensaver
-	      </Anchor>,
+	      <Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases/download/0.4.5/e-dream-screensaver-0.4.5.zip">
+	      Download the screensaver </Anchor>,
 	      unzip, and double-click to install. If prompted, install for all
 	      users. Then to enable it, go into System Settings, select the
 	      "Screen Saver" panel, and then in the "Other" section click on
@@ -44,8 +43,8 @@ export const InstallPage: React.FC = () => {
 	    recommend using the app to configure it.
 	  </p>
 	  <p>
-	    See <Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases">GitHub</Anchor>{' '}
-	    for all the past releases and release notes.
+	    See the <Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases">
+	    past releases</Anchor>{' '} and release notes.
 	  </p>
         </Text>
       </Section>
