@@ -43,8 +43,10 @@ export const InstallPage: React.FC = () => {
 	    recommend using the app to configure it.
 	  </p>
 	  <p>
-	    See the <Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases">
-	    past releases</Anchor>{' '} and release notes.
+	    See the <Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases/latest">
+	    release notes</Anchor>{' '} and
+            {' '}<Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases">
+	    past releases</Anchor>.
 	  </p>
         </Text>
       </Section>
