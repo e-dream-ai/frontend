@@ -65,4 +65,7 @@ export default defineConfig({
     "import.meta.env.VITE_BRANCH": JSON.stringify(gitInfo?.VITE_BRANCH),
     "import.meta.env.VITE_BUILD_DATE": JSON.stringify(gitInfo?.VITE_BUILD_DATE),
   },
+  build: {
+    target: "esnext",
+  },
 });
