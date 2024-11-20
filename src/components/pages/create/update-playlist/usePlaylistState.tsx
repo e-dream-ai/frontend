@@ -15,6 +15,7 @@ type Props = {
 
 export const usePlaylistState = ({ getValues, setValue }: Props) => {
   const { user } = useAuth();
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const location = useLocation();
 
   const [playlistSearch, setPlaylistSearch] = useState<string>("");
@@ -41,6 +42,7 @@ export const usePlaylistState = ({ getValues, setValue }: Props) => {
 
   const { data: playlistsData, isLoading: isPlaylistsLoading } = usePlaylists({
     search: playlistSearch,
+    scope: isUserAdmin ? "all-on-search" : "user-only",
   });
 
   const getLocationParamPlaylist = useCallback(() => {
@@ -77,8 +79,6 @@ export const usePlaylistState = ({ getValues, setValue }: Props) => {
 
     return options;
   }, [playlistsData, getLocationParamPlaylist]);
-
-  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
 
   const playlist = useMemo(
     () =>
