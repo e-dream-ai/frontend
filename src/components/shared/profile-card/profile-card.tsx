@@ -88,104 +88,106 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
   });
 
   return (
-    <>
-      <Row mb="2rem" justifyContent="center">
+    <Row flexWrap="wrap">
+      <Column flex={["0 0 100%", "0 0 50%"]} alignItems="center">
         <Avatar size="lg" url={avatarUrl} />
-      </Row>
+      </Column>
 
-      <Text mb={2} fontSize="1.2rem" color={theme.textPrimaryColor}>
-        {getUserName(user) ?? "-"}
-      </Text>
-
-      <Row my={1}>{t("components.profile_card.role")}</Row>
-      <Text mb={2} fontSize="1rem" color={theme.textSecondaryColor}>
-        {t(ROLES_NAMES[user?.role?.name ?? ""]) ?? "-"}
-      </Text>
-
-      <Row my={1}>{t("components.profile_card.description")}</Row>
-      <Row>
-        <Text
-          fontSize="1rem"
-          fontStyle="italic"
-          color={theme.textSecondaryColor}
-        >
-          <Linkify
-            componentDecorator={(decoratedHref, decoratedText, key) => (
-              <Anchor
-                target="_blank"
-                type="secondary"
-                href={decoratedHref}
-                key={key}
-              >
-                {decoratedText}
-              </Anchor>
-            )}
-          >
-            {user?.description ?? t("components.profile_card.no_description")}
-          </Linkify>
+      <Column flex={["0 0 100%", "0 0 50%"]}>
+        <Text mb={2} fontSize="1.2rem" color={theme.textPrimaryColor}>
+          {getUserName(user) ?? "-"}
         </Text>
-      </Row>
 
-      <Restricted to={PROFILE_PERMISSIONS.CAN_VIEW_QUOTA}>
-        <Row my={1}>{t("components.profile_card.quota")}</Row>
+        <Row my={1}>{t("components.profile_card.role")}</Row>
         <Text mb={2} fontSize="1rem" color={theme.textSecondaryColor}>
-          {user?.quota
-            ? `${toFixedNumber(bytesToGB(user.quota), 2)} ${t("units.gb")}`
-            : "-"}
+          {t(ROLES_NAMES[user?.role?.name ?? ""]) ?? "-"}
         </Text>
-      </Restricted>
 
-      {allowedViewRestrictedInfo && (
-        <>
-          <Row my={1}>{t("components.profile_card.email")}</Row>
-          <Row>
-            <Text fontSize="1rem" color={theme.textSecondaryColor}>
-              {getUserEmail(user) ?? "-"}
-            </Text>
-          </Row>
-          <Row my={1}>{t("components.profile_card.signup_code")}</Row>
-          <Row>
-            <Text fontSize="1rem" color={theme.textSecondaryColor}>
-              {user?.signupInvite?.code ?? "-"}
-            </Text>
-          </Row>
-          <Row my={1}>{t("components.profile_card.last_login")}</Row>
-          <Row>
-            <Text fontSize="1rem" color={theme.textSecondaryColor}>
-              {user?.last_login_at
-                ? formatDateToYYYYMMDD(new Date(user?.last_login_at))
-                : "-"}
-            </Text>
-          </Row>
-
-          <Row my={3}>
-            <Text
-              fontSize="1rem"
-              color={theme.textPrimaryColor}
-              style={{ textTransform: "uppercase", fontStyle: "italic" }}
+        <Row my={1}>{t("components.profile_card.description")}</Row>
+        <Row>
+          <Text
+            fontSize="1rem"
+            fontStyle="italic"
+            color={theme.textSecondaryColor}
+          >
+            <Linkify
+              componentDecorator={(decoratedHref, decoratedText, key) => (
+                <Anchor
+                  target="_blank"
+                  type="secondary"
+                  href={decoratedHref}
+                  key={key}
+                >
+                  {decoratedText}
+                </Anchor>
+              )}
             >
-              {t("components.profile_card.settings")}
-            </Text>
-          </Row>
+              {user?.description ?? t("components.profile_card.no_description")}
+            </Linkify>
+          </Text>
+        </Row>
 
-          <Row my={1}>{t("components.profile_card.nsfw")}</Row>
-          <Row>
-            <Text fontSize="1rem" mb={2} color={theme.textSecondaryColor}>
-              {user?.nsfw ? t("user.nsfw.nsfw") : t("user.nsfw.sfw")}
-            </Text>
-          </Row>
+        <Restricted to={PROFILE_PERMISSIONS.CAN_VIEW_QUOTA}>
+          <Row my={1}>{t("components.profile_card.quota")}</Row>
+          <Text mb={2} fontSize="1rem" color={theme.textSecondaryColor}>
+            {user?.quota
+              ? `${toFixedNumber(bytesToGB(user.quota), 2)} ${t("units.gb")}`
+              : "-"}
+          </Text>
+        </Restricted>
 
-          <Row my={1}>{t("components.profile_card.marketing_emails")}</Row>
-          <Row>
-            <Text fontSize="1rem" mb={2} color={theme.textSecondaryColor}>
-              {user?.enableMarketingEmails
-                ? t("user.marketing_emails.active")
-                : t("user.marketing_emails.inactive")}
-            </Text>
-          </Row>
-        </>
-      )}
-    </>
+        {allowedViewRestrictedInfo && (
+          <>
+            <Row my={1}>{t("components.profile_card.email")}</Row>
+            <Row>
+              <Text fontSize="1rem" color={theme.textSecondaryColor}>
+                {getUserEmail(user) ?? "-"}
+              </Text>
+            </Row>
+            <Row my={1}>{t("components.profile_card.signup_code")}</Row>
+            <Row>
+              <Text fontSize="1rem" color={theme.textSecondaryColor}>
+                {user?.signupInvite?.code ?? "-"}
+              </Text>
+            </Row>
+            <Row my={1}>{t("components.profile_card.last_login")}</Row>
+            <Row>
+              <Text fontSize="1rem" color={theme.textSecondaryColor}>
+                {user?.last_login_at
+                  ? formatDateToYYYYMMDD(new Date(user?.last_login_at))
+                  : "-"}
+              </Text>
+            </Row>
+
+            <Row my={3}>
+              <Text
+                fontSize="1rem"
+                color={theme.textPrimaryColor}
+                style={{ textTransform: "uppercase", fontStyle: "italic" }}
+              >
+                {t("components.profile_card.settings")}
+              </Text>
+            </Row>
+
+            <Row my={1}>{t("components.profile_card.nsfw")}</Row>
+            <Row>
+              <Text fontSize="1rem" mb={2} color={theme.textSecondaryColor}>
+                {user?.nsfw ? t("user.nsfw.nsfw") : t("user.nsfw.sfw")}
+              </Text>
+            </Row>
+
+            <Row my={1}>{t("components.profile_card.marketing_emails")}</Row>
+            <Row>
+              <Text fontSize="1rem" mb={2} color={theme.textSecondaryColor}>
+                {user?.enableMarketingEmails
+                  ? t("user.marketing_emails.active")
+                  : t("user.marketing_emails.inactive")}
+              </Text>
+            </Row>
+          </>
+        )}
+      </Column>
+    </Row>
   );
 };
 
@@ -353,89 +355,93 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           {t("components.profile_card.save")}
         </Button>
       </Row>
-      <Row mb="2rem" justifyContent="center">
-        <AvatarUploader
-          handleChange={handleAvatarChange}
-          src={avatar?.url ? avatar?.url : avatarUrl}
-          types={ALLOWED_IMAGE_TYPES}
-        />
-      </Row>
-      <Input
-        placeholder={t("components.profile_card.name")}
-        type="text"
-        before={<FontAwesomeIcon icon={faUser} />}
-        error={errors.name?.message}
-        {...register("name")}
-      />
-      <Restricted to={PROFILE_PERMISSIONS.CAN_EDIT_ROLE}>
-        <Controller
-          name="role"
-          control={control}
-          render={({ field }) => (
-            <Select
-              {...field}
-              placeholder={t("components.profile_card.role")}
-              isLoading={isRolesLoading}
-              before={<FontAwesomeIcon icon={faUser} />}
-              options={rolesOptions}
-              onInputChange={(newValue) => setRoleSearch(newValue)}
+      <Row mb="2rem" flexWrap="wrap">
+        <Column flex={["0 0 100%", "0 0 50%"]} alignItems="center" mb={4}>
+          <AvatarUploader
+            handleChange={handleAvatarChange}
+            src={avatar?.url ? avatar?.url : avatarUrl}
+            types={ALLOWED_IMAGE_TYPES}
+          />
+        </Column>
+        <Column flex={["0 0 100%", "0 0 50%"]}>
+          <Input
+            placeholder={t("components.profile_card.name")}
+            type="text"
+            before={<FontAwesomeIcon icon={faUser} />}
+            error={errors.name?.message}
+            {...register("name")}
+          />
+          <Restricted to={PROFILE_PERMISSIONS.CAN_EDIT_ROLE}>
+            <Controller
+              name="role"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  placeholder={t("components.profile_card.role")}
+                  isLoading={isRolesLoading}
+                  before={<FontAwesomeIcon icon={faUser} />}
+                  options={rolesOptions}
+                  onInputChange={(newValue) => setRoleSearch(newValue)}
+                />
+              )}
             />
-          )}
-        />
-      </Restricted>
+          </Restricted>
 
-      <TextArea
-        placeholder={t("components.profile_card.description")}
-        before={<FontAwesomeIcon icon={faAlignJustify} />}
-        error={errors.description?.message}
-        {...register("description")}
-      />
+          <TextArea
+            placeholder={t("components.profile_card.description")}
+            before={<FontAwesomeIcon icon={faAlignJustify} />}
+            error={errors.description?.message}
+            {...register("description")}
+          />
 
-      <Restricted to={PROFILE_PERMISSIONS.CAN_VIEW_QUOTA}>
-        <Input
-          placeholder={t("components.profile_card.quota_placeholder")}
-          type="text"
-          before={<FontAwesomeIcon icon={faHardDrive} />}
-          error={errors.quota?.message}
-          {...register("quota")}
-        />
-      </Restricted>
+          <Restricted to={PROFILE_PERMISSIONS.CAN_VIEW_QUOTA}>
+            <Input
+              placeholder={t("components.profile_card.quota_placeholder")}
+              type="text"
+              before={<FontAwesomeIcon icon={faHardDrive} />}
+              error={errors.quota?.message}
+              {...register("quota")}
+            />
+          </Restricted>
 
-      <Row my={3}>
-        <Text
-          fontSize="1rem"
-          color={theme.textPrimaryColor}
-          style={{ textTransform: "uppercase", fontStyle: "italic" }}
-        >
-          {t("components.profile_card.settings")}
-        </Text>
+          <Row my={3}>
+            <Text
+              fontSize="1rem"
+              color={theme.textPrimaryColor}
+              style={{ textTransform: "uppercase", fontStyle: "italic" }}
+            >
+              {t("components.profile_card.settings")}
+            </Text>
+          </Row>
+
+          <Controller
+            name="nsfw"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                placeholder={t("components.profile_card.nsfw")}
+                before={<FontAwesomeIcon icon={faShield} />}
+                options={getNsfwOptions(t)}
+              />
+            )}
+          />
+
+          <Controller
+            name="enableMarketingEmails"
+            control={control}
+            render={({ field }) => (
+              <Select
+                {...field}
+                placeholder={t("components.profile_card.marketing_emails")}
+                before={<FontAwesomeIcon icon={faMailBulk} />}
+                options={getEnableMarketingEmailsOptions(t)}
+              />
+            )}
+          />
+        </Column>
       </Row>
-
-      <Controller
-        name="nsfw"
-        control={control}
-        render={({ field }) => (
-          <Select
-            {...field}
-            placeholder={t("components.profile_card.nsfw")}
-            before={<FontAwesomeIcon icon={faShield} />}
-            options={getNsfwOptions(t)}
-          />
-        )}
-      />
-
-      <Controller
-        name="enableMarketingEmails"
-        control={control}
-        render={({ field }) => (
-          <Select
-            {...field}
-            placeholder={t("components.profile_card.marketing_emails")}
-            before={<FontAwesomeIcon icon={faMailBulk} />}
-            options={getEnableMarketingEmailsOptions(t)}
-          />
-        )}
-      />
     </form>
   );
 };
@@ -457,37 +463,42 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
   const onDisableEditMode = () => setEditMode(false);
 
   return (
-    <Row mb="2rem">
-      <Column flex="auto">
-        {!editMode && (
-          <Restricted
-            to={PROFILE_PERMISSIONS.CAN_EDIT_PROFILE}
-            isOwner={authUser?.id === user?.id}
-          >
-            <Row justifyContent="flex-end">
-              <Button
-                size="md"
-                onClick={onEnableEditMode}
-                after={<FontAwesomeIcon icon={faPencil} />}
-              >
-                {t("components.profile_card.edit_profile")}
-              </Button>
-            </Row>
-          </Restricted>
-        )}
+    <>
+      <Row mb="2rem">
         <Column flex="auto">
-          {editMode ? (
-            <ProfileForm user={user} onDisableEditMode={onDisableEditMode} />
-          ) : (
-            <ProfileDetails user={user} />
+          {!editMode && (
+            <Restricted
+              to={PROFILE_PERMISSIONS.CAN_EDIT_PROFILE}
+              isOwner={authUser?.id === user?.id}
+            >
+              <Row justifyContent="flex-end">
+                <Button
+                  size="md"
+                  onClick={onEnableEditMode}
+                  after={<FontAwesomeIcon icon={faPencil} />}
+                >
+                  {t("components.profile_card.edit_profile")}
+                </Button>
+              </Row>
+            </Restricted>
           )}
+          <Column flex="auto">
+            {editMode ? (
+              <ProfileForm user={user} onDisableEditMode={onDisableEditMode} />
+            ) : (
+              <ProfileDetails user={user} />
+            )}
+          </Column>
         </Column>
-        {!editMode && showApiKeyCard && (
-          <Column>
+      </Row>
+      {!editMode && showApiKeyCard && (
+        <Row flexWrap="wrap">
+          <Column flex={["0 0 100%", "0 0 50%"]}></Column>
+          <Column flex={["0 0 100%", "0 0 50%"]}>
             <ApiKeyCard user={user} />
           </Column>
-        )}
-      </Column>
-    </Row>
+        </Row>
+      )}
+    </>
   );
 };
