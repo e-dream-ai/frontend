@@ -70,7 +70,7 @@ export const router = createBrowserRouter([
               ROLES.ADMIN_GROUP,
             ]}
           >
-            <Navigate to={ROUTES.MY_PROFILE} replace />;
+            <Navigate to={ROUTES.REMOTE_CONTROL} replace />;
           </ProtectedRoute>
         ),
       },
