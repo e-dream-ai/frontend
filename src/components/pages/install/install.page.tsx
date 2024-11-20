@@ -23,15 +23,16 @@ export const InstallPage: React.FC = () => {
 	      <Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases/download/0.4.5/e-dream-app-0.4.5.zip">
 		Download the app
 	      </Anchor>,
-	      unzip, and drag it to your Applications folder. Run it, and
-	      open the app settings. Sign-in by entering your e-mail, then enter the
-	      code e-mailed to you, and close the settings. The app will
-	      automatically download and play visuals. Press the A and D keys to adjust the speed of the experience, or the F1 key for
-	      help with all the commands.
+	      unzip, and drag it to your Applications folder. Run it,
+	      sign-in by entering your e-mail, then enter the code
+	      e-mailed to you, and close the settings. The app will
+	      automatically download and play visuals. Press the A and
+	      D keys to adjust the speed of the experience, or the F1
+	      key for help with all the commands.
 	    </li>
 	    <li>
 	      <Anchor target="_blank" href="https://github.com/e-dream-ai/public/releases/download/0.4.5/e-dream-screensaver-0.4.5.zip">
-	      Download the screensaver </Anchor>,
+	      Download the screensaver</Anchor>,
 	      unzip, and double-click to install. If prompted, install for all
 	      users. Then to enable it, go into System Settings, select the
 	      "Screen Saver" panel, and then in the "Other" section click on
