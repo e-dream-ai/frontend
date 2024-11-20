@@ -101,7 +101,7 @@ export const CreateDream: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <Column pt="1rem">
+      <Column my={2}>
         {video ? (
           <>
             <Text my={3}>{t("page.create.dream_preview")}</Text>
@@ -130,9 +130,9 @@ export const CreateDream: React.FC = () => {
         )}
 
         {isLoading && (
-          <Row mt={1} justifyContent="space-between">
+          <>
             <ProgressBar completed={uploadProgress} />
-          </Row>
+          </>
         )}
 
         <Row my={3}>
