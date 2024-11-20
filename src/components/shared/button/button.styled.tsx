@@ -52,7 +52,7 @@ const ButtonTypes = {
   `,
   secondary: css`
     background-color: ${(props) => props.theme.colorSecondary};
-    color: ${(props) => props.theme.black};
+    color: white;
     &:hover {
       filter: brightness(140%);
     }
