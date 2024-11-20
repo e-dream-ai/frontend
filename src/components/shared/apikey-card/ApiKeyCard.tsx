@@ -114,15 +114,18 @@ const ApiKeyCard: React.FC<ApiKeyCardProps> = ({ user }) => {
         </Row>
 
         <Restricted to={PROFILE_PERMISSIONS.CAN_REVOKE_APIKEY}>
-          <Row>
-            <Button
-              size="sm"
-              before={<FontAwesomeIcon icon={faRemove} />}
-              onClick={handleRevokeApiKey}
-            >
-              {t("components.apikey_card.revoke")}
-            </Button>
-          </Row>
+          {apikey?.apikey && (
+            <Row>
+              <Button
+                buttonType="danger"
+                size="sm"
+                before={<FontAwesomeIcon icon={faRemove} />}
+                onClick={handleRevokeApiKey}
+              >
+                {t("components.apikey_card.revoke")}
+              </Button>
+            </Row>
+          )}
         </Restricted>
       </Column>
     </Row>

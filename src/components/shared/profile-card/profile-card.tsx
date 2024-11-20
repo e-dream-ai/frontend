@@ -32,6 +32,8 @@ import {
   faAlignJustify,
   faHardDrive,
   faMailBulk,
+  faPencil,
+  faSave,
   faShield,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
@@ -59,6 +61,7 @@ import {
 import { bytesToGB, GBToBytes } from "@/utils/file.util";
 import { toFixedNumber } from "@/utils/number.util";
 import { ALLOWED_IMAGE_TYPES } from "@/constants/file.constants";
+import ApiKeyCard from "../apikey-card/ApiKeyCard";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -86,7 +89,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
 
   return (
     <>
-      <Row mb="2rem">
+      <Row mb="2rem" justifyContent="center">
         <Avatar size="lg" url={avatarUrl} />
       </Row>
 
@@ -333,7 +336,24 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 
   return (
     <form id="profile-form" onSubmit={handleSubmit(onSubmit)}>
-      <Row mb="2rem">
+      <Row justifyContent="flex-end">
+        <Button
+          type="button"
+          mr="1rem"
+          disabled={isLoading}
+          onClick={onDisableEditMode}
+        >
+          {t("components.profile_card.cancel")}
+        </Button>
+        <Button
+          type="submit"
+          isLoading={isLoading}
+          after={<FontAwesomeIcon icon={faSave} />}
+        >
+          {t("components.profile_card.save")}
+        </Button>
+      </Row>
+      <Row mb="2rem" justifyContent="center">
         <AvatarUploader
           handleChange={handleAvatarChange}
           src={avatar?.url ? avatar?.url : avatarUrl}
@@ -416,30 +436,19 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           />
         )}
       />
-
-      <Row mt={2}>
-        <Button
-          type="button"
-          mr="1rem"
-          size="sm"
-          disabled={isLoading}
-          onClick={onDisableEditMode}
-        >
-          {t("components.profile_card.cancel")}
-        </Button>
-        <Button type="submit" isLoading={isLoading} size="sm">
-          {t("components.profile_card.save")}
-        </Button>
-      </Row>
     </form>
   );
 };
 
 type ProfileCardProps = {
   user?: Omit<User, "token">;
+  showApiKeyCard?: boolean;
 };
 
-export const ProfileCard: React.FC<ProfileCardProps> = ({ user }) => {
+export const ProfileCard: React.FC<ProfileCardProps> = ({
+  user,
+  showApiKeyCard,
+}) => {
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
   const [editMode, setEditMode] = useState<boolean>(false);
@@ -448,24 +457,35 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({ user }) => {
   const onDisableEditMode = () => setEditMode(false);
 
   return (
-    <Row mb="2rem" mr="1rem">
-      <Column>
-        {editMode ? (
-          <ProfileForm user={user} onDisableEditMode={onDisableEditMode} />
-        ) : (
-          <ProfileDetails user={user} />
-        )}
+    <Row mb="2rem">
+      <Column flex="auto">
         {!editMode && (
           <Restricted
             to={PROFILE_PERMISSIONS.CAN_EDIT_PROFILE}
             isOwner={authUser?.id === user?.id}
           >
-            <Row>
-              <Button size="sm" onClick={onEnableEditMode}>
+            <Row justifyContent="flex-end">
+              <Button
+                size="md"
+                onClick={onEnableEditMode}
+                after={<FontAwesomeIcon icon={faPencil} />}
+              >
                 {t("components.profile_card.edit_profile")}
               </Button>
             </Row>
           </Restricted>
+        )}
+        <Column flex="auto">
+          {editMode ? (
+            <ProfileForm user={user} onDisableEditMode={onDisableEditMode} />
+          ) : (
+            <ProfileDetails user={user} />
+          )}
+        </Column>
+        {!editMode && showApiKeyCard && (
+          <Column>
+            <ApiKeyCard user={user} />
+          </Column>
         )}
       </Column>
     </Row>

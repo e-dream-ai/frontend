@@ -3,18 +3,12 @@ import { Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import { ProfileCard } from "@/components/shared/profile-card/profile-card";
 import { Section } from "@/components/shared/section/section";
-import Text from "@/components/shared/text/text";
-import UserDreams from "@/components/shared/user-dreams/user-dreams";
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { useLocation, useParams } from "react-router-dom";
-import {
-  LeftProfilePage,
-  ProfilePageContainer,
-  RightProfilePage,
-} from "./profile.styled";
-import ApiKeyCard from "@/components/shared/apikey-card/ApiKeyCard";
+import { ProfilePageContainer } from "./profile.styled";
+
 import { useMemo } from "react";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
@@ -72,23 +66,7 @@ const Profile: React.FC<ProfileProps> = ({ isMyProfile }) => {
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
         <ProfilePageContainer>
-          <LeftProfilePage>
-            <ProfileCard user={user} />
-            {showApiKeyCard && <ApiKeyCard user={user} />}
-          </LeftProfilePage>
-          <RightProfilePage>
-            <Text mb="1rem" fontSize="1rem" fontWeight={600}>
-              {t("page.profile.dreams")}
-            </Text>
-            <Row>
-              <UserDreams
-                key={Boolean(user?.nsfw).toString()}
-                userUUID={userUUID}
-                columns={2}
-                grid
-              />
-            </Row>
-          </RightProfilePage>
+          <ProfileCard user={user} showApiKeyCard={showApiKeyCard} />
         </ProfilePageContainer>
       </Section>
     </Container>

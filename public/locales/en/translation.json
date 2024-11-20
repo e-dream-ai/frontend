@@ -330,7 +330,7 @@
       "settings": "settings",
       "save": "Save",
       "cancel": "Cancel",
-      "edit_profile": "Edit Profile",
+      "edit_profile": "Edit",
       "profile_successfully_updated": "Profile updated successfully.",
       "error_updating_profile": "Error updating profile."
     },
