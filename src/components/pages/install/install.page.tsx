@@ -42,7 +42,7 @@ export const InstallPage: React.FC = () => {
             >
               <Card
                 style={{
-                  height: "250px",
+                  height: "220px",
                   marginTop: "1rem",
                 }}
               >
@@ -71,7 +71,7 @@ export const InstallPage: React.FC = () => {
             >
               <Card
                 style={{
-                  height: "250px",
+                  height: "220px",
                   marginTop: "1rem",
                 }}
               >

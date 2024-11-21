@@ -356,14 +356,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         </Button>
       </Row>
       <Row mb="2rem" flexWrap="wrap">
-        <Column flex={["0 0 100%", "0 0 50%"]} alignItems="center" mb={4}>
+        <Column flex={["0 0 100%", "0 0 33.333333%"]} alignItems="center" mb={4}>
           <AvatarUploader
             handleChange={handleAvatarChange}
             src={avatar?.url ? avatar?.url : avatarUrl}
             types={ALLOWED_IMAGE_TYPES}
           />
         </Column>
-        <Column flex={["0 0 100%", "0 0 50%"]}>
+        <Column flex={["0 0 100%", "0 0 33.333333%"]}>
           <Input
             placeholder={t("components.profile_card.name")}
             type="text"
@@ -482,23 +482,31 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               </Row>
             </Restricted>
           )}
-          <Column flex="auto">
-            {editMode ? (
-              <ProfileForm user={user} onDisableEditMode={onDisableEditMode} />
-            ) : (
-              <ProfileDetails user={user} />
+          <Row flexWrap="wrap">
+            <Column
+              flex={
+                editMode
+                  ? ["0 0 100%", "0 0 100%"]
+                  : ["0 0 100%", "0 0 66.666666%"]
+              }
+            >
+              {editMode ? (
+                <ProfileForm
+                  user={user}
+                  onDisableEditMode={onDisableEditMode}
+                />
+              ) : (
+                <ProfileDetails user={user} />
+              )}
+            </Column>
+            {!editMode && showApiKeyCard && (
+              <Column flex={["0 0 100%", "0 0 33.333333%"]}>
+                <ApiKeyCard user={user} />
+              </Column>
             )}
-          </Column>
+          </Row>
         </Column>
       </Row>
-      {!editMode && showApiKeyCard && (
-        <Row flexWrap="wrap">
-          <Column flex={["0 0 100%", "0 0 50%"]}></Column>
-          <Column flex={["0 0 100%", "0 0 50%"]}>
-            <ApiKeyCard user={user} />
-          </Column>
-        </Row>
-      )}
     </>
   );
 };
