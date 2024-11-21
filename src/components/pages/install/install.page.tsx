@@ -1,5 +1,6 @@
 import { Button, Column, Row } from "@/components/shared";
 import { Anchor } from "@/components/shared";
+import { Card } from "@/components/shared/card/card";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import Text from "@/components/shared/text/text";
@@ -36,45 +37,60 @@ export const InstallPage: React.FC = () => {
                 "0 0 100%", // full width on small screens
                 "0 0 50%", // half width on medium screens and up
               ]}
-              py={3}
+              // py={3}
               pr={[0, 2]}
             >
-              <Row justifyContent="center">
-                <Button buttonType="secondary" onClick={handleDownloadApp}>
-                  Download app
-                </Button>
-              </Row>
-              <Row>
-                Unzip, and drag it to your Applications folder. Run it, sign-in
-                by entering your e-mail, then enter the code e-mailed to you,
-                and close the settings. The app will automatically download and
-                play visuals. Press the A and D keys to adjust the speed of the
-                experience, or the F1 key for help with all the commands.
-              </Row>
+              <Card
+                style={{
+                  height: "250px",
+                  marginTop: "1rem",
+                }}
+              >
+                <Row justifyContent="center">
+                  <Button buttonType="secondary" onClick={handleDownloadApp}>
+                    Download app
+                  </Button>
+                </Row>
+                <Row>
+                  Unzip, and drag it to your Applications folder. Run it,
+                  sign-in by entering your e-mail, then enter the code e-mailed
+                  to you, and close the settings. The app will automatically
+                  download and play visuals. Press the A and D keys to adjust
+                  the speed of the experience, or the F1 key for help with all
+                  the commands.
+                </Row>
+              </Card>
             </Column>
             <Column
               flex={[
                 "0 0 100%", // full width on small screens
                 "0 0 50%", // half width on medium screens and up
               ]}
-              py={3}
+              // py={3}
               pl={[0, 2]}
             >
-              <Row justifyContent="center">
-                <Button
-                  buttonType="secondary"
-                  onClick={handleDownloadScreensaver}
-                >
-                  Download screensaver
-                </Button>
-              </Row>
+              <Card
+                style={{
+                  height: "250px",
+                  marginTop: "1rem",
+                }}
+              >
+                <Row justifyContent="center">
+                  <Button
+                    buttonType="secondary"
+                    onClick={handleDownloadScreensaver}
+                  >
+                    Download screensaver
+                  </Button>
+                </Row>
 
-              <Column>
-                Unzip, and double-click to install. If prompted, install for all
-                users. Then to enable it, go into System Settings, select the
-                "Screen Saver" panel, and then in the "Other" section click on
-                "Show More" and then click on "e-dream". Whew!
-              </Column>
+                <Column>
+                  Unzip, and double-click to install. If prompted, install for
+                  all users. Then to enable it, go into System Settings, select
+                  the "Screen Saver" panel, and then in the "Other" section
+                  click on "Show More" and then click on "e-dream". Whew!
+                </Column>
+              </Card>
             </Column>
           </Row>
           <p>
