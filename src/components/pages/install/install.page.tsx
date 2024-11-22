@@ -31,72 +31,68 @@ export const InstallPage: React.FC = () => {
           <p>
             <em>Requirements:</em> macOS version 11+, x86 or Apple Silicon.
           </p>
-          <Row flexWrap="wrap">
-            <Column
-              flex={[
-                "0 0 100%", // full width on small screens
-                "0 0 50%", // half width on medium screens and up
-              ]}
-              // py={3}
-              pr={[0, 2]}
-            >
-              <Card
-                style={{
-                  height: "220px",
-                  marginTop: "1rem",
-                }}
-              >
-                <Row justifyContent="center">
-                  <Button buttonType="secondary" onClick={handleDownloadApp}>
-                    Download app
-                  </Button>
-                </Row>
-                <Row>
+        </Text>
+        <Row flexWrap={["wrap", "nowrap", "nowrap"]}>
+          <Column
+            flex={[
+              "0 0 100%", // full width on small screens
+              "0 0 50%", // half width on medium screens and up
+            ]}
+            pr={[0, 1, 2]}
+          >
+            <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+              <Row justifyContent="center">
+                <Button buttonType="secondary" onClick={handleDownloadApp}>
+                  Download app
+                </Button>
+              </Row>
+              <Row>
+                <Text>
                   Unzip, and drag it to your Applications folder. Run it,
                   sign-in by entering your e-mail, then enter the code e-mailed
                   to you, and close the settings. The app will automatically
                   download and play visuals. Press the A and D keys to adjust
                   the speed of the experience, or the F1 key for help with all
                   the commands.
-                </Row>
-              </Card>
-            </Column>
-            <Column
-              flex={[
-                "0 0 100%", // full width on small screens
-                "0 0 50%", // half width on medium screens and up
-              ]}
-              // py={3}
-              pl={[0, 2]}
-            >
-              <Card
-                style={{
-                  height: "220px",
-                  marginTop: "1rem",
-                }}
-              >
-                <Row justifyContent="center">
-                  <Button
-                    buttonType="secondary"
-                    onClick={handleDownloadScreensaver}
-                  >
-                    Download screensaver
-                  </Button>
-                </Row>
+                </Text>
+              </Row>
+            </Card>
+          </Column>
+          <Column
+            flex={[
+              "0 0 100%", // full width on small screens
+              "0 0 50%", // half width on medium screens and up
+            ]}
+            pr={[0, 1, 2]}
+          >
+            <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+              <Row justifyContent="center">
+                <Button
+                  buttonType="secondary"
+                  onClick={handleDownloadScreensaver}
+                >
+                  Download screensaver
+                </Button>
+              </Row>
 
-                <Column>
+              <Column>
+                <Text>
                   Unzip, and double-click to install. If prompted, install for
                   all users. Then to enable it, go into System Settings, select
                   the "Screen Saver" panel, and then in the "Other" section
                   click on "Show More" and then click on "e-dream". Whew!
-                </Column>
-              </Card>
-            </Column>
-          </Row>
+                </Text>
+              </Column>
+            </Card>
+          </Column>
+        </Row>
+        <Text>
           <p>
             The screensaver shares its settings and account with the app, and we
             recommend using the app to configure it.
           </p>
+        </Text>
+        <Text>
           <p>
             See the{" "}
             <Anchor
