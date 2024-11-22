@@ -14,7 +14,7 @@ export const AboutPage: React.FC = () => {
   const { t } = useTranslation();
 
   const handleCreateAccount = () => {
-    router.navigate(ROUTES.SIGNIN);
+    router.navigate(ROUTES.SIGNUP);
   };
 
   const handleInstallApp = () => {
