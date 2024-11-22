@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { VoidFunctionType } from "@/types/function.types";
 import { ModalComponent } from "@/types/modal.types";
 import { VoidFunction } from "@/utils/function.util";
+import { Types } from "@/types/style-types.types";
 
 type ConfirmModalTypes = {
   isOpen?: boolean;
@@ -10,6 +11,7 @@ type ConfirmModalTypes = {
   title?: string;
   onConfirm?: VoidFunctionType;
   confirmText?: string;
+  confirmButtonType?: Types;
   onCancel?: VoidFunctionType;
   cancelText?: string;
   text?: React.ReactNode;
@@ -20,8 +22,11 @@ export const ConfirmModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({
   isConfirming = false,
   title,
   onConfirm = VoidFunction,
+  confirmText,
+  confirmButtonType = "primary",
   onCancel = VoidFunction,
   text,
+  cancelText,
 }) => {
   const { t } = useTranslation();
 
@@ -39,14 +44,15 @@ export const ConfirmModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({
           disabled={isConfirming}
           onClick={isConfirming ? VoidFunction : onCancel}
         >
-          {t("modal.confirm.cancel")}
+          {cancelText ?? t("modal.confirm.cancel")}
         </Button>
         <Button
+          buttonType={confirmButtonType}
           isLoading={isConfirming}
           ml="1rem"
           onClick={isConfirming ? VoidFunction : onConfirm}
         >
-          {t("modal.confirm.confirm")}
+          {confirmText ?? t("modal.confirm.confirm")}
         </Button>
       </Row>
     </Modal>

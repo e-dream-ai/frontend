@@ -68,6 +68,9 @@ const ButtonTypes = {
   danger: css`
     background-color: ${(props) => props.theme.colorDanger};
     color: ${(props) => props.theme.black};
+    &:hover {
+      filter: brightness(140%);
+    }
   `,
 };
 

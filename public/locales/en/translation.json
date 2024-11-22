@@ -427,6 +427,11 @@
       "error_revoking_apikey": "Error revoking Api Key.",
       "apikey_copied_successfully": "Api Key copied successfully."
     },
+    "auth_menu": {
+      "confirm_signout_modal_title": "Confirm sign out",
+      "confirm_signout_modal_body": "Are you sure to sign out?",
+      "confirm_text": "Sign out"
+    },
     "not_found": {
       "title": "Not found",
       "go_home": "go home"

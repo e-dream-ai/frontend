@@ -22,6 +22,7 @@ type AuthContextType = {
   authenticateUser: () => Promise<void>;
   logout: (options?: LogoutOptions) => Promise<void>;
   isLoading: boolean;
+  isLoggingOut: boolean;
   setLoggedUser: (user: User | null) => void;
 };
 
@@ -134,9 +135,18 @@ export const AuthProvider: React.FC<{
       authenticateUser,
       logout,
       isLoading,
+      isLoggingOut: logoutMutation.isLoading,
       setLoggedUser,
     }),
-    [user, login, authenticateUser, logout, isLoading, setLoggedUser],
+    [
+      user,
+      login,
+      authenticateUser,
+      logout,
+      isLoading,
+      setLoggedUser,
+      logoutMutation.isLoading,
+    ],
   );
 
   return (
