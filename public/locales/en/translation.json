@@ -304,7 +304,8 @@
     "file_uploader": {
       "dropzone_placeholder": "Upload or drop here.",
       "size_error": "File size exceeds limit",
-      "type_error": "File type is not allowed"
+      "type_error": "File type is not allowed",
+      "file_already_exists": "Dream already exists."
     },
     "playlist_dropzone": {
       "dropzone_placeholder": "Drop dream or playlist here from another window to add it to this playlist.",
@@ -403,7 +404,7 @@
       "saving": "Saving",
       "update_playlist_instructions": "Select a playlist and upload dreams to it.",
       "playlist_updated_successfully": "Playlist updated successfully.",
-      "dream_already_exists": "Dream alrady exists.",
+      "dream_already_exists": "Dream already exists.",
       "error_updating_playlist": "Error updating playlist."
     },
     "playlist_checkbox_menu": {
