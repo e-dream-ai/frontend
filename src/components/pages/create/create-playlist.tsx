@@ -83,11 +83,11 @@ export const CreatePlaylist: React.FC = () => {
     (totalUploadedVideos / (totalVideos === 0 ? 1 : totalVideos)) * 100,
   );
 
-  const handleChange: HandleChangeFile = createAddFileHandler(
-    videos,
-    setVideos,
+  const handleChange: HandleChangeFile = createAddFileHandler({
+    currentFiles: videos,
+    setFiles: setVideos,
     t,
-  );
+  });
 
   const setVideoUploaded = (index: number) => {
     setVideos((videos) =>

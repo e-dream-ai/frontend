@@ -1,5 +1,8 @@
 import { FileState } from "@/constants/file.constants";
-import { generateFileState } from "./file-uploader.util";
+import {
+  generateFileState,
+  getFileNameWithoutExtension,
+} from "./file-uploader.util";
 import { toast } from "react-toastify";
 import { TFunction } from "i18next";
 
@@ -18,11 +21,17 @@ export const GBToBytes = (gb: number): number => {
 };
 
 // Generic function to check and handle files
-export const createAddFileHandler = (
-  currentFiles: FileState[],
-  setFiles: React.Dispatch<React.SetStateAction<FileState[]>>,
-  t: TFunction,
-) => {
+export const createAddFileHandler = ({
+  currentFiles,
+  setFiles,
+  t,
+  extraFiles,
+}: {
+  currentFiles: FileState[];
+  setFiles: React.Dispatch<React.SetStateAction<FileState[]>>;
+  t: TFunction;
+  extraFiles?: string[];
+}) => {
   const handleAddFiles = (files: FileList | File) => {
     /**
      * Verify if adding single or multiple files
@@ -31,13 +40,17 @@ export const createAddFileHandler = (
       const filesArray = Array.from(files);
 
       const newFiles = filesArray.filter((file) => {
-        const isDuplicate = currentFiles.some(
-          (cFile) => cFile.name === file.name,
-        );
+        const isDuplicate =
+          currentFiles.some((cFile) => cFile.name === file.name) ||
+          extraFiles?.some(
+            (cFile) => cFile === getFileNameWithoutExtension(file),
+          );
 
         if (isDuplicate) {
           toast.warning(
-            `"${file.name}" ${t("components.file_uploader.file_already_exists")}`,
+            `"${getFileNameWithoutExtension(file)}" ${t(
+              "components.file_uploader.file_already_exists",
+            )}`,
           );
           return false;
         }
@@ -49,13 +62,17 @@ export const createAddFileHandler = (
         ...newFiles.map((f) => generateFileState(f)),
       ]);
     } else {
-      const isDuplicate = currentFiles.some(
-        (cFile) => cFile.name === files.name,
-      );
+      const isDuplicate =
+        currentFiles.some((cFile) => cFile.name === files.name) ||
+        extraFiles?.some(
+          (cFile) => cFile === getFileNameWithoutExtension(files),
+        );
 
       if (isDuplicate) {
         toast.warning(
-          `"${files.name}" ${t("components.file_uploader.file_already_exists")}`,
+          `"${getFileNameWithoutExtension(files)}" ${t(
+            "components.file_uploader.file_already_exists",
+          )}`,
         );
         return;
       }

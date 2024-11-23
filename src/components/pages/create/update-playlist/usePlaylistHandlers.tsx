@@ -102,11 +102,14 @@ export const usePlaylistHandlers = ({
     );
   };
 
-  const handleFileUploaderChange: HandleChangeFile = createAddFileHandler(
-    videos,
-    setVideos,
+  const handleFileUploaderChange: HandleChangeFile = createAddFileHandler({
+    currentFiles: videos,
+    setFiles: setVideos,
     t,
-  );
+    extraFiles: playlist?.items
+      ?.map((i) => i?.dreamItem?.name)
+      ?.filter((n) => n !== undefined),
+  });
 
   const handleUploadVideos = async ({
     nsfw,

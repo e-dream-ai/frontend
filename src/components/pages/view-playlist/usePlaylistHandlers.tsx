@@ -312,11 +312,11 @@ export const usePlaylistHandlers = ({
     );
   };
 
-  const handleFileUploaderChange: HandleChangeFile = createAddFileHandler(
-    videos,
-    setVideos,
+  const handleFileUploaderChange: HandleChangeFile = createAddFileHandler({
+    currentFiles: videos,
+    setFiles: setVideos,
     t,
-  );
+  });
 
   const handleUploadVideos = async () => {
     const playlistDreamItemsNames = playlist?.items

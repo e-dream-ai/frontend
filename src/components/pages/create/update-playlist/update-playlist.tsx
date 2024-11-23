@@ -69,7 +69,7 @@ export const UpdatePlaylist: React.FC = () => {
     totalVideos,
     totalUploadedVideos,
     totalUploadedVideosPercentage,
-  } = usePlaylistState({ getValues, setValue });
+  } = usePlaylistState({ getValues, setValue, control });
 
   const {
     isLoading,
