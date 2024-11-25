@@ -21,7 +21,7 @@ import { HandleChangeFile } from "@/types/media.types";
 import { Column } from "@/components/shared/row/row";
 import Text from "@/components/shared/text/text";
 import {
-  getFileState,
+  generateFileState,
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
 } from "@/utils/file-uploader.util";
@@ -71,7 +71,7 @@ export const CreateDream: React.FC = () => {
     if (files instanceof FileList) {
       return;
     } else {
-      setVideo(getFileState(files));
+      setVideo(generateFileState(files));
     }
   };
 

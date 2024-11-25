@@ -25,12 +25,10 @@ import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import router from "@/routes/router";
 import { FULL_CREATE_ROUTES, ROUTES } from "@/constants/routes.constants";
 import { FileState } from "@/constants/file.constants";
-import {
-  getFileNameWithoutExtension,
-  getFileState,
-} from "@/utils/file-uploader.util";
+import { getFileNameWithoutExtension } from "@/utils/file-uploader.util";
 import useSocket from "@/hooks/useSocket";
 import { emitPlayPlaylist } from "@/utils/socket.util";
+import { createAddFileHandler } from "@/utils/file.util";
 
 type HookParams = {
   uuid?: string;
@@ -314,14 +312,11 @@ export const usePlaylistHandlers = ({
     );
   };
 
-  const handleFileUploaderChange: HandleChangeFile = (files) => {
-    if (files instanceof FileList) {
-      const filesArray = Array.from(files);
-      setVideos((v) => [...v, ...filesArray.map((f) => getFileState(f))]);
-    } else {
-      setVideos((v) => [...v, getFileState(files)]);
-    }
-  };
+  const handleFileUploaderChange: HandleChangeFile = createAddFileHandler({
+    currentFiles: videos,
+    setFiles: setVideos,
+    t,
+  });
 
   const handleUploadVideos = async () => {
     const playlistDreamItemsNames = playlist?.items
