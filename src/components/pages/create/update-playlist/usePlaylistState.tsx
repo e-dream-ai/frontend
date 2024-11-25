@@ -4,16 +4,18 @@ import { User } from "@/types/auth.types";
 import { isAdmin } from "@/utils/user.util";
 import useAuth from "@/hooks/useAuth";
 import { usePlaylists } from "@/api/playlist/query/usePlaylists";
-import { UseFormGetValues, UseFormSetValue } from "react-hook-form";
+import { Control, UseFormGetValues, UseFormSetValue } from "react-hook-form";
 import { UpdateVideoPlaylistFormValues } from "@/schemas/update-playlist.schema";
+import { useWatch } from "react-hook-form";
 import { useLocation } from "react-router-dom";
 
 type Props = {
+  control: Control<UpdateVideoPlaylistFormValues>;
   getValues: UseFormGetValues<UpdateVideoPlaylistFormValues>;
   setValue: UseFormSetValue<UpdateVideoPlaylistFormValues>;
 };
 
-export const usePlaylistState = ({ getValues, setValue }: Props) => {
+export const usePlaylistState = ({ control, setValue }: Props) => {
   const { user } = useAuth();
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const location = useLocation();
@@ -22,7 +24,11 @@ export const usePlaylistState = ({ getValues, setValue }: Props) => {
   const [videos, setVideos] = useState<FileState[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
   const [currentUploadFile, setCurrentUploadFile] = useState(0);
-  const selectedPlaylistUUID = getValues()?.playlist?.value;
+  const formValues = useWatch({ control });
+  const selectedPlaylistUUID = useMemo(
+    () => formValues?.playlist?.value,
+    [formValues],
+  );
 
   /**
    * videos data
@@ -37,13 +43,21 @@ export const usePlaylistState = ({ getValues, setValue }: Props) => {
   );
 
   /**
-   *
+   * playlists options data
    */
 
   const { data: playlistsData, isLoading: isPlaylistsLoading } = usePlaylists({
     search: playlistSearch,
     scope: isUserAdmin ? "all-on-search" : "user-only",
   });
+
+  const playlist = useMemo(
+    () =>
+      playlistsData?.data?.playlists?.find(
+        (p) => p.uuid === selectedPlaylistUUID,
+      ),
+    [playlistsData, selectedPlaylistUUID],
+  );
 
   const getLocationParamPlaylist = useCallback(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -79,14 +93,6 @@ export const usePlaylistState = ({ getValues, setValue }: Props) => {
 
     return options;
   }, [playlistsData, getLocationParamPlaylist]);
-
-  const playlist = useMemo(
-    () =>
-      playlistsData?.data?.playlists?.find(
-        (p) => p.uuid === selectedPlaylistUUID,
-      ),
-    [playlistsData, selectedPlaylistUUID],
-  );
 
   useEffect(() => {
     const paramPlaylist = getLocationParamPlaylist();

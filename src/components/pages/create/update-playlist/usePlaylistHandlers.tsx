@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { NSFW } from "@/constants/dream.constants";
 import queryClient from "@/api/query-client";
 import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
@@ -17,10 +18,11 @@ import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
 import { FileState } from "@/constants/file.constants";
+import { getFileNameWithoutExtension } from "@/utils/file-uploader.util";
 import {
-  getFileNameWithoutExtension,
-  getFileState,
-} from "@/utils/file-uploader.util";
+  createAddFileHandler,
+  removeDuplicateHandler,
+} from "@/utils/file.util";
 
 type HookParams = {
   playlistUUID?: string;
@@ -104,14 +106,14 @@ export const usePlaylistHandlers = ({
     );
   };
 
-  const handleFileUploaderChange: HandleChangeFile = (files) => {
-    if (files instanceof FileList) {
-      const filesArray = Array.from(files);
-      setVideos((v) => [...v, ...filesArray.map((f) => getFileState(f))]);
-    } else {
-      setVideos((v) => [...v, getFileState(files)]);
-    }
-  };
+  const handleFileUploaderChange: HandleChangeFile = createAddFileHandler({
+    currentFiles: videos,
+    setFiles: setVideos,
+    t,
+    extraFiles: playlist?.items
+      ?.map((i) => i?.dreamItem?.name)
+      ?.filter((n) => n !== undefined),
+  });
 
   const handleUploadVideos = async ({
     nsfw,
@@ -172,6 +174,20 @@ export const usePlaylistHandlers = ({
 
   const handleDeleteVideo = (index: number) => () =>
     setVideos((videos) => videos.filter((_, i) => i !== index));
+
+  useEffect(() => {
+    removeDuplicateHandler({
+      currentFiles: videos,
+      setFiles: setVideos,
+      t,
+      extraFiles: playlist?.items
+        ?.map((i) => i?.dreamItem?.name)
+        ?.filter((n) => n !== undefined),
+    });
+    
+    // disabling dependency warning for videos to prevent unnecessary re-runs, only should run when playlist changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [playlist]);
 
   return {
     isLoading,

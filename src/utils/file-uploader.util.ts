@@ -10,7 +10,7 @@ export const handleFileUploaderTypeError = (t: TFunction) => () => {
   toast.error(t("components.file_uploader.type_error"));
 };
 
-export const getFileState = (file: File): FileState => ({
+export const generateFileState = (file: File): FileState => ({
   name: file?.name,
   fileBlob: file,
   url: URL.createObjectURL(file),

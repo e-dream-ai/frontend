@@ -27,7 +27,6 @@ import CreatePlaylistSchema, {
   CreatePlaylistFormValues,
 } from "@/schemas/create-playlist.schema";
 import {
-  getFileState,
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
 } from "@/utils/file-uploader.util";
@@ -46,6 +45,7 @@ import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { VideoList } from "@/components/shared/video-list/video-list";
 import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
 import { Tooltip } from "react-tooltip";
+import { createAddFileHandler } from "@/utils/file.util";
 export const CreatePlaylist: React.FC = () => {
   const { t } = useTranslation();
   const [videos, setVideos] = useState<FileState[]>([]);
@@ -83,14 +83,11 @@ export const CreatePlaylist: React.FC = () => {
     (totalUploadedVideos / (totalVideos === 0 ? 1 : totalVideos)) * 100,
   );
 
-  const handleChange: HandleChangeFile = (files) => {
-    if (files instanceof FileList) {
-      const filesArray = Array.from(files);
-      setVideos((v) => [...v, ...filesArray.map((f) => getFileState(f))]);
-    } else {
-      setVideos((v) => [...v, getFileState(files)]);
-    }
-  };
+  const handleChange: HandleChangeFile = createAddFileHandler({
+    currentFiles: videos,
+    setFiles: setVideos,
+    t,
+  });
 
   const setVideoUploaded = (index: number) => {
     setVideos((videos) =>
