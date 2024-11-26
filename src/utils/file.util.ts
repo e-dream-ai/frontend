@@ -20,8 +20,25 @@ export const GBToBytes = (gb: number): number => {
   return gb * bytesPerGB;
 };
 
-// Generic function to check and handle files
+// Generic function to add files to state
 export const createAddFileHandler = ({
+  setFiles,
+}: {
+  setFiles: React.Dispatch<React.SetStateAction<FileState[]>>;
+}) => {
+  const handleAddFiles = (files: FileList | File) => {
+    if (files instanceof FileList) {
+      const filesArray = Array.from(files);
+      setFiles((v) => [...v, ...filesArray.map((f) => generateFileState(f))]);
+    } else {
+      setFiles((v) => [...v, generateFileState(files)]);
+    }
+  };
+  return handleAddFiles;
+};
+
+// Generic function to check and handle files
+export const createAddAndVerifyFileHandler = ({
   currentFiles,
   setFiles,
   t,

@@ -313,9 +313,7 @@ export const usePlaylistHandlers = ({
   };
 
   const handleFileUploaderChange: HandleChangeFile = createAddFileHandler({
-    currentFiles: videos,
     setFiles: setVideos,
-    t,
   });
 
   const handleUploadVideos = async () => {
