@@ -390,7 +390,7 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     before={<FontAwesomeIcon icon={faSave} />}
                     value={values.user}
-                    href={`/${ROUTES.PROFILE}/${playlist?.user.uuid}`}
+                    href={`${ROUTES.PROFILE}/${playlist?.user.uuid}`}
                     {...register("user")}
                   />
                 </Restricted>
@@ -409,7 +409,11 @@ export const ViewPlaylistPage = () => {
                       isDisabled={!editMode || !allowedEditOwner}
                       isLoading={isUsersLoading}
                       before={<FontAwesomeIcon icon={faUser} />}
-                      href={`/${ROUTES.PROFILE}/${playlist?.user.uuid}`}
+                      href={
+                        playlist?.displayedOwner?.uuid
+                          ? `${ROUTES.PROFILE}/${playlist?.displayedOwner?.uuid}`
+                          : undefined
+                      }
                       options={usersOptions}
                       onInputChange={(newValue) => setUserSearch(newValue)}
                     />

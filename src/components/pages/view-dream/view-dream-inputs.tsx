@@ -228,7 +228,11 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             isDisabled={!editMode || !allowedEditOwner}
             isLoading={isUsersLoading}
             before={<FontAwesomeIcon icon={faUser} />}
-            href={`${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`}
+            href={
+              dream?.displayedOwner?.uuid
+                ? `${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`
+                : undefined
+            }
             options={usersOptions}
             onInputChange={(newValue) => setUserSearch(newValue)}
           />
