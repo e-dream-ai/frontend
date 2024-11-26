@@ -59,7 +59,7 @@ export const SignupPage: React.FC = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid, isDirty },
     reset,
   } = useForm<SignupFormValues>({
     resolver: yupResolver(signupSchema),
@@ -95,7 +95,7 @@ export const SignupPage: React.FC = () => {
             router.navigate(ROUTES.MAGIC, {
               state: {
                 email,
-                isEmailVerification: true
+                isEmailVerification: true,
               },
             });
           } else {
@@ -194,6 +194,7 @@ export const SignupPage: React.FC = () => {
 
               <Button
                 type="submit"
+                buttonType={isValid && isDirty ? "secondary" : "primary"}
                 after={<FontAwesomeIcon icon={faAngleRight} />}
                 isLoading={isLoading}
               >
