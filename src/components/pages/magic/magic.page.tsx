@@ -36,7 +36,7 @@ export const MagicPage: React.FC = () => {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isValid, isDirty },
     reset,
   } = useForm<MagicFormValues>({
     resolver: yupResolver(MagicSchema),
@@ -119,6 +119,7 @@ export const MagicPage: React.FC = () => {
             <Row flex="auto">
               <Button
                 type="submit"
+                buttonType={isValid && isDirty ? "secondary" : "primary"}
                 isLoading={isLoading}
                 style={{ width: "-webkit-fill-available" }}
               >
