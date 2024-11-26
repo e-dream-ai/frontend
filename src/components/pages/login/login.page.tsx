@@ -6,6 +6,7 @@ import { Anchor, Button, Input, Row } from "@/components/shared";
 // import InputPassword from "@/components/shared/input-password/input-password";
 import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import * as yup from "yup";
@@ -33,13 +34,15 @@ export const LoginPage: React.FC = () => {
   const { login } = useAuth();
 
   const {
-    formState: { errors },
+    formState: { errors, isValid, isDirty },
     reset,
     register,
     handleSubmit,
     clearErrors,
     setError,
-  } = useForm<LoginFormValues>({});
+  } = useForm<MagicLoginFormValues>({
+    resolver: yupResolver(MagicLoginSchema),
+  });
 
   const { mutate, isLoading } = useLogin();
   const { mutate: mutateMagic, isLoading: isMagicLoading } = useMagic();
@@ -66,7 +69,7 @@ export const LoginPage: React.FC = () => {
         if (error instanceof yup.ValidationError) {
           error.inner.forEach((err) => {
             if (err.path) {
-              setError(err.path as keyof LoginFormValues, {
+              setError(err.path as keyof MagicLoginFormValues, {
                 type: "manual",
                 message: err.message,
               });
@@ -170,7 +173,7 @@ export const LoginPage: React.FC = () => {
 
             <Row flex="auto">
               <Button
-                buttonType="primary"
+                buttonType={isValid && isDirty ? "secondary" : "primary"}
                 style={{ width: "-webkit-fill-available" }}
                 onClick={handleSubmit(onSubmit("magic"))}
                 isLoading={isMagicLoading}
