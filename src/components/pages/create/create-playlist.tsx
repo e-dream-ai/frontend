@@ -84,9 +84,7 @@ export const CreatePlaylist: React.FC = () => {
   );
 
   const handleChange: HandleChangeFile = createAddFileHandler({
-    currentFiles: videos,
     setFiles: setVideos,
-    t,
   });
 
   const setVideoUploaded = (index: number) => {
