@@ -69,6 +69,7 @@ export const UpdatePlaylist: React.FC = () => {
     totalVideos,
     totalUploadedVideos,
     totalUploadedVideosPercentage,
+    handlePlaylistChange,
   } = usePlaylistState({ getValues, setValue, control });
 
   const {
@@ -125,6 +126,7 @@ export const UpdatePlaylist: React.FC = () => {
                 before={<FontAwesomeIcon icon={faList} />}
                 options={playlistsOptions}
                 onInputChange={(newValue) => setPlaylistSearch(newValue)}
+                onChange={handlePlaylistChange}
                 error={errors.playlist?.label?.message}
                 isDisabled={isUploadingFiles}
               />

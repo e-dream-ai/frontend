@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import { FileState } from "@/constants/file.constants";
 import { User } from "@/types/auth.types";
 import { isAdmin } from "@/utils/user.util";
@@ -7,7 +7,9 @@ import { usePlaylists } from "@/api/playlist/query/usePlaylists";
 import { Control, UseFormGetValues, UseFormSetValue } from "react-hook-form";
 import { UpdateVideoPlaylistFormValues } from "@/schemas/update-playlist.schema";
 import { useWatch } from "react-hook-form";
-import { useLocation } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
+import { usePlaylist } from "@/api/playlist/query/usePlaylist";
+import { Playlist } from "@/types/playlist.types";
 
 type Props = {
   control: Control<UpdateVideoPlaylistFormValues>;
@@ -18,8 +20,11 @@ type Props = {
 export const usePlaylistState = ({ control, setValue }: Props) => {
   const { user } = useAuth();
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
-  const location = useLocation();
-
+  const [searchParams] = useSearchParams();
+  const hasSetInitialValue = useRef(false);
+  const initialPlaylistUUID = searchParams.get("playlist") ?? undefined;
+  const initialPlaylistQuery = usePlaylist(initialPlaylistUUID);
+  const [playlist, setPlaylist] = useState<Playlist>();
   const [playlistSearch, setPlaylistSearch] = useState<string>("");
   const [videos, setVideos] = useState<FileState[]>([]);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
@@ -51,29 +56,6 @@ export const usePlaylistState = ({ control, setValue }: Props) => {
     scope: isUserAdmin ? "all-on-search" : "user-only",
   });
 
-  const playlist = useMemo(
-    () =>
-      playlistsData?.data?.playlists?.find(
-        (p) => p.uuid === selectedPlaylistUUID,
-      ),
-    [playlistsData, selectedPlaylistUUID],
-  );
-
-  const getLocationParamPlaylist = useCallback(() => {
-    const searchParams = new URLSearchParams(location.search);
-    const param1 = searchParams.get("playlist");
-    const param2 = searchParams.get("playlistName");
-
-    if (param1 && param2) {
-      return {
-        label: param2,
-        value: param1,
-      };
-    }
-
-    return undefined;
-  }, [location.search]);
-
   const playlistsOptions = useMemo(() => {
     const options = (playlistsData?.data?.playlists ?? [])
       .filter((playlist) => playlist.name)
@@ -82,29 +64,59 @@ export const usePlaylistState = ({ control, setValue }: Props) => {
         value: playlist?.uuid,
       }));
 
-    const paramPlaylist = getLocationParamPlaylist();
-
-    if (
-      paramPlaylist &&
-      !options.find((o) => o.value === paramPlaylist.value)
-    ) {
-      options.push(paramPlaylist);
-    }
-
     return options;
-  }, [playlistsData, getLocationParamPlaylist]);
+  }, [playlistsData]);
 
+  // Set initial playlist value when it loads
   useEffect(() => {
-    const paramPlaylist = getLocationParamPlaylist();
-    if (paramPlaylist) {
-      setValue("playlist", paramPlaylist);
+    if (
+      initialPlaylistQuery.isFetched &&
+      initialPlaylistQuery.data?.data?.playlist &&
+      !hasSetInitialValue.current
+    ) {
+      const initialPlaylist = initialPlaylistQuery.data.data.playlist;
+      setValue("playlist", {
+        label: initialPlaylist.name ?? "-",
+        value: initialPlaylist.uuid ?? "",
+      });
+      setPlaylist(initialPlaylist);
+      hasSetInitialValue.current = true;
+    } else if (!initialPlaylistQuery.isLoading) {
+      hasSetInitialValue.current = true;
     }
-  }, [getLocationParamPlaylist, setValue]);
+  }, [setValue, initialPlaylistQuery]);
+
+  // Set playlist value
+  // useEffect(() => {
+  //   if (hasSetInitialValue.current) {
+  //     const foundPlaylist = playlistsData?.data?.playlists?.find(
+  //       (p) => p.uuid === selectedPlaylistUUID,
+  //     );
+
+  //     if (foundPlaylist) {
+  //       setPlaylist(foundPlaylist);
+  //     }
+  //   }
+  // }, [selectedPlaylistUUID, playlistsData]);
+
+  console.log({ playlist });
+
+  const handlePlaylistChange = (newValue: { label: string; value: string }) => {
+    setValue("playlist", newValue);
+
+    const foundPlaylist = playlistsData?.data?.playlists?.find(
+      (p) => p.uuid === newValue.value,
+    );
+
+    if (foundPlaylist) {
+      setPlaylist(foundPlaylist);
+    }
+  };
 
   return {
     playlistUUID: selectedPlaylistUUID,
     playlist,
-    isPlaylistsLoading,
+    isPlaylistsLoading: isPlaylistsLoading || initialPlaylistQuery.isLoading,
     playlistsOptions,
     isUserAdmin,
     playlistSearch,
@@ -118,5 +130,6 @@ export const usePlaylistState = ({ control, setValue }: Props) => {
     totalVideos,
     totalUploadedVideos,
     totalUploadedVideosPercentage,
+    handlePlaylistChange,
   };
 };
