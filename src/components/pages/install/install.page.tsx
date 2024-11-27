@@ -29,7 +29,7 @@ export const InstallPage: React.FC = () => {
         <Row justifyContent="space-between" separator />
         <Text>
           <p>
-            <em>Requirements:</em> macOS version 11+, x86 or Apple Silicon.
+            <em>Requirements:</em> macOS version 14+, x86 or Apple Silicon.
           </p>
         </Text>
         <Row flexWrap={["wrap", "nowrap", "nowrap"]}>
