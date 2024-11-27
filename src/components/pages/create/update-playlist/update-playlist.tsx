@@ -47,7 +47,6 @@ export const UpdatePlaylist: React.FC = () => {
     formState: { errors },
     reset,
     control,
-    getValues,
     setValue,
     register,
   } = useForm<UpdateVideoPlaylistFormValues>({
@@ -56,20 +55,22 @@ export const UpdatePlaylist: React.FC = () => {
 
   const {
     playlistUUID,
+    playlists,
     playlist,
     playlistsOptions,
     isPlaylistsLoading,
-    setPlaylistSearch,
     videos,
-    setVideos,
     isUploadingFiles,
-    setIsUploadingFiles,
     currentUploadFile,
-    setCurrentUploadFile,
     totalVideos,
     totalUploadedVideos,
     totalUploadedVideosPercentage,
-  } = usePlaylistState({ getValues, setValue, control });
+    setPlaylist,
+    setPlaylistSearch,
+    setVideos,
+    setIsUploadingFiles,
+    setCurrentUploadFile,
+  } = usePlaylistState({ setValue, control });
 
   const {
     isLoading,
@@ -77,11 +78,15 @@ export const UpdatePlaylist: React.FC = () => {
     handleFileUploaderChange,
     handleUploadVideos,
     handleDeleteVideo,
+    handlePlaylistSelectChange,
   } = usePlaylistHandlers({
     playlistUUID,
+    playlists,
     playlist,
     videos,
     reset,
+    setValue,
+    setPlaylist,
     setCurrentUploadFile,
     setVideos,
     setIsUploadingFiles,
@@ -125,6 +130,7 @@ export const UpdatePlaylist: React.FC = () => {
                 before={<FontAwesomeIcon icon={faList} />}
                 options={playlistsOptions}
                 onInputChange={(newValue) => setPlaylistSearch(newValue)}
+                onChange={handlePlaylistSelectChange}
                 error={errors.playlist?.label?.message}
                 isDisabled={isUploadingFiles}
               />
