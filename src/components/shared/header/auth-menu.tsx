@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Anchor, AnchorLink, Text } from "@/components/shared";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,11 +21,25 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { Menu, MenuButton, MenuItem } from "@/components/shared/menu/menu";
-import { getUserNameOrEmail } from "@/utils/user.util";
+import { getUserNameOrEmail, isAdmin } from "@/utils/user.util";
 import { useImage } from "@/hooks/useImage";
 import { useDesktopClientStatus } from "@/hooks/useDesktopClientStatus";
 import useSocket from "@/hooks/useSocket";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
+import { User } from "@/types/auth.types";
+
+const USER_AUTH_MENU_ROUTES = [
+  { route: ROUTES.MY_PROFILE, title: "header.profile" },
+  { route: ROUTES.MY_DREAMS, title: "header.my_dreams" },
+  { route: ROUTES.REMOTE_CONTROL, title: "header.remote_control" },
+];
+
+const ADMIN_AUTH_MENU_ROUTES = [
+  { route: ROUTES.MY_PROFILE, title: "header.profile" },
+  { route: ROUTES.MY_DREAMS, title: "header.my_dreams" },
+  { route: ROUTES.REMOTE_CONTROL, title: "header.remote_control" },
+  { route: ROUTES.INVITES, title: "header.invites" },
+];
 
 const AuthAnchor: React.FC<{
   text: string;
@@ -43,6 +57,7 @@ const AuthAnchor: React.FC<{
 export const AuthMenu: React.FC = () => {
   const { t } = useTranslation();
   const { user, logout, isLoading, isLoggingOut } = useAuth();
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const [showConfirmSignoutModal, setShowConfirmSignoutModal] =
     useState<boolean>(false);
 
@@ -116,33 +131,29 @@ export const AuthMenu: React.FC = () => {
             align="end"
             menuClassName="my-menu"
           >
-            <AnchorLink type="tertiary" to={ROUTES.MY_PROFILE}>
-              <MenuItem onClick={() => ({})}>{t("header.profile")}</MenuItem>
-            </AnchorLink>
-            <AnchorLink type="tertiary" to={ROUTES.MY_DREAMS}>
-              <MenuItem onClick={() => ({})}>{t("header.my_dreams")}</MenuItem>
-            </AnchorLink>
-            <AnchorLink type="tertiary" to={ROUTES.REMOTE_CONTROL}>
-              <MenuItem onClick={() => ({})}>
-                {t("header.remote_control")}
-              </MenuItem>
-            </AnchorLink>
-            <AnchorLink type="tertiary" to={ROUTES.INVITES}>
-              <MenuItem onClick={() => ({})}>{t("header.invites")}</MenuItem>
-            </AnchorLink>
-            <MenuItem onClick={onShowConfirmSignoutModal}>
+            {(isUserAdmin ? ADMIN_AUTH_MENU_ROUTES : USER_AUTH_MENU_ROUTES).map(
+              (r) => (
+                <AnchorLink key={r.route} type="tertiary" to={r.route}>
+                  <MenuItem onClick={() => ({})}>{t(r.title)}</MenuItem>
+                </AnchorLink>
+              ),
+            )}
+
+            <MenuItem key="logout" onClick={onShowConfirmSignoutModal}>
               {t("header.logout")}
             </MenuItem>
           </Menu>
         ) : (
           <>
             <AuthAnchor
+              key="signup"
               text={t("header.signup")}
               icon={<FontAwesomeIcon icon={faPencil} />}
               href={ROUTES.SIGNUP}
             />
             <Divider>•</Divider>
             <AuthAnchor
+              key="signin"
               text={t("header.login")}
               icon={<FontAwesomeIcon icon={faLock} />}
               href={ROUTES.SIGNIN}
