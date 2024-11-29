@@ -127,7 +127,7 @@ export const InstallPage: React.FC = () => {
             <li>On iOS, share the app to your Home Screen.</li>
             <li>On Android, use the "Install App" menu item in Chrome.</li>
           </ul>
-          Run the app, sign in, and enjoy complete control of e-dream on your
+          Run the app, sign-in, and enjoy complete control of e-dream on your
           laptop or computer from a distance.
         </Text>
       </Section>
