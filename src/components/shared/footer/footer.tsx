@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { FooterCol, FooterRow, StyledFooter } from "./footer.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faBluesky,
   faDiscord,
   faFacebookF,
   faGithub,
@@ -77,6 +78,19 @@ const FooterIcons: React.FC = () => (
         <FontAwesomeIcon icon={faCircle} className="fa-2x" />
         <FontAwesomeIcon
           icon={faFacebookF}
+          className="fa-stack-1x fa-inverse reverse"
+        />
+      </span>
+    </Anchor>
+    <Anchor
+      type="secondary"
+      href="https://bsky.app/profile/e-dream.bsky.social"
+      target="_blank"
+    >
+      <span className="fa-stack fa-lg">
+        <FontAwesomeIcon icon={faCircle} className="fa-2x" />
+        <FontAwesomeIcon
+          icon={faBluesky}
           className="fa-stack-1x fa-inverse reverse"
         />
       </span>
