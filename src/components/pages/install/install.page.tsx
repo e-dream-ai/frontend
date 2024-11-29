@@ -29,7 +29,8 @@ export const InstallPage: React.FC = () => {
         <Row justifyContent="space-between" separator />
         <Text>
           <p>
-            <em>Requirements:</em> macOS version 14+, x86 or Apple Silicon.
+            <em>Requirements:</em> macOS version 14+, x86 or Apple Silicon.<br/>
+	    <em>Note:</em> each sign-in requires a new code. Never reuse the codes.
           </p>
         </Text>
         <Row flexWrap={["wrap", "nowrap", "nowrap"]}>
@@ -127,7 +128,7 @@ export const InstallPage: React.FC = () => {
             <li>On iOS, share the app to your Home Screen.</li>
             <li>On Android, use the "Install App" menu item in Chrome.</li>
           </ul>
-          Run the app, sign in, and enjoy complete control of e-dream on your
+          Run the app, sign-in, and enjoy complete control of e-dream on your
           laptop or computer from a distance.
         </Text>
       </Section>
