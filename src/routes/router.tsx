@@ -42,7 +42,11 @@ export const RootElement = () => {
    * Register pageview on location changes
    */
   useEffect(() => {
-    ReactGA.pageview(location.pathname + location.search);
+    ReactGA.pageview(
+      location.pathname + location.search,
+      undefined,
+      document.title,
+    );
   }, [location]);
 
   return (

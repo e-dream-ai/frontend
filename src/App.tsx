@@ -6,10 +6,8 @@ import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
 import { router } from "@/routes/router";
-import ReactGA from "react-ga";
 import TagManager from "react-gtm-module";
 import "react-toastify/dist/ReactToastify.css";
-import { IS_DEV } from "./constants/env.constantes";
 
 const App = () => {
   /**
@@ -22,13 +20,6 @@ const App = () => {
   };
 
   useEffect(() => {
-    /**
-     * Initialize GA
-     */
-    ReactGA.initialize(import.meta.env.VITE_GA_MEASUREMENT_ID, {
-      debug: IS_DEV,
-      titleCase: false,
-    });
 
     /**
      * Initialize TagManager
