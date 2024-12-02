@@ -53,7 +53,9 @@ export const AuthProvider: React.FC<{
          * GA set user id
          */
         ReactGA.set({
-          user_uuid: String(user.uuid),
+          // using userId since is the option on GaOptions
+          // https://github.com/react-ga/react-ga/blob/087837dc03d482549ded7669ac559df0c7cc5498/types/index.d.ts#L97
+          userId: String(user.uuid),
         });
       }
       setUser(user);
