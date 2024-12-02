@@ -8,7 +8,7 @@ import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "install";
 
-const APP_VERSION = "0.5.0";
+const APP_VERSION = "0.5.2";
 const APP_URL = `https://github.com/e-dream-ai/public/releases/download/${APP_VERSION}/e-dream-app-${APP_VERSION}.zip`;
 const SCREENSAVER_URL = `https://github.com/e-dream-ai/public/releases/download/${APP_VERSION}/e-dream-screensaver-${APP_VERSION}.zip`;
 
