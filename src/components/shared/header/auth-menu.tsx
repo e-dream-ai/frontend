@@ -32,6 +32,7 @@ const USER_AUTH_MENU_ROUTES = [
   { route: ROUTES.MY_PROFILE, title: "header.profile" },
   { route: ROUTES.MY_DREAMS, title: "header.my_dreams" },
   { route: ROUTES.REMOTE_CONTROL, title: "header.remote_control" },
+  { route: ROUTES.HELP, title: "header.help" },
 ];
 
 const ADMIN_AUTH_MENU_ROUTES = [
@@ -39,6 +40,7 @@ const ADMIN_AUTH_MENU_ROUTES = [
   { route: ROUTES.MY_DREAMS, title: "header.my_dreams" },
   { route: ROUTES.REMOTE_CONTROL, title: "header.remote_control" },
   { route: ROUTES.INVITES, title: "header.invites" },
+  { route: ROUTES.HELP, title: "header.help" },
 ];
 
 const AuthAnchor: React.FC<{
