@@ -8,15 +8,11 @@ import React, {
 } from "react";
 import socketIO, { Socket } from "socket.io-client";
 import useAuth from "@/hooks/useAuth";
-// import queryClient from "@/api/query-client";
-// import router from "@/routes/router";
-// import { ROUTES } from "@/constants/routes.constants";
 import { SOCKET_URL } from "@/constants/api.constants";
 import { SOCKET_AUTH_ERROR_MESSAGES } from "@/constants/auth.constants";
-// import { SOCKET_AUTH_ERROR_MESSAGES } from "@/constants/auth.constants";
 
 type SocketContextType = {
-  socket?: Socket;
+  socket?: Socket | null;
   isConnected: boolean;
 };
 
@@ -30,12 +26,13 @@ export const SocketProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
   const { user, authenticateUser } = useAuth();
-
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const isReconnecting = useRef(false);
+
   /**
    * ref to save socket instance
    */
-  const socketRef = useRef<Socket>();
+  const socketRef = useRef<Socket | null>();
 
   const generateSocketInstance = useCallback(() => {
     /**
@@ -83,8 +80,17 @@ export const SocketProvider: React.FC<{
        * If backend sends a 401 using authenticateUser, axios interceptor is in charge of logout and redirect to login.
        */
 
-      if (user && error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED) {
-        await authenticateUser();
+      if (
+        user &&
+        error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED &&
+        !isReconnecting.current
+      ) {
+        try {
+          isReconnecting.current = true;
+          await authenticateUser();
+        } finally {
+          isReconnecting.current = false;
+        }
       }
     });
 
@@ -99,24 +105,37 @@ export const SocketProvider: React.FC<{
     return newSocket;
   }, [user, authenticateUser]);
 
-  useEffect(() => {
-    socketRef.current = generateSocketInstance();
+  // Handle reconnection
+  const handleReconnect = useCallback(async () => {
+    // If we're already reconnecting, don't start another attempt
+    if (isReconnecting.current) {
+      return;
+    }
 
-    // Handle reconnection
-    const handleReconnect = async () => {
+    try {
+      isReconnecting.current = true;
+
       if (socketRef.current) {
         // Tab focused and checking connection
         if (!socketRef.current.connected) {
           // Attempting to reconnect
+          socketRef.current.removeAllListeners();
           socketRef.current.disconnect();
-          socketRef.current = undefined;
+          socketRef.current = null;
           await authenticateUser();
           // socketRef.current.connect();
         } else {
           // Socket already connected
         }
       }
-    };
+    } finally {
+      // Reset the flag when we're done
+      isReconnecting.current = false;
+    }
+  }, [authenticateUser]);
+
+  useEffect(() => {
+    socketRef.current = generateSocketInstance();
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -130,7 +149,6 @@ export const SocketProvider: React.FC<{
 
     const handleOffline = () => {
       setIsConnected(false);
-      socketRef.current?.disconnect();
     };
 
     // Add event listener for when the tab becomes visible or focus
@@ -141,8 +159,9 @@ export const SocketProvider: React.FC<{
     return () => {
       // Disconnect socket and set socketRef to undefined
       if (socketRef.current) {
+        socketRef.current.removeAllListeners();
         socketRef.current.disconnect();
-        socketRef.current = undefined;
+        socketRef.current = null;
       }
 
       // Clean up function
@@ -150,7 +169,7 @@ export const SocketProvider: React.FC<{
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [user, authenticateUser, generateSocketInstance]);
+  }, [generateSocketInstance, handleReconnect]);
 
   // useMemo to memoize context value
   const contextValue = useMemo(
