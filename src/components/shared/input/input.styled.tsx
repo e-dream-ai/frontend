@@ -2,6 +2,7 @@ import styled from "styled-components";
 
 export const StyledInput = styled.input`
   height: 100%;
+  min-height: 2.375rem;
   width: 100%;
   width: -moz-available; /* WebKit-based browsers will ignore this. */
   width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
@@ -47,7 +48,6 @@ export const DisabledInput = styled.div`
 export const InputGroup = styled.div`
   display: flex;
   flex-flow: column;
-  height: 2.375rem;
   min-height: 2.375rem;
   margin-bottom: 1rem;
   border-collapse: separate;
@@ -58,11 +58,13 @@ export const InputRow = styled.div`
   flex: auto;
   border-collapse: separate;
   align-items: center;
+  min-height: 2.375rem;
 `;
 
 export const InputBefore = styled.div`
   display: flex;
-  height: 100%;
+  min-height: 2.375rem;
+  height: -webkit-fill-available;
   min-width: 40px;
   align-items: center;
   justify-content: center;
@@ -73,7 +75,8 @@ export const InputBefore = styled.div`
 
 export const InputAfter = styled.div`
   display: flex;
-  height: 100%;
+  min-height: 2.375rem;
+  height: -webkit-fill-available;
   min-width: 40px;
   align-items: center;
   justify-content: center;
