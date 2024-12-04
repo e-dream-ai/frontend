@@ -43,7 +43,7 @@ export const UpdateDreamSchema = yup
   .object({
     name: yup.string().required(),
     description: yup.string(),
-    sourceUrl: yup.string(),
+    sourceUrl: yup.string().url(),
     activityLevel: yup.number().typeError("Activity level must be a number"),
     featureRank: yup
       .number()
