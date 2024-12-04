@@ -8,15 +8,11 @@ import React, {
 } from "react";
 import socketIO, { Socket } from "socket.io-client";
 import useAuth from "@/hooks/useAuth";
-// import queryClient from "@/api/query-client";
-// import router from "@/routes/router";
-// import { ROUTES } from "@/constants/routes.constants";
 import { SOCKET_URL } from "@/constants/api.constants";
 import { SOCKET_AUTH_ERROR_MESSAGES } from "@/constants/auth.constants";
-// import { SOCKET_AUTH_ERROR_MESSAGES } from "@/constants/auth.constants";
 
 type SocketContextType = {
-  socket?: Socket;
+  socket?: Socket | null;
   isConnected: boolean;
 };
 
@@ -31,19 +27,21 @@ export const SocketProvider: React.FC<{
 }> = ({ children }) => {
   const { user, authenticateUser } = useAuth();
 
+  // boolean flag on state to know if socket is connected
   const [isConnected, setIsConnected] = useState<boolean>(false);
+
   /**
-   * ref to save socket instance
+   * flag to prevent multiple simultaneous authentication attempts during socket reconnection
+   * implemented as a ref (useRef) instead of state (useState) because changes to this flag shouldn't trigger re-renders
+   * and need update value immediately in operations
    */
-  const socketRef = useRef<Socket>();
+  const isReconnecting = useRef(false);
+
+  // ref to save socket instance
+  const socketRef = useRef<Socket | null>();
 
   const generateSocketInstance = useCallback(() => {
-    /**
-     * If there's no user don't create instance
-     */
-    if (!user) {
-      return;
-    }
+    // if there's no user don't create instance
 
     const newSocket = socketIO(`${SOCKET_URL}/${REMOTE_CONTROL_NAMESPACE}`, {
       /**
@@ -59,13 +57,13 @@ export const SocketProvider: React.FC<{
 
     setIsConnected(newSocket.connected);
 
-    // Listen to connect event only once
+    // Listen connect event
     newSocket.on("connect", () => {
       // Socket connected
       setIsConnected(true);
     });
 
-    // Handle disconnection
+    // Listen disconnection event
     newSocket.on("disconnect", () => {
       // Socket disconnected
       setIsConnected(false);
@@ -73,23 +71,25 @@ export const SocketProvider: React.FC<{
 
     // Handle connection error
     newSocket.on("connect_error", async (error) => {
-      // Connection error {error}
       setIsConnected(false);
-      /**
-       * If there's user and receives unauthorized handle logout
-       *
-       * Temporarily commented, after online status is activated or visibilitychange is triggered,
-       * an attempt will be made to make a request to the v2/auth/authenticate endpoint to validate the session.
-       * If backend sends a 401 using authenticateUser, axios interceptor is in charge of logout and redirect to login.
-       */
 
-      if (user && error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED) {
-        await authenticateUser();
+      /**
+       * when a connect_error is triggered and the socket backend message is "UNAUTHORIZED"
+       * the session cookie should be refreshed using `authenticateUser`
+       * will cause user could get a fresh cookie and a new socket instance will be generated with the proper authorization
+       */
+      if (
+        error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED &&
+        !isReconnecting.current
+      ) {
+        try {
+          isReconnecting.current = true;
+          await authenticateUser();
+        } finally {
+          isReconnecting.current = false;
+        }
       }
     });
-
-    // Handle reconnecting attempts
-    newSocket.on("reconnecting", (/* attemptNumber */) => {});
 
     // Handle reconnection success
     newSocket.on("reconnect", (/* attemptNumber */) => {
@@ -97,26 +97,42 @@ export const SocketProvider: React.FC<{
     });
 
     return newSocket;
-  }, [user, authenticateUser]);
+  }, [authenticateUser]);
 
-  useEffect(() => {
-    socketRef.current = generateSocketInstance();
+  // Handle reconnection
+  const handleReconnect = useCallback(async () => {
+    // If we're already reconnecting, don't start another attempt
+    if (isReconnecting.current) {
+      return;
+    }
 
-    // Handle reconnection
-    const handleReconnect = async () => {
+    try {
+      isReconnecting.current = true;
+
       if (socketRef.current) {
         // Tab focused and checking connection
         if (!socketRef.current.connected) {
           // Attempting to reconnect
+
+          // Remove socket listeners, disconnect, fetch `/authenticate` and try a reconnection (refresh cookie session)
+          // Prevent listeners execute functions
+          socketRef.current.removeAllListeners();
           socketRef.current.disconnect();
-          socketRef.current = undefined;
+          socketRef.current = null;
           await authenticateUser();
-          // socketRef.current.connect();
         } else {
           // Socket already connected
         }
       }
-    };
+    } finally {
+      // Reset the flag when we're done
+      isReconnecting.current = false;
+    }
+  }, [authenticateUser]);
+
+  useEffect(() => {
+    // if there's user generate instance
+    socketRef.current = user ? generateSocketInstance() : null;
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -130,7 +146,6 @@ export const SocketProvider: React.FC<{
 
     const handleOffline = () => {
       setIsConnected(false);
-      socketRef.current?.disconnect();
     };
 
     // Add event listener for when the tab becomes visible or focus
@@ -139,18 +154,20 @@ export const SocketProvider: React.FC<{
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
     return () => {
-      // Disconnect socket and set socketRef to undefined
+      // Remove socket listeners, disconnect socket and set socketRef to null
       if (socketRef.current) {
+        // Prevent listeners execute functions
+        socketRef.current.removeAllListeners();
         socketRef.current.disconnect();
-        socketRef.current = undefined;
+        socketRef.current = null;
       }
 
-      // Clean up function
+      // Clean ups functions to prevent execute them when are no longer needed
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [user, authenticateUser, generateSocketInstance]);
+  }, [user, generateSocketInstance, handleReconnect]);
 
   // useMemo to memoize context value
   const contextValue = useMemo(

@@ -27,6 +27,10 @@ export const useAuthenticateUser = () => {
        */
       enabled: false,
       retry: false,
+      // Disable caching for authentication
+      cacheTime: 0,
+      // Ensure we always get fresh data
+      staleTime: 0,
     },
   );
 };
