@@ -2,7 +2,7 @@ import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./i18n";
 import React from "react";
-import ReactGA from "react-ga";
+import ReactGA from "react-ga4";
 import Bugsnag from "@bugsnag/js";
 import BugsnagPluginReact from "@bugsnag/plugin-react";
 import BugsnagPerformance from "@bugsnag/browser-performance";
@@ -55,8 +55,10 @@ export const ErrorBoundary =
  * Initialize GA
  */
 ReactGA.initialize(import.meta.env.VITE_GA_MEASUREMENT_ID, {
-  debug: IS_DEV,
-  titleCase: false,
+  gaOptions: {
+    debug: IS_DEV,
+    titleCase: false,
+  },
 });
 
 root.render(

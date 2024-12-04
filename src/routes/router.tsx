@@ -31,7 +31,7 @@ import PlaylistsFeedPage from "@/components/pages/playlist-feed/playlist-feed";
 import PlaygroundPage from "@/components/pages/playground/playground.page";
 import NotFoundPage from "@/components/pages/not-found/not-found.page";
 import { useEffect } from "react";
-import ReactGA from "react-ga";
+import ReactGA from "react-ga4";
 import { PageContainer } from "@/components/shared/container/page-container";
 import RemoteControlPage from "@/components/pages/remote-control/remote-control.page";
 
@@ -42,12 +42,11 @@ export const RootElement = () => {
    * Register pageview on location changes
    */
   useEffect(() => {
-    ReactGA.pageview(
-      location.pathname + location.search,
-      undefined,
-      document.title,
-    );
-  }, [location]);
+    ReactGA.send({
+      hitType: "pageview",
+      page: window.location.pathname + window.location.search,
+    });
+s  }, [location]);
 
   return (
     <PageContainer>

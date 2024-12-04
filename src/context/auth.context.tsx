@@ -13,7 +13,7 @@ import { useTranslation } from "react-i18next";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAuthenticateUser } from "@/api/user/query/useAuthenticateUser";
-import ReactGA from "react-ga";
+import ReactGA from "react-ga4";
 import Bugsnag from "@bugsnag/js";
 
 type AuthContextType = {
