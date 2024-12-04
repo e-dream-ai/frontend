@@ -15,7 +15,7 @@ import {
 import { getRemoteControlEvent } from "@/utils/remote-control.util";
 
 export const emitPlayDream = (
-  socket?: Socket,
+  socket?: Socket | null,
   dream?: Dream,
   message?: string,
 ) => {
@@ -28,7 +28,7 @@ export const emitPlayDream = (
 };
 
 export const emitPlayPlaylist = (
-  socket?: Socket,
+  socket?: Socket | null,
   playlist?: Playlist,
   message?: string,
 ) => {
