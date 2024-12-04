@@ -43,7 +43,9 @@ export const UpdateDreamSchema = yup
   .object({
     name: yup.string().required(),
     description: yup.string(),
-    sourceUrl: yup.string().url(),
+    sourceUrl: yup
+      .string()
+      .url("Invalid URL format. URL must start with http:// or https://"),
     activityLevel: yup.number().typeError("Activity level must be a number"),
     featureRank: yup
       .number()
