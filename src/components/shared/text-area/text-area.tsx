@@ -34,7 +34,6 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
     {
       before,
       after,
-      onKeyDown,
       onClickAfter,
       error,
       name,
@@ -62,15 +61,6 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
       adjustHeight(e.target);
       props.onChange?.(e);
-    };
-
-    const handleOnKeyDown: KeyboardEventHandler<HTMLTextAreaElement> = (
-      event,
-    ) => {
-      if (event.key === "Enter") {
-        event.preventDefault();
-      }
-      onKeyDown?.(event);
     };
 
     // should trigger recalculation when some deps change
@@ -113,7 +103,6 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
             <StyledTextArea
               ref={internalRef}
               maxLength={4000}
-              onKeyDown={handleOnKeyDown}
               name={name}
               placeholder={placeholder}
               disabled={disabled}
