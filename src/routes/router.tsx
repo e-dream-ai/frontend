@@ -46,7 +46,7 @@ export const RootElement = () => {
       hitType: "pageview",
       page: window.location.pathname + window.location.search,
     });
-s  }, [location]);
+  }, [location]);
 
   return (
     <PageContainer>
