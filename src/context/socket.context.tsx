@@ -48,6 +48,10 @@ export const SocketProvider: React.FC<{
        * 5 seconds timeout
        */
       timeout: 5 * 1000,
+      // default reconnectionAttempts value is Infinity, which could trigger requests to the server with expired auth cookie producing a loop after unauthorization
+      // refresh session using authenticateUser to fetch fresh credentials and generate an new socket instance would work better
+      // attempts limited to 2, continue under observation
+      reconnectionAttempts: 2,
       withCredentials: true,
       extraHeaders: {
         "Edream-Client-Type": "react",
