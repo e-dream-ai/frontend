@@ -38,6 +38,7 @@ export const DisabledTextArea = styled.div`
   font-size: 1rem;
   cursor: not-allowed;
   white-space: pre-wrap;
+  word-break: break-word;
 
   &:disabled {
     cursor: not-allowed;
