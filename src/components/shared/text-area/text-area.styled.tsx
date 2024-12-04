@@ -6,6 +6,7 @@ export const StyledTextArea = styled.textarea`
   width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
   width: fill-available;
   min-height: 8rem;
+  overflow-y: hidden;
   resize: none;
   padding: 6px 12px;
   background: ${(props) => props.theme.colorBackgroundSecondary};
@@ -13,9 +14,32 @@ export const StyledTextArea = styled.textarea`
   border: 0;
   color: ${(props) => props.theme.inputTextColorPrimary};
   font-size: 1rem;
+  font-family: inherit;
 
   &:disabled {
     background-color: ${(props) => props.theme.inputBackgroundColor};
+    cursor: not-allowed;
+  }
+`;
+
+export const DisabledTextArea = styled.div`
+  height: 100%;
+  width: 100%;
+  width: -moz-available; /* WebKit-based browsers will ignore this. */
+  width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
+  width: fill-available;
+  min-height: 8rem;
+  padding: 0.375rem 0.75rem;
+  border: 0;
+  border-radius: 0;
+  align-items: center;
+  background: ${(props) => props.theme.inputBackgroundColor};
+  color: ${(props) => props.theme.inputTextColorPrimary};
+  font-size: 1rem;
+  cursor: not-allowed;
+  white-space: pre-wrap;
+
+  &:disabled {
     cursor: not-allowed;
   }
 `;

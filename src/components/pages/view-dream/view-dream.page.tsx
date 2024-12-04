@@ -473,7 +473,9 @@ const ViewDreamPage: React.FC = () => {
             separator
           >
             <Column flex={["1 1 200px", "1", "1"]}>
-              <h2 style={{ margin: 0 }}>{t("page.view_dream.title")}</h2>
+              <h2 style={{ margin: 0, height: "56px" }}>
+                {t("page.view_dream.title")}
+              </h2>
             </Column>
 
             <Column flex="1" alignSelf="flex-end" alignItems="flex-end">
@@ -553,7 +555,7 @@ const ViewDreamPage: React.FC = () => {
               <span />
               <div>
                 {showEditButton && (
-                  <Row justifyItems="flex-end">
+                  <React.Fragment>
                     <Restricted to={DREAM_PERMISSIONS.CAN_PROCESS_DREAM}>
                       <Button
                         type="button"
@@ -577,7 +579,7 @@ const ViewDreamPage: React.FC = () => {
                         {t("page.view_dream.edit")}{" "}
                       </Button>
                     </Restricted>
-                  </Row>
+                  </React.Fragment>
                 )}
                 {showSaveAndCancelButtons && (
                   <React.Fragment>

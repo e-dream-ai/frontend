@@ -1,4 +1,4 @@
-import { FileUploader, Input } from "@/components/shared";
+import { FileUploader, Input, TextArea } from "@/components/shared";
 import {
   ALLOWED_VIDEO_TYPES,
   MAX_FILE_SIZE_MB,
@@ -103,11 +103,10 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         value={values.name}
         {...register("name")}
       />
-      <Input
+      <TextArea
         linkify
         disabled={!editMode}
         placeholder={t("page.view_dream.description")}
-        type="text"
         before={<FontAwesomeIcon icon={faComment} />}
         error={errors.description?.message}
         value={values.description}

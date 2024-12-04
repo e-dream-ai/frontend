@@ -13,6 +13,8 @@ export const StyledInput = styled.input`
   background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorPrimary};
   font-size: 1rem;
+  font-family: inherit;
+
 
   &:disabled {
     cursor: not-allowed;
@@ -24,8 +26,8 @@ export const StyledInput = styled.input`
 `;
 
 export const DisabledInput = styled.div`
-  display: flex;
   height: 100%;
+  min-height: 2.375rem;
   width: 100%;
   width: -moz-available; /* WebKit-based browsers will ignore this. */
   width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
