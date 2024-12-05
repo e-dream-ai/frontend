@@ -1,8 +1,7 @@
-import { Row } from "@/components/shared";
+import { Column, Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
-import { LoremIpsum8P } from "@/components/shared/lorem-ipsum/lorem-ipsum";
+import JekyllSiteViewer from "@/components/shared/jekyll-viewer/jekyll-viewer";
 import { Section } from "@/components/shared/section/section";
-import Text from "@/components/shared/text/text";
 import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "help";
@@ -14,9 +13,9 @@ export const HelpPage: React.FC = () => {
       <h2>{t("page.help.title")}</h2>
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
-        <Text>
-          <LoremIpsum8P />
-        </Text>
+        <Column flex="auto" style={{ height: "70vh", minHeight: "800px" }}>
+          <JekyllSiteViewer />
+        </Column>
       </Section>
     </Container>
   );
