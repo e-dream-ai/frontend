@@ -1,5 +1,6 @@
 import { Column, Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
+import JekyllSiteViewer from "@/components/shared/jekyll-viewer/jekyll-viewer";
 import { Section } from "@/components/shared/section/section";
 import { useTranslation } from "react-i18next";
 
@@ -15,7 +16,7 @@ export const HelpPage: React.FC = () => {
 
         <Row>
           <Column flex="auto">
-            <iframe src="http://localhost:4000" height="800px" />
+            <JekyllSiteViewer />
           </Column>
         </Row>
       </Section>
