@@ -91,6 +91,10 @@ export const InstallPage: React.FC = () => {
             The screensaver shares its settings and account with the app, and we
             recommend using the app to configure it.
           </p>
+          <p>
+            Each time you sign-in, a fresh code is required.
+            Never reuse the codes e-mailed to you.
+          </p>
         </Text>
         <Text>
           <p>
