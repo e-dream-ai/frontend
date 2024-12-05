@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 const SECTION_ID = "install";
 
 const APP_VERSION = "0.5.2";
+const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
 const APP_URL = `https://github.com/e-dream-ai/public/releases/download/${APP_VERSION}/e-dream-app-${APP_VERSION}.zip`;
 const SCREENSAVER_URL = `https://github.com/e-dream-ai/public/releases/download/${APP_VERSION}/e-dream-screensaver-${APP_VERSION}.zip`;
 
@@ -98,6 +99,7 @@ export const InstallPage: React.FC = () => {
         </Text>
         <Text>
           <p>
+            Current release: {DISPLAY_APP_VERSION}. 
             See the{" "}
             <Anchor
               target="_blank"
