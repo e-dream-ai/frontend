@@ -84,7 +84,7 @@ const FooterIcons: React.FC = () => (
     </Anchor>
     <Anchor
       type="secondary"
-      href="https://bsky.app/profile/e-dream.bsky.social"
+      href="https://bsky.app/profile/e-dream.ai"
       target="_blank"
     >
       <span className="fa-stack fa-lg">
