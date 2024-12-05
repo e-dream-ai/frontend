@@ -1,6 +1,8 @@
 /**
  * Reset some basic elements
  */
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;0,700;0,900;1,100;1,300;1,400;1,700;1,900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Comfortaa:wght@300..700&display=swap");
 body,
 h1,
 h2,
@@ -686,6 +688,75 @@ table td {
 }
 .highlight .il {
   color: #099;
+}
+
+body,
+p,
+.label,
+figcaption,
+.social-icons a,
+.page__footer-copyright {
+  font-family: "Lato", system-ui !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.site-title {
+  font-family: "Comfortaa", sans-serif !important;
+  color: #fcd9b7;
+}
+
+body {
+  background-color: #000;
+  color: #555;
+}
+
+/**
+ * Links
+ */
+a {
+  color: #fcd9b7;
+  text-decoration: none;
+}
+
+a:visited {
+  color: #fcd9b7;
+}
+
+a:hover {
+  color: #00d0db;
+  text-decoration: none;
+}
+
+/**
+ * Site
+ */
+.site-header {
+  border-bottom: solid 1px #555;
+}
+
+.site-title:visited {
+  color: #fcd9b7;
+}
+
+.site-title:visited:hover {
+  color: #00d0db;
+}
+
+.site-footer {
+  border-top: solid 1px #555;
+}
+
+/**
+ * Text
+ */
+.post-meta,
+.footer-col-wrapper {
+  color: #555;
 }
 
 /*# sourceMappingURL=main.css.map */

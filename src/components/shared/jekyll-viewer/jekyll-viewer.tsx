@@ -9,7 +9,7 @@ const StyledIframe = styled.iframe`
 `;
 
 const JekyllViewer = () => {
-  const path = import.meta.env.DEV ? "/_site" : "/";
+  const path = import.meta.env.DEV ? "/help" : "/";
   const src = `${path}/index.html`;
 
   return (
