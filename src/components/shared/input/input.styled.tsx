@@ -66,7 +66,7 @@ export const InputRow = styled.div`
 export const InputBefore = styled.div`
   display: flex;
   min-height: 2.375rem;
-  height: -webkit-fill-available;
+  height: auto;
   min-width: 40px;
   align-items: center;
   justify-content: center;
@@ -78,7 +78,7 @@ export const InputBefore = styled.div`
 export const InputAfter = styled.div`
   display: flex;
   min-height: 2.375rem;
-  height: -webkit-fill-available;
+  height: auto;
   min-width: 40px;
   align-items: center;
   justify-content: center;
