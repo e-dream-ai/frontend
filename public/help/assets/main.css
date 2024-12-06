@@ -732,11 +732,20 @@ a:hover {
   text-decoration: none;
 }
 
+.site-nav .page-link {
+  color: #fcd9b7;
+}
+
+.site-nav .page-link:hover {
+  color: #00d0db;
+  text-decoration: none;
+}
+
 /**
  * Site
  */
 .site-header {
-  border-bottom: solid 1px #555;
+  border: 0;
 }
 
 .site-title:visited {
@@ -748,7 +757,7 @@ a:hover {
 }
 
 .site-footer {
-  border-top: solid 1px #555;
+  border: 0;
 }
 
 /**
