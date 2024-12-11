@@ -1,5 +1,6 @@
 import { DEVICES } from "@/constants/devices.constants";
 import styled, { css } from "styled-components";
+import { DeviceType } from "./menu-header";
 
 const StyledHeader = styled.header`
   display: flex;
@@ -97,9 +98,9 @@ export const LogoIcon = styled.img`
 export const Nav = styled.nav`
   overflow: hidden;
   @media (max-width: ${DEVICES.TABLET}) {
-    display: none;
+    /* display: none;
+    height: 0; */
     width: 100vw;
-    height: 0;
     background-color: ${(props) => props.theme.colorBackgroundTertiary};
   }
 `;
@@ -111,7 +112,7 @@ export const MenuContainer = styled.div`
   align-items: center;
 
   @media (max-width: ${DEVICES.TABLET}) {
-    display: none;
+    /* display: none; */
     order: 4;
   }
 `;
@@ -160,37 +161,49 @@ export const StyledNavList = styled.ul`
   padding: 0;
 
   @media (max-width: ${DEVICES.TABLET}) {
-    flex-flow: column;
-    padding: 1rem 2rem;
+    /* flex-flow: column; 
+    padding: 1rem 2rem; */
   }
 `;
 
 export const NavListItem = styled.li<{
-  onlyMobile?: boolean;
+  deviceType?: DeviceType;
   showSlash?: boolean;
 }>`
-  display: ${(props) => (props.onlyMobile ? "none" : " inline-flex")};
+  display: inline-flex;
   font-size: 1.2rem;
   font-family: "Comfortaa", sans-serif;
   text-transform: lowercase;
 
-  @media (max-width: ${DEVICES.TABLET}) {
-    display: inline-flex;
-    margin: 0.6rem 0;
-  }
-
   &::after {
-    content: ${(props) => (props.showSlash ? `"•"` : "none")};
+    content: "•";
     color: ${(props) => props.theme.textPrimaryColor};
     margin: 0 12px;
 
     @media (max-width: ${DEVICES.TABLET}) {
-      content: "";
+      /* content: ""; */
     }
+  }
+
+  &:last-child::after {
+    content: "";
   }
 
   a {
     color: ${(props) => props.theme.textAccentColor};
+  }
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    display: ${(props) =>
+      props.deviceType === "desktop" ? "none" : " inline-flex"};
+
+    &.both::after {
+      content: "•";
+    }
+
+    &.both:not(:has(~ .both))::after {
+      content: "";
+    }
   }
 `;
 

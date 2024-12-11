@@ -23,10 +23,10 @@ export const MobileMenu: React.FC = () => {
       title: t("header.create"),
       route: FULL_CREATE_ROUTES.DREAM,
     },
-    {
-      title: t("header.playlists"),
-      route: ROUTES.PLAYLISTS,
-    },
+    // {
+    //   title: t("header.playlists"),
+    //   route: ROUTES.PLAYLISTS,
+    // },
     { title: t("header.feed"), route: ROUTES.FEED, showSlash: false },
   ];
 

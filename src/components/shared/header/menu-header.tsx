@@ -8,10 +8,12 @@ import { AnchorLink } from "../anchor/anchor";
 // import Text from "../text/text";
 import { MouseEventHandler } from "react";
 
+export type DeviceType = "desktop" | "both";
+
 type RouteLink = {
   component: React.ReactNode;
   route: string;
-  onlyMobile?: boolean;
+  deviceType?: DeviceType;
   showSlash?: boolean;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
 };
@@ -27,23 +29,38 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
       component: t("header.about"),
       route: ROUTES.ABOUT,
       showSlash: true,
+      deviceType: "desktop",
     },
     {
       component: t("header.install"),
       route: ROUTES.INSTALL,
       showSlash: true,
+      deviceType: "desktop",
     },
     {
       component: t("header.create"),
       route: FULL_CREATE_ROUTES.DREAM,
       showSlash: true,
+      deviceType: "desktop",
     },
     {
       component: t("header.playlists"),
       route: ROUTES.PLAYLISTS,
       showSlash: true,
+      deviceType: "both",
     },
-    { component: t("header.feed"), route: ROUTES.FEED, showSlash: false },
+    {
+      component: t("header.remote_control"),
+      route: ROUTES.REMOTE_CONTROL,
+      showSlash: true,
+      deviceType: "both",
+    },
+    {
+      component: t("header.feed"),
+      route: ROUTES.FEED,
+      showSlash: false,
+      deviceType: "desktop",
+    },
   ];
 
   const NAV_ROUTES: Array<RouteLink> = [
@@ -51,23 +68,13 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
       component: t("header.about"),
       route: ROUTES.ABOUT,
       showSlash: true,
+      deviceType: "desktop",
     },
     {
       component: t("header.install"),
       route: ROUTES.INSTALL,
       showSlash: false,
-    },
-    {
-      component: t("header.login"),
-      route: ROUTES.SIGNIN,
-      onlyMobile: true,
-      showSlash: false,
-    },
-    {
-      component: t("header.signup"),
-      route: ROUTES.SIGNUP,
-      onlyMobile: true,
-      showSlash: false,
+      deviceType: "desktop",
     },
   ];
 
@@ -84,8 +91,9 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
         return (
           <NavListItem
             key={route.route}
-            onlyMobile={route.onlyMobile}
+            deviceType={route.deviceType}
             showSlash={route.showSlash}
+            className={route.deviceType === "both" ? "both" : "desktop"}
           >
             <AnchorLink to={route.route} onClick={handleOnClick}>
               {route.component}
