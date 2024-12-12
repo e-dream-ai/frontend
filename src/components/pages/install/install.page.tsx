@@ -1,9 +1,11 @@
 import { Button, Column, Row } from "@/components/shared";
 import { Anchor } from "@/components/shared";
+import AddToHomeScreen from "@/components/shared/add-to-homescreen/add-to-homescreen";
 import { Card } from "@/components/shared/card/card";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import Text from "@/components/shared/text/text";
+import useUserAgent from "@/hooks/useUserAgent";
 import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "install";
@@ -13,8 +15,10 @@ const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
 const APP_URL = `https://github.com/e-dream-ai/public/releases/download/${APP_VERSION}/e-dream-app-${APP_VERSION}.zip`;
 const SCREENSAVER_URL = `https://github.com/e-dream-ai/public/releases/download/${APP_VERSION}/e-dream-screensaver-${APP_VERSION}.zip`;
 
-export const InstallPage: React.FC = () => {
+const InstallSection = () => {
   const { t } = useTranslation();
+  const { isMacOS } = useUserAgent();
+
   const handleDownloadApp = () => {
     window.open(APP_URL, "_blank");
   };
@@ -24,7 +28,7 @@ export const InstallPage: React.FC = () => {
   };
 
   return (
-    <Container>
+    <>
       <h2>{t("page.install.title")}</h2>
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
@@ -32,6 +36,14 @@ export const InstallPage: React.FC = () => {
           <p>
             <em>Requirements:</em> macOS version 12.4+, x86 or Apple Silicon.
           </p>
+          {!isMacOS && (
+            <p>
+              <b>
+                Warning: currently e-dream is for macOS only, but this computer
+                appears to be something else.
+              </b>
+            </p>
+          )}
         </Text>
         <Row flexWrap={["wrap", "nowrap", "nowrap"]}>
           <Column
@@ -93,14 +105,13 @@ export const InstallPage: React.FC = () => {
             recommend using the app to configure it.
           </p>
           <p>
-            Each time you sign-in, a fresh code is required.
-            Never reuse the codes e-mailed to you.
+            Each time you sign-in, a fresh code is required. Never reuse the
+            codes e-mailed to you.
           </p>
         </Text>
         <Text>
           <p>
-            Current release: {DISPLAY_APP_VERSION}. 
-            See the{" "}
+            Current release: {DISPLAY_APP_VERSION}. See the{" "}
             <Anchor
               target="_blank"
               href="https://github.com/e-dream-ai/public/releases/latest"
@@ -118,10 +129,28 @@ export const InstallPage: React.FC = () => {
           </p>
         </Text>
       </Section>
-      <p>&nbsp;</p>
+    </>
+  );
+};
+
+const RemoteControlSection = () => {
+  const { t } = useTranslation();
+
+  const handleInstallRemoteControl = () => {};
+
+  return (
+    <>
       <h2>{t("page.install.title_remote")}</h2>
       <Section id="install_remote">
         <Row justifyContent="space-between" separator />
+
+        <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+          <Row justifyContent="center" m={0}>
+            <Button buttonType="secondary" onClick={handleInstallRemoteControl}>
+              Install Remote Control
+            </Button>
+          </Row>
+        </Card>
         <Text>
           <p />
           Install{" "}
@@ -137,7 +166,32 @@ export const InstallPage: React.FC = () => {
           laptop or computer from a distance.
         </Text>
       </Section>
-    </Container>
+    </>
+  );
+};
+
+export const InstallPage: React.FC = () => {
+  const { isMobile } = useUserAgent();
+
+  return (
+    <>
+      <AddToHomeScreen />
+      <Container>
+        {isMobile ? (
+          <>
+            <RemoteControlSection />
+            <p>&nbsp;</p>
+            <InstallSection />
+          </>
+        ) : (
+          <>
+            <InstallSection />
+            <p>&nbsp;</p>
+            <RemoteControlSection />
+          </>
+        )}
+      </Container>
+    </>
   );
 };
 
