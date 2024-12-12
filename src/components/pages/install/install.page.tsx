@@ -6,7 +6,9 @@ import { Section } from "@/components/shared/section/section";
 import Text from "@/components/shared/text/text";
 import usePWAInstall from "@/hooks/usePWAInstall";
 import useUserAgent from "@/hooks/useUserAgent";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import PWAPrompt from "react-ios-pwa-prompt";
 
 const SECTION_ID = "install";
 
@@ -137,28 +139,40 @@ const RemoteControlSection = () => {
   const { t } = useTranslation();
   const { isInstallable, install } = usePWAInstall();
 
+  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+
   const handleInstallRemoteControl = () => {
     install();
   };
 
+  const handleShowPromptIOS = () => setShowIOSPrompt(true);
+  const handleHidePromptIOS = () => setShowIOSPrompt(false);
+
   return (
     <>
+      <PWAPrompt
+        isShown={showIOSPrompt}
+        appIconPath="/images/edream-logo-512x512.png"
+        onClose={handleHidePromptIOS}
+      />
+
       <h2>{t("page.install.title_remote")}</h2>
       <Section id="install_remote">
         <Row justifyContent="space-between" separator />
 
-        {isInstallable && (
-          <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
-            <Row justifyContent="center" m={0}>
-              <Button
-                buttonType="secondary"
-                onClick={handleInstallRemoteControl}
-              >
-                Install Remote Control
-              </Button>
-            </Row>
-          </Card>
-        )}
+        <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+          <Row justifyContent="center" m={0}>
+            <Button
+              buttonType="secondary"
+              onClick={
+                isInstallable ? handleInstallRemoteControl : handleShowPromptIOS
+              }
+            >
+              Install Remote Control
+            </Button>
+          </Row>
+        </Card>
+
         <Text>
           <p />
           Install{" "}

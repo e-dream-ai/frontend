@@ -83,6 +83,9 @@ importers:
       react-i18next:
         specifier: ^13.5.0
         version: 13.5.0(i18next@23.7.11)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      react-ios-pwa-prompt:
+        specifier: ^2.0.6
+        version: 2.0.6(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       react-linkify:
         specifier: 1.0.0-alpha
         version: 1.0.0-alpha
@@ -3040,6 +3043,12 @@ packages:
         optional: true
       react-native:
         optional: true
+
+  react-ios-pwa-prompt@2.0.6:
+    resolution: {integrity: sha512-slRvFlcYsOL01D8gbJW4agOQ64pk7V+0EBk+d8z8wQ40vtcaoSw/JJkh+fJQrWSfWFVvZESu3FHP0+un4YUjJg==}
+    peerDependencies:
+      react: '>=16.8.0'
+      react-dom: '>=16.8.0'
 
   react-is@16.13.1:
     resolution: {integrity: sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==}
@@ -7042,6 +7051,11 @@ snapshots:
       i18next: 23.7.11
       react: 18.2.0
     optionalDependencies:
+      react-dom: 18.2.0(react@18.2.0)
+
+  react-ios-pwa-prompt@2.0.6(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
+    dependencies:
+      react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
 
   react-is@16.13.1: {}
