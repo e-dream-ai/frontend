@@ -7,7 +7,6 @@ const StyledHeader = styled.header`
   flex-flow: row;
   flex: auto;
   flex-wrap: wrap;
-  justify-content: space-between;
   align-items: center;
   width: inherit;
   max-width: 1024px;
@@ -63,7 +62,7 @@ export const LogoContainer = styled.div`
   flex-flow: row;
   justify-content: space-between;
   align-items: center;
-  margin-right: 2rem;
+  margin-right: 1rem;
 
   button {
     width: 60px;
@@ -110,9 +109,9 @@ export const MenuContainer = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-left: auto;
 
   @media (max-width: ${DEVICES.TABLET}) {
-    /* display: none; */
     order: 4;
   }
 `;
@@ -159,11 +158,6 @@ export const StyledNavList = styled.ul`
   list-style: none;
   white-space: nowrap;
   padding: 0;
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    /* flex-flow: column; 
-    padding: 1rem 2rem; */
-  }
 `;
 
 export const NavListItem = styled.li<{
@@ -178,14 +172,11 @@ export const NavListItem = styled.li<{
   &::after {
     content: "•";
     color: ${(props) => props.theme.textPrimaryColor};
-    margin: 0 12px;
-
-    @media (max-width: ${DEVICES.TABLET}) {
-      /* content: ""; */
-    }
+    margin: 0 10px;
   }
 
   &:last-child::after {
+    display: none;
     content: "";
   }
 
@@ -202,6 +193,7 @@ export const NavListItem = styled.li<{
     }
 
     &.both:not(:has(~ .both))::after {
+      display: none;
       content: "";
     }
   }
