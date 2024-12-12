@@ -47,13 +47,28 @@ export default defineConfig({
         ],
         icons: [
           {
-            src: "favicon/favicon-128x128.png",
+            src: "icons/ios/128.png",
             sizes: "128x128",
             type: "image/png",
           },
           {
-            src: "favicon/favicon-196x196.png",
-            sizes: "196x196",
+            src: "icons/ios/144.png",
+            sizes: "144x144",
+            type: "image/png",
+          },
+          {
+            src: "icons/ios/180.png",
+            sizes: "180x180",
+            type: "image/png",
+          },
+          {
+            src: "icons/ios/192.png",
+            sizes: "192x192",
+            type: "image/png",
+          },
+          {
+            src: "icons/ios/512.png",
+            sizes: "512x512",
             type: "image/png",
           },
         ],
