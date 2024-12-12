@@ -26,12 +26,6 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
 
   const USER_NAV_ROUTES: Array<RouteLink> = [
     {
-      component: t("header.about"),
-      route: ROUTES.ABOUT,
-      showSlash: true,
-      deviceType: "desktop",
-    },
-    {
       component: t("header.install"),
       route: ROUTES.INSTALL,
       showSlash: true,

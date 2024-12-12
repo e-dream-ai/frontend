@@ -15,8 +15,30 @@ export const usePWAInstall = () => {
   const [installPrompt, setInstallPrompt] = useState<Event>();
   const [isInstallable, setIsInstallable] = useState(false);
 
+  // const checkInstallationRequirements = () => {
+  //   const requirements = {
+  //     hasManifest: !!document.querySelector('link[rel="manifest"]'),
+  //     hasServiceWorker: "serviceWorker" in navigator,
+  //     isHttps: window.location.protocol === "https:",
+  //     hasRequiredIcons: false, // You'll need to check your manifest
+  //     isNotInstalled: !window.matchMedia("(display-mode: standalone)").matches,
+  //   };
+
+  //   console.log("📱 Installation requirements:", requirements);
+  //   return requirements;
+  // };
+
+  // useEffect(() => {
+  //   const requirements = checkInstallationRequirements();
+  //   console.log(
+  //     "📱 Meets all requirements:",
+  //     Object.values(requirements).every(Boolean),
+  //   );
+  // }, []);
+
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
+      console.log("promptEvent", e);
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
       setInstallPrompt(promptEvent);
