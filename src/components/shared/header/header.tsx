@@ -25,7 +25,7 @@ export const Header: React.FC = () => {
       <HeaderContainer>
         <StyledHeader>
           <LogoContainer>
-            <LogoAnchor href={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
+            <LogoAnchor to={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
               <LogoIcon
                 src="/images/edream-logo-512x512.png"
                 alt={t("header.e_dream")}

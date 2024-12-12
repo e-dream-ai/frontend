@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from "react";
-import { Anchor, AnchorLink, Text } from "@/components/shared";
+import { AnchorLink, Text } from "@/components/shared";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
@@ -51,10 +51,10 @@ const AuthAnchor: React.FC<{
   href: string;
 }> = ({ text, icon, href }) => {
   return (
-    <Anchor type="primary" href={href} style={{ textDecoration: "none" }}>
+    <AnchorLink type="primary" to={href} style={{ textDecoration: "none" }}>
       <AnchorIcon>{icon}</AnchorIcon>
       <span>{text}</span>
-    </Anchor>
+    </AnchorLink>
   );
 };
 

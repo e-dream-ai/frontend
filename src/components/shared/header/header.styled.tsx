@@ -1,6 +1,7 @@
 import { DEVICES } from "@/constants/devices.constants";
 import styled, { css } from "styled-components";
 import { DeviceType } from "./menu-header";
+import { Link } from "react-router-dom";
 
 const StyledHeader = styled.header`
   display: flex;
@@ -33,7 +34,7 @@ export const HeaderContainer = styled.div`
   z-index: 2;
 `;
 
-export const LogoAnchor = styled.a`
+export const LogoAnchor = styled(Link)`
   display: inline-flex;
   align-items: center;
   cursor: pointer;
