@@ -138,6 +138,7 @@ const InstallSection = () => {
 const RemoteControlSection = () => {
   const { t } = useTranslation();
   const { isInstallable, install } = usePWAInstall();
+  const { isIOS } = useUserAgent();
 
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
 
@@ -160,18 +161,28 @@ const RemoteControlSection = () => {
       <Section id="install_remote">
         <Row justifyContent="space-between" separator />
 
-        <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
-          <Row justifyContent="center" m={0}>
-            <Button
-              buttonType="secondary"
-              onClick={
-                isInstallable ? handleInstallRemoteControl : handleShowPromptIOS
-              }
-            >
-              Install Remote Control
-            </Button>
-          </Row>
-        </Card>
+        {isInstallable && (
+          <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+            <Row justifyContent="center" m={0}>
+              <Button
+                buttonType="secondary"
+                onClick={handleInstallRemoteControl}
+              >
+                Install Remote Control
+              </Button>
+            </Row>
+          </Card>
+        )}
+
+        {isIOS && (
+          <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+            <Row justifyContent="center" m={0}>
+              <Button buttonType="secondary" onClick={handleShowPromptIOS}>
+                Install Remote Control
+              </Button>
+            </Row>
+          </Card>
+        )}
 
         <Text>
           <p />
