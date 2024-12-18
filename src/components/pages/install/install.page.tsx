@@ -9,6 +9,7 @@ import useUserAgent from "@/hooks/useUserAgent";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import PWAPrompt from "react-ios-pwa-prompt";
+import { toast } from "react-toastify";
 
 const SECTION_ID = "install";
 
@@ -146,6 +147,10 @@ const RemoteControlSection = () => {
     install();
   };
 
+  const handleNotAvailable = () => {
+    toast.warning("Installation not available.");
+  };
+
   const handleShowPromptIOS = () => setShowIOSPrompt(true);
   const handleHidePromptIOS = () => setShowIOSPrompt(false);
 
@@ -161,7 +166,20 @@ const RemoteControlSection = () => {
       <Section id="install_remote">
         <Row justifyContent="space-between" separator />
 
-        {isInstallable && (
+        {!isInstallable && !isIOS && (
+          <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+            <Row justifyContent="center" m={0}>
+              <Button
+                buttonType="secondary"
+                onClick={handleNotAvailable}
+              >
+                Install Remote Control
+              </Button>
+            </Row>
+          </Card>
+        )}
+
+        {isInstallable && !isIOS && (
           <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
             <Row justifyContent="center" m={0}>
               <Button
