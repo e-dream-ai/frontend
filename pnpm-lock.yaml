@@ -83,6 +83,9 @@ importers:
       react-i18next:
         specifier: ^13.5.0
         version: 13.5.0(i18next@23.7.11)(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+      react-icons:
+        specifier: ^5.4.0
+        version: 5.4.0(react@18.2.0)
       react-ios-pwa-prompt:
         specifier: ^2.0.6
         version: 2.0.6(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -3043,6 +3046,11 @@ packages:
         optional: true
       react-native:
         optional: true
+
+  react-icons@5.4.0:
+    resolution: {integrity: sha512-7eltJxgVt7X64oHh6wSWNwwbKTCtMfK35hcjvJS0yxEAhPM8oUKdS3+kqaW1vicIltw+kR2unHaa12S9pPALoQ==}
+    peerDependencies:
+      react: '*'
 
   react-ios-pwa-prompt@2.0.6:
     resolution: {integrity: sha512-slRvFlcYsOL01D8gbJW4agOQ64pk7V+0EBk+d8z8wQ40vtcaoSw/JJkh+fJQrWSfWFVvZESu3FHP0+un4YUjJg==}
@@ -7052,6 +7060,10 @@ snapshots:
       react: 18.2.0
     optionalDependencies:
       react-dom: 18.2.0(react@18.2.0)
+
+  react-icons@5.4.0(react@18.2.0):
+    dependencies:
+      react: 18.2.0
 
   react-ios-pwa-prompt@2.0.6(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:

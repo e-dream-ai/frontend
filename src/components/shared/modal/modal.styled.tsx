@@ -42,6 +42,7 @@ export const ModalBody = styled.div`
   display: flex;
   flex-flow: column;
   padding: 1rem 1.875rem;
+  color: ${(props) => props.theme.textPrimaryColor};
 
   form {
     width: auto;
@@ -53,7 +54,7 @@ export const ModalBody = styled.div`
 export const ModalTitle = styled.h2`
   font-size: 1rem;
   text-transform: uppercase;
-  color: ${(props) => props.theme.textPrimaryColor};
+  color: ${(props) => props.theme.textAccentColor};
   margin: 0;
   line-height: 1.5rem;
 `;

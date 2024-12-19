@@ -1,5 +1,6 @@
 import { Button, Column, Row } from "@/components/shared";
 import { Anchor } from "@/components/shared";
+import AddToHomeScreen from "@/components/shared/add-home-screen/add-home-screen";
 import { Card } from "@/components/shared/card/card";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
@@ -8,7 +9,6 @@ import usePWAInstall from "@/hooks/usePWAInstall";
 import useUserAgent from "@/hooks/useUserAgent";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import PWAPrompt from "react-ios-pwa-prompt";
 import { toast } from "react-toastify";
 
 const SECTION_ID = "install";
@@ -140,38 +140,29 @@ const RemoteControlSection = () => {
   const { t } = useTranslation();
   const { isInstallable, install } = usePWAInstall();
   const { isIOS } = useUserAgent();
+  const [showAddHomeScreen, setShowAddHomeScreen] = useState(false);
 
-  const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+  const onShowAddHomeScreen = () => setShowAddHomeScreen(true);
+  const onHideAddHomeScreen = () => setShowAddHomeScreen(false);
 
   const handleInstallRemoteControl = () => {
     install();
   };
 
-  const handleNotAvailable = () => {
-    toast.warning("Installation not available.");
-  };
-
-  const handleShowPromptIOS = () => setShowIOSPrompt(true);
-  const handleHidePromptIOS = () => setShowIOSPrompt(false);
-
   return (
     <>
-      <PWAPrompt
-        isShown={showIOSPrompt}
-        appIconPath="/images/edream-logo-512x512.png"
-        onClose={handleHidePromptIOS}
-      />
+      <AddToHomeScreen isOpen={showAddHomeScreen} onClose={onHideAddHomeScreen} />
 
       <h2>{t("page.install.title_remote")}</h2>
       <Section id="install_remote">
         <Row justifyContent="space-between" separator />
 
-        {!isInstallable && !isIOS && (
+        {!isInstallable && (
           <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
             <Row justifyContent="center" m={0}>
               <Button
                 buttonType="secondary"
-                onClick={handleNotAvailable}
+                onClick={onShowAddHomeScreen}
               >
                 Install Remote Control
               </Button>
@@ -179,23 +170,13 @@ const RemoteControlSection = () => {
           </Card>
         )}
 
-        {isInstallable && !isIOS && (
+        {isInstallable && (
           <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
             <Row justifyContent="center" m={0}>
               <Button
                 buttonType="secondary"
                 onClick={handleInstallRemoteControl}
               >
-                Install Remote Control
-              </Button>
-            </Row>
-          </Card>
-        )}
-
-        {isIOS && (
-          <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
-            <Row justifyContent="center" m={0}>
-              <Button buttonType="secondary" onClick={handleShowPromptIOS}>
                 Install Remote Control
               </Button>
             </Row>
