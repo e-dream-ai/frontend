@@ -182,18 +182,15 @@ const RemoteControlSection = () => {
         )}
 
         <Text>
-          <p />
-          Install{" "}
-          <Anchor target="_blank" href="/">
-            this web app
-          </Anchor>{" "}
-          on your phone or tablet to use it as a remote control.
-          <ul>
-            <li>On iOS, share the app to your Home Screen.</li>
-            <li>On Android, use the "Install App" menu item in Chrome.</li>
-          </ul>
-          Run the app, sign-in, and enjoy complete control of e-dream on your
-          laptop or computer from a distance.
+          <p>
+            Use the button above to install the remote control on your phone or tablet.
+            Run the app, sign-in, and enjoy complete control of e-dream on your
+            laptop or computer from a distance.
+	  </p>
+	  <p>
+	    The remote control feature works from any web browser where
+	    you sign in, not just a mobile device.
+	  </p>
         </Text>
       </Section>
     </>
