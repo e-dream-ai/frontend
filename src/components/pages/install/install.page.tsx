@@ -9,7 +9,6 @@ import usePWAInstall from "@/hooks/usePWAInstall";
 import useUserAgent from "@/hooks/useUserAgent";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { toast } from "react-toastify";
 
 const SECTION_ID = "install";
 
@@ -139,7 +138,6 @@ const InstallSection = () => {
 const RemoteControlSection = () => {
   const { t } = useTranslation();
   const { isInstallable, install } = usePWAInstall();
-  const { isIOS } = useUserAgent();
   const [showAddHomeScreen, setShowAddHomeScreen] = useState(false);
 
   const onShowAddHomeScreen = () => setShowAddHomeScreen(true);
