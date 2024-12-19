@@ -1,5 +1,6 @@
 import { Button, Column, Row } from "@/components/shared";
 import { Anchor } from "@/components/shared";
+import AddToHomeScreen from "@/components/shared/add-home-screen/add-home-screen";
 import { Card } from "@/components/shared/card/card";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
@@ -140,8 +141,11 @@ const RemoteControlSection = () => {
   const { t } = useTranslation();
   const { isInstallable, install } = usePWAInstall();
   const { isIOS } = useUserAgent();
-
+  const [showAddHomeScreen, setShowAddHomeScreen] = useState(false);
   const [showIOSPrompt, setShowIOSPrompt] = useState(false);
+
+  const onShowAddHomeScreen = () => setShowAddHomeScreen(true);
+  const onHideAddHomeScreen = () => setShowAddHomeScreen(false);
 
   const handleInstallRemoteControl = () => {
     install();
@@ -157,21 +161,23 @@ const RemoteControlSection = () => {
   return (
     <>
       <PWAPrompt
-        isShown={showIOSPrompt}
+        isShown={true}
         appIconPath="/images/edream-logo-512x512.png"
         onClose={handleHidePromptIOS}
       />
+
+      <AddToHomeScreen isOpen={showAddHomeScreen} onClose={onHideAddHomeScreen} />
 
       <h2>{t("page.install.title_remote")}</h2>
       <Section id="install_remote">
         <Row justifyContent="space-between" separator />
 
-        {!isInstallable && !isIOS && (
+        {!isInstallable && (
           <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
             <Row justifyContent="center" m={0}>
               <Button
                 buttonType="secondary"
-                onClick={handleNotAvailable}
+                onClick={onShowAddHomeScreen}
               >
                 Install Remote Control
               </Button>
@@ -184,7 +190,7 @@ const RemoteControlSection = () => {
             <Row justifyContent="center" m={0}>
               <Button
                 buttonType="secondary"
-                onClick={handleInstallRemoteControl}
+                onClick={onShowAddHomeScreen}
               >
                 Install Remote Control
               </Button>
