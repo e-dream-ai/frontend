@@ -165,6 +165,13 @@ const RemoteControlSection = () => {
                 Install Remote Control
               </Button>
             </Row>
+	    <Row>
+	      <Text><p>
+	        Just click to install the remote control on your phone or tablet.
+		Run it, sign-in, and enjoy complete control of e-dream on your
+                laptop or computer from a distance.
+	      </p></Text>
+	    </Row>
           </Card>
         )}
 
@@ -178,18 +185,21 @@ const RemoteControlSection = () => {
                 Install Remote Control
               </Button>
             </Row>
+	    <Row>
+	      <Text><p>
+	        Just click to install the remote control on your phone or tablet.
+		Run it, sign-in, and enjoy complete control of e-dream on your
+                laptop or computer from a distance.
+	      </p></Text>
+	    </Row>
           </Card>
         )}
 
         <Text>
-          <p>
-            Use the button above to install the remote control on your phone or tablet.
-            Run the app, sign-in, and enjoy complete control of e-dream on your
-            laptop or computer from a distance.
-	  </p>
 	  <p>
 	    The remote control feature works from any web browser where
-	    you sign in, not just a mobile device.
+	    you sign in, not just a mobile device. The remote control is a PWA
+	    (Progressive Web App) that can be installed without the app store.
 	  </p>
         </Text>
       </Section>
