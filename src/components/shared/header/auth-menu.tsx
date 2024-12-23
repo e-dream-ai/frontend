@@ -23,7 +23,7 @@ import {
 import { Menu, MenuButton, MenuItem } from "@/components/shared/menu/menu";
 import { getUserNameOrEmail, isAdmin } from "@/utils/user.util";
 import { useImage } from "@/hooks/useImage";
-import { useDesktopClientStatus } from "@/hooks/useDesktopClientStatus";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
 import useSocket from "@/hooks/useSocket";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { User } from "@/types/auth.types";
@@ -70,7 +70,7 @@ export const AuthMenu: React.FC = () => {
     fit: "cover",
   });
 
-  const { isActive } = useDesktopClientStatus();
+  const { isActive } = useDesktopClient();
   const { isConnected } = useSocket();
 
   const onShowConfirmSignoutModal = () => setShowConfirmSignoutModal(true);

@@ -1,5 +1,5 @@
 import { useDream } from "@/api/dream/query/useDream";
-import { Column, ItemCardList, ItemCard, Text } from "@/components/shared";
+import { Column, ItemCardList, ItemCard, Text, Row, Button } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import {
   NEW_REMOTE_CONTROL_EVENT,
@@ -16,6 +16,9 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ItemCardSkeleton } from "../item-card/item-card";
 import { useTheme } from "styled-components";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlay } from "@fortawesome/free-solid-svg-icons";
+import { useWebClient } from "@/hooks/useWebClient";
 
 type CurrentDreamProps = {
   uuid?: string;
@@ -27,15 +30,8 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
   const theme = useTheme();
   const [stateUUID, setStateUUID] = useState<string | undefined>(uuid);
   const { data, isLoading, isRefetching, refetch } = useDream(stateUUID);
+  const { isWebPlayerAvailable, setWebClientActive } = useWebClient()
   const dream = data?.data?.dream;
-
-  useEffect(() => {
-    if (stateUUID) refetch();
-  }, [stateUUID, refetch]);
-
-  useEffect(() => {
-    setStateUUID(uuid);
-  }, [uuid]);
 
   const handleRemoteControlEvent = (data?: RemoteControlEvent): void => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
@@ -60,11 +56,35 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
     handleRemoteControlEvent,
   );
 
+  const handleActivateWebClient = () => {
+    setWebClientActive(true);
+  };
+
+  useEffect(() => {
+    if (stateUUID) refetch();
+  }, [stateUUID, refetch]);
+
+  useEffect(() => {
+    setStateUUID(uuid);
+  }, [uuid]);
+
   return (
     <Column mb="2rem">
-      <Text mb="1rem" fontSize="1rem" fontWeight={600}>
-        {t("components.current_dream.title")}
-      </Text>
+      <Row justifyContent="space-between" mb="0">
+        <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+          {t("components.current_dream.title")}
+        </Text>
+
+        {isWebPlayerAvailable && <Button
+          type="button"
+          buttonType="default"
+          size="md"
+          transparent
+          onClick={handleActivateWebClient}
+        >
+          <FontAwesomeIcon icon={faPlay} />
+        </Button>}
+      </Row>
       {isLoading || isRefetching ? (
         <ItemCardSkeleton>
           <Spinner />
