@@ -5,6 +5,9 @@ import QueryClientProvider from "@/providers/query-client.provider";
 import HighlightContext from "@/providers/highlight.provider";
 import PermissionProvider from "./permission.provider";
 import SocketProvider from "./socket.provider";
+import DesktopClientProvider from "./desktop-client.provider";
+import WebClientProvider from "./web-client.provider";
+
 
 export const withProviders = (
   ...providers: Array<React.FC<{ children?: React.ReactNode }>>
@@ -26,6 +29,8 @@ export const Providers = [
   ModalProvider,
   PermissionProvider,
   SocketProvider,
+  DesktopClientProvider,
+  WebClientProvider
 ];
 
 export default Providers;

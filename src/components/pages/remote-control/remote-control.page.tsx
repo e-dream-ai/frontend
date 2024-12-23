@@ -9,12 +9,15 @@ import { CurrentDream } from "@/components/shared/current-dream/current-dream";
 import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
 import { NotFound } from "@/components/shared/not-found/not-found";
 import { Spinner } from "@/components/shared/spinner/spinner";
+import { WebClientPlayer } from "@/components/shared/web-client-player/web-client-player";
+import { useWebClient } from "@/hooks/useWebClient";
 
 const SECTION_ID = "remote-control";
 
 const RemoteControlPage: React.FC = () => {
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
+  const { isWebClientActive, playingDream } = useWebClient()
   const userUUID = authUser?.uuid;
 
   const {
@@ -50,7 +53,10 @@ const RemoteControlPage: React.FC = () => {
 
         <CurrentDream user={user} uuid={user?.currentDream?.uuid} />
 
+        {isWebClientActive && <WebClientPlayer controls src={playingDream?.video} />}
+
         <CurrentPlaylist user={user} uuid={user?.currentPlaylist?.uuid} />
+
       </Section>
     </Container>
   );
