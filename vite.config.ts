@@ -6,6 +6,7 @@ import gitInfo from "./git-info.json";
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  server: { host: true },
   plugins: [
     react(),
     tsconfigPaths(),
