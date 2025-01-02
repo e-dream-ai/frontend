@@ -768,4 +768,12 @@ a:hover {
   color: #555;
 }
 
+/**
+ * Demo video style
+ */
+.demo-video {
+  width: 100%;
+  height: auto;
+}
+
 /*# sourceMappingURL=main.css.map */
