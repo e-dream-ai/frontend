@@ -187,7 +187,7 @@ export const NavListItem = styled.li<{
 
   @media (max-width: ${DEVICES.TABLET}) {
     display: ${(props) =>
-      props.deviceType === "desktop" ? "none" : " inline-flex"};
+    props.deviceType === "desktop" ? "none" : " inline-flex"};
 
     &.both::after {
       content: "•";
@@ -231,41 +231,20 @@ const AvatarStyle = css`
   border-radius: 100%;
 `;
 
+export const HeaderAvatarWrapper = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+`;
+
 export const HeaderAvatar = styled.div<{
   url?: string;
-  socketConnected?: boolean;
-  desktopClientConnected?: boolean;
 }>`
   ${AvatarStyle}
-
   background-color: rgba(30, 30, 30, 1);
   background-image: ${(props) => `url(${props?.url})`};
   background-size: contain;
   position: relative;
-
-  &::before {
-    content: "";
-    position: absolute;
-    width: 0.8rem;
-    height: 0.8rem;
-    left: 0;
-    bottom: 0;
-    background-color: ${(props) =>
-      props.desktopClientConnected ? "greenyellow" : "gainsboro"};
-    border-radius: 50%;
-  }
-
-  &::after {
-    content: "x";
-    display: ${(props) => (props.socketConnected ? "none" : "block")};
-    position: absolute;
-    transform: translate(0.18rem, 0rem);
-    left: 0;
-    bottom: 0;
-    font-size: 0.8rem;
-    font-weight: bold;
-    color: red;
-  }
 `;
 
 export const HeaderAvatarPlaceholder = styled.div`
@@ -283,31 +262,24 @@ export const HeaderAvatarPlaceholderIcon = styled.div`
   font-size: 1rem;
 `;
 
-export const HeaderAvatarPlaceholderDot = styled.div<{
+export const StyledStatusDot = styled.div<{
   desktopClientConnected?: boolean;
 }>`
-  display: inline-block;
-  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 0.8rem;
   height: 0.8rem;
   background-color: ${(props) =>
     props.desktopClientConnected ? "greenyellow" : "gainsboro"};
   border-radius: 50%;
-  bottom: 0;
-  left: 0;
 `;
 
-export const HeaderAvatarPlaceholderX = styled.div<{
+export const StyledSocketStatus = styled.div<{
   socketConnected?: boolean;
 }>`
-  content: "x";
   display: ${(props) => (props.socketConnected ? "none" : "block")};
-  position: absolute;
-  transform: translate(0.18rem, 0rem);
-  left: 0;
-  bottom: 0;
   font-size: 0.8rem;
-  font-weight: bold;
   color: red;
 `;
 

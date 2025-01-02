@@ -7,11 +7,12 @@ import { AnchorIcon, Divider, StyledAuthHeader } from "./auth-menu.styled";
 import StyledHeader, {
   HeaderAvatar,
   HeaderAvatarPlaceholder,
-  HeaderAvatarPlaceholderDot,
   HeaderAvatarPlaceholderIcon,
-  HeaderAvatarPlaceholderX,
+  HeaderAvatarWrapper,
   HeaderProfileMenu,
   HeaderUserName,
+  StyledSocketStatus,
+  StyledStatusDot,
 } from "./header.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -106,25 +107,23 @@ export const AuthMenu: React.FC = () => {
             menuButton={
               <MenuButton>
                 <HeaderProfileMenu>
-                  {user?.avatar ? (
-                    <HeaderAvatar
-                      url={avatarUrl}
-                      desktopClientConnected={isActive}
+                  <HeaderAvatarWrapper>
+                    <StatusDot
                       socketConnected={isConnected}
+                      desktopClientConnected={isActive}
                     />
-                  ) : (
-                    <HeaderAvatarPlaceholder>
-                      <HeaderAvatarPlaceholderIcon>
-                        <FontAwesomeIcon icon={faUser} />
-                      </HeaderAvatarPlaceholderIcon>
-                      <HeaderAvatarPlaceholderDot
-                        desktopClientConnected={isActive}
+                    {user?.avatar ? (
+                      <HeaderAvatar
+                        url={avatarUrl}
                       />
-                      <HeaderAvatarPlaceholderX socketConnected={isConnected}>
-                        x
-                      </HeaderAvatarPlaceholderX>
-                    </HeaderAvatarPlaceholder>
-                  )}
+                    ) : (
+                      <HeaderAvatarPlaceholder>
+                        <HeaderAvatarPlaceholderIcon>
+                          <FontAwesomeIcon icon={faUser} />
+                        </HeaderAvatarPlaceholderIcon>
+                      </HeaderAvatarPlaceholder>
+                    )}
+                  </HeaderAvatarWrapper>
                   <HeaderUserName>{getUserNameOrEmail(user)}</HeaderUserName>
                   <FontAwesomeIcon icon={faCaretDown} />
                 </HeaderProfileMenu>
@@ -168,3 +167,14 @@ export const AuthMenu: React.FC = () => {
     </React.Fragment>
   );
 };
+
+export const StatusDot: React.FC<{
+  socketConnected: boolean;
+  desktopClientConnected: boolean;
+}> = ({ socketConnected, desktopClientConnected }) => {
+  return (
+    <StyledStatusDot desktopClientConnected={desktopClientConnected}>
+      <StyledSocketStatus socketConnected={socketConnected}>x</StyledSocketStatus>
+    </StyledStatusDot>
+  );
+}
