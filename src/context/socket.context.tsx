@@ -10,10 +10,17 @@ import socketIO, { Socket } from "socket.io-client";
 import useAuth from "@/hooks/useAuth";
 import { SOCKET_URL } from "@/constants/api.constants";
 import { SOCKET_AUTH_ERROR_MESSAGES } from "@/constants/auth.constants";
+import { EmitEvents, EmitListener } from "@/types/socket.types";
 
 type SocketContextType = {
   socket?: Socket | null;
   isConnected: boolean;
+  emit: <Ev extends keyof EmitEvents>(
+    ev: Ev,
+    ...args: Parameters<EmitEvents[Ev]>
+  ) => void;
+  addEmitListener: (listener: EmitListener) => void;
+  removeEmitListener: (listener: EmitListener) => void;
 };
 
 export const SocketContext = createContext<SocketContextType>(
@@ -39,6 +46,9 @@ export const SocketProvider: React.FC<{
 
   // ref to save socket instance
   const socketRef = useRef<Socket | null>();
+
+
+  const emitListeners = React.useRef<Set<EmitListener>>(new Set());
 
   const generateSocketInstance = useCallback(() => {
     // if there's no user don't create instance
@@ -134,6 +144,27 @@ export const SocketProvider: React.FC<{
     }
   }, [authenticateUser]);
 
+  const addEmitListener = useCallback((listener: EmitListener) => {
+    emitListeners.current.add(listener);
+  }, []);
+
+  const removeEmitListener = useCallback((listener: EmitListener) => {
+    emitListeners.current.delete(listener);
+  }, []);
+
+  const emit = useCallback(<Ev extends keyof EmitEvents>(
+    ev: Ev,
+    ...args: Parameters<EmitEvents[Ev]>
+  ) => {
+    // notify listeners
+    emitListeners.current.forEach(listener => {
+      // @ts-expect-error unknonw type error on args
+      listener(ev, ...args);
+    });
+    // emit to socket
+    socketRef.current?.emit(ev, ...args);
+  }, []);
+
   useEffect(() => {
     // if there's user generate instance
     socketRef.current = user ? generateSocketInstance() : null;
@@ -175,8 +206,13 @@ export const SocketProvider: React.FC<{
 
   // useMemo to memoize context value
   const contextValue = useMemo(
-    () => ({ socket: socketRef.current, isConnected }),
-    [isConnected],
+    () => ({
+      socket: socketRef.current, isConnected,
+      emit,
+      addEmitListener,
+      removeEmitListener
+    }),
+    [isConnected, emit, addEmitListener, removeEmitListener],
   );
 
   return (

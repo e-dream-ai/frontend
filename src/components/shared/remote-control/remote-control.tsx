@@ -28,7 +28,7 @@ const ROW_2 = [
 
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
-  const { socket } = useSocket();
+  const { emit } = useSocket();
 
   const handleRemoteControlEvent = onNewRemoteControlEvent(t);
 
@@ -42,7 +42,7 @@ export const RemoteControl: React.FC = () => {
 
   // Emit an event to the server
   const sendMessage = (event: string) => () => {
-    socket?.emit(NEW_REMOTE_CONTROL_EVENT, { event: event });
+    emit(NEW_REMOTE_CONTROL_EVENT, { event: event });
   };
 
   return (

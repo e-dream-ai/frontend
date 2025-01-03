@@ -33,7 +33,7 @@ type CurrentPlaylistProps = {
 };
 
 export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
-  const { socket } = useSocket();
+  const { emit } = useSocket();
   const { t } = useTranslation();
   const theme = useTheme();
   const [stateUUID, setStateUUID] = useState<string | undefined>(uuid);
@@ -41,7 +41,7 @@ export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
   const playlist = data?.data?.playlist;
 
   const onRemoveCurrentPlaylist = () => {
-    socket?.emit(NEW_REMOTE_CONTROL_EVENT, {
+    emit(NEW_REMOTE_CONTROL_EVENT, {
       event: REMOTE_CONTROLS.RESET_PLAYLIST.event,
     });
 

@@ -1,5 +1,7 @@
+import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
 import useAuth from "@/hooks/useAuth";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
+import { useSocketEmitListener } from "@/hooks/useSocketEmitListener";
 import useStatusCallback from "@/hooks/useStatusCallback";
 import { Dream } from "@/types/dream.types";
 import React, {
@@ -15,6 +17,7 @@ type WebClientContextType = {
   isWebPlayerAvailable: boolean;
   playingDream?: Dream;
   setWebClientActive: (isActive: boolean) => void;
+  setWebPlayerAvailable: (isActive: boolean) => void;
 };
 
 export const WebClientContext = createContext<WebClientContextType>(
@@ -43,6 +46,10 @@ export const WebClientProvider: React.FC<{
     setIsWebClientActive(isActive)
   }, [user]);
 
+  const setWebPlayerAvailable = useCallback((isActive: boolean) => {
+    setIsWebPlayerAvailable(isActive)
+  }, []);
+
   useStatusCallback(isActive, {
     onActive: () => {
       setIsWebPlayerAvailable(false);
@@ -53,18 +60,26 @@ export const WebClientProvider: React.FC<{
     },
   });
 
+  useSocketEmitListener((event, data) => {
+    if (event === NEW_REMOTE_CONTROL_EVENT) {
+      toast.info("remote control event listened " + data.event);
+    }
+  });
+
   const memoedValue = useMemo(
     () => ({
       isWebClientActive,
       isWebPlayerAvailable,
       playingDream,
-      setWebClientActive
+      setWebClientActive,
+      setWebPlayerAvailable
     }),
     [
       isWebClientActive,
       isWebPlayerAvailable,
       playingDream,
-      setWebClientActive
+      setWebClientActive,
+      setWebPlayerAvailable
     ],
   );
 

@@ -10,16 +10,16 @@ import useSocket from "@/hooks/useSocket";
 
 export const PlaygroundPage: React.FC = () => {
   const { t } = useTranslation();
-  const { socket } = useSocket();
+  const { emit } = useSocket();
 
   // Emit ping event to the server
   const sendPingEvent = () => {
-    socket?.emit(PING_EVENT);
+    emit(PING_EVENT);
   };
 
   // Emit bye event to the server
   const sendGoodbyeEvent = () => {
-    socket?.emit(GOOD_BYE_EVENT);
+    emit(GOOD_BYE_EVENT);
   };
 
   return (
