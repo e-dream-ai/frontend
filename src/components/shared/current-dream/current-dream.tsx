@@ -30,7 +30,7 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
   const theme = useTheme();
   const [stateUUID, setStateUUID] = useState<string | undefined>(uuid);
   const { data, isLoading, isRefetching, refetch } = useDream(stateUUID);
-  const { isWebPlayerAvailable, setWebClientActive } = useWebClient()
+  const { isWebPlayerAvailable, setWebClientActive, setWebPlayerAvailable } = useWebClient()
   const dream = data?.data?.dream;
 
   const handleRemoteControlEvent = (data?: RemoteControlEvent): void => {
@@ -58,6 +58,7 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
 
   const handleActivateWebClient = () => {
     setWebClientActive(true);
+    setWebPlayerAvailable(false);
   };
 
   useEffect(() => {

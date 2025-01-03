@@ -21,38 +21,60 @@ const useStatusCallback = (
    */
   const { activeDelay = 5000, inactiveDelay = 5000 } = delays;
 
-  const activeTimerRef = useRef<NodeJS.Timeout>();
-  const inactiveTimerRef = useRef<NodeJS.Timeout>();
+  // store callbacks references
+  const onActiveRef = useRef(onActive);
+  const onInactiveRef = useRef(onInactive);
+
+  // update refs when callbacks change
+  useEffect(() => {
+    onActiveRef.current = onActive;
+    onInactiveRef.current = onInactive;
+  }, [onActive, onInactive]);
+
+  // store the timer IDs
+  const timerRef = useRef<NodeJS.Timeout>();
+
+  // Store the last active state to prevent unnecessary timer resets
+  const lastActiveStateRef = useRef(isActive);
 
   useEffect(() => {
-    // clear any existing timers
-    if (activeTimerRef.current) {
-      clearTimeout(activeTimerRef.current);
-    }
-    if (inactiveTimerRef.current) {
-      clearTimeout(inactiveTimerRef.current);
+    // store previous state before updating
+    const stateChanged = lastActiveStateRef.current !== isActive;
+    lastActiveStateRef.current = isActive;
+
+    // clear any existing timer
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = undefined;
     }
 
-    if (isActive && onActive) {
-      activeTimerRef.current = setTimeout(() => {
-        onActive();
-      }, activeDelay);
-    } else if (!isActive && onInactive) {
-      inactiveTimerRef.current = setTimeout(() => {
-        onInactive();
-      }, inactiveDelay);
+    // clear existing timer if state changed
+    if (stateChanged && timerRef.current) {
+      clearTimeout(timerRef.current);
+      timerRef.current = undefined;
     }
 
-    // cleanup on unmount or when isActive changes
-    return () => {
-      if (activeTimerRef.current) {
-        clearTimeout(activeTimerRef.current);
+    // set timer based on current state if there's no active timer
+    if (!timerRef.current) {
+      if (isActive && onActiveRef.current) {
+        timerRef.current = setTimeout(() => {
+          onActiveRef.current?.();
+        }, activeDelay);
+      } else if (!isActive && onInactiveRef.current) {
+        timerRef.current = setTimeout(() => {
+          onInactiveRef.current?.();
+        }, inactiveDelay);
       }
-      if (inactiveTimerRef.current) {
-        clearTimeout(inactiveTimerRef.current);
+    }
+
+    // cleanup function
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+        timerRef.current = undefined;
       }
     };
-  }, [isActive, onActive, onInactive, activeDelay, inactiveDelay]);
+  }, [isActive, activeDelay, inactiveDelay]);
 };
 
 export default useStatusCallback;

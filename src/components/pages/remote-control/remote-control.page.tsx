@@ -51,9 +51,9 @@ const RemoteControlPage: React.FC = () => {
           <RemoteControl />
         </Row>
 
-        <CurrentDream user={user} uuid={user?.currentDream?.uuid} />
-
         {isWebClientActive && <WebClientPlayer controls src={playingDream?.video} />}
+
+        <CurrentDream user={user} uuid={user?.currentDream?.uuid} />
 
         <CurrentPlaylist user={user} uuid={user?.currentPlaylist?.uuid} />
 
