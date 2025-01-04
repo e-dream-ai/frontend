@@ -9,15 +9,16 @@ import { CurrentDream } from "@/components/shared/current-dream/current-dream";
 import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
 import { NotFound } from "@/components/shared/not-found/not-found";
 import { Spinner } from "@/components/shared/spinner/spinner";
-import { WebClientPlayer } from "@/components/shared/web-client-player/web-client-player";
+// import { WebClientPlayer } from "@/components/shared/web-client-player/web-client-player";
 import { useWebClient } from "@/hooks/useWebClient";
+import { VideoJS } from "@/components/shared/video-js/VideoJS";
 
 const SECTION_ID = "remote-control";
 
 const RemoteControlPage: React.FC = () => {
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
-  const { isWebClientActive, playingDream } = useWebClient()
+  const { isWebClientActive, playingDream, paused, speed } = useWebClient()
   const userUUID = authUser?.uuid;
 
   const {
@@ -51,7 +52,9 @@ const RemoteControlPage: React.FC = () => {
           <RemoteControl />
         </Row>
 
-        {isWebClientActive && <WebClientPlayer controls src={playingDream?.video} />}
+        {/* {isWebClientActive && <WebClientPlayer controls src={playingDream?.video} />} */}
+
+        {isWebClientActive && <VideoJS options={{ controls: true, sources: [{ src: playingDream?.video }] }} isPaused={paused} playbackRate={speed} />}
 
         <CurrentDream user={user} uuid={user?.currentDream?.uuid} />
 

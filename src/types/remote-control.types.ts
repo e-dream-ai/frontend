@@ -1,3 +1,5 @@
+import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
+
 export type RemoteControlAction = {
   event: string;
   key: string;
@@ -11,3 +13,6 @@ export type RemoteControlEvent = {
   id?: number;
   key?: string;
 };
+
+export type RemoteEvent =
+  (typeof REMOTE_CONTROLS)[keyof typeof REMOTE_CONTROLS]["event"];
