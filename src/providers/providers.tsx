@@ -7,6 +7,7 @@ import PermissionProvider from "./permission.provider";
 import SocketProvider from "./socket.provider";
 import DesktopClientProvider from "./desktop-client.provider";
 import WebClientProvider from "./web-client.provider";
+import VideoJSProvider from "./video-js.provider";
 
 
 export const withProviders = (
@@ -30,6 +31,7 @@ export const Providers = [
   PermissionProvider,
   SocketProvider,
   DesktopClientProvider,
+  VideoJSProvider,
   WebClientProvider
 ];
 
