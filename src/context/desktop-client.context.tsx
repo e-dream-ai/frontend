@@ -4,7 +4,7 @@ import useAuth from "@/hooks/useAuth";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
 
 // Create context
-interface DesktopClientContextType {
+type DesktopClientContextType = {
   isActive: boolean;
 }
 

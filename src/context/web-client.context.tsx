@@ -3,6 +3,8 @@ import useAuth from "@/hooks/useAuth";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { useSocketEmitListener } from "@/hooks/useSocketEmitListener";
 import useStatusCallback from "@/hooks/useStatusCallback";
+import { usePlaylist } from "@/api/playlist/query/usePlaylist";
+import { useVideoJs } from "@/hooks/useVideoJS";
 import { Dream } from "@/types/dream.types";
 import { RemoteEvent } from "@/types/remote-control.types";
 import { getPlaylistNavigation } from "@/utils/web-client.util";
@@ -48,9 +50,6 @@ type WebClientContextType = {
   isWebClientActive: boolean;
   isWebPlayerAvailable: boolean;
   playingDream?: Dream;
-  paused: boolean;
-  speed: SpeedKey;
-  brightness: BrightnessKey;
   setWebClientActive: (isActive: boolean) => void;
   setWebPlayerAvailable: (isActive: boolean) => void;
 };
@@ -75,9 +74,15 @@ export const WebClientProvider: React.FC<{
   // user
   const { user } = useAuth()
 
+  // videojs
+  const { player, setBrightness: setVideoJSBrightness, playVideo } = useVideoJs()
+
   // user current values
   const currentDream = user?.currentDream;
-  const currentPlaylist = user?.currentPlaylist;
+
+  const { data } = usePlaylist(user?.currentPlaylist?.uuid);
+  const currentPlaylist = data?.data?.playlist;
+
 
   /** 
    * indicates if the web player is currently active
@@ -88,12 +93,12 @@ export const WebClientProvider: React.FC<{
    */
   const [isWebPlayerAvailable, setIsWebPlayerAvailable] = useState<boolean>(false);
   const { isActive } = useDesktopClient();
-  const [playingDream, setPlayingDream] = useState<Dream | null>();
+  const [playingDream, setPlayingDream] = useState<Dream>();
 
   // player states
-  const [paused, setPaused] = useState<boolean>(false);
-  const [speed, setSpeed] = useState<SpeedKey>(4);
-  const [brightness, setBrightness] = useState<BrightnessKey>(4);
+  const [, setPaused] = useState<boolean>(false);
+  const [speed, setSpeed] = useState<number>(SPEEDS[4]);
+  const [brightness, setBrightness] = useState<number>(BRIGHTNESS[4]);
 
   const setWebClientActive = useCallback((isActive: boolean) => {
     if (isActive) {
@@ -123,34 +128,48 @@ export const WebClientProvider: React.FC<{
         playback_slower: () => {
           const currentKey = parseInt(findCurrentSpeedKey(speed, SPEEDS));
           if (currentKey > 0) {
-            setSpeed(currentKey - 1 as SpeedKey);
+            const newKey = currentKey - 1 as SpeedKey;
+            setSpeed(SPEEDS[newKey]);
+            player.current?.playbackRate(SPEEDS[newKey]);
           }
           return true;
         },
         playback_faster: () => {
           const currentKey = parseInt(findCurrentSpeedKey(speed, SPEEDS));
           if (currentKey < 9) {
-            setSpeed(currentKey + 1 as SpeedKey);
+            const newKey = currentKey + 1 as SpeedKey;
+            setSpeed(SPEEDS[newKey]);
+            player.current?.playbackRate(SPEEDS[newKey]);
           }
           return true;
         },
         brighter: () => {
           const currentKey = parseInt(findCurrentBrightnessKey(brightness, BRIGHTNESS));
           if (currentKey < 9) {
-            setBrightness(currentKey + 1 as SpeedKey);
+            const newKey = currentKey + 1 as BrightnessKey;
+            setBrightness(BRIGHTNESS[newKey]);
+            setVideoJSBrightness(BRIGHTNESS[newKey]);
           }
           return true;
         },
         darker: () => {
           const currentKey = parseInt(findCurrentBrightnessKey(brightness, BRIGHTNESS));
           if (currentKey > 0) {
-            setBrightness(currentKey - 1 as BrightnessKey);
+            const newKey = currentKey - 1 as BrightnessKey;
+            setBrightness(BRIGHTNESS[newKey]);
+            setVideoJSBrightness(BRIGHTNESS[newKey]);
           }
           return true;
         },
         pause: () => {
           // handle pause
-          setPaused(true);
+          const isPaused = player.current?.paused();
+          if (isPaused) {
+            player.current?.play();
+          } else {
+            player.current?.pause();
+          }
+          setPaused(!isPaused);
           return true;
         },
         playing: () => true,
@@ -162,54 +181,88 @@ export const WebClientProvider: React.FC<{
         dislike_current_dream: () => true,
         previous: () => {
           const { previous } = getPlaylistNavigation(currentDream, currentPlaylist);
-          setPlayingDream(previous?.dreamItem)
+          const dreamToPlay = previous?.dreamItem ?? currentPlaylist?.items?.[0]?.dreamItem;
+          // setPlayingDream(previous?.dreamItem);
+          if (dreamToPlay) {
+            playVideo(dreamToPlay?.video);
+          }
           return true;
         },
         next: () => {
           const { next } = getPlaylistNavigation(currentDream, currentPlaylist);
-          setPlayingDream(next?.dreamItem)
+          const dreamToPlay = next?.dreamItem ?? currentPlaylist?.items?.[0]?.dreamItem;
+          // setPlayingDream(nextDreamToPlay);
+          if (dreamToPlay) {
+            playVideo(dreamToPlay?.video);
+          }
           return true;
         },
-        forward: () => true,
-        backward: () => true,
+        forward: () => {
+          if (player.current) {
+            const currentTime = player.current.currentTime() ?? 0;
+            // 10 seconds
+            player.current.currentTime(currentTime + 10);
+          }
+          return true
+        },
+        backward: () => {
+          if (player.current) {
+            const currentTime = player.current.currentTime() ?? 0;
+            // 10 seconds
+            player.current.currentTime(Math.max(0, currentTime - 10));
+          }
+          return true
+        },
         credit: () => true,
-        web: () => true,
+        web: () => {
+          window.open(import.meta.env.VITE_FRONTEND_URL, "_blank");
+          return true
+        },
         help: () => true,
         status: () => true,
         set_speed_1: () => {
           setSpeed(1);
+          player.current?.playbackRate(SPEEDS[1]);
           return true
         },
         set_speed_2: () => {
           setSpeed(2);
+          player.current?.playbackRate(SPEEDS[2]);
           return true
         },
         set_speed_3: () => {
           setSpeed(3);
+          player.current?.playbackRate(SPEEDS[3]);
           return true
         },
         set_speed_4: () => {
           setSpeed(4);
+          player.current?.playbackRate(SPEEDS[4]);
           return true
         },
         set_speed_5: () => {
           setSpeed(5);
+          player.current?.playbackRate(SPEEDS[5]);
           return true
         },
         set_speed_6: () => {
           setSpeed(6);
+          player.current?.playbackRate(SPEEDS[6]);
           return true
         },
         set_speed_7: () => {
           setSpeed(7);
+          player.current?.playbackRate(SPEEDS[7]);
           return true
         },
         set_speed_8: () => {
           setSpeed(8);
+          player.current?.playbackRate(SPEEDS[8]);
           return true
         },
         set_speed_9: () => {
           setSpeed(9);
+          player.current?.playbackRate(SPEEDS[9]);
           return true
         },
         capture: () => true,
@@ -228,9 +281,6 @@ export const WebClientProvider: React.FC<{
       isWebClientActive,
       isWebPlayerAvailable,
       playingDream,
-      paused,
-      speed,
-      brightness,
       setWebClientActive,
       setWebPlayerAvailable
     }),
@@ -238,9 +288,6 @@ export const WebClientProvider: React.FC<{
       isWebClientActive,
       isWebPlayerAvailable,
       playingDream,
-      paused,
-      speed,
-      brightness,
       setWebClientActive,
       setWebPlayerAvailable
     ],

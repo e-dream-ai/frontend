@@ -1,95 +1,59 @@
+import { useVideoJs } from '@/hooks/useVideoJS';
+import { VideoJSOptions } from '@/types/video-js.types';
 import { FC, useEffect, useRef } from 'react';
-import videojs from 'video.js';
 import Player from 'video.js/dist/types/player';
+import { Row, Column, Text } from '@/components/shared';
 import 'video.js/dist/video-js.css';
 
-// types for video sources
-interface VideoSource {
-  src: string;
-  type: string;
-}
-
-// types for videojs options
-interface VideoJSOptions {
-  autoplay?: boolean;
-  controls?: boolean;
-  responsive?: boolean;
-  fluid?: boolean;
-  sources: VideoSource[];
-  width?: number;
-  height?: number;
-  playbackRates?: number[];
-}
-
 type VideoJSProps = {
-  isPaused?: boolean;
-  playbackRate?: number;
   options: VideoJSOptions;
   onReady?: (player: Player) => void;
 }
 
-export const VideoJS: FC<VideoJSProps> = ({ isPaused, playbackRate, ...props }) => {
-
-  console.log({ isPaused, playbackRate })
+export const VideoJS: FC<VideoJSProps> = ({ options, onReady }) => {
   const videoRef = useRef<HTMLDivElement>(null);
-  const playerRef = useRef<Player | null>(null);
-  const { options, onReady } = props;
+  const { initializePlayer, destroyPlayer } = useVideoJs();
 
   useEffect(() => {
-    // make sure videojs player is only initialized once
-    if (!playerRef.current) {
-      // videojs player needs to be _inside_ the component el for React 18 Strict Mode
+    if (videoRef.current) {
+      // create the video element
       const videoElement = document.createElement("video-js");
-
       videoElement.classList.add('vjs-big-play-centered', 'vjs-fluid', 'w-full');
-      videoRef.current?.appendChild(videoElement);
+      videoRef.current.appendChild(videoElement); // append to DOM
 
-      const player = playerRef.current = videojs(videoElement, {
-        ...options,
-      }, () => {
-        onReady?.(player);
-      });
+      // adding CSS styles
+      const style = document.createElement('style');
+      style.textContent = `
+        .video-js video {
+          transition: opacity 0.5s ease;
+        }
+        
+        .video-js.vjs-transitioning video {
+          opacity: 0;
+        }
+      `;
+      document.head.appendChild(style);
 
-      // update values on prop change
-    } else {
-      const player = playerRef.current;
-      player.autoplay(options.autoplay);
-      player.src(options.sources);
+      // initialize player
+      initializePlayer(videoElement, options, onReady);
     }
-  }, [options, onReady]);
-
-  // dispose the videojs player when the functional component unmounts
-  useEffect(() => {
-    const player = playerRef.current;
 
     return () => {
-      if (player && !player.isDisposed()) {
-        player.dispose();
-        playerRef.current = null;
-      }
+      destroyPlayer();
     };
-  }, [playerRef]);
-
-  // handle pause state changes from props
-  useEffect(() => {
-    const player = playerRef.current;
-    if (player && typeof isPaused === 'boolean') {
-      if (isPaused) player.pause();
-      else player.play();
-    }
-  }, [isPaused]);
-
-  // handle playbackRate state changes from props
-  useEffect(() => {
-    const player = playerRef.current;
-    if (player && typeof playbackRate === 'number') {
-      player.playbackRate(playbackRate);
-    }
-  }, [playbackRate]);
+  }, [destroyPlayer, initializePlayer, onReady, options]);
 
   return (
-    <div data-vjs-player>
-      <div ref={videoRef} />
-    </div>
+
+    <Column mb="2rem">
+      <Row justifyContent="space-between" mb="0">
+        <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+          Web Client
+        </Text>
+      </Row>
+
+      <div data-vjs-player>
+        <div ref={videoRef} />
+      </div></Column>
   );
 };
