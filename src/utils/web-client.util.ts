@@ -1,3 +1,4 @@
+import { BRIGHTNESS, SPEEDS } from "@/constants/web-client.constants";
 import { Dream } from "@/types/dream.types";
 import { Playlist, PlaylistItem } from "@/types/playlist.types";
 
@@ -52,4 +53,27 @@ export const getPreviousItem = (
   playlist: Playlist,
 ): PlaylistItem | null => {
   return getPlaylistNavigation(currentDream, playlist).previous;
+};
+
+// helper function to find current speed key
+export const findCurrentSpeedKey = (
+  currentSpeed: number,
+  speeds: typeof SPEEDS,
+) => {
+  return (
+    Object.entries(speeds).find(([, value]) => value === currentSpeed)?.[0] ||
+    "4"
+  );
+};
+
+// helper function to find current brightness key
+export const findCurrentBrightnessKey = (
+  currentBrightness: number,
+  brightnesses: typeof BRIGHTNESS,
+) => {
+  return (
+    Object.entries(brightnesses).find(
+      ([, value]) => value === currentBrightness,
+    )?.[0] || "4"
+  );
 };

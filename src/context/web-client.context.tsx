@@ -5,7 +5,7 @@ import { usePlaylist } from "@/api/playlist/query/usePlaylist";
 import { useVideoJs } from "@/hooks/useVideoJS";
 import { Dream } from "@/types/dream.types";
 import { RemoteEvent } from "@/types/remote-control.types";
-import { getPlaylistNavigation } from "@/utils/web-client.util";
+import { findCurrentBrightnessKey, findCurrentSpeedKey, getPlaylistNavigation } from "@/utils/web-client.util";
 import React, {
   createContext,
   useCallback,
@@ -18,36 +18,8 @@ import { toast } from "react-toastify";
 import Player from 'video.js/dist/types/player';
 import useSocket from "@/hooks/useSocket";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
-
-const SPEEDS = {
-  0: 0,     // pause
-  1: 0.25,
-  2: 0.5,
-  3: 0.75,
-  4: 1,     // normal
-  5: 1.25,
-  6: 1.5,
-  7: 1.75,
-  8: 1.85,
-  9: 2      // fastest
-} as const;
-
-type SpeedKey = keyof typeof SPEEDS;
-
-const BRIGHTNESS = {
-  0: 0,      // darkest
-  1: 0.25,
-  2: 0.5,
-  3: 0.75,
-  4: 1,      // normal
-  5: 1.25,
-  6: 1.5,
-  7: 1.75,
-  8: 1.85,
-  9: 2       // brightest
-} as const;
-
-type BrightnessKey = keyof typeof BRIGHTNESS;
+import { BRIGHTNESS, SPEEDS } from "@/constants/web-client.constants";
+import { BrightnessKey, SpeedKey } from "@/types/web-client.types";
 
 type WebClientContextType = {
   isWebClientActive: boolean;
@@ -56,22 +28,12 @@ type WebClientContextType = {
   handlers: Record<RemoteEvent, () => void>;
   setWebClientActive: (isActive: boolean) => void;
   setWebPlayerAvailable: (isActive: boolean) => void;
-  handleVideoJSReady: () => void;
+  handleOnEnded: () => void;
 };
 
 export const WebClientContext = createContext<WebClientContextType>(
   {} as WebClientContextType,
 );
-
-// helper function to find current speed key
-const findCurrentSpeedKey = (currentSpeed: number, speeds: typeof SPEEDS) => {
-  return Object.entries(speeds).find(([, value]) => value === currentSpeed)?.[0] || '4';
-};
-
-// helper function to find current brightness key
-const findCurrentBrightnessKey = (currentBrightness: number, brightnesses: typeof BRIGHTNESS) => {
-  return Object.entries(brightnesses).find(([, value]) => value === currentBrightness)?.[0] || '4';
-};
 
 const setupOverlay = (player: Player | null, overlayContent: string) => {
   // custom styles
@@ -138,12 +100,6 @@ export const WebClientProvider: React.FC<{
   const setWebPlayerAvailable = useCallback((isActive: boolean) => {
     setIsWebClientAvailable(isActive)
   }, []);
-
-  const handleVideoJSReady = useCallback(() => {
-    if (playingDreamRef.current) {
-      playVideo(playingDreamRef.current.video);
-    }
-  }, [playVideo]);
 
   const handlers: Record<RemoteEvent, () => void> = useMemo(() => ({
     playback_slower: () => {
@@ -280,7 +236,18 @@ export const WebClientProvider: React.FC<{
     capture: () => { },
     report: () => { },
     reset_playlist: () => { }
-  }), [player, speed, brightness, currentPlaylist, playVideo, setVideoJSBrightness]);
+  }), [player, speed, brightness, currentPlaylist, emit, playVideo, setVideoJSBrightness]);
+
+  // handles when a video ends playing
+  const handleOnEnded = useCallback(() => {
+    const { next } = getPlaylistNavigation(playingDreamRef.current, currentPlaylist);
+    const dreamToPlay = next?.dreamItem ?? currentPlaylist?.items?.[0]?.dreamItem;
+    if (dreamToPlay) {
+      playVideo(dreamToPlay?.video);
+      playingDreamRef.current = dreamToPlay;
+      emit(NEW_REMOTE_CONTROL_EVENT, { event: "playing", uuid: dreamToPlay.uuid })
+    }
+  }, [emit, playVideo, currentPlaylist]);
 
   useStatusCallback(isActive, {
     onActive: () => {
@@ -307,7 +274,7 @@ export const WebClientProvider: React.FC<{
       handlers,
       setWebClientActive,
       setWebPlayerAvailable,
-      handleVideoJSReady
+      handleOnEnded
     }),
     [
       isWebClientActive,
@@ -315,7 +282,7 @@ export const WebClientProvider: React.FC<{
       handlers,
       setWebClientActive,
       setWebPlayerAvailable,
-      handleVideoJSReady
+      handleOnEnded
     ],
   );
 

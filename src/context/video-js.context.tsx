@@ -1,13 +1,26 @@
 import { VideoJSOptions } from "@/types/video-js.types";
+import { VoidFunction } from "@/utils/function.util";
 import { createContext, useCallback, useMemo, useRef, useState } from "react";
 import videojs from 'video.js';
 import Player from 'video.js/dist/types/player';
+
+type VideoJSEvents = {
+  onEnded?: () => void;
+  onReady?: () => void;
+  onError?: (error: unknown) => void;
+};
+
+type InitializePlayerParams = {
+  element: HTMLElement;
+  options: VideoJSOptions;
+  events?: VideoJSEvents;
+};
 
 // create context
 type VideoJSContextType = {
   player: React.MutableRefObject<Player | null>;
   isReady: boolean;
-  initializePlayer: (element: HTMLElement, options: VideoJSOptions, onReady?: (player: Player) => void) => void;
+  initializePlayer: (params: InitializePlayerParams) => void;
   destroyPlayer: () => void;
   setBrightness: (value: number) => void;
   playVideo: (src: string) => void;
@@ -23,32 +36,40 @@ export const VideoJSProvider = ({
   const [isReady, setIsReady] = useState(false);
   const playerRef = useRef<Player | null>(null);
 
-  const initializePlayer = useCallback((
-    element: HTMLElement,
-    options: VideoJSOptions,
-  ) => {
+  const initializePlayer = useCallback(({ element, options, events }: InitializePlayerParams) => {
+    console.log('initializePlayer');
     // make sure to dispose of any existing player
     if (playerRef.current && !playerRef.current.isDisposed()) {
       playerRef.current.dispose();
     }
 
     // initialize new player
-    playerRef.current = videojs(element, options);
+    const player = videojs(element, options);
+    playerRef.current = player;
     // update isReady value when videojs loads
-    playerRef.current.ready(() => {
+    player.ready(() => {
       setIsReady(true);
+      events?.onReady?.();
     });
+
+    player.on('ended', events?.onEnded ?? VoidFunction);
   }, []);
 
   const destroyPlayer = useCallback(() => {
-    if (playerRef.current && !playerRef.current.isDisposed()) {
-      playerRef.current.dispose();
+    const player = playerRef.current;
+    if (!player) return;
+
+    if (player.isDisposed()) {
+      player.dispose();
       playerRef.current = null;
     }
   }, []);
 
   const setBrightness = useCallback((value: number) => {
-    const videoElement = playerRef.current?.el().querySelector('video');
+    const player = playerRef.current;
+    if (!player) return;
+
+    const videoElement = player?.el().querySelector('video');
     if (videoElement) {
       videoElement.style.filter = `brightness(${value})`;
     }

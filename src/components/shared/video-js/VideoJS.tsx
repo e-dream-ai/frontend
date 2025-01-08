@@ -1,7 +1,7 @@
 import { useVideoJs } from '@/hooks/useVideoJS';
 // import { VideoJSOptions } from '@/types/video-js.types';
 // import Player from 'video.js/dist/types/player';
-import { FC, useEffect, useRef } from 'react';
+import { FC, useLayoutEffect, useRef } from 'react';
 import { Row, Column, Text } from '@/components/shared';
 import 'video.js/dist/video-js.css';
 import { useWebClient } from '@/hooks/useWebClient';
@@ -14,9 +14,9 @@ type VideoJSProps = {
 export const VideoJS: FC<VideoJSProps> = () => {
   const videoRef = useRef<HTMLDivElement>(null);
   const { initializePlayer, destroyPlayer } = useVideoJs();
-  const { handleVideoJSReady } = useWebClient();
+  const { handleOnEnded } = useWebClient();
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (videoRef.current) {
       // create the video element
       const videoElement = document.createElement("video-js");
@@ -37,13 +37,13 @@ export const VideoJS: FC<VideoJSProps> = () => {
       document.head.appendChild(style);
 
       // initialize player
-      initializePlayer(videoElement, { controls: true });
+      initializePlayer({ element: videoElement, options: { controls: true }, events: { onEnded: handleOnEnded } });
     }
 
     return () => {
       destroyPlayer();
     };
-  }, [destroyPlayer, initializePlayer, handleVideoJSReady]);
+  }, [initializePlayer, destroyPlayer, handleOnEnded]);
 
   return (
 
