@@ -1,11 +1,12 @@
 import { VideoJSOptions } from "@/types/video-js.types";
-import { createContext, useCallback, useRef } from "react";
+import { createContext, useCallback, useMemo, useRef, useState } from "react";
 import videojs from 'video.js';
 import Player from 'video.js/dist/types/player';
 
 // create context
 type VideoJSContextType = {
   player: React.MutableRefObject<Player | null>;
+  isReady: boolean;
   initializePlayer: (element: HTMLElement, options: VideoJSOptions, onReady?: (player: Player) => void) => void;
   destroyPlayer: () => void;
   setBrightness: (value: number) => void;
@@ -19,12 +20,12 @@ export const VideoJSProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
+  const [isReady, setIsReady] = useState(false);
   const playerRef = useRef<Player | null>(null);
 
-  const initializePlayer = (
+  const initializePlayer = useCallback((
     element: HTMLElement,
     options: VideoJSOptions,
-    onReady?: (player: Player) => void
   ) => {
     // make sure to dispose of any existing player
     if (playerRef.current && !playerRef.current.isDisposed()) {
@@ -32,18 +33,19 @@ export const VideoJSProvider = ({
     }
 
     // initialize new player
-    playerRef.current = videojs(element, options, () => {
-      onReady?.(playerRef.current!);
+    playerRef.current = videojs(element, options);
+    // update isReady value when videojs loads
+    playerRef.current.ready(() => {
+      setIsReady(true);
     });
-  };
+  }, []);
 
-  const destroyPlayer = () => {
+  const destroyPlayer = useCallback(() => {
     if (playerRef.current && !playerRef.current.isDisposed()) {
       playerRef.current.dispose();
       playerRef.current = null;
     }
-  };
-
+  }, []);
 
   const setBrightness = useCallback((value: number) => {
     const videoElement = playerRef.current?.el().querySelector('video');
@@ -52,7 +54,7 @@ export const VideoJSProvider = ({
     }
   }, []);
 
-  const playVideo = (src: string) => {
+  const playVideo = useCallback((src: string) => {
     const player = playerRef.current;
     if (!player) return;
 
@@ -70,10 +72,16 @@ export const VideoJSProvider = ({
 
       player.play();
     }, 500); // match this with CSS transition duration
-  };
+  }, []);
+
+  const memoedValue = useMemo(
+    () => ({ player: playerRef, initializePlayer, destroyPlayer, setBrightness, playVideo, isReady }),
+    [playerRef, initializePlayer, destroyPlayer, setBrightness, playVideo, isReady
+    ],
+  );
 
   return (
-    <VideoJSContext.Provider value={{ player: playerRef, initializePlayer, destroyPlayer, setBrightness, playVideo }}>
+    <VideoJSContext.Provider value={memoedValue}>
       {children}
     </VideoJSContext.Provider>
   );

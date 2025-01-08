@@ -17,7 +17,7 @@ import useSocket from "@/hooks/useSocket";
 import { User } from "@/types/auth.types";
 import {
   RemoteControlAction,
-  RemoteControlEvent,
+  RemoteControlEventData,
 } from "@/types/remote-control.types";
 import { getRemoteControlEvent } from "@/utils/remote-control.util";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -56,7 +56,7 @@ export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
     setStateUUID(uuid);
   }, [uuid]);
 
-  const handleRemoteControlEvent = (data?: RemoteControlEvent): void => {
+  const handleRemoteControlEvent = (data?: RemoteControlEventData): void => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
       data?.event,
     );
@@ -78,7 +78,7 @@ export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
   /**
    * Handle new remote control events from the server for dream on profile
    */
-  useSocketEventListener<RemoteControlEvent>(
+  useSocketEventListener<RemoteControlEventData>(
     NEW_REMOTE_CONTROL_EVENT,
     handleRemoteControlEvent,
   );

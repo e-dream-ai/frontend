@@ -9,7 +9,8 @@ import useSocket from "@/hooks/useSocket";
 import { RemoteControlContainer } from "./remote-control.styled";
 import { onNewRemoteControlEvent } from "@/utils/socket.util";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
-import { RemoteControlEvent } from "@/types/remote-control.types";
+import { RemoteControlEvent, RemoteControlEventData } from "@/types/remote-control.types";
+import { useWebClient } from "@/hooks/useWebClient";
 
 const ROW_1 = [REMOTE_CONTROLS.HELP, REMOTE_CONTROLS.STATUS];
 
@@ -29,20 +30,28 @@ const ROW_2 = [
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
   const { emit } = useSocket();
+  const { isWebClientActive, handlers } = useWebClient();
 
   const handleRemoteControlEvent = onNewRemoteControlEvent(t);
 
   /**
    * Listen new remote control events from the server
    */
-  useSocketEventListener<RemoteControlEvent>(
+  useSocketEventListener<RemoteControlEventData>(
     NEW_REMOTE_CONTROL_EVENT,
     handleRemoteControlEvent,
   );
 
   // Emit an event to the server
-  const sendMessage = (event: string) => () => {
+  const sendMessage = (event: RemoteControlEvent) => () => {
     emit(NEW_REMOTE_CONTROL_EVENT, { event: event });
+
+    /**
+     * if isWebClientActive then execute handler
+     */
+    if (isWebClientActive) {
+      handlers?.[event]();
+    }
   };
 
   return (

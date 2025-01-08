@@ -1,12 +1,38 @@
 import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
 
+export type RemoteControlEvent =
+  | "playing"
+  | "play_dream"
+  | "play_playlist"
+  | "like"
+  | "dislike"
+  | "like_current_dream"
+  | "dislike_current_dream"
+  | "previous"
+  | "next"
+  | "forward"
+  | "backward"
+  | "pause"
+  | "playback_slower"
+  | "playback_faster"
+  | "brighter"
+  | "darker"
+  | "web"
+  | "help"
+  | "status"
+  | "credit"
+  | "capture"
+  | "report"
+  | "reset_playlist"
+  | `set_speed_${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`;
+
 export type RemoteControlAction = {
-  event: string;
+  event: RemoteControlEvent;
   key: string;
   [key: string]: unknown;
 };
 
-export type RemoteControlEvent = {
+export type RemoteControlEventData = {
   event: string;
   name?: string;
   uuid?: string;

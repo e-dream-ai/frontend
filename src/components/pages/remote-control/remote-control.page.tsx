@@ -18,7 +18,7 @@ const SECTION_ID = "remote-control";
 const RemoteControlPage: React.FC = () => {
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
-  const { isWebClientActive, playingDream } = useWebClient()
+  const { isWebClientActive } = useWebClient();
   const userUUID = authUser?.uuid;
 
   const {
@@ -52,9 +52,7 @@ const RemoteControlPage: React.FC = () => {
           <RemoteControl />
         </Row>
 
-        {/* {isWebClientActive && <WebClientPlayer controls src={playingDream?.video} />} */}
-
-        {isWebClientActive && <VideoJS options={{ controls: true, sources: [{ src: playingDream?.video }] }} />}
+        {isWebClientActive && <VideoJS />}
 
         <CurrentDream user={user} uuid={user?.currentDream?.uuid} />
 

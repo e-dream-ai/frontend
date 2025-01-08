@@ -13,8 +13,6 @@ export const getPlaylistNavigation = (
   // ensure we have items to work with
   const items = playlist?.items || [];
 
-  console.log({ items });
-
   if (!items.length || !currentDream) {
     return { next: null, previous: null };
   }
