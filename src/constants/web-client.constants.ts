@@ -23,3 +23,6 @@ export const BRIGHTNESS = {
   8: 1.85,
   9: 2, // brightest
 } as const;
+
+export const IS_WEB_CLIENT_ACTIVE =
+  import.meta.env.VITE_IS_WEB_CLIENT_ACTIVE === "true";

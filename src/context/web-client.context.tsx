@@ -18,7 +18,7 @@ import { toast } from "react-toastify";
 import Player from 'video.js/dist/types/player';
 import useSocket from "@/hooks/useSocket";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
-import { BRIGHTNESS, SPEEDS } from "@/constants/web-client.constants";
+import { BRIGHTNESS, IS_WEB_CLIENT_ACTIVE, SPEEDS } from "@/constants/web-client.constants";
 import { BrightnessKey, SpeedKey } from "@/types/web-client.types";
 
 type WebClientContextType = {
@@ -251,11 +251,15 @@ export const WebClientProvider: React.FC<{
 
   useStatusCallback(isActive, {
     onActive: () => {
-      setIsWebClientAvailable(false);
+      if (IS_WEB_CLIENT_ACTIVE) {
+        setIsWebClientAvailable(false);
+      }
     },
     onInactive: () => {
-      toast.info("Desktop client is inactive, you're able to play something on the web client clicking play button.");
-      setIsWebClientAvailable(true);
+      if (IS_WEB_CLIENT_ACTIVE) {
+        toast.info("Desktop client is inactive, you're able to play something on the web client clicking play button.");
+        setIsWebClientAvailable(true);
+      }
     },
   });
 
