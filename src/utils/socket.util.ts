@@ -10,7 +10,7 @@ import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 import {
   RemoteControlAction,
-  RemoteControlEvent,
+  RemoteControlEventData,
 } from "@/types/remote-control.types";
 import { getRemoteControlEvent } from "@/utils/remote-control.util";
 
@@ -42,7 +42,7 @@ export const emitPlayPlaylist = (
 
 export const onNewRemoteControlEvent =
   (t: TFunction) =>
-  (data?: RemoteControlEvent): void => {
+  (data?: RemoteControlEventData): void => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
       data?.event,
     );

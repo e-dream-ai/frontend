@@ -9,7 +9,7 @@ import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { User } from "@/types/auth.types";
 import {
   RemoteControlAction,
-  RemoteControlEvent,
+  RemoteControlEventData,
 } from "@/types/remote-control.types";
 import { getRemoteControlEvent } from "@/utils/remote-control.util";
 import { useEffect, useState } from "react";
@@ -30,10 +30,10 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
   const theme = useTheme();
   const [stateUUID, setStateUUID] = useState<string | undefined>(uuid);
   const { data, isLoading, isRefetching, refetch } = useDream(stateUUID);
-  const { isWebPlayerAvailable, setWebClientActive, setWebPlayerAvailable } = useWebClient()
+  const { isWebClientAvailable, setWebClientActive, setWebPlayerAvailable } = useWebClient()
   const dream = data?.data?.dream;
 
-  const handleRemoteControlEvent = (data?: RemoteControlEvent): void => {
+  const handleRemoteControlEvent = (data?: RemoteControlEventData): void => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
       data?.event,
     );
@@ -51,7 +51,7 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
   /**
    * Handle new remote control events from the server for dream on profile
    */
-  useSocketEventListener<RemoteControlEvent>(
+  useSocketEventListener<RemoteControlEventData>(
     NEW_REMOTE_CONTROL_EVENT,
     handleRemoteControlEvent,
   );
@@ -76,7 +76,7 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
           {t("components.current_dream.title")}
         </Text>
 
-        {isWebPlayerAvailable && <Button
+        {isWebClientAvailable && <Button
           type="button"
           buttonType="default"
           size="md"

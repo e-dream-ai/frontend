@@ -1,8 +1,8 @@
 // types for video sources
-interface VideoSource {
+export type VideoSource = {
   src: string;
   type: string;
-}
+};
 
 // types for videojs options
 export type VideoJSOptions = {
@@ -10,7 +10,7 @@ export type VideoJSOptions = {
   controls?: boolean;
   responsive?: boolean;
   fluid?: boolean;
-  sources: VideoSource[];
+  // sources: VideoSource[];
   width?: number;
   height?: number;
   playbackRates?: number[];

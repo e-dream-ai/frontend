@@ -1,7 +1,5 @@
-import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
 import useAuth from "@/hooks/useAuth";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
-import { useSocketEmitListener } from "@/hooks/useSocketEmitListener";
 import useStatusCallback from "@/hooks/useStatusCallback";
 import { usePlaylist } from "@/api/playlist/query/usePlaylist";
 import { useVideoJs } from "@/hooks/useVideoJS";
@@ -11,10 +9,15 @@ import { getPlaylistNavigation } from "@/utils/web-client.util";
 import React, {
   createContext,
   useCallback,
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { toast } from "react-toastify";
+import Player from 'video.js/dist/types/player';
+import useSocket from "@/hooks/useSocket";
+import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
 
 const SPEEDS = {
   0: 0,     // pause
@@ -48,10 +51,12 @@ type BrightnessKey = keyof typeof BRIGHTNESS;
 
 type WebClientContextType = {
   isWebClientActive: boolean;
-  isWebPlayerAvailable: boolean;
+  isWebClientAvailable: boolean;
   playingDream?: Dream;
+  handlers: Record<RemoteEvent, () => void>;
   setWebClientActive: (isActive: boolean) => void;
   setWebPlayerAvailable: (isActive: boolean) => void;
+  handleVideoJSReady: () => void;
 };
 
 export const WebClientContext = createContext<WebClientContextType>(
@@ -60,12 +65,32 @@ export const WebClientContext = createContext<WebClientContextType>(
 
 // helper function to find current speed key
 const findCurrentSpeedKey = (currentSpeed: number, speeds: typeof SPEEDS) => {
-  return Object.entries(speeds).find(([_, value]) => value === currentSpeed)?.[0] || '4';
+  return Object.entries(speeds).find(([, value]) => value === currentSpeed)?.[0] || '4';
 };
 
 // helper function to find current brightness key
 const findCurrentBrightnessKey = (currentBrightness: number, brightnesses: typeof BRIGHTNESS) => {
-  return Object.entries(brightnesses).find(([_, value]) => value === currentBrightness)?.[0] || '4';
+  return Object.entries(brightnesses).find(([, value]) => value === currentBrightness)?.[0] || '4';
+};
+
+const setupOverlay = (player: Player | null, overlayContent: string) => {
+  // custom styles
+  const style = document.createElement('style');
+  style.textContent = `
+    .video-js-overlay {
+      position: absolute;
+      bottom: 40px;
+      left: 20px;
+      color: white;
+      font-size: 20px;
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Create and add overlay
+  const overlay = document.createElement('div');
+  overlay.innerHTML = overlayContent;
+  player?.el().appendChild(overlay);
 };
 
 export const WebClientProvider: React.FC<{
@@ -75,7 +100,10 @@ export const WebClientProvider: React.FC<{
   const { user } = useAuth()
 
   // videojs
-  const { player, setBrightness: setVideoJSBrightness, playVideo } = useVideoJs()
+  const { player, isReady, setBrightness: setVideoJSBrightness, playVideo } = useVideoJs();
+
+  // socket
+  const { emit } = useSocket();
 
   // user current values
   const currentDream = user?.currentDream;
@@ -83,17 +111,17 @@ export const WebClientProvider: React.FC<{
   const { data } = usePlaylist(user?.currentPlaylist?.uuid);
   const currentPlaylist = data?.data?.playlist;
 
-
   /** 
    * indicates if the web player is currently active
    */
   const [isWebClientActive, setIsWebClientActive] = useState<boolean>(false);
   /** 
-   * indicates if the web player play button can be shown to the user
+   * indicates if the web client play button can be shown to the user
    */
-  const [isWebPlayerAvailable, setIsWebPlayerAvailable] = useState<boolean>(false);
+  const [isWebClientAvailable, setIsWebClientAvailable] = useState<boolean>(false);
   const { isActive } = useDesktopClient();
-  const [playingDream, setPlayingDream] = useState<Dream>();
+  const playingDreamRef = useRef<Dream>();
+
 
   // player states
   const [, setPaused] = useState<boolean>(false);
@@ -101,195 +129,193 @@ export const WebClientProvider: React.FC<{
   const [brightness, setBrightness] = useState<number>(BRIGHTNESS[4]);
 
   const setWebClientActive = useCallback((isActive: boolean) => {
+    setIsWebClientActive(isActive);
     if (isActive) {
-      setPlayingDream(currentDream)
+      playingDreamRef.current = currentDream;
     }
-    setIsWebClientActive(isActive)
-  }, [currentDream]);
+  }, [currentDream, setIsWebClientActive]);
 
   const setWebPlayerAvailable = useCallback((isActive: boolean) => {
-    setIsWebPlayerAvailable(isActive)
+    setIsWebClientAvailable(isActive)
   }, []);
+
+  const handleVideoJSReady = useCallback(() => {
+    if (playingDreamRef.current) {
+      playVideo(playingDreamRef.current.video);
+    }
+  }, [playVideo]);
+
+  const handlers: Record<RemoteEvent, () => void> = useMemo(() => ({
+    playback_slower: () => {
+      const currentKey = parseInt(findCurrentSpeedKey(speed, SPEEDS));
+      if (currentKey > 0) {
+        const newKey = currentKey - 1 as SpeedKey;
+        setSpeed(SPEEDS[newKey]);
+        player.current?.playbackRate(SPEEDS[newKey]);
+      }
+    },
+    playback_faster: () => {
+      const currentKey = parseInt(findCurrentSpeedKey(speed, SPEEDS));
+      if (currentKey < 9) {
+        const newKey = currentKey + 1 as SpeedKey;
+        setSpeed(SPEEDS[newKey]);
+        player.current?.playbackRate(SPEEDS[newKey]);
+      }
+    },
+    brighter: () => {
+      const currentKey = parseInt(findCurrentBrightnessKey(brightness, BRIGHTNESS));
+      if (currentKey < 9) {
+        const newKey = currentKey + 1 as BrightnessKey;
+        setBrightness(BRIGHTNESS[newKey]);
+        setVideoJSBrightness(BRIGHTNESS[newKey]);
+      }
+    },
+    darker: () => {
+      const currentKey = parseInt(findCurrentBrightnessKey(brightness, BRIGHTNESS));
+      if (currentKey > 0) {
+        const newKey = currentKey - 1 as BrightnessKey;
+        setBrightness(BRIGHTNESS[newKey]);
+        setVideoJSBrightness(BRIGHTNESS[newKey]);
+      }
+    },
+    pause: () => {
+      // handle pause
+      const isPaused = player.current?.paused();
+      if (isPaused) {
+        player.current?.play();
+      } else {
+        player.current?.pause();
+      }
+      setPaused(!isPaused);
+    },
+    playing: () => { },
+    play_dream: () => { },
+    play_playlist: () => { },
+    like: () => { },
+    dislike: () => { },
+    like_current_dream: () => { },
+    dislike_current_dream: () => { },
+    previous: () => {
+      const { previous } = getPlaylistNavigation(playingDreamRef.current, currentPlaylist);
+      const dreamToPlay = previous?.dreamItem ?? currentPlaylist?.items?.[0]?.dreamItem;
+      if (dreamToPlay) {
+        playVideo(dreamToPlay?.video);
+        playingDreamRef.current = dreamToPlay;
+        emit(NEW_REMOTE_CONTROL_EVENT, { event: "playing", uuid: dreamToPlay.uuid })
+      }
+    },
+    next: () => {
+      const { next } = getPlaylistNavigation(playingDreamRef.current, currentPlaylist);
+      const dreamToPlay = next?.dreamItem ?? currentPlaylist?.items?.[0]?.dreamItem;
+      if (dreamToPlay) {
+        playVideo(dreamToPlay?.video);
+        playingDreamRef.current = dreamToPlay;
+        emit(NEW_REMOTE_CONTROL_EVENT, { event: "playing", uuid: dreamToPlay.uuid })
+      }
+    },
+    forward: () => {
+      if (player.current) {
+        const currentTime = player.current.currentTime() ?? 0;
+        // 10 seconds
+        player.current.currentTime(currentTime + 10);
+      }
+    },
+    backward: () => {
+      if (player.current) {
+        const currentTime = player.current.currentTime() ?? 0;
+        // 10 seconds
+        player.current.currentTime(Math.max(0, currentTime - 10));
+      }
+    },
+    credit: () => {
+      const overlayContent = `
+        <div class="video-js-overlay">
+          <div class="overlay-title">${playingDreamRef.current?.name ?? playingDreamRef.current?.uuid ?? 'No dream playing'}</div>
+          <div class="overlay-title">${playingDreamRef.current?.displayedOwner?.name ?? playingDreamRef.current?.user?.name ?? ''}</div>
+        </div>
+      `;
+      setupOverlay(player.current, overlayContent);
+    },
+    web: () => {
+      window.open(import.meta.env.VITE_FRONTEND_URL, "_blank");
+    },
+    help: () => { },
+    status: () => { },
+    set_speed_1: () => {
+      setSpeed(1);
+      player.current?.playbackRate(SPEEDS[1]);
+    },
+    set_speed_2: () => {
+      setSpeed(2);
+      player.current?.playbackRate(SPEEDS[2]);
+    },
+    set_speed_3: () => {
+      setSpeed(3);
+      player.current?.playbackRate(SPEEDS[3]);
+    },
+    set_speed_4: () => {
+      setSpeed(4);
+      player.current?.playbackRate(SPEEDS[4]);
+    },
+    set_speed_5: () => {
+      setSpeed(5);
+      player.current?.playbackRate(SPEEDS[5]);
+    },
+    set_speed_6: () => {
+      setSpeed(6);
+      player.current?.playbackRate(SPEEDS[6]);
+    },
+    set_speed_7: () => {
+      setSpeed(7);
+      player.current?.playbackRate(SPEEDS[7]);
+    },
+    set_speed_8: () => {
+      setSpeed(8);
+      player.current?.playbackRate(SPEEDS[8]);
+    },
+    set_speed_9: () => {
+      setSpeed(9);
+      player.current?.playbackRate(SPEEDS[9]);
+    },
+    capture: () => { },
+    report: () => { },
+    reset_playlist: () => { }
+  }), [player, speed, brightness, currentPlaylist, playVideo, setVideoJSBrightness]);
 
   useStatusCallback(isActive, {
     onActive: () => {
-      setIsWebPlayerAvailable(false);
+      setIsWebClientAvailable(false);
     },
     onInactive: () => {
       toast.info("Desktop client is inactive, you're able to play something on the web client clicking play button.");
-      setIsWebPlayerAvailable(true);
+      setIsWebClientAvailable(true);
     },
   });
 
-  useSocketEmitListener((event, data) => {
-    if (event === NEW_REMOTE_CONTROL_EVENT) {
-
-      const handlers: Record<RemoteEvent, () => boolean> = {
-        playback_slower: () => {
-          const currentKey = parseInt(findCurrentSpeedKey(speed, SPEEDS));
-          if (currentKey > 0) {
-            const newKey = currentKey - 1 as SpeedKey;
-            setSpeed(SPEEDS[newKey]);
-            player.current?.playbackRate(SPEEDS[newKey]);
-          }
-          return true;
-        },
-        playback_faster: () => {
-          const currentKey = parseInt(findCurrentSpeedKey(speed, SPEEDS));
-          if (currentKey < 9) {
-            const newKey = currentKey + 1 as SpeedKey;
-            setSpeed(SPEEDS[newKey]);
-            player.current?.playbackRate(SPEEDS[newKey]);
-          }
-          return true;
-        },
-        brighter: () => {
-          const currentKey = parseInt(findCurrentBrightnessKey(brightness, BRIGHTNESS));
-          if (currentKey < 9) {
-            const newKey = currentKey + 1 as BrightnessKey;
-            setBrightness(BRIGHTNESS[newKey]);
-            setVideoJSBrightness(BRIGHTNESS[newKey]);
-          }
-          return true;
-        },
-        darker: () => {
-          const currentKey = parseInt(findCurrentBrightnessKey(brightness, BRIGHTNESS));
-          if (currentKey > 0) {
-            const newKey = currentKey - 1 as BrightnessKey;
-            setBrightness(BRIGHTNESS[newKey]);
-            setVideoJSBrightness(BRIGHTNESS[newKey]);
-          }
-          return true;
-        },
-        pause: () => {
-          // handle pause
-          const isPaused = player.current?.paused();
-          if (isPaused) {
-            player.current?.play();
-          } else {
-            player.current?.pause();
-          }
-          setPaused(!isPaused);
-          return true;
-        },
-        playing: () => true,
-        play_dream: () => true,
-        play_playlist: () => true,
-        like: () => true,
-        dislike: () => true,
-        like_current_dream: () => true,
-        dislike_current_dream: () => true,
-        previous: () => {
-          const { previous } = getPlaylistNavigation(currentDream, currentPlaylist);
-          const dreamToPlay = previous?.dreamItem ?? currentPlaylist?.items?.[0]?.dreamItem;
-          // setPlayingDream(previous?.dreamItem);
-          if (dreamToPlay) {
-            playVideo(dreamToPlay?.video);
-          }
-          return true;
-        },
-        next: () => {
-          const { next } = getPlaylistNavigation(currentDream, currentPlaylist);
-          const dreamToPlay = next?.dreamItem ?? currentPlaylist?.items?.[0]?.dreamItem;
-          // setPlayingDream(nextDreamToPlay);
-          if (dreamToPlay) {
-            playVideo(dreamToPlay?.video);
-          }
-          return true;
-        },
-        forward: () => {
-          if (player.current) {
-            const currentTime = player.current.currentTime() ?? 0;
-            // 10 seconds
-            player.current.currentTime(currentTime + 10);
-          }
-          return true
-        },
-        backward: () => {
-          if (player.current) {
-            const currentTime = player.current.currentTime() ?? 0;
-            // 10 seconds
-            player.current.currentTime(Math.max(0, currentTime - 10));
-          }
-          return true
-        },
-        credit: () => true,
-        web: () => {
-          window.open(import.meta.env.VITE_FRONTEND_URL, "_blank");
-          return true
-        },
-        help: () => true,
-        status: () => true,
-        set_speed_1: () => {
-          setSpeed(1);
-          player.current?.playbackRate(SPEEDS[1]);
-          return true
-        },
-        set_speed_2: () => {
-          setSpeed(2);
-          player.current?.playbackRate(SPEEDS[2]);
-          return true
-        },
-        set_speed_3: () => {
-          setSpeed(3);
-          player.current?.playbackRate(SPEEDS[3]);
-          return true
-        },
-        set_speed_4: () => {
-          setSpeed(4);
-          player.current?.playbackRate(SPEEDS[4]);
-          return true
-        },
-        set_speed_5: () => {
-          setSpeed(5);
-          player.current?.playbackRate(SPEEDS[5]);
-          return true
-        },
-        set_speed_6: () => {
-          setSpeed(6);
-          player.current?.playbackRate(SPEEDS[6]);
-          return true
-        },
-        set_speed_7: () => {
-          setSpeed(7);
-          player.current?.playbackRate(SPEEDS[7]);
-          return true
-        },
-        set_speed_8: () => {
-          setSpeed(8);
-          player.current?.playbackRate(SPEEDS[8]);
-          return true
-        },
-        set_speed_9: () => {
-          setSpeed(9);
-          player.current?.playbackRate(SPEEDS[9]);
-          return true
-        },
-        capture: () => true,
-        report: () => true,
-        reset_playlist: () => true
-      };
-
-      toast.info("remote control event listened " + data.event);
-      return handlers[data.event]();
-
+  // play current dream when playerjs is ready
+  useEffect(() => {
+    if (isReady && playingDreamRef.current) {
+      playVideo(playingDreamRef.current.video);
     }
-  });
+  }, [isReady, playVideo]);
 
   const memoedValue = useMemo(
     () => ({
       isWebClientActive,
-      isWebPlayerAvailable,
-      playingDream,
+      isWebClientAvailable,
+      playingDream: playingDreamRef.current,
+      handlers,
       setWebClientActive,
-      setWebPlayerAvailable
+      setWebPlayerAvailable,
+      handleVideoJSReady
     }),
     [
       isWebClientActive,
-      isWebPlayerAvailable,
-      playingDream,
+      isWebClientAvailable,
+      handlers,
       setWebClientActive,
-      setWebPlayerAvailable
+      setWebPlayerAvailable,
+      handleVideoJSReady
     ],
   );
 
