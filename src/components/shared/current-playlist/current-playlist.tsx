@@ -14,7 +14,6 @@ import {
 } from "@/constants/remote-control.constants";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
 import useSocket from "@/hooks/useSocket";
-import { User } from "@/types/auth.types";
 import {
   RemoteControlAction,
   RemoteControlEventData,
@@ -26,18 +25,15 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ItemCardSkeleton } from "../item-card/item-card";
 import { useTheme } from "styled-components";
+import useAuth from "@/hooks/useAuth";
 
-type CurrentPlaylistProps = {
-  uuid?: string;
-  user?: User;
-};
-
-export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
+export const CurrentPlaylist = () => {
   const { emit } = useSocket();
   const { t } = useTranslation();
   const theme = useTheme();
-  const [stateUUID, setStateUUID] = useState<string | undefined>(uuid);
-  const { data, isLoading, isRefetching, refetch } = usePlaylist(stateUUID);
+  const { currentPlaylist } = useAuth();
+  const [uuid, setUUID] = useState<string | undefined>(currentPlaylist?.uuid);
+  const { data, isLoading, isRefetching, refetch } = usePlaylist(uuid);
   const playlist = data?.data?.playlist;
 
   const onRemoveCurrentPlaylist = () => {
@@ -45,15 +41,15 @@ export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
       event: REMOTE_CONTROLS.RESET_PLAYLIST.event,
     });
 
-    setStateUUID(undefined);
+    setUUID(undefined);
   };
 
   useEffect(() => {
-    if (stateUUID) refetch();
-  }, [stateUUID, refetch]);
+    if (uuid) refetch();
+  }, [uuid, refetch]);
 
   useEffect(() => {
-    setStateUUID(uuid);
+    setUUID(uuid);
   }, [uuid]);
 
   const handleRemoteControlEvent = (data?: RemoteControlEventData): void => {
@@ -67,11 +63,11 @@ export const CurrentPlaylist = ({ uuid }: CurrentPlaylistProps) => {
 
     if (event.event === REMOTE_CONTROLS.PLAY_PLAYLIST.event) {
       const newUUID = data?.uuid;
-      setStateUUID(newUUID);
+      setUUID(newUUID);
     }
 
     if (event.event === REMOTE_CONTROLS.RESET_PLAYLIST.event) {
-      setStateUUID(undefined);
+      setUUID(undefined);
     }
   };
 

@@ -15,15 +15,21 @@ import { ROUTES } from "@/constants/routes.constants";
 import { useAuthenticateUser } from "@/api/user/query/useAuthenticateUser";
 import ReactGA from "react-ga4";
 import Bugsnag from "@bugsnag/js";
+import { Dream } from "@/types/dream.types";
+import { Playlist } from "@/types/playlist.types";
 
 type AuthContextType = {
   user: User | null;
+  currentDream?: Dream;
+  currentPlaylist?: Playlist;
+  isLoading: boolean;
+  isLoggingOut: boolean;
   login: (user: User) => void;
   authenticateUser: () => Promise<void>;
   logout: (options?: LogoutOptions) => Promise<void>;
-  isLoading: boolean;
-  isLoggingOut: boolean;
   setLoggedUser: (user: User | null) => void;
+  updateCurrentDream: (dream?: Dream) => void;
+  updateCurrentPlaylist: (playlist?: Playlist) => void;
 };
 
 type LogoutOptions = {
@@ -45,6 +51,10 @@ export const AuthProvider: React.FC<{
   const [isSessionVerified, setIsSessionVerified] = useState<boolean>(false);
 
   const [user, setUser] = useState<User | null>(null);
+  const [currentDream, setCurrentDream] = useState<Dream>();
+  const [currentPlaylist, setCurrentPlaylist] = useState<Playlist>();
+
+  const isLoggingOut = useMemo(() => logoutMutation.isLoading, [logoutMutation.isLoading]);
 
   const setLoggedUser = useCallback(
     (user: User | null) => {
@@ -66,6 +76,8 @@ export const AuthProvider: React.FC<{
   const login: (user: User) => void = useCallback(
     (user: User) => {
       setLoggedUser(user);
+      setCurrentDream(user.currentDream);
+      setCurrentPlaylist(user.currentPlaylist);
       Bugsnag.setUser(user.uuid, user.email, user?.name);
     },
     [setLoggedUser],
@@ -119,6 +131,14 @@ export const AuthProvider: React.FC<{
     }
   }, [authenticateUserQuery, login, logout]);
 
+  const updateCurrentDream = useCallback((dream?: Dream) => {
+    setCurrentDream(dream);
+  }, [setCurrentDream]);
+
+  const updateCurrentPlaylist = useCallback((playlist?: Playlist) => {
+    setCurrentPlaylist(playlist)
+  }, [setCurrentPlaylist]);
+
   useHttpInterceptors({ logout }, [user]);
 
   useEffect(() => {
@@ -133,21 +153,29 @@ export const AuthProvider: React.FC<{
   const memoedValue = useMemo(
     () => ({
       user,
+      isLoading,
+      isLoggingOut,
+      currentDream,
+      currentPlaylist,
+      updateCurrentDream,
+      updateCurrentPlaylist,
       login,
       authenticateUser,
       logout,
-      isLoading,
-      isLoggingOut: logoutMutation.isLoading,
       setLoggedUser,
     }),
     [
       user,
+      isLoading,
+      isLoggingOut,
+      currentDream,
+      currentPlaylist,
+      updateCurrentDream,
+      updateCurrentPlaylist,
       login,
       authenticateUser,
       logout,
-      isLoading,
       setLoggedUser,
-      logoutMutation.isLoading,
     ],
   );
 

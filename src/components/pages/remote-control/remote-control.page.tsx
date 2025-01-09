@@ -1,15 +1,10 @@
-import { useUser } from "@/api/user/query/useUser";
 import { Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
-import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { RemoteControl } from "@/components/shared/remote-control/remote-control";
 import { CurrentDream } from "@/components/shared/current-dream/current-dream";
 import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
-import { NotFound } from "@/components/shared/not-found/not-found";
-import { Spinner } from "@/components/shared/spinner/spinner";
-// import { WebClientPlayer } from "@/components/shared/web-client-player/web-client-player";
 import { useWebClient } from "@/hooks/useWebClient";
 import { VideoJS } from "@/components/shared/video-js/VideoJS";
 
@@ -17,30 +12,7 @@ const SECTION_ID = "remote-control";
 
 const RemoteControlPage: React.FC = () => {
   const { t } = useTranslation();
-  const { user: authUser } = useAuth();
   const { isWebClientActive } = useWebClient();
-  const userUUID = authUser?.uuid;
-
-  const {
-    data,
-    isError,
-    isLoading: isUserLoading,
-  } = useUser({ uuid: userUUID });
-  const user = data?.data?.user;
-
-  if (isUserLoading) {
-    return (
-      <Container>
-        <Row justifyContent="center">
-          <Spinner />
-        </Row>
-      </Container>
-    );
-  }
-
-  if (isError) {
-    return <NotFound />;
-  }
 
   return (
     <Container>
@@ -54,9 +26,9 @@ const RemoteControlPage: React.FC = () => {
 
         {isWebClientActive && <VideoJS />}
 
-        <CurrentDream user={user} uuid={user?.currentDream?.uuid} />
+        <CurrentDream />
 
-        <CurrentPlaylist user={user} uuid={user?.currentPlaylist?.uuid} />
+        <CurrentPlaylist />
 
       </Section>
     </Container>

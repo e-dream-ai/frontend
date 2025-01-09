@@ -6,7 +6,6 @@ import {
   REMOTE_CONTROLS,
 } from "@/constants/remote-control.constants";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
-import { User } from "@/types/auth.types";
 import {
   RemoteControlAction,
   RemoteControlEventData,
@@ -19,17 +18,14 @@ import { useTheme } from "styled-components";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 import { useWebClient } from "@/hooks/useWebClient";
+import useAuth from "@/hooks/useAuth";
 
-type CurrentDreamProps = {
-  uuid?: string;
-  user?: User;
-};
-
-export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
+export const CurrentDream = () => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const [stateUUID, setStateUUID] = useState<string | undefined>(uuid);
-  const { data, isLoading, isRefetching, refetch } = useDream(stateUUID);
+  const { currentDream } = useAuth();
+  const [uuid, setUUID] = useState<string | undefined>(currentDream?.uuid);
+  const { data, isLoading, isRefetching, refetch } = useDream(uuid);
   const { isWebClientAvailable, setWebClientActive, setWebPlayerAvailable } = useWebClient()
   const dream = data?.data?.dream;
 
@@ -44,7 +40,7 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
 
     if (event.event === REMOTE_CONTROLS.PLAYING.event) {
       const newUUID = data?.uuid;
-      setStateUUID(newUUID);
+      setUUID(newUUID);
     }
   };
 
@@ -62,12 +58,12 @@ export const CurrentDream = ({ uuid }: CurrentDreamProps) => {
   };
 
   useEffect(() => {
-    if (stateUUID) refetch();
-  }, [stateUUID, refetch]);
+    if (uuid) refetch();
+  }, [uuid, refetch]);
 
   useEffect(() => {
-    setStateUUID(uuid);
-  }, [uuid]);
+    setUUID(currentDream?.uuid);
+  }, [currentDream]);
 
   return (
     <Column mb="2rem">

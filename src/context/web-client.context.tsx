@@ -4,6 +4,7 @@ import useStatusCallback from "@/hooks/useStatusCallback";
 import { usePlaylist } from "@/api/playlist/query/usePlaylist";
 import { useVideoJs } from "@/hooks/useVideoJS";
 import { Dream } from "@/types/dream.types";
+import { Playlist } from "@/types/playlist.types";
 import { RemoteEvent } from "@/types/remote-control.types";
 import { findCurrentBrightnessKey, findCurrentSpeedKey, getPlaylistNavigation } from "@/utils/web-client.util";
 import React, {
@@ -39,7 +40,7 @@ export const WebClientProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
   // user
-  const { user } = useAuth()
+  const { user, updateCurrentDream } = useAuth()
 
   // videojs
   const { player, isReady, setBrightness: setVideoJSBrightness, playVideo } = useVideoJs();
@@ -50,8 +51,12 @@ export const WebClientProvider: React.FC<{
   // overlay
   const { showOverlay, hideOverlay } = useVideoJSOverlay(player);
 
+  // dream and playlist values
+  const playingDreamRef = useRef<Dream>();
+  const playingPlaylistRef = useRef<Playlist>();
+
   // user current values
-  const currentDream = user?.currentDream;
+  const currentDream = useMemo(() => user?.currentDream, [user?.currentDream]);
 
   const { data } = usePlaylist(user?.currentPlaylist?.uuid);
   const currentPlaylist = data?.data?.playlist;
@@ -65,7 +70,6 @@ export const WebClientProvider: React.FC<{
    */
   const [isWebClientAvailable, setIsWebClientAvailable] = useState<boolean>(false);
   const { isActive } = useDesktopClient();
-  const playingDreamRef = useRef<Dream>();
 
 
   // player states
@@ -136,21 +140,23 @@ export const WebClientProvider: React.FC<{
     like_current_dream: () => { },
     dislike_current_dream: () => { },
     previous: () => {
-      const { previous } = getPlaylistNavigation(playingDreamRef.current, currentPlaylist);
-      const dreamToPlay = previous?.dreamItem ?? currentPlaylist?.items?.[0]?.dreamItem;
-      if (dreamToPlay) {
-        playVideo(dreamToPlay?.video);
+      const { previous } = getPlaylistNavigation(playingDreamRef.current, playingPlaylistRef?.current);
+      const dreamToPlay = previous?.dreamItem ?? playingPlaylistRef?.current?.items?.[0]?.dreamItem;
+      if (dreamToPlay && dreamToPlay.video) {
+        playVideo(dreamToPlay.video);
         playingDreamRef.current = dreamToPlay;
         emit(NEW_REMOTE_CONTROL_EVENT, { event: "playing", uuid: dreamToPlay.uuid })
+        updateCurrentDream(dreamToPlay);
       }
     },
     next: () => {
-      const { next } = getPlaylistNavigation(playingDreamRef.current, currentPlaylist);
-      const dreamToPlay = next?.dreamItem ?? currentPlaylist?.items?.[0]?.dreamItem;
-      if (dreamToPlay) {
-        playVideo(dreamToPlay?.video);
+      const { next } = getPlaylistNavigation(playingDreamRef.current, playingPlaylistRef?.current);
+      const dreamToPlay = next?.dreamItem ?? playingPlaylistRef?.current?.items?.[0]?.dreamItem;
+      if (dreamToPlay && dreamToPlay.video) {
+        playVideo(dreamToPlay.video);
         playingDreamRef.current = dreamToPlay;
         emit(NEW_REMOTE_CONTROL_EVENT, { event: "playing", uuid: dreamToPlay.uuid })
+        updateCurrentDream(dreamToPlay);
       }
     },
     forward: () => {
@@ -230,27 +236,40 @@ export const WebClientProvider: React.FC<{
     capture: () => { },
     report: () => { },
     reset_playlist: () => { }
-  }), [player, speed, brightness, currentPlaylist, showCredit, emit, playVideo, setVideoJSBrightness, showOverlay, hideOverlay, setShowCredit]);
+  }), [
+    player,
+    speed,
+    brightness,
+    showCredit,
+    emit,
+    playVideo,
+    setVideoJSBrightness,
+    showOverlay,
+    hideOverlay,
+    setShowCredit,
+    updateCurrentDream
+  ]);
 
   // handles when a video ends playing
   const handleOnEnded = useCallback(() => {
     const { next } = getPlaylistNavigation(playingDreamRef.current, currentPlaylist);
     const dreamToPlay = next?.dreamItem ?? currentPlaylist?.items?.[0]?.dreamItem;
-    if (dreamToPlay) {
-      playVideo(dreamToPlay?.video);
+    if (dreamToPlay && dreamToPlay.video) {
+      playVideo(dreamToPlay.video);
       playingDreamRef.current = dreamToPlay;
+      updateCurrentDream(dreamToPlay);
       emit(NEW_REMOTE_CONTROL_EVENT, { event: "playing", uuid: dreamToPlay.uuid })
     }
-  }, [emit, playVideo, currentPlaylist]);
+  }, [emit, playVideo, updateCurrentDream, currentPlaylist]);
 
   useStatusCallback(isActive, {
     onActive: () => {
-      if (IS_WEB_CLIENT_ACTIVE) {
+      if (IS_WEB_CLIENT_ACTIVE && user) {
         setIsWebClientAvailable(false);
       }
     },
     onInactive: () => {
-      if (IS_WEB_CLIENT_ACTIVE) {
+      if (IS_WEB_CLIENT_ACTIVE && user) {
         toast.info("Desktop client is inactive, you're able to play something on the web client clicking play button.");
         setIsWebClientAvailable(true);
       }
@@ -263,6 +282,13 @@ export const WebClientProvider: React.FC<{
       playVideo(playingDreamRef.current.video);
     }
   }, [isReady, playVideo]);
+
+  // update playing playlist
+  useEffect(() => {
+    if (currentPlaylist) {
+      playingPlaylistRef.current = currentPlaylist;
+    }
+  }, [currentPlaylist]);
 
   const memoedValue = useMemo(
     () => ({
