@@ -24,8 +24,13 @@ export const VideoJS: FC<VideoJSProps> = () => {
       videoRef.current.appendChild(videoElement); // append to DOM
 
       // adding CSS styles
-      const style = document.createElement('style');
-      style.textContent = `
+      // add unique ids to avoid duplicates
+      const styleId = 'video-player-transitions';
+
+      if (!document.getElementById(styleId)) {
+        const style = document.createElement('style');
+        style.id = styleId;
+        style.textContent = `
         .video-js video {
           transition: opacity 0.5s ease;
         }
@@ -34,7 +39,8 @@ export const VideoJS: FC<VideoJSProps> = () => {
           opacity: 0;
         }
       `;
-      document.head.appendChild(style);
+        document.head.appendChild(style);
+      }
 
       // initialize player
       initializePlayer({ element: videoElement, options: { controls: true }, events: { onEnded: handleOnEnded } });

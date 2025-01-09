@@ -37,7 +37,6 @@ export const VideoJSProvider = ({
   const playerRef = useRef<Player | null>(null);
 
   const initializePlayer = useCallback(({ element, options, events }: InitializePlayerParams) => {
-    console.log('initializePlayer');
     // make sure to dispose of any existing player
     if (playerRef.current && !playerRef.current.isDisposed()) {
       playerRef.current.dispose();
@@ -77,21 +76,63 @@ export const VideoJSProvider = ({
 
   const playVideo = useCallback((src: string) => {
     const player = playerRef.current;
-    if (!player) return;
+    if (!player) {
+      console.warn('[Player] No player reference found');
+      return;
+    }
 
-    // add transitioning class to start fade out
-    player.addClass('vjs-transitioning');
+    // log player state
+    console.log('[Player] Player state:', {
+      src,
+      currentSrc: player.currentSrc(),
+      readyState: player.readyState(),
+      error: player.error()
+    });
 
-    // wait for fade out
+    const transitioningClass = "vjs-transitioning";
+
+    // remove transitioning class if already exists 
+    player.removeClass(transitioningClass);
+
+    // add transitioning class to start animation
+    player.addClass(transitioningClass);
+
+    // wait for animation
     setTimeout(() => {
-      player.src(src);
+      try {
+        // clean up event listeners
+        player.off('loadeddata');
+        player.off('error');
 
-      // remove transitioning class when new video loads
-      player.one('loadeddata', () => {
-        player.removeClass('vjs-transitioning');
-      });
+        // listen for error handling
+        player.one('error', () => {
+          console.error('[Player] Load error:', player.error());
+          player.removeClass(transitioningClass);
+        });
 
-      player.play();
+        // listen for success handling
+        player.one('loadeddata', () => {
+          console.log('[Player] Video loaded:', src);
+          player.removeClass(transitioningClass);
+        });
+
+        // set source 
+        player.src({
+          src: src,
+        });
+
+        // handle play promise
+        const playPromise = player.play();
+        if (playPromise !== undefined) {
+          playPromise.catch(error => {
+            console.error('[Player] Play error:', error);
+            player.removeClass(transitioningClass);
+          });
+        }
+      } catch (error) {
+        console.error('[Player] Error in playVideo:', error);
+        player.removeClass(transitioningClass);
+      }
     }, 500); // match this with CSS transition duration
   }, []);
 
