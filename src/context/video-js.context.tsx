@@ -77,17 +77,8 @@ export const VideoJSProvider = ({
   const playVideo = useCallback((src: string) => {
     const player = playerRef.current;
     if (!player) {
-      console.warn('[Player] No player reference found');
       return;
     }
-
-    // log player state
-    console.log('[Player] Player state:', {
-      src,
-      currentSrc: player.currentSrc(),
-      readyState: player.readyState(),
-      error: player.error()
-    });
 
     const transitioningClass = "vjs-transitioning";
 
@@ -106,13 +97,11 @@ export const VideoJSProvider = ({
 
         // listen for error handling
         player.one('error', () => {
-          console.error('[Player] Load error:', player.error());
           player.removeClass(transitioningClass);
         });
 
         // listen for success handling
         player.one('loadeddata', () => {
-          console.log('[Player] Video loaded:', src);
           player.removeClass(transitioningClass);
         });
 
@@ -124,13 +113,11 @@ export const VideoJSProvider = ({
         // handle play promise
         const playPromise = player.play();
         if (playPromise !== undefined) {
-          playPromise.catch(error => {
-            console.error('[Player] Play error:', error);
+          playPromise.catch(() => {
             player.removeClass(transitioningClass);
           });
         }
       } catch (error) {
-        console.error('[Player] Error in playVideo:', error);
         player.removeClass(transitioningClass);
       }
     }, 500); // match this with CSS transition duration

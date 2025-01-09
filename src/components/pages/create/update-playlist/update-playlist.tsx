@@ -106,7 +106,6 @@ export const UpdatePlaylist: React.FC = () => {
         });
       }
     } catch (error) {
-      console.error(error);
       setIsUploadingFiles(false);
       toast.error(t("components.update_playlist.error_updating_playlist"));
     }
