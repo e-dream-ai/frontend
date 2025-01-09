@@ -15,11 +15,11 @@ import React, {
   useState,
 } from "react";
 import { toast } from "react-toastify";
-import Player from 'video.js/dist/types/player';
 import useSocket from "@/hooks/useSocket";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
 import { BRIGHTNESS, IS_WEB_CLIENT_ACTIVE, SPEEDS } from "@/constants/web-client.constants";
 import { BrightnessKey, SpeedKey } from "@/types/web-client.types";
+import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
 
 type WebClientContextType = {
   isWebClientActive: boolean;
@@ -35,26 +35,6 @@ export const WebClientContext = createContext<WebClientContextType>(
   {} as WebClientContextType,
 );
 
-const setupOverlay = (player: Player | null, overlayContent: string) => {
-  // custom styles
-  const style = document.createElement('style');
-  style.textContent = `
-    .video-js-overlay {
-      position: absolute;
-      bottom: 40px;
-      left: 20px;
-      color: white;
-      font-size: 20px;
-    }
-  `;
-  document.head.appendChild(style);
-
-  // Create and add overlay
-  const overlay = document.createElement('div');
-  overlay.innerHTML = overlayContent;
-  player?.el().appendChild(overlay);
-};
-
 export const WebClientProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
@@ -66,6 +46,9 @@ export const WebClientProvider: React.FC<{
 
   // socket
   const { emit } = useSocket();
+
+  // overlay
+  const { showOverlay, hideOverlay } = useVideoJSOverlay(player);
 
   // user current values
   const currentDream = user?.currentDream;
@@ -89,6 +72,7 @@ export const WebClientProvider: React.FC<{
   const [, setPaused] = useState<boolean>(false);
   const [speed, setSpeed] = useState<number>(SPEEDS[4]);
   const [brightness, setBrightness] = useState<number>(BRIGHTNESS[4]);
+  const [showCredit, setShowCredit] = useState<boolean>(false);
 
   const setWebClientActive = useCallback((isActive: boolean) => {
     setIsWebClientActive(isActive);
@@ -184,13 +168,23 @@ export const WebClientProvider: React.FC<{
       }
     },
     credit: () => {
-      const overlayContent = `
-        <div class="video-js-overlay">
-          <div class="overlay-title">${playingDreamRef.current?.name ?? playingDreamRef.current?.uuid ?? 'No dream playing'}</div>
-          <div class="overlay-title">${playingDreamRef.current?.displayedOwner?.name ?? playingDreamRef.current?.user?.name ?? ''}</div>
-        </div>
-      `;
-      setupOverlay(player.current, overlayContent);
+      const creditOverlayId = "credit";
+      if (showCredit) {
+        hideOverlay(creditOverlayId);
+        setShowCredit(false);
+      } else {
+        const overlayContent = `
+          <div>
+            <div>${playingDreamRef.current?.name ?? playingDreamRef.current?.uuid ?? 'No dream playing'}</div>
+            <div>${playingDreamRef.current?.displayedOwner?.name ?? playingDreamRef.current?.user?.name ?? ''}</div>
+          </div>
+        `;
+        showOverlay({
+          id: creditOverlayId,
+          content: overlayContent,
+        });
+        setShowCredit(true);
+      }
     },
     web: () => {
       window.open(import.meta.env.VITE_FRONTEND_URL, "_blank");
@@ -236,7 +230,7 @@ export const WebClientProvider: React.FC<{
     capture: () => { },
     report: () => { },
     reset_playlist: () => { }
-  }), [player, speed, brightness, currentPlaylist, emit, playVideo, setVideoJSBrightness]);
+  }), [player, speed, brightness, currentPlaylist, showCredit, emit, playVideo, setVideoJSBrightness, showOverlay, hideOverlay, setShowCredit]);
 
   // handles when a video ends playing
   const handleOnEnded = useCallback(() => {
