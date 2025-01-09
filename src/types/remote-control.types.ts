@@ -29,6 +29,7 @@ export type RemoteControlEvent =
 export type RemoteControlAction = {
   event: RemoteControlEvent;
   key: string;
+  triggerKey: string;
   [key: string]: unknown;
 };
 

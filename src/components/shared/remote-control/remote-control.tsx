@@ -1,8 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/shared";
 import {
-  NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
+  NEW_REMOTE_CONTROL_EVENT,
 } from "@/constants/remote-control.constants";
 import { useTranslation } from "react-i18next";
 import useSocket from "@/hooks/useSocket";
@@ -53,6 +53,41 @@ export const RemoteControl: React.FC = () => {
       handlers?.[event]();
     }
   };
+
+  useEffect(() => {
+    // Create a mapping of trigger keys to events
+    const keyToEventMap = new Map<string, RemoteControlEvent>();
+    Object.values(REMOTE_CONTROLS).forEach(({ event, triggerKey }) => {
+      if (triggerKey) {
+        // handle multiple keys for same event
+        triggerKey.split(', ').forEach(k => keyToEventMap.set(k, event));
+      }
+    });
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const key = event.key;
+
+      // check if this key triggers an event
+      const eventName: RemoteControlEvent | undefined = keyToEventMap.get(key);
+
+      if (eventName) {
+        event.preventDefault();
+      }
+
+      /**
+       * if isWebClientActive then execute handler
+       */
+      if (isWebClientActive && eventName) {
+        handlers?.[eventName]();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [handlers, isWebClientActive]);
 
   return (
     <RemoteControlContainer>
