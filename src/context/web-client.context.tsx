@@ -6,7 +6,7 @@ import { useVideoJs } from "@/hooks/useVideoJS";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 import { RemoteEvent } from "@/types/remote-control.types";
-import { findCurrentBrightnessKey, findCurrentSpeedKey, getPlaylistNavigation } from "@/utils/web-client.util";
+import { calculatePlaybackRateFromSpeed, getPlaylistNavigation, multiplyPerceptualFPS, tapsToBrightness } from "@/utils/web-client.util";
 import React, {
   createContext,
   useCallback,
@@ -18,8 +18,7 @@ import React, {
 import { toast } from "react-toastify";
 import useSocket from "@/hooks/useSocket";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
-import { BRIGHTNESS, IS_WEB_CLIENT_ACTIVE, SPEEDS } from "@/constants/web-client.constants";
-import { BrightnessKey, SpeedKey } from "@/types/web-client.types";
+import { IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
 
 type WebClientContextType = {
@@ -74,8 +73,8 @@ export const WebClientProvider: React.FC<{
 
   // player states
   const [, setPaused] = useState<boolean>(false);
-  const [speed, setSpeed] = useState<number>(SPEEDS[4]);
-  const [brightness, setBrightness] = useState<number>(BRIGHTNESS[4]);
+  const [playbackRate, setPlaybackRate] = useState<number>(calculatePlaybackRateFromSpeed(8, 1));
+  const [brightness, setBrightness] = useState<number>(40);
   const [showCredit, setShowCredit] = useState<boolean>(false);
 
   const setWebClientActive = useCallback((isActive: boolean) => {
@@ -91,36 +90,24 @@ export const WebClientProvider: React.FC<{
 
   const handlers: Record<RemoteEvent, () => void> = useMemo(() => ({
     playback_slower: () => {
-      const currentKey = parseInt(findCurrentSpeedKey(speed, SPEEDS));
-      if (currentKey > 0) {
-        const newKey = currentKey - 1 as SpeedKey;
-        setSpeed(SPEEDS[newKey]);
-        player.current?.playbackRate(SPEEDS[newKey]);
-      }
+      const newPlaybackRate = multiplyPerceptualFPS(1 / 1.1224, playbackRate);
+      setPlaybackRate(newPlaybackRate);
+      player.current?.playbackRate(newPlaybackRate);
     },
     playback_faster: () => {
-      const currentKey = parseInt(findCurrentSpeedKey(speed, SPEEDS));
-      if (currentKey < 9) {
-        const newKey = currentKey + 1 as SpeedKey;
-        setSpeed(SPEEDS[newKey]);
-        player.current?.playbackRate(SPEEDS[newKey]);
-      }
+      const newPlaybackRate = multiplyPerceptualFPS(1.1224, playbackRate);
+      setPlaybackRate(newPlaybackRate);
+      player.current?.playbackRate(newPlaybackRate);
     },
     brighter: () => {
-      const currentKey = parseInt(findCurrentBrightnessKey(brightness, BRIGHTNESS));
-      if (currentKey < 9) {
-        const newKey = currentKey + 1 as BrightnessKey;
-        setBrightness(BRIGHTNESS[newKey]);
-        setVideoJSBrightness(BRIGHTNESS[newKey]);
-      }
+      const newBrightness = brightness + 1;
+      setVideoJSBrightness(tapsToBrightness(brightness));
+      setBrightness(newBrightness);
     },
     darker: () => {
-      const currentKey = parseInt(findCurrentBrightnessKey(brightness, BRIGHTNESS));
-      if (currentKey > 0) {
-        const newKey = currentKey - 1 as BrightnessKey;
-        setBrightness(BRIGHTNESS[newKey]);
-        setVideoJSBrightness(BRIGHTNESS[newKey]);
-      }
+      const newBrightness = brightness - 1;
+      setVideoJSBrightness(tapsToBrightness(brightness));
+      setBrightness(newBrightness);
     },
     pause: () => {
       // handle pause
@@ -198,47 +185,56 @@ export const WebClientProvider: React.FC<{
     help: () => { },
     status: () => { },
     set_speed_1: () => {
-      setSpeed(1);
-      player.current?.playbackRate(SPEEDS[1]);
+      const playbackRate = calculatePlaybackRateFromSpeed(1, playingDreamRef?.current?.activityLevel);
+      player.current?.playbackRate(playbackRate);
+      setPlaybackRate(playbackRate);
     },
     set_speed_2: () => {
-      setSpeed(2);
-      player.current?.playbackRate(SPEEDS[2]);
+      const playbackRate = calculatePlaybackRateFromSpeed(2, playingDreamRef?.current?.activityLevel);
+      player.current?.playbackRate(playbackRate);
+      setPlaybackRate(playbackRate);
     },
     set_speed_3: () => {
-      setSpeed(3);
-      player.current?.playbackRate(SPEEDS[3]);
+      const playbackRate = calculatePlaybackRateFromSpeed(3, playingDreamRef?.current?.activityLevel);
+      player.current?.playbackRate(playbackRate);
+      setPlaybackRate(playbackRate);
     },
     set_speed_4: () => {
-      setSpeed(4);
-      player.current?.playbackRate(SPEEDS[4]);
+      const playbackRate = calculatePlaybackRateFromSpeed(4, playingDreamRef?.current?.activityLevel);
+      player.current?.playbackRate(playbackRate);
+      setPlaybackRate(playbackRate);
     },
     set_speed_5: () => {
-      setSpeed(5);
-      player.current?.playbackRate(SPEEDS[5]);
+      const playbackRate = calculatePlaybackRateFromSpeed(5, playingDreamRef?.current?.activityLevel);
+      player.current?.playbackRate(playbackRate);
+      setPlaybackRate(playbackRate);
     },
     set_speed_6: () => {
-      setSpeed(6);
-      player.current?.playbackRate(SPEEDS[6]);
+      const playbackRate = calculatePlaybackRateFromSpeed(6, playingDreamRef?.current?.activityLevel);
+      player.current?.playbackRate(playbackRate);
+      setPlaybackRate(playbackRate);
     },
     set_speed_7: () => {
-      setSpeed(7);
-      player.current?.playbackRate(SPEEDS[7]);
+      const playbackRate = calculatePlaybackRateFromSpeed(7, playingDreamRef?.current?.activityLevel);
+      player.current?.playbackRate(playbackRate);
+      setPlaybackRate(playbackRate);
     },
     set_speed_8: () => {
-      setSpeed(8);
-      player.current?.playbackRate(SPEEDS[8]);
+      const playbackRate = calculatePlaybackRateFromSpeed(8, playingDreamRef?.current?.activityLevel);
+      player.current?.playbackRate(playbackRate);
+      setPlaybackRate(playbackRate);
     },
     set_speed_9: () => {
-      setSpeed(9);
-      player.current?.playbackRate(SPEEDS[9]);
+      const playbackRate = calculatePlaybackRateFromSpeed(9, playingDreamRef?.current?.activityLevel);
+      player.current?.playbackRate(playbackRate);
+      setPlaybackRate(playbackRate);
     },
     capture: () => { },
     report: () => { },
     reset_playlist: () => { }
   }), [
     player,
-    speed,
+    playbackRate,
     brightness,
     showCredit,
     emit,
@@ -247,6 +243,7 @@ export const WebClientProvider: React.FC<{
     showOverlay,
     hideOverlay,
     setShowCredit,
+    setPlaybackRate,
     updateCurrentDream
   ]);
 

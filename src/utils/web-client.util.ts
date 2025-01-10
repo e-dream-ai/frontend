@@ -77,3 +77,37 @@ export const findCurrentBrightnessKey = (
     )?.[0] || "4"
   );
 };
+
+// from desktop client
+export function speedToPerceptualFPS(speed: number) {
+  return Math.pow(2.0, (speed + 1) / 2);
+}
+
+export function perceptualFPSToDecoderFPS(
+  perceptualFPS: number = 1,
+  activityLevel: number = 1,
+) {
+  return perceptualFPS / activityLevel;
+}
+
+export function calculatePlaybackRateFromSpeed(
+  speed: number,
+  activityLevel: number = 1,
+) {
+  const INITIAL_DECODER_FPS = 23;
+  return (
+    perceptualFPSToDecoderFPS(speedToPerceptualFPS(speed), activityLevel) /
+    INITIAL_DECODER_FPS
+  );
+}
+
+export function multiplyPerceptualFPS(
+  multiplier: number,
+  perceptualFPS: number,
+) {
+  return multiplier * perceptualFPS;
+}
+
+export function tapsToBrightness(taps: number) {
+  return Math.pow(2.0, taps / 40) - 1;
+}
