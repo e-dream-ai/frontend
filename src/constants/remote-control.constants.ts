@@ -46,6 +46,7 @@ export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
   CAPTURE: { event: "capture", key: "T", triggerKey: "" },
   REPORT: { event: "report", key: "R, !", triggerKey: "" },
   RESET_PLAYLIST: { event: "reset_playlist", key: "", triggerKey: "" },
+  FULLSCREEN: { event: "fullscreen", key: "", triggerKey: "f" },
 };
 
 export const REMOTE_CONTROLS_TRANSLATIONS = {

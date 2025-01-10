@@ -1,4 +1,8 @@
-import { BRIGHTNESS, SPEEDS } from "@/constants/web-client.constants";
+import {
+  BRIGHTNESS,
+  INITIAL_DECODER_FPS,
+  SPEEDS,
+} from "@/constants/web-client.constants";
 import { Dream } from "@/types/dream.types";
 import { Playlist, PlaylistItem } from "@/types/playlist.types";
 
@@ -94,7 +98,6 @@ export function calculatePlaybackRateFromSpeed(
   speed: number,
   activityLevel: number = 1,
 ) {
-  const INITIAL_DECODER_FPS = 23;
   return (
     perceptualFPSToDecoderFPS(speedToPerceptualFPS(speed), activityLevel) /
     INITIAL_DECODER_FPS

@@ -26,3 +26,7 @@ export const BRIGHTNESS = {
 
 export const IS_WEB_CLIENT_ACTIVE =
   import.meta.env.VITE_IS_WEB_CLIENT_ACTIVE === "true";
+export const CREDIT_OVERLAY_ID = "credit";
+export const SHOW_OVERLAY_TRANSITION_MS = 200;
+export const HIDE_OVERLAY_TRANSITION_MS = 201;
+export const INITIAL_DECODER_FPS = 23;

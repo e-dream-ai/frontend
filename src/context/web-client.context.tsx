@@ -18,8 +18,9 @@ import React, {
 import { toast } from "react-toastify";
 import useSocket from "@/hooks/useSocket";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
-import { IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
+import { CREDIT_OVERLAY_ID, IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
+import { SpeedControls, SpeedLevels } from "@/types/web-client.types";
 
 type WebClientContextType = {
   isWebClientActive: boolean;
@@ -42,7 +43,7 @@ export const WebClientProvider: React.FC<{
   const { user, updateCurrentDream } = useAuth()
 
   // videojs
-  const { player, isReady, setBrightness: setVideoJSBrightness, playVideo } = useVideoJs();
+  const { player, isReady, setBrightness: setVideoJSBrightness, playVideo, toggleFullscreen } = useVideoJs();
 
   // socket
   const { emit } = useSocket();
@@ -75,7 +76,7 @@ export const WebClientProvider: React.FC<{
   const [, setPaused] = useState<boolean>(false);
   const [playbackRate, setPlaybackRate] = useState<number>(calculatePlaybackRateFromSpeed(8, 1));
   const [brightness, setBrightness] = useState<number>(40);
-  const [showCredit, setShowCredit] = useState<boolean>(false);
+  const [showCreditOverlay, setShowCreditOverlay] = useState<boolean>(false);
 
   const setWebClientActive = useCallback((isActive: boolean) => {
     setIsWebClientActive(isActive);
@@ -87,6 +88,77 @@ export const WebClientProvider: React.FC<{
   const setWebPlayerAvailable = useCallback((isActive: boolean) => {
     setIsWebClientAvailable(isActive)
   }, []);
+
+  const updateCreditOverlay = useCallback(() => {
+    // hide overlay if is already showing one
+    hideOverlay(CREDIT_OVERLAY_ID);
+
+    // update overlay with new content
+    const overlayContent = `
+        <div>
+          <div>${playingDreamRef.current?.name ?? playingDreamRef.current?.uuid ?? 'No dream playing'}</div>
+          <div>${playingDreamRef.current?.displayedOwner?.name ?? playingDreamRef.current?.user?.name ?? ''}</div>
+        </div>
+      `;
+
+    showOverlay({
+      id: CREDIT_OVERLAY_ID,
+      content: overlayContent,
+    });
+  }, [showOverlay, hideOverlay]);
+
+  const toggleCreditOverlay = useCallback(() => {
+    if (showCreditOverlay) {
+      hideOverlay(CREDIT_OVERLAY_ID);
+      setShowCreditOverlay(false);
+    } else {
+      updateCreditOverlay();
+      setShowCreditOverlay(true);
+    }
+  }, [showCreditOverlay, updateCreditOverlay, hideOverlay]);
+
+  // get next dream to play having direction
+  const getNextDream = useCallback((direction: 'next' | 'previous') => {
+    const { [direction]: targetDream } = getPlaylistNavigation(
+      playingDreamRef.current,
+      playingPlaylistRef?.current
+    );
+    return targetDream?.dreamItem ?? playingPlaylistRef?.current?.items?.[0]?.dreamItem;
+  }, []);
+
+  // plays dream and updates state
+  const playDream = useCallback((dreamToPlay?: Dream) => {
+    if (!dreamToPlay?.video) return;
+
+    playingDreamRef.current = dreamToPlay;
+    playVideo(dreamToPlay.video);
+    emit(NEW_REMOTE_CONTROL_EVENT, {
+      event: "playing",
+      uuid: dreamToPlay.uuid
+    });
+    updateCurrentDream(dreamToPlay);
+
+    if (showCreditOverlay) {
+      updateCreditOverlay();
+    }
+  }, [showCreditOverlay, emit, playVideo, updateCurrentDream, updateCreditOverlay]);
+
+  const handlePlaylistControl = useCallback((direction: 'next' | 'previous') => {
+    playDream(getNextDream(direction));
+  }, [playDream, getNextDream]);
+
+  const setSpeed = useCallback((speed: number) => {
+    const playbackRate = calculatePlaybackRateFromSpeed(speed, playingDreamRef?.current?.activityLevel);
+    player.current?.playbackRate(playbackRate);
+    setPlaybackRate(playbackRate);
+  }, [player]);
+
+  const speedControls = (Object.fromEntries(
+    Array.from({ length: 9 }, (_, i) => [
+      `set_speed_${i + 1}`,
+      () => setSpeed((i + 1) as SpeedLevels)
+    ])
+  ) as SpeedControls);
 
   const handlers: Record<RemoteEvent, () => void> = useMemo(() => ({
     playback_slower: () => {
@@ -127,24 +199,10 @@ export const WebClientProvider: React.FC<{
     like_current_dream: () => { },
     dislike_current_dream: () => { },
     previous: () => {
-      const { previous } = getPlaylistNavigation(playingDreamRef.current, playingPlaylistRef?.current);
-      const dreamToPlay = previous?.dreamItem ?? playingPlaylistRef?.current?.items?.[0]?.dreamItem;
-      if (dreamToPlay && dreamToPlay.video) {
-        playVideo(dreamToPlay.video);
-        playingDreamRef.current = dreamToPlay;
-        emit(NEW_REMOTE_CONTROL_EVENT, { event: "playing", uuid: dreamToPlay.uuid })
-        updateCurrentDream(dreamToPlay);
-      }
+      handlePlaylistControl('previous');
     },
     next: () => {
-      const { next } = getPlaylistNavigation(playingDreamRef.current, playingPlaylistRef?.current);
-      const dreamToPlay = next?.dreamItem ?? playingPlaylistRef?.current?.items?.[0]?.dreamItem;
-      if (dreamToPlay && dreamToPlay.video) {
-        playVideo(dreamToPlay.video);
-        playingDreamRef.current = dreamToPlay;
-        emit(NEW_REMOTE_CONTROL_EVENT, { event: "playing", uuid: dreamToPlay.uuid })
-        updateCurrentDream(dreamToPlay);
-      }
+      handlePlaylistControl('next');
     },
     forward: () => {
       if (player.current) {
@@ -161,90 +219,30 @@ export const WebClientProvider: React.FC<{
       }
     },
     credit: () => {
-      const creditOverlayId = "credit";
-      if (showCredit) {
-        hideOverlay(creditOverlayId);
-        setShowCredit(false);
-      } else {
-        const overlayContent = `
-          <div>
-            <div>${playingDreamRef.current?.name ?? playingDreamRef.current?.uuid ?? 'No dream playing'}</div>
-            <div>${playingDreamRef.current?.displayedOwner?.name ?? playingDreamRef.current?.user?.name ?? ''}</div>
-          </div>
-        `;
-        showOverlay({
-          id: creditOverlayId,
-          content: overlayContent,
-        });
-        setShowCredit(true);
-      }
+      toggleCreditOverlay();
     },
     web: () => {
       window.open(import.meta.env.VITE_FRONTEND_URL, "_blank");
     },
     help: () => { },
     status: () => { },
-    set_speed_1: () => {
-      const playbackRate = calculatePlaybackRateFromSpeed(1, playingDreamRef?.current?.activityLevel);
-      player.current?.playbackRate(playbackRate);
-      setPlaybackRate(playbackRate);
-    },
-    set_speed_2: () => {
-      const playbackRate = calculatePlaybackRateFromSpeed(2, playingDreamRef?.current?.activityLevel);
-      player.current?.playbackRate(playbackRate);
-      setPlaybackRate(playbackRate);
-    },
-    set_speed_3: () => {
-      const playbackRate = calculatePlaybackRateFromSpeed(3, playingDreamRef?.current?.activityLevel);
-      player.current?.playbackRate(playbackRate);
-      setPlaybackRate(playbackRate);
-    },
-    set_speed_4: () => {
-      const playbackRate = calculatePlaybackRateFromSpeed(4, playingDreamRef?.current?.activityLevel);
-      player.current?.playbackRate(playbackRate);
-      setPlaybackRate(playbackRate);
-    },
-    set_speed_5: () => {
-      const playbackRate = calculatePlaybackRateFromSpeed(5, playingDreamRef?.current?.activityLevel);
-      player.current?.playbackRate(playbackRate);
-      setPlaybackRate(playbackRate);
-    },
-    set_speed_6: () => {
-      const playbackRate = calculatePlaybackRateFromSpeed(6, playingDreamRef?.current?.activityLevel);
-      player.current?.playbackRate(playbackRate);
-      setPlaybackRate(playbackRate);
-    },
-    set_speed_7: () => {
-      const playbackRate = calculatePlaybackRateFromSpeed(7, playingDreamRef?.current?.activityLevel);
-      player.current?.playbackRate(playbackRate);
-      setPlaybackRate(playbackRate);
-    },
-    set_speed_8: () => {
-      const playbackRate = calculatePlaybackRateFromSpeed(8, playingDreamRef?.current?.activityLevel);
-      player.current?.playbackRate(playbackRate);
-      setPlaybackRate(playbackRate);
-    },
-    set_speed_9: () => {
-      const playbackRate = calculatePlaybackRateFromSpeed(9, playingDreamRef?.current?.activityLevel);
-      player.current?.playbackRate(playbackRate);
-      setPlaybackRate(playbackRate);
-    },
     capture: () => { },
     report: () => { },
-    reset_playlist: () => { }
+    reset_playlist: () => { },
+    fullscreen: () => {
+      toggleFullscreen();
+    },
+    ...speedControls
   }), [
     player,
     playbackRate,
     brightness,
-    showCredit,
-    emit,
-    playVideo,
+    speedControls,
     setVideoJSBrightness,
-    showOverlay,
-    hideOverlay,
-    setShowCredit,
-    setPlaybackRate,
-    updateCurrentDream
+    toggleCreditOverlay,
+    toggleFullscreen,
+    handlePlaylistControl,
+    // setSpeed,
   ]);
 
   // handles when a video ends playing

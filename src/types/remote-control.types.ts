@@ -24,7 +24,8 @@ export type RemoteControlEvent =
   | "capture"
   | "report"
   | "reset_playlist"
-  | `set_speed_${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`;
+  | `set_speed_${1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9}`
+  | "fullscreen";
 
 export type RemoteControlAction = {
   event: RemoteControlEvent;

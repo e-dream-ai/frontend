@@ -24,6 +24,7 @@ type VideoJSContextType = {
   destroyPlayer: () => void;
   setBrightness: (value: number) => void;
   playVideo: (src: string) => void;
+  toggleFullscreen: () => void;
 }
 
 const VideoJSContext = createContext<VideoJSContextType | undefined>(undefined);
@@ -123,10 +124,19 @@ export const VideoJSProvider = ({
     }, 500); // match this with CSS transition duration
   }, []);
 
+  const toggleFullscreen = useCallback(() => {
+    const player = playerRef.current;
+    if (!player) return;
+    if (player.isFullscreen()) {
+      player.exitFullscreen();
+    } else {
+      player.requestFullscreen();
+    }
+  }, []);
+
   const memoedValue = useMemo(
-    () => ({ player: playerRef, initializePlayer, destroyPlayer, setBrightness, playVideo, isReady }),
-    [playerRef, initializePlayer, destroyPlayer, setBrightness, playVideo, isReady
-    ],
+    () => ({ player: playerRef, initializePlayer, destroyPlayer, setBrightness, playVideo, toggleFullscreen, isReady }),
+    [playerRef, initializePlayer, destroyPlayer, setBrightness, playVideo, toggleFullscreen, isReady],
   );
 
   return (
