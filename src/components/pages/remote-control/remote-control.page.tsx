@@ -7,6 +7,7 @@ import { CurrentDream } from "@/components/shared/current-dream/current-dream";
 import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
 import { useWebClient } from "@/hooks/useWebClient";
 import { VideoJS } from "@/components/shared/video-js/VideoJS";
+import VideoPlayer from "@/components/shared/video-js/VideoPlayer";
 
 const SECTION_ID = "remote-control";
 
@@ -25,6 +26,8 @@ const RemoteControlPage: React.FC = () => {
         </Row>
 
         {isWebClientActive && <VideoJS />}
+
+        <VideoPlayer />
 
         <CurrentDream />
 
