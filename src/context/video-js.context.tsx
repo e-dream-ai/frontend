@@ -1,8 +1,8 @@
 import { VideoJSOptions } from "@/types/video-js.types";
 import { VoidFunction } from "@/utils/function.util";
 import { createContext, useCallback, useMemo, useRef, useState } from "react";
-import videojs from 'video.js';
-import Player from 'video.js/dist/types/player';
+import videojs from "video.js";
+import Player from "video.js/dist/types/player";
 
 type VideoJSEvents = {
   onEnded?: () => void;
@@ -10,15 +10,22 @@ type VideoJSEvents = {
   onError?: (error: unknown) => void;
 };
 
+type ActivePlayer = "one" | "two";
+
 type InitializePlayerParams = {
-  element: HTMLElement;
+  videoOneElement: HTMLVideoElement;
+  videoTwoElement: HTMLVideoElement;
   options: VideoJSOptions;
   events?: VideoJSEvents;
 };
 
 // create context
 type VideoJSContextType = {
-  player: React.MutableRefObject<Player | null>;
+  activePlayer: ActivePlayer;
+  playerOne: React.MutableRefObject<Player | null>;
+  playerTwo: React.MutableRefObject<Player | null>;
+  videoOne: React.RefObject<HTMLVideoElement | null>;
+  videoTwo: React.RefObject<HTMLVideoElement | null>;
   isReady: boolean;
   initializePlayer: (params: InitializePlayerParams) => void;
   destroyPlayer: () => void;
@@ -35,108 +42,153 @@ export const VideoJSProvider = ({
   children: React.ReactNode;
 }) => {
   const [isReady, setIsReady] = useState(false);
-  const playerRef = useRef<Player | null>(null);
+  const [activePlayer, setActivePlayer] = useState<ActivePlayer>("one");
+  const playerOneRef = useRef<Player | null>(null);
+  const playerTwoRef = useRef<Player | null>(null);
+  const videoOneRef = useRef<HTMLVideoElement>(null);
+  const videoTwoRef = useRef<HTMLVideoElement>(null);
 
-  const initializePlayer = useCallback(({ element, options, events }: InitializePlayerParams) => {
-    // make sure to dispose of any existing player
-    if (playerRef.current && !playerRef.current.isDisposed()) {
-      playerRef.current.dispose();
+  const initializePlayer = useCallback(({ videoOneElement, videoTwoElement, options, events }: InitializePlayerParams) => {
+    // cleanup existing players if any
+    if (playerOneRef.current && !playerOneRef.current.isDisposed()) {
+      playerOneRef.current.dispose();
+    }
+    if (playerTwoRef.current && !playerTwoRef.current.isDisposed()) {
+      playerTwoRef.current.dispose();
     }
 
-    // initialize new player
-    const player = videojs(element, options);
-    playerRef.current = player;
-    // update isReady value when videojs loads
-    player.ready(() => {
-      setIsReady(true);
-      events?.onReady?.();
+    // initialize both players
+    const playerOne = videojs(videoOneElement, options);
+    const playerTwo = videojs(videoTwoElement, options);
+
+    playerOneRef.current = playerOne;
+    playerTwoRef.current = playerTwo;
+
+    // track ready state for both players
+    let oneReady = false;
+    let twoReady = false;
+
+    playerOne.ready(() => {
+      oneReady = true;
+      if (oneReady && twoReady) {
+        setIsReady(true);
+        events?.onReady?.();
+      }
     });
 
-    player.on('ended', events?.onEnded ?? VoidFunction);
+    playerTwo.ready(() => {
+      twoReady = true;
+      if (oneReady && twoReady) {
+        setIsReady(true);
+        events?.onReady?.();
+      }
+    });
+
+    // event handlers
+    playerOne.on("ended", events?.onEnded ?? VoidFunction);
+    playerTwo.on("ended", events?.onEnded ?? VoidFunction);
   }, []);
 
   const destroyPlayer = useCallback(() => {
-    const player = playerRef.current;
-    if (!player) return;
-
-    if (player.isDisposed()) {
-      player.dispose();
-      playerRef.current = null;
+    if (playerOneRef.current && !playerOneRef.current.isDisposed()) {
+      playerOneRef.current.dispose();
+      playerOneRef.current = null;
+    }
+    if (playerTwoRef.current && !playerTwoRef.current.isDisposed()) {
+      playerTwoRef.current.dispose();
+      playerTwoRef.current = null;
     }
   }, []);
 
   const setBrightness = useCallback((value: number) => {
-    const player = playerRef.current;
-    if (!player) return;
+    const currentPlayer = activePlayer === "one" ? playerOneRef.current : playerTwoRef.current;
+    if (!currentPlayer) return;
 
-    const videoElement = player?.el().querySelector('video');
+    const videoElement = currentPlayer.el().querySelector("video");
     if (videoElement) {
       videoElement.style.filter = `brightness(${value})`;
     }
-  }, []);
+  }, [activePlayer]);
 
   const playVideo = useCallback((src: string) => {
-    const player = playerRef.current;
-    if (!player) {
-      return;
-    }
+    const getCurrentPlayer = (active: "one" | "two") =>
+      active === "one" ? playerOneRef.current : playerTwoRef.current;
+    const getNextPlayer = (active: "one" | "two") =>
+      active === "one" ? playerTwoRef.current : playerOneRef.current;
 
-    const transitioningClass = "vjs-transitioning";
+    setActivePlayer(prevActive => {
+      const currentPlayer = getCurrentPlayer(prevActive);
+      const nextPlayer = getNextPlayer(prevActive);
 
-    // remove transitioning class if already exists 
-    player.removeClass(transitioningClass);
+      if (!currentPlayer || !nextPlayer) return prevActive;
 
-    // add transitioning class to start animation
-    player.addClass(transitioningClass);
+      setTimeout(async () => {
+        try {
+          // cleanup event listeners
+          nextPlayer.off("loadeddata");
+          nextPlayer.off("error");
 
-    // wait for animation
-    setTimeout(() => {
-      try {
-        // clean up event listeners
-        player.off('loadeddata');
-        player.off('error');
+          const wasPlaying = !currentPlayer.paused();
+          nextPlayer.src({ src });
 
-        // listen for error handling
-        player.one('error', () => {
-          player.removeClass(transitioningClass);
-        });
-
-        // listen for success handling
-        player.one('loadeddata', () => {
-          player.removeClass(transitioningClass);
-        });
-
-        // set source 
-        player.src({
-          src: src,
-        });
-
-        // handle play promise
-        const playPromise = player.play();
-        if (playPromise !== undefined) {
-          playPromise.catch(() => {
-            player.removeClass(transitioningClass);
+          // setup event listeners
+          nextPlayer.one("error", () => {
+            // error handling
           });
+          nextPlayer.one("loadeddata", () => {
+            // loadeddata handling
+          });
+
+          // wait for next player to be ready
+          await new Promise<void>((resolve) => {
+            nextPlayer.one('canplay', () => {
+              resolve();
+            });
+          });
+
+          if (wasPlaying) {
+            try {
+              await nextPlayer.play();
+            } catch (error) {
+              // 
+            }
+          }
+        } catch (error) {
+          //
         }
-      } catch (error) {
-        player.removeClass(transitioningClass);
-      }
-    }, 500); // match this with CSS transition duration
+      }, 500);
+
+      // new active player
+      return prevActive === "one" ? "two" : "one";
+    });
   }, []);
 
   const toggleFullscreen = useCallback(() => {
-    const player = playerRef.current;
-    if (!player) return;
-    if (player.isFullscreen()) {
-      player.exitFullscreen();
+    const currentPlayer = activePlayer === "one" ? playerOneRef.current : playerTwoRef.current;
+    if (!currentPlayer) return;
+
+    if (currentPlayer.isFullscreen()) {
+      currentPlayer.exitFullscreen();
     } else {
-      player.requestFullscreen();
+      currentPlayer.requestFullscreen();
     }
-  }, []);
+  }, [activePlayer]);
 
   const memoedValue = useMemo(
-    () => ({ player: playerRef, initializePlayer, destroyPlayer, setBrightness, playVideo, toggleFullscreen, isReady }),
-    [playerRef, initializePlayer, destroyPlayer, setBrightness, playVideo, toggleFullscreen, isReady],
+    () => ({
+      activePlayer,
+      playerOne: playerOneRef,
+      playerTwo: playerTwoRef,
+      videoOne: videoOneRef,
+      videoTwo: videoTwoRef,
+      isReady,
+      initializePlayer,
+      destroyPlayer,
+      setBrightness,
+      playVideo,
+      toggleFullscreen,
+    }),
+    [activePlayer, isReady, initializePlayer, destroyPlayer, setBrightness, playVideo, toggleFullscreen],
   );
 
   return (

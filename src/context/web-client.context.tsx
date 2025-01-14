@@ -43,7 +43,9 @@ export const WebClientProvider: React.FC<{
   const { user, updateCurrentDream } = useAuth()
 
   // videojs
-  const { player, isReady, setBrightness: setVideoJSBrightness, playVideo, toggleFullscreen } = useVideoJs();
+  const { playerOne, playerTwo, activePlayer, isReady, setBrightness: setVideoJSBrightness, playVideo, toggleFullscreen } = useVideoJs();
+
+  const player = activePlayer === "one" ? playerOne : playerTwo;
 
   // socket
   const { emit } = useSocket();
@@ -59,7 +61,7 @@ export const WebClientProvider: React.FC<{
   const currentDream = useMemo(() => user?.currentDream, [user?.currentDream]);
 
   const { data } = usePlaylist(user?.currentPlaylist?.uuid);
-  const currentPlaylist = data?.data?.playlist;
+  const currentPlaylist = useMemo(() => data?.data?.playlist, [data]);
 
   /** 
    * indicates if the web player is currently active
@@ -273,6 +275,7 @@ export const WebClientProvider: React.FC<{
 
   // play current dream when playerjs is ready
   useEffect(() => {
+    console.log({ isReady, playVideo });
     if (isReady && playingDreamRef.current) {
       playVideo(playingDreamRef.current.video);
     }
