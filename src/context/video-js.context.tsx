@@ -1,14 +1,7 @@
 import { VideoJSOptions } from "@/types/video-js.types";
-import { VoidFunction } from "@/utils/function.util";
 import { createContext, useCallback, useMemo, useRef, useState } from "react";
 import videojs from "video.js";
 import Player from "video.js/dist/types/player";
-
-type VideoJSEvents = {
-  onEnded?: () => void;
-  onReady?: () => void;
-  onError?: (error: unknown) => void;
-};
 
 type ActivePlayer = "one" | "two";
 
@@ -16,22 +9,20 @@ type InitializePlayerParams = {
   videoOneElement: HTMLVideoElement;
   videoTwoElement: HTMLVideoElement;
   options: VideoJSOptions;
-  events?: VideoJSEvents;
 };
 
 // create context
 type VideoJSContextType = {
+  isReady: boolean;
   activePlayer: ActivePlayer;
   playerOne: React.MutableRefObject<Player | null>;
   playerTwo: React.MutableRefObject<Player | null>;
-  videoOne: React.RefObject<HTMLVideoElement | null>;
-  videoTwo: React.RefObject<HTMLVideoElement | null>;
-  isReady: boolean;
   initializePlayer: (params: InitializePlayerParams) => void;
   destroyPlayer: () => void;
   setBrightness: (value: number) => void;
   playVideo: (src: string) => void;
   toggleFullscreen: () => void;
+  setPlaybackRate: (playbackRate: number) => void;
 }
 
 const VideoJSContext = createContext<VideoJSContextType | undefined>(undefined);
@@ -43,12 +34,18 @@ export const VideoJSProvider = ({
 }) => {
   const [isReady, setIsReady] = useState(false);
   const [activePlayer, setActivePlayer] = useState<ActivePlayer>("one");
+  const activePlayerRef = useRef<ActivePlayer>("one");
   const playerOneRef = useRef<Player | null>(null);
   const playerTwoRef = useRef<Player | null>(null);
-  const videoOneRef = useRef<HTMLVideoElement>(null);
-  const videoTwoRef = useRef<HTMLVideoElement>(null);
 
-  const initializePlayer = useCallback(({ videoOneElement, videoTwoElement, options, events }: InitializePlayerParams) => {
+
+  // updates both ref (immediate access in callbacks, no re-renders) and state (triggers re-renders) for the video player instances
+  const updateActivePlayer = useCallback((ap: ActivePlayer) => {
+    activePlayerRef.current = ap;
+    setActivePlayer(ap);
+  }, []);
+
+  const initializePlayer = useCallback(({ videoOneElement, videoTwoElement, options }: InitializePlayerParams) => {
     // cleanup existing players if any
     if (playerOneRef.current && !playerOneRef.current.isDisposed()) {
       playerOneRef.current.dispose();
@@ -72,7 +69,6 @@ export const VideoJSProvider = ({
       oneReady = true;
       if (oneReady && twoReady) {
         setIsReady(true);
-        events?.onReady?.();
       }
     });
 
@@ -80,13 +76,8 @@ export const VideoJSProvider = ({
       twoReady = true;
       if (oneReady && twoReady) {
         setIsReady(true);
-        events?.onReady?.();
       }
     });
-
-    // event handlers
-    playerOne.on("ended", events?.onEnded ?? VoidFunction);
-    playerTwo.on("ended", events?.onEnded ?? VoidFunction);
   }, []);
 
   const destroyPlayer = useCallback(() => {
@@ -101,94 +92,114 @@ export const VideoJSProvider = ({
   }, []);
 
   const setBrightness = useCallback((value: number) => {
-    const currentPlayer = activePlayer === "one" ? playerOneRef.current : playerTwoRef.current;
-    if (!currentPlayer) return;
+    const playerRefs = [playerOneRef, playerTwoRef];
 
-    const videoElement = currentPlayer.el().querySelector("video");
-    if (videoElement) {
-      videoElement.style.filter = `brightness(${value})`;
-    }
-  }, [activePlayer]);
+    playerRefs.forEach(playerRef => {
+      const videoElement = playerRef.current?.el()?.querySelector("video");
+      if (videoElement) {
+        videoElement.style.filter = `brightness(${value})`;
+      }
+    });
+  }, []);
 
-  const playVideo = useCallback((src: string) => {
+  const playVideo = useCallback(async (src: string) => {
     const getCurrentPlayer = (active: "one" | "two") =>
       active === "one" ? playerOneRef.current : playerTwoRef.current;
     const getNextPlayer = (active: "one" | "two") =>
       active === "one" ? playerTwoRef.current : playerOneRef.current;
 
-    setActivePlayer(prevActive => {
-      const currentPlayer = getCurrentPlayer(prevActive);
-      const nextPlayer = getNextPlayer(prevActive);
 
-      if (!currentPlayer || !nextPlayer) return prevActive;
+    const currentPlayer = getCurrentPlayer(activePlayerRef.current);
+    const nextPlayer = getNextPlayer(activePlayerRef.current);
 
-      setTimeout(async () => {
-        try {
-          // cleanup event listeners
-          nextPlayer.off("loadeddata");
-          nextPlayer.off("error");
+    if (!currentPlayer || !nextPlayer) return;
 
-          const wasPlaying = !currentPlayer.paused();
-          nextPlayer.src({ src });
+    const currentPlaybackRate = currentPlayer.playbackRate();
+    const wasFullscreen = currentPlayer.isFullscreen();
 
-          // setup event listeners
-          nextPlayer.one("error", () => {
-            // error handling
-          });
-          nextPlayer.one("loadeddata", () => {
-            // loadeddata handling
-          });
+    try {
+      nextPlayer.src({ src });
 
-          // wait for next player to be ready
-          await new Promise<void>((resolve) => {
-            nextPlayer.one('canplay', () => {
-              resolve();
-            });
-          });
+      // keep playback rate from previous player
+      nextPlayer.one("loadeddata", async () => {
+        nextPlayer.playbackRate(currentPlaybackRate);
+      });
 
-          if (wasPlaying) {
-            try {
-              await nextPlayer.play();
-            } catch (error) {
-              // 
-            }
-          }
-        } catch (error) {
+      // wait for next player to be ready
+      await new Promise<void>((resolve) => {
+        nextPlayer.one("canplay", () => {
+          resolve();
+        });
+      });
+
+
+      await nextPlayer.play();
+
+      // set fullscreen after play has started
+      if (wasFullscreen) {
+        await nextPlayer.requestFullscreen().catch(console.warn);
+      }
+
+    } catch (error) {
+      return false;
+    }
+
+    // new active player
+    updateActivePlayer(activePlayerRef.current === "one" ? "two" : "one");
+
+    return true;
+  }, [updateActivePlayer]);
+
+  const toggleFullscreen = useCallback(() => {
+    const playerRefs = [playerOneRef, playerTwoRef];
+
+    playerRefs.forEach(playerRef => {
+      const player = playerRef.current;
+      if (!player) return;
+      if (player.isFullscreen()) {
+        player.exitFullscreen();
+      } else {
+        player.requestFullscreen().catch(() => {
           //
-        }
-      }, 500);
+        });
+      }
+    });
 
-      // new active player
-      return prevActive === "one" ? "two" : "one";
+  }, []);
+
+  const setPlaybackRate = useCallback((playbackRate: number) => {
+    const playerRefs = [playerOneRef, playerTwoRef];
+
+    playerRefs.forEach(playerRef => {
+      const player = playerRef.current;
+      if (!player) return;
+      player.playbackRate(playbackRate);
     });
   }, []);
 
-  const toggleFullscreen = useCallback(() => {
-    const currentPlayer = activePlayer === "one" ? playerOneRef.current : playerTwoRef.current;
-    if (!currentPlayer) return;
-
-    if (currentPlayer.isFullscreen()) {
-      currentPlayer.exitFullscreen();
-    } else {
-      currentPlayer.requestFullscreen();
-    }
-  }, [activePlayer]);
-
   const memoedValue = useMemo(
     () => ({
+      isReady,
       activePlayer,
       playerOne: playerOneRef,
       playerTwo: playerTwoRef,
-      videoOne: videoOneRef,
-      videoTwo: videoTwoRef,
-      isReady,
       initializePlayer,
       destroyPlayer,
       setBrightness,
       playVideo,
       toggleFullscreen,
+      setPlaybackRate
     }),
-    [activePlayer, isReady, initializePlayer, destroyPlayer, setBrightness, playVideo, toggleFullscreen],
+    [
+      isReady,
+      activePlayer,
+      initializePlayer,
+      destroyPlayer,
+      setBrightness,
+      playVideo,
+      toggleFullscreen,
+      setPlaybackRate
+    ],
   );
 
   return (

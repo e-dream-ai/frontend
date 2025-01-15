@@ -12,9 +12,9 @@ export type OverlayOptions = {
 };
 
 export const useVideoJSOverlay = (
-  playerRef: React.MutableRefObject<Player | null>,
+  playerRefs: Array<React.MutableRefObject<Player | null>>,
 ) => {
-  const overlaysRef = useRef<Map<string, HTMLElement>>(new Map());
+  const overlaysRef = useRef<Map<string, HTMLElement[]>>(new Map());
   const overlayTimeoutsRef = useRef(new Map<string, NodeJS.Timeout>());
   const styleElementRef = useRef<HTMLStyleElement | null>(null);
 
@@ -44,8 +44,8 @@ export const useVideoJSOverlay = (
 
   // hide overlay fn
   const hideOverlay = useCallback((id: string = "default") => {
-    const overlay = overlaysRef.current.get(id);
-    if (!overlay) return;
+    const overlays = overlaysRef.current.get(id);
+    if (!overlays) return;
 
     // remove any existing timeout
     const timeoutId = overlayTimeoutsRef.current.get(id);
@@ -54,16 +54,20 @@ export const useVideoJSOverlay = (
     }
 
     // revemove visible class
-    overlay.classList.remove("visible");
+    overlays.forEach((overlay) => {
+      overlay.classList.remove("visible");
+    });
 
     const newTimeoutId = setTimeout(() => {
       // remove if element existso on DOM
-      if (overlay && overlay.parentNode) {
-        overlay.parentNode.removeChild(overlay);
-      }
+      // remove all overlays with this ID from DOM
+      overlays.forEach((overlay) => {
+        if (overlay && overlay.parentNode) {
+          overlay.parentNode.removeChild(overlay);
+        }
+      });
       overlaysRef.current.delete(id);
       overlayTimeoutsRef.current.delete(id);
-      console.log("overlay hidden and removed from DOM");
     }, SHOW_OVERLAY_TRANSITION_MS); // match transition duration
 
     // add new timeout
@@ -74,27 +78,34 @@ export const useVideoJSOverlay = (
   const showOverlay = useCallback(
     (options: OverlayOptions) => {
       const { id = "default", content, duration } = options;
-      const player = playerRef.current;
-      if (!player) return;
 
       // remove overlay with id if exists
       hideOverlay(id);
 
       // wait for any pending removal to complete
       setTimeout(() => {
-        // add new overlay
-        const overlay = document.createElement("div");
-        overlay.className = "video-js-overlay";
-        overlay.id = `video-overlay-${id}`;
-        overlay.innerHTML = content;
+        const newOverlays: HTMLElement[] = [];
 
-        player.el().appendChild(overlay);
-        overlaysRef.current.set(id, overlay);
+        playerRefs.forEach((playerRef) => {
+          const player = playerRef.current;
+          if (!player) return;
+          // add new overlay
+          const overlay = document.createElement("div");
+          overlay.className = "video-js-overlay";
+          overlay.id = `video-overlay-${id}`;
+          overlay.innerHTML = content;
 
-        // make visible
-        requestAnimationFrame(() => {
-          overlay.classList.add("visible");
+          player.el().appendChild(overlay);
+          newOverlays.push(overlay);
+
+          // make visible
+          requestAnimationFrame(() => {
+            overlay.classList.add("visible");
+          });
         });
+
+        // store all overlays for this ID
+        overlaysRef.current.set(id, newOverlays);
 
         // autohide if duration is set
         if (duration) {
@@ -104,7 +115,7 @@ export const useVideoJSOverlay = (
         }
       }, HIDE_OVERLAY_TRANSITION_MS); // slightly longer than hide transition
     },
-    [playerRef, hideOverlay],
+    [playerRefs, hideOverlay],
   );
 
   const hideAllOverlays = useCallback(() => {

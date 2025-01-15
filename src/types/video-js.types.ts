@@ -14,4 +14,5 @@ export type VideoJSOptions = {
   width?: number;
   height?: number;
   playbackRates?: number[];
+  preload?: string;
 };
