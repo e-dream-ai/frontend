@@ -20,7 +20,7 @@ export const VideoJS: FC<VideoJSProps> = () => {
       videoOneElement: videoOneRef.current,
       videoTwoElement: videoTwoRef.current,
       options: {
-        // controls: true,
+        controls: true,
         fluid: true,
         preload: "auto"
       },
@@ -46,7 +46,7 @@ export const VideoJS: FC<VideoJSProps> = () => {
             >
               <video
                 ref={videoOneRef}
-                className="video-js vjs-big-play-centered vjs-fluid w-full"
+                className="video-js vjs-big-play-centered"
               />
             </PlayerWrapper>
           </VideoContainer>
@@ -56,7 +56,7 @@ export const VideoJS: FC<VideoJSProps> = () => {
             >
               <video
                 ref={videoTwoRef}
-                className="video-js vjs-big-play-centered vjs-fluid w-full"
+                className="video-js vjs-big-play-centered"
               />
             </PlayerWrapper>
           </VideoContainer>
