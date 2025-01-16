@@ -19,11 +19,14 @@ type VideoJSContextType = {
   playerTwo: React.MutableRefObject<Player | null>;
   initializePlayer: (params: InitializePlayerParams) => void;
   destroyPlayer: () => void;
+  addEventListener: (event: string, handler: VideoJSEventHandler) => () => void;
   setBrightness: (value: number) => void;
   playVideo: (src: string) => void;
   toggleFullscreen: () => void;
   setPlaybackRate: (playbackRate: number) => void;
 }
+
+type VideoJSEventHandler = (event: unknown) => void;
 
 const VideoJSContext = createContext<VideoJSContextType | undefined>(undefined);
 
@@ -37,7 +40,7 @@ export const VideoJSProvider = ({
   const activePlayerRef = useRef<ActivePlayer>("one");
   const playerOneRef = useRef<Player | null>(null);
   const playerTwoRef = useRef<Player | null>(null);
-
+  const eventHandlersRef = useRef<Map<string, VideoJSEventHandler[]>>(new Map());
 
   // updates both ref (immediate access in callbacks, no re-renders) and state (triggers re-renders) for the video player instances
   const updateActivePlayer = useCallback((ap: ActivePlayer) => {
@@ -91,6 +94,38 @@ export const VideoJSProvider = ({
     }
   }, []);
 
+  const addEventListener = useCallback((
+    event: string,
+    handler: VideoJSEventHandler
+  ) => {
+    const handlers = eventHandlersRef.current.get(event) || [];
+    eventHandlersRef.current.set(event, [...handlers, handler]);
+
+    const players = [playerOneRef.current, playerTwoRef.current];
+    players.forEach((player, index) => {
+      if (player) {
+        // trigger handler for active player
+        const wrappedHandler = (e: VideoJSEventHandler) => {
+          const playerNumber = index === 0 ? "one" : "two";
+          if (playerNumber === activePlayerRef.current) {
+            handler(e);
+          }
+        };
+
+        player.on(event, wrappedHandler);
+      }
+    });
+
+    return () => {
+      const handlers = eventHandlersRef.current.get(event) || [];
+      eventHandlersRef.current.set(event, handlers.filter(h => h !== handler));
+
+      players.forEach(player => {
+        if (player) player.off(event, handler);
+      });
+    };
+  }, []);
+
   const setBrightness = useCallback((value: number) => {
     const playerRefs = [playerOneRef, playerTwoRef];
 
@@ -131,7 +166,6 @@ export const VideoJSProvider = ({
           resolve();
         });
       });
-
 
       await nextPlayer.play();
 
@@ -185,6 +219,7 @@ export const VideoJSProvider = ({
       playerTwo: playerTwoRef,
       initializePlayer,
       destroyPlayer,
+      addEventListener,
       setBrightness,
       playVideo,
       toggleFullscreen,
@@ -195,6 +230,7 @@ export const VideoJSProvider = ({
       activePlayer,
       initializePlayer,
       destroyPlayer,
+      addEventListener,
       setBrightness,
       playVideo,
       toggleFullscreen,

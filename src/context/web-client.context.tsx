@@ -48,6 +48,7 @@ export const WebClientProvider: React.FC<{
     playerTwo,
     activePlayer,
     isReady,
+    addEventListener,
     setBrightness: setPlayerBrightness,
     setPlaybackRate: setPlayerPlaybackRate,
     playVideo,
@@ -288,6 +289,14 @@ export const WebClientProvider: React.FC<{
       playingPlaylistRef.current = currentPlaylist;
     }
   }, [currentPlaylist]);
+
+  useEffect(() => {
+    const cleanup = addEventListener('ended', () => {
+      handlers.next();
+    });
+
+    return cleanup;
+  }, [handlers, addEventListener]);
 
   const memoedValue = useMemo(
     () => ({
