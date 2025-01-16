@@ -158,12 +158,15 @@ export const VideoJSProvider = ({
       // keep playback rate from previous player
       nextPlayer.one("loadeddata", async () => {
         nextPlayer.playbackRate(currentPlaybackRate);
+        nextPlayer.off("loadeddata");
       });
 
       // wait for next player to be ready
       await new Promise<void>((resolve) => {
         nextPlayer.one("canplay", () => {
           resolve();
+          // remove listener
+          nextPlayer.off("canplay");
         });
       });
 

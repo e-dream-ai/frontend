@@ -67,6 +67,8 @@ export const WebClientProvider: React.FC<{
   const playingDreamRef = useRef<Dream>();
   const playingPlaylistRef = useRef<Playlist>();
   const showCreditOverlayRef = useRef(false);
+  // used to prevent multiple calls to handlers.next() on automatic video change
+  const transitioningRef = useRef(false);
 
   // user current values
   const currentDream = useMemo(() => user?.currentDream, [user?.currentDream]);
@@ -105,11 +107,16 @@ export const WebClientProvider: React.FC<{
     // hide overlay if is already showing one
     hideOverlay(CREDIT_OVERLAY_ID);
 
+    const dreamName = playingDreamRef.current?.name ?? playingDreamRef.current?.uuid;
+    const artist = playingDreamRef.current?.displayedOwner?.name ?? playingDreamRef.current?.user?.name;
+    const playlist = playingPlaylistRef.current?.name ?? playingPlaylistRef.current?.uuid;
+
     // update overlay with new content
     const overlayContent = `
         <div>
-          <div>${playingDreamRef.current?.name ?? playingDreamRef.current?.uuid ?? 'No dream playing'}</div>
-          <div>${playingDreamRef.current?.displayedOwner?.name ?? playingDreamRef.current?.user?.name ?? ''}</div>
+          ${dreamName ? `<div>title: ${dreamName}</div>` : ""}
+          ${artist ? `<div>artist: ${artist}</div>` : ""}
+          ${playlist ? `<div>playlist: ${playlist}</div>` : ""}
         </div>
       `;
 
@@ -291,12 +298,31 @@ export const WebClientProvider: React.FC<{
   }, [currentPlaylist]);
 
   useEffect(() => {
-    const cleanup = addEventListener('ended', () => {
+    const cleanup1 = addEventListener('timeupdate', () => {
+      const remainingTime = Number(player?.current?.remainingTime());
+
+      if (Number.isNaN(remainingTime)) {
+        return;
+      }
+
+      // start transition when we reach threshold
+      const TRANSITION_THRESHOLD = 3;
+      if (remainingTime <= TRANSITION_THRESHOLD && !transitioningRef.current) {
+        transitioningRef.current = true;
+        handlers.next();
+      }
+    });
+
+    const cleanup2 = addEventListener('ended', () => {
+      transitioningRef.current = false;
       handlers.next();
     });
 
-    return cleanup;
-  }, [handlers, addEventListener]);
+    return () => {
+      cleanup1();
+      cleanup2();
+    };
+  }, [player, handlers, addEventListener]);
 
   const memoedValue = useMemo(
     () => ({
