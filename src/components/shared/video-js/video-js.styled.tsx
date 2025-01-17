@@ -1,3 +1,4 @@
+import { TRANSITION_THRESHOLD } from "@/constants/video-js.constants";
 import styled from "styled-components";
 
 export const VideoWrapper = styled.div`
@@ -11,7 +12,7 @@ export const VideoContainer = styled.div<{ isActive: boolean }>`
   position: absolute;
   width: 100%;
   height: 100%;
-  transition: opacity 1000ms ease;
+  transition: opacity ${TRANSITION_THRESHOLD * 1000}ms ease;
   opacity: ${props => props.isActive ? 1 : 0};
   z-index: ${props => props.isActive ? 2 : 1};
 

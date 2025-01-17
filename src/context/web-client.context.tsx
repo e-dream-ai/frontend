@@ -97,10 +97,12 @@ export const WebClientProvider: React.FC<{
 
   const setWebClientActive = useCallback((isActive: boolean) => {
     setIsWebClientActive(isActive);
-    if (isActive) {
+    if (isActive && currentDream) {
+      // if there's a current dream, set it as playing dream and preload it
       playingDreamRef.current = currentDream;
+      preloadVideo(currentDream.video);
     }
-  }, [currentDream, setIsWebClientActive]);
+  }, [currentDream, setIsWebClientActive, preloadVideo]);
 
   const setWebPlayerAvailable = useCallback((isActive: boolean) => {
     setIsWebClientAvailable(isActive)
@@ -153,12 +155,18 @@ export const WebClientProvider: React.FC<{
     if (!dreamToPlay?.video) return false;
 
     playingDreamRef.current = dreamToPlay;
-    await playVideo(dreamToPlay.video);
+    const played = await playVideo(dreamToPlay.video);
+
+    // if video was not played return false
+    if (!played) {
+      return false;
+    }
+
+    updateCurrentDream(dreamToPlay);
     emit(NEW_REMOTE_CONTROL_EVENT, {
       event: "playing",
       uuid: dreamToPlay.uuid
     });
-    updateCurrentDream(dreamToPlay);
 
     // get next dream after being update to preload it into a player instance
     const dreamToPreload = getNextDream("next");
