@@ -3,7 +3,7 @@ import { createContext, useCallback, useMemo, useRef, useState } from "react";
 import videojs from "video.js";
 import Player from "video.js/dist/types/player";
 import { v4 as uuidv4 } from 'uuid';
-import { PoolConfig } from "@/constants/video-js.constants";
+import { PoolConfig, TRANSITION_THRESHOLD, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
 
 type VideoJSContextType = {
   isReady: boolean;
@@ -227,12 +227,12 @@ export const VideoJSProvider = ({
         nextPlayer.src({ src });
         nextPlayerInstance.currentSrc = src;
 
-        nextPlayer.one("loadeddata", () => {
+        nextPlayer.one(VIDEOJS_EVENTS.LOADEDDATA, () => {
           nextPlayer.playbackRate(currentPlaybackRate);
         });
 
         await new Promise<void>((resolve) => {
-          nextPlayer.one("canplay", resolve);
+          nextPlayer.one(VIDEOJS_EVENTS.CANPLAY, resolve);
         });
       }
 
@@ -244,6 +244,11 @@ export const VideoJSProvider = ({
 
       await nextPlayer.play();
 
+      // if was fullscreen request to fullscreen new player too
+      if (wasFullscreen) {
+        await nextPlayer.requestFullscreen().catch(console.warn);
+      }
+
       if (currentPlayer) {
         currentPlayer.isActive = false;
         currentPlayer.lastUsed = Date.now();
@@ -254,8 +259,21 @@ export const VideoJSProvider = ({
       nextPlayerInstance.lastUsed = Date.now();
       updateActivePlayer(nextPlayerInstance.id);
 
-      if (wasFullscreen) {
-        await nextPlayer.requestFullscreen().catch(console.warn);
+      // wait transition
+      await new Promise<void>((resolve) => {
+        // TRANSITION_THRESHOLD / 2 
+        setTimeout(resolve, TRANSITION_THRESHOLD / 2 * 1000);
+      });
+
+      if (currentPlayer) {
+        // stop playing current player
+        currentPlayer?.player?.pause();
+        currentPlayer?.player?.currentTime(0);
+      }
+
+      if (currentPlayer && wasFullscreen) {
+        // exit fullscreen
+        await currentPlayer?.player?.exitFullscreen().catch(console.warn);
       }
 
       return true;
@@ -284,7 +302,7 @@ export const VideoJSProvider = ({
 
       // wait for ready to play
       await new Promise<void>((resolve) => {
-        player.one("canplay", resolve);
+        player.one(VIDEOJS_EVENTS.CANPLAY, resolve);
       });
 
     } catch (error) {

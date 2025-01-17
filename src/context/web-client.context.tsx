@@ -21,6 +21,7 @@ import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
 import { CREDIT_OVERLAY_ID, IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
 import { SpeedControls, SpeedLevels } from "@/types/web-client.types";
+import { TRANSITION_THRESHOLD, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
 
 type WebClientContextType = {
   isWebClientActive: boolean;
@@ -55,7 +56,8 @@ export const WebClientProvider: React.FC<{
     toggleFullscreen
   } = useVideoJs();
 
-
+  // prev active player data to track changes
+  const prevActivePlayerRef = useRef<string | null>(null);
   const playerInstance = useMemo(() => players.get(activePlayer ?? ''), [players, activePlayer]);
 
   // socket
@@ -148,7 +150,7 @@ export const WebClientProvider: React.FC<{
 
   // plays dream and updates state
   const playDream = useCallback(async (dreamToPlay?: Dream) => {
-    if (!dreamToPlay?.video) return;
+    if (!dreamToPlay?.video) return false;
 
     playingDreamRef.current = dreamToPlay;
     await playVideo(dreamToPlay.video);
@@ -165,10 +167,11 @@ export const WebClientProvider: React.FC<{
       preloadVideo(dreamToPreload.video)
     }
 
+    return true;
   }, [emit, playVideo, preloadVideo, getNextDream, updateCurrentDream]);
 
-  const handlePlaylistControl = useCallback((direction: 'next' | 'previous') => {
-    playDream(getNextDream(direction));
+  const handlePlaylistControl = useCallback(async (direction: 'next' | 'previous') => {
+    return playDream(getNextDream(direction));
   }, [playDream, getNextDream]);
 
   const setSpeed = useCallback((speed: number) => {
@@ -222,12 +225,8 @@ export const WebClientProvider: React.FC<{
     dislike: () => { },
     like_current_dream: () => { },
     dislike_current_dream: () => { },
-    previous: () => {
-      handlePlaylistControl('previous');
-    },
-    next: () => {
-      handlePlaylistControl('next');
-    },
+    previous: async () => handlePlaylistControl('previous'),
+    next: async () => handlePlaylistControl('next'),
     forward: () => {
       if (playerInstance?.player) {
         const currentTime = playerInstance?.player.currentTime() ?? 0;
@@ -302,10 +301,9 @@ export const WebClientProvider: React.FC<{
     }
   }, [currentPlaylist]);
 
-
   // register events on videojs instance
   useEffect(() => {
-    const cleanup1 = addEventListener('timeupdate', () => {
+    const cleanup1 = addEventListener(VIDEOJS_EVENTS.TIMEUPDATE, async () => {
       const remainingTime = Number(playerInstance?.player?.remainingTime());
 
       if (Number.isNaN(remainingTime)) {
@@ -313,16 +311,20 @@ export const WebClientProvider: React.FC<{
       }
 
       // start transition when we reach threshold
-      const TRANSITION_THRESHOLD = 3;
       if (remainingTime <= TRANSITION_THRESHOLD && !transitioningRef.current) {
+        // lock transitioning and wait for the change
         transitioningRef.current = true;
-        handlers.next();
+        await handlers.next();
+        transitioningRef.current = false;
       }
     });
 
-    const cleanup2 = addEventListener('ended', () => {
+    // ended event just in case TIMEUPDATE didn't work
+    const cleanup2 = addEventListener(VIDEOJS_EVENTS.ENDED, async () => {
+      // lock transitioning and wait for the change
+      transitioningRef.current = true;
+      await handlers.next();
       transitioningRef.current = false;
-      handlers.next();
     });
 
     return () => {
@@ -331,11 +333,18 @@ export const WebClientProvider: React.FC<{
     };
   }, [playerInstance, handlers, addEventListener]);
 
+  // hook to update credit overlay after dream changed
   useEffect(() => {
-    if (showCreditOverlayRef.current) {
-      updateCreditOverlay();
+    if (activePlayer !== prevActivePlayerRef.current) {
+      // update prevActivePlayerRef value
+      prevActivePlayerRef.current = activePlayer;
+
+      // if showCreditOverlay update overlay
+      if (showCreditOverlayRef.current) {
+        updateCreditOverlay();
+      }
     }
-  }, [playerInstance, playerInstance?.id, updateCreditOverlay])
+  }, [activePlayer, updateCreditOverlay])
 
   const memoedValue = useMemo(
     () => ({
