@@ -36,6 +36,11 @@ type PlayerInstance = {
   eventHandlers: Map<string, VideoJSEventHandler[]>;
 };
 
+/**
+ *  VideoJS Context is wrapper for video.js that manages multiple player instances to enable video transitions and crossfade effects. 
+ *  It maintains has a pool of video players where one remains active while others preload content, ensuring smooth playback transitions without interruptions (or try to).
+ *  Context serves exclusively as a controller for video.js instances and their features, events, etc. 
+ */
 const VideoJSContext = createContext<VideoJSContextType | undefined>(undefined);
 
 // generate uuuid fn 

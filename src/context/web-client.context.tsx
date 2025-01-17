@@ -33,6 +33,11 @@ type WebClientContextType = {
   handleOnEnded: () => void;
 };
 
+
+/**
+ *  Web Client Context serves as a high-level controller for dream and playlist management, building upon the VideoJS Context to provide advanced playlist handling and controls. 
+ *  It manages user interactions, playlist navigation, dream transitions, video overlays, remote control events, speed, brightnes, etc.
+ */
 export const WebClientContext = createContext<WebClientContextType>(
   {} as WebClientContextType,
 );

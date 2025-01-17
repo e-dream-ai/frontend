@@ -9,6 +9,10 @@ type VideoJSProps = {
   //
 }
 
+/**
+ * Renders and manages multiple video.js player instances. 
+ * It works with the VideoJS Context to create a pool of video players, where each player is used to have smooth video transitions. 
+ */
 export const VideoJS: FC<VideoJSProps> = () => {
   const { players, videoWrapperRef, createPlayer } = useVideoJs();
 
@@ -48,7 +52,13 @@ const PlayerSlot = ({ id }: { id: string }) => {
       const options = {
         controls: true,
         fluid: true,
-        preload: "auto"
+        preload: "auto",
+        controlBar: {
+          pictureInPictureToggle: false
+        },
+        html5: {
+          noPictureInPicture: true
+        }
       };
 
       const id = registerPlayer(videoRef.current, options);
