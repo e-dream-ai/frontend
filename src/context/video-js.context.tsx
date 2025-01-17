@@ -1,7 +1,8 @@
 import { VideoJSOptions } from "@/types/video-js.types";
-import { createContext, useCallback, useMemo, useRef, useState } from "react";
+import { createContext, RefObject, useCallback, useMemo, useRef, useState } from "react";
 import videojs from "video.js";
 import Player from "video.js/dist/types/player";
+import Component from "video.js/dist/types/component";
 import { v4 as uuidv4 } from 'uuid';
 import { PoolConfig, TRANSITION_THRESHOLD, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
 
@@ -9,6 +10,7 @@ type VideoJSContextType = {
   isReady: boolean;
   activePlayer: string | null;
   players: Map<string, PlayerInstance>;
+  videoWrapperRef: RefObject<HTMLDivElement>;
   createPlayer: () => string;
   removePlayer: (id: string) => void;
   registerPlayer: (element: HTMLVideoElement, options: VideoJSOptions) => string;
@@ -44,16 +46,28 @@ export const VideoJSProvider = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const [isReady, setIsReady] = useState(false);
-  // players pool
   const playersPoolRef = useRef<Map<string, PlayerInstance>>(new Map());
-  const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
   const activePlayerIdRef = useRef<string | null>(null);
   const globalEventHandlersRef = useRef<Map<string, VideoJSEventHandler[]>>(new Map());
+  const videoWrapperRef = useRef<HTMLDivElement>(null);
+  const [isReady, setIsReady] = useState(false);
+  // players pool
+  const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
 
   const updateActivePlayer = useCallback((ap: string | null) => {
     activePlayerIdRef.current = ap;
     setActivePlayerId(ap);
+  }, []);
+
+  // toggle fullscreen for video wrapper
+  const toggleFullscreen = useCallback(async () => {
+    if (!videoWrapperRef.current) return;
+
+    if (document.fullscreenElement === videoWrapperRef.current) {
+      await document.exitFullscreen();
+    } else {
+      await videoWrapperRef.current.requestFullscreen();
+    }
   }, []);
 
   // create a new player slot without initializing videojs
@@ -107,6 +121,8 @@ export const VideoJSProvider = ({
 
   // register player into a pool slot
   const registerPlayer = useCallback((element: HTMLVideoElement, options: VideoJSOptions) => {
+
+    // create player
     const player = videojs(element, options);
     const playerInstance = Array.from(playersPoolRef.current.values())
       .find(p => p.player === null);
@@ -132,8 +148,54 @@ export const VideoJSProvider = ({
       });
     });
 
+    // replace fullscreen properties to work with video wrapper
+    player.ready(() => {
+      // get the fullscreen toggle button component
+      const fullscreenToggle = player?.getChild('ControlBar')?.getChild('FullscreenToggle') as Component & {
+        handleClick: (event: Event) => void;
+      };
+
+      if (fullscreenToggle) {
+        // override all player functions related with fullscreen
+
+        // override handleClick fn
+        fullscreenToggle.handleClick = (event: Event) => {
+          // prevent default behavior
+          event.preventDefault();
+
+          // call fullscreen toggle
+          toggleFullscreen();
+
+          // focus the active player element
+          // needed since fullscreen button got focused after click and don't allow keyboard events
+          const activePlayer = activePlayerIdRef.current ?
+            playersPoolRef.current.get(activePlayerIdRef.current) : null;
+
+          if (activePlayer?.player) {
+            const videoElement = activePlayer.player.el().querySelector('video');
+            videoElement?.focus();
+          }
+        };
+
+        // override isFullscreen fn to check container state
+        player.isFullscreen = () => {
+          return document.fullscreenElement === videoWrapperRef.current;
+        };
+
+        // override requestFullscreen fn
+        player.requestFullscreen = async () => {
+          videoWrapperRef.current?.requestFullscreen();
+        };
+
+        // override exitFullscreen fn
+        player.exitFullscreen = () => {
+          return document.exitFullscreen();
+        };
+      }
+    });
+
     return playerInstance.id;
-  }, []);
+  }, [toggleFullscreen]);
 
   // unregister player
   const unregisterPlayer = useCallback((id: string) => {
@@ -219,7 +281,6 @@ export const VideoJSProvider = ({
 
     const nextPlayer = nextPlayerInstance.player;
     const currentPlaybackRate = currentPlayer?.player?.playbackRate() || 1;
-    const wasFullscreen = currentPlayer?.player?.isFullscreen() || false;
 
     try {
       // set source if different from current
@@ -244,11 +305,6 @@ export const VideoJSProvider = ({
 
       await nextPlayer.play();
 
-      // if was fullscreen request to fullscreen new player too
-      if (wasFullscreen) {
-        await nextPlayer.requestFullscreen().catch(console.warn);
-      }
-
       if (currentPlayer) {
         currentPlayer.isActive = false;
         currentPlayer.lastUsed = Date.now();
@@ -266,14 +322,10 @@ export const VideoJSProvider = ({
       });
 
       if (currentPlayer) {
+
         // stop playing current player
         currentPlayer?.player?.pause();
         currentPlayer?.player?.currentTime(0);
-      }
-
-      if (currentPlayer && wasFullscreen) {
-        // exit fullscreen
-        await currentPlayer?.player?.exitFullscreen().catch(console.warn);
       }
 
       return true;
@@ -322,18 +374,6 @@ export const VideoJSProvider = ({
     });
   }, []);
 
-  const toggleFullscreen = useCallback(() => {
-    playersPoolRef.current.forEach(p => {
-      if (p.isActive && p.player) {
-        if (p.player.isFullscreen()) {
-          p.player.exitFullscreen();
-        } else {
-          p.player.requestFullscreen().catch(console.warn);
-        }
-      }
-    });
-  }, []);
-
   const setPlaybackRate = useCallback((playbackRate: number) => {
     playersPoolRef.current.forEach(p => {
       if (p.player) {
@@ -347,6 +387,7 @@ export const VideoJSProvider = ({
       isReady,
       activePlayer: activePlayerId,
       players: playersPoolRef.current,
+      videoWrapperRef,
       registerPlayer,
       unregisterPlayer,
       addEventListener,
@@ -361,6 +402,7 @@ export const VideoJSProvider = ({
     [
       isReady,
       activePlayerId,
+      videoWrapperRef,
       registerPlayer,
       unregisterPlayer,
       addEventListener,

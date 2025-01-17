@@ -10,8 +10,8 @@ type VideoJSProps = {
 }
 
 export const VideoJS: FC<VideoJSProps> = () => {
-  const { players, createPlayer } = useVideoJs();
-  
+  const { players, videoWrapperRef, createPlayer } = useVideoJs();
+
   useEffect(() => {
     // creates min initial player slots
     for (let i = 0; i < PoolConfig.minPlayers; i++) {
@@ -27,7 +27,7 @@ export const VideoJS: FC<VideoJSProps> = () => {
             Web Client
           </Text>
         </Row>
-        <VideoWrapper>
+        <VideoWrapper ref={videoWrapperRef}>
           {Array.from(players.values()).map(({ id }) => (
             <PlayerSlot key={id} id={id} />
           ))}
@@ -40,6 +40,8 @@ export const VideoJS: FC<VideoJSProps> = () => {
 const PlayerSlot = ({ id }: { id: string }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { activePlayer, registerPlayer, unregisterPlayer } = useVideoJs();
+
+  const isActive = id === activePlayer;
 
   useEffect(() => {
     if (videoRef.current) {
@@ -58,11 +60,11 @@ const PlayerSlot = ({ id }: { id: string }) => {
   }, [registerPlayer, unregisterPlayer]);
 
   return (
-    <VideoContainer isActive={id === activePlayer}>
+    <VideoContainer isActive={isActive}>
       <PlayerWrapper data-vjs-player>
         <video
           ref={videoRef}
-          className="video-js vjs-big-play-centered"
+          className={`video-js vjs-big-play-centered ${isActive ? "active" : "inactive"}`}
           data-player-id={id}
         />
       </PlayerWrapper>

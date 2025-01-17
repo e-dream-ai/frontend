@@ -6,6 +6,10 @@ export const VideoWrapper = styled.div`
   width: 100%;
   max-width: 1024px;
   aspect-ratio: 16 / 9;
+
+  &:fullscreen {
+    background: black; /* optional, for better aesthetics */
+  }
 `;
 
 export const VideoContainer = styled.div<{ isActive: boolean }>`
