@@ -10,9 +10,22 @@ export type VideoJSOptions = {
   controls?: boolean;
   responsive?: boolean;
   fluid?: boolean;
-  // sources: VideoSource[];
   width?: number;
   height?: number;
   playbackRates?: number[];
   preload?: string;
+};
+
+export type VideoJSEvents = {
+  READY: "ready";
+  LOADSTART: "loadstart";
+  LOADEDDATA: "loadeddata";
+  LOADEDMETADATA: "loadedmetadata";
+  CANPLAY: "canplay";
+  CANPLAYTHROUGH: "canplaythrough";
+  PLAYING: "playing";
+  WAITING: "waiting";
+  ERROR: "error";
+  ENDED: "ended";
+  TIMEUPDATE: "timeupdate";
 };
