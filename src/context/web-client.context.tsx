@@ -44,24 +44,25 @@ export const WebClientProvider: React.FC<{
 
   // videojs
   const {
-    playerOne,
-    playerTwo,
+    players,
     activePlayer,
     isReady,
     addEventListener,
     setBrightness: setPlayerBrightness,
     setPlaybackRate: setPlayerPlaybackRate,
     playVideo,
+    preloadVideo,
     toggleFullscreen
   } = useVideoJs();
 
-  const player = activePlayer === "one" ? playerOne : playerTwo;
+
+  const playerInstance = useMemo(() => players.get(activePlayer ?? ''), [players, activePlayer]);
 
   // socket
   const { emit } = useSocket();
 
   // overlay
-  const { showOverlay, hideOverlay } = useVideoJSOverlay([playerOne, playerTwo]);
+  const { showOverlay, hideOverlay } = useVideoJSOverlay(playerInstance?.player ? [playerInstance.player] : []);
 
   // dream and playlist values
   const playingDreamRef = useRef<Dream>();
@@ -157,10 +158,14 @@ export const WebClientProvider: React.FC<{
     });
     updateCurrentDream(dreamToPlay);
 
-    if (showCreditOverlayRef.current) {
-      updateCreditOverlay();
+    // get next dream after being update to preload it into a player instance
+    const dreamToPreload = getNextDream("next");
+
+    if (dreamToPreload?.video) {
+      preloadVideo(dreamToPreload.video)
     }
-  }, [emit, playVideo, updateCurrentDream, updateCreditOverlay]);
+
+  }, [emit, playVideo, preloadVideo, getNextDream, updateCurrentDream]);
 
   const handlePlaylistControl = useCallback((direction: 'next' | 'previous') => {
     playDream(getNextDream(direction));
@@ -202,11 +207,11 @@ export const WebClientProvider: React.FC<{
     },
     pause: () => {
       // handle pause
-      const isPaused = player.current?.paused();
+      const isPaused = playerInstance?.player?.paused();
       if (isPaused) {
-        player.current?.play();
+        playerInstance?.player?.play();
       } else {
-        player.current?.pause();
+        playerInstance?.player?.pause();
       }
       setPaused(!isPaused);
     },
@@ -224,17 +229,17 @@ export const WebClientProvider: React.FC<{
       handlePlaylistControl('next');
     },
     forward: () => {
-      if (player.current) {
-        const currentTime = player.current.currentTime() ?? 0;
+      if (playerInstance?.player) {
+        const currentTime = playerInstance?.player.currentTime() ?? 0;
         // 10 seconds
-        player.current.currentTime(currentTime + 10);
+        playerInstance?.player.currentTime(currentTime + 10);
       }
     },
     backward: () => {
-      if (player.current) {
-        const currentTime = player.current.currentTime() ?? 0;
+      if (playerInstance?.player) {
+        const currentTime = playerInstance?.player.currentTime() ?? 0;
         // 10 seconds
-        player.current.currentTime(Math.max(0, currentTime - 10));
+        playerInstance?.player.currentTime(Math.max(0, currentTime - 10));
       }
     },
     credit: () => {
@@ -253,7 +258,7 @@ export const WebClientProvider: React.FC<{
     },
     ...speedControls
   }), [
-    player,
+    playerInstance,
     playbackRate,
     brightness,
     speedControls,
@@ -297,9 +302,11 @@ export const WebClientProvider: React.FC<{
     }
   }, [currentPlaylist]);
 
+
+  // register events on videojs instance
   useEffect(() => {
     const cleanup1 = addEventListener('timeupdate', () => {
-      const remainingTime = Number(player?.current?.remainingTime());
+      const remainingTime = Number(playerInstance?.player?.remainingTime());
 
       if (Number.isNaN(remainingTime)) {
         return;
@@ -322,7 +329,13 @@ export const WebClientProvider: React.FC<{
       cleanup1();
       cleanup2();
     };
-  }, [player, handlers, addEventListener]);
+  }, [playerInstance, handlers, addEventListener]);
+
+  useEffect(() => {
+    if (showCreditOverlayRef.current) {
+      updateCreditOverlay();
+    }
+  }, [playerInstance, playerInstance?.id, updateCreditOverlay])
 
   const memoedValue = useMemo(
     () => ({

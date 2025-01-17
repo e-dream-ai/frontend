@@ -12,7 +12,7 @@ export type OverlayOptions = {
 };
 
 export const useVideoJSOverlay = (
-  playerRefs: Array<React.MutableRefObject<Player | null>>,
+  players: Array<Player | null>,
 ) => {
   const overlaysRef = useRef<Map<string, HTMLElement[]>>(new Map());
   const overlayTransitionsRef = useRef<Map<string, Promise<void>>>(new Map());
@@ -108,8 +108,8 @@ export const useVideoJSOverlay = (
         const newOverlays: HTMLElement[] = [];
         activeOverlays.add(id);
 
-        playerRefs.forEach((playerRef) => {
-          const player = playerRef.current;
+        players.forEach((p) => {
+          const player = p;
           if (!player) return;
 
           // add new overlay
@@ -144,8 +144,9 @@ export const useVideoJSOverlay = (
       await showPromise;
       overlayTransitionsRef.current.delete(id);
     },
-    [activeOverlays, playerRefs, hideOverlay, waitForOverlayTransition],
+    [activeOverlays, players, hideOverlay, waitForOverlayTransition],
   );
+  
   const hideAllOverlays = useCallback(() => {
     overlaysRef.current.forEach((_, id) => hideOverlay(id));
   }, [hideOverlay]);
