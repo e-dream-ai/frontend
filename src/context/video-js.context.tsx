@@ -287,20 +287,21 @@ export const VideoJSProvider = ({
     const nextPlayer = nextPlayerInstance.player;
     const currentPlaybackRate = currentPlayer?.player?.playbackRate() || 1;
 
+    console.log({ currentPlaybackRate });
+
     try {
       // set source if different from current
       if (nextPlayerInstance.currentSrc !== src) {
         nextPlayer.src({ src });
         nextPlayerInstance.currentSrc = src;
 
-        nextPlayer.one(VIDEOJS_EVENTS.LOADEDDATA, () => {
-          nextPlayer.playbackRate(currentPlaybackRate);
-        });
-
         await new Promise<void>((resolve) => {
           nextPlayer.one(VIDEOJS_EVENTS.CANPLAY, resolve);
         });
       }
+
+      // set playback rate
+      nextPlayer.playbackRate(currentPlaybackRate);
 
       // update lastUsed for both current and next player to prevent cleanup
       nextPlayerInstance.lastUsed = Date.now();
