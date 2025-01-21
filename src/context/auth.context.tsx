@@ -17,6 +17,9 @@ import ReactGA from "react-ga4";
 import Bugsnag from "@bugsnag/js";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
+import useCurrentDream from "@/api/dream/query/useCurrentDream";
+import useCurrentPlaylist from "@/api/dream/query/useCurrentPlaylist";
+import { useLocation } from "react-router-dom";
 
 type AuthContextType = {
   user: User | null;
@@ -24,12 +27,14 @@ type AuthContextType = {
   currentPlaylist?: Playlist;
   isLoading: boolean;
   isLoggingOut: boolean;
+  isLoadingCurrentDream: boolean;
+  isLoadingCurrentPlaylist: boolean;
   login: (user: User) => void;
   authenticateUser: () => Promise<void>;
   logout: (options?: LogoutOptions) => Promise<void>;
   setLoggedUser: (user: User | null) => void;
-  updateCurrentDream: (dream?: Dream) => void;
-  updateCurrentPlaylist: (playlist?: Playlist) => void;
+  updateCurrentDream: () => void;
+  updateCurrentPlaylist: () => void;
 };
 
 type LogoutOptions = {
@@ -47,12 +52,23 @@ export const AuthProvider: React.FC<{
   const logoutMutation = useLogout();
   const { t } = useTranslation();
 
+  // location
+  const location = useLocation();
+
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSessionVerified, setIsSessionVerified] = useState<boolean>(false);
 
   const [user, setUser] = useState<User | null>(null);
-  const [currentDream, setCurrentDream] = useState<Dream>();
-  const [currentPlaylist, setCurrentPlaylist] = useState<Playlist>();
+
+  // current dream
+  const { data: currentDreamData, refetch: refetchCurrentDream, isLoading: isLoadingCD, isRefetching: isRefetchingCD } = useCurrentDream();
+  const currentDream = useMemo(() => currentDreamData?.data?.dream, [currentDreamData]);
+  const isLoadingCurrentDream = useMemo(() => isLoadingCD || isRefetchingCD, [isLoadingCD, isRefetchingCD])
+
+  // current playlist
+  const { data: currentPlaylistData, refetch: refetchCurrentPlaylist, isLoading: isLoadingCP, isRefetching: isRefetchingCP } = useCurrentPlaylist();
+  const currentPlaylist = useMemo(() => currentPlaylistData?.data?.playlist, [currentPlaylistData]);
+  const isLoadingCurrentPlaylist = useMemo(() => isLoadingCP || isRefetchingCP, [isLoadingCP, isRefetchingCP])
 
   const isLoggingOut = useMemo(() => logoutMutation.isLoading, [logoutMutation.isLoading]);
 
@@ -76,8 +92,6 @@ export const AuthProvider: React.FC<{
   const login: (user: User) => void = useCallback(
     (user: User) => {
       setLoggedUser(user);
-      setCurrentDream(user.currentDream);
-      setCurrentPlaylist(user.currentPlaylist);
       Bugsnag.setUser(user.uuid, user.email, user?.name);
     },
     [setLoggedUser],
@@ -131,30 +145,38 @@ export const AuthProvider: React.FC<{
     }
   }, [authenticateUserQuery, login, logout]);
 
-  const updateCurrentDream = useCallback((dream?: Dream) => {
-    setCurrentDream(dream);
-  }, [setCurrentDream]);
+  const updateCurrentDream = useCallback(() => {
+    refetchCurrentDream();
+  }, [refetchCurrentDream]);
 
-  const updateCurrentPlaylist = useCallback((playlist?: Playlist) => {
-    setCurrentPlaylist(playlist)
-  }, [setCurrentPlaylist]);
+  const updateCurrentPlaylist = useCallback(() => {
+    refetchCurrentPlaylist();
+  }, [refetchCurrentPlaylist]);
 
   useHttpInterceptors({ logout }, [user]);
 
   useEffect(() => {
-    /**
-     * If sesion is not verified, authenticateUser
-     */
+    // If sesion is not verified, authenticateUser
     if (!isSessionVerified) {
       authenticateUser();
     }
   }, [isSessionVerified, setIsSessionVerified, authenticateUser]);
+
+  // refetch current dream and playlist when user navigates to remote control page
+  useEffect(() => {
+    if (location.pathname === ROUTES.REMOTE_CONTROL) {
+      updateCurrentDream();
+      updateCurrentPlaylist();
+    }
+  }, [location, updateCurrentDream, updateCurrentPlaylist]);
 
   const memoedValue = useMemo(
     () => ({
       user,
       isLoading,
       isLoggingOut,
+      isLoadingCurrentDream,
+      isLoadingCurrentPlaylist,
       currentDream,
       currentPlaylist,
       updateCurrentDream,
@@ -168,6 +190,8 @@ export const AuthProvider: React.FC<{
       user,
       isLoading,
       isLoggingOut,
+      isLoadingCurrentDream,
+      isLoadingCurrentPlaylist,
       currentDream,
       currentPlaylist,
       updateCurrentDream,

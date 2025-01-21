@@ -1,12 +1,3 @@
-import useAuth from "@/hooks/useAuth";
-import { useDesktopClient } from "@/hooks/useDesktopClient";
-import useStatusCallback from "@/hooks/useStatusCallback";
-import { usePlaylist } from "@/api/playlist/query/usePlaylist";
-import { useVideoJs } from "@/hooks/useVideoJS";
-import { Dream } from "@/types/dream.types";
-import { Playlist } from "@/types/playlist.types";
-import { RemoteEvent } from "@/types/remote-control.types";
-import { calculatePlaybackRateFromSpeed, getPlaylistNavigation, multiplyPerceptualFPS, tapsToBrightness } from "@/utils/web-client.util";
 import React, {
   createContext,
   useCallback,
@@ -15,6 +6,15 @@ import React, {
   useRef,
   useState,
 } from "react";
+import useAuth from "@/hooks/useAuth";
+import { Dream } from "@/types/dream.types";
+import { Playlist } from "@/types/playlist.types";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
+import useStatusCallback from "@/hooks/useStatusCallback";
+import { useVideoJs } from "@/hooks/useVideoJS";
+import useCurrentPlaylist from "@/api/dream/query/useCurrentPlaylist";
+import { RemoteEvent } from "@/types/remote-control.types";
+import { calculatePlaybackRateFromSpeed, getPlaylistNavigation, multiplyPerceptualFPS, tapsToBrightness } from "@/utils/web-client.util";
 import { toast } from "react-toastify";
 import useSocket from "@/hooks/useSocket";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
@@ -22,6 +22,8 @@ import { CREDIT_OVERLAY_ID, IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
 import { SpeedControls, SpeedLevels } from "@/types/web-client.types";
 import { TRANSITION_THRESHOLD, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
+import { useLocation } from "react-router-dom";
+import { ROUTES } from "@/constants/routes.constants";
 
 type WebClientContextType = {
   isWebClientActive: boolean;
@@ -68,6 +70,9 @@ export const WebClientProvider: React.FC<{
   // socket
   const { emit } = useSocket();
 
+  // location
+  const location = useLocation();
+
   // overlay
   const { showOverlay, hideOverlay } = useVideoJSOverlay(playerInstance?.player ? [playerInstance.player] : []);
 
@@ -81,8 +86,8 @@ export const WebClientProvider: React.FC<{
   // user current values
   const currentDream = useMemo(() => user?.currentDream, [user?.currentDream]);
 
-  const { data } = usePlaylist(user?.currentPlaylist?.uuid);
-  const currentPlaylist = useMemo(() => data?.data?.playlist, [data]);
+  const { data: currentPlaylistData } = useCurrentPlaylist();
+  const currentPlaylist = useMemo(() => currentPlaylistData?.data?.playlist, [currentPlaylistData]);
 
   /** 
    * indicates if the web player is currently active
@@ -167,7 +172,7 @@ export const WebClientProvider: React.FC<{
       return false;
     }
 
-    updateCurrentDream(dreamToPlay);
+    updateCurrentDream();
     emit(NEW_REMOTE_CONTROL_EVENT, {
       event: "playing",
       uuid: dreamToPlay.uuid
@@ -358,6 +363,15 @@ export const WebClientProvider: React.FC<{
       }
     }
   }, [activePlayer, updateCreditOverlay])
+
+  // play current dream when user comes back to remote control page
+  useEffect(() => {
+    // if pathname is RC and isWebClientActive, then play current dream
+    if (location.pathname === ROUTES.REMOTE_CONTROL && isWebClientActive && playingDreamRef.current?.video) {
+      // play current dream
+      playVideo(playingDreamRef.current.video);
+    }
+  }, [location, isWebClientActive, playVideo]);
 
   const memoedValue = useMemo(
     () => ({

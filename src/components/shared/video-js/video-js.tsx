@@ -14,14 +14,19 @@ type VideoJSProps = {
  * It works with the VideoJS Context to create a pool of video players, where each player is used to have smooth video transitions. 
  */
 export const VideoJS: FC<VideoJSProps> = () => {
-  const { players, videoWrapperRef, createPlayer } = useVideoJs();
+  const { players, videoWrapperRef, createPlayer, clearPlayers } = useVideoJs();
 
   useEffect(() => {
     // creates min initial player slots
     for (let i = 0; i < PoolConfig.minPlayers; i++) {
       createPlayer();
     }
-  }, [createPlayer]);
+
+    return () => {
+      // cleanup player instances
+      clearPlayers();
+    }
+  }, [createPlayer, clearPlayers]);
 
   return (
     <Row>

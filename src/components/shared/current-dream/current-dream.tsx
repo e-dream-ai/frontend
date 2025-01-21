@@ -1,4 +1,3 @@
-import { useDream } from "@/api/dream/query/useDream";
 import { Column, ItemCardList, ItemCard, Text, Row, Button } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import {
@@ -11,7 +10,6 @@ import {
   RemoteControlEventData,
 } from "@/types/remote-control.types";
 import { getRemoteControlEvent } from "@/utils/remote-control.util";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ItemCardSkeleton } from "../item-card/item-card";
 import { useTheme } from "styled-components";
@@ -23,11 +21,8 @@ import useAuth from "@/hooks/useAuth";
 export const CurrentDream = () => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { currentDream } = useAuth();
-  const [uuid, setUUID] = useState<string | undefined>(currentDream?.uuid);
-  const { data, isLoading, isRefetching, refetch } = useDream(uuid);
+  const { currentDream, isLoadingCurrentDream, updateCurrentDream } = useAuth();
   const { isWebClientAvailable, setWebClientActive, setWebPlayerAvailable } = useWebClient()
-  const dream = data?.data?.dream;
 
   const handleRemoteControlEvent = (data?: RemoteControlEventData): void => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
@@ -39,8 +34,7 @@ export const CurrentDream = () => {
     }
 
     if (event.event === REMOTE_CONTROLS.PLAYING.event) {
-      const newUUID = data?.uuid;
-      setUUID(newUUID);
+      updateCurrentDream();
     }
   };
 
@@ -56,14 +50,6 @@ export const CurrentDream = () => {
     setWebClientActive(true);
     setWebPlayerAvailable(false);
   };
-
-  useEffect(() => {
-    if (uuid) refetch();
-  }, [uuid, refetch]);
-
-  useEffect(() => {
-    setUUID(currentDream?.uuid);
-  }, [currentDream]);
 
   return (
     <Column mb="2rem">
@@ -82,13 +68,13 @@ export const CurrentDream = () => {
           <FontAwesomeIcon icon={faPlay} />
         </Button>}
       </Row>
-      {isLoading || isRefetching ? (
+      {isLoadingCurrentDream ? (
         <ItemCardSkeleton>
           <Spinner />
         </ItemCardSkeleton>
-      ) : dream ? (
+      ) : currentDream ? (
         <ItemCardList>
-          <ItemCard type="dream" item={dream} size="sm" inline />
+          <ItemCard type="dream" item={currentDream} size="sm" inline />
         </ItemCardList>
       ) : (
         <ItemCardSkeleton>

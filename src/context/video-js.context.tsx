@@ -15,6 +15,7 @@ type VideoJSContextType = {
   removePlayer: (id: string) => void;
   registerPlayer: (element: HTMLVideoElement, options: VideoJSOptions) => string;
   unregisterPlayer: (id: string) => void;
+  clearPlayers: () => void;
   addEventListener: (event: string, handler: VideoJSEventHandler) => () => void;
   setBrightness: (value: number) => void;
   playVideo: (src: string) => Promise<boolean>;
@@ -220,6 +221,33 @@ export const VideoJSProvider = ({
     }
   }, []);
 
+  const clearPlayers = useCallback(() => {
+    // loop through player instances
+    playersPoolRef.current.forEach((playerInstance) => {
+      if (playerInstance.player && !playerInstance.player.isDisposed()) {
+        // cleanup event handlers
+        playerInstance.eventHandlers.forEach((handlers, event) => {
+          handlers.forEach(handler => {
+            playerInstance.player?.off(event, handler);
+          });
+        });
+        playerInstance.eventHandlers.clear();
+
+        // dispose instance
+        playerInstance.player.dispose();
+      }
+    });
+
+    // clear pool
+    playersPoolRef.current.clear();
+
+    // reset active player
+    updateActivePlayer(null);
+
+    // reset ready
+    setIsReady(false);
+  }, [updateActivePlayer]);
+
   const addEventListener = useCallback((event: string, handler: VideoJSEventHandler) => {
     const handlers = globalEventHandlersRef.current.get(event) || [];
     globalEventHandlersRef.current.set(event, [...handlers, handler]);
@@ -286,8 +314,6 @@ export const VideoJSProvider = ({
 
     const nextPlayer = nextPlayerInstance.player;
     const currentPlaybackRate = currentPlayer?.player?.playbackRate() || 1;
-
-    console.log({ currentPlaybackRate });
 
     try {
       // set source if different from current
@@ -404,6 +430,7 @@ export const VideoJSProvider = ({
       setPlaybackRate,
       createPlayer,
       removePlayer,
+      clearPlayers,
     }),
     [
       isReady,
@@ -419,6 +446,7 @@ export const VideoJSProvider = ({
       setPlaybackRate,
       createPlayer,
       removePlayer,
+      clearPlayers,
     ]
   );
 

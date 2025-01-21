@@ -1,7 +1,6 @@
 import "@szhsin/react-menu/dist/index.css";
 import "@szhsin/react-menu/dist/transitions/slide.css";
 import { AUTO_CLOSE_MS } from "@/constants/toast.constants";
-import Providers, { withProviders } from "@/providers/providers";
 import { useEffect } from "react";
 import { RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
@@ -41,6 +40,4 @@ const App = () => {
   );
 };
 
-const AppWithProviders = withProviders(...Providers)(App);
-
-export default AppWithProviders;
+export default App;

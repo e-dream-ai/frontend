@@ -1,4 +1,3 @@
-import { usePlaylist } from "@/api/playlist/query/usePlaylist";
 import {
   Row,
   Column,
@@ -21,36 +20,24 @@ import {
 import { getRemoteControlEvent } from "@/utils/remote-control.util";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { ItemCardSkeleton } from "../item-card/item-card";
 import { useTheme } from "styled-components";
 import useAuth from "@/hooks/useAuth";
 
 export const CurrentPlaylist = () => {
-  const { emit } = useSocket();
   const { t } = useTranslation();
+  const { emit } = useSocket();
   const theme = useTheme();
-  const { currentPlaylist } = useAuth();
-  const [uuid, setUUID] = useState<string | undefined>(currentPlaylist?.uuid);
-  const { data, isLoading, isRefetching, refetch } = usePlaylist(uuid);
-  const playlist = data?.data?.playlist;
+  const { currentPlaylist, isLoadingCurrentPlaylist, updateCurrentPlaylist } = useAuth();
 
   const onRemoveCurrentPlaylist = () => {
     emit(NEW_REMOTE_CONTROL_EVENT, {
       event: REMOTE_CONTROLS.RESET_PLAYLIST.event,
     });
 
-    setUUID(undefined);
+    updateCurrentPlaylist();
   };
-
-  useEffect(() => {
-    if (uuid) refetch();
-  }, [uuid, refetch]);
-
-  useEffect(() => {
-    setUUID(uuid);
-  }, [uuid]);
 
   const handleRemoteControlEvent = (data?: RemoteControlEventData): void => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
@@ -62,12 +49,11 @@ export const CurrentPlaylist = () => {
     }
 
     if (event.event === REMOTE_CONTROLS.PLAY_PLAYLIST.event) {
-      const newUUID = data?.uuid;
-      setUUID(newUUID);
+      updateCurrentPlaylist();
     }
 
     if (event.event === REMOTE_CONTROLS.RESET_PLAYLIST.event) {
-      setUUID(undefined);
+      updateCurrentPlaylist();
     }
   };
 
@@ -85,7 +71,7 @@ export const CurrentPlaylist = () => {
         <Text mb="1rem" fontSize="1rem" fontWeight={600}>
           {t("components.current_playlist.title")}
         </Text>
-        {playlist ? (
+        {currentPlaylist ? (
           <Button
             type="button"
             buttonType="danger"
@@ -99,13 +85,13 @@ export const CurrentPlaylist = () => {
           <></>
         )}
       </Row>
-      {isLoading || isRefetching ? (
+      {isLoadingCurrentPlaylist ? (
         <ItemCardSkeleton>
           <Spinner />
         </ItemCardSkeleton>
-      ) : playlist ? (
+      ) : currentPlaylist ? (
         <ItemCardList>
-          <ItemCard type="playlist" item={playlist} size="sm" inline />
+          <ItemCard type="playlist" item={currentPlaylist} size="sm" inline />
         </ItemCardList>
       ) : (
         <ItemCardSkeleton>

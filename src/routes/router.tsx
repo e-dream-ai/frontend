@@ -34,6 +34,7 @@ import { useEffect } from "react";
 import ReactGA from "react-ga4";
 import { PageContainer } from "@/components/shared/container/page-container";
 import RemoteControlPage from "@/components/pages/remote-control/remote-control.page";
+import Providers, { withProviders } from "@/providers/providers";
 
 export const RootElement = () => {
   const location = useLocation();
@@ -57,10 +58,12 @@ export const RootElement = () => {
   );
 };
 
+const RootElementWithProviders = withProviders(...Providers)(RootElement)
+
 export const router = createBrowserRouter([
   {
     path: ROUTES.ROOT,
-    element: <RootElement />,
+    element: <RootElementWithProviders />,
     errorElement: <NotFoundPage />,
     children: [
       {

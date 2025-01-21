@@ -9,7 +9,6 @@ import DesktopClientProvider from "./desktop-client.provider";
 import WebClientProvider from "./web-client.provider";
 import VideoJSProvider from "./video-js.provider";
 
-
 export const withProviders = (
   ...providers: Array<React.FC<{ children?: React.ReactNode }>>
 ) => {
