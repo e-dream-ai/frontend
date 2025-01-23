@@ -7,6 +7,7 @@ import InstallPage from "@/components/pages/install/install.page";
 import LearnMorePage from "@/components/pages/learn-more/learn-more.page";
 import MyDreamsPage from "@/components/pages/my-dreams/my-dreams.page";
 import ProfilePage from "@/components/pages/profile/profile.page";
+import UserFeedPage from "@/components/pages/user-feed/user-feed.page";
 import InvitesPage from "@/components/pages/invites/invites.page";
 import TermsOfServicePage from "@/components/pages/terms-of-service/terms-of-service.page";
 import ViewDreamPage from "@/components/pages/view-dream/view-dream.page";
@@ -223,6 +224,20 @@ export const router = createBrowserRouter([
             ]}
           >
             <ProfilePage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: `${ROUTES.PROFILE}/:uuid${ROUTES.USER_FEED}`,
+        element: (
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
+            <UserFeedPage />
           </ProtectedRoute>
         ),
       },

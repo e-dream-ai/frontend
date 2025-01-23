@@ -1,36 +1,46 @@
+import { useEffect, useState } from "react";
 import { useFeed } from "@/api/feed/query/useFeed";
 import { Column, ItemCard, ItemCardList, Row } from "@/components/shared";
 import { Paginate } from "@/components/shared/paginate/paginate";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import Text from "@/components/shared/text/text";
 import { PAGINATION } from "@/constants/pagination.constants";
-import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
+import { FeedItemServerType } from "@/types/feed.types";
 
 type UserDreamsProps = {
   userUUID?: string;
   grid?: boolean;
   columns?: number;
+  type?: FeedItemServerType;
 };
 
 const UserDreams: React.FC<UserDreamsProps> = ({
   userUUID,
   grid,
   columns = 2,
+  type
 }) => {
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching } = useFeed({
     page,
     userUUID,
+    type
   });
   const feed = data?.data?.feed;
   const pageCount = Math.ceil((data?.data?.count ?? 1) / PAGINATION.TAKE);
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);
   };
+
+  // reset page to 0 when type changes
+  useEffect(() => {
+    setPage(0);
+  }, [type]);
+
   return (
     <Row flex="auto">
       <Column flex="auto">
@@ -70,6 +80,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({
 
         <Row justifyContent="center" margin="0">
           <Paginate
+            forcePage={page}
             breakLabel="..."
             nextLabel={`${t("components.paginate.next")} >`}
             onPageChange={handleonPageChange}

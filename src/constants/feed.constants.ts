@@ -19,7 +19,7 @@ export const FEED_FILTERS_NAMES = {
   ADMIN: "page.feed.admin",
 };
 
-export const getFilterData: (
+export const getFeedFilterData: (
   t: TFunction,
   isAdmin: boolean,
 ) => Array<{ key: string; value: string }> = (t, isAdmin) => {
@@ -45,4 +45,17 @@ export const getFilterData: (
   }
 
   return defaultArray;
+};
+
+export const getUserFeedFilterData: (
+  t: TFunction,
+) => Array<{ key: string; value: string }> = (t) => {
+  return [
+    { key: t(FEED_FILTERS_NAMES.ALL), value: FEED_FILTERS.ALL.toString() },
+    { key: t(FEED_FILTERS_NAMES.DREAM), value: FEED_FILTERS.DREAM.toString() },
+    {
+      key: t(FEED_FILTERS_NAMES.PLAYLIST),
+      value: FEED_FILTERS.PLAYLIST.toString(),
+    },
+  ];
 };

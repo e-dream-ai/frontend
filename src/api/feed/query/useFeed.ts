@@ -48,12 +48,15 @@ type HookParams = {
 };
 
 export const useFeed = ({ page = 0, userUUID, search, type }: HookParams) => {
+  const { user } = useAuth();
   const take = PAGINATION.TAKE;
   const skip = page * take;
-  const { user } = useAuth();
+  // "all" is not handled by backend
+  const beType = type === "all" ? undefined : type;
+
   return useQuery<ApiResponse<{ feed: FeedItem[]; count: number }>, Error>(
     [FEED_QUERY_KEY, page, search, type],
-    getFeed({ take, skip, userUUID, search, type }),
+    getFeed({ take, skip, userUUID, search, type: beType }),
     {
       enabled: Boolean(user),
     },

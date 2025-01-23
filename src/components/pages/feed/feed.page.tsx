@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 import UserCard, { UserCardList } from "../user-card/user-card";
-import { FEED_FILTERS, getFilterData } from "@/constants/feed.constants";
+import { FEED_FILTERS, getFeedFilterData } from "@/constants/feed.constants";
 import { useUsers } from "@/api/user/query/useUsers";
 import { useCallback, useMemo, useState } from "react";
 import { FeedItem, FeedItemServerType } from "@/types/feed.types";
@@ -149,7 +149,7 @@ export const FeedPage: React.FC = () => {
           <RadioButtonGroup
             name="search-filter"
             value={radioGroupState as string}
-            data={getFilterData(t, isUserAdmin)}
+            data={getFeedFilterData(t, isUserAdmin)}
             onChange={handleRadioButtonGroupChange}
           />
           {isLoading ? (

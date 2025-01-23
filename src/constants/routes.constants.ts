@@ -13,6 +13,7 @@ export const ROUTES = {
   VIEW_PLAYLIST: "/playlist",
   PROFILE: "/profile",
   MY_PROFILE: "/my-profile",
+  USER_FEED: "/feed",
   REMOTE_CONTROL: "/rc",
   INVITES: "/invites",
   HELP: "/help",

@@ -227,6 +227,9 @@
       "my_profile": "My Profile",
       "dreams": "Dreams"
     },
+    "user_feed": {
+      "title": "Dreams"
+    },
     "remote_control": {
       "title": "Remote Control",
       "remote_control": "Remote Control"
@@ -349,6 +352,7 @@
       "save": "Save",
       "cancel": "Cancel",
       "edit_profile": "Edit",
+      "view_dreams": "View Dreams",
       "profile_successfully_updated": "Profile updated successfully.",
       "error_updating_profile": "Error updating profile."
     },
