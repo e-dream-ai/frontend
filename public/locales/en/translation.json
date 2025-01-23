@@ -494,5 +494,8 @@
   "toasts": {
     "play_dream": "Dream {{name}} played.",
     "play_playlist": "Playlist {{name}} played."
+  },
+  "web_client": {
+    "web_client_available": "Desktop client is inactive, you're able to play something on the web client clicking play button."
   }
 }

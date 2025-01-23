@@ -24,6 +24,7 @@ import { SpeedControls, SpeedLevels } from "@/types/web-client.types";
 import { TRANSITION_THRESHOLD, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
 import { useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
+import { useTranslation } from "react-i18next";
 
 type WebClientContextType = {
   isWebClientActive: boolean;
@@ -47,6 +48,8 @@ export const WebClientContext = createContext<WebClientContextType>(
 export const WebClientProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
+  const { t } = useTranslation();
+
   // user
   const { user, updateCurrentDream } = useAuth()
 
@@ -299,7 +302,6 @@ export const WebClientProvider: React.FC<{
     },
     onInactive: () => {
       if (IS_WEB_CLIENT_ACTIVE && user) {
-        toast.info("Desktop client is inactive, you're able to play something on the web client clicking play button.");
         setIsWebClientAvailable(true);
       }
     },
@@ -372,6 +374,15 @@ export const WebClientProvider: React.FC<{
       playVideo(playingDreamRef.current.video);
     }
   }, [location, isWebClientActive, playVideo]);
+
+
+  // show web client available toast
+  useEffect(() => {
+    // if pathname is RC and isWebClientAvailable but not isWebClientActive, then show toast
+    if (location.pathname === ROUTES.REMOTE_CONTROL && !isWebClientActive && isWebClientAvailable) {
+      toast.info(t("web_client.web_client_available"));
+    }
+  }, [t, location, isWebClientActive, isWebClientAvailable]);
 
   const memoedValue = useMemo(
     () => ({
