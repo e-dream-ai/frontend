@@ -23,28 +23,32 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { Menu, MenuButton, MenuItem } from "@/components/shared/menu/menu";
 import { getUserNameOrEmail, isAdmin } from "@/utils/user.util";
+import { joinPaths } from "@/utils/router.util";
 import { useImage } from "@/hooks/useImage";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import useSocket from "@/hooks/useSocket";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { User } from "@/types/auth.types";
 
-const USER_AUTH_MENU_ROUTES = [
-  { route: ROUTES.MY_PROFILE, title: "header.profile" },
-  { route: ROUTES.MY_DREAMS, title: "header.my_dreams" },
-  // { route: ROUTES.REMOTE_CONTROL, title: "header.remote_control" },
-  { route: ROUTES.ABOUT, title: "header.about" },
-  // { route: ROUTES.HELP, title: "header.help" },
-];
+const createMenuRoutes = (userUUID?: string) => {
+  const USER_AUTH_MENU_ROUTES = [
+    { route: ROUTES.MY_PROFILE, title: "header.profile" },
+    { route: `/${joinPaths([ROUTES.PROFILE, userUUID ?? "", ROUTES.USER_FEED])}`, title: "header.my_dreams" },
+    { route: ROUTES.ABOUT, title: "header.about" },
+  ];
 
-const ADMIN_AUTH_MENU_ROUTES = [
-  { route: ROUTES.MY_PROFILE, title: "header.profile" },
-  { route: ROUTES.MY_DREAMS, title: "header.my_dreams" },
-  // { route: ROUTES.REMOTE_CONTROL, title: "header.remote_control" },
-  { route: ROUTES.INVITES, title: "header.invites" },
-  { route: ROUTES.ABOUT, title: "header.about" },
-  // { route: ROUTES.HELP, title: "header.help" },
-];
+  const ADMIN_AUTH_MENU_ROUTES = [
+    { route: ROUTES.MY_PROFILE, title: "header.profile" },
+    { route: `/${joinPaths([ROUTES.PROFILE, userUUID ?? "", ROUTES.USER_FEED])}`, title: "header.my_dreams" },
+    { route: ROUTES.INVITES, title: "header.invites" },
+    { route: ROUTES.ABOUT, title: "header.about" },
+  ];
+
+  return {
+    user: USER_AUTH_MENU_ROUTES,
+    admin: ADMIN_AUTH_MENU_ROUTES
+  };
+};
 
 const AuthAnchor: React.FC<{
   text: string;
@@ -66,13 +70,15 @@ export const AuthMenu: React.FC = () => {
   const [showConfirmSignoutModal, setShowConfirmSignoutModal] =
     useState<boolean>(false);
 
+  const { isActive } = useDesktopClient();
+  const { isConnected } = useSocket();
+
   const avatarUrl = useImage(user?.avatar, {
     width: 30,
     fit: "cover",
   });
 
-  const { isActive } = useDesktopClient();
-  const { isConnected } = useSocket();
+  const routes = useMemo(() => createMenuRoutes(user?.uuid)[isUserAdmin ? "admin" : "user"], [isUserAdmin, user])
 
   const onShowConfirmSignoutModal = () => setShowConfirmSignoutModal(true);
   const onHideConfirmSignoutModal = () => setShowConfirmSignoutModal(false);
@@ -134,7 +140,7 @@ export const AuthMenu: React.FC = () => {
             align="end"
             menuClassName="my-menu"
           >
-            {(isUserAdmin ? ADMIN_AUTH_MENU_ROUTES : USER_AUTH_MENU_ROUTES).map(
+            {(routes).map(
               (r) => (
                 <AnchorLink key={r.route} type="tertiary" to={r.route}>
                   <MenuItem onClick={() => ({})}>{t(r.title)}</MenuItem>

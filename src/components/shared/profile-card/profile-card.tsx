@@ -99,12 +99,15 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
     <Row flexWrap="wrap">
       <Column flex={["0 0 100%", "0 0 50%"]} alignItems="center">
         <Avatar size="lg" url={avatarUrl} />
-        {
-          !isOwner &&
-          <Button mt="3" buttonType="tertiary" size="sm" onClick={handleNavigateDreams}>
-            {t("components.profile_card.view_dreams")}
-          </Button>
-        }
+
+        <Button
+          mt="3"
+          buttonType="tertiary"
+          size="sm"
+          onClick={handleNavigateDreams}
+        >
+          {t("components.profile_card.view_dreams")}
+        </Button>
       </Column>
 
       <Column flex={["0 0 100%", "0 0 50%"]}>
