@@ -390,7 +390,7 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     before={<FontAwesomeIcon icon={faSave} />}
                     value={values.user}
-                    href={`${ROUTES.PROFILE}/${playlist?.user.uuid}`}
+                    to={`${ROUTES.PROFILE}/${playlist?.user.uuid}`}
                     {...register("user")}
                   />
                 </Restricted>
@@ -409,7 +409,7 @@ export const ViewPlaylistPage = () => {
                       isDisabled={!editMode || !allowedEditOwner}
                       isLoading={isUsersLoading}
                       before={<FontAwesomeIcon icon={faUser} />}
-                      href={
+                      to={
                         playlist?.displayedOwner?.uuid
                           ? `${ROUTES.PROFILE}/${playlist?.displayedOwner?.uuid}`
                           : undefined

@@ -2,7 +2,7 @@ import router from "@/routes/router";
 import useLogin from "@/api/auth/useLogin";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
-import { Anchor, Button, Input, Row } from "@/components/shared";
+import { AnchorLink, Button, Input, Row } from "@/components/shared";
 // import InputPassword from "@/components/shared/input-password/input-password";
 import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
@@ -53,33 +53,33 @@ export const LoginPage: React.FC = () => {
 
   const onSubmit =
     (submitType: SubmitType) =>
-    async (data: LoginFormValues | MagicLoginFormValues) => {
-      clearErrors();
-      const schema = submitType === "login" ? LoginSchema : MagicLoginSchema;
+      async (data: LoginFormValues | MagicLoginFormValues) => {
+        clearErrors();
+        const schema = submitType === "login" ? LoginSchema : MagicLoginSchema;
 
-      try {
-        await schema.validate(data, { abortEarly: false });
+        try {
+          await schema.validate(data, { abortEarly: false });
 
-        if (submitType === "login" && "password" in data) {
-          handleLogin(data.email, data.password);
-        } else {
-          handleMagicLogin(data.email);
+          if (submitType === "login" && "password" in data) {
+            handleLogin(data.email, data.password);
+          } else {
+            handleMagicLogin(data.email);
+          }
+        } catch (error) {
+          if (error instanceof yup.ValidationError) {
+            error.inner.forEach((err) => {
+              if (err.path) {
+                setError(err.path as keyof MagicLoginFormValues, {
+                  type: "manual",
+                  message: err.message,
+                });
+              }
+            });
+          } else {
+            // Handle unexpected errors
+          }
         }
-      } catch (error) {
-        if (error instanceof yup.ValidationError) {
-          error.inner.forEach((err) => {
-            if (err.path) {
-              setError(err.path as keyof MagicLoginFormValues, {
-                type: "manual",
-                message: err.message,
-              });
-            }
-          });
-        } else {
-          // Handle unexpected errors
-        }
-      }
-    };
+      };
 
   const handleLogin = (email: string, password: string) => {
     mutate(
@@ -184,9 +184,9 @@ export const LoginPage: React.FC = () => {
             </Row>
 
             <Row justifyContent="space-between" mb="0.4rem">
-              <Anchor href={ROUTES.SIGNUP}>
+              <AnchorLink to={ROUTES.SIGNUP}>
                 {t("page.login.dont_have_account")}
-              </Anchor>
+              </AnchorLink>
             </Row>
 
             {/* <Row justifyContent="space-between" mb="0.4rem">

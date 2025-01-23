@@ -4,6 +4,7 @@ import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import {
   Anchor,
+  AnchorLink,
   Button,
   Checkbox,
   Column,
@@ -181,9 +182,9 @@ export const SignupPage: React.FC = () => {
             <Row justifyContent="space-between">
               <Column>
                 <Row justifyContent="space-between" mb="0.4rem">
-                  <Anchor href={ROUTES.SIGNIN}>
+                  <AnchorLink to={ROUTES.SIGNIN}>
                     {t("page.signup.already_have_account")}
-                  </Anchor>
+                  </AnchorLink>
                 </Row>
                 {/* <Row mb="0.4rem">
                   <Anchor onClick={handleOpenForgotPasswordModal}>

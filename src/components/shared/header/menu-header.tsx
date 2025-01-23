@@ -89,7 +89,7 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
             showSlash={route.showSlash}
             className={route.deviceType === "both" ? "both" : "desktop"}
           >
-            <AnchorLink to={route.route} onClick={handleOnClick}>
+            <AnchorLink to={route.route} onClick={handleOnClick} style={{ textDecoration: "none" }}>
               {route.component}
             </AnchorLink>
           </NavListItem>

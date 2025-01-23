@@ -2,17 +2,14 @@ import { useTranslation } from "react-i18next";
 import Container from "../container/container";
 import Row, { Column } from "../row/row";
 import { Section } from "../section/section";
-import { useNavigate } from "react-router-dom";
-import { ROUTES } from "@/constants/routes.constants";
 import Text from "../text/text";
-import Anchor from "../anchor/anchor";
+import { AnchorLink } from "../anchor/anchor";
+import { ROUTES } from "@/constants/routes.constants";
 
 const SectionID = "not-found";
 
 export const NotFound = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const handleGoHome = () => navigate(ROUTES.ROOT);
 
   return (
     <Section id={SectionID}>
@@ -32,9 +29,9 @@ export const NotFound = () => {
         <Row flex="1">
           <Text>
             {t("page.not_found.message")},{" "}
-            <Anchor onClick={handleGoHome}>
+            <AnchorLink to={ROUTES.ROOT}>
               {t("components.not_found.go_home")}
-            </Anchor>
+            </AnchorLink>
             .
           </Text>
         </Row>

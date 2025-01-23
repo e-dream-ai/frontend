@@ -1,5 +1,4 @@
-import { Button, Column, Row } from "@/components/shared";
-import { Anchor } from "@/components/shared";
+import { AnchorLink, Button, Column, Row } from "@/components/shared";
 import { Card } from "@/components/shared/card/card";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
@@ -95,8 +94,8 @@ export const AboutPage: React.FC = () => {
             social media. Become a creator yourself!
           </p>
           <p>
-            <Anchor href={ROUTES.SIGNUP}>Create an account</Anchor>,{" "}
-            <Anchor href="/install">install the app</Anchor>, and begin the
+            <AnchorLink to={ROUTES.SIGNUP}>Create an account</AnchorLink>,{" "}
+            <AnchorLink to={ROUTES.INSTALL}>install the app</AnchorLink>, and begin the
             experience.
           </p>
         </Text>

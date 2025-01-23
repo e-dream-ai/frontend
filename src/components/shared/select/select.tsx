@@ -11,7 +11,7 @@ import {
   InputGroup,
   InputRow,
 } from "../input/input.styled";
-import { Anchor } from "..";
+import { Anchor, AnchorLink } from "..";
 import { truncateString } from "@/utils/string.util";
 import { Option } from "@/types/select.types";
 
@@ -81,6 +81,7 @@ const StyledSelect = styled(ReactSelect)`
 
 type SelectProps = Props<unknown, boolean, GroupBase<unknown>> & {
   href?: string;
+  to?: string;
   before?: React.ReactNode;
   after?: React.ReactNode;
   error?: string;
@@ -93,6 +94,7 @@ export const Select = React.forwardRef<
   (
     {
       href,
+      to,
       before,
       after,
       error,
@@ -102,8 +104,9 @@ export const Select = React.forwardRef<
       placeholder,
       ...props
     },
-    /* @ts-expect-error ref is expected to being declared but not needed to make component work */
-    ref,
+    // unused ref
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    __,
   ) => {
     const v = value as Option;
 
@@ -116,15 +119,21 @@ export const Select = React.forwardRef<
           {before && <InputBefore>{before}</InputBefore>}
           {isDisabled ? (
             <DisabledInput>
-              {href ? (
-                <Anchor type="secondary" href={href}>
-                  {label}
-                </Anchor>
-              ) : typeof label === "string" ? (
-                truncateString(label, 30)
-              ) : (
-                label ?? "-"
-              )}
+              {
+                to ? (
+                  <AnchorLink type="secondary" to={to}>
+                    {label}
+                  </AnchorLink>
+                ) :
+                  href ? (
+                    <Anchor type="secondary" href={href}>
+                      {label}
+                    </Anchor>
+                  ) : typeof label === "string" ? (
+                    truncateString(label, 30)
+                  ) : (
+                    label ?? "-"
+                  )}
             </DisabledInput>
           ) : (
             <StyledSelect

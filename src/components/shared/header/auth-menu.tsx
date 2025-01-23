@@ -142,7 +142,7 @@ export const AuthMenu: React.FC = () => {
           >
             {(routes).map(
               (r) => (
-                <AnchorLink key={r.route} type="tertiary" to={r.route}>
+                <AnchorLink key={r.route} type="tertiary" to={r.route} style={{ textDecoration: "none" }}>
                   <MenuItem onClick={() => ({})}>{t(r.title)}</MenuItem>
                 </AnchorLink>
               ),

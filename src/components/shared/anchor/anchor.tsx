@@ -56,7 +56,6 @@ export const AnchorLink = styled(Link)<
 >`
   ${(props) => AnchorType[props.type || "primary"]}
   ${commonStyles}
-  text-decoration: none;
 `;
 
 export default Anchor;

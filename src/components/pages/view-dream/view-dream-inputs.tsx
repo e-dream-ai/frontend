@@ -209,7 +209,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           type="text"
           before={<FontAwesomeIcon icon={faSave} />}
           value={values.user}
-          href={`${ROUTES.PROFILE}/${dream?.user.uuid}`}
+          to={`${ROUTES.PROFILE}/${dream?.user.uuid}`}
           {...register("user")}
         />
       </Restricted>
@@ -227,7 +227,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             isDisabled={!editMode || !allowedEditOwner}
             isLoading={isUsersLoading}
             before={<FontAwesomeIcon icon={faUser} />}
-            href={
+            to={
               dream?.displayedOwner?.uuid
                 ? `${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`
                 : undefined

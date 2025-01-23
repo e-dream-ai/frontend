@@ -9,11 +9,12 @@ import StyledInput, {
   InputGroup,
   InputRow,
 } from "./input.styled";
-import { Anchor } from "..";
+import { Anchor, AnchorLink } from "..";
 
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   linkify?: boolean;
   href?: string;
+  to?: string;
   before?: React.ReactNode;
   after?: React.ReactNode;
   error?: string;
@@ -31,6 +32,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       value,
       linkify,
       href,
+      to,
       name,
       placeholder,
       ...props
@@ -59,15 +61,20 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 >
                   {value || "-"}
                 </Linkify>
-              ) : href ? (
-                <Anchor type="secondary" href={href}>
+              ) : to ? (
+                <AnchorLink type="secondary" to={to}>
                   {value}
-                </Anchor>
-              ) : typeof value === "string" ? (
-                value
-              ) : (
-                value || "-"
-              )}
+                </AnchorLink>
+              )
+                : href ? (
+                  <Anchor type="secondary" href={href}>
+                    {value}
+                  </Anchor>
+                ) : typeof value === "string" ? (
+                  value
+                ) : (
+                  value || "-"
+                )}
             </DisabledInput>
           ) : (
             <StyledInput
