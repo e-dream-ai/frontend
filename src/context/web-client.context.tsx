@@ -339,10 +339,18 @@ export const WebClientProvider: React.FC<{
 
   // update playing playlist
   useEffect(() => {
+
+    // update playingPlaylistRef playlist
     if (currentPlaylist) {
       playingPlaylistRef.current = currentPlaylist;
     }
-  }, [currentPlaylist]);
+
+    // when currentPlaylist changes play first dream 
+    const firstPlaylistDream = currentPlaylist?.items?.[0]?.dreamItem;
+    if (isWebClientActive && firstPlaylistDream) {
+      playDream(firstPlaylistDream);
+    }
+  }, [currentPlaylist, isWebClientActive, playDream]);
 
   // register events on videojs instance
   useEffect(() => {
