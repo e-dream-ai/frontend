@@ -28,7 +28,7 @@ export const DesktopClientProvider = ({
   /**
    * Handle ping event, set to active status when it arrives
    */
-  const handlePingEvent = (): void => {
+  const handlePingEvent = async (): Promise<void> => {
     setIsActive(true);
     const now = Date.now();
     setLastEventTime(now);
@@ -37,7 +37,7 @@ export const DesktopClientProvider = ({
   /**
    * Handle goodbye event, set to inactive status when it arrives
    */
-  const handleGoodbyeEvent = (): void => {
+  const handleGoodbyeEvent = async (): Promise<void> => {
     setIsActive(false);
     setLastEventTime(undefined);
   };
