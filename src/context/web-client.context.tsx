@@ -17,7 +17,7 @@ import { RemoteControlEventData, RemoteEvent } from "@/types/remote-control.type
 import { calculatePlaybackRateFromSpeed, getPlaylistNavigation, multiplyPerceptualFPS, tapsToBrightness } from "@/utils/web-client.util";
 import { toast } from "react-toastify";
 import useSocket from "@/hooks/useSocket";
-import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
+import { NEW_REMOTE_CONTROL_EVENT, REMOTE_CONTROLS } from "@/constants/remote-control.constants";
 import { CREDIT_OVERLAY_ID, IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
 import { SpeedControls, SpeedLevels } from "@/types/web-client.types";
@@ -53,7 +53,7 @@ export const WebClientProvider: React.FC<{
   const { t } = useTranslation();
 
   // user
-  const { user, updateCurrentDream } = useAuth()
+  const { user, refreshCurrentDream, refreshCurrentPlaylist } = useAuth()
 
   // videojs
   const {
@@ -177,12 +177,13 @@ export const WebClientProvider: React.FC<{
       return false;
     }
 
-    updateCurrentDream();
     emit(NEW_REMOTE_CONTROL_EVENT, {
       event: "playing",
       uuid: dreamToPlay.uuid,
       isWebClientEvent: true,
     });
+
+    refreshCurrentDream();
 
     // get next dream after being update to preload it into a player instance
     const dreamToPreload = getNextDream("next");
@@ -192,7 +193,7 @@ export const WebClientProvider: React.FC<{
     }
 
     return true;
-  }, [emit, playVideo, preloadVideo, getNextDream, updateCurrentDream]);
+  }, [emit, playVideo, preloadVideo, getNextDream, refreshCurrentDream]);
 
   const handlePlaylistControl = useCallback(async (direction: 'next' | 'previous') => {
     return playDream(getNextDream(direction));
@@ -309,11 +310,33 @@ export const WebClientProvider: React.FC<{
       // execute handler synced with event
       handlers?.[event]?.();
 
-      if (event === "play_dream") {
+      /**
+       * Handle dream events
+       */
+      if (event === REMOTE_CONTROLS.PLAY_DREAM.event) {
         const newDream = await fetchDream(data?.uuid)
         // if there's a dream play it
         Boolean(newDream) && playDream(newDream);
       }
+
+      if (event === REMOTE_CONTROLS.PLAYING.event) {
+        refreshCurrentDream();
+      }
+
+      /**
+       * Handle playlist events
+       */
+      if (event === REMOTE_CONTROLS.PLAY_PLAYLIST.event) {
+        const playlist = await refreshCurrentPlaylist();
+        const newDream = playlist?.items?.find(i => Boolean(i.dreamItem))?.dreamItem;
+        // if there's a dream play it
+        Boolean(newDream) && playDream(newDream);
+      }
+
+      if (event === REMOTE_CONTROLS.RESET_PLAYLIST.event) {
+        refreshCurrentPlaylist();
+      }
+
     },
   );
 

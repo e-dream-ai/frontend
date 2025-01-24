@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import {
   Row,
   Column,
@@ -11,13 +12,7 @@ import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
 } from "@/constants/remote-control.constants";
-import useSocketEventListener from "@/hooks/useSocketEventListener";
 import useSocket from "@/hooks/useSocket";
-import {
-  RemoteControlAction,
-  RemoteControlEventData,
-} from "@/types/remote-control.types";
-import { getRemoteControlEvent } from "@/utils/remote-control.util";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
@@ -29,41 +24,20 @@ export const CurrentPlaylist = () => {
   const { t } = useTranslation();
   const { emit } = useSocket();
   const theme = useTheme();
-  const { currentPlaylist, isLoadingCurrentPlaylist, updateCurrentPlaylist } = useAuth();
+  const { currentPlaylist, isLoadingCurrentPlaylist, refreshCurrentPlaylist } = useAuth();
 
   const onRemoveCurrentPlaylist = () => {
     emit(NEW_REMOTE_CONTROL_EVENT, {
       event: REMOTE_CONTROLS.RESET_PLAYLIST.event,
     });
 
-    updateCurrentPlaylist();
+    refreshCurrentPlaylist();
   };
 
-  const handleRemoteControlEvent = async (data?: RemoteControlEventData): Promise<void | undefined> => {
-    const event: RemoteControlAction | undefined = getRemoteControlEvent(
-      data?.event,
-    );
-
-    if (!event) {
-      return;
-    }
-
-    if (event.event === REMOTE_CONTROLS.PLAY_PLAYLIST.event) {
-      updateCurrentPlaylist();
-    }
-
-    if (event.event === REMOTE_CONTROLS.RESET_PLAYLIST.event) {
-      updateCurrentPlaylist();
-    }
-  };
-
-  /**
-   * Handle new remote control events from the server for dream on profile
-   */
-  useSocketEventListener<RemoteControlEventData>(
-    NEW_REMOTE_CONTROL_EVENT,
-    handleRemoteControlEvent,
-  );
+  // update current playlist on component mount
+  useEffect(() => {
+    refreshCurrentPlaylist();
+  }, [refreshCurrentPlaylist])
 
   return (
     <Column mb="2rem">

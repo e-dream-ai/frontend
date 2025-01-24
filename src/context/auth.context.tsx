@@ -19,7 +19,6 @@ import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 import useCurrentDream from "@/api/dream/query/useCurrentDream";
 import useCurrentPlaylist from "@/api/dream/query/useCurrentPlaylist";
-import { useLocation } from "react-router-dom";
 
 type AuthContextType = {
   user: User | null;
@@ -33,8 +32,8 @@ type AuthContextType = {
   authenticateUser: () => Promise<void>;
   logout: (options?: LogoutOptions) => Promise<void>;
   setLoggedUser: (user: User | null) => void;
-  updateCurrentDream: () => void;
-  updateCurrentPlaylist: () => void;
+  refreshCurrentDream: () => Promise<Dream | undefined>;
+  refreshCurrentPlaylist: () => Promise<Playlist | undefined>;
 };
 
 type LogoutOptions = {
@@ -51,9 +50,6 @@ export const AuthProvider: React.FC<{
   const authenticateUserQuery = useAuthenticateUser();
   const logoutMutation = useLogout();
   const { t } = useTranslation();
-
-  // location
-  const location = useLocation();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isSessionVerified, setIsSessionVerified] = useState<boolean>(false);
@@ -145,12 +141,14 @@ export const AuthProvider: React.FC<{
     }
   }, [authenticateUserQuery, login, logout]);
 
-  const updateCurrentDream = useCallback(() => {
-    refetchCurrentDream();
+  const refreshCurrentDream = useCallback(async () => {
+    const refetchData = await refetchCurrentDream();
+    return refetchData?.data?.data?.dream;
   }, [refetchCurrentDream]);
 
-  const updateCurrentPlaylist = useCallback(() => {
-    refetchCurrentPlaylist();
+  const refreshCurrentPlaylist = useCallback(async () => {
+    const refetchData = await refetchCurrentPlaylist();
+    return refetchData?.data?.data?.playlist;
   }, [refetchCurrentPlaylist]);
 
   useHttpInterceptors({ logout }, [user]);
@@ -162,14 +160,6 @@ export const AuthProvider: React.FC<{
     }
   }, [isSessionVerified, setIsSessionVerified, authenticateUser]);
 
-  // refetch current dream and playlist when user navigates to remote control page
-  useEffect(() => {
-    if (location.pathname === ROUTES.REMOTE_CONTROL) {
-      updateCurrentDream();
-      updateCurrentPlaylist();
-    }
-  }, [location, updateCurrentDream, updateCurrentPlaylist]);
-
   const memoedValue = useMemo(
     () => ({
       user,
@@ -179,8 +169,8 @@ export const AuthProvider: React.FC<{
       isLoadingCurrentPlaylist,
       currentDream,
       currentPlaylist,
-      updateCurrentDream,
-      updateCurrentPlaylist,
+      refreshCurrentDream,
+      refreshCurrentPlaylist,
       login,
       authenticateUser,
       logout,
@@ -194,8 +184,8 @@ export const AuthProvider: React.FC<{
       isLoadingCurrentPlaylist,
       currentDream,
       currentPlaylist,
-      updateCurrentDream,
-      updateCurrentPlaylist,
+      refreshCurrentDream,
+      refreshCurrentPlaylist,
       login,
       authenticateUser,
       logout,

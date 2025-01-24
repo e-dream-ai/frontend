@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Column, ItemCardList, ItemCard, Text, Row, Button } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import {
@@ -21,7 +22,7 @@ import useAuth from "@/hooks/useAuth";
 export const CurrentDream = () => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { currentDream, isLoadingCurrentDream, updateCurrentDream } = useAuth();
+  const { currentDream, isLoadingCurrentDream, refreshCurrentDream } = useAuth();
   const { isWebClientAvailable, setWebClientActive, setWebPlayerAvailable } = useWebClient()
 
   const handleRemoteControlEvent = async (data?: RemoteControlEventData): Promise<void | undefined> => {
@@ -34,7 +35,7 @@ export const CurrentDream = () => {
     }
 
     if (event.event === REMOTE_CONTROLS.PLAYING.event) {
-      updateCurrentDream();
+      refreshCurrentDream();
     }
   };
 
@@ -50,6 +51,11 @@ export const CurrentDream = () => {
     setWebClientActive(true);
     setWebPlayerAvailable(false);
   };
+
+  // update current dream on component mount
+  useEffect(() => {
+    refreshCurrentDream();
+  }, [refreshCurrentDream])
 
   return (
     <Column mb="2rem">
