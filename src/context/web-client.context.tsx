@@ -27,6 +27,7 @@ import { ROUTES } from "@/constants/routes.constants";
 import { useTranslation } from "react-i18next";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { fetchDream } from "@/api/dream/query/useDream";
+import { joinPaths } from "@/utils/router.util";
 
 type WebClientContextType = {
   isWebClientActive: boolean;
@@ -53,7 +54,7 @@ export const WebClientProvider: React.FC<{
   const { t } = useTranslation();
 
   // user
-  const { user, refreshCurrentDream, refreshCurrentPlaylist } = useAuth()
+  const { user, currentDream: cd, refreshCurrentDream, refreshCurrentPlaylist } = useAuth()
 
   // videojs
   const {
@@ -89,7 +90,7 @@ export const WebClientProvider: React.FC<{
   const transitioningRef = useRef(false);
 
   // user current values
-  const currentDream = useMemo(() => user?.currentDream, [user?.currentDream]);
+  const currentDream = useMemo(() => cd, [cd]);
 
   const { data: currentPlaylistData } = useCurrentPlaylist();
   const currentPlaylist = useMemo(() => currentPlaylistData?.data?.playlist, [currentPlaylistData]);
@@ -270,7 +271,14 @@ export const WebClientProvider: React.FC<{
       toggleCreditOverlay();
     },
     web: () => {
-      window.open(import.meta.env.VITE_FRONTEND_URL, "_blank");
+      window.open(
+        joinPaths(
+          [
+            import.meta.env.VITE_FRONTEND_URL,
+            ROUTES.VIEW_DREAM,
+            playingDreamRef?.current?.uuid
+          ]
+        ), "_blank");
     },
     help: () => { },
     status: () => { },
