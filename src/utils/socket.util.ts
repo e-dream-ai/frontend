@@ -42,7 +42,7 @@ export const emitPlayPlaylist = (
 
 export const onNewRemoteControlEvent =
   (t: TFunction) =>
-  (data?: RemoteControlEventData): void => {
+  async (data?: RemoteControlEventData): Promise<void | undefined> => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
       data?.event,
     );

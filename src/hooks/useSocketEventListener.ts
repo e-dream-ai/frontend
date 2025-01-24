@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import useSocket from "./useSocket";
 
-type EventListener<T> = (data?: T) => void;
+type EventListener<T> = (data?: T) => Promise<void | undefined>;
 
 const useSocketEventListener = <T>(
   event: string,

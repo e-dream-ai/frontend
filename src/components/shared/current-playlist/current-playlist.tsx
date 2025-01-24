@@ -39,7 +39,7 @@ export const CurrentPlaylist = () => {
     updateCurrentPlaylist();
   };
 
-  const handleRemoteControlEvent = (data?: RemoteControlEventData): void => {
+  const handleRemoteControlEvent = async (data?: RemoteControlEventData): Promise<void | undefined> => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
       data?.event,
     );

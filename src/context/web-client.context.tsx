@@ -13,7 +13,7 @@ import { useDesktopClient } from "@/hooks/useDesktopClient";
 import useStatusCallback from "@/hooks/useStatusCallback";
 import { useVideoJs } from "@/hooks/useVideoJS";
 import useCurrentPlaylist from "@/api/dream/query/useCurrentPlaylist";
-import { RemoteEvent } from "@/types/remote-control.types";
+import { RemoteControlEventData, RemoteEvent } from "@/types/remote-control.types";
 import { calculatePlaybackRateFromSpeed, getPlaylistNavigation, multiplyPerceptualFPS, tapsToBrightness } from "@/utils/web-client.util";
 import { toast } from "react-toastify";
 import useSocket from "@/hooks/useSocket";
@@ -25,6 +25,8 @@ import { TRANSITION_THRESHOLD, VIDEOJS_EVENTS } from "@/constants/video-js.const
 import { useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import { useTranslation } from "react-i18next";
+import useSocketEventListener from "@/hooks/useSocketEventListener";
+import { fetchDream } from "@/api/dream/query/useDream";
 
 type WebClientContextType = {
   isWebClientActive: boolean;
@@ -178,7 +180,8 @@ export const WebClientProvider: React.FC<{
     updateCurrentDream();
     emit(NEW_REMOTE_CONTROL_EVENT, {
       event: "playing",
-      uuid: dreamToPlay.uuid
+      uuid: dreamToPlay.uuid,
+      isWebClientEvent: true,
     });
 
     // get next dream after being update to preload it into a player instance
@@ -294,6 +297,26 @@ export const WebClientProvider: React.FC<{
     handlePlaylistControl("next");
   }, [handlePlaylistControl]);
 
+  // Listen new remote control events from the server
+  useSocketEventListener<RemoteControlEventData>(
+    NEW_REMOTE_CONTROL_EVENT,
+    async (data?: RemoteControlEventData) => {
+      const event = data?.event as RemoteEvent;
+      if (!event) {
+        return;
+      }
+
+      // execute handler synced with event
+      handlers?.[event]?.();
+
+      if (event === "play_dream") {
+        const newDream = await fetchDream(data?.uuid)
+        // if there's a dream play it
+        Boolean(newDream) && playDream(newDream);
+      }
+    },
+  );
+
   useStatusCallback(isActive, {
     onActive: () => {
       if (IS_WEB_CLIENT_ACTIVE && user) {
@@ -374,7 +397,6 @@ export const WebClientProvider: React.FC<{
       playVideo(playingDreamRef.current.video);
     }
   }, [location, isWebClientActive, playVideo]);
-
 
   // show web client available toast
   useEffect(() => {

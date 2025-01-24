@@ -24,7 +24,7 @@ export const CurrentDream = () => {
   const { currentDream, isLoadingCurrentDream, updateCurrentDream } = useAuth();
   const { isWebClientAvailable, setWebClientActive, setWebPlayerAvailable } = useWebClient()
 
-  const handleRemoteControlEvent = (data?: RemoteControlEventData): void => {
+  const handleRemoteControlEvent = async (data?: RemoteControlEventData): Promise<void | undefined> => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
       data?.event,
     );
