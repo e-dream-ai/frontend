@@ -8,13 +8,12 @@ import StyledHeader, {
   LogoContainer,
   LogoIcon,
   Nav,
-  AuthMenuContainer,
-  MobileMenuContainer,
+  ProfileContainer,
 } from "./header.styled";
-import { AuthMenu } from "./auth-menu";
+import { HeaderProfile } from "./header-profile";
 import { ROUTES } from "@/constants/routes.constants";
+import { KebabMenu } from "./kebab-menu";
 import useAuth from "@/hooks/useAuth";
-import { MobileMenu } from "./mobile-menu";
 
 export const Header: React.FC = () => {
   const { t } = useTranslation();
@@ -34,13 +33,10 @@ export const Header: React.FC = () => {
             </LogoAnchor>
           </LogoContainer>
 
-          <AuthMenuContainer>
-            <AuthMenu />
-          </AuthMenuContainer>
-
-          <MobileMenuContainer>
-            <MobileMenu />
-          </MobileMenuContainer>
+          <ProfileContainer>
+            <HeaderProfile />
+            <KebabMenu />
+          </ProfileContainer>
 
           <MenuContainer>
             <Nav>
