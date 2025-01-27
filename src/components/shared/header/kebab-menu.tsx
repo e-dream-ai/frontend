@@ -1,6 +1,6 @@
 import { Fragment, useMemo, useState } from "react";
 import { AnchorLink, Button, Text } from "@/components/shared";
-import { FULL_CREATE_ROUTES } from "@/constants/routes.constants";
+import { FULL_CREATE_ROUTES, ROUTES } from "@/constants/routes.constants";
 import { useAuth } from "@/hooks/useAuth";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEllipsisV } from "@fortawesome/free-solid-svg-icons";
@@ -9,14 +9,83 @@ import { useTranslation } from "react-i18next";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
+import { joinPaths } from "@/utils/router.util";
 
-const createMenuRoutes = () => {
+const createMenuRoutes = (user?: User | null) => {
   const USER_AUTH_MENU_ROUTES = [
-    { route: FULL_CREATE_ROUTES.DREAM, title: "header.create" },
+    {
+      title: "header.my_dreams",
+      route: `/${joinPaths(
+        [
+          ROUTES.PROFILE,
+          user?.uuid ?? "",
+          ROUTES.USER_FEED
+        ])}`,
+      deviceType: "mobile",
+    },
+    {
+      title: "header.feed",
+      route: ROUTES.FEED,
+      deviceType: "mobile",
+    },
+    {
+      title: "header.install",
+      route: ROUTES.INSTALL,
+      deviceType: "mobile",
+    },
+    {
+      title: "header.about",
+      route: ROUTES.ABOUT,
+      deviceType: "mobile",
+    },
+    {
+      route: FULL_CREATE_ROUTES.DREAM,
+      title: "header.create"
+    },
+    {
+      route: ROUTES.HELP,
+      title: "header.help"
+    },
   ];
 
   const ADMIN_AUTH_MENU_ROUTES = [
-    { route: FULL_CREATE_ROUTES.DREAM, title: "header.create" },
+    {
+      title: "header.my_dreams",
+      route: `/${joinPaths(
+        [
+          ROUTES.PROFILE,
+          user?.uuid ?? "",
+          ROUTES.USER_FEED
+        ])}`,
+      deviceType: "mobile",
+    },
+    {
+      title: "header.feed",
+      route: ROUTES.FEED,
+      deviceType: "mobile",
+    },
+    {
+      title: "header.install",
+      route: ROUTES.INSTALL,
+      deviceType: "mobile",
+    },
+    {
+      title: "header.about",
+      route: ROUTES.ABOUT,
+      deviceType: "mobile",
+    },
+    {
+      route: FULL_CREATE_ROUTES.DREAM,
+      title: "header.create"
+    },
+    {
+      route: ROUTES.HELP,
+      title: "header.help"
+    },
+    {
+      route: ROUTES.INVITES,
+      title: "header.invites"
+    },
   ];
 
   return {
@@ -40,7 +109,7 @@ export const KebabMenu: React.FC = () => {
     onHideConfirmSignoutModal();
   };
 
-  const routes = useMemo(() => createMenuRoutes()[isUserAdmin ? "admin" : "user"], [isUserAdmin]);
+  const routes = useMemo(() => createMenuRoutes(user)[isUserAdmin ? "admin" : "user"], [user, isUserAdmin]);
 
   return (
     <Fragment>
@@ -69,11 +138,17 @@ export const KebabMenu: React.FC = () => {
         transition
         position="anchor"
         align="end"
-        menuClassName="my-menu"
+        menuClassName="my-kebab-menu"
       >
         {(routes).map(
           (r) => (
-            <AnchorLink key={r.route} type="tertiary" to={r.route} style={{ textDecoration: "none" }}>
+            <AnchorLink
+              key={r.route}
+              type="tertiary"
+              to={r.route}
+              className={r.deviceType}
+              style={{ textDecoration: "none" }}
+            >
               <MenuItem onClick={() => ({})}>{t(r.title)}</MenuItem>
             </AnchorLink>
           ),
