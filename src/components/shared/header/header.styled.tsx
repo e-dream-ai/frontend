@@ -117,29 +117,12 @@ export const MenuContainer = styled.div`
   }
 `;
 
-export const AuthMenuContainer = styled.div`
+export const ProfileContainer = styled.div`
   order: 3;
   display: flex;
   flex: auto;
   justify-content: flex-end;
   align-items: center;
-
-  button {
-    height: 55px;
-  }
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    order: 2;
-  }
-`;
-
-export const MobileMenuContainer = styled.div`
-  order: 4;
-  display: none;
-  justify-content: flex-end;
-  align-items: center;
-  margin-left: 1rem;
-  text-transform: lowercase;
 
   button {
     width: 55px;
@@ -148,8 +131,7 @@ export const MobileMenuContainer = styled.div`
   }
 
   @media (max-width: ${DEVICES.TABLET}) {
-    order: 3;
-    display: flex;
+    order: 2;
   }
 `;
 
@@ -200,7 +182,7 @@ export const NavListItem = styled.li<{
   }
 `;
 
-export const HeaderProfileMenu = styled.div`
+export const HeaderProfileWrapper = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;

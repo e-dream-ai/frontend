@@ -1,14 +1,12 @@
-import { FULL_CREATE_ROUTES, ROUTES } from "@/constants/routes.constants";
+import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { StyledNavList, NavListItem } from "./header.styled";
 import { AnchorLink } from "../anchor/anchor";
-// import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-// import { faArrowRightFromBracket } from "@fortawesome/free-solid-svg-icons";
-// import Text from "../text/text";
 import { MouseEventHandler } from "react";
+import { joinPaths } from "@/utils/router.util";
 
-export type DeviceType = "desktop" | "both";
+export type DeviceType = "mobile" | "desktop" | "both";
 
 type RouteLink = {
   component: React.ReactNode;
@@ -21,22 +19,10 @@ type RouteLink = {
 export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
   onClickMenuItem,
 }) => {
-  const { user, isLoading /* ,logout */ } = useAuth();
+  const { user, isLoading } = useAuth();
   const { t } = useTranslation();
 
   const USER_NAV_ROUTES: Array<RouteLink> = [
-    {
-      component: t("header.install"),
-      route: ROUTES.INSTALL,
-      showSlash: true,
-      deviceType: "desktop",
-    },
-    {
-      component: t("header.create"),
-      route: FULL_CREATE_ROUTES.DREAM,
-      showSlash: true,
-      deviceType: "desktop",
-    },
     {
       component: t("header.playlists"),
       route: ROUTES.PLAYLISTS,
@@ -50,9 +36,32 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
       deviceType: "both",
     },
     {
+      component: t("header.my_dreams"),
+      route: `/${joinPaths(
+        [
+          ROUTES.PROFILE,
+          user?.uuid ?? "",
+          ROUTES.USER_FEED
+        ])}`,
+      showSlash: true,
+      deviceType: "desktop",
+    },
+    {
       component: t("header.feed"),
       route: ROUTES.FEED,
       showSlash: false,
+      deviceType: "desktop",
+    },
+    {
+      component: t("header.install"),
+      route: ROUTES.INSTALL,
+      showSlash: true,
+      deviceType: "desktop",
+    },
+    {
+      component: t("header.about"),
+      route: ROUTES.ABOUT,
+      showSlash: true,
       deviceType: "desktop",
     },
   ];
@@ -87,7 +96,7 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
             key={route.route}
             deviceType={route.deviceType}
             showSlash={route.showSlash}
-            className={route.deviceType === "both" ? "both" : "desktop"}
+            className={route.deviceType}
           >
             <AnchorLink to={route.route} onClick={handleOnClick} style={{ textDecoration: "none" }}>
               {route.component}
