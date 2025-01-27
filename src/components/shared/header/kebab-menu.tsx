@@ -10,45 +10,37 @@ import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
 import { joinPaths } from "@/utils/router.util";
+import { VoidFunction } from "@/utils/function.util";
 
 const createMenuRoutes = (user?: User | null) => {
-  const USER_AUTH_MENU_ROUTES = [
-    {
-      title: "header.my_dreams",
-      route: `/${joinPaths(
-        [
-          ROUTES.PROFILE,
-          user?.uuid ?? "",
-          ROUTES.USER_FEED
-        ])}`,
-      deviceType: "mobile",
-    },
-    {
-      title: "header.feed",
-      route: ROUTES.FEED,
-      deviceType: "mobile",
-    },
-    {
-      title: "header.install",
-      route: ROUTES.INSTALL,
-      deviceType: "mobile",
-    },
-    {
-      title: "header.about",
-      route: ROUTES.ABOUT,
-      deviceType: "mobile",
-    },
-    {
-      route: FULL_CREATE_ROUTES.DREAM,
-      title: "header.create"
-    },
-    {
-      route: ROUTES.HELP,
-      title: "header.help"
-    },
-  ];
 
-  const ADMIN_AUTH_MENU_ROUTES = [
+  const USER_ROUTES = [
+    {
+      title: "header.playlists",
+      route: ROUTES.PLAYLISTS,
+      display: "none"
+    },
+    {
+      title: "header.remote_control",
+      route: ROUTES.REMOTE_CONTROL,
+      display: "none"
+    },
+    {
+      title: "header.feed",
+      route: ROUTES.FEED,
+      display: "none"
+    },
+    {
+      title: "header.create",
+      route: FULL_CREATE_ROUTES.DREAM,
+      // using display props from styled-system to setup mobile, tablet, laptop, desktop breakpoints
+      display: ["flex", "flex", "none", "none"]
+    },
+    {
+      title: "header.profile",
+      route: ROUTES.MY_PROFILE,
+      display: ["flex", "flex", "none", "none"]
+    },
     {
       title: "header.my_dreams",
       route: `/${joinPaths(
@@ -57,40 +49,34 @@ const createMenuRoutes = (user?: User | null) => {
           user?.uuid ?? "",
           ROUTES.USER_FEED
         ])}`,
-      deviceType: "mobile",
-    },
-    {
-      title: "header.feed",
-      route: ROUTES.FEED,
-      deviceType: "mobile",
-    },
-    {
-      title: "header.install",
-      route: ROUTES.INSTALL,
-      deviceType: "mobile",
+      display: "flex"
     },
     {
       title: "header.about",
       route: ROUTES.ABOUT,
-      deviceType: "mobile",
+      display: "flex"
     },
     {
-      route: FULL_CREATE_ROUTES.DREAM,
-      title: "header.create"
+      title: "header.install",
+      route: ROUTES.INSTALL,
+      display: "flex"
     },
     {
+      title: "header.help",
       route: ROUTES.HELP,
-      title: "header.help"
+      display: "flex"
     },
     {
+      title: "header.invites",
       route: ROUTES.INVITES,
-      title: "header.invites"
+      display: "flex"
     },
   ];
 
   return {
-    user: USER_AUTH_MENU_ROUTES,
-    admin: ADMIN_AUTH_MENU_ROUTES
+    // remove invites from routes for normal users
+    user: USER_ROUTES.filter(r => r.title !== "header.invites"),
+    admin: USER_ROUTES
   };
 };
 
@@ -146,15 +132,19 @@ export const KebabMenu: React.FC = () => {
               key={r.route}
               type="tertiary"
               to={r.route}
-              className={r.deviceType}
-              style={{ textDecoration: "none" }}
+              display={r.display}
+              style={{ textDecoration: "none", textTransform: "lowercase" }}
             >
-              <MenuItem onClick={() => ({})}>{t(r.title)}</MenuItem>
+              <MenuItem onClick={VoidFunction}>{t(r.title)}</MenuItem>
             </AnchorLink>
           ),
         )}
 
-        <MenuItem key="logout" onClick={onShowConfirmSignoutModal}>
+        <MenuItem
+          key="logout"
+          onClick={onShowConfirmSignoutModal}
+          style={{ textDecoration: "none", textTransform: "lowercase" }}
+        >
           {t("header.logout")}
         </MenuItem>
       </Menu>

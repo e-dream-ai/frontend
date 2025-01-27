@@ -1,5 +1,5 @@
 import styled, { css } from "styled-components";
-import { SpaceProps, space } from "styled-system";
+import { DisplayProps, SpaceProps, display, space } from "styled-system";
 import { Types } from "@/types/style-types.types";
 import { Link } from "react-router-dom";
 
@@ -43,18 +43,26 @@ const commonStyles = css`
 export const Anchor = styled.a<
   {
     type?: Types;
-  } & SpaceProps
+  }
+  & SpaceProps
+  & DisplayProps
 >`
   ${(props) => AnchorType[props.type || "primary"]}
+  ${display}
+  ${space}
   ${commonStyles}
 `;
 
-export const AnchorLink = styled(Link)<
+export const AnchorLink = styled(Link) <
   {
     type?: Types;
-  } & SpaceProps
+  }
+  & SpaceProps
+  & DisplayProps
 >`
   ${(props) => AnchorType[props.type || "primary"]}
+  ${display}
+  ${space}
   ${commonStyles}
 `;
 

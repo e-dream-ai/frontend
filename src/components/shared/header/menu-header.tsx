@@ -1,20 +1,20 @@
-import { ROUTES } from "@/constants/routes.constants";
+import { FULL_CREATE_ROUTES, ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { StyledNavList, NavListItem } from "./header.styled";
 import { AnchorLink } from "../anchor/anchor";
 import { MouseEventHandler } from "react";
 import { joinPaths } from "@/utils/router.util";
+import { DisplayProps } from "styled-system";
 
-export type DeviceType = "mobile" | "desktop" | "both";
+export type DeviceType = "mobile" | "tablet" | "laptop" | "desktop";
 
 type RouteLink = {
   component: React.ReactNode;
   route: string;
-  deviceType?: DeviceType;
   showSlash?: boolean;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
-};
+} & DisplayProps;
 
 export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
   onClickMenuItem,
@@ -26,14 +26,28 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
     {
       component: t("header.playlists"),
       route: ROUTES.PLAYLISTS,
-      showSlash: true,
-      deviceType: "both",
+      display: "inline-flex"
     },
     {
       component: t("header.remote_control"),
       route: ROUTES.REMOTE_CONTROL,
-      showSlash: true,
-      deviceType: "both",
+      display: "inline-flex"
+    },
+    {
+      component: t("header.feed"),
+      route: ROUTES.FEED,
+      display: "inline-flex"
+    },
+    {
+      component: t("header.create"),
+      route: FULL_CREATE_ROUTES.DREAM,
+      // using display props from styled-system to setup mobile, tablet, laptop, desktop breakpoints
+      display: ["none", "none", "inline-flex", "inline-flex"]
+    },
+    {
+      component: t("header.profile"),
+      route: ROUTES.MY_PROFILE,
+      display: ["none", "none", "inline-flex", "inline-flex"]
     },
     {
       component: t("header.my_dreams"),
@@ -43,26 +57,27 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
           user?.uuid ?? "",
           ROUTES.USER_FEED
         ])}`,
-      showSlash: true,
-      deviceType: "desktop",
-    },
-    {
-      component: t("header.feed"),
-      route: ROUTES.FEED,
-      showSlash: false,
-      deviceType: "desktop",
-    },
-    {
-      component: t("header.install"),
-      route: ROUTES.INSTALL,
-      showSlash: true,
-      deviceType: "desktop",
+      display: "none"
     },
     {
       component: t("header.about"),
       route: ROUTES.ABOUT,
-      showSlash: true,
-      deviceType: "desktop",
+      display: "none"
+    },
+    {
+      component: t("header.install"),
+      route: ROUTES.INSTALL,
+      display: "none"
+    },
+    {
+      component: t("header.help"),
+      route: ROUTES.HELP,
+      display: "none"
+    },
+    {
+      component: t("header.invites"),
+      route: ROUTES.INVITES,
+      display: "none"
     },
   ];
 
@@ -70,14 +85,13 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
     {
       component: t("header.about"),
       route: ROUTES.ABOUT,
-      showSlash: true,
-      deviceType: "desktop",
+      display: "inline-flex"
+
     },
     {
       component: t("header.install"),
       route: ROUTES.INSTALL,
-      showSlash: false,
-      deviceType: "desktop",
+      display: "inline-flex"
     },
   ];
 
@@ -94,9 +108,7 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
         return (
           <NavListItem
             key={route.route}
-            deviceType={route.deviceType}
-            showSlash={route.showSlash}
-            className={route.deviceType}
+            display={route.display}
           >
             <AnchorLink to={route.route} onClick={handleOnClick} style={{ textDecoration: "none" }}>
               {route.component}

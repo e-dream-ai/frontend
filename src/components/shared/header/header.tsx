@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { NavList } from "./menu-header";
 import StyledHeader, {
-  MenuContainer,
+  NavContainer,
   HeaderContainer,
   HeaderTitle,
   LogoAnchor,
@@ -22,8 +22,8 @@ export const Header: React.FC = () => {
   return (
     <>
       <HeaderContainer>
-        <StyledHeader>
-          <LogoContainer>
+        <StyledHeader flexDirection="row" flexWrap={["wrap", "wrap", "wrap", "nowrap"]}>
+          <LogoContainer order={1}>
             <LogoAnchor to={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
               <LogoIcon
                 src="/images/edream-logo-512x512.png"
@@ -33,16 +33,16 @@ export const Header: React.FC = () => {
             </LogoAnchor>
           </LogoContainer>
 
-          <ProfileContainer>
-            <HeaderProfile />
-            <KebabMenu />
-          </ProfileContainer>
-
-          <MenuContainer>
+          <NavContainer order={[3, 3, 3, 2]} flex="auto">
             <Nav>
               <NavList />
             </Nav>
-          </MenuContainer>
+          </NavContainer>
+
+          <ProfileContainer order={[2, 2, 2, 3]} ml={["1rem", "1rem", "4rem", "1rem"]}>
+            <HeaderProfile />
+            <KebabMenu />
+          </ProfileContainer>
         </StyledHeader>
       </HeaderContainer>
     </>

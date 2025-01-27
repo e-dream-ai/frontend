@@ -1,9 +1,18 @@
 import { DEVICES } from "@/constants/devices.constants";
 import styled, { css } from "styled-components";
-import { DeviceType } from "./menu-header";
+import {
+  display,
+  DisplayProps,
+  order,
+  OrderProps,
+  flexbox,
+  FlexboxProps,
+  SpaceProps,
+  space,
+} from "styled-system"
 import { Link } from "react-router-dom";
 
-const StyledHeader = styled.header`
+const StyledHeader = styled.header<FlexboxProps>`
   display: flex;
   flex-flow: row;
   flex: auto;
@@ -20,6 +29,7 @@ const StyledHeader = styled.header`
   @media (max-width: ${DEVICES.TABLET}) {
     padding: 0.8rem 1rem;
   }
+  ${flexbox}
 `;
 
 export const HeaderContainer = styled.div`
@@ -57,13 +67,11 @@ export const HeaderTitle = styled.h1`
   }
 `;
 
-export const LogoContainer = styled.div`
-  order: 1;
+export const LogoContainer = styled.div<OrderProps>`
   display: inline-flex;
   flex-flow: row;
   justify-content: space-between;
   align-items: center;
-  margin-right: 1rem;
 
   button {
     width: 60px;
@@ -78,6 +86,8 @@ export const LogoContainer = styled.div`
       display: block;
     }
   }
+
+  ${order}
 `;
 
 export const LogoIcon = styled.img`
@@ -98,27 +108,21 @@ export const LogoIcon = styled.img`
 export const Nav = styled.nav`
   overflow: hidden;
   @media (max-width: ${DEVICES.TABLET}) {
-    /* display: none;
-    height: 0; */
     width: 100vw;
     background-color: ${(props) => props.theme.colorBackgroundTertiary};
   }
 `;
 
-export const MenuContainer = styled.div`
-  order: 2;
+export const NavContainer = styled.div<OrderProps & FlexboxProps>`
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-left: auto;
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    order: 4;
-  }
+  ${order}
+  ${flexbox}
 `;
 
-export const ProfileContainer = styled.div`
-  order: 3;
+export const ProfileContainer = styled.div<OrderProps & SpaceProps>`
   display: flex;
   flex: auto;
   justify-content: flex-end;
@@ -129,10 +133,8 @@ export const ProfileContainer = styled.div`
     height: 55px;
     font-size: 2rem;
   }
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    order: 2;
-  }
+  ${order}
+  ${space}
 `;
 
 export const StyledNavList = styled.ul`
@@ -143,43 +145,34 @@ export const StyledNavList = styled.ul`
   padding: 0;
 `;
 
-export const NavListItem = styled.li<{
-  deviceType?: DeviceType;
-  showSlash?: boolean;
-}>`
-  display: inline-flex;
+export const NavListItem = styled.li<DisplayProps>`
   font-size: 1.2rem;
   font-family: "Comfortaa", sans-serif;
   text-transform: lowercase;
 
-  &::after {
+  &:not([display="none"])::after {
     content: "•";
     color: ${(props) => props.theme.textPrimaryColor};
     margin: 0 10px;
   }
 
-  &:last-child::after {
+  &:not([display="none"]):last-of-type::after,
+  &:not([display="none"]):not(:has(~ li:not([display="none"])))::after {
     display: none;
-    content: "";
   }
 
   a {
     color: ${(props) => props.theme.textAccentColor};
   }
 
+
   @media (max-width: ${DEVICES.TABLET}) {
-    display: ${(props) =>
-    props.deviceType === "desktop" ? "none" : " inline-flex"};
-
-    &.both::after {
-      content: "•";
-    }
-
-    &.both:not(:has(~ .both))::after {
+    &[display="inline-flex"]:not(:has(~ li[display="inline-flex"]))::after {
       display: none;
-      content: "";
     }
   }
+
+  ${display}
 `;
 
 export const HeaderProfileWrapper = styled.div`
