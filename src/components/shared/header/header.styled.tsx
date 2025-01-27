@@ -150,23 +150,25 @@ export const NavListItem = styled.li<DisplayProps>`
   font-family: "Comfortaa", sans-serif;
   text-transform: lowercase;
 
+  a {
+    color: ${(props) => props.theme.textAccentColor};
+  }
+
+  // adding dot • menu separator
   &:not([display="none"])::after {
     content: "•";
     color: ${(props) => props.theme.textPrimaryColor};
     margin: 0 10px;
   }
 
+  // remove dot • menu separator from last child
   &:not([display="none"]):last-of-type::after,
   &:not([display="none"]):not(:has(~ li:not([display="none"])))::after {
     display: none;
   }
 
-  a {
-    color: ${(props) => props.theme.textAccentColor};
-  }
-
-
-  @media (max-width: ${DEVICES.TABLET}) {
+  // remove dot • menu separator from last child on tablets or lower
+  @media (max-width: 831px) {
     &[display="inline-flex"]:not(:has(~ li[display="inline-flex"]))::after {
       display: none;
     }

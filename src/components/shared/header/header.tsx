@@ -39,7 +39,7 @@ export const Header: React.FC = () => {
             </Nav>
           </NavContainer>
 
-          <ProfileContainer order={[2, 2, 2, 3]} ml={["1rem", "1rem", "4rem", "1rem"]}>
+          <ProfileContainer order={[2, 2, 2, 3]} ml={["1rem", "4rem", "4rem", "1rem"]}>
             <HeaderProfile />
             <KebabMenu />
           </ProfileContainer>
