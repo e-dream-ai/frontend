@@ -109,12 +109,13 @@ export const Nav = styled.nav`
   overflow: hidden;
 `;
 
-export const NavContainer = styled.div<OrderProps & FlexboxProps>`
+export const NavContainer = styled.div<OrderProps & FlexboxProps & DisplayProps>`
   display: flex;
   justify-content: space-between;
   align-items: center;
   ${order}
   ${flexbox}
+  ${display}
 `;
 
 export const ProfileContainer = styled.div<OrderProps & SpaceProps>`

@@ -81,17 +81,18 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
     },
   ];
 
+  // items to show to guests
   const NAV_ROUTES: Array<RouteLink> = [
     {
       component: t("header.about"),
       route: ROUTES.ABOUT,
-      display: "inline-flex"
+      display: ["none", "inline-flex", "inline-flex", "inline-flex"]
 
     },
     {
       component: t("header.install"),
       route: ROUTES.INSTALL,
-      display: "inline-flex"
+      display: ["none", "inline-flex", "inline-flex", "inline-flex"]
     },
   ];
 

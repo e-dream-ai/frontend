@@ -73,6 +73,27 @@ const createMenuRoutes = (user?: User | null) => {
     },
   ];
 
+  // items to show to guests
+  const GUEST_ROUTES = [
+    {
+      title: "header.about",
+      route: ROUTES.ABOUT,
+      display: "block"
+    },
+    {
+      title: "header.install",
+      route: ROUTES.INSTALL,
+      display: "block"
+    },
+  ]
+
+  if (!user) {
+    return {
+      user: GUEST_ROUTES,
+      admin: GUEST_ROUTES
+    }
+  }
+
   return {
     // remove invites from routes for normal users
     user: USER_ROUTES.filter(r => r.title !== "header.invites"),
@@ -140,13 +161,17 @@ export const KebabMenu: React.FC = () => {
           ),
         )}
 
-        <MenuItem
-          key="logout"
-          onClick={onShowConfirmSignoutModal}
-          style={{ textDecoration: "none", textTransform: "lowercase" }}
-        >
-          {t("header.logout")}
-        </MenuItem>
+        {
+          user ?
+            <MenuItem
+              key="logout"
+              onClick={onShowConfirmSignoutModal}
+              style={{ textDecoration: "none", textTransform: "lowercase" }}
+            >
+              {t("header.logout")}
+            </MenuItem>
+            : <></>
+        }
       </Menu>
     </Fragment>
   );

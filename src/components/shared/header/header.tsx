@@ -14,6 +14,7 @@ import { HeaderProfile } from "./header-profile";
 import { ROUTES } from "@/constants/routes.constants";
 import { KebabMenu } from "./kebab-menu";
 import useAuth from "@/hooks/useAuth";
+import Row from "../row/row";
 
 export const Header: React.FC = () => {
   const { t } = useTranslation();
@@ -33,15 +34,27 @@ export const Header: React.FC = () => {
             </LogoAnchor>
           </LogoContainer>
 
-          <NavContainer order={[3, 2, 2, 2]} justifyContent="space-between">
+          <NavContainer
+            order={[3, 2, 2, 2]}
+            justifyContent="space-between"
+            display={user ? "flex" : ["none", "flex", "flex", "flex"]}
+          >
             <Nav>
               <NavList />
             </Nav>
           </NavContainer>
 
-          <ProfileContainer order={[2, 3, 3, 3]} ml={["15vw", "0rem", "1rem", "1rem"]}>
+          <ProfileContainer
+            order={[2, 3, 3, 3]}
+            ml={user ? ["15vw", "0rem", "1rem", "1rem"] : "1rem"}
+          >
             <HeaderProfile />
-            <KebabMenu />
+            <Row
+              m={0}
+              display={user ? "flex" : ["flex", "none", "none", "none"]}
+            >
+              <KebabMenu />
+            </Row>
           </ProfileContainer>
         </StyledHeader>
       </HeaderContainer>
