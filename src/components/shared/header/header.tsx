@@ -33,13 +33,13 @@ export const Header: React.FC = () => {
             </LogoAnchor>
           </LogoContainer>
 
-          <NavContainer order={[3, 3, 2, 2]} justifyContent="space-between">
+          <NavContainer order={[3, 2, 2, 2]} justifyContent="space-between">
             <Nav>
               <NavList />
             </Nav>
           </NavContainer>
 
-          <ProfileContainer order={[2, 2, 3, 3]} ml={["1rem", "25vw", "1rem", "1rem"]}>
+          <ProfileContainer order={[2, 3, 3, 3]} ml={["15vw", "0rem", "1rem", "1rem"]}>
             <HeaderProfile />
             <KebabMenu />
           </ProfileContainer>

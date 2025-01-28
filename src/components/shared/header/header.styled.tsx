@@ -62,7 +62,7 @@ export const HeaderTitle = styled.h1`
     font-size: 2rem;
   }
 
-  @media (max-width: ${DEVICES.MOBILE_L}) {
+  @media (max-width: ${DEVICES.MOBILE_S}) {
     font-size: 1.4rem;
   }
 `;
@@ -100,17 +100,13 @@ export const LogoIcon = styled.img`
     height: 3rem;
   }
 
-  @media (max-width: ${DEVICES.MOBILE_L}) {
+  @media (max-width: ${DEVICES.MOBILE_S}) {
     height: 2rem;
   }
 `;
 
 export const Nav = styled.nav`
   overflow: hidden;
-  @media (max-width: ${DEVICES.TABLET}) {
-    width: 100vw;
-    background-color: ${(props) => props.theme.colorBackgroundTertiary};
-  }
 `;
 
 export const NavContainer = styled.div<OrderProps & FlexboxProps>`
@@ -166,14 +162,14 @@ export const NavListItem = styled.li<DisplayProps>`
   }
 
   // remove dot • menu separator from last child on tablets or lower
-  @media (max-width: 831px) {
+  @media (max-width: calc(${DEVICES.MOBILE_L} - (0.0625em))) {
     &[display="inline-flex"]:not(:has(~ li[display="inline-flex"]))::after {
       display: none;
     }
   }
   
   // remove dot • menu separator from last child on tablets or lower
-  @media (max-width: 1023px) {
+  @media (max-width: calc(${DEVICES.TABLET} - (0.0625em))) {
     &[display="none,none,inline-flex,inline-flex"]:not(:has(~ li[display="none,none,inline-flex,inline-flex"]))::after {
       display: none;
     }
@@ -196,7 +192,7 @@ export const HeaderProfileWrapper = styled.div`
 export const HeaderUserName = styled.span`
   font-family: "Comfortaa", sans-serif;
   text-transform: lowercase;
-  @media (max-width: 639px) {
+  @media (max-width: calc(${DEVICES.MOBILE_L} - (0.0625em))) {
     display: none;
   }
 `;
