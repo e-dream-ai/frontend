@@ -117,14 +117,12 @@ export const NavContainer = styled.div<OrderProps & FlexboxProps>`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-left: auto;
   ${order}
   ${flexbox}
 `;
 
 export const ProfileContainer = styled.div<OrderProps & SpaceProps>`
   display: flex;
-  flex: auto;
   justify-content: flex-end;
   align-items: center;
 
@@ -173,6 +171,13 @@ export const NavListItem = styled.li<DisplayProps>`
       display: none;
     }
   }
+  
+  // remove dot • menu separator from last child on tablets or lower
+  @media (max-width: 1023px) {
+    &[display="none,none,inline-flex,inline-flex"]:not(:has(~ li[display="none,none,inline-flex,inline-flex"]))::after {
+      display: none;
+    }
+  }
 
   ${display}
 `;
@@ -191,7 +196,7 @@ export const HeaderProfileWrapper = styled.div`
 export const HeaderUserName = styled.span`
   font-family: "Comfortaa", sans-serif;
   text-transform: lowercase;
-  @media (max-width: ${DEVICES.TABLET}) {
+  @media (max-width: 639px) {
     display: none;
   }
 `;

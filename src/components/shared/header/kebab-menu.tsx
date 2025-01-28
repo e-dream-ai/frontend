@@ -28,18 +28,18 @@ const createMenuRoutes = (user?: User | null) => {
     {
       title: "header.feed",
       route: ROUTES.FEED,
-      display: "none"
+      display: ["block", "block", "none", "none"]
     },
     {
       title: "header.create",
       route: FULL_CREATE_ROUTES.DREAM,
       // using display props from styled-system to setup mobile, tablet, laptop, desktop breakpoints
-      display: ["flex", "flex", "none", "none"]
+      display: ["block", "block", "block", "none"]
     },
     {
       title: "header.profile",
       route: ROUTES.MY_PROFILE,
-      display: ["flex", "flex", "none", "none"]
+      display: ["block", "block", "block", "none"]
     },
     {
       title: "header.my_dreams",
@@ -49,27 +49,27 @@ const createMenuRoutes = (user?: User | null) => {
           user?.uuid ?? "",
           ROUTES.USER_FEED
         ])}`,
-      display: "flex"
+      display: "block"
     },
     {
       title: "header.about",
       route: ROUTES.ABOUT,
-      display: "flex"
+      display: "block"
     },
     {
       title: "header.install",
       route: ROUTES.INSTALL,
-      display: "flex"
+      display: "block"
     },
     {
       title: "header.help",
       route: ROUTES.HELP,
-      display: "flex"
+      display: "block"
     },
     {
       title: "header.invites",
       route: ROUTES.INVITES,
-      display: "flex"
+      display: "block"
     },
   ];
 

@@ -36,18 +36,18 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
     {
       component: t("header.feed"),
       route: ROUTES.FEED,
-      display: "inline-flex"
+      display: ["none", "none", "inline-flex", "inline-flex"]
     },
     {
       component: t("header.create"),
       route: FULL_CREATE_ROUTES.DREAM,
       // using display props from styled-system to setup mobile, tablet, laptop, desktop breakpoints
-      display: ["none", "none", "inline-flex", "inline-flex"]
+      display: ["none", "none", "none", "inline-flex"]
     },
     {
       component: t("header.profile"),
       route: ROUTES.MY_PROFILE,
-      display: ["none", "none", "inline-flex", "inline-flex"]
+      display: ["none", "none", "none", "inline-flex"]
     },
     {
       component: t("header.my_dreams"),
