@@ -191,8 +191,7 @@ const ViewDreamPage: React.FC = () => {
               handleMutateDream(data);
             } else {
               toast.error(
-                `${t("page.view_dream.error_updating_dream")} ${
-                  response.message
+                `${t("page.view_dream.error_updating_dream")} ${response.message
                 }`,
               );
             }
@@ -280,13 +279,13 @@ const ViewDreamPage: React.FC = () => {
         : "-",
       processedVideoFrames: dream?.processedVideoFrames
         ? secondsToTimeFormat(
-            Math.round(
-              framesToSeconds(
-                dream?.processedVideoFrames,
-                dream?.activityLevel,
-              ),
+          Math.round(
+            framesToSeconds(
+              dream?.processedVideoFrames,
+              dream?.activityLevel,
             ),
-          )
+          ),
+        )
         : "-",
       processedVideoFPS: dream?.processedVideoFPS
         ? `${dream?.processedVideoFPS} Original FPS`
@@ -299,13 +298,13 @@ const ViewDreamPage: React.FC = () => {
        */
       displayedOwner: isUserAdmin
         ? {
-            value: dream?.displayedOwner?.id,
-            label: getUserName(dream?.displayedOwner),
-          }
+          value: dream?.displayedOwner?.id,
+          label: getUserName(dream?.displayedOwner),
+        }
         : {
-            value: dream?.displayedOwner?.id ?? dream?.user?.id,
-            label: getUserName(dream?.displayedOwner ?? dream?.user),
-          },
+          value: dream?.displayedOwner?.id ?? dream?.user?.id,
+          label: getUserName(dream?.displayedOwner ?? dream?.user),
+        },
       nsfw: filterNsfwOption(dream?.nsfw, t),
       ccbyLicense: filterCcaLicenceOption(dream?.ccbyLicense, t),
       upvotes: dream?.upvotes,
@@ -678,7 +677,7 @@ const ViewDreamPage: React.FC = () => {
                   <h3>{t("page.view_dream.playlists")}</h3>
                 </Row>
                 <Row flex="auto">
-                  <ItemCardList grid columns={1}>
+                  <ItemCardList>
                     {playlistItems?.map((pi) => (
                       <ItemCard
                         key={pi.id}

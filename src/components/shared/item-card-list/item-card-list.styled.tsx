@@ -29,7 +29,7 @@ export const StyledItemCardList = styled.ul<{
   list-style-type: none;
   padding: 0;
   margin: 0;
-  gap: ${(props) => (props?.grid ? `${GAP}px` : "0")};
+  gap: ${GAP}px;
 
   li {
     width: ${calculateCardWidth};

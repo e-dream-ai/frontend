@@ -321,8 +321,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       <Row
         style={{ position: "relative" }}
         m={0}
-        mb={inline ? 0 : 4}
-        mr={inline ? 4 : 0}
+        mb={3}
+        mr={inline ? [0, 4, 4, 4] : 0}
+        flex={["auto", 0, 0, 0]}
       >
         <Thumbnail />
 
@@ -367,7 +368,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             margin="0"
             padding="3"
             justifyContent="space-between"
-            flexWrap={["wrap", "nowrap", "nowrap", "nowrap"]}
+            flexDirection={["column", "row", "row", "row"]}
           >
             {onDelete && (
               <Row alignItems="flex-start" m={0}>

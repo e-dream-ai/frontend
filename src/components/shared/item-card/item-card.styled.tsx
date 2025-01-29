@@ -136,15 +136,7 @@ export const ItemCardImage = styled.img<{ size: Sizes }>`
   height: auto;
   ${(props) => ImageSizes[props.size]}
 
-  @media (max-width: ${DEVICES.TABLET}) {
-    width: auto;
-    /* 
-    * use max-width if image gets too large
-    * max-width: 400px;
-    */
-  }
-
-  @media (max-width: ${DEVICES.MOBILE_L}) {
+  @media (max-width: ${DEVICES.MOBILE_S}) {
     max-width: 100%;
     width: auto;
   }
@@ -165,15 +157,7 @@ export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`
   background-color: rgba(30, 30, 30, 1);
   ${(props) => ImageSizes[props.size]}
 
-  @media (max-width: ${DEVICES.TABLET}) {
-    /* 
-    * use max-width if image gets too large
-    * max-width: 400px;
-    */
-    width: auto;
-  }
-
-  @media (max-width: ${DEVICES.MOBILE_L}) {
+  @media (max-width: ${DEVICES.MOBILE_S}) {
     max-width: 100%;
     width: auto;
   }
