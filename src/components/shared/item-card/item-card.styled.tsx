@@ -62,7 +62,7 @@ export const StyledItemCard = styled.li<{
   flex-wrap: wrap;
   flex: auto;
   position: relative;
-  margin: 2px 0;
+  margin: 0;
   border: 0;
   min-height: 150px;
 
