@@ -326,32 +326,33 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               {...register("processedVideoFPS")}
             />
           </FormItem>
-          <FormItem>
-            <Controller
-              name="displayedOwner"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  placeholder={
-                    isUserAdmin
-                      ? t("page.view_dream.displayed_owner")
-                      : t("page.view_dream.owner")
-                  }
-                  isDisabled={!editMode || !allowedEditOwner}
-                  isLoading={isUsersLoading}
-                  before={<FontAwesomeIcon icon={faUser} />}
-                  to={
-                    dream?.displayedOwner?.uuid
-                      ? `${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`
-                      : undefined
-                  }
-                  options={usersOptions}
-                  onInputChange={(newValue) => setUserSearch(newValue)}
-                />
-              )}
-            />
-          </FormItem>
+          <Restricted
+            to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
+            isOwner={isOwner}
+          >
+            <FormItem>
+              <Controller
+                name="displayedOwner"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    placeholder={t("page.view_dream.displayed_owner")}
+                    isDisabled={!editMode || !allowedEditOwner}
+                    isLoading={isUsersLoading}
+                    before={<FontAwesomeIcon icon={faUser} />}
+                    to={
+                      dream?.displayedOwner?.uuid
+                        ? `${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`
+                        : undefined
+                    }
+                    options={usersOptions}
+                    onInputChange={(newValue) => setUserSearch(newValue)}
+                  />
+                )}
+              />
+            </FormItem>
+          </Restricted>
           <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_PROCESSED_AT}>
             <FormItem>
               <Input
