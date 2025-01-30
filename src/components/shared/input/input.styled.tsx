@@ -51,7 +51,6 @@ export const DisabledInput = styled.div`
 
 export const InputGroup = styled.div`
   display: flex;
-  flex: auto;
   flex-flow: column;
   min-height: 2.375rem;
   margin-bottom: 1rem;
@@ -62,7 +61,6 @@ export const InputRow = styled.div`
   display: flex;
   flex: auto;
   border-collapse: separate;
-  align-items: center;
   min-height: 2.375rem;
 `;
 

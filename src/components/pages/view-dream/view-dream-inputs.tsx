@@ -57,6 +57,7 @@ import {
   getNsfwOptions,
 } from "@/constants/dream.constants";
 import { useImage } from "@/hooks/useImage";
+import { FormContainer, FormItem } from "@/components/shared/form/form";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -73,8 +74,6 @@ type ViewDreamInputsProps = {
   handleThumbnailChange: HandleChangeFile;
   handleRemoveThumbnail: () => void;
 };
-
-const FLEX_INPUT = ["1 1 100%", "1 1 100%", "1 1 calc(50% - 1rem)", "1 1 calc(50% - 1rem)"];
 
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   dream,
@@ -152,22 +151,30 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             value={values.name}
             {...register("name")}
           />
-          <Restricted
-            to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
-            isOwner={isOwner}
-          >
-            <Row flex={FLEX_INPUT} m={0}>
-              <Input
-                disabled
-                placeholder={t("page.view_dream.owner")}
-                type="text"
-                before={<FontAwesomeIcon icon={faSave} />}
-                value={values.user}
-                to={`${ROUTES.PROFILE}/${dream?.user.uuid}`}
-                {...register("user")}
-              />
-            </Row>
-          </Restricted>
+          <Input
+            disabled
+            placeholder={t("page.view_dream.owner")}
+            type="text"
+            before={<FontAwesomeIcon icon={faSave} />}
+            value={
+              // always shows user for admins
+              // for normal users look for 'displayed owner' or user instead
+              isUserAdmin
+                ? values.user
+                : (dream?.displayedOwner?.name ?? values.user)
+            }
+            to={
+              // always navigate to user for admins
+              // for normal users navigate to 'displayed owner' or user instead
+              isUserAdmin
+                ? `${ROUTES.PROFILE}/${dream?.user.uuid}` : (
+                  dream?.displayedOwner?.uuid
+                    ? `${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`
+                    : `${ROUTES.PROFILE}/${dream?.user.uuid}`
+                )
+            }
+            {...register("user")}
+          />
           <Input
             disabled
             placeholder={t("page.view_dream.duration")}
@@ -217,11 +224,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         </Column>
       </Row>
 
-      <Row flex="auto" flexWrap="wrap" m={0} style={{
-        // @ts-expect-error column-gap is valid
-        "column-gap": "1rem"
-      }}>
-        <Row flex={FLEX_INPUT} m={0}>
+      <FormContainer>
+        <FormItem>
           <Controller
             name="ccbyLicense"
             control={control}
@@ -235,9 +239,9 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               />
             )}
           />
-        </Row>
+        </FormItem>
         <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_NSFW} isOwner={isOwner}>
-          <Row flex={FLEX_INPUT} m={0}>
+          <FormItem>
             <Controller
               name="nsfw"
               control={control}
@@ -251,9 +255,9 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                 />
               )}
             />
-          </Row>
+          </FormItem>
         </Restricted>
-        <Row flex={FLEX_INPUT} m={0}>
+        <FormItem>
           <Input
             linkify
             disabled={!editMode}
@@ -264,8 +268,9 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             value={values.sourceUrl}
             {...register("sourceUrl")}
           />
-        </Row>
-      </Row>
+        </FormItem>
+      </FormContainer>
+
       <Row flex="auto" justifyContent="center">
         <Button type="button" size="sm" buttonType="tertiary" onClick={switchShowMore}>
           {showMore ? t("page.view_dream.less") : t("page.view_dream.more")} {showMore ? "-" : "+"}
@@ -273,11 +278,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
       </Row>
 
       {showMore &&
-        <Row flex="auto" flexWrap="wrap" m={0} style={{
-          // @ts-expect-error column-gap is valid
-          "column-gap": "1rem"
-        }}>
-          <Row flex={FLEX_INPUT} m={0}>
+        <FormContainer>
+          <FormItem>
             <Input
               disabled={!editMode}
               placeholder={t("page.view_dream.activity_level")}
@@ -288,9 +290,9 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               value={values.activityLevel}
               {...register("activityLevel")}
             />
-          </Row>
+          </FormItem>
           <Restricted to={DREAM_PERMISSIONS.CAN_EDIT_FEATURE_RANK}>
-            <Row flex={FLEX_INPUT} m={0}>
+            <FormItem>
               <Input
                 disabled={!editMode}
                 placeholder={t("page.view_dream.feature_rank")}
@@ -301,10 +303,10 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                 value={values.featureRank}
                 {...register("featureRank")}
               />
-            </Row>
+            </FormItem>
           </Restricted>
 
-          <Row flex={FLEX_INPUT} m={0}>
+          <FormItem>
             <Input
               disabled
               placeholder={t("page.view_dream.size")}
@@ -313,8 +315,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               value={values.processedVideoSize}
               {...register("processedVideoSize")}
             />
-          </Row>
-          <Row flex={FLEX_INPUT} m={0}>
+          </FormItem>
+          <FormItem>
             <Input
               disabled
               placeholder={t("page.view_dream.original_fps")}
@@ -323,8 +325,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               value={values.processedVideoFPS}
               {...register("processedVideoFPS")}
             />
-          </Row>
-          <Row flex={FLEX_INPUT} m={0}>
+          </FormItem>
+          <FormItem>
             <Controller
               name="displayedOwner"
               control={control}
@@ -349,9 +351,9 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                 />
               )}
             />
-          </Row>
+          </FormItem>
           <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_PROCESSED_AT}>
-            <Row flex={FLEX_INPUT} m={0}>
+            <FormItem>
               <Input
                 disabled
                 placeholder={t("page.view_dream.processed")}
@@ -360,9 +362,9 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                 value={values.processed_at}
                 {...register("processed_at")}
               />
-            </Row>
+            </FormItem>
           </Restricted>
-        </Row>
+        </FormContainer>
       }
     </>
   );
