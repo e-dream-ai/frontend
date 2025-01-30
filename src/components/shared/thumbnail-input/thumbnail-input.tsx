@@ -11,7 +11,7 @@ import {
   ThumbnailContainer,
   ThumbnailOverlay,
 } from "@/components/shared/thumbnail/thumbnail";
-import { MAX_FILE_SIZE_MB } from "@/constants/file.constants";
+import { ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE_MB } from "@/constants/file.constants";
 import { useTranslation } from "react-i18next";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import {
@@ -33,7 +33,6 @@ type ThumbnailInputProps = {
   isRemoved: boolean;
   handleChange: HandleChangeFile;
   handleRemove?: () => void;
-  types: string[];
 };
 
 export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
@@ -45,7 +44,6 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   isRemoved,
   handleChange,
   handleRemove,
-  types,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -98,7 +96,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
           onSizeError={handleFileUploaderSizeError(t)}
           onTypeError={handleFileUploaderTypeError(t)}
           name="file"
-          types={types}
+          types={ALLOWED_IMAGE_TYPES}
         />
       )}
     </>

@@ -7,7 +7,10 @@ import {
   flexbox,
   FlexboxProps,
   display,
-  DisplayProps
+  DisplayProps,
+  grid, 
+  GridProps
+  
 } from "styled-system";
 
 type RowProps = {
@@ -15,7 +18,8 @@ type RowProps = {
 } & SpaceProps 
   & WidthProps 
   & FlexboxProps
-  & DisplayProps;
+  & DisplayProps
+  & GridProps;
 
 export const Row = styled.div<RowProps>`
   display: flex;
@@ -27,6 +31,7 @@ export const Row = styled.div<RowProps>`
   ${space}
   ${width}
   ${flexbox}
+  ${grid}
   ${display}
 `;
 

@@ -1,6 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
-  // AddItemPlaylistDropzone,
   Button,
   Input,
   ItemCardList,
@@ -47,7 +46,6 @@ import { usePlaylistState } from "./usePlaylistState";
 import { usePlaylistHandlers } from "./usePlaylistHandlers";
 import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
-import { ALLOWED_IMAGE_TYPES } from "@/constants/file.constants";
 import { NotFound } from "@/components/shared/not-found/not-found";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 
@@ -336,7 +334,6 @@ export const ViewPlaylistPage = () => {
                   isRemoved={isThumbnailRemoved}
                   handleChange={handleThumbnailChange}
                   handleRemove={handleRemoveThumbnail}
-                  types={ALLOWED_IMAGE_TYPES}
                 />
               </Column>
               <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>

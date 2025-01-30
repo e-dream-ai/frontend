@@ -12,7 +12,6 @@ import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import Text from "@/components/shared/text/text";
-import { ThumbnailInput } from "@/components/shared/thumbnail-input/thumbnail-input";
 import { FORMAT } from "@/constants/moment.constants";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
@@ -51,7 +50,6 @@ import { framesToSeconds, secondsToTimeFormat } from "@/utils/video.utils";
 import { truncateString } from "@/utils/string.util";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 import { User } from "@/types/auth.types";
-import { useImage } from "@/hooks/useImage";
 import {
   CCA_LICENSE,
   NSFW,
@@ -66,7 +64,6 @@ import { VoteType } from "@/types/vote.types";
 import { FilmstripGallery } from "@/components/shared/filmstrip-gallery/filmstrip-gallery";
 import { FeedItemType } from "@/types/feed.types";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
-import { ALLOWED_IMAGE_TYPES } from "@/constants/file.constants";
 import { NotFound } from "@/components/shared/not-found/not-found";
 
 type Params = { uuid: string };
@@ -157,12 +154,6 @@ const ViewDreamPage: React.FC = () => {
 
   const showEditButton = !editMode && !isDreamProcessing;
   const showSaveAndCancelButtons = editMode && !isDreamProcessing;
-
-  const thumbnailUrl = useImage(dream?.thumbnail, {
-    width: 500,
-    fit: "cover",
-  });
-
   // Handlers
 
   const handleMutateVideoDream = async (data: UpdateDreamFormValues) => {
@@ -603,34 +594,22 @@ const ViewDreamPage: React.FC = () => {
                 )}
               </div>
             </Row>
-            <Row flexWrap="wrap">
-              <Column
-                mr={[0, 2, 2]}
-                mb={[4, 4, 0]}
-                flex={["1 1 320px", "1", "1"]}
-              >
-                <ThumbnailInput
-                  localMultimedia={thumbnail}
-                  thumbnail={thumbnailUrl}
-                  editMode={editMode}
-                  isProcessing={isDreamProcessing}
-                  isRemoved={isThumbnailRemoved}
-                  handleChange={handleThumbnailChange}
-                  handleRemove={handleRemoveThumbnail}
-                  types={ALLOWED_IMAGE_TYPES}
-                />
-              </Column>
-              <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>
-                <ViewDreamInputs
-                  dream={dream}
-                  values={values}
-                  register={register}
-                  errors={errors}
-                  editMode={editMode}
-                  control={control}
-                />
-              </Column>
-            </Row>
+
+            <ViewDreamInputs
+              dream={dream}
+              isProcessing={isDreamProcessing}
+              values={values}
+              register={register}
+              errors={errors}
+              editMode={editMode}
+              control={control}
+
+              // thumbnail props
+              thumbnailState={thumbnail}
+              isThumbnailRemoved={isThumbnailRemoved}
+              handleThumbnailChange={handleThumbnailChange}
+              handleRemoveThumbnail={handleRemoveThumbnail}
+            />
 
             {!isDreamProcessing ? (
               <React.Fragment>
