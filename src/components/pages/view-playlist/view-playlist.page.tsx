@@ -175,13 +175,13 @@ export const ViewPlaylistPage = () => {
        */
       displayedOwner: isUserAdmin
         ? {
-            value: playlist?.displayedOwner?.id,
-            label: getUserName(playlist?.displayedOwner),
-          }
+          value: playlist?.displayedOwner?.id,
+          label: getUserName(playlist?.displayedOwner),
+        }
         : {
-            value: playlist?.displayedOwner?.id ?? playlist?.user?.id,
-            label: getUserName(playlist?.displayedOwner ?? playlist?.user),
-          },
+          value: playlist?.displayedOwner?.id ?? playlist?.user?.id,
+          label: getUserName(playlist?.displayedOwner ?? playlist?.user),
+        },
       featureRank: playlist?.featureRank,
       nsfw: filterNsfwOption(playlist?.nsfw, t),
       created_at: moment(playlist?.created_at).format(FORMAT),
@@ -407,9 +407,14 @@ export const ViewPlaylistPage = () => {
                       isLoading={isUsersLoading}
                       before={<FontAwesomeIcon icon={faUser} />}
                       to={
-                        playlist?.displayedOwner?.uuid
-                          ? `${ROUTES.PROFILE}/${playlist?.displayedOwner?.uuid}`
-                          : undefined
+                        // always navigate to user for admins
+                        // for normal users navigate to 'displayed owner' or user instead
+                        isUserAdmin
+                          ? `${ROUTES.PROFILE}/${playlist?.user.uuid}` : (
+                            playlist?.displayedOwner?.uuid
+                              ? `${ROUTES.PROFILE}/${playlist?.displayedOwner?.uuid}`
+                              : `${ROUTES.PROFILE}/${playlist?.user.uuid}`
+                          )
                       }
                       options={usersOptions}
                       onInputChange={(newValue) => setUserSearch(newValue)}
