@@ -26,3 +26,5 @@ export type FeedItem = {
   updated_at: string;
   deleted_at: string;
 };
+
+export type UserFeedType = "all" | "playlist" | "dream" | "upvote" | "downvote";

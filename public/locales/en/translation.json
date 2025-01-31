@@ -216,6 +216,8 @@
       "admin": "Admin",
       "user": "User",
       "users": "Users",
+      "upvote": "Liked",
+      "downvote": "Disliked",
       "empty_feed": "No items to show",
       "empty_users": "No users to show"
     },
