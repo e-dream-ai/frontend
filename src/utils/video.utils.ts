@@ -6,7 +6,7 @@ export const secondsToTimeFormat = (seconds: number) => {
   // calculate the number of hours, minutes, and seconds
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = seconds % 60;
+  const remainingSeconds = Math.floor(seconds % 60);
 
   // each part to ensure it has two digits
   const formattedHours = hours.toString().padStart(2, "0");

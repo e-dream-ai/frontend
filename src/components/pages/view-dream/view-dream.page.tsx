@@ -270,11 +270,9 @@ const ViewDreamPage: React.FC = () => {
         : "-",
       processedVideoFrames: dream?.processedVideoFrames
         ? secondsToTimeFormat(
-          Math.round(
-            framesToSeconds(
-              dream?.processedVideoFrames,
-              dream?.activityLevel,
-            ),
+          framesToSeconds(
+            dream?.processedVideoFrames,
+            dream?.activityLevel,
           ),
         )
         : "-",

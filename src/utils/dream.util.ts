@@ -45,8 +45,11 @@ export const calculateTimeFromFrames = ({
     return "00:00:00";
   }
 
+  // Adjust the frame number by adding 1 to account for zero-based indexing
+  const adjustedFrameNumber = frameNumber + 1;
+
   // Calculate the current time in seconds
-  const currentTimeSeconds = frameNumber / fps;
+  const currentTimeSeconds = adjustedFrameNumber / fps;
 
   // Convert the current time in seconds to hours, minutes, and seconds
   const hours = Math.floor(currentTimeSeconds / 3600);
