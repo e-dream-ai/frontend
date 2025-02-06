@@ -77,6 +77,11 @@ export const usePlaylistState = () => {
     [playlist?.items],
   );
 
+  const playlistKeyframes = useMemo(
+    () => playlist?.playlistKeyframes?.sort((a, b) => a.order - b.order) ?? [],
+    [playlist?.playlistKeyframes],
+  );
+
   return {
     isError,
     uuid,
@@ -90,6 +95,7 @@ export const usePlaylistState = () => {
     allowedEditPlaylist,
     allowedEditOwner,
     items,
+    playlistKeyframes,
     userSearch,
     setUserSearch,
     videos,

@@ -13,6 +13,7 @@ import { FeedItem } from "@/types/feed.types";
 import Text from "@/components/shared/text/text";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { useRankedFeed } from "@/api/feed/query/useRankedFeed";
+import { ItemType } from "@/components/shared/item-card/item-card";
 
 const SECTION_ID = "ranked";
 
@@ -101,7 +102,7 @@ const FeedList: React.FC<{ feed?: FeedItem[] }> = ({ feed }) => {
               <ItemCard
                 showPlayButton
                 key={feedItem.id}
-                type={feedItem.type}
+                type={feedItem.type as ItemType}
                 item={item}
                 size="lg"
               />

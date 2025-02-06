@@ -26,7 +26,7 @@ import {
   ThumbnailPlaceholder,
   UsernameText,
 } from "./item-card.styled";
-import { FeedItemServerType, FeedItemType } from "@/types/feed.types";
+import { FeedItemType } from "@/types/feed.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFilm,
@@ -43,8 +43,10 @@ import useSocket from "@/hooks/useSocket";
 import { useImage } from "@/hooks/useImage";
 import { useItemCardListState } from "../item-card-list/item-card-list";
 import { HighlightPosition } from "@/types/item-card.types";
+import { Keyframe } from "@/types/keyframe.types";
 
 type DNDMode = "local" | "cross-window";
+export type ItemType = "dream" | "playlist" | "keyframe";
 
 const DND_MODES: { [key: string]: DNDMode } = {
   LOCAL: "local",
@@ -56,8 +58,8 @@ type ItemCardProps = {
    * item playlist id
    */
   itemId?: number;
-  type?: FeedItemServerType;
-  item?: Dream | Omit<Playlist, "items">;
+  type?: ItemType;
+  item?: Dream | Omit<Playlist, "items"> | Keyframe;
   draggable?: boolean;
   size?: Sizes;
   dndMode?: DNDMode;
@@ -87,7 +89,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
-  const { uuid, name, thumbnail, user, displayedOwner } = item ?? {};
+  const { uuid, name, user, displayedOwner } = item ?? {};
+  const thumbnail = type === "dream" || type === "playlist"
+    ? (item as Dream | Playlist)?.thumbnail
+    : (item as Keyframe).image;
+
   const avatarUrl = useImage(
     displayedOwner ? displayedOwner?.avatar : user?.avatar,
     {
@@ -112,9 +118,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   });
 
   const navigateRoute =
-    type === FeedItemType.DREAM
+    type === "dream"
       ? `${ROUTES.VIEW_DREAM}/${item?.uuid}`
-      : `${ROUTES.VIEW_PLAYLIST}/${item?.uuid}`;
+      : type === "playlist" ? `${ROUTES.VIEW_PLAYLIST}/${item?.uuid}` : `${ROUTES.VIEW_KEYFRAME}/${item?.uuid}`;
 
   const handlePlay: MouseEventHandler<HTMLButtonElement> = useCallback(
     (event) => {

@@ -9,6 +9,7 @@ import { useTranslation } from "react-i18next";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 import { FeedItemServerType } from "@/types/feed.types";
+import { ItemType } from "../item-card/item-card";
 
 type UserDreamsProps = {
   userUUID?: string;
@@ -65,7 +66,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({
               }
               return (
                 <ItemCard
-                  type={feedItem.type}
+                  type={feedItem.type as ItemType}
                   item={item}
                   key={feedItem.id}
                   size="lg"

@@ -39,7 +39,7 @@ export const CreatePage: React.FC = () => {
       case FULL_CREATE_ROUTES.PLAYLIST:
         setTabIndex(CREATE_TYPE.PLAYLIST);
         break;
-      case FULL_CREATE_ROUTES.ADD_TO_PLAYLIST:
+      case FULL_CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST:
         setTabIndex(CREATE_TYPE.ADD_TO_PLAYLIST);
         break;
       default:
@@ -51,7 +51,7 @@ export const CreatePage: React.FC = () => {
     const paths = [
       FULL_CREATE_ROUTES.DREAM,
       FULL_CREATE_ROUTES.PLAYLIST,
-      FULL_CREATE_ROUTES.ADD_TO_PLAYLIST,
+      FULL_CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST,
     ];
     navigate(paths[index]);
   };
@@ -109,7 +109,7 @@ export const CreatePage: React.FC = () => {
           <TabPanel tabIndex={CREATE_TYPE.ADD_TO_PLAYLIST}>
             <Routes>
               <Route
-                path={CREATE_ROUTES.ADD_TO_PLAYLIST}
+                path={CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST}
                 element={<UpdatePlaylist />}
               />
             </Routes>

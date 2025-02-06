@@ -10,7 +10,7 @@ import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
 import { FORMAT } from "@/constants/moment.constants";
 import moment from "moment";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate } from "react-router-dom";
@@ -48,12 +48,51 @@ import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
 import { NotFound } from "@/components/shared/not-found/not-found";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
+import RadioButtonGroup from "@/components/shared/radio-button-group/radio-button-group";
+import { TFunction } from "i18next";
 
 const SectionID = "playlist";
 
+
+/**
+ * Playlist tabs handling
+ */
+type PlaylistTabs = "items" | "keyframes";
+
+const PLAYLIST_TABS: Record<Uppercase<PlaylistTabs>, PlaylistTabs> = {
+  ITEMS: "items",
+  KEYFRAMES: "keyframes"
+} as const;
+
+const FEED_FILTERS_NAMES: Record<Uppercase<PlaylistTabs>, string> = {
+  ITEMS: "page.view_playlist.items",
+  KEYFRAMES: "page.view_playlist.keyframes",
+};
+
+const getPlaylistTabsFilterData: (
+  t: TFunction,
+) => Array<{ key: string; value: string }> = (t) => {
+  return [
+    { key: t(FEED_FILTERS_NAMES.ITEMS), value: PLAYLIST_TABS.ITEMS.toString() },
+    { key: t(FEED_FILTERS_NAMES.KEYFRAMES), value: PLAYLIST_TABS.KEYFRAMES.toString() },
+  ];
+};
+
+
+/**
+ * View playlist page
+ */
 export const ViewPlaylistPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+
+  const [radioGroupState, setRadioGroupState] = useState<
+    PlaylistTabs | undefined
+  >(PLAYLIST_TABS.ITEMS);
+
+  const handleRadioButtonGroupChange = (value?: string) => {
+    setRadioGroupState(value as PlaylistTabs);
+  };
 
   const {
     isError,
@@ -68,6 +107,7 @@ export const ViewPlaylistPage = () => {
     allowedEditPlaylist,
     allowedEditOwner,
     items,
+    playlistKeyframes,
     setUserSearch,
     videos,
     setVideos,
@@ -434,9 +474,12 @@ export const ViewPlaylistPage = () => {
             </Row>
             <Row justifyContent="space-between" alignItems="center">
               <Column>
-                <Row>
-                  <h3>{t("page.view_playlist.items")}</h3>
-                </Row>
+                <RadioButtonGroup
+                  name="search-filter"
+                  value={radioGroupState as string}
+                  data={getPlaylistTabsFilterData(t)}
+                  onChange={handleRadioButtonGroupChange}
+                />
               </Column>
               <Restricted
                 to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
@@ -492,32 +535,65 @@ export const ViewPlaylistPage = () => {
                 </Column>
               </Restricted>
             </Row>
-            <Row flex="auto">
-              {items.length ? (
-                <ItemCardList>
-                  {items.map((i) => (
-                    <ItemCard
-                      key={i.id}
-                      draggable
-                      itemId={i.id}
-                      dndMode="local"
-                      size="sm"
-                      type={i.type}
-                      item={i.type === "dream" ? i.dreamItem : i.playlistItem}
-                      order={i.order}
-                      deleteDisabled={!allowedEditPlaylist}
-                      showPlayButton
-                      inline
-                      droppable
-                      onDelete={handleDeletePlaylistItem(i.id)}
-                      onOrder={handleOrderPlaylist}
-                    />
-                  ))}
-                </ItemCardList>
-              ) : (
-                <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
-              )}
-            </Row>
+            {
+              // if items are selected, show item cardlist and data
+              radioGroupState === "items" && <Row flex="auto">
+                {items.length ? (
+                  <ItemCardList>
+                    {items.map((i) => (
+                      <ItemCard
+                        key={i.id}
+                        draggable
+                        itemId={i.id}
+                        dndMode="local"
+                        size="sm"
+                        type={i.type}
+                        item={i.type === "dream" ? i.dreamItem : i.playlistItem}
+                        order={i.order}
+                        deleteDisabled={!allowedEditPlaylist}
+                        showPlayButton
+                        inline
+                        droppable
+                        onDelete={handleDeletePlaylistItem(i.id)}
+                        onOrder={handleOrderPlaylist}
+                      />
+                    ))}
+                  </ItemCardList>
+                ) : (
+                  <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
+                )}
+              </Row>
+            }
+            {
+              // if items are selected, show item cardlist and data
+              radioGroupState === "keyframes" && <Row flex="auto">
+                {playlistKeyframes.length ? (
+                  <ItemCardList>
+                    {playlistKeyframes.map((k) => (
+                      <ItemCard
+                        key={k.id}
+                        draggable
+                        itemId={k.id}
+                        dndMode="local"
+                        size="sm"
+                        type="keyframe"
+                        item={k.keyframe}
+                        order={k.order}
+                        deleteDisabled={!allowedEditPlaylist}
+                        // showPlayButton
+                        inline
+                        // droppable
+                        // onDelete={handleDeletePlaylistItem(i.id)}
+                        // onOrder={handleOrderPlaylist}
+                      />
+                    ))}
+                  </ItemCardList>
+                ) : (
+                  <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
+                )}
+              </Row>
+            }
+
 
             {/* Removing add item playlist dropzone, probably next to be deprecated  */}
             {/* <Restricted
@@ -544,3 +620,5 @@ export const ViewPlaylistPage = () => {
     </>
   );
 };
+
+export default ViewPlaylistPage;

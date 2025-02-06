@@ -23,6 +23,7 @@ import { ROLES } from "@/constants/role.constants";
 import { RoleType } from "@/types/role.types";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
+import { ItemType } from "@/components/shared/item-card/item-card";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -211,7 +212,7 @@ const FeedList: React.FC<{ feed?: FeedItem[] }> = ({ feed }) => {
               <ItemCard
                 showPlayButton
                 key={feedItem.id}
-                type={feedItem.type}
+                type={feedItem.type as ItemType}
                 item={item}
                 size="lg"
               />

@@ -181,6 +181,7 @@
       "thumbnail": "Thumbnail",
       "nsfw": "Content Rating",
       "items": "Playlist items",
+      "keyframes": "Keyframes",
       "empty_playlist": "No items to show",
       "sort_by": "Sort by",
       "add_item": "Add item",

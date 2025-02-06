@@ -11,7 +11,8 @@ import UserFeedPage from "@/components/pages/user-feed/user-feed.page";
 import InvitesPage from "@/components/pages/invites/invites.page";
 import TermsOfServicePage from "@/components/pages/terms-of-service/terms-of-service.page";
 import ViewDreamPage from "@/components/pages/view-dream/view-dream.page";
-import { ViewPlaylistPage } from "@/components/pages/view-playlist/view-playlist.page";
+import ViewPlaylistPage from "@/components/pages/view-playlist/view-playlist.page";
+import ViewKeyframePage from "@/components/pages/view-keyframe/view-keyframe.page";
 import { ROLES } from "@/constants/role.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import {
@@ -174,6 +175,20 @@ export const router = createBrowserRouter([
             ]}
           >
             <ViewPlaylistPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: `${ROUTES.VIEW_KEYFRAME}/:uuid`,
+        element: (
+          <ProtectedRoute
+            allowedRoles={[
+              ROLES.USER_GROUP,
+              ROLES.CREATOR_GROUP,
+              ROLES.ADMIN_GROUP,
+            ]}
+          >
+            <ViewKeyframePage />
           </ProtectedRoute>
         ),
       },

@@ -390,7 +390,7 @@ export const usePlaylistHandlers = ({
       playlistName: String(playlist?.name ?? ""),
     }).toString();
 
-    router.navigate(`${FULL_CREATE_ROUTES.ADD_TO_PLAYLIST}?${queryParams}`);
+    router.navigate(`${FULL_CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST}?${queryParams}`);
   };
 
   return {

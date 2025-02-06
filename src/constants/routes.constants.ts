@@ -11,6 +11,7 @@ export const ROUTES = {
   FEED: "/feed",
   PLAYLISTS: "/playlists",
   VIEW_PLAYLIST: "/playlist",
+  VIEW_KEYFRAME: "/keyframe",
   PROFILE: "/profile",
   MY_PROFILE: "/my-profile",
   USER_FEED: "/feed",
@@ -27,11 +28,13 @@ export const ROUTES = {
 export const CREATE_ROUTES = {
   DREAM: "dream",
   PLAYLIST: "playlist",
-  ADD_TO_PLAYLIST: "add-to-playlist",
+  ADD_ITEM_TO_PLAYLIST: "add-item-to-playlist",
+  ADD_KEYFRAME_TO_PLAYLIST: "add-keyframe-to-playlist",
 };
 
 export const FULL_CREATE_ROUTES = {
-  DREAM: `${ROUTES.CREATE}/dream`,
-  PLAYLIST: `${ROUTES.CREATE}/playlist`,
-  ADD_TO_PLAYLIST: `${ROUTES.CREATE}/add-to-playlist`,
+  DREAM: `${ROUTES.CREATE}/${CREATE_ROUTES.DREAM}`,
+  PLAYLIST: `${ROUTES.CREATE}/${CREATE_ROUTES.PLAYLIST}`,
+  ADD_ITEM_TO_PLAYLIST: `${ROUTES.CREATE}/${CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST}`,
+  ADD_KEYFRAME_TO_PLAYLIST: `${ROUTES.CREATE}/${CREATE_ROUTES.ADD_KEYFRAME_TO_PLAYLIST}`,
 };
