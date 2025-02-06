@@ -147,6 +147,7 @@ export const ViewPlaylistPage = () => {
     handleEdit,
     handleMutateThumbnailPlaylist,
     handleDeletePlaylistItem,
+    handleDeleteKeyframe,
     handleOrderPlaylist,
     handleOrderPlaylistBy,
     handleUploadVideos,
@@ -235,13 +236,8 @@ export const ViewPlaylistPage = () => {
     resetRemotePlaylistForm();
   }, [reset, resetRemotePlaylistForm]);
 
-  if (!uuid) {
-    return <Navigate to={ROUTES.ROOT} replace />;
-  }
-
-  if (isError) {
-    return <NotFound />;
-  }
+  if (!uuid) return <Navigate to={ROUTES.ROOT} replace />;
+  if (isError) return <NotFound />;
 
   if (isPlaylistLoading) {
     return (
@@ -580,11 +576,8 @@ export const ViewPlaylistPage = () => {
                         item={k.keyframe}
                         order={k.order}
                         deleteDisabled={!allowedEditPlaylist}
-                        // showPlayButton
                         inline
-                        // droppable
-                        // onDelete={handleDeletePlaylistItem(i.id)}
-                        // onOrder={handleOrderPlaylist}
+                        onDelete={handleDeleteKeyframe(k.id)}
                       />
                     ))}
                   </ItemCardList>

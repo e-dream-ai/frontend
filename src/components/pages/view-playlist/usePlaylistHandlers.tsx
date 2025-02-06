@@ -18,6 +18,7 @@ import {
 } from "@/utils/playlist.util";
 import { useOrderPlaylist } from "@/api/playlist/mutation/useOrderPlaylist";
 import { useDeletePlaylistItem } from "@/api/playlist/mutation/useDeletePlaylistItem";
+import { useDeletePlaylistKeyframe } from "@/api/playlist/mutation/useDeletePlaylistKeyframe";
 import { Playlist, PlaylistItem } from "@/types/playlist.types";
 import { useDeletePlaylist } from "@/api/playlist/mutation/useDeletePlaylist";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
@@ -75,6 +76,7 @@ export const usePlaylistHandlers = ({
   const orderPlaylistMutation = useOrderPlaylist(uuid);
 
   const { mutate: mutateDeletePlaylistItem } = useDeletePlaylistItem();
+  const { mutate: mutateDeletePlaylistKeyframe } = useDeletePlaylistKeyframe();
 
   const { mutate: mutateDeletePlaylist, isLoading: isLoadingDeletePlaylist } =
     useDeletePlaylist();
@@ -119,8 +121,7 @@ export const usePlaylistHandlers = ({
             setEditMode(false);
           } else {
             toast.error(
-              `${t("page.view_playlist.error_updating_playlist")} ${
-                response.message
+              `${t("page.view_playlist.error_updating_playlist")} ${response.message
               }`,
             );
           }
@@ -142,8 +143,7 @@ export const usePlaylistHandlers = ({
               handleMutatePlaylist(data);
             } else {
               toast.error(
-                `${t("page.view_playlist.error_updating_playlist")} ${
-                  response.message
+                `${t("page.view_playlist.error_updating_playlist")} ${response.message
                 }`,
               );
             }
@@ -202,6 +202,52 @@ export const usePlaylistHandlers = ({
       );
     };
 
+  const handleDeleteKeyframe =
+    (playlistKeyframeId: number) => (event: React.MouseEvent) => {
+      event.stopPropagation();
+      event.preventDefault();
+      const toastId = toast.loading(
+        t("page.view_playlist.deleting_playlist_keyframe"),
+      );
+      mutateDeletePlaylistKeyframe(
+        { playlistUUID: playlist!.uuid, playlistKeyframeId: playlistKeyframeId },
+        {
+          onSuccess: (response) => {
+            if (response.success) {
+              // invalidates playlist query to bring new data without deleted keyframe
+              queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
+              toast.update(toastId, {
+                render: t(
+                  "page.view_playlist.playlist_keyframe_deleted_successfully",
+                ),
+                type: "success",
+                isLoading: false,
+                ...TOAST_DEFAULT_CONFIG,
+              });
+            } else {
+              toast.update(toastId, {
+                render: `${t(
+                  "page.view_playlist.error_deleting_playlist_keyframe",
+                )} ${response.message}`,
+                type: "error",
+                isLoading: false,
+                ...TOAST_DEFAULT_CONFIG,
+              });
+            }
+          },
+          onError: () => {
+            toast.update(toastId, {
+              render: `${t("page.view_playlist.error_deleting_playlist_keyframe")}`,
+              type: "error",
+              isLoading: false,
+              ...TOAST_DEFAULT_CONFIG,
+            });
+          },
+        },
+      );
+    };
+
+
   const handleOrderPlaylist = async (dropItem: SetItemOrder) => {
     /**
      * Validate new index value
@@ -237,9 +283,8 @@ export const usePlaylistHandlers = ({
         });
       } else {
         toast.update(toastId, {
-          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
-            response.message
-          }`,
+          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${response.message
+            }`,
           type: "error",
           isLoading: false,
           ...TOAST_DEFAULT_CONFIG,
@@ -285,9 +330,8 @@ export const usePlaylistHandlers = ({
         });
       } else {
         toast.update(toastId, {
-          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
-            response.message
-          }`,
+          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${response.message
+            }`,
           type: "error",
           isLoading: false,
           ...TOAST_DEFAULT_CONFIG,
@@ -364,8 +408,7 @@ export const usePlaylistHandlers = ({
           router.navigate(ROUTES.FEED);
         } else {
           toast.error(
-            `${t("page.view_playlist.error_deleting_playlist")} ${
-              response.message
+            `${t("page.view_playlist.error_deleting_playlist")} ${response.message
             }`,
           );
         }
@@ -401,6 +444,7 @@ export const usePlaylistHandlers = ({
     handleMutatePlaylist,
     handleMutateThumbnailPlaylist,
     handleDeletePlaylistItem,
+    handleDeleteKeyframe,
     handleOrderPlaylist,
     handleOrderPlaylistBy,
     handleFileUploaderChange,
