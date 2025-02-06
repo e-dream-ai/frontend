@@ -154,6 +154,7 @@ export const ViewPlaylistPage = () => {
     handleConfirmDeletePlaylist,
     handlePlayPlaylist,
     handleNavigateAddToPlaylist,
+    handleNavigateAddKeyframeToPlaylist
   } = usePlaylistHandlers({
     uuid,
     playlist,
@@ -482,52 +483,86 @@ export const ViewPlaylistPage = () => {
                 isOwner={user?.id === playlist?.user?.id}
               >
                 <Column>
-                  <Row mb={2} justifyContent="flex-end">
-                    <Text>{t("page.view_playlist.sort_by")}</Text>
-                  </Row>
-
-                  <Row mb={0}>
-                    <Column mr="2">
-                      <Button
-                        type="button"
-                        buttonType="default"
-                        transparent
-                        ml="1rem"
-                        onClick={handleNavigateAddToPlaylist}
-                        data-tooltip-id="add-dreams"
-                      >
-                        <Tooltip
-                          id="add-dreams"
-                          place="right-end"
-                          content={t(
-                            "page.view_playlist.add_dreams_to_playlist",
-                          )}
-                        />
-                        <FontAwesomeIcon icon={faPlus} />
-                      </Button>
-                    </Column>
-                    <Column>
-                      <Row alignItems="center" flex="auto" mb="0">
-                        <Button
-                          type="button"
-                          size="sm"
-                          buttonType="tertiary"
-                          mr={2}
-                          onClick={handleOrderPlaylistBy("name")}
-                        >
-                          {t("page.view_playlist.name")}
-                        </Button>
-                        <Button
-                          type="button"
-                          size="sm"
-                          buttonType="tertiary"
-                          onClick={handleOrderPlaylistBy("date")}
-                        >
-                          {t("page.view_playlist.date")}
-                        </Button>
+                  {radioGroupState === "items" &&
+                    (<>
+                      <Row mb={2} justifyContent="flex-end">
+                        <Text>{t("page.view_playlist.sort_by")}</Text>
                       </Row>
-                    </Column>
-                  </Row>
+
+                      <Row mb={0}>
+                        <Column mr="2">
+                          <Button
+                            type="button"
+                            buttonType="default"
+                            transparent
+                            ml="1rem"
+                            onClick={handleNavigateAddToPlaylist}
+                            data-tooltip-id="add-dreams"
+                          >
+                            <Tooltip
+                              id="add-dreams"
+                              place="right-end"
+                              content={t(
+                                "page.view_playlist.add_dreams_to_playlist",
+                              )}
+                            />
+                            <FontAwesomeIcon icon={faPlus} />
+                          </Button>
+                        </Column>
+                        <Column>
+                          <Row alignItems="center" flex="auto" mb="0">
+                            <Button
+                              type="button"
+                              size="sm"
+                              buttonType="tertiary"
+                              mr={2}
+                              onClick={handleOrderPlaylistBy("name")}
+                            >
+                              {t("page.view_playlist.name")}
+                            </Button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              buttonType="tertiary"
+                              onClick={handleOrderPlaylistBy("date")}
+                            >
+                              {t("page.view_playlist.date")}
+                            </Button>
+                          </Row>
+                        </Column>
+                      </Row>
+                    </>
+                    )
+                  }
+
+                  {radioGroupState === "keyframes" &&
+                    (
+                      <>
+                        <Row mb={0}>
+                          <Column mr="2">
+                            <Button
+                              type="button"
+                              buttonType="default"
+                              transparent
+                              ml="1rem"
+                              onClick={handleNavigateAddKeyframeToPlaylist}
+                              data-tooltip-id="add-keyframes"
+                            >
+                              <Tooltip
+                                id="add-keyframes"
+                                place="right-end"
+                                content={t(
+                                  "page.view_playlist.add_keyframes_to_playlist",
+                                )}
+                              />
+                              <FontAwesomeIcon icon={faPlus} />
+                            </Button>
+                          </Column>
+                        </Row>
+                      </>
+                    )
+                  }
+
                 </Column>
               </Restricted>
             </Row>

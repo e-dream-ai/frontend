@@ -187,6 +187,7 @@
       "add_item": "Add item",
       "upload_file": "Upload file(s)",
       "add_dreams_to_playlist": "Add dreams to this playlist",
+      "add_keyframes_to_playlist": "Add keyframes to this playlist",
       "dream_already_exists": "dream already exists, omitted.",
       "play_playlist_client": "Playlist sent to play on client.",
       "confirm_delete_modal_title": "Confirm delete playlist",

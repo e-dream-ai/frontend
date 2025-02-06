@@ -436,6 +436,16 @@ export const usePlaylistHandlers = ({
     router.navigate(`${FULL_CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST}?${queryParams}`);
   };
 
+  const handleNavigateAddKeyframeToPlaylist = () => {
+    const queryParams = new URLSearchParams({
+      playlist: String(playlist?.uuid ?? ""),
+      playlistName: String(playlist?.name ?? ""),
+    }).toString();
+
+    router.navigate(`${FULL_CREATE_ROUTES.ADD_KEYFRAME_TO_PLAYLIST}?${queryParams}`);
+  };
+
+
   return {
     isLoading,
     uploadProgress,
@@ -453,5 +463,6 @@ export const usePlaylistHandlers = ({
     handleConfirmDeletePlaylist,
     handlePlayPlaylist,
     handleNavigateAddToPlaylist,
+    handleNavigateAddKeyframeToPlaylist
   };
 };
