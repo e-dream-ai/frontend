@@ -37,11 +37,15 @@ import { getUserName, isAdmin } from "@/utils/user.util";
 import { Select } from "@/components/shared/select/select";
 import { toast } from "react-toastify";
 import { NotFound } from "@/components/shared/not-found/not-found";
-import { useKeyframe } from "@/api/keyframe/query/useKeyframe";
+import { KEYFRAME_QUERY_KEY, useKeyframe } from "@/api/keyframe/query/useKeyframe";
 import { User } from "@/types/auth.types";
 import { useUsers } from "@/api/user/query/useUsers";
 import usePermission from "@/hooks/usePermission";
 import { useImage } from "@/hooks/useImage";
+import router from "@/routes/router";
+import { useDeleteKeyframe } from "@/api/keyframe/mutation/useDeleteKeyframe";
+import queryClient from "@/api/query-client";
+import { useUpdateKeyframe } from "@/api/keyframe/mutation/useUpdateKeyframe";
 
 type Params = { uuid: string };
 
@@ -64,7 +68,6 @@ export const ViewKeyframePage = () => {
 
   const { data, isLoading: isKeyframeLoading, isError } = useKeyframe(uuid);
   const keyframe = data?.data?.keyframe;
-  console.log({ isError, keyframe, isKeyframeLoading });
   const imageUrl = useImage(keyframe?.image, {
     width: 500,
     fit: "cover",
@@ -73,6 +76,9 @@ export const ViewKeyframePage = () => {
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
   });
+
+  const { mutate: mutateKeyframe, isLoading: isLoadingKeyframeMutation } =useUpdateKeyframe();
+  const { mutate: mutateDeleteKeyframe, isLoading: isLoadingDeleteKeyframe } = useDeleteKeyframe();
 
   const usersOptions = (usersData?.data?.users ?? [])
     .filter((user) => user.name)
@@ -135,14 +141,61 @@ export const ViewKeyframePage = () => {
     setIsImageRemoved(false);
   };
 
-  const onSubmit = async (data: UpdateKeyframeFormValues) => {
-    try {
-      return data;
-      //
-    } catch (error) {
-      toast.error(t("page.view_keyframe.error_updating_keyframe"));
-    }
+  const onSubmit = (data: UpdateKeyframeFormValues) => {
+    mutateKeyframe(
+      {
+        uuid: uuid!,
+        values: {
+          name: data.name,
+          displayedOwner: data?.displayedOwner?.value,
+        },
+      },
+      {
+        onSuccess: (response) => {
+          if (response.success) {
+            queryClient.setQueryData([KEYFRAME_QUERY_KEY, uuid], response);
+            reset({ name: response?.data?.keyframe.name });
+            toast.success(
+              `${t("page.view_keyframe.keyframe_updated_successfully")}`,
+            );
+            setEditMode(false);
+          } else {
+            toast.error(
+              `${t("page.view_keyframe.error_updating_keyframe")} ${response.message
+              }`,
+            );
+          }
+        },
+        onError: () => {
+          toast.error(t("page.view_keyframe.error_updating_keyframe"));
+        },
+      },
+    );
   };
+
+
+  const handleConfirmDeleteKeyframe = () => {
+    mutateDeleteKeyframe(uuid!, {
+      onSuccess: (response) => {
+        if (response.success) {
+          toast.success(
+            `${t("page.view_keyframe.keyframe_deleted_successfully")}`,
+          );
+          onHideConfirmDeleteModal();
+          router.navigate(ROUTES.FEED);
+        } else {
+          toast.error(
+            `${t("page.view_keyframe.error_deleting_keyframe")} ${response.message
+            }`,
+          );
+        }
+      },
+      onError: () => {
+        toast.error(t("page.view_keyframe.error_deleting_keyframe"));
+      },
+    });
+  };
+
 
   const resetRemoteKeyframeForm = useCallback(() => {
     reset({
@@ -195,11 +248,9 @@ export const ViewKeyframePage = () => {
     <>
       <ConfirmModal
         isOpen={showConfirmDeleteModal}
+        isConfirming={isLoadingDeleteKeyframe}
         onCancel={onHideConfirmDeleteModal}
-        onConfirm={() => ({})}
-        isConfirming={false}
-        // onConfirm={handleConfirmDeleteKeyframe}
-        // isConfirming={isLoadingDeleteKeyframe}
+        onConfirm={handleConfirmDeleteKeyframe}
         title={t("page.view_keyframe.confirm_delete_modal_title")}
         text={
           <Text>
@@ -253,7 +304,7 @@ export const ViewKeyframePage = () => {
                     <Button
                       type="button"
                       onClick={handleCancel}
-                      disabled={isKeyframeLoading}
+                      disabled={isLoadingKeyframeMutation}
                     >
                       {t("page.view_keyframe.cancel")}
                     </Button>
@@ -261,10 +312,10 @@ export const ViewKeyframePage = () => {
                     <Button
                       type="submit"
                       after={<FontAwesomeIcon icon={faSave} />}
-                      isLoading={isKeyframeLoading}
+                      isLoading={isLoadingKeyframeMutation}
                       ml="1rem"
                     >
-                      {isKeyframeLoading
+                      {isLoadingKeyframeMutation
                         ? t("page.view_keyframe.saving")
                         : t("page.view_keyframe.save")}
                     </Button>
