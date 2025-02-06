@@ -205,6 +205,26 @@
       "playlist_items_ordered_successfully": "Playlist items ordered successfully.",
       "error_ordering_playlist_items": "Error ordering playlist items."
     },
+    "view_keyframe": {
+      "title": "View Keyframe",
+      "edit": "Edit",
+      "save": "Save",
+      "saving": "Saving",
+      "cancel": "Cancel",
+      "name": "Name",
+      "date": "Date",
+      "owner": "Owner",
+      "displayed_owner": "Displayed Owner",
+      "created": "Created",
+      "keyframes": "Keyframes",
+      "upload_file": "Upload file(s)",
+      "confirm_delete_modal_title": "Confirm delete keyframe",
+      "confirm_delete_modal_body": "Are you sure to delete this keyframe?",
+      "keyframe_updated_successfully": "Keyframe updated successfully.",
+      "error_updating_keyframe": "Error updating keyframe.",
+      "keyframe_deleted_successfully": "Keyframe deleted successfully.",
+      "error_deleting_keyframe": "Error deleting keyframe."
+    },
     "my_dreams": {
       "title": "My dreams"
     },
