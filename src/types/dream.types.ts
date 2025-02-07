@@ -1,4 +1,5 @@
 import { User } from "./auth.types";
+import { Keyframe } from "./keyframe.types";
 import { PlaylistItem } from "./playlist.types";
 
 export enum DreamStatusType {
@@ -38,6 +39,8 @@ export type Dream = {
   filmstrip?: Frame[];
   upvotes?: number;
   downvotes?: number;
+  startKeyframe?: Keyframe;
+  endKeyframe?: Keyframe;
   processed_at?: string;
   created_at: string;
   updated_at: string;

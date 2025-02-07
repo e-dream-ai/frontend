@@ -22,6 +22,14 @@ export type UpdateDreamFormValues = {
     label?: string;
     value?: string;
   };
+  startKeyframe: {
+    label?: string;
+    value?: string;
+  };
+  endKeyframe: {
+    label?: string;
+    value?: string;
+  };
   upvotes?: number;
   downvotes?: number;
   created_at?: string;
@@ -35,6 +43,8 @@ export type UpdateDreamRequestValues = {
   activityLevel?: number;
   featureRank?: number;
   displayedOwner?: number;
+  startKeyframe?: string;
+  endKeyframe?: string;
   nsfw?: boolean;
   ccbyLicense?: boolean;
 };
@@ -65,6 +75,14 @@ export const UpdateDreamSchema = yup
     ccbyLicense: yup.object({
       label: yup.string(),
       value: yup.string(),
+    }),
+    startKeyframe: yup.object({
+      label: yup.string(),
+      value: yup.string().uuid(),
+    }),
+    endKeyframe: yup.object({
+      label: yup.string(),
+      value: yup.string().uuid(),
     }),
     created_at: yup.string(),
   })

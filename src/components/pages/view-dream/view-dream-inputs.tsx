@@ -29,6 +29,7 @@ import {
   faFileVideo,
   faFilm,
   faFire,
+  faImage,
   faLink,
   faMicrochip,
   faPhotoVideo,
@@ -58,6 +59,7 @@ import {
 } from "@/constants/dream.constants";
 import { useImage } from "@/hooks/useImage";
 import { FormContainer, FormItem } from "@/components/shared/form/form";
+import { useKeyframes } from "@/api/keyframe/query/useKeyframes";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -92,11 +94,17 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const { t } = useTranslation();
   const { user } = useAuth();
   const [userSearch, setUserSearch] = useState<string>("");
+  const [keyframeSearch, setKeyframeSearch] = useState<string>("");
   const [showMore, setShowMore] = useState<boolean>(false);
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
+
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
+  });
+
+  const { data: keyframesData, isLoading: isKeyframesLoading } = useKeyframes({
+    search: keyframeSearch,
   });
 
   const switchShowMore = () => setShowMore(v => !v);
@@ -106,6 +114,13 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
     .map((user) => ({
       label: user?.name ?? "-",
       value: user?.id,
+    }));
+
+  const keyframesOptions = (keyframesData?.data?.keyframes ?? [])
+    .filter((keyframe) => keyframe.name)
+    .map((keyframe) => ({
+      label: keyframe?.name ?? "-",
+      value: keyframe?.uuid,
     }));
 
   const allowedEditOwner = usePermission({
@@ -324,6 +339,40 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               before={<FontAwesomeIcon icon={faPhotoVideo} />}
               value={values.processedVideoFPS}
               {...register("processedVideoFPS")}
+            />
+          </FormItem>
+          <FormItem>
+            <Controller
+              name="startKeyframe"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  placeholder={t("page.view_dream.start_keyframe")}
+                  isDisabled={!editMode}
+                  isLoading={isKeyframesLoading}
+                  before={<FontAwesomeIcon icon={faImage} />}
+                  options={keyframesOptions}
+                  onInputChange={(newValue) => setKeyframeSearch(newValue)}
+                />
+              )}
+            />
+          </FormItem>
+          <FormItem>
+            <Controller
+              name="endKeyframe"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  placeholder={t("page.view_dream.end_keyframe")}
+                  isDisabled={!editMode}
+                  isLoading={isKeyframesLoading}
+                  before={<FontAwesomeIcon icon={faImage} />}
+                  options={keyframesOptions}
+                  onInputChange={(newValue) => setKeyframeSearch(newValue)}
+                />
+              )}
             />
           </FormItem>
           <Restricted

@@ -142,6 +142,8 @@
       "size": "Size",
       "owner": "Owner",
       "displayed_owner": "Displayed Owner",
+      "start_keyframe": "Start Keyframe",
+      "end_keyframe": "End Keyframe",
       "created": "Created",
       "processed": "Processed",
       "video": "Video",

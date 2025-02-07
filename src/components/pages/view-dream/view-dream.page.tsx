@@ -208,17 +208,14 @@ const ViewDreamPage: React.FC = () => {
         displayedOwner: data?.displayedOwner?.value,
         nsfw: data?.nsfw.value === NSFW.TRUE,
         ccbyLicense: data?.ccbyLicense.value === CCA_LICENSE.TRUE,
+        startKeyframe: data?.startKeyframe?.value,
+        endKeyframe: data?.endKeyframe?.value,
       },
       {
         onSuccess: (data) => {
           const dream = data?.data?.dream;
           if (data.success) {
             queryClient.setQueryData([DREAM_QUERY_KEY, dream?.uuid], data);
-            reset({
-              name: dream?.name,
-              activityLevel: dream?.activityLevel,
-              featureRank: dream?.featureRank,
-            });
             toast.success(t("page.view_dream.dream_updated_successfully"));
             setEditMode(false);
           } else {
@@ -298,6 +295,17 @@ const ViewDreamPage: React.FC = () => {
       ccbyLicense: filterCcaLicenceOption(dream?.ccbyLicense, t),
       upvotes: dream?.upvotes,
       downvotes: dream?.downvotes,
+      /**
+       * keyframes
+       */
+      startKeyframe: {
+        label: dream?.startKeyframe?.name ?? "-",
+        value: dream?.startKeyframe?.uuid
+      },
+      endKeyframe: {
+        label: dream?.endKeyframe?.name ?? "-",
+        value: dream?.endKeyframe?.uuid
+      },
       created_at: moment(dream?.created_at).format(FORMAT),
       processed_at: dream?.processed_at
         ? moment(dream?.processed_at).format(FORMAT)
