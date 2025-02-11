@@ -16,10 +16,17 @@ export const StyledTextArea = styled.textarea`
   font-size: 1rem;
   font-family: inherit;
 
+  // remove focus outline
+  &:focus {
+    outline: none;    
+  }
+
   &:disabled {
     background-color: ${(props) => props.theme.inputBackgroundColor};
     cursor: not-allowed;
   }
+
+
 `;
 
 export const DisabledTextArea = styled.div`
