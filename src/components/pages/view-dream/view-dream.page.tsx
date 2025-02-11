@@ -12,11 +12,9 @@ import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import Text from "@/components/shared/text/text";
-import { FORMAT } from "@/constants/moment.constants";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
-import moment from "moment";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -41,21 +39,13 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { DreamStatusType } from "@/types/dream.types";
 import { Video } from "./view-dream.styled";
-import { getUserName, isAdmin } from "@/utils/user.util";
+import { isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import useSocket from "@/hooks/useSocket";
 import { emitPlayDream } from "@/utils/socket.util";
-import { bytesToMegabytes } from "@/utils/file.util";
-import { framesToSeconds, secondsToTimeFormat } from "@/utils/video.utils";
 import { truncateString } from "@/utils/string.util";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 import { User } from "@/types/auth.types";
-import {
-  CCA_LICENSE,
-  NSFW,
-  filterCcaLicenceOption,
-  filterNsfwOption,
-} from "@/constants/dream.constants";
 import { useUpvoteDream } from "@/api/dream/mutation/useUpvoteDream";
 import { useDownvoteDream } from "@/api/dream/mutation/useDownvoteDream";
 import { useUnvoteDream } from "@/api/dream/mutation/useUnvoteDream";
@@ -65,6 +55,7 @@ import { FilmstripGallery } from "@/components/shared/filmstrip-gallery/filmstri
 import { FeedItemType } from "@/types/feed.types";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 import { NotFound } from "@/components/shared/not-found/not-found";
+import { formatDreamForm, formatDreamRequest } from "@/utils/dream.util";
 
 type Params = { uuid: string };
 
@@ -199,18 +190,7 @@ const ViewDreamPage: React.FC = () => {
 
   const handleMutateDream = (data: UpdateDreamFormValues) => {
     mutateDream(
-      {
-        name: data.name,
-        description: data.description,
-        sourceUrl: data.sourceUrl,
-        activityLevel: data.activityLevel,
-        featureRank: data.featureRank,
-        displayedOwner: data?.displayedOwner?.value,
-        nsfw: data?.nsfw.value === NSFW.TRUE,
-        ccbyLicense: data?.ccbyLicense.value === CCA_LICENSE.TRUE,
-        startKeyframe: data?.startKeyframe?.value,
-        endKeyframe: data?.endKeyframe?.value,
-      },
+      formatDreamRequest(data),
       {
         onSuccess: (data) => {
           const dream = data?.data?.dream;
@@ -256,61 +236,7 @@ const ViewDreamPage: React.FC = () => {
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
 
   const resetRemoteDreamForm = useCallback(() => {
-    reset({
-      name: dream?.name,
-      description: dream?.description,
-      sourceUrl: dream?.sourceUrl,
-      activityLevel: dream?.activityLevel,
-      featureRank: dream?.featureRank,
-      processedVideoSize: dream?.processedVideoSize
-        ? Math.round(bytesToMegabytes(dream?.processedVideoSize)) + " MB"
-        : "-",
-      processedVideoFrames: dream?.processedVideoFrames
-        ? secondsToTimeFormat(
-          framesToSeconds(
-            dream?.processedVideoFrames,
-            dream?.activityLevel,
-          ),
-        )
-        : "-",
-      processedVideoFPS: dream?.processedVideoFPS
-        ? `${dream?.processedVideoFPS} Original FPS`
-        : "-",
-      user: getUserName(dream?.user),
-      /**
-       * set displayedOwner
-       * for admins always show displayedOwner
-       * for normal users show displayedOwner, if doesn't exists, show user
-       */
-      displayedOwner: isUserAdmin
-        ? {
-          value: dream?.displayedOwner?.id,
-          label: getUserName(dream?.displayedOwner),
-        }
-        : {
-          value: dream?.displayedOwner?.id ?? dream?.user?.id,
-          label: getUserName(dream?.displayedOwner ?? dream?.user),
-        },
-      nsfw: filterNsfwOption(dream?.nsfw, t),
-      ccbyLicense: filterCcaLicenceOption(dream?.ccbyLicense, t),
-      upvotes: dream?.upvotes,
-      downvotes: dream?.downvotes,
-      /**
-       * keyframes
-       */
-      startKeyframe: {
-        label: dream?.startKeyframe?.name ?? "-",
-        value: dream?.startKeyframe?.uuid
-      },
-      endKeyframe: {
-        label: dream?.endKeyframe?.name ?? "-",
-        value: dream?.endKeyframe?.uuid
-      },
-      created_at: moment(dream?.created_at).format(FORMAT),
-      processed_at: dream?.processed_at
-        ? moment(dream?.processed_at).format(FORMAT)
-        : "-",
-    });
+    reset(formatDreamForm({ dream, isAdmin: isUserAdmin, t }));
   }, [reset, dream, isUserAdmin, t]);
 
   const handleRemoveVideo = () => {

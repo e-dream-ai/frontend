@@ -48,7 +48,6 @@ import { useRoles } from "@/api/user/query/useRoles";
 import { useImage } from "@/hooks/useImage";
 import {
   NSFW,
-  filterNsfwOption,
   getNsfwOptions,
 } from "@/constants/dream.constants";
 import usePermission from "@/hooks/usePermission";
@@ -65,6 +64,7 @@ import ApiKeyCard from "../apikey-card/ApiKeyCard";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
 import { joinPaths } from "@/utils/router.util";
+import { filterNsfwOption } from "@/utils/dream.util";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;

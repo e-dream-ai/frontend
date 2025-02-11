@@ -41,7 +41,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserName } from "@/utils/user.util";
 import { Select } from "@/components/shared/select/select";
-import { filterNsfwOption, getNsfwOptions } from "@/constants/dream.constants";
+import { getNsfwOptions } from "@/constants/dream.constants";
 import { usePlaylistState } from "./usePlaylistState";
 import { usePlaylistHandlers } from "./usePlaylistHandlers";
 import { toast } from "react-toastify";
@@ -51,6 +51,7 @@ import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu
 import RadioButtonGroup from "@/components/shared/radio-button-group/radio-button-group";
 import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
+import { filterNsfwOption } from "@/utils/dream.util";
 
 const SectionID = "playlist";
 

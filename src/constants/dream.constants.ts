@@ -19,13 +19,3 @@ export const getCcaLicenceOptions = (t: TFunction) => [
   { value: CCA_LICENSE.TRUE, label: t("dream.ccby_license.active") },
   { value: CCA_LICENSE.FALSE, label: t("dream.ccby_license.inactive") },
 ];
-
-export const filterNsfwOption = (value: boolean = false, t: TFunction) =>
-  getNsfwOptions(t).find(
-    (option) => option.value === Boolean(value).toString(),
-  ) ?? { value: NSFW.FALSE, label: t("user.nsfw.sfw") };
-
-export const filterCcaLicenceOption = (value: boolean = false, t: TFunction) =>
-  getCcaLicenceOptions(t).find(
-    (option) => option.value === Boolean(value).toString(),
-  ) ?? { value: CCA_LICENSE.FALSE, label: t("dream.ccby_license.inactive") };

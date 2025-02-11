@@ -13,3 +13,6 @@ export const truncateString = (
     return str;
   }
 };
+
+export const removeEmptyString = (value?: string) =>
+  value?.trim() === "" ? undefined : value;
