@@ -1,4 +1,5 @@
 import * as yup from "yup";
+import { CompletedPart } from "./multipart-upload";
 
 export type UpdateKeyframeFormValues = {
   name: string;
@@ -29,5 +30,27 @@ export const UpdateKeyframeSchema = yup
     created_at: yup.string(),
   })
   .required();
+
+export type InitKeyframeImageMultipartUploadFormValues = {
+  uuid?: string;
+  values: {
+    extension: string;
+  };
+};
+
+export type InitKeyframeImageMultipartUploadResponse = {
+  keyframe?: Keyframe;
+  uploadId?: string;
+  urls?: Array<string>;
+};
+
+export type CompleteKeyframeImageMultipartUploadFormValues = {
+  uuid?: string;
+  values: {
+    extension?: string;
+    parts?: Array<CompletedPart>;
+    uploadId?: string;
+  };
+};
 
 export default UpdateKeyframeSchema;

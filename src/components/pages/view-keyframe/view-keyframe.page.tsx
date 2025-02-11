@@ -46,6 +46,9 @@ import router from "@/routes/router";
 import { useDeleteKeyframe } from "@/api/keyframe/mutation/useDeleteKeyframe";
 import queryClient from "@/api/query-client";
 import { useUpdateKeyframe } from "@/api/keyframe/mutation/useUpdateKeyframe";
+import { useUpdateImageKeyframe } from "@/api/keyframe/mutation/useUpdateImageKeyframe";
+import { useDeleteImageKeyframe } from "@/api/keyframe/mutation/useDeleteImageKeyframe";
+import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 
 type Params = { uuid: string };
 
@@ -77,8 +80,14 @@ export const ViewKeyframePage = () => {
     search: userSearch,
   });
 
-  const { mutate: mutateKeyframe, isLoading: isLoadingKeyframeMutation } =useUpdateKeyframe();
+  const updateKeyframeMutation = useUpdateKeyframe();
+  const updateImageKeyframeMutation = useUpdateImageKeyframe();
   const { mutate: mutateDeleteKeyframe, isLoading: isLoadingDeleteKeyframe } = useDeleteKeyframe();
+  const deleteImageKeyframeMutation = useDeleteImageKeyframe();
+
+  const isLoading = updateKeyframeMutation.isLoading
+    || updateImageKeyframeMutation.isLoading
+    || deleteImageKeyframeMutation.isLoading;
 
   const usersOptions = (usersData?.data?.users ?? [])
     .filter((user) => user.name)
@@ -141,36 +150,49 @@ export const ViewKeyframePage = () => {
     setIsImageRemoved(false);
   };
 
-  const onSubmit = (data: UpdateKeyframeFormValues) => {
-    mutateKeyframe(
-      {
-        uuid: uuid!,
-        values: {
-          name: data.name,
-          displayedOwner: data?.displayedOwner?.value,
-        },
-      },
-      {
-        onSuccess: (response) => {
-          if (response.success) {
-            queryClient.setQueryData([KEYFRAME_QUERY_KEY, uuid], response);
-            reset({ name: response?.data?.keyframe.name });
-            toast.success(
-              `${t("page.view_keyframe.keyframe_updated_successfully")}`,
-            );
-            setEditMode(false);
-          } else {
-            toast.error(
-              `${t("page.view_keyframe.error_updating_keyframe")} ${response.message
-              }`,
-            );
-          }
-        },
-        onError: () => {
-          toast.error(t("page.view_keyframe.error_updating_keyframe"));
-        },
-      },
-    );
+  const onSubmit = async (data: UpdateKeyframeFormValues) => {
+    try {
+      if (image && !isImageRemoved) {
+        // update image for keyframe
+        await updateImageKeyframeMutation.updateImageKeyframe(uuid!, image!.file);
+      }
+
+      if (isImageRemoved && !image) {
+        // remove image from keyframe
+        await deleteImageKeyframeMutation.mutateAsync(uuid!);
+      }
+
+      // update keyframe values
+      const response = await updateKeyframeMutation.mutateAsync(
+        {
+          uuid: uuid!,
+          values: {
+            name: data.name,
+            displayedOwner: data?.displayedOwner?.value,
+          },
+        }
+      );
+
+      if (response.success) {
+        queryClient.setQueryData([KEYFRAME_QUERY_KEY, uuid], response);
+        reset({ name: response?.data?.keyframe.name });
+        toast.success(
+          `${t("page.view_keyframe.keyframe_updated_successfully")}`,
+        );
+        setEditMode(false);
+        // reset image states
+        setIsImageRemoved(false);
+        setImage(undefined);
+      } else {
+        toast.error(
+          `${t("page.view_keyframe.error_updating_keyframe")} ${response.message
+          }`,
+        );
+      }
+
+    } catch (_) {
+      toast.error(t("page.view_keyframe.error_updating_keyframe"));
+    }
   };
 
 
@@ -304,7 +326,7 @@ export const ViewKeyframePage = () => {
                     <Button
                       type="button"
                       onClick={handleCancel}
-                      disabled={isLoadingKeyframeMutation}
+                      disabled={isLoading}
                     >
                       {t("page.view_keyframe.cancel")}
                     </Button>
@@ -312,10 +334,10 @@ export const ViewKeyframePage = () => {
                     <Button
                       type="submit"
                       after={<FontAwesomeIcon icon={faSave} />}
-                      isLoading={isLoadingKeyframeMutation}
+                      isLoading={isLoading}
                       ml="1rem"
                     >
-                      {isLoadingKeyframeMutation
+                      {isLoading
                         ? t("page.view_keyframe.saving")
                         : t("page.view_keyframe.save")}
                     </Button>
@@ -391,16 +413,7 @@ export const ViewKeyframePage = () => {
                       isDisabled={!editMode || !allowedEditOwner}
                       isLoading={isUsersLoading}
                       before={<FontAwesomeIcon icon={faUser} />}
-                      to={
-                        // always navigate to user for admins
-                        // for normal users navigate to 'displayed owner' or user instead
-                        isUserAdmin
-                          ? `${ROUTES.PROFILE}/${keyframe?.user.uuid}` : (
-                            keyframe?.displayedOwner?.uuid
-                              ? `${ROUTES.PROFILE}/${keyframe?.displayedOwner?.uuid}`
-                              : `${ROUTES.PROFILE}/${keyframe?.user.uuid}`
-                          )
-                      }
+                      to={getDisplayedOwnerProfileRoute(isUserAdmin, keyframe?.user, keyframe?.displayedOwner)}
                       options={usersOptions}
                       onInputChange={(newValue) => setUserSearch(newValue)}
                     />

@@ -7,6 +7,7 @@ import { Section } from "@/components/shared/section/section";
 import { CreateDream } from "./create-dream";
 import { CreatePlaylist } from "./create-playlist";
 import { UpdatePlaylist } from "./update-playlist/update-playlist";
+import { CreateKeyframe } from "./create-keyframe";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import Restricted from "@/components/shared/restricted/restricted";
 import Text from "@/components/shared/text/text";
@@ -21,6 +22,7 @@ enum CREATE_TYPE {
   DREAM = 0,
   PLAYLIST = 1,
   ADD_TO_PLAYLIST = 2,
+  KEYFRAME = 3,
 }
 
 const SECTION_ID = "page";
@@ -42,6 +44,9 @@ export const CreatePage: React.FC = () => {
       case FULL_CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST:
         setTabIndex(CREATE_TYPE.ADD_TO_PLAYLIST);
         break;
+      case FULL_CREATE_ROUTES.ADD_KEYFRAME_TO_PLAYLIST:
+        setTabIndex(CREATE_TYPE.KEYFRAME);
+        break;
       default:
         setTabIndex(0);
     }
@@ -52,6 +57,7 @@ export const CreatePage: React.FC = () => {
       FULL_CREATE_ROUTES.DREAM,
       FULL_CREATE_ROUTES.PLAYLIST,
       FULL_CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST,
+      FULL_CREATE_ROUTES.ADD_KEYFRAME_TO_PLAYLIST,
     ];
     navigate(paths[index]);
   };
@@ -70,6 +76,9 @@ export const CreatePage: React.FC = () => {
             </Tab>
             <Tab tabIndex={`${CREATE_TYPE.ADD_TO_PLAYLIST}`}>
               {t("page.create.add_to_playlist_tab_title")}
+            </Tab>
+            <Tab tabIndex={`${CREATE_TYPE.KEYFRAME}`}>
+              {t("page.create.keyframe_title")}
             </Tab>
           </TabList>
 
@@ -111,6 +120,15 @@ export const CreatePage: React.FC = () => {
               <Route
                 path={CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST}
                 element={<UpdatePlaylist />}
+              />
+            </Routes>
+          </TabPanel>
+
+          <TabPanel tabIndex={CREATE_TYPE.KEYFRAME}>
+            <Routes>
+              <Route
+                path={CREATE_ROUTES.ADD_KEYFRAME_TO_PLAYLIST}
+                element={<CreateKeyframe />}
               />
             </Routes>
           </TabPanel>

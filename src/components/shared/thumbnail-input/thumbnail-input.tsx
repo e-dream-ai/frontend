@@ -64,7 +64,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
     );
   }
 
-  if (!hasThumbnail && (!editMode || isLoading)) {
+  if (!editMode && (!hasThumbnail || isLoading || isRemoved)) {
     return (
       <ThumbnailPlaceholder>
         <FontAwesomeIcon icon={faPhotoFilm} />

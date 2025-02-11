@@ -50,6 +50,7 @@ import { NotFound } from "@/components/shared/not-found/not-found";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 import RadioButtonGroup from "@/components/shared/radio-button-group/radio-button-group";
 import { TFunction } from "i18next";
+import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 
 const SectionID = "playlist";
 
@@ -443,16 +444,7 @@ export const ViewPlaylistPage = () => {
                       isDisabled={!editMode || !allowedEditOwner}
                       isLoading={isUsersLoading}
                       before={<FontAwesomeIcon icon={faUser} />}
-                      to={
-                        // always navigate to user for admins
-                        // for normal users navigate to 'displayed owner' or user instead
-                        isUserAdmin
-                          ? `${ROUTES.PROFILE}/${playlist?.user.uuid}` : (
-                            playlist?.displayedOwner?.uuid
-                              ? `${ROUTES.PROFILE}/${playlist?.displayedOwner?.uuid}`
-                              : `${ROUTES.PROFILE}/${playlist?.user.uuid}`
-                          )
-                      }
+                      to={getDisplayedOwnerProfileRoute(isUserAdmin, playlist?.user, playlist?.displayedOwner)}
                       options={usersOptions}
                       onInputChange={(newValue) => setUserSearch(newValue)}
                     />

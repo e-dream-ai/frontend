@@ -103,6 +103,7 @@
       "content_policy": "Be sure to follow the Content Policy and User Generated Content section of the",
       "terms_of_service": "Terms of Service",
       "become_creator": "To become a creator and upload your own dreams, email",
+      "playlist": "Playlist",
       "cancel": "Cancel",
       "create": "Create",
       "creating": "Creating",
@@ -112,6 +113,7 @@
       "error_uploading_dream": "Error uploading dream.",
       "playlist_tab_title": "Create playlist",
       "add_to_playlist_tab_title": "Add to playlist",
+      "keyframe_title": "Keyframe",
       "playlist_instructions": "Create a playlist and optionally upload dreams to it.",
       "upload_file": "Upload or drop your dreams here. Zero, one, or more video files in almost any format should work.",
       "playlist_file_instructions": "Upload or drop one or more dreams here.",
@@ -121,7 +123,14 @@
       "error_creating_playlist": "Error creating playlist.",
       "playlist_file_count": "Uploaded files: {{current}} of {{total}}",
       "playlist_uploading_current_file": "Uploading file {{current}}",
-      "multipart_dream_upload_cancelled_successfully": "Dream upload successfully cancelled."
+      "multipart_dream_upload_cancelled_successfully": "Dream upload successfully cancelled.",
+      "keyframe_name": "Name",
+      "keyframe_instructions": "Create a keyframe.",
+      "keyframe_preview": "Keyframe Preview",
+      "keyframe_file_instructions": "Upload or drop a keyframe file here.",
+      "keyframe_successfully_created": "Keyframe successfully created.",
+      "error_creating_keyframe": "Error creating keyframe.",
+      "keyframe_upload_cancelled_successfully": "Keyframe upload canceled successfully."
     },
     "view_dream": {
       "title": "View Dream",

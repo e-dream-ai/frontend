@@ -34,8 +34,6 @@ const UserVotedDreams: React.FC<UserVotedDreamsProps> = ({
     setPage(selected);
   };
 
-  console.log({ dreams })
-
   // reset page to 0 when type changes
   useEffect(() => {
     setPage(0);

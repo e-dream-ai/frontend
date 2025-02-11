@@ -29,7 +29,6 @@ import {
   faFileVideo,
   faFilm,
   faFire,
-  faImage,
   faLink,
   faMicrochip,
   faPhotoVideo,
@@ -59,7 +58,8 @@ import {
 } from "@/constants/dream.constants";
 import { useImage } from "@/hooks/useImage";
 import { FormContainer, FormItem } from "@/components/shared/form/form";
-import { useKeyframes } from "@/api/keyframe/query/useKeyframes";
+import { getUserProfileRoute } from "@/utils/router.util";
+import { KeyframeSelect } from "./keyframe-select";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -94,17 +94,12 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const { t } = useTranslation();
   const { user } = useAuth();
   const [userSearch, setUserSearch] = useState<string>("");
-  const [keyframeSearch, setKeyframeSearch] = useState<string>("");
   const [showMore, setShowMore] = useState<boolean>(false);
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
 
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
-  });
-
-  const { data: keyframesData, isLoading: isKeyframesLoading } = useKeyframes({
-    search: keyframeSearch,
   });
 
   const switchShowMore = () => setShowMore(v => !v);
@@ -114,13 +109,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
     .map((user) => ({
       label: user?.name ?? "-",
       value: user?.id,
-    }));
-
-  const keyframesOptions = (keyframesData?.data?.keyframes ?? [])
-    .filter((keyframe) => keyframe.name)
-    .map((keyframe) => ({
-      label: keyframe?.name ?? "-",
-      value: keyframe?.uuid,
     }));
 
   const allowedEditOwner = usePermission({
@@ -178,16 +166,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                 ? values.user
                 : (dream?.displayedOwner?.name ?? values.user)
             }
-            to={
-              // always navigate to user for admins
-              // for normal users navigate to 'displayed owner' or user instead
-              isUserAdmin
-                ? `${ROUTES.PROFILE}/${dream?.user.uuid}` : (
-                  dream?.displayedOwner?.uuid
-                    ? `${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`
-                    : `${ROUTES.PROFILE}/${dream?.user.uuid}`
-                )
-            }
+            to={getUserProfileRoute(dream?.user)}
             {...register("user")}
           />
           <Input
@@ -341,40 +320,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               {...register("processedVideoFPS")}
             />
           </FormItem>
-          <FormItem>
-            <Controller
-              name="startKeyframe"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  placeholder={t("page.view_dream.start_keyframe")}
-                  isDisabled={!editMode}
-                  isLoading={isKeyframesLoading}
-                  before={<FontAwesomeIcon icon={faImage} />}
-                  options={keyframesOptions}
-                  onInputChange={(newValue) => setKeyframeSearch(newValue)}
-                />
-              )}
-            />
-          </FormItem>
-          <FormItem>
-            <Controller
-              name="endKeyframe"
-              control={control}
-              render={({ field }) => (
-                <Select
-                  {...field}
-                  placeholder={t("page.view_dream.end_keyframe")}
-                  isDisabled={!editMode}
-                  isLoading={isKeyframesLoading}
-                  before={<FontAwesomeIcon icon={faImage} />}
-                  options={keyframesOptions}
-                  onInputChange={(newValue) => setKeyframeSearch(newValue)}
-                />
-              )}
-            />
-          </FormItem>
           <Restricted
             to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
             isOwner={isOwner}
@@ -414,6 +359,22 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               />
             </FormItem>
           </Restricted>
+          <FormItem>
+            <KeyframeSelect
+              name="startKeyframe"
+              control={control}
+              placeholder={t("page.view_dream.start_keyframe")}
+              editMode={editMode}
+            />
+          </FormItem>
+          <FormItem>
+            <KeyframeSelect
+              name="endKeyframe"
+              control={control}
+              placeholder={t("page.view_dream.end_keyframe")}
+              editMode={editMode}
+            />
+          </FormItem>
         </FormContainer>
       }
     </>
