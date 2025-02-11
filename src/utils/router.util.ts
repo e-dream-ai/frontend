@@ -33,3 +33,6 @@ export const getDisplayedOwnerProfileRoute = (
     ? `${ROUTES.PROFILE}/${displayedOwner?.uuid}`
     : `${ROUTES.PROFILE}/${user?.uuid}`;
 };
+
+export const getKeyframeRoute = (uuid?: string) =>
+  uuid && `${ROUTES.VIEW_KEYFRAME}/${uuid}`;
