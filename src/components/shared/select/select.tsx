@@ -1,5 +1,5 @@
-import React from "react";
-import { Tooltip } from "react-tooltip";
+import React, { useCallback, useRef } from "react";
+import { PlacesType, Tooltip, TooltipRefProps } from "react-tooltip";
 import ReactSelect, { Props } from "react-select";
 import { GroupBase } from "react-select";
 import styled from "styled-components";
@@ -38,7 +38,11 @@ const StyledSelect = styled(ReactSelect)`
   }
 
   .select__value-container {
-    padding: 0;
+    padding: 0.375rem 0.75rem;
+  }
+
+  .select__single-value {
+    margin: 0;
   }
 
   .select__input-container {
@@ -85,6 +89,7 @@ type SelectProps = Props<unknown, boolean, GroupBase<unknown>> & {
   before?: React.ReactNode;
   after?: React.ReactNode;
   error?: string;
+  tooltipPlace?: PlacesType;
 };
 
 export const Select = React.forwardRef<
@@ -102,19 +107,33 @@ export const Select = React.forwardRef<
       value,
       name,
       placeholder,
+      tooltipPlace = "right",
       ...props
     },
     // unused ref
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     __,
   ) => {
-    const v = value as Option;
+    const tooltipRef = useRef<TooltipRefProps>(null);
 
+    const v = value as Option;
     const label = v?.label;
 
+    const handleMenuClose = useCallback(() => tooltipRef.current?.close(), []);
+
     return (
-      <InputGroup data-tooltip-id={name}>
-        <Tooltip id={name} place="right-end" content={placeholder as string} />
+      <InputGroup data-tooltip-id={name} >
+        <Tooltip
+          id={name}
+          ref={tooltipRef}
+          place={tooltipPlace}
+          content={placeholder as string}
+          style={{
+            maxWidth: "14rem",
+            wordBreak: "break-word",
+          }}
+
+        />
         <InputRow>
           {before && <InputBefore>{before}</InputBefore>}
           {isDisabled ? (
@@ -145,6 +164,7 @@ export const Select = React.forwardRef<
               placeholder={placeholder}
               {...props}
               theme={undefined}
+              onMenuClose={handleMenuClose}
             />
           )}
           {after && <InputAfter />}

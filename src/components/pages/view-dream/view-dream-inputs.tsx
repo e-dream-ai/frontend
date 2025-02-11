@@ -60,6 +60,7 @@ import { useImage } from "@/hooks/useImage";
 import { FormContainer, FormItem } from "@/components/shared/form/form";
 import { getUserProfileRoute } from "@/utils/router.util";
 import { KeyframeSelect } from "./keyframe-select";
+import { useTooltipPlaces } from "@/hooks/useFormTooltipPlaces";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -93,6 +94,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const tooltipPlaces = useTooltipPlaces();
   const [userSearch, setUserSearch] = useState<string>("");
   const [showMore, setShowMore] = useState<boolean>(false);
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
@@ -114,6 +116,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const allowedEditOwner = usePermission({
     permission: PLAYLIST_PERMISSIONS.CAN_EDIT_OWNER,
   });
+
   const thumbnailUrl = useImage(dream?.thumbnail, {
     width: 500,
     fit: "cover",
@@ -230,6 +233,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                 placeholder={t("page.view_dream.ccby_license")}
                 before={<FontAwesomeIcon icon={faBook} />}
                 options={getCcaLicenceOptions(t)}
+                tooltipPlace={tooltipPlaces.left}
               />
             )}
           />
@@ -246,6 +250,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                   placeholder={t("page.view_dream.nsfw")}
                   before={<FontAwesomeIcon icon={faShield} />}
                   options={getNsfwOptions(t)}
+                  tooltipPlace={tooltipPlaces.right}
                 />
               )}
             />
@@ -260,6 +265,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             before={<FontAwesomeIcon icon={faLink} />}
             error={errors.sourceUrl?.message}
             value={values.sourceUrl}
+            tooltipPlace={tooltipPlaces.left}
             {...register("sourceUrl")}
           />
         </FormItem>
@@ -282,6 +288,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               before={<FontAwesomeIcon icon={faFire} />}
               error={errors.activityLevel?.message}
               value={values.activityLevel}
+              tooltipPlace={tooltipPlaces.left}
               {...register("activityLevel")}
             />
           </FormItem>
@@ -295,6 +302,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                 before={<FontAwesomeIcon icon={faRankingStar} />}
                 error={errors.featureRank?.message}
                 value={values.featureRank}
+                tooltipPlace={tooltipPlaces.right}
                 {...register("featureRank")}
               />
             </FormItem>
@@ -307,6 +315,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               type="text"
               before={<FontAwesomeIcon icon={faFile} />}
               value={values.processedVideoSize}
+              tooltipPlace={tooltipPlaces.left}
               {...register("processedVideoSize")}
             />
           </FormItem>
@@ -317,6 +326,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               type="text"
               before={<FontAwesomeIcon icon={faPhotoVideo} />}
               value={values.processedVideoFPS}
+              tooltipPlace={tooltipPlaces.right}
               {...register("processedVideoFPS")}
             />
           </FormItem>
@@ -342,6 +352,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                     }
                     options={usersOptions}
                     onInputChange={(newValue) => setUserSearch(newValue)}
+                    tooltipPlace={tooltipPlaces.left}
                   />
                 )}
               />
@@ -355,6 +366,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                 type="text"
                 before={<FontAwesomeIcon icon={faMicrochip} />}
                 value={values.processed_at}
+                tooltipPlace={tooltipPlaces.right}
                 {...register("processed_at")}
               />
             </FormItem>
@@ -365,6 +377,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               control={control}
               placeholder={t("page.view_dream.start_keyframe")}
               editMode={editMode}
+              tooltipPlace={tooltipPlaces.left}
             />
           </FormItem>
           <FormItem>
@@ -373,6 +386,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               control={control}
               placeholder={t("page.view_dream.end_keyframe")}
               editMode={editMode}
+              tooltipPlace={tooltipPlaces.right}
             />
           </FormItem>
         </FormContainer>

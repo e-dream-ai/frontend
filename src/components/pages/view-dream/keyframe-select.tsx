@@ -5,19 +5,22 @@ import { UpdateDreamFormValues } from "@/schemas/update-dream.schema";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faImage } from "@fortawesome/free-solid-svg-icons";
 import Select from "@/components/shared/select/select";
+import { PlacesType } from "react-tooltip";
 
 type KeyframeSelectProps = {
   name: "startKeyframe" | "endKeyframe";
   placeholder: string;
   control: Control<UpdateDreamFormValues>
   editMode: boolean;
+  tooltipPlace?: PlacesType;
 }
 
 export const KeyframeSelect = ({
   name,
   control,
   placeholder,
-  editMode
+  editMode,
+  tooltipPlace
 }: KeyframeSelectProps) => {
   const [keyframeSearch, setKeyframeSearch] = useState<string>("");
 
@@ -45,6 +48,7 @@ export const KeyframeSelect = ({
           before={<FontAwesomeIcon icon={faImage} />}
           options={keyframesOptions}
           onInputChange={(newValue) => setKeyframeSearch(newValue)}
+          tooltipPlace={tooltipPlace}
         />
       )}
     />

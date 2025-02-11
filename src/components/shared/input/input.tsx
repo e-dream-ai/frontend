@@ -1,5 +1,5 @@
 import React from "react";
-import { Tooltip } from "react-tooltip";
+import { PlacesType, Tooltip } from "react-tooltip";
 import Linkify from "react-linkify";
 import StyledInput, {
   DisabledInput,
@@ -18,6 +18,7 @@ export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   before?: React.ReactNode;
   after?: React.ReactNode;
   error?: string;
+  tooltipPlace?: PlacesType;
   onClickAfter?: () => void;
 };
 
@@ -35,13 +36,14 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       to,
       name,
       placeholder,
+      tooltipPlace = "right",
       ...props
     },
     ref,
   ) => {
     return (
       <InputGroup data-tooltip-id={name}>
-        <Tooltip id={name} place="right-end" content={placeholder} />
+        <Tooltip id={name} place={tooltipPlace} content={placeholder} />
         <InputRow>
           {before && <InputBefore>{before}</InputBefore>}
           {disabled ? (
