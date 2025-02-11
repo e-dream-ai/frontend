@@ -127,7 +127,9 @@ export const CreateKeyframe: React.FC = () => {
       const newKeyframe = createKeyframeRequest?.data?.keyframe;
       const playlistUUID = data.playlist.value;
 
-      await updateImageKeyframeMutation.updateImageKeyframe(newKeyframe!.uuid, image!.file);
+      if (image) {
+        await updateImageKeyframeMutation.updateImageKeyframe(newKeyframe!.uuid, image!.file);
+      }
 
       if (data.playlist) {
         await addKeyframeItemMutation.mutateAsync({
