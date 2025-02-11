@@ -70,7 +70,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                   <Anchor type="secondary" href={href}>
                     {value}
                   </Anchor>
-                ) : typeof value === "string" ? (
+                ) : typeof value === "string" || value === 0 ? (
                   value
                 ) : (
                   value || "-"
