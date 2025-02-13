@@ -4,59 +4,100 @@ import {
   SPEEDS,
 } from "@/constants/web-client.constants";
 import { Dream } from "@/types/dream.types";
-import { Playlist, PlaylistItem } from "@/types/playlist.types";
+import { Playlist } from "@/types/playlist.types";
 
 type NavigationResult = {
-  next: PlaylistItem | null;
-  previous: PlaylistItem | null;
+  next: Dream | null;
+  previous: Dream | null;
 };
 
-export const getPlaylistNavigation = (
-  currentDream?: Dream,
-  playlist?: Playlist,
-): NavigationResult => {
-  // ensure we have items to work with
-  const items = playlist?.items || [];
-
-  if (!items.length || !currentDream) {
-    return { next: null, previous: null };
+// playlist navigation using keyframe concatenation based on -> https://github.com/e-dream-ai/client/issues/89
+export const getPlaylistNavigation = ({
+  currentDream,
+  playlist,
+  playedDreams,
+}: {
+  currentDream?: Dream;
+  playlist?: Playlist;
+  playedDreams: string[];
+}): NavigationResult => {
+  // if there are no items or current dream return null values
+  if (!playlist?.items) {
+    return {
+      previous: null,
+      next: null,
+    };
   }
 
-  // find the current item index
-  const currentIndex = items.findIndex(
-    (item) => item.type === "dream" && item.dreamItem?.id === currentDream.id,
+  // get previous dream
+  const previousDream =
+    playlist.items?.find(
+      // playedDreams.at(-2) skips current dream which is last in array
+      (pi) => pi.dreamItem?.uuid === playedDreams.at(-2),
+    )?.dreamItem ??
+    // if there are no items on played dreams array, take the current dream
+    currentDream;
+
+  // calculate unplayed dreams
+  const unplayedDreams: Dream[] =
+    playlist?.items
+      ?.filter((pi) => Boolean(pi.dreamItem))
+      ?.filter((pi) => !playedDreams.includes(pi.dreamItem!.uuid))
+      ?.map((pi) => pi.dreamItem!) ?? [];
+
+  // find unplayed dreams with a startKeyframe that matches with current dream endkeyframe
+  const concatenatedDreams = unplayedDreams.filter(
+    (d) =>
+      // first verify that end keyframe exists
+      currentDream?.endKeyframe?.uuid &&
+      d.startKeyframe?.uuid &&
+      currentDream.endKeyframe.uuid === d.startKeyframe.uuid,
   );
 
-  // if dream not found in playlist
-  if (currentIndex === -1) {
-    return { next: null, previous: null };
+  // if there are concatenated items, take one randomly and return it as next
+  if (concatenatedDreams.length) {
+    const randomDreamIndex = Math.floor(
+      Math.random() * concatenatedDreams.length,
+    );
+    const randomDream = concatenatedDreams[randomDreamIndex];
+
+    return {
+      previous: previousDream ?? null,
+      next: randomDream,
+    };
   }
 
-  // get next and previous indices
-  const nextIndex = currentIndex + 1;
-  const previousIndex = currentIndex - 1;
-
-  // get next and previous items
-  const next = nextIndex < items.length ? items[nextIndex] : null;
-  const previous = previousIndex >= 0 ? items[previousIndex] : null;
-
-  return { next, previous };
+  return {
+    previous: previousDream ?? null,
+    // items are ordered, so return first unplayed dream
+    next: unplayedDreams[0] ?? null,
+  };
 };
 
 // get next item from navigation
 export const getNextItem = (
   currentDream: Dream,
   playlist: Playlist,
-): PlaylistItem | null => {
-  return getPlaylistNavigation(currentDream, playlist).next;
+  playedDreams: string[],
+): Dream | null => {
+  return getPlaylistNavigation({
+    currentDream,
+    playlist,
+    playedDreams,
+  }).next;
 };
 
 // get previous item from navigation
 export const getPreviousItem = (
   currentDream: Dream,
   playlist: Playlist,
-): PlaylistItem | null => {
-  return getPlaylistNavigation(currentDream, playlist).previous;
+  playedDreams: string[],
+): Dream | null => {
+  return getPlaylistNavigation({
+    currentDream,
+    playlist,
+    playedDreams,
+  }).previous;
 };
 
 // helper function to find current speed key

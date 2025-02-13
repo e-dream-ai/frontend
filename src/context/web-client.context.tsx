@@ -85,6 +85,8 @@ export const WebClientProvider: React.FC<{
   // dream and playlist values
   const playingDreamRef = useRef<Dream>();
   const playingPlaylistRef = useRef<Playlist>();
+  // played dreams to control dreams concatenation -> https://github.com/e-dream-ai/client/issues/89
+  const playedDreamsRef = useRef<Array<string>>([]);
   const showCreditOverlayRef = useRef(false);
   // used to prevent multiple calls to handlers.next() on automatic video change
   const transitioningRef = useRef(false);
@@ -93,7 +95,16 @@ export const WebClientProvider: React.FC<{
   const currentDream = useMemo(() => cd, [cd]);
 
   const { data: currentPlaylistData } = useCurrentPlaylist();
-  const currentPlaylist = useMemo(() => currentPlaylistData?.data?.playlist, [currentPlaylistData]);
+
+  const currentPlaylist = useMemo(() => {
+    const playlist = currentPlaylistData?.data?.playlist;
+    // ensure items order
+    if (playlist?.items) {
+      playlist.items.sort((a, b) => a.order - b.order);
+    }
+
+    return playlist;
+  }, [currentPlaylistData]);
 
   /** 
    * indicates if the web player is currently active
@@ -159,11 +170,14 @@ export const WebClientProvider: React.FC<{
 
   // get next dream to play having direction
   const getNextDream = useCallback((direction: 'next' | 'previous') => {
-    const { [direction]: targetDream } = getPlaylistNavigation(
-      playingDreamRef.current,
-      playingPlaylistRef?.current
-    );
-    return targetDream?.dreamItem ?? playingPlaylistRef?.current?.items?.[0]?.dreamItem;
+    const { [direction]: targetDream } = getPlaylistNavigation({
+      currentDream: playingDreamRef.current,
+      playlist: playingPlaylistRef?.current,
+      playedDreams: playedDreamsRef.current
+    });
+
+    // next or previous dream, if can't get play first playlist item
+    return targetDream ?? playingPlaylistRef?.current?.items?.[0]?.dreamItem;
   }, []);
 
   // plays dream and updates state
@@ -176,6 +190,11 @@ export const WebClientProvider: React.FC<{
     // if video was not played return false
     if (!played) {
       return false;
+    }
+
+    // add dream to played dreams array if is not included
+    if (!playedDreamsRef.current.includes(dreamToPlay.uuid)) {
+      playedDreamsRef.current.push(dreamToPlay.uuid);
     }
 
     emit(NEW_REMOTE_CONTROL_EVENT, {
@@ -364,9 +383,9 @@ export const WebClientProvider: React.FC<{
   // play current dream when playerjs is ready
   useEffect(() => {
     if (isReady && playingDreamRef.current) {
-      playVideo(playingDreamRef.current.video);
+      playDream(playingDreamRef.current);
     }
-  }, [isReady, playVideo]);
+  }, [isReady, playDream]);
 
   // update playing playlist
   useEffect(() => {
@@ -433,9 +452,9 @@ export const WebClientProvider: React.FC<{
     // if pathname is RC and isWebClientActive, then play current dream
     if (location.pathname === ROUTES.REMOTE_CONTROL && isWebClientActive && playingDreamRef.current?.video) {
       // play current dream
-      playVideo(playingDreamRef.current.video);
+      playDream(playingDreamRef.current);
     }
-  }, [location, isWebClientActive, playVideo]);
+  }, [location, isWebClientActive, playDream]);
 
   // show web client available toast
   useEffect(() => {
