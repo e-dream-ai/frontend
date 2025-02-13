@@ -5,25 +5,20 @@ import {
 } from "@/constants/web-client.constants";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
-
-type NavigationResult = {
-  next: Dream | null;
-  previous: Dream | null;
-  isNextConcatenated: boolean;
-};
+import { PlaylistNavigation } from "@/types/web-client.types";
 
 // playlist navigation using keyframe concatenation based on -> https://github.com/e-dream-ai/client/issues/89
 export const getPlaylistNavigation = ({
-  currentDream,
-  playlist,
+  playingDream,
+  playingPlaylist,
   playedDreams,
 }: {
-  currentDream?: Dream;
-  playlist?: Playlist;
+  playingDream?: Dream;
+  playingPlaylist?: Playlist;
   playedDreams: string[];
-}): NavigationResult => {
+}): PlaylistNavigation => {
   // if there are no items or current dream return null values
-  if (!playlist?.items) {
+  if (!playingPlaylist?.items) {
     return {
       previous: null,
       next: null,
@@ -33,16 +28,16 @@ export const getPlaylistNavigation = ({
 
   // get previous dream
   const previousDream =
-    playlist.items?.find(
+    playingPlaylist.items?.find(
       // playedDreams.at(-2) skips current dream which is last in array
       (pi) => pi.dreamItem?.uuid === playedDreams.at(-2),
     )?.dreamItem ??
     // if there are no items on played dreams array, take the current dream
-    currentDream;
+    playingDream;
 
   // calculate unplayed dreams
   const unplayedDreams: Dream[] =
-    playlist?.items
+    playingPlaylist?.items
       ?.filter((pi) => Boolean(pi.dreamItem))
       ?.filter((pi) => !playedDreams.includes(pi.dreamItem!.uuid))
       ?.map((pi) => pi.dreamItem!) ?? [];
@@ -51,9 +46,9 @@ export const getPlaylistNavigation = ({
   const concatenatedDreams = unplayedDreams.filter(
     (d) =>
       // first verify that end keyframe exists
-      currentDream?.endKeyframe?.uuid &&
+      playingDream?.endKeyframe?.uuid &&
       d.startKeyframe?.uuid &&
-      currentDream.endKeyframe.uuid === d.startKeyframe.uuid,
+      playingDream.endKeyframe.uuid === d.startKeyframe.uuid,
   );
 
   // if there are concatenated items, take one randomly and return it as next
@@ -80,26 +75,26 @@ export const getPlaylistNavigation = ({
 
 // get next item from navigation
 export const getNextItem = (
-  currentDream: Dream,
-  playlist: Playlist,
+  playingDream: Dream,
+  playingPlaylist: Playlist,
   playedDreams: string[],
 ): Dream | null => {
   return getPlaylistNavigation({
-    currentDream,
-    playlist,
+    playingDream,
+    playingPlaylist,
     playedDreams,
   }).next;
 };
 
 // get previous item from navigation
 export const getPreviousItem = (
-  currentDream: Dream,
-  playlist: Playlist,
+  playingDream: Dream,
+  playingPlaylist: Playlist,
   playedDreams: string[],
 ): Dream | null => {
   return getPlaylistNavigation({
-    currentDream,
-    playlist,
+    playingDream,
+    playingPlaylist,
     playedDreams,
   }).previous;
 };
