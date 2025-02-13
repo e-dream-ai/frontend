@@ -4,7 +4,7 @@ import videojs from "video.js";
 import Player from "video.js/dist/types/player";
 import Component from "video.js/dist/types/component";
 import { v4 as uuidv4 } from 'uuid';
-import { PoolConfig, TRANSITION_THRESHOLD, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
+import { PoolConfig, CROSSFADE_DURATION, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
 
 type VideoJSContextType = {
   isReady: boolean;
@@ -18,7 +18,7 @@ type VideoJSContextType = {
   clearPlayers: () => void;
   addEventListener: (event: string, handler: VideoJSEventHandler) => () => void;
   setBrightness: (value: number) => void;
-  playVideo: (src: string) => Promise<boolean>;
+  playVideo: (src: string, options?: { skipCrossfade: boolean }) => Promise<boolean>;
   preloadVideo: (src: string) => Promise<boolean>;
   toggleFullscreen: () => void;
   setPlaybackRate: (playbackRate: number) => void;
@@ -35,6 +35,7 @@ type PlayerInstance = {
   currentSrc: string | null;
   isPreloaded: boolean;
   eventHandlers: Map<string, VideoJSEventHandler[]>;
+  skipCrossfade: boolean;
 };
 
 /**
@@ -88,7 +89,8 @@ export const VideoJSProvider = ({
       lastUsed: Date.now(),
       currentSrc: null,
       isPreloaded: false,
-      eventHandlers: new Map()
+      eventHandlers: new Map(),
+      skipCrossfade: false,
     };
 
     playersPoolRef.current.set(id, playerInstance);
@@ -287,7 +289,7 @@ export const VideoJSProvider = ({
     };
   }, []);
 
-  const playVideo = useCallback(async (src: string): Promise<boolean> => {
+  const playVideo = useCallback(async (src: string, options: { skipCrossfade: boolean } = { skipCrossfade: false }): Promise<boolean> => {
     const currentPlayer = activePlayerIdRef.current ?
       playersPoolRef.current.get(activePlayerIdRef.current) : null;
 
@@ -345,13 +347,16 @@ export const VideoJSProvider = ({
       nextPlayerInstance.isActive = true;
       nextPlayerInstance.isPreloaded = false;
       nextPlayerInstance.lastUsed = Date.now();
+      nextPlayerInstance.skipCrossfade = options.skipCrossfade;
       updateActivePlayer(nextPlayerInstance.id);
 
       // wait transition
-      await new Promise<void>((resolve) => {
-        // TRANSITION_THRESHOLD / 2 
-        setTimeout(resolve, TRANSITION_THRESHOLD / 2 * 1000);
-      });
+      if (!options.skipCrossfade) {
+        await new Promise<void>((resolve) => {
+          // CROSSFADE_DURATION / 2 
+          setTimeout(resolve, CROSSFADE_DURATION / 2 * 1000);
+        });
+      }
 
       if (currentPlayer) {
 

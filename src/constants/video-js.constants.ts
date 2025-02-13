@@ -22,4 +22,4 @@ export const PoolConfig = {
 };
 
 // transition previous time on seconds
-export const TRANSITION_THRESHOLD = 1;
+export const CROSSFADE_DURATION = 1;
