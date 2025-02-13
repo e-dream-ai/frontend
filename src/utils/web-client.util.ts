@@ -9,6 +9,7 @@ import { Playlist } from "@/types/playlist.types";
 type NavigationResult = {
   next: Dream | null;
   previous: Dream | null;
+  isNextConcatenated: boolean;
 };
 
 // playlist navigation using keyframe concatenation based on -> https://github.com/e-dream-ai/client/issues/89
@@ -26,6 +27,7 @@ export const getPlaylistNavigation = ({
     return {
       previous: null,
       next: null,
+      isNextConcatenated: false,
     };
   }
 
@@ -64,6 +66,7 @@ export const getPlaylistNavigation = ({
     return {
       previous: previousDream ?? null,
       next: randomDream,
+      isNextConcatenated: true,
     };
   }
 
@@ -71,6 +74,7 @@ export const getPlaylistNavigation = ({
     previous: previousDream ?? null,
     // items are ordered, so return first unplayed dream
     next: unplayedDreams[0] ?? null,
+    isNextConcatenated: false,
   };
 };
 

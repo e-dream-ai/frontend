@@ -21,7 +21,7 @@ import { NEW_REMOTE_CONTROL_EVENT, REMOTE_CONTROLS } from "@/constants/remote-co
 import { CREDIT_OVERLAY_ID, IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
 import { SpeedControls, SpeedLevels } from "@/types/web-client.types";
-import { TRANSITION_THRESHOLD, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
+import { CROSSFADE_DURATION, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
 import { useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import { useTranslation } from "react-i18next";
@@ -170,22 +170,29 @@ export const WebClientProvider: React.FC<{
 
   // get next dream to play having direction
   const getNextDream = useCallback((direction: 'next' | 'previous') => {
-    const { [direction]: targetDream } = getPlaylistNavigation({
-      currentDream: playingDreamRef.current,
-      playlist: playingPlaylistRef?.current,
-      playedDreams: playedDreamsRef.current
-    });
+    const {
+      [direction]: targetDream,
+      isNextConcatenated
+    }
+      = getPlaylistNavigation({
+        currentDream: playingDreamRef.current,
+        playlist: playingPlaylistRef?.current,
+        playedDreams: playedDreamsRef.current
+      });
 
     // next or previous dream, if can't get play first playlist item
-    return targetDream ?? playingPlaylistRef?.current?.items?.[0]?.dreamItem;
+    return {
+      dream: targetDream ?? playingPlaylistRef?.current?.items?.[0]?.dreamItem,
+      isNextConcatenated
+    };
   }, []);
 
   // plays dream and updates state
-  const playDream = useCallback(async (dreamToPlay?: Dream) => {
+  const playDream = useCallback(async (dreamToPlay?: Dream, options: { skipCrossfade: boolean } = { skipCrossfade: false }) => {
     if (!dreamToPlay?.video) return false;
 
     playingDreamRef.current = dreamToPlay;
-    const played = await playVideo(dreamToPlay.video);
+    const played = await playVideo(dreamToPlay.video, options);
 
     // if video was not played return false
     if (!played) {
@@ -206,7 +213,7 @@ export const WebClientProvider: React.FC<{
     refreshCurrentDream();
 
     // get next dream after being update to preload it into a player instance
-    const dreamToPreload = getNextDream("next");
+    const { dream: dreamToPreload } = getNextDream("next");
 
     if (dreamToPreload?.video) {
       preloadVideo(dreamToPreload.video)
@@ -216,7 +223,8 @@ export const WebClientProvider: React.FC<{
   }, [emit, playVideo, preloadVideo, getNextDream, refreshCurrentDream]);
 
   const handlePlaylistControl = useCallback(async (direction: 'next' | 'previous') => {
-    return playDream(getNextDream(direction));
+    const { dream, isNextConcatenated } = getNextDream(direction);
+    return playDream(dream, { skipCrossfade: isNextConcatenated });
   }, [playDream, getNextDream]);
 
   const setSpeed = useCallback((speed: number) => {
@@ -412,7 +420,7 @@ export const WebClientProvider: React.FC<{
       }
 
       // start transition when we reach threshold
-      if (remainingTime <= TRANSITION_THRESHOLD && !transitioningRef.current) {
+      if (remainingTime <= CROSSFADE_DURATION && !transitioningRef.current) {
         // lock transitioning and wait for the change
         transitioningRef.current = true;
         await handlers.next();

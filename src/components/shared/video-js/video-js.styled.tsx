@@ -1,4 +1,4 @@
-import { TRANSITION_THRESHOLD } from "@/constants/video-js.constants";
+import { CROSSFADE_DURATION } from "@/constants/video-js.constants";
 import styled from "styled-components";
 
 export const VideoWrapper = styled.div`
@@ -12,11 +12,12 @@ export const VideoWrapper = styled.div`
   }
 `;
 
-export const VideoContainer = styled.div<{ isActive: boolean }>`
+export const VideoContainer = styled.div<{ isActive: boolean, skipCrossfade: boolean }>`
   position: absolute;
   width: 100%;
   height: 100%;
-  transition: opacity ${TRANSITION_THRESHOLD * 1000}ms ease;
+  transition: ${({ skipCrossfade }) =>
+    skipCrossfade ? 'none' : `opacity ${CROSSFADE_DURATION * 1000}ms ease`};
   opacity: ${props => props.isActive ? 1 : 0};
   z-index: ${props => props.isActive ? 2 : 1};
 
