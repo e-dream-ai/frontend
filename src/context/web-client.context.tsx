@@ -125,7 +125,7 @@ export const WebClientProvider: React.FC<{
 
   // player states
   const [, setPaused] = useState<boolean>(false);
-  const [playbackRate, setPlaybackRate] = useState<number>(calculatePlaybackRateFromSpeed(8, 1));
+  const [playbackRate, setPlaybackRate] = useState<number>(() => calculatePlaybackRateFromSpeed(8, 1));
   const [brightness, setBrightness] = useState<number>(40);
 
   const setWebClientActive = useCallback((isActive: boolean) => {
@@ -135,7 +135,7 @@ export const WebClientProvider: React.FC<{
       playingDreamRef.current = currentDream;
       preloadVideo(currentDream.video);
     }
-  }, [currentDream, setIsWebClientActive, preloadVideo]);
+  }, [currentDream, preloadVideo]);
 
   const setWebPlayerAvailable = useCallback((isActive: boolean) => {
     setIsWebClientAvailable(isActive)
@@ -426,28 +426,6 @@ export const WebClientProvider: React.FC<{
     },
   });
 
-  // update playing playlist
-  useEffect(() => {
-    // if same playlist, skip
-    if (playingPlaylistRef.current?.uuid === currentPlaylist?.uuid) {
-      return
-    }
-    // update playingPlaylistRef playlist
-    playingPlaylistRef.current = currentPlaylist;
-
-    const handlePlayDream = async () => {
-      const firstPlaylistDream = currentPlaylist?.items?.[0]?.dreamItem;
-      if (!firstPlaylistDream) return;
-      const played = await playDream(firstPlaylistDream);
-      if (played) updatePlaylistNavigation();
-    };
-
-    // when currentPlaylist changes play first dream 
-    if (isWebClientActive) {
-      handlePlayDream();
-    }
-  }, [currentPlaylist, isWebClientActive, playDream, updatePlaylistNavigation]);
-
   // register events on videojs instance
   useEffect(() => {
     const cleanup1 = addEventListener(VIDEOJS_EVENTS.TIMEUPDATE, async () => {
@@ -520,7 +498,29 @@ export const WebClientProvider: React.FC<{
     ) {
       handlePlayDream();
     }
-  }, [location, isReady, isWebClientActive, playDream, updatePlaylistNavigation]);
+  }, [location.pathname, isReady, isWebClientActive, playDream, updatePlaylistNavigation]);
+
+  // update playing playlist
+  useEffect(() => {
+    // if same playlist, skip
+    if (playingPlaylistRef.current?.uuid === currentPlaylist?.uuid) {
+      return
+    }
+    // update playingPlaylistRef playlist
+    playingPlaylistRef.current = currentPlaylist;
+
+    const handlePlayDream = async () => {
+      const firstPlaylistDream = currentPlaylist?.items?.[0]?.dreamItem;
+      if (!firstPlaylistDream) return;
+      const played = await playDream(firstPlaylistDream);
+      if (played) updatePlaylistNavigation();
+    };
+
+    // when currentPlaylist changes play first dream 
+    if (isWebClientActive) {
+      handlePlayDream();
+    }
+  }, [currentPlaylist, isWebClientActive, playDream, updatePlaylistNavigation]);
 
   // show web client available toast
   useEffect(() => {
@@ -528,7 +528,7 @@ export const WebClientProvider: React.FC<{
     if (location.pathname === ROUTES.REMOTE_CONTROL && !isWebClientActive && isWebClientAvailable) {
       toast.info(t("web_client.web_client_available"));
     }
-  }, [t, location, isWebClientActive, isWebClientAvailable]);
+  }, [t, location.pathname, isWebClientActive, isWebClientAvailable]);
 
   const memoedValue = useMemo(
     () => ({
