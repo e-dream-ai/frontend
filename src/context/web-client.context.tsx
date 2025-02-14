@@ -20,7 +20,7 @@ import useSocket from "@/hooks/useSocket";
 import { NEW_REMOTE_CONTROL_EVENT, REMOTE_CONTROLS } from "@/constants/remote-control.constants";
 import { CREDIT_OVERLAY_ID, IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
-import { PlaylistNavigation, SpeedControls, SpeedLevels } from "@/types/web-client.types";
+import { PlaylistDirection, PlaylistNavigation, SpeedControls, SpeedLevels } from "@/types/web-client.types";
 import { LONG_CROSSFADE_DURATION, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
 import { useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
@@ -179,7 +179,25 @@ export const WebClientProvider: React.FC<{
     return playlistNavigationRef?.current?.[direction];
   }, []);
 
-  // updates playlist navigation
+  const addDreamToPlayedHistory = useCallback((dream: Dream) => {
+    // add dream to played dreams array if is not included
+    if (!playedDreamsHistoryRef.current.includes(dream.uuid)) {
+      playedDreamsHistoryRef.current.push(dream.uuid);
+    }
+  }, []);
+
+  /**
+   * Preloads navigation videos.
+   */
+  const preloadNavigationVideos = useCallback((navigation: PlaylistNavigation) => {
+    if (navigation.previous?.video) preloadVideo(navigation.previous.video);
+    if (navigation.next?.video) preloadVideo(navigation.next.video);
+  }, [preloadVideo]);
+
+  /**
+   * Updates playlist navigation into playlistNavigationRef. 
+   * Obtains next and previous dream in the playlist. Calculates isNextConcatenated value too.
+   */
   const updatePlaylistNavigation = useCallback(() => {
     const navigation = getPlaylistNavigation({
       playingDream: playingDreamRef.current,
@@ -190,13 +208,8 @@ export const WebClientProvider: React.FC<{
 
     playlistNavigationRef.current = navigation;
 
-    if (navigation.previous?.video) {
-      preloadVideo(navigation.previous.video);
-    }
-    if (navigation.next?.video) {
-      preloadVideo(navigation.next.video);
-    }
-  }, [preloadVideo]);
+    preloadNavigationVideos(navigation);
+  }, [preloadNavigationVideos]);
 
   // plays dream and updates state
   const playDream = useCallback(
@@ -225,7 +238,7 @@ export const WebClientProvider: React.FC<{
       return true;
     }, [emit, playVideo, refreshCurrentDream]);
 
-  const handlePlaylistControl = useCallback(async (direction: 'next' | 'previous', longTransition: boolean = false) => {
+  const handlePlaylistControl = useCallback(async (direction: PlaylistDirection, longTransition: boolean = false) => {
     const dream = getNextDream(direction)
 
     if (!dream) return false;
@@ -246,10 +259,8 @@ export const WebClientProvider: React.FC<{
       playlistHistoryPositionRef.current = Math.max(playlistHistoryPositionRef.current - 1, 0);
     }
 
-    // add dream to played dreams array if is not included
-    if (!playedDreamsHistoryRef.current.includes(dream.uuid)) {
-      playedDreamsHistoryRef.current.push(dream.uuid);
-    }
+    // add dream to played dreams
+    addDreamToPlayedHistory(dream);
 
     // reset played dreams  
     if (playedDreamsHistoryRef.current.length === playingPlaylistRef.current?.items?.filter(pi => Boolean(pi.dreamItem)).length) {
@@ -262,7 +273,7 @@ export const WebClientProvider: React.FC<{
     }
 
     return played;
-  }, [playDream, getNextDream, updatePlaylistNavigation]);
+  }, [playDream, getNextDream, updatePlaylistNavigation, addDreamToPlayedHistory]);
 
   const setSpeed = useCallback((speed: number) => {
     const playbackRate = calculatePlaybackRateFromSpeed(speed, playingDreamRef?.current?.activityLevel);
@@ -315,7 +326,7 @@ export const WebClientProvider: React.FC<{
     dislike: () => { },
     like_current_dream: () => { },
     dislike_current_dream: () => { },
-    previous: async () => handlePlaylistControl('previous'),
+    previous: async () => handlePlaylistControl(PlaylistDirection.PREVIOUS),
     // @ts-expect-error options?.longTransition exists 
     next: async (options?: NextHandlerProps) => handlePlaylistControl('next', options?.longTransition),
     forward: () => {
@@ -368,7 +379,7 @@ export const WebClientProvider: React.FC<{
 
   // handles when a video ends playing
   const handleOnEnded = useCallback(() => {
-    handlePlaylistControl("next");
+    handlePlaylistControl(PlaylistDirection.NEXT);
   }, [handlePlaylistControl]);
 
   // Listen new remote control events from the server
@@ -428,12 +439,11 @@ export const WebClientProvider: React.FC<{
 
   // register events on videojs instance
   useEffect(() => {
-    const cleanup1 = addEventListener(VIDEOJS_EVENTS.TIMEUPDATE, async () => {
+
+    const handleTimeUpdate = async () => {
       const remainingTime = Number(playerInstance?.player?.remainingTime());
 
-      if (Number.isNaN(remainingTime)) {
-        return;
-      }
+      if (Number.isNaN(remainingTime)) return;
 
       // start transition when we reach threshold
       if (
@@ -449,15 +459,18 @@ export const WebClientProvider: React.FC<{
         await handlers.next({ longTransition: true });
         transitioningRef.current = false;
       }
-    });
+    }
 
-    // ended event just in case TIMEUPDATE didn't work
-    const cleanup2 = addEventListener(VIDEOJS_EVENTS.ENDED, async () => {
+    // ended event just in case TIMEUPDATE is skipped (i.e. a concatenated kf)
+    const handleEnded = async () => {
       // lock transitioning and wait for the change
       transitioningRef.current = true;
       await handlers.next();
       transitioningRef.current = false;
-    });
+    }
+
+    const cleanup1 = addEventListener(VIDEOJS_EVENTS.TIMEUPDATE, handleTimeUpdate);
+    const cleanup2 = addEventListener(VIDEOJS_EVENTS.ENDED, handleEnded);
 
     return () => {
       cleanup1();
@@ -485,10 +498,8 @@ export const WebClientProvider: React.FC<{
       const dream = playingDreamRef.current;
       if (!dream) return;
       const played = await playDream(dream);
-      // add dream to played dreams array if is not included
-      if (!playedDreamsHistoryRef.current.includes(dream.uuid)) {
-        playedDreamsHistoryRef.current.push(dream.uuid);
-      }
+      // add dream to played dreams
+      addDreamToPlayedHistory(dream);
       if (played) updatePlaylistNavigation();
     };
 
@@ -505,7 +516,7 @@ export const WebClientProvider: React.FC<{
     ) {
       handlePlayDream();
     }
-  }, [location.pathname, isReady, isWebClientActive, playDream, updatePlaylistNavigation]);
+  }, [location.pathname, isReady, isWebClientActive, playDream, updatePlaylistNavigation, addDreamToPlayedHistory]);
 
   // update playing playlist
   useEffect(() => {

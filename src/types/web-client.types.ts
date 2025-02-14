@@ -11,3 +11,8 @@ export type PlaylistNavigation = {
   previous: Dream | null;
   isNextConcatenated: boolean;
 };
+
+export enum PlaylistDirection {
+  NEXT = "next",
+  PREVIOUS = "previous",
+}
