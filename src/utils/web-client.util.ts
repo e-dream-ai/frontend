@@ -12,10 +12,12 @@ export const getPlaylistNavigation = ({
   playingDream,
   playingPlaylist,
   playedDreams,
+  historyPosition,
 }: {
   playingDream?: Dream;
   playingPlaylist?: Playlist;
   playedDreams: string[];
+  historyPosition: number;
 }): PlaylistNavigation => {
   // if there are no items or current dream return null values
   if (!playingPlaylist?.items) {
@@ -26,14 +28,31 @@ export const getPlaylistNavigation = ({
     };
   }
 
+  // check if history position matches last played dream position
+  const isHistoryMatchingPlayback =
+    historyPosition === Math.max(playedDreams.length - 1, 0);
+
   // get previous dream
   const previousDream =
     playingPlaylist.items?.find(
-      // playedDreams.at(-2) skips current dream which is last in array
-      (pi) => pi.dreamItem?.uuid === playedDreams.at(-2),
+      // playedDreams.at(historyPosition - 1) skips current dream which is last in array
+      (pi) => pi.dreamItem?.uuid === playedDreams.at(historyPosition - 1),
     )?.dreamItem ??
     // if there are no items on played dreams array, take the current dream
     playingDream;
+
+  // if history position doesn't match last played dream, return proper next dream
+  if (!isHistoryMatchingPlayback) {
+    const nextDream = playingPlaylist.items?.find(
+      // playedDreams.at(historyPosition) gets proper next dream
+      (pi) => pi.dreamItem?.uuid === playedDreams.at(historyPosition + 1),
+    )?.dreamItem;
+    return {
+      previous: previousDream ?? null,
+      next: nextDream ?? null,
+      isNextConcatenated: false,
+    };
+  }
 
   // calculate unplayed dreams
   const unplayedDreams: Dream[] =
@@ -71,32 +90,6 @@ export const getPlaylistNavigation = ({
     next: unplayedDreams[0] ?? null,
     isNextConcatenated: false,
   };
-};
-
-// get next item from navigation
-export const getNextItem = (
-  playingDream: Dream,
-  playingPlaylist: Playlist,
-  playedDreams: string[],
-): Dream | null => {
-  return getPlaylistNavigation({
-    playingDream,
-    playingPlaylist,
-    playedDreams,
-  }).next;
-};
-
-// get previous item from navigation
-export const getPreviousItem = (
-  playingDream: Dream,
-  playingPlaylist: Playlist,
-  playedDreams: string[],
-): Dream | null => {
-  return getPlaylistNavigation({
-    playingDream,
-    playingPlaylist,
-    playedDreams,
-  }).previous;
 };
 
 // helper function to find current speed key

@@ -10,6 +10,7 @@ interface StatusDelays {
   inactiveDelay?: number;
 }
 
+// hook to observe the state of a var, onActive or onInactive event is triggered depending on the value of the variable
 const useStatusCallback = (
   isActive: boolean,
   callbacks: StatusCallbacks,
