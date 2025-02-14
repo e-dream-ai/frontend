@@ -436,7 +436,14 @@ export const WebClientProvider: React.FC<{
       }
 
       // start transition when we reach threshold
-      if (remainingTime <= LONG_CROSSFADE_DURATION && !transitioningRef.current) {
+      if (
+        // verify if should start a native transition
+        remainingTime <= LONG_CROSSFADE_DURATION
+        // if is a concatenated transition, do not run a long transition
+        && !playlistNavigationRef.current?.isNextConcatenated
+        // verify transition lock state
+        && !transitioningRef.current
+      ) {
         // lock transitioning and wait for the change
         transitioningRef.current = true;
         await handlers.next({ longTransition: true });
