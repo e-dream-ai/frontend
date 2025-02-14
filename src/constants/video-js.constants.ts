@@ -21,5 +21,7 @@ export const PoolConfig = {
   maxPlayers: 6,
 };
 
-// transition previous time on seconds
-export const CROSSFADE_DURATION = 1;
+// transition time on seconds
+export const SHORT_CROSSFADE_DURATION = 1;
+export const LONG_CROSSFADE_DURATION = 5;
+export const NO_CROSSFADE_DURATION = 0;

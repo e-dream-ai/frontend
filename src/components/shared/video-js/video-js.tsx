@@ -37,8 +37,8 @@ export const VideoJS: FC<VideoJSProps> = () => {
           </Text>
         </Row>
         <VideoWrapper ref={videoWrapperRef}>
-          {Array.from(players.values()).map(({ id, skipCrossfade }) => (
-            <PlayerSlot key={id} id={id} skipCrossfade={skipCrossfade} />
+          {Array.from(players.values()).map(({ id, skipCrossfade, longTransition }) => (
+            <PlayerSlot key={id} id={id} skipCrossfade={skipCrossfade} longTransition={longTransition} />
           ))}
         </VideoWrapper>
       </Column>
@@ -46,7 +46,7 @@ export const VideoJS: FC<VideoJSProps> = () => {
   );
 };
 
-const PlayerSlot = ({ id, skipCrossfade }: { id: string, skipCrossfade: boolean }) => {
+const PlayerSlot = ({ id, skipCrossfade, longTransition }: { id: string, skipCrossfade: boolean, longTransition: boolean }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const { activePlayer, registerPlayer, unregisterPlayer } = useVideoJs();
 
@@ -75,7 +75,7 @@ const PlayerSlot = ({ id, skipCrossfade }: { id: string, skipCrossfade: boolean 
   }, [registerPlayer, unregisterPlayer]);
 
   return (
-    <VideoContainer isActive={isActive} skipCrossfade={skipCrossfade}>
+    <VideoContainer isActive={isActive} skipCrossfade={skipCrossfade} longTransition={longTransition}>
       <PlayerWrapper data-vjs-player>
         <video
           ref={videoRef}
@@ -83,6 +83,6 @@ const PlayerSlot = ({ id, skipCrossfade }: { id: string, skipCrossfade: boolean 
           data-player-id={id}
         />
       </PlayerWrapper>
-    </VideoContainer>
+    </VideoContainer >
   );
 };

@@ -4,7 +4,7 @@ import videojs from "video.js";
 import Player from "video.js/dist/types/player";
 import Component from "video.js/dist/types/component";
 import { v4 as uuidv4 } from 'uuid';
-import { PoolConfig, CROSSFADE_DURATION, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
+import { LONG_CROSSFADE_DURATION, PoolConfig, SHORT_CROSSFADE_DURATION, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
 
 type VideoJSContextType = {
   isReady: boolean;
@@ -18,7 +18,7 @@ type VideoJSContextType = {
   clearPlayers: () => void;
   addEventListener: (event: string, handler: VideoJSEventHandler) => () => void;
   setBrightness: (value: number) => void;
-  playVideo: (src: string, options?: { skipCrossfade: boolean }) => Promise<boolean>;
+  playVideo: (src: string, options?: { skipCrossfade: boolean; longTransition: boolean }) => Promise<boolean>;
   preloadVideo: (src: string) => Promise<boolean>;
   toggleFullscreen: () => void;
   setPlaybackRate: (playbackRate: number) => void;
@@ -36,6 +36,7 @@ type PlayerInstance = {
   isPreloaded: boolean;
   eventHandlers: Map<string, VideoJSEventHandler[]>;
   skipCrossfade: boolean;
+  longTransition: boolean;
 };
 
 /**
@@ -91,6 +92,7 @@ export const VideoJSProvider = ({
       isPreloaded: false,
       eventHandlers: new Map(),
       skipCrossfade: false,
+      longTransition: false,
     };
 
     playersPoolRef.current.set(id, playerInstance);
@@ -289,88 +291,94 @@ export const VideoJSProvider = ({
     };
   }, []);
 
-  const playVideo = useCallback(async (src: string, options: { skipCrossfade: boolean } = { skipCrossfade: false }): Promise<boolean> => {
-    const currentPlayer = activePlayerIdRef.current ?
-      playersPoolRef.current.get(activePlayerIdRef.current) : null;
+  const playVideo = useCallback(
+    async (
+      src: string,
+      options = { skipCrossfade: false, longTransition: false }
+    ): Promise<boolean> => {
+      const currentPlayer = activePlayerIdRef.current ?
+        playersPoolRef.current.get(activePlayerIdRef.current) : null;
 
-    // find players by next preferences:
-    // - preloaded players with matching source
-    // - player with matching source
-    // - oldest last used inactive player
-    const nextPlayerInstance = Array.from(playersPoolRef.current.values())
-      .filter(p => !p.isActive && p.player)
-      .sort((a, b) => {
-        // preloaded players with matching source
-        if (a.isPreloaded && a.currentSrc === src) return -1;
-        if (b.isPreloaded && b.currentSrc === src) return 1;
+      // find players by next preferences:
+      // - preloaded players with matching source
+      // - player with matching source
+      // - oldest last used inactive player
+      const nextPlayerInstance = Array.from(playersPoolRef.current.values())
+        .filter(p => !p.isActive && p.player)
+        .sort((a, b) => {
+          // preloaded players with matching source
+          if (a.isPreloaded && a.currentSrc === src) return -1;
+          if (b.isPreloaded && b.currentSrc === src) return 1;
 
-        // player with matching source
-        if (a.currentSrc === src) return -1;
-        if (b.currentSrc === src) return 1;
+          // player with matching source
+          if (a.currentSrc === src) return -1;
+          if (b.currentSrc === src) return 1;
 
-        // oldest last used inactive player
-        return a.lastUsed - b.lastUsed;
-      })[0];
+          // oldest last used inactive player
+          return a.lastUsed - b.lastUsed;
+        })[0];
 
-    if (!nextPlayerInstance || !nextPlayerInstance.player) return false;
+      if (!nextPlayerInstance || !nextPlayerInstance.player) return false;
 
-    const nextPlayer = nextPlayerInstance.player;
-    const currentPlaybackRate = currentPlayer?.player?.playbackRate() || 1;
+      const nextPlayer = nextPlayerInstance.player;
+      const currentPlaybackRate = currentPlayer?.player?.playbackRate() || 1;
 
-    try {
-      // set source if different from current
-      if (nextPlayerInstance.currentSrc !== src) {
-        nextPlayer.src({ src });
-        nextPlayerInstance.currentSrc = src;
+      try {
+        // set source if different from current
+        if (nextPlayerInstance.currentSrc !== src) {
+          nextPlayer.src({ src });
+          nextPlayerInstance.currentSrc = src;
 
-        await new Promise<void>((resolve) => {
-          nextPlayer.one(VIDEOJS_EVENTS.CANPLAY, resolve);
-        });
+          await new Promise<void>((resolve) => {
+            nextPlayer.one(VIDEOJS_EVENTS.CANPLAY, resolve);
+          });
+        }
+
+        // set playback rate
+        nextPlayer.playbackRate(currentPlaybackRate);
+
+        // update lastUsed for both current and next player to prevent cleanup
+        nextPlayerInstance.lastUsed = Date.now();
+
+        // set crossfade options for next player
+        nextPlayerInstance.skipCrossfade = options?.skipCrossfade ?? false;
+        nextPlayerInstance.longTransition = options?.longTransition ?? false;
+
+        await nextPlayer.play();
+
+        if (currentPlayer) {
+          currentPlayer.isActive = false;
+          currentPlayer.lastUsed = Date.now();
+          // set crossfade options for current player so can show same effect for next show and current hide
+          currentPlayer.skipCrossfade = options?.skipCrossfade ?? false;
+          currentPlayer.longTransition = options?.longTransition ?? false;
+        }
+
+        nextPlayerInstance.isActive = true;
+        nextPlayerInstance.isPreloaded = false;
+        nextPlayerInstance.lastUsed = Date.now();
+        updateActivePlayer(nextPlayerInstance.id);
+
+        // wait transition
+        if (!options.skipCrossfade) {
+          await new Promise<void>((resolve) => {
+            // CROSSFADE_DURATION 
+            setTimeout(resolve, (options?.longTransition ? LONG_CROSSFADE_DURATION : SHORT_CROSSFADE_DURATION) * 1000);
+          });
+        }
+
+        if (currentPlayer) {
+          // stop playing current player
+          currentPlayer?.player?.pause();
+          currentPlayer?.player?.currentTime(0);
+        }
+
+        return true;
+      } catch (_) {
+        nextPlayerInstance.isPreloaded = false;
+        return false;
       }
-
-      // set playback rate
-      nextPlayer.playbackRate(currentPlaybackRate);
-
-      // update lastUsed for both current and next player to prevent cleanup
-      nextPlayerInstance.lastUsed = Date.now();
-      if (currentPlayer) {
-        currentPlayer.lastUsed = Date.now();
-      }
-
-      await nextPlayer.play();
-
-      if (currentPlayer) {
-        currentPlayer.isActive = false;
-        currentPlayer.lastUsed = Date.now();
-      }
-
-      nextPlayerInstance.isActive = true;
-      nextPlayerInstance.isPreloaded = false;
-      nextPlayerInstance.lastUsed = Date.now();
-      nextPlayerInstance.skipCrossfade = options.skipCrossfade;
-      updateActivePlayer(nextPlayerInstance.id);
-
-      // wait transition
-      if (!options.skipCrossfade) {
-        await new Promise<void>((resolve) => {
-          // CROSSFADE_DURATION / 2 
-          setTimeout(resolve, CROSSFADE_DURATION / 2 * 1000);
-        });
-      }
-
-      if (currentPlayer) {
-
-        // stop playing current player
-        currentPlayer?.player?.pause();
-        currentPlayer?.player?.currentTime(0);
-      }
-
-      return true;
-    } catch (_) {
-      nextPlayerInstance.isPreloaded = false;
-      return false;
-    }
-  }, [updateActivePlayer]);
+    }, [updateActivePlayer]);
 
   const preloadVideo = useCallback(async (src: string): Promise<boolean> => {
     // find inactive players that are not preloaded
