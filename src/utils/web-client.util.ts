@@ -5,18 +5,18 @@ import {
 } from "@/constants/web-client.constants";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
-import { PlaylistNavigation } from "@/types/web-client.types";
+import { HistoryItem, PlaylistNavigation } from "@/types/web-client.types";
 
 // playlist navigation using keyframe concatenation based on -> https://github.com/e-dream-ai/client/issues/89
 export const getPlaylistNavigation = ({
   playingDream,
   playingPlaylist,
-  playedDreams,
+  history,
   historyPosition,
 }: {
   playingDream?: Dream;
   playingPlaylist?: Playlist;
-  playedDreams: string[];
+  history: HistoryItem[];
   historyPosition: number;
 }): PlaylistNavigation => {
   // if there are no items or current dream return null values
@@ -25,32 +25,31 @@ export const getPlaylistNavigation = ({
       previous: null,
       next: null,
       isNextConcatenated: false,
+      allDreamsPlayed: false,
     };
   }
 
   // check if history position matches last played dream position
-  const isHistoryMatchingPlayback =
-    historyPosition === Math.max(playedDreams.length - 1, 0);
+  const highestHistoryPosition = Math.max(history.length - 1, 0);
+  const previousHistoryPosition = Math.max(historyPosition - 1, 0);
+  const nextHistoryPosition = Math.max(historyPosition + 1, 0);
+  const isHistoryMatchingPlayback = historyPosition === highestHistoryPosition;
 
   // get previous dream
   const previousDream =
-    playingPlaylist.items?.find(
-      // playedDreams.at(historyPosition - 1) skips current dream which is last in array
-      (pi) => pi.dreamItem?.uuid === playedDreams.at(historyPosition - 1),
-    )?.dreamItem ??
+    history[previousHistoryPosition]?.dream ??
     // if there are no items on played dreams array, take the current dream
     playingDream;
 
   // if history position doesn't match last played dream, return proper next dream
   if (!isHistoryMatchingPlayback) {
-    const nextDream = playingPlaylist.items?.find(
-      // playedDreams.at(historyPosition) gets proper next dream
-      (pi) => pi.dreamItem?.uuid === playedDreams.at(historyPosition + 1),
-    )?.dreamItem;
+    const nextDream = history[nextHistoryPosition].dream;
+
     return {
       previous: previousDream ?? null,
       next: nextDream ?? null,
       isNextConcatenated: false,
+      allDreamsPlayed: false,
     };
   }
 
@@ -58,8 +57,12 @@ export const getPlaylistNavigation = ({
   const unplayedDreams: Dream[] =
     playingPlaylist?.items
       ?.filter((pi) => Boolean(pi.dreamItem))
-      ?.filter((pi) => !playedDreams.includes(pi.dreamItem!.uuid))
+      ?.filter(
+        (pi) => !history.find((h) => h.dream.uuid === pi.dreamItem!.uuid),
+      )
       ?.map((pi) => pi.dreamItem!) ?? [];
+
+  const allDreamsPlayed = !unplayedDreams.length;
 
   // find unplayed dreams with a startKeyframe that matches with current dream endkeyframe
   const concatenatedDreams = unplayedDreams.filter(
@@ -81,14 +84,16 @@ export const getPlaylistNavigation = ({
       previous: previousDream ?? null,
       next: randomDream,
       isNextConcatenated: true,
+      allDreamsPlayed,
     };
   }
 
   return {
     previous: previousDream ?? null,
-    // items are ordered, so return first unplayed dream
-    next: unplayedDreams[0] ?? null,
+    // items are ordered, so return first unplayed dream else first dream at history
+    next: unplayedDreams[0] ?? history[0]?.dream ?? null,
     isNextConcatenated: false,
+    allDreamsPlayed,
   };
 };
 

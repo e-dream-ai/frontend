@@ -10,6 +10,12 @@ export type PlaylistNavigation = {
   next: Dream | null;
   previous: Dream | null;
   isNextConcatenated: boolean;
+  allDreamsPlayed: boolean;
+};
+
+export type HistoryItem = {
+  dream: Dream;
+  wasConcatenated: boolean;
 };
 
 export enum PlaylistDirection {

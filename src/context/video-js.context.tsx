@@ -363,7 +363,7 @@ export const VideoJSProvider = ({
         if (!options.skipCrossfade) {
           await new Promise<void>((resolve) => {
             // CROSSFADE_DURATION 
-            setTimeout(resolve, (options?.longTransition ? LONG_CROSSFADE_DURATION : SHORT_CROSSFADE_DURATION) * 1000);
+            setTimeout(resolve, (options?.longTransition ? LONG_CROSSFADE_DURATION : SHORT_CROSSFADE_DURATION) / 2 * 1000);
           });
         }
 
@@ -395,12 +395,13 @@ export const VideoJSProvider = ({
       // set source
       player.src({ src });
       preloadPlayerInstance.currentSrc = src;
-      preloadPlayerInstance.isPreloaded = true;
 
       // wait for ready to play
       await new Promise<void>((resolve) => {
         player.one(VIDEOJS_EVENTS.CANPLAY, resolve);
       });
+
+      preloadPlayerInstance.isPreloaded = true;
 
     } catch (error) {
       preloadPlayerInstance.isPreloaded = false;
