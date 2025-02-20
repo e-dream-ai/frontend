@@ -4,6 +4,7 @@ import { Row, Column, Text } from '@/components/shared';
 import 'video.js/dist/video-js.css';
 import { PlayerWrapper, VideoContainer, VideoWrapper } from './video-js.styled';
 import { PoolConfig } from '@/constants/video-js.constants';
+import { useWebClient } from '@/hooks/useWebClient';
 
 type VideoJSProps = {
   //
@@ -15,6 +16,7 @@ type VideoJSProps = {
  */
 export const VideoJS: FC<VideoJSProps> = () => {
   const { players, videoWrapperRef, createPlayer, clearPlayers } = useVideoJs();
+  const { isWebClientActive } = useWebClient();
 
   useEffect(() => {
     // creates min initial player slots
@@ -29,7 +31,7 @@ export const VideoJS: FC<VideoJSProps> = () => {
   }, [createPlayer, clearPlayers]);
 
   return (
-    <Row>
+    <Row style={{ display: isWebClientActive ? "flex" : "none" }}>
       <Column flex="auto">
         <Row>
           <Text mb="1rem" fontSize="1rem" fontWeight={600}>

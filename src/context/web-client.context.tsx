@@ -130,12 +130,7 @@ export const WebClientProvider: React.FC<{
 
   const setWebClientActive = useCallback((isActive: boolean) => {
     setIsWebClientActive(isActive);
-    if (isActive && currentDream) {
-      // if there's a current dream, set it as playing dream and preload it
-      playingDreamRef.current = currentDream;
-      preloadVideo(currentDream.video);
-    }
-  }, [currentDream, preloadVideo]);
+  }, []);
 
   const setWebPlayerAvailable = useCallback((isActive: boolean) => {
     setIsWebClientAvailable(isActive)
@@ -271,6 +266,9 @@ export const WebClientProvider: React.FC<{
     const dream = getNextDream(direction)
 
     if (!dream) return false;
+    if (transitioningRef.current) return false;
+
+    transitioningRef.current = true;
 
     const isNextConcatenated = Boolean(playlistNavigationRef.current?.isNextConcatenated);
 
@@ -296,6 +294,8 @@ export const WebClientProvider: React.FC<{
     if (played) {
       updatePlaylistNavigation();
     }
+
+    transitioningRef.current = false;
 
     return played;
   }, [playDream, getNextDream, updatePlaylistNavigation, addDreamToHistory]);
@@ -468,7 +468,6 @@ export const WebClientProvider: React.FC<{
 
   // register events on videojs instance
   useEffect(() => {
-
     const handleTimeUpdate = async () => {
       const remainingTime = Number(playerInstance?.player?.remainingTime());
 
@@ -484,18 +483,15 @@ export const WebClientProvider: React.FC<{
         && !transitioningRef.current
       ) {
         // lock transitioning and wait for the change
-        transitioningRef.current = true;
         await handlers.next({ longTransition: true });
-        transitioningRef.current = false;
       }
     }
 
     // ended event just in case TIMEUPDATE is skipped (i.e. a concatenated kf)
     const handleEnded = async () => {
       // lock transitioning and wait for the change
-      transitioningRef.current = true;
       await handlers.next();
-      transitioningRef.current = false;
+
     }
 
     const cleanup1 = addEventListener(VIDEOJS_EVENTS.TIMEUPDATE, handleTimeUpdate);
@@ -536,6 +532,14 @@ export const WebClientProvider: React.FC<{
       playDreamWithHistory(playingDreamRef.current)
     }
   }, [location.pathname, isReady, isWebClientActive, playDreamWithHistory]);
+
+  // if there's a current dream, set it as playing dream and preload it
+  useEffect(() => {
+    if (currentDream) {
+      playingDreamRef.current = currentDream;
+      preloadVideo(currentDream.video);
+    }
+  }, [currentDream, preloadVideo]);
 
   // update playing playlist ref
   useEffect(() => {

@@ -32,7 +32,7 @@ type PlayerInstance = {
   player: Player | null;
   isActive: boolean;
   lastUsed: number;
-  currentSrc: string | null;
+  src: string | null;
   isPreloaded: boolean;
   eventHandlers: Map<string, VideoJSEventHandler[]>;
   skipCrossfade: boolean;
@@ -88,7 +88,7 @@ export const VideoJSProvider = ({
       player: null,
       isActive: playersPoolRef.current.size === 0,
       lastUsed: Date.now(),
-      currentSrc: null,
+      src: null,
       isPreloaded: false,
       eventHandlers: new Map(),
       skipCrossfade: false,
@@ -307,12 +307,12 @@ export const VideoJSProvider = ({
         .filter(p => !p.isActive && p.player)
         .sort((a, b) => {
           // preloaded players with matching source
-          if (a.isPreloaded && a.currentSrc === src) return -1;
-          if (b.isPreloaded && b.currentSrc === src) return 1;
+          if (a.isPreloaded && a.src === src) return -1;
+          if (b.isPreloaded && b.src === src) return 1;
 
           // player with matching source
-          if (a.currentSrc === src) return -1;
-          if (b.currentSrc === src) return 1;
+          if (a.src === src) return -1;
+          if (b.src === src) return 1;
 
           // oldest last used inactive player
           return a.lastUsed - b.lastUsed;
@@ -325,13 +325,15 @@ export const VideoJSProvider = ({
 
       try {
         // set source if different from current
-        if (nextPlayerInstance.currentSrc !== src) {
+        if (nextPlayerInstance.src !== src) {
           nextPlayer.src({ src });
-          nextPlayerInstance.currentSrc = src;
+          nextPlayerInstance.src = src;
 
-          await new Promise<void>((resolve) => {
-            nextPlayer.one(VIDEOJS_EVENTS.CANPLAY, resolve);
-          });
+          // possible not longer needed since preloading 
+          // await new Promise<void>((resolve) => {
+          //   console.log("CANPLAY FROM PLAYVIDEO")
+          //   nextPlayer.one(VIDEOJS_EVENTS.CANPLAY, resolve);
+          // });
         }
 
         // set playback rate
@@ -393,8 +395,9 @@ export const VideoJSProvider = ({
       const player = preloadPlayerInstance.player;
 
       // set source
+      preloadPlayerInstance.src = src;
       player.src({ src });
-      preloadPlayerInstance.currentSrc = src;
+      player.preload("auto");
 
       // wait for ready to play
       await new Promise<void>((resolve) => {
