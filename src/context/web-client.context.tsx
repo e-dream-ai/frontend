@@ -485,7 +485,9 @@ export const WebClientProvider: React.FC<{
       // start transition when we reach threshold
       if (
         // verify if should start a native transition
-        remainingTime <= LONG_CROSSFADE_DURATION
+        // LONG_CROSSFADE_DURATION / 2 
+        // should be triggered with half of time of the transition duration so that it takes 5 seconds in total between the two dreams?
+        remainingTime <= LONG_CROSSFADE_DURATION / 2
         // if is a concatenated transition, do not run a long transition
         && !playlistNavigationRef.current?.isNextConcatenated
         // verify transition lock state

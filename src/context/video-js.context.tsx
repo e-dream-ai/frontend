@@ -7,8 +7,8 @@ import { v4 as uuidv4 } from 'uuid';
 import {
   PoolConfig,
   VIDEOJS_EVENTS,
-  // LONG_CROSSFADE_DURATION,
-  // SHORT_CROSSFADE_DURATION,
+  LONG_CROSSFADE_DURATION,
+  SHORT_CROSSFADE_DURATION,
 } from "@/constants/video-js.constants";
 import { PRELOAD_OPTION } from "@/constants/web-client.constants";
 
@@ -370,12 +370,12 @@ export const VideoJSProvider = ({
         updateActivePlayer(nextPlayerInstance.id);
 
         // Wait for the video transition for crossfade
-        // if (!options.skipCrossfade) {
-        //   await new Promise<void>((resolve) => {
-        //     // CROSSFADE_DURATION 
-        //     setTimeout(resolve, (options?.longTransition ? LONG_CROSSFADE_DURATION : SHORT_CROSSFADE_DURATION) / 2 * 1000);
-        //   });
-        // }
+        if (!options.skipCrossfade) {
+          await new Promise<void>((resolve) => {
+            // CROSSFADE_DURATION 
+            setTimeout(resolve, (options?.longTransition ? LONG_CROSSFADE_DURATION : SHORT_CROSSFADE_DURATION) * 1000);
+          });
+        }
 
         if (currentPlayer) {
           // stop playing current player
