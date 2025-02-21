@@ -66,7 +66,7 @@ const VideoPlayer = () => {
       const player = videojs(element, {
         controls: true,
         fluid: true,
-        preload: 'auto'
+        preload: 'metadata'
       });
       return player;
     };

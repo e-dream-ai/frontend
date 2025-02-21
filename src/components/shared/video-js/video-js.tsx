@@ -1,10 +1,11 @@
 import { useVideoJs } from '@/hooks/useVideoJS';
 import { FC, useEffect, useRef } from 'react';
 import { Row, Column, Text } from '@/components/shared';
-import 'video.js/dist/video-js.css';
 import { PlayerWrapper, VideoContainer, VideoWrapper } from './video-js.styled';
 import { PoolConfig } from '@/constants/video-js.constants';
 import { useWebClient } from '@/hooks/useWebClient';
+import { PRELOAD_OPTION } from '@/constants/web-client.constants';
+import 'video.js/dist/video-js.css';
 
 type VideoJSProps = {
   //
@@ -59,7 +60,7 @@ const PlayerSlot = ({ id, skipCrossfade, longTransition }: { id: string, skipCro
       const options = {
         controls: true,
         fluid: true,
-        preload: "auto",
+        preload: PRELOAD_OPTION,
         controlBar: {
           pictureInPictureToggle: false
         },

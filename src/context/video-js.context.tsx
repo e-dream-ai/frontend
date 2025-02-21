@@ -4,7 +4,13 @@ import videojs from "video.js";
 import Player from "video.js/dist/types/player";
 import Component from "video.js/dist/types/component";
 import { v4 as uuidv4 } from 'uuid';
-import { LONG_CROSSFADE_DURATION, PoolConfig, SHORT_CROSSFADE_DURATION, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
+import {
+  PoolConfig,
+  VIDEOJS_EVENTS,
+  // LONG_CROSSFADE_DURATION,
+  // SHORT_CROSSFADE_DURATION,
+} from "@/constants/video-js.constants";
+import { PRELOAD_OPTION } from "@/constants/web-client.constants";
 
 type VideoJSContextType = {
   isReady: boolean;
@@ -303,20 +309,29 @@ export const VideoJSProvider = ({
       // - preloaded players with matching source
       // - player with matching source
       // - oldest last used inactive player
-      const nextPlayerInstance = Array.from(playersPoolRef.current.values())
+      const nextPlayers = Array.from(playersPoolRef.current.values())
         .filter(p => !p.isActive && p.player)
         .sort((a, b) => {
-          // preloaded players with matching source
-          if (a.isPreloaded && a.src === src) return -1;
-          if (b.isPreloaded && b.src === src) return 1;
+          const PRIORITY = {
+            PRELOADED_WITH_MATCH: 2,
+            SRC_MATCH: 1,
+            NONE: 0
+          };
 
-          // player with matching source
-          if (a.src === src) return -1;
-          if (b.src === src) return 1;
+          // Determines priority level of a player based on preload status and source match
+          const getPriority = (player: PlayerInstance) => {
+            if (player.src !== src) return PRIORITY.NONE;
+            if (player.isPreloaded) return PRIORITY.PRELOADED_WITH_MATCH;
+            return PRIORITY.SRC_MATCH;
+          };
 
-          // oldest last used inactive player
-          return a.lastUsed - b.lastUsed;
-        })[0];
+          const diff = getPriority(b) - getPriority(a);
+          // Otherwise is sort by last time used
+          return diff || a.lastUsed - b.lastUsed;
+        });
+
+
+      const nextPlayerInstance = nextPlayers[0];
 
       if (!nextPlayerInstance || !nextPlayerInstance.player) return false;
 
@@ -326,14 +341,8 @@ export const VideoJSProvider = ({
       try {
         // set source if different from current
         if (nextPlayerInstance.src !== src) {
-          nextPlayer.src({ src });
+          nextPlayer.src({ src, preload: PRELOAD_OPTION });
           nextPlayerInstance.src = src;
-
-          // possible not longer needed since preloading 
-          // await new Promise<void>((resolve) => {
-          //   console.log("CANPLAY FROM PLAYVIDEO")
-          //   nextPlayer.one(VIDEOJS_EVENTS.CANPLAY, resolve);
-          // });
         }
 
         // set playback rate
@@ -356,18 +365,17 @@ export const VideoJSProvider = ({
           currentPlayer.longTransition = options?.longTransition ?? false;
         }
 
-        nextPlayerInstance.isActive = true;
-        nextPlayerInstance.isPreloaded = false;
         nextPlayerInstance.lastUsed = Date.now();
+        nextPlayerInstance.isActive = true;
         updateActivePlayer(nextPlayerInstance.id);
 
-        // wait transition
-        if (!options.skipCrossfade) {
-          await new Promise<void>((resolve) => {
-            // CROSSFADE_DURATION 
-            setTimeout(resolve, (options?.longTransition ? LONG_CROSSFADE_DURATION : SHORT_CROSSFADE_DURATION) / 2 * 1000);
-          });
-        }
+        // Wait for the video transition for crossfade
+        // if (!options.skipCrossfade) {
+        //   await new Promise<void>((resolve) => {
+        //     // CROSSFADE_DURATION 
+        //     setTimeout(resolve, (options?.longTransition ? LONG_CROSSFADE_DURATION : SHORT_CROSSFADE_DURATION) / 2 * 1000);
+        //   });
+        // }
 
         if (currentPlayer) {
           // stop playing current player
@@ -383,6 +391,14 @@ export const VideoJSProvider = ({
     }, [updateActivePlayer]);
 
   const preloadVideo = useCallback(async (src: string): Promise<boolean> => {
+    // Check if we already have a preloaded player with this src
+    const existingPreloadedPlayer = Array.from(playersPoolRef.current.values())
+      .find(p => p.isPreloaded && p.src === src);
+
+    if (existingPreloadedPlayer) {
+      return true;
+    }
+
     // find inactive players that are not preloaded
     const inactivePlayers = Array.from(playersPoolRef.current.values())
       .filter(p => !p.isActive && !p.isPreloaded && p.player)
@@ -396,12 +412,11 @@ export const VideoJSProvider = ({
 
       // set source
       preloadPlayerInstance.src = src;
-      player.src({ src });
-      player.preload("auto");
+      player.src({ src, preload: PRELOAD_OPTION });
 
-      // wait for ready to play
+      // wait for metadata ready
       await new Promise<void>((resolve) => {
-        player.one(VIDEOJS_EVENTS.CANPLAY, resolve);
+        player.one(VIDEOJS_EVENTS.LOADEDMETADATA, resolve);
       });
 
       preloadPlayerInstance.isPreloaded = true;

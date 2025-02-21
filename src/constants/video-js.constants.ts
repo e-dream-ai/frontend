@@ -17,8 +17,8 @@ export const VIDEOJS_EVENTS: { [K in keyof VideoJSEvents]: VideoJSEvents[K] } =
 
 // players pool configuration
 export const PoolConfig = {
-  minPlayers: 4,
-  maxPlayers: 6,
+  minPlayers: 6,
+  maxPlayers: 10,
 };
 
 // transition time on seconds

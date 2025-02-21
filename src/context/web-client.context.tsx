@@ -28,6 +28,7 @@ import { useTranslation } from "react-i18next";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { fetchDream } from "@/api/dream/query/useDream";
 import { joinPaths } from "@/utils/router.util";
+import { setCurrentUserDreamOptimistically } from "@/api/dream/utils/dream-utils";
 
 type WebClientContextType = {
   isWebClientActive: boolean;
@@ -215,6 +216,9 @@ export const WebClientProvider: React.FC<{
       resetHistory();
     }
 
+    console.log("previous", navigation.previous?.uuid);
+    console.log("next", navigation.next?.uuid);
+
     preloadNavigationVideos(navigation);
   }, [preloadNavigationVideos, resetHistory]);
 
@@ -225,11 +229,16 @@ export const WebClientProvider: React.FC<{
       options: { skipCrossfade: boolean, longTransition: boolean } = { skipCrossfade: false, longTransition: false }
     ) => {
       if (!dreamToPlay?.video) return false;
+      // playing log
+      console.log("-----");
+      console.log("playing", dreamToPlay.uuid);
 
       playingDreamRef.current = dreamToPlay;
       const played = await playVideo(dreamToPlay.video, options);
 
       // if video was not played return false
+      // played log
+      console.log("played", played);
       if (!played) {
         return false;
       }
@@ -240,10 +249,10 @@ export const WebClientProvider: React.FC<{
         isWebClientEvent: true,
       });
 
-      refreshCurrentDream();
+      setCurrentUserDreamOptimistically(dreamToPlay);
 
       return true;
-    }, [emit, playVideo, refreshCurrentDream]);
+    }, [emit, playVideo]);
 
   // used to play dreams that are not handled by navigation events (next/prev) 
   const playDreamWithHistory = useCallback(async (dream?: Dream) => {
