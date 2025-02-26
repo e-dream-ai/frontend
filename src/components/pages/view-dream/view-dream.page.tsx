@@ -16,7 +16,7 @@ import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
+import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -29,6 +29,7 @@ import { DreamVideoInput, ViewDreamInputs } from "./view-dream-inputs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircle,
+  faFlag,
   faGears,
   faPencil,
   faPlay,
@@ -56,6 +57,7 @@ import { FeedItemType } from "@/types/feed.types";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 import { NotFound } from "@/components/shared/not-found/not-found";
 import { formatDreamForm, formatDreamRequest } from "@/utils/dream.util";
+import { ReportDreamModal } from "@/components/modals/report-dream.modal";
 
 type Params = { uuid: string };
 
@@ -96,6 +98,8 @@ const ViewDreamPage: React.FC = () => {
     useState<boolean>(false);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
     useState<boolean>(false);
+  const [showReportModal, setShowReportModal] =
+    useState<boolean>(false);
 
   const { mutate: mutateDream, isLoading: isLoadingDreamMutation } =
     useUpdateDream(uuid);
@@ -115,19 +119,10 @@ const ViewDreamPage: React.FC = () => {
     uploadDreamVideoMutation.isLoading ||
     isLoadingThumbnailDreamMutation;
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    getValues,
-    control,
-  } = useForm<UpdateDreamFormValues>({
+  const formMethods = useForm<UpdateDreamFormValues>({
     resolver: yupResolver(UpdateDreamSchema),
     defaultValues: { name: "" },
   });
-
-  const values = getValues();
 
   const isDreamProcessing: boolean = useMemo(
     () =>
@@ -234,10 +229,12 @@ const ViewDreamPage: React.FC = () => {
   const onHideConfirmProcessModal = () => setShowConfirmProcessModal(false);
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
+  const onShowReportModal = () => setShowReportModal(true);
+  const onHideReportModal = () => setShowReportModal(false);
 
   const resetRemoteDreamForm = useCallback(() => {
-    reset(formatDreamForm({ dream, isAdmin: isUserAdmin, t }));
-  }, [reset, dream, isUserAdmin, t]);
+    formMethods.reset(formatDreamForm({ dream, isAdmin: isUserAdmin, t }));
+  }, [formMethods, dream, isUserAdmin, t]);
 
   const handleRemoveVideo = () => {
     setIsVideoRemoved(true);
@@ -326,25 +323,19 @@ const ViewDreamPage: React.FC = () => {
    */
   useEffect(() => {
     resetRemoteDreamForm();
-  }, [reset, resetRemoteDreamForm]);
+  }, [resetRemoteDreamForm]);
 
-  if (!uuid) {
-    return <Navigate to={ROUTES.ROOT} replace />;
-  }
+  if (!uuid) return <Navigate to={ROUTES.ROOT} replace />;
 
-  if (isDreamLoading) {
-    return (
-      <Container>
-        <Row justifyContent="center">
-          <Spinner />
-        </Row>
-      </Container>
-    );
-  }
+  if (isDreamLoading) return (
+    <Container>
+      <Row justifyContent="center">
+        <Spinner />
+      </Row>
+    </Container>
+  );
 
-  if (isError) {
-    return <NotFound />;
-  }
+  if (isError) return <NotFound />;
 
   return (
     <React.Fragment>
@@ -384,6 +375,13 @@ const ViewDreamPage: React.FC = () => {
             </em>
           </Text>
         }
+      />
+      {/**
+       * Report dream modal
+       */}
+      <ReportDreamModal
+        isOpen={showReportModal}
+        onCancel={onHideReportModal}
       />
       <Container>
         <Section id={SectionID}>
@@ -454,6 +452,16 @@ const ViewDreamPage: React.FC = () => {
                     )}
                   </Button>
 
+                  <Button
+                    type="button"
+                    buttonType="default"
+                    transparent
+                    style={{ width: "3rem" }}
+                    onClick={onShowReportModal}
+                  >
+                    <FontAwesomeIcon icon={faFlag} />
+                  </Button>
+
                   <Restricted
                     to={DREAM_PERMISSIONS.CAN_DELETE_DREAM}
                     isOwner={isOwner}
@@ -472,139 +480,138 @@ const ViewDreamPage: React.FC = () => {
               )}
             </Column>
           </Row>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            <Row justifyContent="space-between" justifyItems="flex-end">
-              <span />
-              <div>
-                {showEditButton && (
-                  <React.Fragment>
-                    <Restricted to={DREAM_PERMISSIONS.CAN_PROCESS_DREAM}>
+
+          <FormProvider {...formMethods}>
+            <form onSubmit={formMethods.handleSubmit(onSubmit)}>
+              <Row justifyContent="space-between" justifyItems="flex-end">
+                <span />
+                <div>
+                  {showEditButton && (
+                    <React.Fragment>
+                      <Restricted to={DREAM_PERMISSIONS.CAN_PROCESS_DREAM}>
+                        <Button
+                          type="button"
+                          mx="2"
+                          after={<FontAwesomeIcon icon={faGears} />}
+                          isLoading={processDreamMutation.isLoading}
+                          onClick={onShowConfirmProcessModal}
+                        >
+                          {t("page.view_dream.rerun")}{" "}
+                        </Button>
+                      </Restricted>
+                      <Restricted
+                        to={DREAM_PERMISSIONS.CAN_EDIT_DREAM}
+                        isOwner={isOwner}
+                      >
+                        <Button
+                          type="button"
+                          after={<FontAwesomeIcon icon={faPencil} />}
+                          onClick={handleEdit}
+                        >
+                          {t("page.view_dream.edit")}{" "}
+                        </Button>
+                      </Restricted>
+                    </React.Fragment>
+                  )}
+                  {showSaveAndCancelButtons && (
+                    <React.Fragment>
                       <Button
                         type="button"
-                        mx="2"
-                        after={<FontAwesomeIcon icon={faGears} />}
-                        isLoading={processDreamMutation.isLoading}
-                        onClick={onShowConfirmProcessModal}
+                        onClick={handleCancel}
+                        disabled={isLoading}
                       >
-                        {t("page.view_dream.rerun")}{" "}
+                        {t("page.view_dream.cancel")}
                       </Button>
-                    </Restricted>
-                    <Restricted
-                      to={DREAM_PERMISSIONS.CAN_EDIT_DREAM}
-                      isOwner={isOwner}
-                    >
                       <Button
-                        type="button"
-                        after={<FontAwesomeIcon icon={faPencil} />}
-                        onClick={handleEdit}
+                        type="submit"
+                        after={<FontAwesomeIcon icon={faSave} />}
+                        isLoading={isLoading}
+                        ml="1rem"
                       >
-                        {t("page.view_dream.edit")}{" "}
+                        {isLoading
+                          ? t("page.view_dream.saving")
+                          : t("page.view_dream.save")}
                       </Button>
-                    </Restricted>
-                  </React.Fragment>
-                )}
-                {showSaveAndCancelButtons && (
-                  <React.Fragment>
-                    <Button
-                      type="button"
-                      onClick={handleCancel}
-                      disabled={isLoading}
-                    >
-                      {t("page.view_dream.cancel")}
-                    </Button>
-                    <Button
-                      type="submit"
-                      after={<FontAwesomeIcon icon={faSave} />}
-                      isLoading={isLoading}
-                      ml="1rem"
-                    >
-                      {isLoading
-                        ? t("page.view_dream.saving")
-                        : t("page.view_dream.save")}
-                    </Button>
-                  </React.Fragment>
-                )}
-              </div>
-            </Row>
+                    </React.Fragment>
+                  )}
+                </div>
+              </Row>
 
-            <ViewDreamInputs
-              dream={dream}
-              isProcessing={isDreamProcessing}
-              values={values}
-              register={register}
-              errors={errors}
-              editMode={editMode}
-              control={control}
+              <ViewDreamInputs
+                dream={dream}
+                isProcessing={isDreamProcessing}
+                editMode={editMode}
 
-              // thumbnail props
-              thumbnailState={thumbnail}
-              isThumbnailRemoved={isThumbnailRemoved}
-              handleThumbnailChange={handleThumbnailChange}
-              handleRemoveThumbnail={handleRemoveThumbnail}
-            />
+                // thumbnail props
+                thumbnailState={thumbnail}
+                isThumbnailRemoved={isThumbnailRemoved}
+                handleThumbnailChange={handleThumbnailChange}
+                handleRemoveThumbnail={handleRemoveThumbnail}
+              />
 
-            {!isDreamProcessing ? (
-              <React.Fragment>
-                <Row>
-                  <h3>{t("page.view_dream.filmstrip")}</h3>
-                </Row>
-                <Row flexWrap="wrap">
-                  <FilmstripGallery dream={dream} />
-                </Row>
+              {!isDreamProcessing ? (
+                <React.Fragment>
+                  <Row>
+                    <h3>{t("page.view_dream.filmstrip")}</h3>
+                  </Row>
+                  <Row flexWrap="wrap">
+                    <FilmstripGallery dream={dream} />
+                  </Row>
 
-                <Restricted
-                  to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
-                  isOwner={isOwner}
-                >
-                  <Row justifyContent="space-between" alignItems="center">
-                    <h3>{t("page.view_dream.original_video")}</h3>
-                    {editMode && (
-                      <Button
-                        type="button"
-                        buttonType="danger"
-                        onClick={handleRemoveVideo}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </Button>
-                    )}
+                  <Restricted
+                    to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
+                    isOwner={isOwner}
+                  >
+                    <Row justifyContent="space-between" alignItems="center">
+                      <h3>{t("page.view_dream.original_video")}</h3>
+                      {editMode && (
+                        <Button
+                          type="button"
+                          buttonType="danger"
+                          onClick={handleRemoveVideo}
+                        >
+                          <FontAwesomeIcon icon={faTrash} />
+                        </Button>
+                      )}
+                    </Row>
+                    <Row justifyContent={["center", "center", "flex-start"]}>
+                      <DreamVideoInput
+                        dream={dream}
+                        editMode={editMode}
+                        video={video}
+                        isRemoved={isVideoRemoved}
+                        handleChange={handleVideoChange}
+                      />
+                    </Row>
+                  </Restricted>
+                  <Row>
+                    <h3>{t("page.view_dream.video")}</h3>
                   </Row>
                   <Row justifyContent={["center", "center", "flex-start"]}>
-                    <DreamVideoInput
-                      dream={dream}
-                      editMode={editMode}
-                      video={video}
-                      isRemoved={isVideoRemoved}
-                      handleChange={handleVideoChange}
-                    />
+                    <Video controls src={video?.url || dream?.video} />
                   </Row>
-                </Restricted>
-                <Row>
-                  <h3>{t("page.view_dream.video")}</h3>
-                </Row>
-                <Row justifyContent={["center", "center", "flex-start"]}>
-                  <Video controls src={video?.url || dream?.video} />
-                </Row>
-                <Row>
-                  <h3>{t("page.view_dream.playlists")}</h3>
-                </Row>
-                <Row flex="auto">
-                  <ItemCardList>
-                    {playlistItems?.map((pi) => (
-                      <ItemCard
-                        key={pi.id}
-                        type={FeedItemType.PLAYLIST}
-                        item={pi.playlist}
-                        inline
-                        size="sm"
-                      />
-                    ))}
-                  </ItemCardList>
-                </Row>
-              </React.Fragment>
-            ) : (
-              false
-            )}
-          </form>
+                  <Row>
+                    <h3>{t("page.view_dream.playlists")}</h3>
+                  </Row>
+                  <Row flex="auto">
+                    <ItemCardList>
+                      {playlistItems?.map((pi) => (
+                        <ItemCard
+                          key={pi.id}
+                          type={FeedItemType.PLAYLIST}
+                          item={pi.playlist}
+                          inline
+                          size="sm"
+                        />
+                      ))}
+                    </ItemCardList>
+                  </Row>
+                </React.Fragment>
+              ) : (
+                false
+              )}
+            </form>
+          </FormProvider>
         </Section>
       </Container>
     </React.Fragment>

@@ -13,7 +13,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faClipboard, faEraser } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
-import { StyledLi, StyledList } from "./invites-list.styled";
+import { Ul, Li } from "@/components/shared/list/list.styled";
 import { useTheme } from "styled-components";
 import { formatRoleName } from "@/utils/user.util";
 import useHighlight from "@/hooks/useHighlight";
@@ -22,7 +22,7 @@ import { HighlightKeys } from "@/constants/highlight.constants";
 const List: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
-  return <StyledList>{children}</StyledList>;
+  return <Ul>{children}</Ul>;
 };
 
 const InviteItem: React.FC<{
@@ -55,7 +55,7 @@ const InviteItem: React.FC<{
   };
 
   return (
-    <StyledLi isNew={isNew}>
+    <Li isNew={isNew}>
       <Row
         flex="auto"
         margin="0"
@@ -106,7 +106,7 @@ const InviteItem: React.FC<{
           </Row>
         </Column>
       </Row>
-    </StyledLi>
+    </Li>
   );
 };
 

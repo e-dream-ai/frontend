@@ -15,6 +15,7 @@
     "feed": "Feed",
     "my_dreams": "My dreams",
     "invites": "Invites",
+    "reports": "Reports",
     "help": "Help"
   },
   "footer": {
@@ -289,6 +290,9 @@
       "invite_created_successfully": "Invite created successfully.",
       "error_creating_invite": "Error creating invite."
     },
+    "reports": {
+      "title": "Reports"
+    },
     "help": {
       "title": "Help"
     },
@@ -330,6 +334,16 @@
       "title": "Create Invite",
       "invites_send_email_tab_title": "Send Email",
       "invites_custom_code_tab_title": "Custom Code"
+    },
+    "report": {
+      "title": "Report dream",
+      "type": "Type",
+      "comments": "Comments",
+      "link": "Link",
+      "cancel": "Cancel",
+      "report": "Report",
+      "report_created_successfully": "Report created successfully.",
+      "error_creating_report": "Error creating report."
     },
     "add_home_screen": {
       "app_functionality_description": "e-dream has app functionality, add it to your home screen to use it.",
@@ -453,6 +467,15 @@
       "signup_url_copied_successfully": "Invite signup url copied successfully.",
       "invite_invalidated_successfully": "Invite invalidated successfully.",
       "error_invalidating_invite": "Error invalidating invite."
+    },
+    "reports_list": {
+      "empty": "No reports to show",
+      "dream": "Dream",
+      "reported_by": "Reported by",
+      "reported_at": "Reported at",
+      "processed": "Processed",
+      "comments": "Comments",
+      "link": "link"
     },
     "filmstrip": {
       "empty": "No filmstrip"

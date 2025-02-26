@@ -1,14 +1,12 @@
-import { Column, Row, FileUploader, Input, TextArea, Button } from "@/components/shared";
+import { Column, Row, FileUploader, Input, Button } from "@/components/shared";
 import { ThumbnailInput } from "@/components/shared/thumbnail-input/thumbnail-input";
 import {
   ALLOWED_VIDEO_TYPES,
   MAX_FILE_SIZE_MB,
 } from "@/constants/file.constants";
 import {
-  Control,
   Controller,
-  FieldErrors,
-  UseFormRegister,
+  useFormContext,
 } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { UpdateDreamFormValues } from "@/schemas/update-dream.schema";
@@ -61,15 +59,17 @@ import { FormContainer, FormItem } from "@/components/shared/form/form";
 import { getUserProfileRoute } from "@/utils/router.util";
 import { KeyframeSelect } from "./keyframe-select";
 import { useTooltipPlaces } from "@/hooks/useFormTooltipPlaces";
+import { FormInput } from "@/components/shared/input/input";
+import { FormTextArea } from "@/components/shared/text-area/text-area";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
   isProcessing?: boolean;
-  values: UpdateDreamFormValues;
-  register: UseFormRegister<UpdateDreamFormValues>;
-  errors: FieldErrors<UpdateDreamFormValues>;
+  // values: UpdateDreamFormValues;
+  // register: UseFormRegister<UpdateDreamFormValues>;
+  // errors: FieldErrors<UpdateDreamFormValues>;
+  // control: Control<UpdateDreamFormValues>;
   editMode: boolean;
-  control: Control<UpdateDreamFormValues>;
 
   // thumbnail
   thumbnailState: MultiMediaState;
@@ -81,11 +81,7 @@ type ViewDreamInputsProps = {
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   dream,
   isProcessing,
-  values,
-  register,
-  errors,
   editMode,
-  control,
   // thumbnail
   thumbnailState,
   isThumbnailRemoved,
@@ -99,6 +95,21 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const [showMore, setShowMore] = useState<boolean>(false);
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
+
+  const {
+    control,
+    register,
+    formState: {
+      errors
+    },
+  } = useFormContext<UpdateDreamFormValues>();
+
+  // always shows user for admins
+  // for normal users look for 'displayed owner' or user instead
+  const dreamOwnerToShow =
+    isUserAdmin
+      ? dream?.user?.name
+      : dream?.displayedOwner?.name ?? dream?.user?.name;
 
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
@@ -132,7 +143,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         <Column
           flex="1"
           mr={[0, 2, 2, 2]}
-          mb={[2, 0, 0, 0]}
+          mb={4}
         >
           <ThumbnailInput
             localMultimedia={thumbnailState}
@@ -148,13 +159,12 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           flex="1"
           ml={[0, 2, 2]}
         >
-          <Input
+          <FormInput
             disabled={!editMode}
             placeholder={t("page.view_dream.name")}
             type="text"
             before={<FontAwesomeIcon icon={faFileVideo} />}
             error={errors.name?.message}
-            value={values.name}
             {...register("name")}
           />
           <Input
@@ -162,60 +172,49 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             placeholder={t("page.view_dream.owner")}
             type="text"
             before={<FontAwesomeIcon icon={faSave} />}
-            value={
-              // always shows user for admins
-              // for normal users look for 'displayed owner' or user instead
-              isUserAdmin
-                ? values.user
-                : (dream?.displayedOwner?.name ?? values.user)
-            }
+            value={dreamOwnerToShow}
             to={getUserProfileRoute(dream?.user)}
             {...register("user")}
           />
-          <Input
+          <FormInput
             disabled
             placeholder={t("page.view_dream.duration")}
             type="text"
             before={<FontAwesomeIcon icon={faClock} />}
-            value={values.processedVideoFrames}
             {...register("processedVideoFrames")}
           />
-          <Input
+          <FormInput
             disabled
             placeholder={t("page.view_dream.created")}
             type="text"
             before={<FontAwesomeIcon icon={faCalendar} />}
-            value={values.created_at}
             {...register("created_at")}
           />
-          <Input
+          <FormInput
             disabled
             placeholder={t("page.view_dream.upvotes")}
             type="text"
             before={<FontAwesomeIcon icon={faThumbsUp} />}
-            value={values.upvotes}
             {...register("upvotes")}
           />
-          <Input
+          <FormInput
             disabled
             placeholder={t("page.view_dream.downvotes")}
             type="text"
             before={<FontAwesomeIcon icon={faThumbsDown} />}
-            value={values.downvotes}
             {...register("downvotes")}
           />
-
         </Column>
       </Row>
       <Row flex="auto" m={0}>
         <Column flex="auto" m={0}>
-          <TextArea
+          <FormTextArea
             linkify
             disabled={!editMode}
             placeholder={t("page.view_dream.description")}
             before={<FontAwesomeIcon icon={faComment} />}
             error={errors.description?.message}
-            value={values.description}
+            // value={values.description}
             {...register("description")}
           />
         </Column>
@@ -257,14 +256,13 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           </FormItem>
         </Restricted>
         <FormItem>
-          <Input
+          <FormInput
             linkify
             disabled={!editMode}
             placeholder={t("page.view_dream.source_url")}
             type="text"
             before={<FontAwesomeIcon icon={faLink} />}
             error={errors.sourceUrl?.message}
-            value={values.sourceUrl}
             tooltipPlace={tooltipPlaces.left}
             {...register("sourceUrl")}
           />
@@ -280,28 +278,26 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
       {showMore &&
         <FormContainer>
           <FormItem>
-            <Input
+            <FormInput
               disabled={!editMode}
               placeholder={t("page.view_dream.activity_level")}
               type="number"
               step="0.01"
               before={<FontAwesomeIcon icon={faFire} />}
               error={errors.activityLevel?.message}
-              value={values.activityLevel}
               tooltipPlace={tooltipPlaces.left}
               {...register("activityLevel")}
             />
           </FormItem>
           <Restricted to={DREAM_PERMISSIONS.CAN_EDIT_FEATURE_RANK}>
             <FormItem>
-              <Input
+              <FormInput
                 disabled={!editMode}
                 placeholder={t("page.view_dream.feature_rank")}
                 type="number"
                 step="0.01"
                 before={<FontAwesomeIcon icon={faRankingStar} />}
                 error={errors.featureRank?.message}
-                value={values.featureRank}
                 tooltipPlace={tooltipPlaces.right}
                 {...register("featureRank")}
               />
@@ -309,23 +305,21 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           </Restricted>
 
           <FormItem>
-            <Input
+            <FormInput
               disabled
               placeholder={t("page.view_dream.size")}
               type="text"
               before={<FontAwesomeIcon icon={faFile} />}
-              value={values.processedVideoSize}
               tooltipPlace={tooltipPlaces.left}
               {...register("processedVideoSize")}
             />
           </FormItem>
           <FormItem>
-            <Input
+            <FormInput
               disabled
               placeholder={t("page.view_dream.original_fps")}
               type="text"
               before={<FontAwesomeIcon icon={faPhotoVideo} />}
-              value={values.processedVideoFPS}
               tooltipPlace={tooltipPlaces.right}
               {...register("processedVideoFPS")}
             />
@@ -360,12 +354,11 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           </Restricted>
           <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_PROCESSED_AT}>
             <FormItem>
-              <Input
+              <FormInput
                 disabled
                 placeholder={t("page.view_dream.processed")}
                 type="text"
                 before={<FontAwesomeIcon icon={faMicrochip} />}
-                value={values.processed_at}
                 tooltipPlace={tooltipPlaces.right}
                 {...register("processed_at")}
               />

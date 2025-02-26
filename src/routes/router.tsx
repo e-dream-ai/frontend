@@ -9,6 +9,7 @@ import MyDreamsPage from "@/components/pages/my-dreams/my-dreams.page";
 import ProfilePage from "@/components/pages/profile/profile.page";
 import UserFeedPage from "@/components/pages/user-feed/user-feed.page";
 import InvitesPage from "@/components/pages/invites/invites.page";
+import ReportsPage from "@/components/pages/reports/reports.page";
 import TermsOfServicePage from "@/components/pages/terms-of-service/terms-of-service.page";
 import ViewDreamPage from "@/components/pages/view-dream/view-dream.page";
 import ViewPlaylistPage from "@/components/pages/view-playlist/view-playlist.page";
@@ -225,6 +226,14 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={[ROLES.ADMIN_GROUP]}>
             <InvitesPage />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: ROUTES.REPORTS,
+        element: (
+          <ProtectedRoute allowedRoles={[ROLES.ADMIN_GROUP]}>
+            <ReportsPage />
           </ProtectedRoute>
         ),
       },

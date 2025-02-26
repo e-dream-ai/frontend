@@ -17,6 +17,7 @@ export const ROUTES = {
   USER_FEED: "/feed",
   REMOTE_CONTROL: "/rc",
   INVITES: "/invites",
+  REPORTS: "/reports",
   HELP: "/help",
   LEARN_MORE: "/learn-more",
   ABOUT: "/about",

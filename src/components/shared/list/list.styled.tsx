@@ -1,15 +1,15 @@
 import styled from "styled-components";
 
-export const StyledList = styled.ul`
+export const Ul = styled.ul`
   display: flex;
   flex-flow: column;
   margin: 0;
   padding: 0;
 `;
 
-export const StyledLi = styled.li<{ isNew?: boolean }>`
+export const Li = styled.li<{ isNew?: boolean }>`
   background-color: ${(props) =>
-    props.isNew ? props.theme.colorLightPrimary : "transparent"};
+        props.isNew ? props.theme.colorLightPrimary : "transparent"};
   display: flex;
   flex: auto;
   flex-flow: row;

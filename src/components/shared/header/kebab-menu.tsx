@@ -71,6 +71,11 @@ const createMenuRoutes = (user?: User | null) => {
       route: ROUTES.INVITES,
       display: "block"
     },
+    {
+      title: "header.reports",
+      route: ROUTES.REPORTS,
+      display: "block"
+    },
   ];
 
   // items to show to guests
@@ -95,8 +100,8 @@ const createMenuRoutes = (user?: User | null) => {
   }
 
   return {
-    // remove invites from routes for normal users
-    user: USER_ROUTES.filter(r => r.title !== "header.invites"),
+    // remove invites and reports from routes for normal users
+    user: USER_ROUTES.filter(r => r.title !== "header.invites" && r.title !== "header.reports"),
     admin: USER_ROUTES
   };
 };

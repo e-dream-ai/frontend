@@ -12,3 +12,4 @@ export { Column, Row } from "./row/row";
 export { Thumbnail, ThumbnailPlaceholder } from "./thumbnail/thumbnail";
 export { Text } from "./text/text";
 export { TextArea } from "./text-area/text-area";
+export { Select } from "./select/select";

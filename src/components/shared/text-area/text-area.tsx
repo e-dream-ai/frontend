@@ -17,6 +17,7 @@ import {
 import { Anchor } from "..";
 import Linkify from "react-linkify";
 import { Tooltip } from "react-tooltip";
+import { useFormContext } from "react-hook-form";
 
 export type TextAreaProps =
   React.TextareaHTMLAttributes<HTMLTextAreaElement> & {
@@ -119,6 +120,15 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
       </TextAreaGroup>
     );
   },
+);
+
+export const FormTextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
+  (props, ref) => {
+    const { watch } = useFormContext();
+    const watchedValue = props.name ? watch(props.name) : props.value;
+
+    return <TextArea {...props} value={watchedValue} ref={ref} />;
+  }
 );
 
 export default TextArea;

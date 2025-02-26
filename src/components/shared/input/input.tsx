@@ -10,6 +10,7 @@ import StyledInput, {
   InputRow,
 } from "./input.styled";
 import { Anchor, AnchorLink } from "..";
+import { useFormContext } from "react-hook-form";
 
 export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   linkify?: boolean;
@@ -94,5 +95,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     );
   },
 );
+
+export const FormInput = React.forwardRef<HTMLInputElement, InputProps>(
+  (props, ref) => {
+    const { watch } = useFormContext();
+    const watchedValue = props.name ? watch(props.name) : props.value;
+
+    return <Input {...props} value={watchedValue} ref={ref} />;
+  }
+);
+
 
 export default Input;
