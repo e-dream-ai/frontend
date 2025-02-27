@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useReports } from "@/api/report/query/useReports";
-import { Column, Row } from "@/components/shared";
+import { AnchorLink, Button, Column, Row } from "@/components/shared";
 import { Paginate } from "@/components/shared/paginate/paginate";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import Text from "@/components/shared/text/text";
@@ -11,6 +11,16 @@ import { Ul, Li } from "@/components/shared/list/list.styled";
 import { useTheme } from "styled-components";
 import useHighlight from "@/hooks/useHighlight";
 import { HighlightKeys } from "@/constants/highlight.constants";
+import { getUserNameOrEmail } from "@/utils/user.util";
+import { getDreamNameOrUUID } from "@/utils/dream.util";
+import moment from "moment";
+import { SHORT_FORMAT } from "@/constants/moment.constants";
+import CopyToClipboard from "react-copy-to-clipboard";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { Tooltip } from "react-tooltip";
+import { faClipboard, faLink } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
+import { ROUTES } from "@/constants/routes.constants";
 
 const List: React.FC<{
   children?: React.ReactNode;
@@ -22,7 +32,16 @@ const ReportItem: React.FC<{
   report: Report;
 }> = ({ report }) => {
   const { state } = useHighlight();
+  const { t } = useTranslation();
   const isNew = state[HighlightKeys.NEW_INVITE] === report.id;
+
+  const handleCopied = () => {
+    toast.success(t("components.reports_list.copied"));
+  };
+
+  const handleNavigateToUrl = (url: string) => () => {
+    window.open(url, "_blank");
+  };
 
   return (
     <Li isNew={isNew}>
@@ -33,22 +52,85 @@ const ReportItem: React.FC<{
         alignItems="center"
       >
         <Column flex={["2"]}>
-          <Text>{report?.dream?.name}</Text>
+          <AnchorLink to={`${ROUTES.VIEW_DREAM}/${report.dream.uuid}`} type="secondary">
+            {getDreamNameOrUUID(report.dream)}
+          </AnchorLink>
         </Column>
         <Column flex={["1"]}>
-          <Text>{report?.reportedBy?.name}</Text>
+          <AnchorLink to={`${ROUTES.PROFILE}/${report.reportedBy?.uuid}`} type="secondary">
+            {getUserNameOrEmail(report?.reportedBy)}
+          </AnchorLink>
         </Column>
         <Column flex={["1"]}>
-          <Text>{report?.reportedAt}</Text>
+          <Text>{moment(report?.reportedAt).format(SHORT_FORMAT)}</Text>
         </Column>
         <Column flex={["1"]}>
-          <Text>{report?.processed}</Text>
+          <Text>{report?.processed ? t("components.reports_list.yes") : t("components.reports_list.no")}</Text>
         </Column>
         <Column flex={["1"]}>
-          <Text>{report?.comments}</Text>
+          <Row m="0">
+            <Text mr="1" data-tooltip-id="comments">
+              <Tooltip
+                id="comments"
+                place="right-end"
+                content={report.comments}
+              />
+              {report?.comments ? t("components.reports_list.yes") : t("components.reports_list.no")}
+            </Text>
+            <CopyToClipboard text={report.link}>
+              <Button
+                data-tooltip-id="copy-comments"
+                buttonType="tertiary"
+                size="sm"
+                onClick={handleCopied}
+                before={<FontAwesomeIcon icon={faClipboard} />}
+                mr="1"
+              >
+                <Tooltip
+                  id="copy-comments"
+                  place="right-end"
+                  content={t("components.reports_list.copy_comments")}
+                />
+              </Button>
+            </CopyToClipboard>
+          </Row>
         </Column>
         <Column flex={["1"]}>
-          <Text>{report?.link}</Text>
+          {report.link ?
+            <Row m="0">
+              <CopyToClipboard text={report.link}>
+                <Button
+                  data-tooltip-id="copy-url"
+                  buttonType="tertiary"
+                  size="sm"
+                  onClick={handleCopied}
+                  before={<FontAwesomeIcon icon={faClipboard} />}
+                  mr="1"
+                >
+                  <Tooltip
+                    id="copy-url"
+                    place="right-end"
+                    content={t("components.reports_list.copy_url")}
+                  />
+                </Button>
+              </CopyToClipboard>
+
+              <Button
+                data-tooltip-id="navigate-to-url"
+                buttonType="tertiary"
+                size="sm"
+                onClick={handleNavigateToUrl(report.link)}
+                before={<FontAwesomeIcon icon={faLink} />}
+              >
+                <Tooltip
+                  id="navigate-to-url"
+                  place="right-end"
+                  content={t("components.reports_list.navigate_url")}
+                />
+              </Button>
+            </Row>
+            : <>-</>
+          }
         </Column>
 
       </Row>
@@ -110,7 +192,6 @@ export const ReportsList: React.FC = () => {
                   {t("components.reports_list.link")}
                 </Text>
               </Column>
-              <Column flex={["1"]} alignItems="flex-end"></Column>
             </Row>
             <List>
               {reports?.map((report: Report) => (

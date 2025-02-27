@@ -1,7 +1,6 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
   Button,
-  Input,
   ItemCard,
   ItemCardList,
   Row,
@@ -12,7 +11,7 @@ import { Section } from "@/components/shared/section/section";
 import { FORMAT } from "@/constants/moment.constants";
 import moment from "moment";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, FormProvider } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
 import UpdateKeyframeSchema, {
@@ -51,6 +50,7 @@ import { useUpdateKeyframe } from "@/api/keyframe/mutation/useUpdateKeyframe";
 import { useUpdateImageKeyframe } from "@/api/keyframe/mutation/useUpdateImageKeyframe";
 import { useDeleteImageKeyframe } from "@/api/keyframe/mutation/useDeleteImageKeyframe";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
+import { FormInput } from "@/components/shared/input/input";
 
 type Params = { uuid: string };
 
@@ -109,19 +109,10 @@ export const ViewKeyframePage = () => {
     isOwner,
   });
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    getValues,
-    control,
-  } = useForm<UpdateKeyframeFormValues>({
+  const formMethods = useForm<UpdateKeyframeFormValues>({
     resolver: yupResolver(UpdateKeyframeSchema),
     defaultValues: { name: "" },
   });
-
-  const values = getValues();
 
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
@@ -177,7 +168,7 @@ export const ViewKeyframePage = () => {
 
       if (response.success) {
         queryClient.setQueryData([KEYFRAME_QUERY_KEY, uuid], response);
-        reset({ name: response?.data?.keyframe.name });
+        formMethods.reset({ name: response?.data?.keyframe.name });
         toast.success(
           `${t("page.view_keyframe.keyframe_updated_successfully")}`,
         );
@@ -222,7 +213,7 @@ export const ViewKeyframePage = () => {
 
 
   const resetRemoteKeyframeForm = useCallback(() => {
-    reset({
+    formMethods.reset({
       name: keyframe?.name,
       user: keyframe?.user?.name,
       /**
@@ -241,14 +232,14 @@ export const ViewKeyframePage = () => {
         },
       created_at: moment(keyframe?.created_at).format(FORMAT),
     });
-  }, [reset, keyframe, isUserAdmin]);
+  }, [formMethods, keyframe, isUserAdmin]);
 
   /**
    * Setting api values to form
    */
   useEffect(() => {
     resetRemoteKeyframeForm();
-  }, [reset, resetRemoteKeyframeForm]);
+  }, [formMethods, resetRemoteKeyframeForm]);
 
   if (!uuid) {
     return <Navigate to={ROUTES.ROOT} replace />;
@@ -319,122 +310,119 @@ export const ViewKeyframePage = () => {
               </Row>
             </Column>
           </Row>
-          <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
-            <Row justifyContent="space-between">
-              <span />
-              <div>
-                {editMode ? (
-                  <>
-                    <Button
-                      type="button"
-                      onClick={handleCancel}
-                      disabled={isLoading}
-                    >
-                      {t("page.view_keyframe.cancel")}
-                    </Button>
 
-                    <Button
-                      type="submit"
-                      after={<FontAwesomeIcon icon={faSave} />}
-                      isLoading={isLoading}
-                      ml="1rem"
-                    >
-                      {isLoading
-                        ? t("page.view_keyframe.saving")
-                        : t("page.view_keyframe.save")}
-                    </Button>
-                  </>
-                ) : (
-                  <Restricted
-                    to={KEYFRAMES_PERMISSIONS.CAN_EDIT_KEYFRAMES}
-                    isOwner={isOwner}
-                  >
-                    <Button
-                      type="button"
-                      after={<FontAwesomeIcon icon={faSave} />}
-                      onClick={handleEdit}
-                    >
-                      {t("page.view_keyframe.edit")}
-                    </Button>
-                  </Restricted>
-                )}
-              </div>
-            </Row>
-            <Row flexWrap="wrap">
-              <Column
-                mr={[0, 2, 2]}
-                mb={[4, 4, 0]}
-                flex={["1 1 320px", "1", "1"]}
-              >
-                <ThumbnailInput
-                  thumbnail={imageUrl}
-                  localMultimedia={image}
-                  editMode={editMode}
-                  isRemoved={isImageRemoved}
-                  handleChange={handleThumbnailChange}
-                  handleRemove={handleRemoveThumbnail}
-                />
-              </Column>
-              <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>
-                <Input
-                  disabled={!editMode}
-                  placeholder={t("page.view_keyframe.name")}
-                  type="text"
-                  before={<FontAwesomeIcon icon={faFileVideo} />}
-                  error={errors.name?.message}
-                  value={values.name}
-                  {...register("name")}
-                />
+          <FormProvider {...formMethods}>
+            <form style={{ minWidth: "320px" }} onSubmit={formMethods.handleSubmit(onSubmit)}>
+              <Row justifyContent="space-between">
+                <span />
+                <div>
+                  {editMode ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={isLoading}
+                      >
+                        {t("page.view_keyframe.cancel")}
+                      </Button>
 
-                <Restricted
-                  to={KEYFRAMES_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
-                  isOwner={user?.id === keyframe?.user?.id}
-                >
-                  <Input
-                    disabled
-                    placeholder={t("page.view_keyframe.owner")}
-                    type="text"
-                    before={<FontAwesomeIcon icon={faSave} />}
-                    value={values.user}
-                    to={`${ROUTES.PROFILE}/${keyframe?.user.uuid}`}
-                    {...register("user")}
-                  />
-                </Restricted>
-
-                <Controller
-                  name="displayedOwner"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      placeholder={
-                        isUserAdmin
-                          ? t("page.view_dream.displayed_owner")
-                          : t("page.view_dream.owner")
-                      }
-                      isDisabled={!editMode || !allowedEditOwner}
-                      isLoading={isUsersLoading}
-                      before={<FontAwesomeIcon icon={faUser} />}
-                      to={getDisplayedOwnerProfileRoute(isUserAdmin, keyframe?.user, keyframe?.displayedOwner)}
-                      options={usersOptions}
-                      onInputChange={(newValue) => setUserSearch(newValue)}
-                    />
+                      <Button
+                        type="submit"
+                        after={<FontAwesomeIcon icon={faSave} />}
+                        isLoading={isLoading}
+                        ml="1rem"
+                      >
+                        {isLoading
+                          ? t("page.view_keyframe.saving")
+                          : t("page.view_keyframe.save")}
+                      </Button>
+                    </>
+                  ) : (
+                    <Restricted
+                      to={KEYFRAMES_PERMISSIONS.CAN_EDIT_KEYFRAMES}
+                      isOwner={isOwner}
+                    >
+                      <Button
+                        type="button"
+                        after={<FontAwesomeIcon icon={faSave} />}
+                        onClick={handleEdit}
+                      >
+                        {t("page.view_keyframe.edit")}
+                      </Button>
+                    </Restricted>
                   )}
-                />
+                </div>
+              </Row>
+              <Row flexWrap="wrap">
+                <Column
+                  mr={[0, 2, 2]}
+                  mb={[4, 4, 0]}
+                  flex={["1 1 320px", "1", "1"]}
+                >
+                  <ThumbnailInput
+                    thumbnail={imageUrl}
+                    localMultimedia={image}
+                    editMode={editMode}
+                    isRemoved={isImageRemoved}
+                    handleChange={handleThumbnailChange}
+                    handleRemove={handleRemoveThumbnail}
+                  />
+                </Column>
+                <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>
+                  <FormInput
+                    disabled={!editMode}
+                    placeholder={t("page.view_keyframe.name")}
+                    type="text"
+                    before={<FontAwesomeIcon icon={faFileVideo} />}
+                    {...formMethods.register("name")}
+                  />
 
-                <Input
-                  disabled
-                  placeholder={t("page.view_keyframe.created")}
-                  type="text"
-                  before={<FontAwesomeIcon icon={faCalendar} />}
-                  value={values.created_at}
-                  {...register("created_at")}
-                />
-              </Column>
-            </Row>
+                  <Restricted
+                    to={KEYFRAMES_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
+                    isOwner={user?.id === keyframe?.user?.id}
+                  >
+                    <FormInput
+                      disabled
+                      placeholder={t("page.view_keyframe.owner")}
+                      type="text"
+                      before={<FontAwesomeIcon icon={faSave} />}
+                      to={`${ROUTES.PROFILE}/${keyframe?.user.uuid}`}
+                      {...formMethods.register("user")}
+                    />
+                  </Restricted>
 
+                  <Controller
+                    name="displayedOwner"
+                    control={formMethods.control}
+                    render={({ field }) => (
+                      <Select
+                        {...field}
+                        placeholder={
+                          isUserAdmin
+                            ? t("page.view_dream.displayed_owner")
+                            : t("page.view_dream.owner")
+                        }
+                        isDisabled={!editMode || !allowedEditOwner}
+                        isLoading={isUsersLoading}
+                        before={<FontAwesomeIcon icon={faUser} />}
+                        to={getDisplayedOwnerProfileRoute(isUserAdmin, keyframe?.user, keyframe?.displayedOwner)}
+                        options={usersOptions}
+                        onInputChange={(newValue) => setUserSearch(newValue)}
+                      />
+                    )}
+                  />
 
-          </form>
+                  <FormInput
+                    disabled
+                    placeholder={t("page.view_keyframe.created")}
+                    type="text"
+                    before={<FontAwesomeIcon icon={faCalendar} />}
+                    {...formMethods.register("created_at")}
+                  />
+                </Column>
+              </Row>
+            </form>
+          </FormProvider>
 
           <Row mt="1rem">
             <h3>{t("page.view_keyframe.dreams")}</h3>

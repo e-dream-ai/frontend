@@ -3,7 +3,7 @@ import * as yup from "yup";
 
 export type CreateReportFormRequest = {
   dreamUUID: string;
-  type: number;
+  typeId: number;
   comments?: string;
   link?: string;
 };

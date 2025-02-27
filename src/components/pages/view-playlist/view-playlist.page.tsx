@@ -1,7 +1,6 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
   Button,
-  Input,
   ItemCardList,
   Row,
 } from "@/components/shared";
@@ -11,7 +10,7 @@ import { Section } from "@/components/shared/section/section";
 import { FORMAT } from "@/constants/moment.constants";
 import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, FormProvider } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate } from "react-router-dom";
 import UpdatePlaylistSchema, {
@@ -52,6 +51,7 @@ import RadioButtonGroup from "@/components/shared/radio-button-group/radio-butto
 import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 import { filterNsfwOption } from "@/utils/dream.util";
+import { FormInput } from "@/components/shared/input/input";
 
 const SectionID = "playlist";
 
@@ -126,19 +126,10 @@ export const ViewPlaylistPage = () => {
     totalVideos,
   } = usePlaylistState();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-    getValues,
-    control,
-  } = useForm<UpdatePlaylistFormValues>({
+  const formMethods = useForm<UpdatePlaylistFormValues>({
     resolver: yupResolver(UpdatePlaylistSchema),
     defaultValues: { name: "" },
   });
-
-  const values = getValues();
 
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
@@ -164,7 +155,7 @@ export const ViewPlaylistPage = () => {
     thumbnail,
     isThumbnailRemoved,
     videos,
-    reset,
+    reset: formMethods.reset,
     setEditMode,
     setCurrentUploadFile,
     setVideos,
@@ -209,7 +200,7 @@ export const ViewPlaylistPage = () => {
   };
 
   const resetRemotePlaylistForm = useCallback(() => {
-    reset({
+    formMethods.reset({
       name: playlist?.name,
       user: playlist?.user?.name,
       /**
@@ -230,14 +221,14 @@ export const ViewPlaylistPage = () => {
       nsfw: filterNsfwOption(playlist?.nsfw, t),
       created_at: moment(playlist?.created_at).format(FORMAT),
     });
-  }, [reset, playlist, isUserAdmin, t]);
+  }, [formMethods, playlist, isUserAdmin, t]);
 
   /**
    * Setting api values to form
    */
   useEffect(() => {
     resetRemotePlaylistForm();
-  }, [reset, resetRemotePlaylistForm]);
+  }, [formMethods, resetRemotePlaylistForm]);
 
   if (!uuid) return <Navigate to={ROUTES.ROOT} replace />;
   if (isError) return <NotFound />;
@@ -319,218 +310,165 @@ export const ViewPlaylistPage = () => {
               </Row>
             </Column>
           </Row>
-          <form style={{ minWidth: "320px" }} onSubmit={handleSubmit(onSubmit)}>
-            <Row justifyContent="space-between">
-              <span />
-              <div>
-                {editMode ? (
-                  <>
-                    <Button
-                      type="button"
-                      onClick={handleCancel}
-                      disabled={isLoading}
-                    >
-                      {t("page.view_playlist.cancel")}
-                    </Button>
 
-                    <Button
-                      type="submit"
-                      after={<FontAwesomeIcon icon={faSave} />}
-                      isLoading={isLoading}
-                      ml="1rem"
+          <FormProvider {...formMethods}>
+            <form style={{ minWidth: "320px" }} onSubmit={formMethods.handleSubmit(onSubmit)}>
+              <Row justifyContent="space-between">
+                <span />
+                <div>
+                  {editMode ? (
+                    <>
+                      <Button
+                        type="button"
+                        onClick={handleCancel}
+                        disabled={isLoading}
+                      >
+                        {t("page.view_playlist.cancel")}
+                      </Button>
+
+                      <Button
+                        type="submit"
+                        after={<FontAwesomeIcon icon={faSave} />}
+                        isLoading={isLoading}
+                        ml="1rem"
+                      >
+                        {isLoading
+                          ? t("page.view_playlist.saving")
+                          : t("page.view_playlist.save")}
+                      </Button>
+                    </>
+                  ) : (
+                    <Restricted
+                      to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
+                      isOwner={isOwner}
                     >
-                      {isLoading
-                        ? t("page.view_playlist.saving")
-                        : t("page.view_playlist.save")}
-                    </Button>
-                  </>
-                ) : (
+                      <Button
+                        type="button"
+                        after={<FontAwesomeIcon icon={faSave} />}
+                        onClick={handleEdit}
+                      >
+                        {t("page.view_playlist.edit")}
+                      </Button>
+                    </Restricted>
+                  )}
+                </div>
+              </Row>
+              <Row flexWrap="wrap">
+                <Column
+                  mr={[0, 2, 2]}
+                  mb={[4, 4, 0]}
+                  flex={["1 1 320px", "1", "1"]}
+                >
+                  <ThumbnailInput
+                    thumbnail={thumbnailUrl}
+                    localMultimedia={thumbnail}
+                    editMode={editMode}
+                    isRemoved={isThumbnailRemoved}
+                    handleChange={handleThumbnailChange}
+                    handleRemove={handleRemoveThumbnail}
+                  />
+                </Column>
+                <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>
+                  <FormInput
+                    disabled={!editMode}
+                    placeholder={t("page.view_playlist.name")}
+                    type="text"
+                    before={<FontAwesomeIcon icon={faFileVideo} />}
+                    {...formMethods.register("name")}
+                  />
+                  <Restricted to={PLAYLIST_PERMISSIONS.CAN_VIEW_FEATURE_RANK}>
+                    <FormInput
+                      disabled={!editMode}
+                      placeholder={t("page.view_playlist.feature_rank")}
+                      type="text"
+                      before={<FontAwesomeIcon icon={faRankingStar} />}
+                      {...formMethods.register("featureRank")}
+                    />
+                  </Restricted>
+
                   <Restricted
-                    to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
+                    to={PLAYLIST_PERMISSIONS.CAN_VIEW_NSFW}
                     isOwner={isOwner}
                   >
-                    <Button
-                      type="button"
-                      after={<FontAwesomeIcon icon={faSave} />}
-                      onClick={handleEdit}
-                    >
-                      {t("page.view_playlist.edit")}
-                    </Button>
+                    <Controller
+                      name="nsfw"
+                      control={formMethods.control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          isDisabled={!editMode || !allowedEditOwner}
+                          placeholder={t("page.view_playlist.nsfw")}
+                          before={<FontAwesomeIcon icon={faShield} />}
+                          options={getNsfwOptions(t)}
+                        />
+                      )}
+                    />
                   </Restricted>
-                )}
-              </div>
-            </Row>
-            <Row flexWrap="wrap">
-              <Column
-                mr={[0, 2, 2]}
-                mb={[4, 4, 0]}
-                flex={["1 1 320px", "1", "1"]}
-              >
-                <ThumbnailInput
-                  thumbnail={thumbnailUrl}
-                  localMultimedia={thumbnail}
-                  editMode={editMode}
-                  isRemoved={isThumbnailRemoved}
-                  handleChange={handleThumbnailChange}
-                  handleRemove={handleRemoveThumbnail}
-                />
-              </Column>
-              <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>
-                <Input
-                  disabled={!editMode}
-                  placeholder={t("page.view_playlist.name")}
-                  type="text"
-                  before={<FontAwesomeIcon icon={faFileVideo} />}
-                  error={errors.name?.message}
-                  value={values.name}
-                  {...register("name")}
-                />
-                <Restricted to={PLAYLIST_PERMISSIONS.CAN_VIEW_FEATURE_RANK}>
-                  <Input
-                    disabled={!editMode}
-                    placeholder={t("page.view_playlist.feature_rank")}
-                    type="text"
-                    before={<FontAwesomeIcon icon={faRankingStar} />}
-                    error={errors.featureRank?.message}
-                    value={values.featureRank}
-                    {...register("featureRank")}
-                  />
-                </Restricted>
 
-                <Restricted
-                  to={PLAYLIST_PERMISSIONS.CAN_VIEW_NSFW}
-                  isOwner={isOwner}
-                >
+                  <Restricted
+                    to={PLAYLIST_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
+                    isOwner={user?.id === playlist?.user?.id}
+                  >
+                    <FormInput
+                      disabled
+                      placeholder={t("page.view_playlist.owner")}
+                      type="text"
+                      before={<FontAwesomeIcon icon={faSave} />}
+                      to={`${ROUTES.PROFILE}/${playlist?.user.uuid}`}
+                      {...formMethods.register("user")}
+                    />
+                  </Restricted>
+
                   <Controller
-                    name="nsfw"
-                    control={control}
+                    name="displayedOwner"
+                    control={formMethods.control}
                     render={({ field }) => (
                       <Select
                         {...field}
+                        placeholder={
+                          isUserAdmin
+                            ? t("page.view_dream.displayed_owner")
+                            : t("page.view_dream.owner")
+                        }
                         isDisabled={!editMode || !allowedEditOwner}
-                        placeholder={t("page.view_playlist.nsfw")}
-                        before={<FontAwesomeIcon icon={faShield} />}
-                        options={getNsfwOptions(t)}
+                        isLoading={isUsersLoading}
+                        before={<FontAwesomeIcon icon={faUser} />}
+                        to={getDisplayedOwnerProfileRoute(isUserAdmin, playlist?.user, playlist?.displayedOwner)}
+                        options={usersOptions}
+                        onInputChange={(newValue) => setUserSearch(newValue)}
                       />
                     )}
                   />
-                </Restricted>
 
+                  <FormInput
+                    disabled
+                    placeholder={t("page.view_playlist.created")}
+                    type="text"
+                    before={<FontAwesomeIcon icon={faCalendar} />}
+                    {...formMethods.register("created_at")}
+                  />
+                </Column>
+              </Row>
+              <Row justifyContent="space-between" alignItems="center">
+                <Column>
+                  <RadioButtonGroup
+                    name="search-filter"
+                    value={radioGroupState as string}
+                    data={getPlaylistTabsFilterData(t)}
+                    onChange={handleRadioButtonGroupChange}
+                  />
+                </Column>
                 <Restricted
-                  to={PLAYLIST_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
+                  to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
                   isOwner={user?.id === playlist?.user?.id}
                 >
-                  <Input
-                    disabled
-                    placeholder={t("page.view_playlist.owner")}
-                    type="text"
-                    before={<FontAwesomeIcon icon={faSave} />}
-                    value={values.user}
-                    to={`${ROUTES.PROFILE}/${playlist?.user.uuid}`}
-                    {...register("user")}
-                  />
-                </Restricted>
+                  <Column>
+                    {radioGroupState === "items" &&
+                      (<>
+                        <Row mb={2} justifyContent="flex-end">
+                          <Text>{t("page.view_playlist.sort_by")}</Text>
+                        </Row>
 
-                <Controller
-                  name="displayedOwner"
-                  control={control}
-                  render={({ field }) => (
-                    <Select
-                      {...field}
-                      placeholder={
-                        isUserAdmin
-                          ? t("page.view_dream.displayed_owner")
-                          : t("page.view_dream.owner")
-                      }
-                      isDisabled={!editMode || !allowedEditOwner}
-                      isLoading={isUsersLoading}
-                      before={<FontAwesomeIcon icon={faUser} />}
-                      to={getDisplayedOwnerProfileRoute(isUserAdmin, playlist?.user, playlist?.displayedOwner)}
-                      options={usersOptions}
-                      onInputChange={(newValue) => setUserSearch(newValue)}
-                    />
-                  )}
-                />
-
-                <Input
-                  disabled
-                  placeholder={t("page.view_playlist.created")}
-                  type="text"
-                  before={<FontAwesomeIcon icon={faCalendar} />}
-                  value={values.created_at}
-                  {...register("created_at")}
-                />
-              </Column>
-            </Row>
-            <Row justifyContent="space-between" alignItems="center">
-              <Column>
-                <RadioButtonGroup
-                  name="search-filter"
-                  value={radioGroupState as string}
-                  data={getPlaylistTabsFilterData(t)}
-                  onChange={handleRadioButtonGroupChange}
-                />
-              </Column>
-              <Restricted
-                to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
-                isOwner={user?.id === playlist?.user?.id}
-              >
-                <Column>
-                  {radioGroupState === "items" &&
-                    (<>
-                      <Row mb={2} justifyContent="flex-end">
-                        <Text>{t("page.view_playlist.sort_by")}</Text>
-                      </Row>
-
-                      <Row mb={0}>
-                        <Column mr="2">
-                          <Button
-                            type="button"
-                            buttonType="default"
-                            transparent
-                            ml="1rem"
-                            onClick={handleNavigateAddToPlaylist}
-                            data-tooltip-id="add-dreams"
-                          >
-                            <Tooltip
-                              id="add-dreams"
-                              place="right-end"
-                              content={t(
-                                "page.view_playlist.add_dreams_to_playlist",
-                              )}
-                            />
-                            <FontAwesomeIcon icon={faPlus} />
-                          </Button>
-                        </Column>
-                        <Column>
-                          <Row alignItems="center" flex="auto" mb="0">
-                            <Button
-                              type="button"
-                              size="sm"
-                              buttonType="tertiary"
-                              mr={2}
-                              onClick={handleOrderPlaylistBy("name")}
-                            >
-                              {t("page.view_playlist.name")}
-                            </Button>
-                            <Button
-                              type="button"
-                              size="sm"
-                              buttonType="tertiary"
-                              onClick={handleOrderPlaylistBy("date")}
-                            >
-                              {t("page.view_playlist.date")}
-                            </Button>
-                          </Row>
-                        </Column>
-                      </Row>
-                    </>
-                    )
-                  }
-
-                  {radioGroupState === "keyframes" &&
-                    (
-                      <>
                         <Row mb={0}>
                           <Column mr="2">
                             <Button
@@ -538,86 +476,135 @@ export const ViewPlaylistPage = () => {
                               buttonType="default"
                               transparent
                               ml="1rem"
-                              onClick={handleNavigateAddKeyframeToPlaylist}
-                              data-tooltip-id="add-keyframes"
+                              onClick={handleNavigateAddToPlaylist}
+                              data-tooltip-id="add-dreams"
                             >
                               <Tooltip
-                                id="add-keyframes"
+                                id="add-dreams"
                                 place="right-end"
                                 content={t(
-                                  "page.view_playlist.add_keyframes_to_playlist",
+                                  "page.view_playlist.add_dreams_to_playlist",
                                 )}
                               />
                               <FontAwesomeIcon icon={faPlus} />
                             </Button>
                           </Column>
+                          <Column>
+                            <Row alignItems="center" flex="auto" mb="0">
+                              <Button
+                                type="button"
+                                size="sm"
+                                buttonType="tertiary"
+                                mr={2}
+                                onClick={handleOrderPlaylistBy("name")}
+                              >
+                                {t("page.view_playlist.name")}
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                buttonType="tertiary"
+                                onClick={handleOrderPlaylistBy("date")}
+                              >
+                                {t("page.view_playlist.date")}
+                              </Button>
+                            </Row>
+                          </Column>
                         </Row>
                       </>
-                    )
-                  }
+                      )
+                    }
 
-                </Column>
-              </Restricted>
-            </Row>
-            {
-              // if items are selected, show item cardlist and data
-              radioGroupState === "items" && <Row flex="auto">
-                {items.length ? (
-                  <ItemCardList>
-                    {items.map((i) => (
-                      <ItemCard
-                        key={i.id}
-                        draggable
-                        itemId={i.id}
-                        dndMode="local"
-                        size="sm"
-                        type={i.type}
-                        item={i.type === "dream" ? i.dreamItem : i.playlistItem}
-                        order={i.order}
-                        deleteDisabled={!allowedEditPlaylist}
-                        showPlayButton
-                        inline
-                        droppable
-                        onDelete={handleDeletePlaylistItem(i.id)}
-                        onOrder={handleOrderPlaylist}
-                      />
-                    ))}
-                  </ItemCardList>
-                ) : (
-                  <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
-                )}
+                    {radioGroupState === "keyframes" &&
+                      (
+                        <>
+                          <Row mb={0}>
+                            <Column mr="2">
+                              <Button
+                                type="button"
+                                buttonType="default"
+                                transparent
+                                ml="1rem"
+                                onClick={handleNavigateAddKeyframeToPlaylist}
+                                data-tooltip-id="add-keyframes"
+                              >
+                                <Tooltip
+                                  id="add-keyframes"
+                                  place="right-end"
+                                  content={t(
+                                    "page.view_playlist.add_keyframes_to_playlist",
+                                  )}
+                                />
+                                <FontAwesomeIcon icon={faPlus} />
+                              </Button>
+                            </Column>
+                          </Row>
+                        </>
+                      )
+                    }
+
+                  </Column>
+                </Restricted>
               </Row>
-            }
-            {
-              // if items are selected, show item cardlist and data
-              radioGroupState === "keyframes" && <Row flex="auto">
-                {playlistKeyframes.length ? (
-                  <ItemCardList>
-                    {playlistKeyframes.map((k) => (
-                      <ItemCard
-                        key={k.id}
-                        draggable
-                        itemId={k.id}
-                        dndMode="local"
-                        size="sm"
-                        type="keyframe"
-                        item={k.keyframe}
-                        order={k.order}
-                        deleteDisabled={!allowedEditPlaylist}
-                        inline
-                        onDelete={handleDeleteKeyframe(k.id)}
-                      />
-                    ))}
-                  </ItemCardList>
-                ) : (
-                  <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
-                )}
-              </Row>
-            }
+              {
+                // if items are selected, show item cardlist and data
+                radioGroupState === "items" && <Row flex="auto">
+                  {items.length ? (
+                    <ItemCardList>
+                      {items.map((i) => (
+                        <ItemCard
+                          key={i.id}
+                          draggable
+                          itemId={i.id}
+                          dndMode="local"
+                          size="sm"
+                          type={i.type}
+                          item={i.type === "dream" ? i.dreamItem : i.playlistItem}
+                          order={i.order}
+                          deleteDisabled={!allowedEditPlaylist}
+                          showPlayButton
+                          inline
+                          droppable
+                          onDelete={handleDeletePlaylistItem(i.id)}
+                          onOrder={handleOrderPlaylist}
+                        />
+                      ))}
+                    </ItemCardList>
+                  ) : (
+                    <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
+                  )}
+                </Row>
+              }
+              {
+                // if items are selected, show item cardlist and data
+                radioGroupState === "keyframes" && <Row flex="auto">
+                  {playlistKeyframes.length ? (
+                    <ItemCardList>
+                      {playlistKeyframes.map((k) => (
+                        <ItemCard
+                          key={k.id}
+                          draggable
+                          itemId={k.id}
+                          dndMode="local"
+                          size="sm"
+                          type="keyframe"
+                          item={k.keyframe}
+                          order={k.order}
+                          deleteDisabled={!allowedEditPlaylist}
+                          inline
+                          onDelete={handleDeleteKeyframe(k.id)}
+                        />
+                      ))}
+                    </ItemCardList>
+                  ) : (
+                    <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
+                  )}
+                </Row>
+              }
 
 
-            {/* Removing add item playlist dropzone, probably next to be deprecated  */}
-            {/* <Restricted
+              {/* Removing add item playlist dropzone, probably next to be deprecated  */}
+              {/* <Restricted
               to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
               isOwner={user?.id === playlist?.user?.id}
             >
@@ -635,7 +622,8 @@ export const ViewPlaylistPage = () => {
                 <AddItemPlaylistDropzone show uuid={playlist?.uuid} />
               </Row>
             </Restricted> */}
-          </form>
+            </form>
+          </FormProvider>
         </Section>
       </Container>
     </>

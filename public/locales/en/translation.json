@@ -475,7 +475,13 @@
       "reported_at": "Reported at",
       "processed": "Processed",
       "comments": "Comments",
-      "link": "link"
+      "link": "link",
+      "yes": "Yes",
+      "no": "No",
+      "copy_url": "Copy url",
+      "copy_comments": "Copy comments",
+      "copied": "Copied!",
+      "navigate_url": "Navigate to url"
     },
     "filmstrip": {
       "empty": "No filmstrip"

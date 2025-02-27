@@ -1,3 +1,5 @@
+
+import { useMemo } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, Input, Modal, Row, Select, TextArea } from "@/components/shared";
 import { Controller, useForm } from "react-hook-form";
@@ -9,24 +11,20 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faAngleRight, faFileText, faLink, faWarning } from "@fortawesome/free-solid-svg-icons";
 import { useCreateReport } from "@/api/report/mutation/useCreateReport";
 import { UNLICENSED_TYPE_ID } from "@/constants/report.constants";
+import { useReportTypes } from "@/api/report/query/useReportTypes";
+import { Dream } from "@/types/dream.types";
 
-const TYPES = [
-  { id: 1, type: "Spam content" },
-  { id: 2, type: "Not safe for work (NSFW)" },
-  { id: 3, type: "Contains visible title, watermark, or bug" },
-  { id: 4, type: "Potentially unlicensed (original source needed)" },
-  { id: 5, type: "Illegal or harassing material" },
-  { id: 6, type: "Other content issue" }
-];
-
-const typesOptions = TYPES.map((f) => ({
-  value: f.id,
-  label: f.type,
-}));
-
-export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({ isOpen = false, onCancel }) => {
+export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes> & { dream: Dream }> = ({ isOpen = false, onCancel, dream }) => {
   const { t } = useTranslation();
   const { mutate, isLoading } = useCreateReport();
+  const { data, isLoading: loadingTypes } = useReportTypes()
+
+  const typesOptions = useMemo(() => (data?.data?.reportTypes ?? [])
+    .map((f) => ({
+      value: f.id,
+      label: f.description,
+    }))
+    , [data]);
 
   const {
     control,
@@ -44,8 +42,8 @@ export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({ 
   const onSubmit = (formData: CreateReportFormValues) => {
     mutate(
       {
-        dreamUUID: "",
-        type: formData.type.value,
+        dreamUUID: dream.uuid,
+        typeId: formData.type.value,
         comments: formData.comments,
         link: formData.link
       },
@@ -56,6 +54,7 @@ export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({ 
               t("modal.report.report_created_successfully"),
             );
             reset();
+            onCancel?.();
           } else {
             toast.error(
               `${t("modal.report.error_creating_report")} ${data.message
@@ -86,7 +85,7 @@ export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({ 
             <Select
               {...field}
               placeholder={t("modal.report.type")}
-              // isLoading={isTypesLoading}
+              isLoading={loadingTypes}
               before={<FontAwesomeIcon icon={faWarning} />}
               options={typesOptions}
               // onChange={handleTypeSelectChange}
@@ -106,17 +105,17 @@ export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({ 
         {
           watchedType?.value === UNLICENSED_TYPE_ID && <Input
             placeholder={t("modal.report.link")}
-            type="email"
+            type="text"
             before={<FontAwesomeIcon icon={faLink} />}
             error={errors.link?.message}
             {...register("link")}
           />
         }
-        
+
         <Row justifyContent="flex-end">
           <Button
             type="button"
-            isLoading={isLoading}
+            disabled={isLoading}
             mr="1"
             onClick={onCancel}
           >

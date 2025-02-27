@@ -99,9 +99,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const {
     control,
     register,
-    formState: {
-      errors
-    },
   } = useFormContext<UpdateDreamFormValues>();
 
   // always shows user for admins
@@ -164,7 +161,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             placeholder={t("page.view_dream.name")}
             type="text"
             before={<FontAwesomeIcon icon={faFileVideo} />}
-            error={errors.name?.message}
             {...register("name")}
           />
           <Input
@@ -213,8 +209,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             disabled={!editMode}
             placeholder={t("page.view_dream.description")}
             before={<FontAwesomeIcon icon={faComment} />}
-            error={errors.description?.message}
-            // value={values.description}
             {...register("description")}
           />
         </Column>
@@ -262,7 +256,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             placeholder={t("page.view_dream.source_url")}
             type="text"
             before={<FontAwesomeIcon icon={faLink} />}
-            error={errors.sourceUrl?.message}
             tooltipPlace={tooltipPlaces.left}
             {...register("sourceUrl")}
           />
@@ -284,7 +277,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               type="number"
               step="0.01"
               before={<FontAwesomeIcon icon={faFire} />}
-              error={errors.activityLevel?.message}
               tooltipPlace={tooltipPlaces.left}
               {...register("activityLevel")}
             />
@@ -297,7 +289,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                 type="number"
                 step="0.01"
                 before={<FontAwesomeIcon icon={faRankingStar} />}
-                error={errors.featureRank?.message}
                 tooltipPlace={tooltipPlaces.right}
                 {...register("featureRank")}
               />

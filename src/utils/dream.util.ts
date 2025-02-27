@@ -17,6 +17,8 @@ import {
   UpdateDreamRequestValues,
 } from "@/schemas/update-dream.schema";
 
+export const getDreamNameOrUUID = (dream?: Dream) => dream?.name || dream?.uuid;
+
 export const generateDreamOptimisticApiResponse = ({
   dream,
 }: {

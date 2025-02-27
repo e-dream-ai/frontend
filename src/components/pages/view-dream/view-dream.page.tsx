@@ -327,7 +327,7 @@ const ViewDreamPage: React.FC = () => {
 
   if (!uuid) return <Navigate to={ROUTES.ROOT} replace />;
 
-  if (isDreamLoading) return (
+  if (isDreamLoading || !dream) return (
     <Container>
       <Row justifyContent="center">
         <Spinner />
@@ -382,6 +382,7 @@ const ViewDreamPage: React.FC = () => {
       <ReportDreamModal
         isOpen={showReportModal}
         onCancel={onHideReportModal}
+        dream={dream}
       />
       <Container>
         <Section id={SectionID}>
