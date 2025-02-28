@@ -460,7 +460,18 @@ const ViewDreamPage: React.FC = () => {
                     style={{ width: "3rem" }}
                     onClick={onShowReportModal}
                   >
-                    <FontAwesomeIcon icon={faFlag} />
+                    {(dream.reports?.length) ? (
+                      <span className="fa-stack fa-sm">
+                        <FontAwesomeIcon icon={faCircle} className="fa-2x" />
+                        <FontAwesomeIcon
+                          icon={faFlag}
+                          className="fa-stack-1x"
+                          style={{ color: "black" }}
+                        />
+                      </span>
+                    ) : (
+                      <FontAwesomeIcon icon={faFlag} />
+                    )}
                   </Button>
 
                   <Restricted

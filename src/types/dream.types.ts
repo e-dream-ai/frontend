@@ -1,6 +1,7 @@
 import { User } from "./auth.types";
 import { Keyframe } from "./keyframe.types";
 import { PlaylistItem } from "./playlist.types";
+import { Report } from "./report.types";
 
 export enum DreamStatusType {
   NONE = "none",
@@ -41,6 +42,7 @@ export type Dream = {
   downvotes?: number;
   startKeyframe?: Keyframe;
   endKeyframe?: Keyframe;
+  reports?: Report[];
   processed_at?: string;
   created_at: string;
   updated_at: string;
