@@ -18,9 +18,10 @@ import { SHORT_FORMAT } from "@/constants/moment.constants";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Tooltip } from "react-tooltip";
-import { faClipboard, faLink } from "@fortawesome/free-solid-svg-icons";
+import { faClipboard, faGears, faLink } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { ROUTES } from "@/constants/routes.constants";
+import { useUpdateReport } from "@/api/report/mutation/useUpdateReport";
 
 const List: React.FC<{
   children?: React.ReactNode;
@@ -33,6 +34,7 @@ const ReportItem: React.FC<{
 }> = ({ report }) => {
   const { state } = useHighlight();
   const { t } = useTranslation();
+  const { mutateAsync, isLoading } = useUpdateReport();
   const isNew = state[HighlightKeys.NEW_INVITE] === report.id;
 
   const handleCopied = () => {
@@ -42,6 +44,22 @@ const ReportItem: React.FC<{
   const handleNavigateToUrl = (url: string) => () => {
     window.open(url, "_blank");
   };
+
+  const handleProcessReport = async () => {
+    try {
+      const data = await mutateAsync({ uuid: report.uuid, values: { processed: true } })
+
+      if (data.success) {
+        toast.success(t("components.reports_list.report_processed_successfully"));
+      } else {
+        toast.error(
+          `${t("components.reports_list.error_processing_report")} ${data.message}`,
+        );
+      }
+    } catch (error) {
+      toast.error(t("components.reports_list.error_processing_report"));
+    }
+  }
 
   return (
     <Li isNew={isNew}>
@@ -65,7 +83,17 @@ const ReportItem: React.FC<{
           <Text>{moment(report?.reportedAt).format(SHORT_FORMAT)}</Text>
         </Column>
         <Column flex={["1"]}>
-          <Text>{report?.processed ? t("components.reports_list.yes") : t("components.reports_list.no")}</Text>
+          <Row>
+            <Text>{report?.processed ? t("components.reports_list.yes") : t("components.reports_list.no")}</Text>
+            <Button
+              data-tooltip-id="navigate-to-url"
+              buttonType="tertiary"
+              size="sm"
+              onClick={handleProcessReport}
+              isLoading={isLoading}
+              before={<FontAwesomeIcon icon={faGears} />}
+            />
+          </Row>
         </Column>
         <Column flex={["1"]}>
           <Row m="0">
