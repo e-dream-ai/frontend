@@ -153,7 +153,8 @@ export const TermsOfServicePage: React.FC = () => {
                   permission for the company to create derived works such as
                   changing resolution and re-encoding in different formats,
                   playing back at different speeds, mixing with other visuals,
-                  and otherwise transforming or editing for interactive display.
+                  generating transitions, and transforming or editing
+		  for interactive display.
                 </li>
                 <li>
                   Uploading also grants each other user of the Service a
@@ -173,9 +174,21 @@ export const TermsOfServicePage: React.FC = () => {
                   perform, server copies of your videos that have been removed
                   or deleted.
                 </li>
+		<li>
+                  No AI Training Without Consent. This license does not grant
+                  the company or anyone the right to use your content for training
+                  generative AI models beyond what is necessary to operate the
+                  service (eg indexing and recommendations).
+		</li>
+                <li>
+                  No Third-Party Remixing or Derivatives outside normal
+                  use. Other users may not copy, remix, alter, or
+                  redistribute your content beyond what is inherently enabled
+                  by using the service.
+                </li>
                 <li>
                   The company is not obligated to distribute or display any
-                  uploaded content. The company may delete any content at its
+                  uploaded content. The company may hide or delete content at its
                   sole discretion.
                 </li>
                 <li>
@@ -190,14 +203,49 @@ export const TermsOfServicePage: React.FC = () => {
                   If the content has a source URL or description,
 		  please record this metadata along with the content.
                 </li>
-                <li>
-                  The upload form has an optional checkbox to add a
-		  {" "}<Anchor href="https://creativecommons.org/licenses/by/4.0/">
-		  Creative Commons Attribution</Anchor> license (CC BY).
-		  As long as you are given appropriate credit, this enables
-		  other artists to remix and build on your content, including
-		  training AI models.
-                </li>
+              </ol>
+            </li>
+            <li>
+              <b>Granting Additional Rights with a CC BY License</b>
+              <ol type="a">
+		<li>
+ 		  If the ‘CC BY’ option is checked at upload (or later you edit your content’s
+                  license setting accordingly), you agree to license your Content under the
+		  {" "}<Anchor href="https://creativecommons.org/licenses/by/4.0/">Creative
+                  Commons Attribution 4.0 International (CC BY 4.0) license</Anchor>. In
+                  doing so, you grant to the company and the general public a worldwide,
+                  non-exclusive, royalty-free license to reproduce, distribute, create
+                  derivative works of, display, and perform your Content, for both
+                  commercial and non-commercial purposes, as long as proper attribution is
+                  given to you. We summarize those requirements below.
+		</li>
+		<li>
+		  <b>AI Training and Remixing.</b>  By selecting CC BY, you also explicitly grant
+                  the company permission to include your content in datasets for training AI
+                  models or other algorithmic processes and to make it available for
+                  remixing and transformation by other users or third parties, subject to
+                  CC BY attribution requirements.
+		</li>
+		<li>
+		  <b>User Remix & Collaboration.</b> Other users may edit, adapt, or build upon
+                  your Content (for instance, to create mashups, collaborative
+                  “wiki-visuals,” or other derivative works) and share those remixes under
+                  the terms of CC BY, which requires that they credit you as the original
+                  creator.
+		</li>
+		<li>
+		  <b>Attribution Requirements.</b>  Anyone using or remixing your Content under
+                  CC BY must provide appropriate credit (e.g., by citing you by name with
+                  link) or other appropriate attribution) and indicate if changes were made
+                  to the original work.
+		</li>
+		<li>
+		  <b>Changing Your Mind or Removing CC BY.</b>  Selecting or deselecting the CC
+                  BY option only applies on a prospective basis. Once anyone has lawfully
+                  accessed or downloaded your content under CC BY, nobody can
+                  retroactively revoke their rights to content already in use, subject to
+                  applicable laws.
+		</li>
               </ol>
             </li>
             <li>
