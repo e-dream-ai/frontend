@@ -2,6 +2,8 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import {
   Button,
   Input,
+  ItemCard,
+  ItemCardList,
   Row,
 } from "@/components/shared";
 import Container from "@/components/shared/container/container";
@@ -433,6 +435,23 @@ export const ViewKeyframePage = () => {
 
 
           </form>
+
+          <Row mt="1rem">
+            <h3>{t("page.view_keyframe.dreams")}</h3>
+          </Row>
+          <Row flex="auto">
+            <ItemCardList>
+              {keyframe?.dreams?.map((d) => (
+                <ItemCard
+                  key={d.id}
+                  type="dream"
+                  item={d}
+                  inline
+                  size="sm"
+                />
+              ))}
+            </ItemCardList>
+          </Row>
         </Section>
       </Container>
     </>

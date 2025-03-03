@@ -230,6 +230,7 @@
       "created": "Created",
       "keyframes": "Keyframes",
       "upload_file": "Upload file(s)",
+      "dreams": "Dreams",
       "confirm_delete_modal_title": "Confirm delete keyframe",
       "confirm_delete_modal_body": "Are you sure to delete this keyframe?",
       "keyframe_updated_successfully": "Keyframe updated successfully.",
