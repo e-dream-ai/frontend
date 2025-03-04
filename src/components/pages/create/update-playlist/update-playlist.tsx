@@ -38,6 +38,7 @@ import {
   faUpload,
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
+import { CCBY_ID } from "@/constants/terms-of-service";
 
 export const UpdatePlaylist: React.FC = () => {
   const { t } = useTranslation();
@@ -175,7 +176,11 @@ export const UpdatePlaylist: React.FC = () => {
                   {...register("ccbyLicense")}
                   error={errors.ccbyLicense?.message}
                 >
-                  {t("page.create.ccby_license_dream")}
+                  {t("page.create.license_dream")}
+                  {" "}
+                  <AnchorLink to={`${ROUTES.TERMS_OF_SERVICE}#${CCBY_ID}`}>
+                    {t("page.create.license_dream_ccby")}
+                  </AnchorLink>
                 </Checkbox>
               </div>
               <TextArea

@@ -46,6 +46,7 @@ import { VideoList } from "@/components/shared/video-list/video-list";
 import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
 import { Tooltip } from "react-tooltip";
 import { createAddFileHandler } from "@/utils/file.util";
+import { CCBY_ID } from "@/constants/terms-of-service";
 export const CreatePlaylist: React.FC = () => {
   const { t } = useTranslation();
   const [videos, setVideos] = useState<FileState[]>([]);
@@ -228,7 +229,11 @@ export const CreatePlaylist: React.FC = () => {
                   place="right-end"
                   content={t("page.create.ccby_license_dream_tooltip")}
                 />
-                {t("page.create.ccby_license_dream")}
+                {t("page.create.license_dream")}
+                {" "}
+                <AnchorLink to={`${ROUTES.TERMS_OF_SERVICE}#${CCBY_ID}`}>
+                  {t("page.create.license_dream_ccby")}
+                </AnchorLink>
               </Checkbox>
             </div>
             <TextArea

@@ -7,6 +7,7 @@ import { ToastContainer } from "react-toastify";
 import { router } from "@/routes/router";
 import TagManager from "react-gtm-module";
 import "react-toastify/dist/ReactToastify.css";
+import ScrollToHashElement from "@/components/shared/scroll-to-hash/scroll-to-hash";
 
 const App = () => {
   /**
@@ -30,6 +31,7 @@ const App = () => {
 
   return (
     <>
+      <ScrollToHashElement />
       <ToastContainer
         theme="dark"
         position="bottom-right"

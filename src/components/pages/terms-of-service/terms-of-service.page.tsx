@@ -2,7 +2,9 @@ import { Row } from "@/components/shared";
 import { Anchor } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
+import { CcbyTable } from "@/components/shared/terms-of-service/table";
 import Text from "@/components/shared/text/text";
+import { CCBY_ID } from "@/constants/terms-of-service";
 import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "terms-of-service";
@@ -154,7 +156,7 @@ export const TermsOfServicePage: React.FC = () => {
                   changing resolution and re-encoding in different formats,
                   playing back at different speeds, mixing with other visuals,
                   generating transitions, and transforming or editing
-		  for interactive display.
+                  for interactive display.
                 </li>
                 <li>
                   Uploading also grants each other user of the Service a
@@ -174,12 +176,12 @@ export const TermsOfServicePage: React.FC = () => {
                   perform, server copies of your videos that have been removed
                   or deleted.
                 </li>
-		<li>
+                <li>
                   No AI Training Without Consent. This license does not grant
                   the company or anyone the right to use your content for training
                   generative AI models beyond what is necessary to operate the
                   service (eg indexing and recommendations).
-		</li>
+                </li>
                 <li>
                   No Third-Party Remixing or Derivatives outside normal
                   use. Other users may not copy, remix, alter, or
@@ -201,52 +203,60 @@ export const TermsOfServicePage: React.FC = () => {
                 </li>
                 <li>
                   If the content has a source URL or description,
-		  please record this metadata along with the content.
+                  please record this metadata along with the content.
                 </li>
               </ol>
             </li>
             <li>
               <b>Granting Additional Rights with a CC BY License</b>
               <ol type="a">
-		<li>
- 		  If the ‘CC BY’ option is checked at upload (or later you edit your content’s
+                <li>
+                  If the ‘CC BY’ option is checked at upload (or later you edit your content’s
                   license setting accordingly), you agree to license your Content under the
-		  {" "}<Anchor href="https://creativecommons.org/licenses/by/4.0/">Creative
-                  Commons Attribution 4.0 International (CC BY 4.0) license</Anchor>. In
+                  {" "}<Anchor href="https://creativecommons.org/licenses/by/4.0/">Creative
+                    Commons Attribution 4.0 International (CC BY 4.0) license</Anchor>. In
                   doing so, you grant to the company and the general public a worldwide,
                   non-exclusive, royalty-free license to reproduce, distribute, create
                   derivative works of, display, and perform your Content, for both
                   commercial and non-commercial purposes, as long as proper attribution is
                   given to you. We summarize those requirements below.
-		</li>
-		<li>
-		  <b>AI Training and Remixing.</b>  By selecting CC BY, you also explicitly grant
+                </li>
+                <li>
+                  <b>AI Training and Remixing.</b>  By selecting CC BY, you also explicitly grant
                   the company permission to include your content in datasets for training AI
                   models or other algorithmic processes and to make it available for
                   remixing and transformation by other users or third parties, subject to
                   CC BY attribution requirements.
-		</li>
-		<li>
-		  <b>User Remix & Collaboration.</b> Other users may edit, adapt, or build upon
+                </li>
+                <li>
+                  <b>User Remix & Collaboration.</b> Other users may edit, adapt, or build upon
                   your Content (for instance, to create mashups, collaborative
                   “wiki-visuals,” or other derivative works) and share those remixes under
                   the terms of CC BY, which requires that they credit you as the original
                   creator.
-		</li>
-		<li>
-		  <b>Attribution Requirements.</b>  Anyone using or remixing your Content under
+                </li>
+                <li>
+                  <b>Attribution Requirements.</b>  Anyone using or remixing your Content under
                   CC BY must provide appropriate credit (e.g., by citing you by name with
                   link) or other appropriate attribution) and indicate if changes were made
                   to the original work.
-		</li>
-		<li>
-		  <b>Changing Your Mind or Removing CC BY.</b>  Selecting or deselecting the CC
+                </li>
+                <li>
+                  <b>Changing Your Mind or Removing CC BY.</b>  Selecting or deselecting the CC
                   BY option only applies on a prospective basis. Once anyone has lawfully
                   accessed or downloaded your content under CC BY, nobody can
                   retroactively revoke their rights to content already in use, subject to
                   applicable laws.
-		</li>
+                </li>
               </ol>
+            </li>
+            <li id={CCBY_ID}>
+              <b>To summarize:</b>
+              <ul>
+                <li>
+                  <CcbyTable />
+                </li>
+              </ul>
             </li>
             <li>
               <b>Disclaimers of Warranties and Limitations on Liability</b>

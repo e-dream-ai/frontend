@@ -42,6 +42,7 @@ import {
 } from "@/schemas/dream.schema";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Tooltip } from "react-tooltip";
+import { CCBY_ID } from "@/constants/terms-of-service";
 
 export const CreateDream: React.FC = () => {
   const { t } = useTranslation();
@@ -150,7 +151,11 @@ export const CreateDream: React.FC = () => {
                   place="right-end"
                   content={t("page.create.ccby_license_dream_tooltip")}
                 />
-                {t("page.create.ccby_license_dream")}
+                {t("page.create.license_dream")}
+                {" "}
+                <AnchorLink to={`${ROUTES.TERMS_OF_SERVICE}#${CCBY_ID}`}>
+                  {t("page.create.license_dream_ccby")}
+                </AnchorLink>
               </Checkbox>
             </div>
 
