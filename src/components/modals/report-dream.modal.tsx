@@ -13,6 +13,7 @@ import { useCreateReport } from "@/api/report/mutation/useCreateReport";
 import { UNLICENSED_TYPE_ID } from "@/constants/report.constants";
 import { useReportTypes } from "@/api/report/query/useReportTypes";
 import { Dream } from "@/types/dream.types";
+import { removeEmptyString } from "@/utils/string.util";
 
 export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes> & { dream: Dream }> = ({ isOpen = false, onCancel, dream }) => {
   const { t } = useTranslation();
@@ -44,8 +45,9 @@ export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes> & { dr
       {
         dreamUUID: dream.uuid,
         typeId: formData.type.value,
-        comments: formData.comments,
-        link: formData.link
+        // set undefined if value is an empty string
+        comments: removeEmptyString(formData.comments),
+        link: removeEmptyString(formData.link)
       },
       {
         onSuccess: (data) => {

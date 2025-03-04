@@ -471,11 +471,12 @@
     "reports_list": {
       "empty": "No reports to show",
       "dream": "Dream",
+      "type": "Type",
       "reported_by": "Reported by",
       "reported_at": "Reported at",
       "processed": "Processed",
       "comments": "Comments",
-      "link": "link",
+      "link": "Link",
       "yes": "Yes",
       "no": "No",
       "copy_url": "Copy url",

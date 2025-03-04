@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useReports } from "@/api/report/query/useReports";
-import { AnchorLink, Button, Column, Row } from "@/components/shared";
+import { Anchor, AnchorLink, Button, Column, Row } from "@/components/shared";
 import { Paginate } from "@/components/shared/paginate/paginate";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import Text from "@/components/shared/text/text";
@@ -18,18 +18,21 @@ import { SHORT_FORMAT } from "@/constants/moment.constants";
 import CopyToClipboard from "react-copy-to-clipboard";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { Tooltip } from "react-tooltip";
-import { faClipboard, faGears, faLink } from "@fortawesome/free-solid-svg-icons";
+import { faClipboard, faGears } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 import { ROUTES } from "@/constants/routes.constants";
 import { useUpdateReport } from "@/api/report/mutation/useUpdateReport";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
-import { truncateString } from "@/utils/string.util";
+import { truncateString, truncateWords } from "@/utils/string.util";
+import { TYPES } from "@/constants/report.constants";
 
 const List: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
   return <Ul>{children}</Ul>;
 };
+
+const GAP = "1rem";
 
 const ReportItem: React.FC<{
   report: Report;
@@ -46,10 +49,6 @@ const ReportItem: React.FC<{
 
   const handleCopied = () => {
     toast.success(t("components.reports_list.copied"));
-  };
-
-  const handleNavigateToUrl = (url: string) => () => {
-    window.open(url, "_blank");
   };
 
   const handleProcessReport = async () => {
@@ -84,7 +83,7 @@ const ReportItem: React.FC<{
           <Text>
             {t("components.reports_list.confirm_process_report")}{" "}
             <em>
-              <strong>{truncateString(report.dream?.name, 30)}</strong>
+              <strong>{truncateString(report.dream?.name, 20)}</strong>
             </em>
           </Text>
         }
@@ -96,11 +95,18 @@ const ReportItem: React.FC<{
           margin="0"
           justifyContent="space-between"
           alignItems="center"
+          style={{ gap: GAP }}
         >
-          <Column flex={["2"]}>
+
+          <Column flex={["3"]}>
             <AnchorLink to={`${ROUTES.VIEW_DREAM}/${report.dream.uuid}`} type="secondary">
-              {getDreamNameOrUUID(report.dream)}
+              {truncateString(getDreamNameOrUUID(report.dream), 20)}
             </AnchorLink>
+          </Column>
+          <Column flex={["1"]}>
+            <Text>
+              {TYPES[report?.type?.id].short ?? 'Other'}
+            </Text>
           </Column>
           <Column flex={["1"]}>
             <AnchorLink to={`${ROUTES.PROFILE}/${report.reportedBy?.uuid}`} type="secondary">
@@ -112,29 +118,29 @@ const ReportItem: React.FC<{
           </Column>
           <Column flex={["1"]}>
             <Row m="0" alignItems="center">
-              <Text mr="2">
-                {report?.processed ? t("components.reports_list.yes") : t("components.reports_list.no")}
-              </Text>
-              {!report?.processed &&
-                <Button
-                  data-tooltip-id="navigate-to-url"
-                  buttonType="tertiary"
-                  size="sm"
-                  onClick={onShowConfirmProcessModal}
-                  isLoading={isProcessingReport}
-                  before={<FontAwesomeIcon icon={faGears} />}
-                />}
+              {
+                report?.processed
+                  ? <Text mr="2">{t("components.reports_list.yes")}</Text>
+                  : <Button
+                    data-tooltip-id="navigate-to-url"
+                    buttonType="tertiary"
+                    size="sm"
+                    onClick={onShowConfirmProcessModal}
+                    isLoading={isProcessingReport}
+                    before={<FontAwesomeIcon icon={faGears} />}
+                  />
+              }
             </Row>
           </Column>
-          <Column flex={["1"]}>
-            <Row m="0" alignItems="center">
-              <Text mr="2" data-tooltip-id="comments">
+          <Column flex={["2"]}>
+            <Row m="0" alignItems="center" justifyContent="space-between">
+              <Text mr="1" data-tooltip-id={`comments-${report.uuid}`}>
                 <Tooltip
-                  id="comments"
+                  id={`comments-${report.uuid}`}
                   place="right-end"
-                  content={`${t("components.reports_list.comments")}: ${report.comments ?? "-"}`}
+                  content={`${t("components.reports_list.comments")}: ${report.comments ?? ""}`}
                 />
-                {report?.comments ? t("components.reports_list.yes") : t("components.reports_list.no")}
+                {truncateWords(report.comments, 10)}
               </Text>
               <CopyToClipboard text={report.comments}>
                 <Button
@@ -143,7 +149,6 @@ const ReportItem: React.FC<{
                   size="sm"
                   onClick={handleCopied}
                   before={<FontAwesomeIcon icon={faClipboard} />}
-                  mr="1"
                 >
                   <Tooltip
                     id="copy-comments"
@@ -154,41 +159,12 @@ const ReportItem: React.FC<{
               </CopyToClipboard>
             </Row>
           </Column>
-          <Column flex={["1"]}>
+          <Column flex={["3"]}>
             {report.link ?
               <Row m="0">
-                <CopyToClipboard text={report.link}>
-                  <Button
-                    data-tooltip-id="copy-url"
-                    buttonType="tertiary"
-                    size="sm"
-                    onClick={handleCopied}
-                    before={<FontAwesomeIcon icon={faClipboard} />}
-                    mr="1"
-                  >
-                    <Tooltip
-                      id="copy-url"
-                      place="right-end"
-                      content={t("components.reports_list.copy_url")}
-                    />
-                  </Button>
-                </CopyToClipboard>
-
-                <Button
-                  data-tooltip-id="navigate-to-url"
-                  buttonType="tertiary"
-                  size="sm"
-                  onClick={handleNavigateToUrl(report.link)}
-                  before={<FontAwesomeIcon icon={faLink} />}
-                >
-                  <Tooltip
-                    id="navigate-to-url"
-                    place="right-end"
-                    content={t("components.reports_list.navigate_url")}
-                  />
-                </Button>
+                <Anchor type="secondary" href={report.link}>{truncateString(report.link, 20)}</Anchor>
               </Row>
-              : <>-</>
+              : <>{t("components.reports_list.no")}</>
             }
           </Column>
 
@@ -221,10 +197,15 @@ export const ReportsList: React.FC = () => {
           </Row>
         ) : reports?.length ? (
           <>
-            <Row justifyContent="space-between">
-              <Column flex={["2"]}>
+            <Row justifyContent="space-between" style={{ gap: GAP }}>
+              <Column flex={["3"]}>
                 <Text color={theme.colorSecondary}>
                   {t("components.reports_list.dream")}
+                </Text>
+              </Column>
+              <Column flex={["1"]}>
+                <Text color={theme.colorSecondary}>
+                  {t("components.reports_list.type")}
                 </Text>
               </Column>
               <Column flex={["1"]}>
@@ -242,12 +223,12 @@ export const ReportsList: React.FC = () => {
                   {t("components.reports_list.processed")}
                 </Text>
               </Column>
-              <Column flex={["1"]}>
+              <Column flex={["2"]}>
                 <Text color={theme.colorSecondary}>
                   {t("components.reports_list.comments")}
                 </Text>
               </Column>
-              <Column flex={["1"]}>
+              <Column flex={["3"]}>
                 <Text color={theme.colorSecondary}>
                   {t("components.reports_list.link")}
                 </Text>
