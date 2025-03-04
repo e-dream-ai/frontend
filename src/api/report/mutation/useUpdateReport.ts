@@ -4,6 +4,8 @@ import { UpdateReportRequestValues } from "@/schemas/update-report.schema";
 import { ApiResponse } from "@/types/api.types";
 import { Report } from "@/types/report.types";
 import { axiosClient } from "@/client/axios.client";
+import queryClient from "@/api/query-client";
+import { REPORTS_QUERY_KEY } from "../query/useReports";
 
 export const UPDATE_REPORT_MUTATION_KEY = "updateReport";
 
@@ -29,5 +31,9 @@ export const useUpdateReport = () => {
     UpdateReportRequestValues
   >(updateReport(), {
     mutationKey: [UPDATE_REPORT_MUTATION_KEY],
+    onSuccess: () => {
+      // Invalidate and refetch the 'reports' query
+      queryClient.invalidateQueries([REPORTS_QUERY_KEY]);
+    },
   });
 };

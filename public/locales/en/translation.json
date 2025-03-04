@@ -481,7 +481,11 @@
       "copy_url": "Copy url",
       "copy_comments": "Copy comments",
       "copied": "Copied!",
-      "navigate_url": "Navigate to url"
+      "navigate_url": "Navigate to url",
+      "confirm_process_report_title": "Confirm process report",
+      "confirm_process_report": "Confirm process report for dream",
+      "report_processed_successfully": "Report processed successfully",
+      "error_processing_report": "Error processing report"
     },
     "filmstrip": {
       "empty": "No filmstrip"

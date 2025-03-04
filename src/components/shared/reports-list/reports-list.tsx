@@ -22,6 +22,8 @@ import { faClipboard, faGears, faLink } from "@fortawesome/free-solid-svg-icons"
 import { toast } from "react-toastify";
 import { ROUTES } from "@/constants/routes.constants";
 import { useUpdateReport } from "@/api/report/mutation/useUpdateReport";
+import { ConfirmModal } from "@/components/modals/confirm.modal";
+import { truncateString } from "@/utils/string.util";
 
 const List: React.FC<{
   children?: React.ReactNode;
@@ -34,8 +36,13 @@ const ReportItem: React.FC<{
 }> = ({ report }) => {
   const { state } = useHighlight();
   const { t } = useTranslation();
-  const { mutateAsync, isLoading } = useUpdateReport();
+  const [showConfirmProcessModal, setShowConfirmProcessModal] =
+    useState<boolean>(false);
+  const { mutateAsync, isLoading: isProcessingReport } = useUpdateReport();
   const isNew = state[HighlightKeys.NEW_INVITE] === report.id;
+
+  const onShowConfirmProcessModal = () => setShowConfirmProcessModal(true);
+  const onHideConfirmProcessModal = () => setShowConfirmProcessModal(false);
 
   const handleCopied = () => {
     toast.success(t("components.reports_list.copied"));
@@ -51,6 +58,7 @@ const ReportItem: React.FC<{
 
       if (data.success) {
         toast.success(t("components.reports_list.report_processed_successfully"));
+        onHideConfirmProcessModal();
       } else {
         toast.error(
           `${t("components.reports_list.error_processing_report")} ${data.message}`,
@@ -62,73 +70,75 @@ const ReportItem: React.FC<{
   }
 
   return (
-    <Li isNew={isNew}>
-      <Row
-        flex="auto"
-        margin="0"
-        justifyContent="space-between"
-        alignItems="center"
-      >
-        <Column flex={["2"]}>
-          <AnchorLink to={`${ROUTES.VIEW_DREAM}/${report.dream.uuid}`} type="secondary">
-            {getDreamNameOrUUID(report.dream)}
-          </AnchorLink>
-        </Column>
-        <Column flex={["1"]}>
-          <AnchorLink to={`${ROUTES.PROFILE}/${report.reportedBy?.uuid}`} type="secondary">
-            {getUserNameOrEmail(report?.reportedBy)}
-          </AnchorLink>
-        </Column>
-        <Column flex={["1"]}>
-          <Text>{moment(report?.reportedAt).format(SHORT_FORMAT)}</Text>
-        </Column>
-        <Column flex={["1"]}>
-          <Row>
-            <Text>{report?.processed ? t("components.reports_list.yes") : t("components.reports_list.no")}</Text>
-            <Button
-              data-tooltip-id="navigate-to-url"
-              buttonType="tertiary"
-              size="sm"
-              onClick={handleProcessReport}
-              isLoading={isLoading}
-              before={<FontAwesomeIcon icon={faGears} />}
-            />
-          </Row>
-        </Column>
-        <Column flex={["1"]}>
-          <Row m="0">
-            <Text mr="1" data-tooltip-id="comments">
-              <Tooltip
-                id="comments"
-                place="right-end"
-                content={report.comments}
-              />
-              {report?.comments ? t("components.reports_list.yes") : t("components.reports_list.no")}
-            </Text>
-            <CopyToClipboard text={report.link}>
-              <Button
-                data-tooltip-id="copy-comments"
-                buttonType="tertiary"
-                size="sm"
-                onClick={handleCopied}
-                before={<FontAwesomeIcon icon={faClipboard} />}
-                mr="1"
-              >
-                <Tooltip
-                  id="copy-comments"
-                  place="right-end"
-                  content={t("components.reports_list.copy_comments")}
-                />
-              </Button>
-            </CopyToClipboard>
-          </Row>
-        </Column>
-        <Column flex={["1"]}>
-          {report.link ?
-            <Row m="0">
-              <CopyToClipboard text={report.link}>
+    <>
+      {/**
+       * Confirm process report modal
+       */}
+      <ConfirmModal
+        isOpen={showConfirmProcessModal}
+        onCancel={onHideConfirmProcessModal}
+        onConfirm={handleProcessReport}
+        isConfirming={isProcessingReport}
+        title={t("components.reports_list.confirm_process_report_title")}
+        text={
+          <Text>
+            {t("components.reports_list.confirm_process_report")}{" "}
+            <em>
+              <strong>{truncateString(report.dream?.name, 30)}</strong>
+            </em>
+          </Text>
+        }
+      />
+
+      <Li isNew={isNew}>
+        <Row
+          flex="auto"
+          margin="0"
+          justifyContent="space-between"
+          alignItems="center"
+        >
+          <Column flex={["2"]}>
+            <AnchorLink to={`${ROUTES.VIEW_DREAM}/${report.dream.uuid}`} type="secondary">
+              {getDreamNameOrUUID(report.dream)}
+            </AnchorLink>
+          </Column>
+          <Column flex={["1"]}>
+            <AnchorLink to={`${ROUTES.PROFILE}/${report.reportedBy?.uuid}`} type="secondary">
+              {getUserNameOrEmail(report?.reportedBy)}
+            </AnchorLink>
+          </Column>
+          <Column flex={["1"]}>
+            <Text>{moment(report?.reportedAt).format(SHORT_FORMAT)}</Text>
+          </Column>
+          <Column flex={["1"]}>
+            <Row m="0" alignItems="center">
+              <Text mr="2">
+                {report?.processed ? t("components.reports_list.yes") : t("components.reports_list.no")}
+              </Text>
+              {!report?.processed &&
                 <Button
-                  data-tooltip-id="copy-url"
+                  data-tooltip-id="navigate-to-url"
+                  buttonType="tertiary"
+                  size="sm"
+                  onClick={onShowConfirmProcessModal}
+                  isLoading={isProcessingReport}
+                  before={<FontAwesomeIcon icon={faGears} />}
+                />}
+            </Row>
+          </Column>
+          <Column flex={["1"]}>
+            <Row m="0" alignItems="center">
+              <Text mr="2" data-tooltip-id="comments">
+                <Tooltip
+                  id="comments"
+                  place="right-end"
+                  content={`${t("components.reports_list.comments")}: ${report.comments ?? "-"}`}
+                />
+                {report?.comments ? t("components.reports_list.yes") : t("components.reports_list.no")}
+              </Text>
+              <CopyToClipboard text={report.comments}>
+                <Button
+                  data-tooltip-id="copy-comments"
                   buttonType="tertiary"
                   size="sm"
                   onClick={handleCopied}
@@ -136,33 +146,55 @@ const ReportItem: React.FC<{
                   mr="1"
                 >
                   <Tooltip
-                    id="copy-url"
+                    id="copy-comments"
                     place="right-end"
-                    content={t("components.reports_list.copy_url")}
+                    content={t("components.reports_list.copy_comments")}
                   />
                 </Button>
               </CopyToClipboard>
-
-              <Button
-                data-tooltip-id="navigate-to-url"
-                buttonType="tertiary"
-                size="sm"
-                onClick={handleNavigateToUrl(report.link)}
-                before={<FontAwesomeIcon icon={faLink} />}
-              >
-                <Tooltip
-                  id="navigate-to-url"
-                  place="right-end"
-                  content={t("components.reports_list.navigate_url")}
-                />
-              </Button>
             </Row>
-            : <>-</>
-          }
-        </Column>
+          </Column>
+          <Column flex={["1"]}>
+            {report.link ?
+              <Row m="0">
+                <CopyToClipboard text={report.link}>
+                  <Button
+                    data-tooltip-id="copy-url"
+                    buttonType="tertiary"
+                    size="sm"
+                    onClick={handleCopied}
+                    before={<FontAwesomeIcon icon={faClipboard} />}
+                    mr="1"
+                  >
+                    <Tooltip
+                      id="copy-url"
+                      place="right-end"
+                      content={t("components.reports_list.copy_url")}
+                    />
+                  </Button>
+                </CopyToClipboard>
 
-      </Row>
-    </Li>
+                <Button
+                  data-tooltip-id="navigate-to-url"
+                  buttonType="tertiary"
+                  size="sm"
+                  onClick={handleNavigateToUrl(report.link)}
+                  before={<FontAwesomeIcon icon={faLink} />}
+                >
+                  <Tooltip
+                    id="navigate-to-url"
+                    place="right-end"
+                    content={t("components.reports_list.navigate_url")}
+                  />
+                </Button>
+              </Row>
+              : <>-</>
+            }
+          </Column>
+
+        </Row>
+      </Li>
+    </>
   );
 };
 
