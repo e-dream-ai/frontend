@@ -14,18 +14,18 @@ export const CcbyTable = () =>
     <thead>
       <tr>
         <th>Feature</th>
-        <th>Default License</th>
+        <th>Basic License</th>
         <th>CC BY License</th>
       </tr>
     </thead>
     <tbody>
       <tr>
-        <td>Basic Hosting & Display</td>
-        <td>Included - e-dream may re-encode & stream your Content to other users</td>
-        <td>Included - same as default</td>
+        <td>Hosting & Interactive Display</td>
+        <td>Included - e-dream may re-encode & distribute your content to other users</td>
+        <td>Included - same as basic</td>
       </tr>
       <tr>
-        <td>AI Training</td>
+        <td>Generative AI Training</td>
         <td>Not permitted</td>
         <td>Permitted - your Content may be used to train AI models</td>
       </tr>
@@ -41,13 +41,13 @@ export const CcbyTable = () =>
       </tr>
       <tr>
         <td>Attribution</td>
-        <td>Not required beyond normal display credits (username, etc.)</td>
+        <td>Not required beyond optional on-screen display</td>
         <td>Required - must credit the original creator</td>
       </tr>
       <tr>
         <td>Removal from Service</td>
         <td>Terminates license after a reasonable time (except backups)</td>
-        <td>Same as default, but cannot retroactively revoke rights for pre-existing downloads/derivatives (license remains valid)</td>
+        <td>Same as basic but cannot retroactively revoke rights for pre-existing downloads/derivatives</td>
       </tr>
     </tbody>
   </StyledTable>

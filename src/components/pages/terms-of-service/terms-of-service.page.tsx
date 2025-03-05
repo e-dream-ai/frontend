@@ -252,11 +252,7 @@ export const TermsOfServicePage: React.FC = () => {
             </li>
             <li id={CCBY_ID}>
               <b>To summarize:</b>
-              <ul>
-                <li>
-                  <CcbyTable />
-                </li>
-              </ul>
+	      <CcbyTable />
             </li>
             <li>
               <b>Disclaimers of Warranties and Limitations on Liability</b>
