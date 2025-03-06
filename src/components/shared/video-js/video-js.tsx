@@ -2,9 +2,8 @@ import { useVideoJs } from '@/hooks/useVideoJS';
 import { FC, useEffect, useRef } from 'react';
 import { Row, Column, Text } from '@/components/shared';
 import { PlayerWrapper, VideoContainer, VideoWrapper } from './video-js.styled';
-import { PoolConfig } from '@/constants/video-js.constants';
+import { PoolConfig, VIDEOJS_OPTIONS } from '@/constants/video-js.constants';
 import { useWebClient } from '@/hooks/useWebClient';
-import { PRELOAD_OPTION } from '@/constants/web-client.constants';
 import 'video.js/dist/video-js.css';
 
 type VideoJSProps = {
@@ -57,19 +56,8 @@ const PlayerSlot = ({ id, skipCrossfade, longTransition }: { id: string, skipCro
 
   useEffect(() => {
     if (videoRef.current) {
-      const options = {
-        controls: true,
-        fluid: true,
-        preload: PRELOAD_OPTION,
-        controlBar: {
-          pictureInPictureToggle: false
-        },
-        html5: {
-          noPictureInPicture: true
-        }
-      };
 
-      const id = registerPlayer(videoRef.current, options);
+      const id = registerPlayer(videoRef.current, VIDEOJS_OPTIONS);
 
       return () => {
         unregisterPlayer(id);

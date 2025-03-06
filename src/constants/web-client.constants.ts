@@ -24,9 +24,6 @@ export const BRIGHTNESS = {
   9: 2, // brightest
 } as const;
 
-// auto | metadata | none
-export const PRELOAD_OPTION = "metadata";
-
 export const IS_WEB_CLIENT_ACTIVE =
   import.meta.env.VITE_IS_WEB_CLIENT_ACTIVE === "true";
 export const CREDIT_OVERLAY_ID = "credit";

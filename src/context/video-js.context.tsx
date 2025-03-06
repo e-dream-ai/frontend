@@ -9,8 +9,8 @@ import {
   VIDEOJS_EVENTS,
   LONG_CROSSFADE_DURATION,
   SHORT_CROSSFADE_DURATION,
+  PRELOAD_OPTION,
 } from "@/constants/video-js.constants";
-import { PRELOAD_OPTION } from "@/constants/web-client.constants";
 
 type VideoJSContextType = {
   isReady: boolean;
@@ -274,6 +274,20 @@ export const VideoJSProvider = ({
 
         // register event
         playerInstance.player.on(event, wrappedHandler);
+
+        // register `playing` event important for all instances
+        playerInstance.player.on(VIDEOJS_EVENTS.PLAYING, () => {
+          // sets user as inactive to avoid controls flash by end of video
+          playerInstance?.player?.userActive(false);
+        });
+
+        // register `ended` event important for all instances
+        playerInstance.player.on(VIDEOJS_EVENTS.ENDED, () => {
+          // sets user as inactive to avoid controls flash by end of video
+          playerInstance?.player?.userActive(false);
+          // removes the vjs-has-started to avoid controls flash by end of video
+          playerInstance?.player?.hasStarted(false);
+        });
 
         const instanceHandlers = playerInstance.eventHandlers.get(event) || [];
         playerInstance.eventHandlers.set(event, [...instanceHandlers, wrappedHandler]);
