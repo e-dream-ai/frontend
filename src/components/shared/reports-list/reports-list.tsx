@@ -37,6 +37,7 @@ const GAP = "1rem";
 const ReportItem: React.FC<{
   report: Report;
 }> = ({ report }) => {
+  const reportType = TYPES.find(rt => rt.id === report?.type?.id);
   const { state } = useHighlight();
   const { t } = useTranslation();
   const [showConfirmProcessModal, setShowConfirmProcessModal] =
@@ -105,7 +106,7 @@ const ReportItem: React.FC<{
           </Column>
           <Column flex={["1"]}>
             <Text>
-              {TYPES[report?.type?.id].short ?? 'Other'}
+              {reportType?.short ?? 'Other'}
             </Text>
           </Column>
           <Column flex={["1"]}>
