@@ -177,12 +177,11 @@ export const TermsOfServicePage: React.FC = () => {
                   or deleted.
                 </li>
                 <li>
-                  No Training Without Consent. The Basic License does not grant
+                  No Generative Training Without Consent. The Basic License does not grant
                   the company or anyone the right to use your content for
-                  training generative AI models. The company may analyze and
-                  train on the content with AI for the purpose of running the
-                  service, eg providing search and recommendation, and training
-                  models for these purposes.
+                  training generative AI models. The company may analyze the content with
+		  AI for the purpose of running the service, eg providing search and recommendation,
+		  and training models for these purposes.
                 </li>
                 <li>
                   No Third-Party Remixing or Derivatives outside normal
