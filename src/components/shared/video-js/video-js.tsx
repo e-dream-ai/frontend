@@ -56,7 +56,6 @@ const PlayerSlot = ({ id, skipCrossfade, longTransition }: { id: string, skipCro
 
   useEffect(() => {
     if (videoRef.current) {
-
       const id = registerPlayer(videoRef.current, VIDEOJS_OPTIONS);
 
       return () => {

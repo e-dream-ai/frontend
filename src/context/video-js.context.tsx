@@ -228,6 +228,7 @@ export const VideoJSProvider = ({
         playerInstance.player.dispose();
       }
       playerInstance.player = null;
+      playersPoolRef.current.delete(id);
     }
   }, []);
 
@@ -348,7 +349,9 @@ export const VideoJSProvider = ({
 
       const nextPlayerInstance = nextPlayers[0];
 
-      if (!nextPlayerInstance || !nextPlayerInstance.player) return false;
+      if (!nextPlayerInstance || !nextPlayerInstance.player) {
+        return false;
+      }
 
       const nextPlayer = nextPlayerInstance.player;
       const currentPlaybackRate = currentPlayer?.player?.playbackRate() || 1;
@@ -407,7 +410,8 @@ export const VideoJSProvider = ({
 
   const preloadVideo = useCallback(async (src: string): Promise<boolean> => {
     // Check if we already have a preloaded player with this src
-    const existingPreloadedPlayer = Array.from(playersPoolRef.current.values())
+    const players = Array.from(playersPoolRef.current.values());
+    const existingPreloadedPlayer = players
       .find(p => p.isPreloaded && p.src === src);
 
     if (existingPreloadedPlayer) {
@@ -415,14 +419,14 @@ export const VideoJSProvider = ({
     }
 
     // find inactive players ordered by last used
-    const inactivePlayers = Array.from(playersPoolRef.current.values())
+    const inactivePlayers = players
       .filter(p => !p.isActive && p.player)
       .sort((a, b) => a.lastUsed - b.lastUsed);
 
     const preloadPlayerInstance = inactivePlayers[0];
     if (!preloadPlayerInstance || !preloadPlayerInstance.player) {
       return false
-    };
+    }
 
     try {
       const player = preloadPlayerInstance.player;

@@ -196,10 +196,10 @@ export const WebClientProvider: React.FC<{
   const preloadNavigationVideos = useCallback(async (navigation: PlaylistNavigation) => {
     if (navigation.previous?.video) {
       preloadVideo(navigation.previous.video);
-    };
+    }
     if (navigation.next?.video) {
       preloadVideo(navigation.next.video);
-    };
+    }
   }, [preloadVideo]);
 
   /**
@@ -554,13 +554,20 @@ export const WebClientProvider: React.FC<{
     }
   }, [location.pathname, isReady, isWebClientActive, playDreamWithHistory]);
 
-  // if there's a current dream, set it as playing dream and preload it
+  // preload video when there's a current dream
   useEffect(() => {
-    if (currentDream) {
+    if (
+      // location should be remote control
+      location.pathname === ROUTES.REMOTE_CONTROL
+      // videojs instances should be ready
+      && isReady
+      // should be a current dream
+      && currentDream
+    ) {
       playingDreamRef.current = currentDream;
       preloadVideo(currentDream.video);
     }
-  }, [currentDream, preloadVideo]);
+  }, [location.pathname, isReady, currentDream, preloadVideo]);
 
   // update playing playlist ref
   useEffect(() => {
