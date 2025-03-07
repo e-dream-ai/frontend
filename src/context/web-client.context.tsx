@@ -466,18 +466,24 @@ export const WebClientProvider: React.FC<{
     },
   );
 
-  useStatusCallback(isActive, {
-    onActive: () => {
-      if (IS_WEB_CLIENT_ACTIVE && user) {
-        setIsWebClientAvailable(false);
-      }
+  useStatusCallback(
+    isActive,
+    {
+      onActive: () => {
+        if (IS_WEB_CLIENT_ACTIVE && user) {
+          setIsWebClientAvailable(false);
+        }
+      },
+      onInactive: () => {
+        if (IS_WEB_CLIENT_ACTIVE && user) {
+          setIsWebClientAvailable(true);
+        }
+      },
     },
-    onInactive: () => {
-      if (IS_WEB_CLIENT_ACTIVE && user) {
-        setIsWebClientAvailable(true);
-      }
-    },
-  });
+    {},
+    // Add user to deps to refresh callbacks when user logs in
+    [user]
+  );
 
   // register events on videojs instance
   useEffect(() => {

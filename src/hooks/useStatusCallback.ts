@@ -15,6 +15,7 @@ const useStatusCallback = (
   isActive: boolean,
   callbacks: StatusCallbacks,
   delays: StatusDelays = {},
+  deps: unknown[] = [], // Add a deps array to control when effects shold be triggered
 ) => {
   const { onActive, onInactive } = callbacks;
   /**
@@ -30,7 +31,13 @@ const useStatusCallback = (
   useEffect(() => {
     onActiveRef.current = onActive;
     onInactiveRef.current = onInactive;
-  }, [onActive, onInactive]);
+  }, [
+    onActive,
+    onInactive,
+    // Include deps in the dependency array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ...deps,
+  ]);
 
   // store the timer IDs
   const timerRef = useRef<NodeJS.Timeout>();
@@ -75,7 +82,15 @@ const useStatusCallback = (
         timerRef.current = undefined;
       }
     };
-  }, [isActive, activeDelay, inactiveDelay]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    isActive,
+    activeDelay,
+    inactiveDelay,
+    // Include deps in the dependency array
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    ...deps,
+  ]); // Include deps in the dependency array
 };
 
 export default useStatusCallback;
