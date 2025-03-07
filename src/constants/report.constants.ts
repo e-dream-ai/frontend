@@ -2,7 +2,7 @@
 export const UNLICENSED_TYPE_ID = 4;
 
 export const TYPES = [
-  { short: "Spam", type: "Spam content" },
+  { id: 1, short: "Spam", type: "Spam content" },
   { id: 2, short: "NSFW", type: "Not safe for work (NSFW)" },
   { id: 3, short: "Bug", type: "Contains visible title, watermark, or bug" },
   {
