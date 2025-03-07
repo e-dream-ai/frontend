@@ -193,9 +193,13 @@ export const WebClientProvider: React.FC<{
   /**
    * Preloads navigation videos.
    */
-  const preloadNavigationVideos = useCallback((navigation: PlaylistNavigation) => {
-    if (navigation.previous?.video) preloadVideo(navigation.previous.video);
-    if (navigation.next?.video) preloadVideo(navigation.next.video);
+  const preloadNavigationVideos = useCallback(async (navigation: PlaylistNavigation) => {
+    if (navigation.previous?.video) {
+      preloadVideo(navigation.previous.video);
+    };
+    if (navigation.next?.video) {
+      preloadVideo(navigation.next.video);
+    };
   }, [preloadVideo]);
 
   /**

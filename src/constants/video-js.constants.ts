@@ -1,8 +1,9 @@
 import { VideoJSEvents } from "@/types/video-js.types";
 
 // VideoJS preload option
-// auto | metadata | none
-export const PRELOAD_OPTION = "metadata";
+// https://videojs.com/guides/options/#preload
+// `auto` starts loading the video immediately (if the browser supports it), maybe should be changed for some types of devices to `metadata`
+export const PRELOAD_OPTION = "auto";
 
 // using options documented by https://videojs.com/guides/options/#controls
 export const VIDEOJS_OPTIONS = {
@@ -27,6 +28,7 @@ export const VIDEOJS_EVENTS: { [K in keyof VideoJSEvents]: VideoJSEvents[K] } =
     LOADEDMETADATA: "loadedmetadata",
     CANPLAY: "canplay",
     CANPLAYTHROUGH: "canplaythrough",
+    PLAY: "play",
     PLAYING: "playing",
     WAITING: "waiting",
     ERROR: "error",

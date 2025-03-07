@@ -276,9 +276,11 @@ export const VideoJSProvider = ({
         playerInstance.player.on(event, wrappedHandler);
 
         // register `playing` event important for all instances
-        playerInstance.player.on(VIDEOJS_EVENTS.PLAYING, () => {
+        playerInstance.player.on(VIDEOJS_EVENTS.PLAY, () => {
           // sets user as inactive to avoid controls flash by end of video
           playerInstance?.player?.userActive(false);
+          // adds the vjs-has-started to avoid controls flash by end of video
+          playerInstance?.player?.hasStarted(true);
         });
 
         // register `ended` event important for all instances
@@ -343,7 +345,6 @@ export const VideoJSProvider = ({
           // Otherwise is sort by last time used
           return diff || a.lastUsed - b.lastUsed;
         });
-
 
       const nextPlayerInstance = nextPlayers[0];
 
@@ -413,13 +414,15 @@ export const VideoJSProvider = ({
       return true;
     }
 
-    // find inactive players that are not preloaded
+    // find inactive players ordered by last used
     const inactivePlayers = Array.from(playersPoolRef.current.values())
-      .filter(p => !p.isActive && !p.isPreloaded && p.player)
+      .filter(p => !p.isActive && p.player)
       .sort((a, b) => a.lastUsed - b.lastUsed);
 
     const preloadPlayerInstance = inactivePlayers[0];
-    if (!preloadPlayerInstance || !preloadPlayerInstance.player) return false;
+    if (!preloadPlayerInstance || !preloadPlayerInstance.player) {
+      return false
+    };
 
     try {
       const player = preloadPlayerInstance.player;

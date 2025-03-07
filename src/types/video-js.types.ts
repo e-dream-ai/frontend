@@ -23,6 +23,7 @@ export type VideoJSEvents = {
   LOADEDMETADATA: "loadedmetadata";
   CANPLAY: "canplay";
   CANPLAYTHROUGH: "canplaythrough";
+  PLAY: "play";
   PLAYING: "playing";
   WAITING: "waiting";
   ERROR: "error";
