@@ -138,10 +138,10 @@ export const TermsOfServicePage: React.FC = () => {
               </ol>
             </li>
             <li>
-              <b>User Generated Content</b>
+              <b>Basic License for User Generated Content</b>
               <ol type="a">
                 <li>
-                  When a user uploads content to e-dream, they become a creator.
+                  When a user uploads content to the service, they become a creator.
                 </li>
                 <li>
                   The user attests that the content is legal and the uploader
@@ -154,7 +154,7 @@ export const TermsOfServicePage: React.FC = () => {
                   royalty-free, sublicensable and transferable. It includes
                   permission for the company to create derived works such as
                   changing resolution and re-encoding in different formats,
-                  playing back at different speeds, mixing with other visuals,
+                  playing back at different speeds, mixing with other content,
                   generating transitions, and transforming or editing
                   for interactive display.
                 </li>
@@ -177,10 +177,12 @@ export const TermsOfServicePage: React.FC = () => {
                   or deleted.
                 </li>
                 <li>
-                  No AI Training Without Consent. This license does not grant
-                  the company or anyone the right to use your content for training
-                  generative AI models beyond what is necessary to operate the
-                  service (eg indexing and recommendations).
+                  No Training Without Consent. The Basic License does not grant
+                  the company or anyone the right to use your content for
+                  training generative AI models. The company may analyze and
+                  train on the content with AI for the purpose of running the
+                  service, eg providing search and recommendation, and training
+                  models for these purposes.
                 </li>
                 <li>
                   No Third-Party Remixing or Derivatives outside normal

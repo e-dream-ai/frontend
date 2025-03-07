@@ -21,27 +21,27 @@ export const CcbyTable = () =>
     <tbody>
       <tr>
         <td>Hosting & Interactive Display</td>
-        <td>Included - e-dream may re-encode & distribute your content to other users</td>
+        <td>Included - the company may re-encode & distribute your content to other users</td>
         <td>Included - same as basic</td>
       </tr>
       <tr>
         <td>Generative AI Training</td>
         <td>Not permitted</td>
-        <td>Permitted - your Content may be used to train AI models</td>
+        <td>Permitted - your Content may be used to train generative models</td>
       </tr>
       <tr>
         <td>User Remix & Derivative Use</td>
-        <td>Not permitted outside standard viewing or service features</td>
-        <td>Permitted - others may modify, re-share, and remix, as long as they credit you</td>
+        <td>Not permitted beyond interactive display in the service</td>
+        <td>Permitted - others may modify, reshare, and remix, as long as they credit you</td>
       </tr>
       <tr>
         <td>Commercial Use by Others</td>
         <td>Not permitted</td>
-        <td>Permitted - provided they comply with CC BY attribution requirements</td>
+        <td>Permitted - as long as they credit you</td>
       </tr>
       <tr>
         <td>Attribution</td>
-        <td>Not required beyond optional on-screen display</td>
+        <td>Not required - interactive users may request showing credits</td>
         <td>Required - must credit the original creator</td>
       </tr>
       <tr>
