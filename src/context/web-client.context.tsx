@@ -75,7 +75,10 @@ export const WebClientProvider: React.FC<{
 
   // prev active player data to track changes
   const prevActivePlayerRef = useRef<string | null>(null);
-  const playerInstance = useMemo(() => players.get(activePlayer ?? ''), [players, activePlayer]);
+  const playerInstance = useMemo(
+    () => players.find(p => p.id === activePlayer),
+    [players, activePlayer]
+  );
 
   // socket
   const { emit } = useSocket();

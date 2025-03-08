@@ -15,7 +15,7 @@ import {
 type VideoJSContextType = {
   isReady: boolean;
   activePlayer: string | null;
-  players: Map<string, PlayerInstance>;
+  players: PlayerInstance[];
   videoWrapperRef: RefObject<HTMLDivElement>;
   createPlayer: () => string;
   removePlayer: (id: string) => void;
@@ -281,16 +281,12 @@ export const VideoJSProvider = ({
         playerInstance.player.on(VIDEOJS_EVENTS.PLAY, () => {
           // sets user as inactive to avoid controls flash by end of video
           playerInstance?.player?.userActive(false);
-          // adds the vjs-has-started to avoid controls flash by end of video
-          playerInstance?.player?.hasStarted(true);
         });
 
         // register `ended` event important for all instances
         playerInstance.player.on(VIDEOJS_EVENTS.ENDED, () => {
           // sets user as inactive to avoid controls flash by end of video
           playerInstance?.player?.userActive(false);
-          // removes the vjs-has-started to avoid controls flash by end of video
-          playerInstance?.player?.hasStarted(false);
         });
 
         const instanceHandlers = playerInstance.eventHandlers.get(event) || [];
@@ -364,12 +360,11 @@ export const VideoJSProvider = ({
           nextPlayerInstance.src = src;
         }
 
-        // set playback rate
+        // set playback rate for next player
         nextPlayer.playbackRate(currentPlaybackRate);
 
-        // update lastUsed for both current and next player to prevent cleanup
+        // update lastUsed for next player to prevent cleanup
         nextPlayerInstance.lastUsed = Date.now();
-
         // set crossfade options for next player
         nextPlayerInstance.skipCrossfade = options?.skipCrossfade ?? false;
         nextPlayerInstance.longTransition = options?.longTransition ?? false;
@@ -377,7 +372,9 @@ export const VideoJSProvider = ({
         await nextPlayer.play();
 
         if (currentPlayer) {
+          // set current player as inactive
           currentPlayer.isActive = false;
+          // update lastUsed for current player
           currentPlayer.lastUsed = Date.now();
           // set crossfade options for current player so can show same effect for next show and current hide
           currentPlayer.skipCrossfade = options?.skipCrossfade ?? false;
@@ -400,6 +397,8 @@ export const VideoJSProvider = ({
           // stop playing current player
           currentPlayer?.player?.pause();
           currentPlayer?.player?.currentTime(0);
+          // removes the vjs-has-started to avoid controls flash by end of video
+          currentPlayer?.player?.hasStarted(false);
         }
 
         return true;
@@ -472,7 +471,7 @@ export const VideoJSProvider = ({
     () => ({
       isReady,
       activePlayer: activePlayerId,
-      players: playersPoolRef.current,
+      players: Array.from(playersPoolRef.current.values()),
       videoWrapperRef,
       registerPlayer,
       unregisterPlayer,
@@ -490,6 +489,7 @@ export const VideoJSProvider = ({
       isReady,
       activePlayerId,
       videoWrapperRef,
+      playersPoolRef,
       registerPlayer,
       unregisterPlayer,
       addEventListener,

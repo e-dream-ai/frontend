@@ -1,5 +1,5 @@
 import { useVideoJs } from '@/hooks/useVideoJS';
-import { FC, useEffect, useRef } from 'react';
+import { FC, memo, useEffect, useRef } from 'react';
 import { Row, Column, Text } from '@/components/shared';
 import { PlayerWrapper, VideoContainer, VideoWrapper } from './video-js.styled';
 import { PoolConfig, VIDEOJS_OPTIONS } from '@/constants/video-js.constants';
@@ -15,8 +15,15 @@ type VideoJSProps = {
  * It works with the VideoJS Context to create a pool of video players, where each player is used to have smooth video transitions. 
  */
 export const VideoJS: FC<VideoJSProps> = () => {
-  const { players, videoWrapperRef, createPlayer, clearPlayers } = useVideoJs();
+  const {
+    players,
+    videoWrapperRef,
+    activePlayer,
+    createPlayer,
+    clearPlayers
+  } = useVideoJs();
   const { isWebClientActive } = useWebClient();
+
 
   useEffect(() => {
     // creates min initial player slots
@@ -39,8 +46,14 @@ export const VideoJS: FC<VideoJSProps> = () => {
           </Text>
         </Row>
         <VideoWrapper ref={videoWrapperRef}>
-          {Array.from(players.values()).map(({ id, skipCrossfade, longTransition }) => (
-            <PlayerSlot key={id} id={id} skipCrossfade={skipCrossfade} longTransition={longTransition} />
+          {players.map(({ id, skipCrossfade, longTransition }) => (
+            <PlayerSlot
+              key={id}
+              id={id}
+              isActive={id === activePlayer}
+              skipCrossfade={skipCrossfade}
+              longTransition={longTransition}
+            />
           ))}
         </VideoWrapper>
       </Column>
@@ -48,31 +61,45 @@ export const VideoJS: FC<VideoJSProps> = () => {
   );
 };
 
-const PlayerSlot = ({ id, skipCrossfade, longTransition }: { id: string, skipCrossfade: boolean, longTransition: boolean }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const { activePlayer, registerPlayer, unregisterPlayer } = useVideoJs();
+/**
+ * Renders the video player element that contains videoRef to create videojs instance
+ * Using `memo` helps avoid unnecesary rerenders, still rendering when parent does it
+ */
+const PlayerSlot = memo(
+  ({
+    id,
+    isActive,
+    skipCrossfade,
+    longTransition
+  }: {
+    id: string,
+    isActive: boolean;
+    skipCrossfade: boolean,
+    longTransition: boolean
+  }) => {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const { registerPlayer, unregisterPlayer } = useVideoJs();
 
-  const isActive = id === activePlayer;
+    useEffect(() => {
+      if (videoRef.current) {
+        const id = registerPlayer(videoRef.current, VIDEOJS_OPTIONS);
 
-  useEffect(() => {
-    if (videoRef.current) {
-      const id = registerPlayer(videoRef.current, VIDEOJS_OPTIONS);
+        return () => {
+          unregisterPlayer(id);
+        };
+      }
+    }, [id, registerPlayer, unregisterPlayer]);
 
-      return () => {
-        unregisterPlayer(id);
-      };
-    }
-  }, [registerPlayer, unregisterPlayer]);
-
-  return (
-    <VideoContainer isActive={isActive} skipCrossfade={skipCrossfade} longTransition={longTransition}>
-      <PlayerWrapper data-vjs-player>
-        <video
-          ref={videoRef}
-          className={`video-js vjs-big-play-centered ${isActive ? "active" : "inactive"}`}
-          data-player-id={id}
-        />
-      </PlayerWrapper>
-    </VideoContainer >
-  );
-};
+    return (
+      <VideoContainer isActive={isActive} skipCrossfade={skipCrossfade} longTransition={longTransition}>
+        <PlayerWrapper data-vjs-player>
+          <video
+            ref={videoRef}
+            className={`video-js vjs-big-play-centered ${isActive ? "active" : "inactive"}`}
+            data-player-id={id}
+          />
+        </PlayerWrapper>
+      </VideoContainer >
+    );
+  }
+);
