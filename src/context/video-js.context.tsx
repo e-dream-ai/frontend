@@ -108,6 +108,7 @@ export const VideoJSProvider = ({
     }
 
     if (playersPoolRef.current.size >= PoolConfig.minPlayers) {
+      // setIsReady(true) should be changed to register player? 
       setIsReady(true);
     }
 

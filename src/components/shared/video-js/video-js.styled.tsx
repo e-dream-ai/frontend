@@ -1,4 +1,4 @@
-import { LONG_CROSSFADE_DURATION, NO_CROSSFADE_DURATION, SHORT_CROSSFADE_DURATION } from "@/constants/video-js.constants";
+import { LONG_CROSSFADE_DURATION, SHORT_CROSSFADE_DURATION } from "@/constants/video-js.constants";
 import styled from "styled-components";
 
 export const VideoWrapper = styled.div`
@@ -17,11 +17,10 @@ export const VideoContainer = styled.div<{ isActive: boolean, skipCrossfade: boo
   width: 100%;
   height: 100%;
   transition: ${({ skipCrossfade, longTransition }) =>
-    `opacity ${(
-      skipCrossfade
-        ? NO_CROSSFADE_DURATION
-        : longTransition ? LONG_CROSSFADE_DURATION : SHORT_CROSSFADE_DURATION
-    ) * 1000}ms ease`};
+    skipCrossfade
+      ? "opacity 0s linear" :
+      `opacity ${(longTransition ? LONG_CROSSFADE_DURATION : SHORT_CROSSFADE_DURATION) * 1000}ms ease`
+  };
   opacity: ${props => props.isActive ? 1 : 0};
   z-index: ${props => props.isActive ? 2 : 1};
 
