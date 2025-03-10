@@ -8,16 +8,24 @@ import { PAGINATION } from "@/constants/pagination.constants";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Playlist } from "@/types/playlist.types";
+import { usePaginateProps } from "@/hooks/usePaginateProps";
 
 const SECTION_ID = "playlists";
 
 export const PlaylistsPage: React.FC = () => {
   const { t } = useTranslation();
+  const {
+    marginPagesDisplayed,
+    pageRangeDisplayed,
+    breakLabel,
+    previousLabel,
+    nextLabel,
+    renderOnZeroPageCount
+  } = usePaginateProps();
   const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching } = useMyPlaylists({ page });
   const playlists: Playlist[] = data?.data?.playlists ?? [];
   const pageCount = Math.ceil((data?.data?.count ?? 1) / PAGINATION.TAKE);
-
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);
   };
@@ -45,12 +53,14 @@ export const PlaylistsPage: React.FC = () => {
 
         <Row justifyContent="center" margin="0">
           <Paginate
-            breakLabel="..."
-            nextLabel={`${t("components.paginate.next")} >`}
+            breakLabel={breakLabel}
+            previousLabel={previousLabel}
+            nextLabel={nextLabel}
+            marginPagesDisplayed={marginPagesDisplayed}
+            pageRangeDisplayed={pageRangeDisplayed}
+            renderOnZeroPageCount={renderOnZeroPageCount}
             onPageChange={handleonPageChange}
             pageCount={pageCount}
-            previousLabel={`< ${t("components.paginate.previous")}`}
-            renderOnZeroPageCount={null}
           />
         </Row>
       </Section>

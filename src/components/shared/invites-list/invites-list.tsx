@@ -18,6 +18,7 @@ import { useTheme } from "styled-components";
 import { formatRoleName } from "@/utils/user.util";
 import useHighlight from "@/hooks/useHighlight";
 import { HighlightKeys } from "@/constants/highlight.constants";
+import { usePaginateProps } from "@/hooks/usePaginateProps";
 
 const List: React.FC<{
   children?: React.ReactNode;
@@ -113,6 +114,14 @@ const InviteItem: React.FC<{
 export const InvitesList: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const {
+    marginPagesDisplayed,
+    pageRangeDisplayed,
+    breakLabel,
+    previousLabel,
+    nextLabel,
+    renderOnZeroPageCount
+  } = usePaginateProps();
 
   const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching } = useInvites({
@@ -163,12 +172,14 @@ export const InvitesList: React.FC = () => {
 
         <Row justifyContent="center" margin="0">
           <Paginate
-            breakLabel="..."
-            nextLabel={`${t("components.paginate.next")} >`}
+            breakLabel={breakLabel}
+            previousLabel={previousLabel}
+            nextLabel={nextLabel}
+            marginPagesDisplayed={marginPagesDisplayed}
+            pageRangeDisplayed={pageRangeDisplayed}
+            renderOnZeroPageCount={renderOnZeroPageCount}
             onPageChange={handleonPageChange}
             pageCount={pageCount}
-            previousLabel={`< ${t("components.paginate.previous")}`}
-            renderOnZeroPageCount={null}
           />
         </Row>
       </Column>

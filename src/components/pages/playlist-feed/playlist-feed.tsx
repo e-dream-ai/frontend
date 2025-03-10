@@ -11,19 +11,23 @@ import { Playlist } from "@/types/playlist.types";
 import { useState } from "react";
 import { FeedItem } from "@/types/feed.types";
 import Text from "@/components/shared/text/text";
-import { useWindowSize } from "@/hooks/useWindowSize";
 import { useRankedFeed } from "@/api/feed/query/useRankedFeed";
 import { ItemType } from "@/components/shared/item-card/item-card";
+import { usePaginateProps } from "@/hooks/usePaginateProps";
 
 const SECTION_ID = "ranked";
 
 export const PlaylistsFeedPage: React.FC = () => {
   const { t } = useTranslation();
   const [page, setPage] = useState<number>(0);
-  const { width } = useWindowSize();
-
-  const pageRange = (width ?? 0) > 600 ? 5 : 0;
-  const marginPages = (width ?? 0) > 600 ? 2 : 0;
+  const {
+    marginPagesDisplayed,
+    pageRangeDisplayed,
+    breakLabel,
+    previousLabel,
+    nextLabel,
+    renderOnZeroPageCount
+  } = usePaginateProps();
 
   const {
     data: feedData,
@@ -59,15 +63,15 @@ export const PlaylistsFeedPage: React.FC = () => {
 
         <Row justifyContent="center" margin="0">
           <Paginate
-            breakLabel="..."
-            nextLabel={`${t("components.paginate.next")} >`}
+            breakLabel={breakLabel}
+            previousLabel={previousLabel}
+            nextLabel={nextLabel}
+            marginPagesDisplayed={marginPagesDisplayed}
+            pageRangeDisplayed={pageRangeDisplayed}
+            renderOnZeroPageCount={renderOnZeroPageCount}
             forcePage={page}
             onPageChange={handleOnPageChange}
             pageCount={pageCount}
-            marginPagesDisplayed={marginPages}
-            pageRangeDisplayed={pageRange}
-            previousLabel={`< ${t("components.paginate.previous")}`}
-            renderOnZeroPageCount={null}
           />
         </Row>
       </Section>

@@ -25,6 +25,7 @@ import { useUpdateReport } from "@/api/report/mutation/useUpdateReport";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { truncateString, truncateWords } from "@/utils/string.util";
 import { TYPES } from "@/constants/report.constants";
+import { usePaginateProps } from "@/hooks/usePaginateProps";
 
 const List: React.FC<{
   children?: React.ReactNode;
@@ -178,8 +179,16 @@ const ReportItem: React.FC<{
 export const ReportsList: React.FC = () => {
   const { t } = useTranslation();
   const theme = useTheme();
-
   const [page, setPage] = useState<number>(0);
+
+  const {
+    marginPagesDisplayed,
+    pageRangeDisplayed,
+    breakLabel,
+    previousLabel,
+    nextLabel,
+    renderOnZeroPageCount
+  } = usePaginateProps();
   const { data, isLoading, isRefetching } = useReports({
     page,
   });
@@ -247,12 +256,14 @@ export const ReportsList: React.FC = () => {
 
         <Row justifyContent="center" margin="0">
           <Paginate
-            breakLabel="..."
-            nextLabel={`${t("components.paginate.next")} >`}
+            breakLabel={breakLabel}
+            previousLabel={previousLabel}
+            nextLabel={nextLabel}
+            marginPagesDisplayed={marginPagesDisplayed}
+            pageRangeDisplayed={pageRangeDisplayed}
+            renderOnZeroPageCount={renderOnZeroPageCount}
             onPageChange={handleonPageChange}
             pageCount={pageCount}
-            previousLabel={`< ${t("components.paginate.previous")}`}
-            renderOnZeroPageCount={null}
           />
         </Row>
       </Column>

@@ -18,12 +18,12 @@ import { useCallback, useMemo, useState } from "react";
 import { FeedItem, FeedItemServerType } from "@/types/feed.types";
 import { User } from "@/types/auth.types";
 import Text from "@/components/shared/text/text";
-import { useWindowSize } from "@/hooks/useWindowSize";
 import { ROLES } from "@/constants/role.constants";
 import { RoleType } from "@/types/role.types";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
 import { ItemType } from "@/components/shared/item-card/item-card";
+import { usePaginateProps } from "@/hooks/usePaginateProps";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -42,10 +42,14 @@ export const FeedPage: React.FC = () => {
   const [radioGroupState, setRadioGroupState] = useState<
     FeedItemServerType | undefined
   >(FEED_FILTERS.ALL);
-  const { width } = useWindowSize();
-
-  const pageRange = (width ?? 0) > 600 ? 5 : 0;
-  const marginPages = (width ?? 0) > 600 ? 2 : 0;
+  const {
+    marginPagesDisplayed,
+    pageRangeDisplayed,
+    breakLabel,
+    previousLabel,
+    nextLabel,
+    renderOnZeroPageCount
+  } = usePaginateProps();
 
   const getFeedType: (
     type?: FeedItemServerType,
@@ -167,17 +171,17 @@ export const FeedPage: React.FC = () => {
 
         <Row justifyContent="center" margin="0">
           <Paginate
-            breakLabel="..."
-            nextLabel={`${t("components.paginate.next")} >`}
+            breakLabel={breakLabel}
+            previousLabel={previousLabel}
+            nextLabel={nextLabel}
+            marginPagesDisplayed={marginPagesDisplayed}
+            pageRangeDisplayed={pageRangeDisplayed}
+            renderOnZeroPageCount={renderOnZeroPageCount}
             forcePage={showUserListTab ? usersPage : page}
             onPageChange={
               showUserListTab ? handleOnUserPageChange : handleOnPageChange
             }
             pageCount={showUserListTab ? usersPageCount : pageCount}
-            marginPagesDisplayed={marginPages}
-            pageRangeDisplayed={pageRange}
-            previousLabel={`< ${t("components.paginate.previous")}`}
-            renderOnZeroPageCount={null}
           />
         </Row>
       </Section>

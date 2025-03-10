@@ -7,6 +7,7 @@ import { PAGINATION } from "@/constants/pagination.constants";
 import { useTranslation } from "react-i18next";
 import { useUserVotedDreams } from "@/api/user/query/useUserVotedDreams";
 import { VoteType } from "@/types/vote.types";
+import { usePaginateProps } from "@/hooks/usePaginateProps";
 
 type UserVotedDreamsProps = {
   userUUID?: string;
@@ -22,6 +23,14 @@ const UserVotedDreams: React.FC<UserVotedDreamsProps> = ({
   type
 }) => {
   const { t } = useTranslation();
+  const {
+    marginPagesDisplayed,
+    pageRangeDisplayed,
+    breakLabel,
+    previousLabel,
+    nextLabel,
+    renderOnZeroPageCount
+  } = usePaginateProps();
   const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching } = useUserVotedDreams({
     page,
@@ -65,13 +74,15 @@ const UserVotedDreams: React.FC<UserVotedDreamsProps> = ({
 
         <Row justifyContent="center" margin="0">
           <Paginate
+            breakLabel={breakLabel}
+            previousLabel={previousLabel}
+            nextLabel={nextLabel}
+            marginPagesDisplayed={marginPagesDisplayed}
+            pageRangeDisplayed={pageRangeDisplayed}
+            renderOnZeroPageCount={renderOnZeroPageCount}
             forcePage={page}
-            breakLabel="..."
-            nextLabel={`${t("components.paginate.next")} >`}
             onPageChange={handleonPageChange}
             pageCount={pageCount}
-            previousLabel={`< ${t("components.paginate.previous")}`}
-            renderOnZeroPageCount={null}
           />
         </Row>
       </Column>

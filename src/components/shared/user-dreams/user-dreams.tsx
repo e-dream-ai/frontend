@@ -10,6 +10,7 @@ import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 import { FeedItemServerType } from "@/types/feed.types";
 import { ItemType } from "../item-card/item-card";
+import { usePaginateProps } from "@/hooks/usePaginateProps";
 
 type UserDreamsProps = {
   userUUID?: string;
@@ -25,6 +26,14 @@ const UserDreams: React.FC<UserDreamsProps> = ({
   type
 }) => {
   const { t } = useTranslation();
+  const {
+    marginPagesDisplayed,
+    pageRangeDisplayed,
+    breakLabel,
+    previousLabel,
+    nextLabel,
+    renderOnZeroPageCount
+  } = usePaginateProps();
   const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching } = useFeed({
     page,
@@ -81,13 +90,15 @@ const UserDreams: React.FC<UserDreamsProps> = ({
 
         <Row justifyContent="center" margin="0">
           <Paginate
+            breakLabel={breakLabel}
+            previousLabel={previousLabel}
+            nextLabel={nextLabel}
+            marginPagesDisplayed={marginPagesDisplayed}
+            pageRangeDisplayed={pageRangeDisplayed}
+            renderOnZeroPageCount={renderOnZeroPageCount}
             forcePage={page}
-            breakLabel="..."
-            nextLabel={`${t("components.paginate.next")} >`}
             onPageChange={handleonPageChange}
             pageCount={pageCount}
-            previousLabel={`< ${t("components.paginate.previous")}`}
-            renderOnZeroPageCount={null}
           />
         </Row>
       </Column>
