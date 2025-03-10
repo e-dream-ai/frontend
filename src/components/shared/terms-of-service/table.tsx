@@ -21,7 +21,7 @@ export const CcbyTable = () =>
     <tbody>
       <tr>
         <td>Hosting & Interactive Display</td>
-        <td>Included - the company may re-encode & distribute your content to other users</td>
+        <td>Included - the company may distribute your content to other users and transform it for interactive display</td>
         <td>Included - same as basic</td>
       </tr>
       <tr>
