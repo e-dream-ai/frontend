@@ -37,11 +37,6 @@ const createMenuRoutes = (user?: User | null) => {
       display: ["block", "block", "block", "none"]
     },
     {
-      title: "header.profile",
-      route: ROUTES.MY_PROFILE,
-      display: ["block", "block", "block", "none"]
-    },
-    {
       title: "header.my_dreams",
       route: `/${joinPaths(
         [
@@ -49,6 +44,11 @@ const createMenuRoutes = (user?: User | null) => {
           user?.uuid ?? "",
           ROUTES.USER_FEED
         ])}`,
+      display: ["block", "block", "block", "none"]
+    },
+    {
+      title: "header.profile",
+      route: ROUTES.MY_PROFILE,
       display: "block"
     },
     {

@@ -191,6 +191,9 @@ export const HeaderProfileWrapper = styled.div`
 `;
 
 export const HeaderUserName = styled.span`
+  max-width: 4em;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-family: "Comfortaa", sans-serif;
   text-transform: lowercase;
   @media (max-width: calc(${DEVICES.MOBILE_L} - (0.0625em))) {

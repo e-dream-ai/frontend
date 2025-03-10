@@ -45,11 +45,6 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
       display: ["none", "none", "none", "inline-flex"]
     },
     {
-      component: t("header.profile"),
-      route: ROUTES.MY_PROFILE,
-      display: ["none", "none", "none", "inline-flex"]
-    },
-    {
       component: t("header.my_dreams"),
       route: `/${joinPaths(
         [
@@ -57,6 +52,11 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
           user?.uuid ?? "",
           ROUTES.USER_FEED
         ])}`,
+      display: ["none", "none", "none", "inline-flex"]
+    },
+    {
+      component: t("header.profile"),
+      route: ROUTES.MY_PROFILE,
       display: "none"
     },
     {
