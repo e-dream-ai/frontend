@@ -1,4 +1,4 @@
-import { NSFW } from "@/constants/dream.constants";
+import { NSFW } from "@/constants/select.constants";
 import queryClient from "@/api/query-client";
 import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
 import {
@@ -97,8 +97,7 @@ export const usePlaylistHandlers = ({
             );
           } else {
             toast.error(
-              `${t("components.update_playlist.error_updating_playlist")} ${
-                response.message
+              `${t("components.update_playlist.error_updating_playlist")} ${response.message
               }`,
             );
           }
@@ -125,11 +124,13 @@ export const usePlaylistHandlers = ({
 
   const handleUploadVideos = async ({
     nsfw,
+    hidden,
     ccbyLicense,
     description,
     sourceUrl,
   }: {
     nsfw?: boolean;
+    hidden?: boolean;
     ccbyLicense?: boolean;
     description?: string;
     sourceUrl?: string;
@@ -155,6 +156,7 @@ export const usePlaylistHandlers = ({
       const createdDream = await uploadDreamVideoMutateAsync({
         file: videos[i]?.fileBlob,
         nsfw,
+        hidden,
         ccbyLicense,
         description,
         sourceUrl,

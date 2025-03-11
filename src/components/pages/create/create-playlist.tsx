@@ -103,7 +103,8 @@ export const CreatePlaylist: React.FC = () => {
   const handleUploadVideos = async (
     playlist: Playlist,
     opts?: {
-      nswf?: boolean;
+      nsfw?: boolean;
+      hidden?: boolean;
       ccbyLicense?: boolean;
       description?: string;
       sourceUrl?: string;
@@ -113,7 +114,8 @@ export const CreatePlaylist: React.FC = () => {
       setCurrentUploadFile(i);
       const createdDream = await mutateAsync({
         file: videos[i]?.fileBlob,
-        nsfw: opts?.nswf,
+        nsfw: opts?.nsfw,
+        hidden: opts?.hidden,
         ccbyLicense: opts?.ccbyLicense,
         description: opts?.description,
         sourceUrl: opts?.sourceUrl,
@@ -152,7 +154,8 @@ export const CreatePlaylist: React.FC = () => {
         router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist?.uuid}`);
       } else {
         handleUploadVideos(playlist, {
-          nswf: data.nsfw,
+          nsfw: data.nsfw,
+          hidden: data.hidden,
           ccbyLicense: data.ccbyLicense,
           description: data.description,
           sourceUrl: data.sourceUrl,
@@ -218,6 +221,9 @@ export const CreatePlaylist: React.FC = () => {
           <Column flex="auto">
             <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
               {t("page.create.nsfw_playlist")}
+            </Checkbox>
+            <Checkbox {...register("hidden")} error={errors.hidden?.message}>
+              {t("page.create.hidden_playlist")}
             </Checkbox>
             <div data-tooltip-id="ccby-license">
               <Checkbox

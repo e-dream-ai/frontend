@@ -7,8 +7,6 @@ import {
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
-import { FORMAT } from "@/constants/moment.constants";
-import moment from "moment";
 import { useCallback, useEffect, useState } from "react";
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -38,9 +36,8 @@ import {
   faTrash,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { getUserName } from "@/utils/user.util";
 import { Select } from "@/components/shared/select/select";
-import { getNsfwOptions } from "@/constants/dream.constants";
+import { getHiddenOptions, getNsfwOptions } from "@/constants/select.constants";
 import { usePlaylistState } from "./usePlaylistState";
 import { usePlaylistHandlers } from "./usePlaylistHandlers";
 import { toast } from "react-toastify";
@@ -50,11 +47,10 @@ import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu
 import RadioButtonGroup from "@/components/shared/radio-button-group/radio-button-group";
 import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
-import { filterNsfwOption } from "@/utils/dream.util";
 import { FormInput } from "@/components/shared/input/input";
+import { formatPlaylistForm } from "@/utils/playlist.util";
 
 const SectionID = "playlist";
-
 
 /**
  * Playlist tabs handling
@@ -79,7 +75,6 @@ const getPlaylistTabsFilterData: (
     { key: t(FEED_FILTERS_NAMES.KEYFRAMES), value: PLAYLIST_TABS.KEYFRAMES.toString() },
   ];
 };
-
 
 /**
  * View playlist page
@@ -200,27 +195,7 @@ export const ViewPlaylistPage = () => {
   };
 
   const resetRemotePlaylistForm = useCallback(() => {
-    formMethods.reset({
-      name: playlist?.name,
-      user: playlist?.user?.name,
-      /**
-       * set displayedOwner
-       * for admins always show displayedOwner
-       * for normal users show displayedOwner, if doesn't exists, show user
-       */
-      displayedOwner: isUserAdmin
-        ? {
-          value: playlist?.displayedOwner?.id,
-          label: getUserName(playlist?.displayedOwner),
-        }
-        : {
-          value: playlist?.displayedOwner?.id ?? playlist?.user?.id,
-          label: getUserName(playlist?.displayedOwner ?? playlist?.user),
-        },
-      featureRank: playlist?.featureRank,
-      nsfw: filterNsfwOption(playlist?.nsfw, t),
-      created_at: moment(playlist?.created_at).format(FORMAT),
-    });
+    formMethods.reset(formatPlaylistForm({ playlist, isAdmin: isUserAdmin, t }));
   }, [formMethods, playlist, isUserAdmin, t]);
 
   /**
@@ -404,6 +379,26 @@ export const ViewPlaylistPage = () => {
                       )}
                     />
                   </Restricted>
+
+                  <Restricted
+                    to={PLAYLIST_PERMISSIONS.CAN_VIEW_HIDDEN}
+                    isOwner={isOwner}
+                  >
+                    <Controller
+                      name="hidden"
+                      control={formMethods.control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          isDisabled={!editMode || !allowedEditOwner}
+                          placeholder={t("page.view_playlist.hidden")}
+                          before={<FontAwesomeIcon icon={faShield} />}
+                          options={getHiddenOptions(t)}
+                        />
+                      )}
+                    />
+                  </Restricted>
+
 
                   <Restricted
                     to={PLAYLIST_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}

@@ -49,7 +49,7 @@ import { useImage } from "@/hooks/useImage";
 import {
   NSFW,
   getNsfwOptions,
-} from "@/constants/dream.constants";
+} from "@/constants/select.constants";
 import usePermission from "@/hooks/usePermission";
 import { formatDateToYYYYMMDD } from "@/utils/date.util";
 import {
@@ -64,7 +64,7 @@ import ApiKeyCard from "../apikey-card/ApiKeyCard";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
 import { joinPaths } from "@/utils/router.util";
-import { filterNsfwOption } from "@/utils/dream.util";
+import { filterNsfwOption } from "@/utils/select.util";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;

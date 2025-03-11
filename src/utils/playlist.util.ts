@@ -2,6 +2,16 @@ import { PlaylistApiResponse } from "@/schemas/playlist.schema";
 import { ApiResponse } from "@/types/api.types";
 import { ItemOrder, SetItemOrder } from "@/types/dnd.types";
 import { Playlist, PlaylistItem } from "@/types/playlist.types";
+import { TFunction } from "i18next";
+import { getUserName } from "./user.util";
+import moment from "moment";
+import { FORMAT } from "@/constants/moment.constants";
+import { filterHiddenOption, filterNsfwOption } from "./select.util";
+import {
+  UpdatePlaylistFormValues,
+  UpdatePlaylistRequestValues,
+} from "@/schemas/update-playlist.schema";
+import { HIDDEN, NSFW } from "@/constants/select.constants";
 
 export const getOrderedItemsPlaylistRequest = ({
   items = [],
@@ -109,3 +119,49 @@ export const sortPlaylistItemsByDate = (
       .map((item, index) => ({ id: item.id, order: index }))
   );
 };
+
+// format playlist obj to fill form
+export const formatPlaylistForm = ({
+  playlist,
+  isAdmin,
+  t,
+}: {
+  playlist?: Playlist;
+  isAdmin: boolean;
+  t: TFunction;
+}) => ({
+  name: playlist?.name,
+  user: playlist?.user?.name,
+  /**
+   * set displayedOwner
+   * for admins always show displayedOwner
+   * for normal users show displayedOwner, if doesn't exists, show user
+   */
+  displayedOwner: isAdmin
+    ? {
+        value: playlist?.displayedOwner?.id,
+        label: getUserName(playlist?.displayedOwner),
+      }
+    : {
+        value: playlist?.displayedOwner?.id ?? playlist?.user?.id,
+        label: getUserName(playlist?.displayedOwner ?? playlist?.user),
+      },
+  featureRank: playlist?.featureRank,
+  nsfw: filterNsfwOption(playlist?.nsfw, t),
+  hidden: filterHiddenOption(playlist?.hidden, t),
+  created_at: moment(playlist?.created_at).format(FORMAT),
+});
+
+export const formatPlaylistRequest = (
+  uuid: string,
+  data: UpdatePlaylistFormValues,
+): UpdatePlaylistRequestValues => ({
+  uuid: uuid,
+  values: {
+    name: data.name,
+    featureRank: data?.featureRank,
+    displayedOwner: data?.displayedOwner?.value,
+    nsfw: data?.nsfw.value === NSFW.TRUE,
+    hidden: data?.hidden.value === HIDDEN.TRUE,
+  },
+});

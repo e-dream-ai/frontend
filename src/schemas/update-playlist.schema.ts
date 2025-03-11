@@ -12,6 +12,10 @@ export type UpdatePlaylistFormValues = {
     label?: string;
     value?: string;
   };
+  hidden: {
+    label?: string;
+    value?: string;
+  };
   created_at?: string;
 };
 
@@ -21,6 +25,7 @@ export type UpdateVideoPlaylistFormValues = {
     value: string;
   };
   nsfw: boolean;
+  hidden: boolean;
   ccbyLicense: boolean;
   description?: string;
   sourceUrl?: string;
@@ -33,6 +38,7 @@ export type UpdatePlaylistRequestValues = {
     featureRank?: number;
     displayedOwner?: number;
     nsfw?: boolean;
+    hidden?: boolean;
   };
 };
 
@@ -52,6 +58,10 @@ export const UpdatePlaylistSchema = yup
       label: yup.string(),
       value: yup.string(),
     }),
+    hidden: yup.object({
+      label: yup.string(),
+      value: yup.string(),
+    }),
     created_at: yup.string(),
   })
   .required();
@@ -65,6 +75,7 @@ export const UpdateVideoPlaylistSchema = yup
       })
       .required("Playlist is required."),
     nsfw: yup.boolean().required(),
+    hidden: yup.boolean().required(),
     ccbyLicense: yup.boolean().required(),
     description: yup.string(),
     sourceUrl: yup.string(),

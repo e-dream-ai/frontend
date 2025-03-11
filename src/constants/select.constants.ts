@@ -5,6 +5,11 @@ export const NSFW = {
   FALSE: "false",
 };
 
+export const HIDDEN = {
+  TRUE: "true",
+  FALSE: "false",
+};
+
 export const CCA_LICENSE = {
   TRUE: "true",
   FALSE: "false",
@@ -13,6 +18,11 @@ export const CCA_LICENSE = {
 export const getNsfwOptions = (t: TFunction) => [
   { value: NSFW.TRUE, label: t("user.nsfw.nsfw") },
   { value: NSFW.FALSE, label: t("user.nsfw.sfw") },
+];
+
+export const getHiddenOptions = (t: TFunction) => [
+  { value: HIDDEN.TRUE, label: t("dream.hidden.hidden") },
+  { value: HIDDEN.FALSE, label: t("dream.hidden.not_hidden") },
 ];
 
 export const getCcaLicenceOptions = (t: TFunction) => [

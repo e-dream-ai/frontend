@@ -98,7 +98,9 @@
       "dream_description": "Optional Description",
       "dream_source_url": "Optional Source URL",
       "nsfw_dream": "Mark NSFW Dream",
+      "hidden_dream": "Hidden Dream",
       "nsfw_playlist": "Mark NSFW Playlist",
+      "hidden_playlist": "Hidden Playlist",
       "license_dream": "Allow Training and Remixing with",
       "license_dream_ccby": "CC BY",
       "ccby_license_dream_tooltip": "Add Creative Commons Attribution License",
@@ -161,6 +163,7 @@
       "original_video": "Original Video",
       "original_fps": "Original FPS",
       "nsfw": "Content Rating",
+      "hidden": "Hidden",
       "more": "More",
       "less": "Less",
       "thumbnail": "Thumbnail",
@@ -193,6 +196,7 @@
       "feature_rank": "Feature Rank",
       "thumbnail": "Thumbnail",
       "nsfw": "Content Rating",
+      "hidden": "Hidden",
       "items": "Playlist items",
       "keyframes": "Keyframes",
       "empty_playlist": "No items to show",
@@ -560,6 +564,10 @@
     "ccby_license": {
       "active": "active",
       "inactive": "inactive"
+    },
+    "hidden": {
+      "hidden": "Hidden",
+      "not_hidden": "Not Hidden"
     }
   },
   "roles": {

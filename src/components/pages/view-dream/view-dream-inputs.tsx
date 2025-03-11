@@ -23,6 +23,7 @@ import {
   faCalendar,
   faClock,
   faComment,
+  faEyeSlash,
   faFile,
   faFileVideo,
   faFilm,
@@ -52,8 +53,9 @@ import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
 import {
   getCcaLicenceOptions,
+  getHiddenOptions,
   getNsfwOptions,
-} from "@/constants/dream.constants";
+} from "@/constants/select.constants";
 import { useImage } from "@/hooks/useImage";
 import { FormContainer, FormItem } from "@/components/shared/form/form";
 import { getUserProfileRoute } from "@/utils/router.util";
@@ -260,6 +262,25 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             {...register("sourceUrl")}
           />
         </FormItem>
+
+        <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_HIDDEN} isOwner={isOwner}>
+          <FormItem>
+            <Controller
+              name="hidden"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  isDisabled={!editMode || !allowedEditOwner}
+                  placeholder={t("page.view_dream.hidden")}
+                  before={<FontAwesomeIcon icon={faEyeSlash} />}
+                  options={getHiddenOptions(t)}
+                  tooltipPlace={tooltipPlaces.right}
+                />
+              )}
+            />
+          </FormItem>
+        </Restricted>
       </FormContainer>
 
       <Row flex="auto" justifyContent="center">

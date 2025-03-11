@@ -81,6 +81,7 @@ export const CreateDream: React.FC = () => {
       await mutateAsync({
         file: video?.fileBlob,
         nsfw: formData.nsfw,
+        hidden: formData.hidden,
         description: formData.description,
         sourceUrl: formData.sourceUrl,
         ccbyLicense: formData.ccbyLicense,
@@ -140,6 +141,9 @@ export const CreateDream: React.FC = () => {
           <Column flex="auto">
             <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
               {t("page.create.nsfw_dream")}
+            </Checkbox>
+            <Checkbox {...register("hidden")} error={errors.hidden?.message}>
+              {t("page.create.hidden_dream")}
             </Checkbox>
             <div data-tooltip-id="ccby-license">
               <Checkbox

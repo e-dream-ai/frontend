@@ -1,4 +1,3 @@
-import { NSFW } from "@/constants/dream.constants";
 import queryClient from "@/api/query-client";
 import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
 import { UpdatePlaylistFormValues } from "@/schemas/update-playlist.schema";
@@ -12,6 +11,7 @@ import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import { TOAST_DEFAULT_CONFIG } from "@/constants/toast.constants";
 import { ItemOrder, SetItemOrder } from "@/types/dnd.types";
 import {
+  formatPlaylistRequest,
   getOrderedItemsPlaylistRequest,
   sortPlaylistItemsByDate,
   sortPlaylistItemsByName,
@@ -101,15 +101,7 @@ export const usePlaylistHandlers = ({
 
   const handleMutatePlaylist = (data: UpdatePlaylistFormValues) => {
     mutatePlaylist(
-      {
-        uuid: uuid!,
-        values: {
-          name: data.name,
-          featureRank: data?.featureRank,
-          displayedOwner: data?.displayedOwner?.value,
-          nsfw: data?.nsfw.value === NSFW.TRUE,
-        },
-      },
+      formatPlaylistRequest(uuid!, data),
       {
         onSuccess: (response) => {
           if (response.success) {

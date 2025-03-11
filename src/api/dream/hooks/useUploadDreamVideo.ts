@@ -36,6 +36,7 @@ type AsyncMutationProps = (params?: {
   file?: File;
   dream?: Dream;
   nsfw?: boolean;
+  hidden?: boolean;
   ccbyLicense?: boolean;
   description?: string;
   sourceUrl?: string;

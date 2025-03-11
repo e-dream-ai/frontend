@@ -6,16 +6,16 @@ import { getUserName } from "./user.util";
 import { FORMAT } from "@/constants/moment.constants";
 import moment from "moment";
 import { TFunction } from "i18next";
-import {
-  CCA_LICENSE,
-  getCcaLicenceOptions,
-  getNsfwOptions,
-  NSFW,
-} from "@/constants/dream.constants";
+import { CCA_LICENSE, HIDDEN, NSFW } from "@/constants/select.constants";
 import {
   UpdateDreamFormValues,
   UpdateDreamRequestValues,
 } from "@/schemas/update-dream.schema";
+import {
+  filterCcaLicenceOption,
+  filterHiddenOption,
+  filterNsfwOption,
+} from "./select.util";
 
 export const getDreamNameOrUUID = (dream?: Dream) => dream?.name || dream?.uuid;
 
@@ -80,18 +80,6 @@ export const calculateTimeFromFrames = ({
     .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
 };
 
-// get nsfw options for filter
-export const filterNsfwOption = (value: boolean = false, t: TFunction) =>
-  getNsfwOptions(t).find(
-    (option) => option.value === Boolean(value).toString(),
-  ) ?? { value: NSFW.FALSE, label: t("user.nsfw.sfw") };
-
-// get ccaLicence options for filter
-export const filterCcaLicenceOption = (value: boolean = false, t: TFunction) =>
-  getCcaLicenceOptions(t).find(
-    (option) => option.value === Boolean(value).toString(),
-  ) ?? { value: CCA_LICENSE.FALSE, label: t("dream.ccby_license.inactive") };
-
 // format dream obj to fill form
 export const formatDreamForm = ({
   dream,
@@ -134,6 +122,7 @@ export const formatDreamForm = ({
         label: getUserName(dream?.displayedOwner ?? dream?.user),
       },
   nsfw: filterNsfwOption(dream?.nsfw, t),
+  hidden: filterHiddenOption(dream?.hidden, t),
   ccbyLicense: filterCcaLicenceOption(dream?.ccbyLicense, t),
   upvotes: dream?.upvotes,
   downvotes: dream?.downvotes,
@@ -164,6 +153,7 @@ export const formatDreamRequest = (
   featureRank: data.featureRank,
   displayedOwner: data?.displayedOwner?.value,
   nsfw: data?.nsfw.value === NSFW.TRUE,
+  hidden: data?.hidden.value === HIDDEN.TRUE,
   ccbyLicense: data?.ccbyLicense.value === CCA_LICENSE.TRUE,
   startKeyframe: data?.startKeyframe?.value,
   endKeyframe: data?.endKeyframe?.value,

@@ -101,6 +101,7 @@ export const UpdatePlaylist: React.FC = () => {
         setIsUploadingFiles(true);
         await handleUploadVideos({
           nsfw: formData?.nsfw,
+          hidden: formData?.hidden,
           ccbyLicense: formData?.ccbyLicense,
           description: formData?.description,
           sourceUrl: formData?.sourceUrl,
@@ -170,6 +171,9 @@ export const UpdatePlaylist: React.FC = () => {
             <Column flex="auto">
               <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
                 {t("page.create.nsfw_dream")}
+              </Checkbox>
+              <Checkbox {...register("hidden")} error={errors.hidden?.message}>
+                {t("page.create.hidden_playlist")}
               </Checkbox>
               <div data-tooltip-id="ccby-license">
                 <Checkbox

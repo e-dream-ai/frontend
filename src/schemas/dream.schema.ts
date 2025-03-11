@@ -8,6 +8,7 @@ export type CreateDreamFormValues = {
   description?: string;
   sourceUrl?: string;
   nsfw: boolean;
+  hidden: boolean;
   ccbyLicense: boolean;
 };
 
@@ -16,6 +17,7 @@ export const CreateDreamSchema = yup
     description: yup.string(),
     sourceUrl: yup.string(),
     nsfw: yup.boolean().required(),
+    hidden: yup.boolean().required(),
     ccbyLicense: yup.boolean().required(),
   })
   .required();

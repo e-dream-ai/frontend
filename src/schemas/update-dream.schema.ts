@@ -18,6 +18,10 @@ export type UpdateDreamFormValues = {
     label?: string;
     value?: string;
   };
+  hidden: {
+    label?: string;
+    value?: string;
+  };
   ccbyLicense: {
     label?: string;
     value?: string;
@@ -46,6 +50,7 @@ export type UpdateDreamRequestValues = {
   startKeyframe?: string;
   endKeyframe?: string;
   nsfw?: boolean;
+  hidden?: boolean;
   ccbyLicense?: boolean;
 };
 
@@ -69,6 +74,10 @@ export const UpdateDreamSchema = yup
       value: yup.number(),
     }),
     nsfw: yup.object({
+      label: yup.string(),
+      value: yup.string(),
+    }),
+    hidden: yup.object({
       label: yup.string(),
       value: yup.string(),
     }),
