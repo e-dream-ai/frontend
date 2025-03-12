@@ -23,7 +23,7 @@ import {
   faCalendar,
   faClock,
   faComment,
-  faEyeSlash,
+  faEye,
   faFile,
   faFileVideo,
   faFilm,
@@ -273,7 +273,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                   {...field}
                   isDisabled={!editMode}
                   placeholder={t("page.view_dream.hidden")}
-                  before={<FontAwesomeIcon icon={faEyeSlash} />}
+                  before={<FontAwesomeIcon icon={faEye} />}
                   options={getHiddenOptions(t)}
                   tooltipPlace={tooltipPlaces.right}
                 />

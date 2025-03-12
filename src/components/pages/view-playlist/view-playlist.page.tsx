@@ -27,6 +27,7 @@ import { HandleChangeFile } from "@/types/media.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCalendar,
+  faEye,
   faFileVideo,
   faPlay,
   faPlus,
@@ -396,7 +397,7 @@ export const ViewPlaylistPage = () => {
                           {...field}
                           isDisabled={!editMode || !allowedEditOwner}
                           placeholder={t("page.view_playlist.hidden")}
-                          before={<FontAwesomeIcon icon={faShield} />}
+                          before={<FontAwesomeIcon icon={faEye} />}
                           options={getHiddenOptions(t)}
                         />
                       )}
