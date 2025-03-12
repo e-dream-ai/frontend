@@ -26,7 +26,6 @@ import {
   ThumbnailPlaceholder,
   UsernameText,
 } from "./item-card.styled";
-import { FeedItemType } from "@/types/feed.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faFilm,
@@ -127,7 +126,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
       event.preventDefault();
       event.stopPropagation();
 
-      if (type === FeedItemType.DREAM) {
+      if (type === "dream") {
         emitPlayDream(
           socket,
           item as Dream,

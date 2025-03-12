@@ -261,6 +261,7 @@
       "users": "Users",
       "upvote": "Liked",
       "downvote": "Disliked",
+      "hidden": "Hidden",
       "empty_feed": "No items to show",
       "empty_users": "No users to show"
     },

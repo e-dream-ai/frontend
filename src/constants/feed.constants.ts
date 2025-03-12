@@ -1,7 +1,7 @@
 import { TFunction } from "i18next";
-import { FeedItemServerType, UserFeedType } from "@/types/feed.types";
+import { FeedItemType, UserFeedType } from "@/types/feed.types";
 
-export const FEED_FILTERS: { [key: string]: FeedItemServerType } = {
+export const FEED_FILTERS: Record<Uppercase<FeedItemType>, FeedItemType> = {
   ALL: "all",
   DREAM: "dream",
   PLAYLIST: "playlist",
@@ -25,6 +25,7 @@ export const USER_FEED_TYPES: Record<Uppercase<UserFeedType>, UserFeedType> = {
   DREAM: "dream",
   UPVOTE: "upvote",
   DOWNVOTE: "downvote",
+  HIDDEN: "hidden",
 } as const;
 
 export const USER_FEED_FILTERS_NAMES = {
@@ -33,6 +34,7 @@ export const USER_FEED_FILTERS_NAMES = {
   PLAYLIST: "page.feed.playlist",
   UPVOTE: "page.feed.upvote",
   DOWNVOTE: "page.feed.downvote",
+  HIDDEN: "page.feed.hidden",
 };
 
 export const getFeedFilterData: (
@@ -86,6 +88,10 @@ export const getUserFeedFilterData: (
     {
       key: t(USER_FEED_FILTERS_NAMES.DOWNVOTE),
       value: USER_FEED_TYPES.DOWNVOTE.toString(),
+    },
+    {
+      key: t(USER_FEED_FILTERS_NAMES.HIDDEN),
+      value: USER_FEED_TYPES.HIDDEN.toString(),
     },
   ];
 };

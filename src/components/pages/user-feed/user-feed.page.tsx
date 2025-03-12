@@ -8,22 +8,29 @@ import RadioButtonGroup from "@/components/shared/radio-button-group/radio-butto
 import { Section } from "@/components/shared/section/section";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import UserDreams from "@/components/shared/user-dreams/user-dreams";
-import { getUserFeedFilterData, USER_FEED_TYPES } from "@/constants/feed.constants";
+import { USER_FEED_TYPES } from "@/constants/feed.constants";
 import { useImage } from "@/hooks/useImage";
 import { getUserNameOrEmail } from "@/utils/user.util";
 import { useTranslation } from "react-i18next";
 import { useParams } from "react-router-dom";
-import { UserFeedType } from "@/types/feed.types";
+import { FeedItemFilterType, UserFeedType } from "@/types/feed.types";
 import UserVotedDreams from "@/components/shared/user-dreams/user-voted-dreams";
 import { VoteType } from "@/types/vote.types";
+import { useUserFeedFilter } from "./useUserFeedFilter";
+import useAuth from "@/hooks/useAuth";
 
 const SECTION_ID = "user-feed";
 
+const USER_DREAMS_COMPONENT = [USER_FEED_TYPES.ALL, USER_FEED_TYPES.DREAM, USER_FEED_TYPES.PLAYLIST, USER_FEED_TYPES.HIDDEN]
+
 export const UserFeedPage: React.FC = () => {
+  const { user: authUser } = useAuth()
   const { t } = useTranslation();
   const { uuid: userUUID } = useParams<{ uuid: string }>();
-
   const [radioGroupState, setRadioGroupState] = useState<UserFeedType>(USER_FEED_TYPES.ALL);
+
+  const isOwner = userUUID === authUser?.uuid;
+  const radioGroupData = useUserFeedFilter(isOwner);
 
   const {
     data,
@@ -71,17 +78,17 @@ export const UserFeedPage: React.FC = () => {
           <RadioButtonGroup
             name="feed-filter"
             value={radioGroupState as string}
-            data={getUserFeedFilterData(t)}
+            data={radioGroupData}
             onChange={handleRadioButtonGroupChange}
           />
         </Row>
         {
-          [USER_FEED_TYPES.ALL, USER_FEED_TYPES.DREAM, USER_FEED_TYPES.PLAYLIST].includes(radioGroupState)
+          USER_DREAMS_COMPONENT.includes(radioGroupState)
             ? <UserDreams
               grid
               columns={3}
               userUUID={user?.uuid}
-              type={radioGroupState as string}
+              type={radioGroupState as FeedItemFilterType}
             />
             : <UserVotedDreams
               grid

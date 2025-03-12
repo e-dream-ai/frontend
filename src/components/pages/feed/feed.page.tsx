@@ -15,7 +15,7 @@ import UserCard, { UserCardList } from "../user-card/user-card";
 import { FEED_FILTERS, getFeedFilterData } from "@/constants/feed.constants";
 import { useUsers } from "@/api/user/query/useUsers";
 import { useCallback, useMemo, useState } from "react";
-import { FeedItem, FeedItemServerType } from "@/types/feed.types";
+import { FeedItem, FeedItemFilterType, FeedItemType } from "@/types/feed.types";
 import { User } from "@/types/auth.types";
 import Text from "@/components/shared/text/text";
 import { ROLES } from "@/constants/role.constants";
@@ -40,7 +40,7 @@ export const FeedPage: React.FC = () => {
   const [usersPage, setUsersPage] = useState<number>(0);
   const [search, setSearch] = useState<string | undefined>();
   const [radioGroupState, setRadioGroupState] = useState<
-    FeedItemServerType | undefined
+    FeedItemType | undefined
   >(FEED_FILTERS.ALL);
   const {
     marginPagesDisplayed,
@@ -51,18 +51,8 @@ export const FeedPage: React.FC = () => {
     renderOnZeroPageCount
   } = usePaginateProps();
 
-  const getFeedType: (
-    type?: FeedItemServerType,
-  ) => FeedItemServerType | undefined = useCallback((type) => {
-    if (type === FEED_FILTERS.ALL) return undefined;
-    if (type === FEED_FILTERS.DREAM) return FEED_FILTERS.DREAM;
-    if (type === FEED_FILTERS.PLAYLIST) return FEED_FILTERS.PLAYLIST;
-    if (type === FEED_FILTERS.USER) return undefined;
 
-    return undefined;
-  }, []);
-
-  const getUserFeedType: (type?: FeedItemServerType) => RoleType | undefined =
+  const getUserFeedType: (type?: FeedItemType) => RoleType | undefined =
     useCallback((type) => {
       if (type === FEED_FILTERS.ALL) return undefined;
       if (type === FEED_FILTERS.DREAM) return undefined;
@@ -81,7 +71,7 @@ export const FeedPage: React.FC = () => {
   } = useFeed({
     page,
     search,
-    type: getFeedType(radioGroupState),
+    type: radioGroupState as FeedItemFilterType,
   });
   const feed = feedData?.data?.feed;
   const pageCount = Math.ceil((feedData?.data?.count ?? 1) / PAGINATION.TAKE);
@@ -97,7 +87,7 @@ export const FeedPage: React.FC = () => {
       radioGroupState === FEED_FILTERS.USER
         ? USER_TAKE.USER_FILTER
         : USER_TAKE.SEARCH,
-    role: getUserFeedType(radioGroupState),
+    role: getUserFeedType(radioGroupState as FeedItemType),
   });
   const users = usersData?.data?.users;
   const usersPageCount = Math.ceil(
@@ -111,12 +101,12 @@ export const FeedPage: React.FC = () => {
     FEED_FILTERS.USER,
     FEED_FILTERS.CREATOR,
     FEED_FILTERS.ADMIN,
-  ].includes(radioGroupState ?? "");
+  ].includes(radioGroupState as FeedItemType);
 
   const showUserListTab = showUserList;
 
   const handleRadioButtonGroupChange = (value?: string) => {
-    setRadioGroupState(value);
+    setRadioGroupState(value as FeedItemType);
     setPage(0);
     setUsersPage(0);
   };

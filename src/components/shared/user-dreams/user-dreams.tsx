@@ -8,7 +8,7 @@ import { PAGINATION } from "@/constants/pagination.constants";
 import { useTranslation } from "react-i18next";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
-import { FeedItemServerType } from "@/types/feed.types";
+import { FeedItemFilterType } from "@/types/feed.types";
 import { ItemType } from "../item-card/item-card";
 import { usePaginateProps } from "@/hooks/usePaginateProps";
 
@@ -16,7 +16,7 @@ type UserDreamsProps = {
   userUUID?: string;
   grid?: boolean;
   columns?: number;
-  type?: FeedItemServerType;
+  type?: FeedItemFilterType;
 };
 
 const UserDreams: React.FC<UserDreamsProps> = ({

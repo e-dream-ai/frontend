@@ -53,7 +53,6 @@ import { useUnvoteDream } from "@/api/dream/mutation/useUnvoteDream";
 import { useDreamVote } from "@/api/dream/query/useDreamVote";
 import { VoteType } from "@/types/vote.types";
 import { FilmstripGallery } from "@/components/shared/filmstrip-gallery/filmstrip-gallery";
-import { FeedItemType } from "@/types/feed.types";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 import { NotFound } from "@/components/shared/not-found/not-found";
 import { formatDreamForm, formatDreamRequest } from "@/utils/dream.util";
@@ -613,7 +612,7 @@ const ViewDreamPage: React.FC = () => {
                       {playlistItems?.map((pi) => (
                         <ItemCard
                           key={pi.id}
-                          type={FeedItemType.PLAYLIST}
+                          type="playlist"
                           item={pi.playlist}
                           inline
                           size="sm"
