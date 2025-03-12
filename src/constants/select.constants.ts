@@ -22,7 +22,7 @@ export const getNsfwOptions = (t: TFunction) => [
 
 export const getHiddenOptions = (t: TFunction) => [
   { value: HIDDEN.TRUE, label: t("dream.hidden.hidden") },
-  { value: HIDDEN.FALSE, label: t("dream.hidden.not_hidden") },
+  { value: HIDDEN.FALSE, label: t("dream.hidden.visible") },
 ];
 
 export const getCcaLicenceOptions = (t: TFunction) => [

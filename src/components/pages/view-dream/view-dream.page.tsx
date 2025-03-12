@@ -327,6 +327,11 @@ const ViewDreamPage: React.FC = () => {
 
   if (!uuid) return <Navigate to={ROUTES.ROOT} replace />;
 
+  /**
+   * Return error if query has an error
+   */
+  if (isError) return <NotFound />;
+
   if (isDreamLoading || !dream) return (
     <Container>
       <Row justifyContent="center">
@@ -334,8 +339,6 @@ const ViewDreamPage: React.FC = () => {
       </Row>
     </Container>
   );
-
-  if (isError) return <NotFound />;
 
   return (
     <React.Fragment>

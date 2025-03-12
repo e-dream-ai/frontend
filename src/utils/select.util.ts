@@ -18,7 +18,7 @@ export const filterNsfwOption = (value: boolean = false, t: TFunction) =>
 export const filterHiddenOption = (value: boolean = false, t: TFunction) =>
   getHiddenOptions(t).find(
     (option) => option.value === Boolean(value).toString(),
-  ) ?? { value: HIDDEN.FALSE, label: t("dream.hidden.not_hidden") };
+  ) ?? { value: HIDDEN.FALSE, label: t("dream.hidden.visible") };
 
 // get ccaLicence options for filter
 export const filterCcaLicenceOption = (value: boolean = false, t: TFunction) =>

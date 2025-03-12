@@ -567,7 +567,7 @@
     },
     "hidden": {
       "hidden": "Hidden",
-      "not_hidden": "Not Hidden"
+      "visible": "Visible"
     }
   },
   "roles": {

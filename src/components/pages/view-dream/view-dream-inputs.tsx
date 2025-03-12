@@ -224,7 +224,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             render={({ field }) => (
               <Select
                 {...field}
-                isDisabled={!editMode || !allowedEditOwner}
+                isDisabled={!editMode}
                 placeholder={t("page.view_dream.ccby_license")}
                 before={<FontAwesomeIcon icon={faBook} />}
                 options={getCcaLicenceOptions(t)}
@@ -241,7 +241,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               render={({ field }) => (
                 <Select
                   {...field}
-                  isDisabled={!editMode || !allowedEditOwner}
+                  isDisabled={!editMode}
                   placeholder={t("page.view_dream.nsfw")}
                   before={<FontAwesomeIcon icon={faShield} />}
                   options={getNsfwOptions(t)}
@@ -271,7 +271,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               render={({ field }) => (
                 <Select
                   {...field}
-                  isDisabled={!editMode || !allowedEditOwner}
+                  isDisabled={!editMode}
                   placeholder={t("page.view_dream.hidden")}
                   before={<FontAwesomeIcon icon={faEyeSlash} />}
                   options={getHiddenOptions(t)}

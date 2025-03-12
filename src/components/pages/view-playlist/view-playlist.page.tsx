@@ -206,9 +206,13 @@ export const ViewPlaylistPage = () => {
   }, [formMethods, resetRemotePlaylistForm]);
 
   if (!uuid) return <Navigate to={ROUTES.ROOT} replace />;
+
+  /**
+   * Return error if query has an error
+   */
   if (isError) return <NotFound />;
 
-  if (isPlaylistLoading) {
+  if (isPlaylistLoading || !playlist) {
     return (
       <Container>
         <Row justifyContent="center">
