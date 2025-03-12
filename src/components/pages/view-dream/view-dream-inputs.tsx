@@ -272,7 +272,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                 <Select
                   {...field}
                   isDisabled={!editMode}
-                  placeholder={t("page.view_dream.hidden")}
+                  placeholder={t("page.view_dream.visibility")}
                   before={<FontAwesomeIcon icon={faEye} />}
                   options={getHiddenOptions(t)}
                   tooltipPlace={tooltipPlaces.right}

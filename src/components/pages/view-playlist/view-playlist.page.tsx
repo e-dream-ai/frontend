@@ -396,7 +396,7 @@ export const ViewPlaylistPage = () => {
                         <Select
                           {...field}
                           isDisabled={!editMode || !allowedEditOwner}
-                          placeholder={t("page.view_playlist.hidden")}
+                          placeholder={t("page.view_playlist.visibility")}
                           before={<FontAwesomeIcon icon={faEye} />}
                           options={getHiddenOptions(t)}
                         />
