@@ -4,6 +4,7 @@ import { HandleChangeFile } from "@/types/media.types";
 import { Avatar } from "@/components/shared/avatar/avatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusSquare } from "@fortawesome/free-solid-svg-icons";
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_FILE_SIZE_MB } from "@/constants/file.constants";
 
 const StyledFileUploaderDropzone = styled.div`
   width: 100%;
@@ -57,6 +58,8 @@ export const AvatarUploader: React.FC<Props> = (props) => {
         backgroundColor: theme?.inputBackgroundColor,
         opacity: 1,
       }}
+      maxSize={MAX_IMAGE_FILE_SIZE_MB}
+      types={ALLOWED_IMAGE_TYPES}
     >
       <Avatar size="lg" url={props.src}>
         <StyledFileUploaderDropzone>

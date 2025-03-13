@@ -59,7 +59,6 @@ import {
 } from "@/constants/user.constants";
 import { bytesToGB, GBToBytes } from "@/utils/file.util";
 import { toFixedNumber } from "@/utils/number.util";
-import { ALLOWED_IMAGE_TYPES } from "@/constants/file.constants";
 import ApiKeyCard from "../apikey-card/ApiKeyCard";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
@@ -375,7 +374,6 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           <AvatarUploader
             handleChange={handleAvatarChange}
             src={avatar?.url ? avatar?.url : avatarUrl}
-            types={ALLOWED_IMAGE_TYPES}
           />
         </Column>
         <Column flex={["0 0 100%", "0 0 33.333333%"]}>

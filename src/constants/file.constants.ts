@@ -1,5 +1,8 @@
-// MAX_FILE_SIZE_MB 16GB
+// MAX_FILE_SIZE_MB 50GB
 export const MAX_FILE_SIZE_MB = 50 * 1024;
+
+// MAX_IMAGE_FILE_SIZE_MB 25MB
+export const MAX_IMAGE_FILE_SIZE_MB = 25;
 
 export const FILE_FORM = {
   FILE: "file",

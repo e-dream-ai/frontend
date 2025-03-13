@@ -29,7 +29,7 @@ import { usePlaylists } from "@/api/playlist/query/usePlaylists";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
-import { ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE_MB } from "@/constants/file.constants";
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_FILE_SIZE_MB } from "@/constants/file.constants";
 import { useUpdateImageKeyframe } from "@/api/keyframe/mutation/useUpdateImageKeyframe";
 import { handleFileUploaderSizeError, handleFileUploaderTypeError } from "@/utils/file-uploader.util";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
@@ -209,7 +209,7 @@ export const CreateKeyframe: React.FC = () => {
           <>
             <Text my={3}>{t("page.create.keyframe_file_instructions")}</Text>
             <FileUploader
-              maxSize={MAX_FILE_SIZE_MB}
+              maxSize={MAX_IMAGE_FILE_SIZE_MB}
               handleChange={handleFileUploaderChange}
               onSizeError={handleFileUploaderSizeError(t)}
               onTypeError={handleFileUploaderTypeError(t)}

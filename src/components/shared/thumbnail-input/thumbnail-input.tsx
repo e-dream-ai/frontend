@@ -11,7 +11,7 @@ import {
   ThumbnailContainer,
   ThumbnailOverlay,
 } from "@/components/shared/thumbnail/thumbnail";
-import { ALLOWED_IMAGE_TYPES, MAX_FILE_SIZE_MB } from "@/constants/file.constants";
+import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_FILE_SIZE_MB } from "@/constants/file.constants";
 import { useTranslation } from "react-i18next";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import {
@@ -91,7 +91,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
         </ThumbnailContainer>
       ) : (
         <FileUploader
-          maxSize={MAX_FILE_SIZE_MB}
+          maxSize={MAX_IMAGE_FILE_SIZE_MB}
           handleChange={handleChange}
           onSizeError={handleFileUploaderSizeError(t)}
           onTypeError={handleFileUploaderTypeError(t)}
