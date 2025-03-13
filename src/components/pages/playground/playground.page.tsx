@@ -4,6 +4,7 @@ import Text from "@/components/shared/text/text";
 import { Button, Row } from "@/components/shared";
 import {
   GOOD_BYE_EVENT,
+  PING_REDIS_EVENT,
   PING_EVENT,
 } from "@/constants/remote-control.constants";
 import useSocket from "@/hooks/useSocket";
@@ -15,6 +16,11 @@ export const PlaygroundPage: React.FC = () => {
   // Emit ping event to the server
   const sendPingEvent = () => {
     emit(PING_EVENT);
+  };
+
+  // Emit ping redis event to the server
+  const sendPingRedisEvent = () => {
+    emit(PING_REDIS_EVENT);
   };
 
   // Emit bye event to the server
@@ -41,6 +47,17 @@ export const PlaygroundPage: React.FC = () => {
             onClick={sendPingEvent}
           >
             {t("page.playground.ping")}
+          </Button>
+          <Button
+            key="ping"
+            buttonType="tertiary"
+            size="sm"
+            fontSize="0.6rem"
+            textTransform="none"
+            mr="0.4rem"
+            onClick={sendPingRedisEvent}
+          >
+            {t("page.playground.ping_redis")}
           </Button>
           <Button
             key="pong"

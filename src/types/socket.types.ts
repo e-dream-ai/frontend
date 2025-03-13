@@ -2,6 +2,7 @@ import {
   NEW_REMOTE_CONTROL_EVENT,
   PING_EVENT,
   GOOD_BYE_EVENT,
+  PING_REDIS_EVENT,
 } from "@/constants/remote-control.constants";
 import { RemoteControlEvent } from "./remote-control.types";
 
@@ -12,6 +13,7 @@ export type EmitEvents = {
   }) => void;
   [PING_EVENT]: () => void;
   [GOOD_BYE_EVENT]: () => void;
+  [PING_REDIS_EVENT]: () => void;
 };
 
 export type EmitListener = {

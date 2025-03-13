@@ -37,6 +37,7 @@
       "title": "Playground",
       "client": "Client",
       "ping": "Ping",
+      "ping_redis": "Ping Redis",
       "goodbye": "Goodbye"
     },
     "login": {
