@@ -49,6 +49,12 @@ export const AuthProvider: React.FC<{
 }> = ({ children }) => {
   const authenticateUserQuery = useAuthenticateUser();
   const logoutMutation = useLogout();
+  /**
+   * Take `authUserRefetch` and `logoutMutateAsync` from query/mutation since
+   * need to avoid using query/mutation on `useCallback` array deps since causes rerender issues
+   */
+  const { refetch: authUserRefetch } = authenticateUserQuery;
+  const { mutateAsync: logoutMutateAsync } = logoutMutation;
   const { t } = useTranslation();
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -82,7 +88,7 @@ export const AuthProvider: React.FC<{
       }
       setUser(user);
     },
-    [setUser],
+    [],
   );
 
   const login: (user: User) => void = useCallback(
@@ -95,7 +101,7 @@ export const AuthProvider: React.FC<{
 
   const fetchLogout = useCallback(async () => {
     try {
-      const data = await logoutMutation.mutateAsync();
+      const data = await logoutMutateAsync();
 
       if (data.success) {
         toast.success(t("modal.logout.user_logged_out_successfully"));
@@ -108,7 +114,7 @@ export const AuthProvider: React.FC<{
     } catch (error) {
       toast.error(t("modal.logout.error_signingout_user"));
     }
-  }, [t, logoutMutation]);
+  }, [t, logoutMutateAsync]);
 
   const logout = useCallback(
     async (options: LogoutOptions = { callFetchLogout: false }) => {
@@ -126,7 +132,7 @@ export const AuthProvider: React.FC<{
   const authenticateUser = useCallback(async () => {
     try {
       setIsLoading(true);
-      const authenticateUserRequest = await authenticateUserQuery.refetch();
+      const authenticateUserRequest = await authUserRefetch();
       const fetchedUser = authenticateUserRequest.data?.data?.user;
 
       if (fetchedUser) {
@@ -139,7 +145,7 @@ export const AuthProvider: React.FC<{
       setIsLoading(false);
       setIsSessionVerified(true);
     }
-  }, [authenticateUserQuery, login, logout]);
+  }, [authUserRefetch, login, logout]);
 
   const refreshCurrentDream = useCallback(async () => {
     const refetchData = await refetchCurrentDream();
