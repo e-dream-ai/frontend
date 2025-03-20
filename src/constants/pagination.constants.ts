@@ -1,3 +1,3 @@
 export const PAGINATION = {
-  TAKE: 24,
+  TAKE: 48,
 };
