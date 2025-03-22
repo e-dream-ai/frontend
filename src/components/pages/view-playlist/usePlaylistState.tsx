@@ -72,6 +72,10 @@ export const usePlaylistState = () => {
     isOwner,
   });
 
+  const allowedEditVisibility = usePermission({
+    permission: PLAYLIST_PERMISSIONS.CAN_EDIT_VISIBILITY,
+  });
+
   const items = useMemo(
     () => playlist?.items?.sort((a, b) => a.order - b.order) ?? [],
     [playlist?.items],
@@ -94,6 +98,7 @@ export const usePlaylistState = () => {
     isOwner,
     allowedEditPlaylist,
     allowedEditOwner,
+    allowedEditVisibility,
     items,
     playlistKeyframes,
     userSearch,

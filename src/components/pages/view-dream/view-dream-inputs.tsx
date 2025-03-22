@@ -39,10 +39,7 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
-import {
-  DREAM_PERMISSIONS,
-  PLAYLIST_PERMISSIONS,
-} from "@/constants/permissions.constants";
+import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import Restricted from "@/components/shared/restricted/restricted";
 import Select from "@/components/shared/select/select";
 import usePermission from "@/hooks/usePermission";
@@ -124,7 +121,11 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
     }));
 
   const allowedEditOwner = usePermission({
-    permission: PLAYLIST_PERMISSIONS.CAN_EDIT_OWNER,
+    permission: DREAM_PERMISSIONS.CAN_EDIT_OWNER,
+  });
+
+  const allowedEditVisibility = usePermission({
+    permission: DREAM_PERMISSIONS.CAN_EDIT_VISIBILITY,
   });
 
   const thumbnailUrl = useImage(dream?.thumbnail, {
@@ -271,7 +272,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               render={({ field }) => (
                 <Select
                   {...field}
-                  isDisabled={!editMode}
+                  isDisabled={!editMode || !allowedEditVisibility}
                   placeholder={t("page.view_dream.visibility")}
                   before={<FontAwesomeIcon icon={faEye} />}
                   options={getHiddenOptions(t)}
