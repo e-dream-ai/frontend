@@ -7,18 +7,22 @@ import {
 } from "@/schemas/update-playlist.schema";
 import { useUpdatePlaylist } from "@/api/playlist/mutation/useUpdatePlaylist";
 import { toast } from "react-toastify";
-import { SetStateAction } from "react";
+import { SetStateAction, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { UseFormReset, UseFormSetValue } from "react-hook-form";
 import { HandleChangeFile } from "@/types/media.types";
 import { Playlist } from "@/types/playlist.types";
-import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
+import { generateDreamVideoFormRequest, useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
 import { FileState } from "@/constants/file.constants";
 import { getFileNameWithoutExtension } from "@/utils/file-uploader.util";
 import { createAddFileHandler } from "@/utils/file.util";
+import { CreateDreamFormValues } from "@/schemas/dream.schema";
+import useAuth from "@/hooks/useAuth";
+import { isAdmin } from "@/utils/user.util";
+import { User } from "@/types/auth.types";
 
 type HookParams = {
   playlistUUID?: string;
@@ -46,6 +50,8 @@ export const usePlaylistHandlers = ({
   setIsUploadingFiles,
 }: HookParams) => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
 
   const { mutate: mutatePlaylist, isLoading: isLoadingPlaylistMutation } =
     useUpdatePlaylist();
@@ -122,19 +128,7 @@ export const usePlaylistHandlers = ({
     setFiles: setVideos,
   });
 
-  const handleUploadVideos = async ({
-    nsfw,
-    hidden,
-    ccbyLicense,
-    description,
-    sourceUrl,
-  }: {
-    nsfw?: boolean;
-    hidden?: boolean;
-    ccbyLicense?: boolean;
-    description?: string;
-    sourceUrl?: string;
-  } = {}) => {
+  const handleUploadVideos = async (data: CreateDreamFormValues) => {
     const playlistDreamItemsNames = playlist?.items
       ?.filter((item) => Boolean(item?.dreamItem?.name))
       ?.map((item) => item.dreamItem!.name);
@@ -153,14 +147,7 @@ export const usePlaylistHandlers = ({
         continue;
       }
 
-      const createdDream = await uploadDreamVideoMutateAsync({
-        file: videos[i]?.fileBlob,
-        nsfw,
-        hidden,
-        ccbyLicense,
-        description,
-        sourceUrl,
-      });
+      const createdDream = await uploadDreamVideoMutateAsync(generateDreamVideoFormRequest(data, videos[i]?.fileBlob, isUserAdmin));
       setVideoUploaded(i);
       if (createdDream) {
         await addPlaylistItemMutation.mutateAsync({

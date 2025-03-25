@@ -145,6 +145,7 @@ export const formatDreamForm = ({
 
 export const formatDreamRequest = (
   data: UpdateDreamFormValues,
+  isAdmin: boolean = false,
 ): UpdateDreamRequestValues => ({
   name: data.name,
   description: data.description,
@@ -153,8 +154,14 @@ export const formatDreamRequest = (
   featureRank: data.featureRank,
   displayedOwner: data?.displayedOwner?.value,
   nsfw: data?.nsfw.value === NSFW.TRUE,
-  hidden: data?.hidden.value === HIDDEN.TRUE,
   ccbyLicense: data?.ccbyLicense.value === CCA_LICENSE.TRUE,
   startKeyframe: data?.startKeyframe?.value,
   endKeyframe: data?.endKeyframe?.value,
+
+  // If user is admin, add allowed extra fields
+  ...(isAdmin
+    ? {
+        hidden: data?.hidden.value === HIDDEN.TRUE,
+      }
+    : {}),
 });

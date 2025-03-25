@@ -184,7 +184,7 @@ const ViewDreamPage: React.FC = () => {
 
   const handleMutateDream = (data: UpdateDreamFormValues) => {
     mutateDream(
-      formatDreamRequest(data),
+      formatDreamRequest(data, isUserAdmin),
       {
         onSuccess: (data) => {
           const dream = data?.data?.dream;

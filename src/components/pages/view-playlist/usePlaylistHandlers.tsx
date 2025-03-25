@@ -3,7 +3,7 @@ import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
 import { UpdatePlaylistFormValues } from "@/schemas/update-playlist.schema";
 import { useUpdatePlaylist } from "@/api/playlist/mutation/useUpdatePlaylist";
 import { toast } from "react-toastify";
-import { SetStateAction } from "react";
+import { SetStateAction, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { UseFormReset } from "react-hook-form";
 import { useUpdateThumbnailPlaylist } from "@/api/playlist/mutation/useUpdateThumbnailPlaylist";
@@ -20,6 +20,7 @@ import { useOrderPlaylist } from "@/api/playlist/mutation/useOrderPlaylist";
 import { useDeletePlaylistItem } from "@/api/playlist/mutation/useDeletePlaylistItem";
 import { useDeletePlaylistKeyframe } from "@/api/playlist/mutation/useDeletePlaylistKeyframe";
 import { Playlist, PlaylistItem } from "@/types/playlist.types";
+import { User } from "@/types/auth.types";
 import { useDeletePlaylist } from "@/api/playlist/mutation/useDeletePlaylist";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
@@ -30,6 +31,8 @@ import { getFileNameWithoutExtension } from "@/utils/file-uploader.util";
 import useSocket from "@/hooks/useSocket";
 import { emitPlayPlaylist } from "@/utils/socket.util";
 import { createAddFileHandler } from "@/utils/file.util";
+import useAuth from "@/hooks/useAuth";
+import { isAdmin } from "@/utils/user.util";
 
 type HookParams = {
   uuid?: string;
@@ -64,6 +67,9 @@ export const usePlaylistHandlers = ({
 }: HookParams) => {
   const { t } = useTranslation();
   const { socket } = useSocket();
+  const { user } = useAuth();
+
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
 
   const { mutate: mutatePlaylist, isLoading: isLoadingPlaylistMutation } =
     useUpdatePlaylist();
@@ -101,7 +107,7 @@ export const usePlaylistHandlers = ({
 
   const handleMutatePlaylist = (data: UpdatePlaylistFormValues) => {
     mutatePlaylist(
-      formatPlaylistRequest(uuid!, data),
+      formatPlaylistRequest(uuid!, data, isUserAdmin),
       {
         onSuccess: (response) => {
           if (response.success) {

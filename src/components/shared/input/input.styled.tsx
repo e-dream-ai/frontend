@@ -57,11 +57,12 @@ export const InputGroup = styled.div`
   border-collapse: separate;
 `;
 
-export const InputRow = styled.div`
+export const InputRow = styled.div<{ outlined?: boolean }>`
   display: flex;
   flex: auto;
   border-collapse: separate;
   min-height: 2.375rem;
+  border: ${props => props.outlined ? "1px solid red" : "0"};
 `;
 
 export const InputBefore = styled.div`

@@ -155,6 +155,7 @@ export const formatPlaylistForm = ({
 export const formatPlaylistRequest = (
   uuid: string,
   data: UpdatePlaylistFormValues,
+  isAdmin: boolean = false,
 ): UpdatePlaylistRequestValues => ({
   uuid: uuid,
   values: {
@@ -162,6 +163,11 @@ export const formatPlaylistRequest = (
     featureRank: data?.featureRank,
     displayedOwner: data?.displayedOwner?.value,
     nsfw: data?.nsfw.value === NSFW.TRUE,
-    hidden: data?.hidden.value === HIDDEN.TRUE,
+    // If user is admin, add allowed extra fields
+    ...(isAdmin
+      ? {
+          hidden: data?.hidden.value === HIDDEN.TRUE,
+        }
+      : {}),
   },
 });

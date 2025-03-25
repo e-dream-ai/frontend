@@ -48,7 +48,7 @@ import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu
 import RadioButtonGroup from "@/components/shared/radio-button-group/radio-button-group";
 import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
-import { FormInput } from "@/components/shared/input/input";
+import Input, { FormInput } from "@/components/shared/input/input";
 import { formatPlaylistForm } from "@/utils/playlist.util";
 
 const SectionID = "playlist";
@@ -102,6 +102,8 @@ export const ViewPlaylistPage = () => {
     isUsersLoading,
     isOwner,
     isUserAdmin,
+
+
     allowedEditPlaylist,
     allowedEditOwner,
     allowedEditVisibility,
@@ -350,6 +352,19 @@ export const ViewPlaylistPage = () => {
                   />
                 </Column>
                 <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>
+                  {
+                    // Show only for owners when playlist is hidden
+                    isOwner && playlist.hidden &&
+                    <Input
+                      disabled
+                      outlined
+                      type="text"
+                      placeholder={t("page.view_playlist.visibility")}
+                      before={<FontAwesomeIcon icon={faEye} />}
+                      value={t("dream.hidden.hidden")}
+                      name="visibility-for-owner"
+                    />
+                  }
                   <FormInput
                     disabled={!editMode}
                     placeholder={t("page.view_playlist.name")}
@@ -386,10 +401,8 @@ export const ViewPlaylistPage = () => {
                     />
                   </Restricted>
 
-                  <Restricted
-                    to={PLAYLIST_PERMISSIONS.CAN_VIEW_HIDDEN}
-                    isOwner={isOwner}
-                  >
+                  {/* If user is admin, show editable hidden field */}
+                  <Restricted to={PLAYLIST_PERMISSIONS.CAN_VIEW_VISIBILITY}>
                     <Controller
                       name="hidden"
                       control={formMethods.control}
@@ -404,7 +417,6 @@ export const ViewPlaylistPage = () => {
                       )}
                     />
                   </Restricted>
-
 
                   <Restricted
                     to={PLAYLIST_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
@@ -626,7 +638,7 @@ export const ViewPlaylistPage = () => {
             </form>
           </FormProvider>
         </Section>
-      </Container>
+      </Container >
     </>
   );
 };

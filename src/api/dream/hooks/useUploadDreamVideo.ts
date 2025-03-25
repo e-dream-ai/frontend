@@ -31,8 +31,9 @@ import { useRefreshMultipartUploadUrl } from "../mutation/useRefreshMultipartUpl
 import { UseMutationResult } from "@tanstack/react-query";
 import { ApiResponse } from "@/types/api.types";
 import { TFunction } from "i18next";
+import { CreateDreamFormValues } from "@/schemas/dream.schema";
 
-type AsyncMutationProps = (params?: {
+export type AsyncMutationProps = {
   file?: File;
   dream?: Dream;
   nsfw?: boolean;
@@ -40,7 +41,11 @@ type AsyncMutationProps = (params?: {
   ccbyLicense?: boolean;
   description?: string;
   sourceUrl?: string;
-}) => Promise<Dream | undefined>;
+};
+
+type AsyncMutation = (
+  params?: AsyncMutationProps,
+) => Promise<Dream | undefined>;
 
 type UseUploadDreamVideoProps = {
   navigateToDream?: boolean;
@@ -164,6 +169,31 @@ const reducer = (state: State, action: Action): State => {
 const calculateTotalParts = (fileSize: number) => {
   return Math.max(Math.ceil(fileSize / MULTIPART_FILE_PART_SIZE), 1);
 };
+
+/**
+ * Generate video creation payload
+ * @param data {CreateDreamFormValues}
+ * @param video {File}
+ * @returns
+ */
+export const generateDreamVideoFormRequest = (
+  data: CreateDreamFormValues,
+  video?: File,
+  isAdmin: boolean = false,
+): AsyncMutationProps => ({
+  file: video,
+  nsfw: data.nsfw,
+  hidden: data.hidden,
+  description: data.description,
+  sourceUrl: data.sourceUrl,
+  ccbyLicense: data.ccbyLicense,
+  // If user is admin, add allowed extra fields
+  ...(isAdmin
+    ? {
+        hidden: data?.hidden,
+      }
+    : {}),
+});
 
 /**
  * Initiates the multipart upload process by obtaining presigned URLs for uploading each part.
@@ -723,7 +753,7 @@ export const useUploadDreamVideo = ({
    * @param props Object containing optional `file` and `dream` details.
    * @returns A promise resolving to the updated dream object on successful upload or `undefined` on failure.
    */
-  const mutateAsync: AsyncMutationProps = async ({
+  const mutateAsync: AsyncMutation = async ({
     file,
     dream,
     nsfw,

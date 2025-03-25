@@ -39,6 +39,8 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
 import { CCBY_ID } from "@/constants/terms-of-service";
+import Restricted from "@/components/shared/restricted/restricted";
+import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 
 export const UpdatePlaylist: React.FC = () => {
   const { t } = useTranslation();
@@ -172,9 +174,11 @@ export const UpdatePlaylist: React.FC = () => {
               <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
                 {t("page.create.nsfw_dream")}
               </Checkbox>
-              <Checkbox {...register("hidden")} error={errors.hidden?.message}>
-                {t("page.create.hidden_playlist")}
-              </Checkbox>
+              <Restricted to={DREAM_PERMISSIONS.CAN_EDIT_VISIBILITY}>
+                <Checkbox {...register("hidden")} error={errors.hidden?.message}>
+                  {t("page.create.hidden_dream")}
+                </Checkbox>
+              </Restricted>
               <div data-tooltip-id="ccby-license">
                 <Checkbox
                   {...register("ccbyLicense")}

@@ -14,7 +14,7 @@ export const useUserFeedFilter = (isOwner: boolean) => {
   const isUserAdmin = isAdmin(user);
 
   const allowedViewHidden = usePermission({
-    permission: USER_FEED_PERMISSIONS.CAN_VIEW_HIDDEN,
+    permission: USER_FEED_PERMISSIONS.CAN_VIEW_VISIBILITY,
     isOwner: isOwner,
   });
 

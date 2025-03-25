@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
 import {
@@ -32,7 +32,7 @@ import {
 } from "@/constants/file.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import { Video } from "./create.styled";
-import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
+import { generateDreamVideoFormRequest, useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { toast } from "react-toastify";
 import { useTheme } from "styled-components";
 import { useForm } from "react-hook-form";
@@ -43,9 +43,16 @@ import {
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Tooltip } from "react-tooltip";
 import { CCBY_ID } from "@/constants/terms-of-service";
+import Restricted from "@/components/shared/restricted/restricted";
+import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
+import useAuth from "@/hooks/useAuth";
+import { isAdmin } from "@/utils/user.util";
+import { User } from "@/types/auth.types";
 
 export const CreateDream: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const videoRef = useRef(null);
   const theme = useTheme();
   const [video, setVideo] = useState<FileState>();
@@ -76,16 +83,9 @@ export const CreateDream: React.FC = () => {
     }
   };
 
-  const onSubmit = async (formData: CreateDreamFormValues) => {
+  const onSubmit = async (data: CreateDreamFormValues) => {
     try {
-      await mutateAsync({
-        file: video?.fileBlob,
-        nsfw: formData.nsfw,
-        hidden: formData.hidden,
-        description: formData.description,
-        sourceUrl: formData.sourceUrl,
-        ccbyLicense: formData.ccbyLicense,
-      });
+      await mutateAsync(generateDreamVideoFormRequest(data, video?.fileBlob, isUserAdmin));
     } catch (error) {
       toast.error(t("page.create.error_uploading_dream"));
     }
@@ -142,9 +142,11 @@ export const CreateDream: React.FC = () => {
             <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
               {t("page.create.nsfw_dream")}
             </Checkbox>
-            <Checkbox {...register("hidden")} error={errors.hidden?.message}>
-              {t("page.create.hidden_dream")}
-            </Checkbox>
+            <Restricted to={DREAM_PERMISSIONS.CAN_EDIT_VISIBILITY}>
+              <Checkbox {...register("hidden")} error={errors.hidden?.message}>
+                {t("page.create.hidden_dream")}
+              </Checkbox>
+            </Restricted>
             <div data-tooltip-id="ccby-license">
               <Checkbox
                 {...register("ccbyLicense")}

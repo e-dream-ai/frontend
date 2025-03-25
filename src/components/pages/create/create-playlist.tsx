@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { toast } from "react-toastify";
 import { yupResolver } from "@hookform/resolvers/yup";
 import {
@@ -37,18 +37,24 @@ import {
   MAX_FILE_SIZE_MB,
 } from "@/constants/file.constants";
 import { HandleChangeFile } from "@/types/media.types";
-import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
+import { generateDreamVideoFormRequest, useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import { Playlist } from "@/types/playlist.types";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import Restricted from "@/components/shared/restricted/restricted";
-import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
+import { DREAM_PERMISSIONS, PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
 import { VideoList } from "@/components/shared/video-list/video-list";
 import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
 import { Tooltip } from "react-tooltip";
 import { createAddFileHandler } from "@/utils/file.util";
 import { CCBY_ID } from "@/constants/terms-of-service";
+import { CreateDreamFormValues } from "@/schemas/dream.schema";
+import useAuth from "@/hooks/useAuth";
+import { isAdmin } from "@/utils/user.util";
+import { User } from "@/types/auth.types";
 export const CreatePlaylist: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const [videos, setVideos] = useState<FileState[]>([]);
   const [currentUploadFile, setCurrentUploadFile] = useState(0);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
@@ -102,24 +108,15 @@ export const CreatePlaylist: React.FC = () => {
 
   const handleUploadVideos = async (
     playlist: Playlist,
-    opts?: {
-      nsfw?: boolean;
-      hidden?: boolean;
-      ccbyLicense?: boolean;
-      description?: string;
-      sourceUrl?: string;
-    },
+    data: CreateDreamFormValues,
   ) => {
     for (let i = 0; i < videos.length; i++) {
       setCurrentUploadFile(i);
-      const createdDream = await mutateAsync({
-        file: videos[i]?.fileBlob,
-        nsfw: opts?.nsfw,
-        hidden: opts?.hidden,
-        ccbyLicense: opts?.ccbyLicense,
-        description: opts?.description,
-        sourceUrl: opts?.sourceUrl,
-      });
+
+      const createdDream = await mutateAsync(
+        generateDreamVideoFormRequest(data, videos[i]?.fileBlob, isUserAdmin)
+      );
+
       setVideoUploaded(i);
       if (createdDream) {
         await addPlaylistItemMutation.mutateAsync({
@@ -154,9 +151,9 @@ export const CreatePlaylist: React.FC = () => {
         router.navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist?.uuid}`);
       } else {
         handleUploadVideos(playlist, {
-          nsfw: data.nsfw,
-          hidden: data.hidden,
-          ccbyLicense: data.ccbyLicense,
+          nsfw: data.nsfw ?? false,
+          hidden: data.hidden ?? false,
+          ccbyLicense: data.ccbyLicense ?? false,
           description: data.description,
           sourceUrl: data.sourceUrl,
         });
@@ -222,9 +219,11 @@ export const CreatePlaylist: React.FC = () => {
             <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
               {t("page.create.nsfw_playlist")}
             </Checkbox>
-            <Checkbox {...register("hidden")} error={errors.hidden?.message}>
-              {t("page.create.hidden_playlist")}
-            </Checkbox>
+            <Restricted to={PLAYLIST_PERMISSIONS.CAN_EDIT_VISIBILITY}>
+              <Checkbox {...register("hidden")} error={errors.hidden?.message}>
+                {t("page.create.hidden_playlist")}
+              </Checkbox>
+            </Restricted>
             <div data-tooltip-id="ccby-license">
               <Checkbox
                 {...register("ccbyLicense")}

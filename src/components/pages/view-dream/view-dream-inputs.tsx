@@ -159,6 +159,19 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           flex="1"
           ml={[0, 2, 2]}
         >
+          {
+            // Show only for owners when playlist is hidden
+            isOwner && dream?.hidden &&
+            <Input
+              disabled
+              outlined
+              type="text"
+              placeholder={t("page.view_playlist.visibility")}
+              before={<FontAwesomeIcon icon={faEye} />}
+              value={t("dream.hidden.hidden")}
+              name="visibility-for-owner"
+            />
+          }
           <FormInput
             disabled={!editMode}
             placeholder={t("page.view_dream.name")}
@@ -264,7 +277,9 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           />
         </FormItem>
 
-        <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_HIDDEN} isOwner={isOwner}>
+
+        {/* If user is admin, show editable hidden field */}
+        <Restricted to={DREAM_PERMISSIONS.CAN_EDIT_VISIBILITY}>
           <FormItem>
             <Controller
               name="hidden"
@@ -282,6 +297,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             />
           </FormItem>
         </Restricted>
+
       </FormContainer>
 
       <Row flex="auto" justifyContent="center">

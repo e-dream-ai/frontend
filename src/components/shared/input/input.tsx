@@ -19,6 +19,7 @@ export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   before?: React.ReactNode;
   after?: React.ReactNode;
   error?: string;
+  outlined?: boolean;
   tooltipPlace?: PlacesType;
   onClickAfter?: () => void;
 };
@@ -31,6 +32,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       onClickAfter,
       error,
       disabled,
+      outlined,
       value,
       linkify,
       href,
@@ -45,7 +47,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <InputGroup data-tooltip-id={name}>
         <Tooltip id={name} place={tooltipPlace} content={placeholder} />
-        <InputRow>
+        <InputRow outlined={outlined}>
           {before && <InputBefore>{before}</InputBefore>}
           {disabled ? (
             <DisabledInput>
