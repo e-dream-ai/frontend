@@ -160,7 +160,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           ml={[0, 2, 2]}
         >
           {
-            // Show only for owners when playlist is hidden
+            // Show only for owners when dream is hidden
             isOwner && dream?.hidden &&
             <Input
               disabled

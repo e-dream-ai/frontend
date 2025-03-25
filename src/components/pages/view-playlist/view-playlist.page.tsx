@@ -361,7 +361,7 @@ export const ViewPlaylistPage = () => {
                       type="text"
                       placeholder={t("page.view_playlist.visibility")}
                       before={<FontAwesomeIcon icon={faEye} />}
-                      value={t("dream.hidden.hidden")}
+                      value={t("playlist.hidden.hidden")}
                       name="visibility-for-owner"
                     />
                   }

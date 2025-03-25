@@ -572,6 +572,12 @@
       "visible": "Visible"
     }
   },
+  "playlist": {
+    "hidden": {
+      "hidden": "Hidden",
+      "visible": "Visible"
+    }
+  },
   "roles": {
     "user_group": "user",
     "admin_group": "admin",
