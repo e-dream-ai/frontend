@@ -10,7 +10,7 @@ import { Section } from "@/components/shared/section/section";
 import { useCallback, useEffect, useState } from "react";
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import UpdatePlaylistSchema, {
   UpdatePlaylistFormValues,
 } from "@/schemas/update-playlist.schema";
@@ -83,6 +83,7 @@ const getPlaylistTabsFilterData: (
 export const ViewPlaylistPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const location = useLocation();
 
   const [radioGroupState, setRadioGroupState] = useState<
     PlaylistTabs | undefined
@@ -102,8 +103,6 @@ export const ViewPlaylistPage = () => {
     isUsersLoading,
     isOwner,
     isUserAdmin,
-
-
     allowedEditPlaylist,
     allowedEditOwner,
     allowedEditVisibility,
@@ -208,6 +207,29 @@ export const ViewPlaylistPage = () => {
   useEffect(() => {
     resetRemotePlaylistForm();
   }, [formMethods, resetRemotePlaylistForm]);
+
+  /**
+   * Handles automatic scrolling when navigation comes from a virtual playlist
+   */
+  useEffect(() => {
+    // Extract the target element UUID from the URL hash
+    const targetElementUUID = location.hash.replace('#', '');
+
+    // Only attempt to scroll after loading is complete and if we have a target
+    // We need to wait when request is completed, since the component will not be rendered initially
+    if (!isPlaylistLoading && targetElementUUID) {
+      // Use data attribute for more reliable selection
+      const targetElement = document.querySelector(`[data-element-uuid="${targetElementUUID}"]`);
+
+      if (targetElement) {
+        // Scroll to the element
+        targetElement.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      }
+    }
+  }, [isPlaylistLoading, location]);
 
   if (!uuid) return <Navigate to={ROUTES.ROOT} replace />;
 

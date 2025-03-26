@@ -48,6 +48,7 @@ import { HighlightPosition } from "@/types/item-card.types";
 import { Keyframe } from "@/types/keyframe.types";
 import { PlaylistWithDreams } from "@/types/feed.types";
 import Text from "../text/text";
+import { getVirtualPlaylistThumbnailDreams, shouldVirtualPlaylistDisplayDots } from "@/utils/virtual-playlist.util";
 
 type DNDMode = "local" | "cross-window";
 /**
@@ -89,7 +90,7 @@ const ROUTE_MAP = {
   "dream": ROUTES.VIEW_DREAM,
   "playlist": ROUTES.VIEW_PLAYLIST,
   "keyframe": ROUTES.VIEW_KEYFRAME,
-  "virtual-playlist": undefined
+  "virtual-playlist": ROUTES.VIEW_PLAYLIST,
 } as const;
 
 const getThumbnail = (type: string, item?: Item) => {
@@ -127,7 +128,8 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
   const { uuid, name, user, displayedOwner } = item ?? {};
-  const thumbnail = getThumbnail(type, item);
+  const thumbnail = useMemo(() => getThumbnail(type, item), [type, item]);
+  const thumbnailDreams = useMemo(() => getVirtualPlaylistThumbnailDreams((item as PlaylistWithDreams)?.dreams), [item]);
 
   const avatarUrl = useImage(
     displayedOwner ? displayedOwner?.avatar : user?.avatar,
@@ -152,7 +154,23 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     fit: "cover",
   });
 
-  const navigateRoute = ROUTE_MAP[type] && `${ROUTE_MAP[type]}/${item?.uuid}`;
+  /**
+    * Generate a navigation route 
+    */
+  const generateNavigationRoute = (): string | undefined => {
+    // Get base route
+    const baseRoute = ROUTE_MAP[type];
+    if (!baseRoute || !item?.uuid) return undefined;
+
+    // If item has a first dream child, add it to navigation as #ID
+    const firstDream = thumbnailDreams?.[0];
+
+    return firstDream
+      ? `${baseRoute}/${item.uuid}#${firstDream.uuid}`
+      : `${baseRoute}/${item.uuid}`;
+  }
+
+  const navigateRoute = generateNavigationRoute();
 
   const handlePlay: MouseEventHandler<HTMLButtonElement> = useCallback(
     (event) => {
@@ -178,7 +196,10 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           t("toasts.play_playlist", { name: (item as PlaylistWithDreams)?.name }),
         );
 
-        const firstDream = (item as PlaylistWithDreams).dreams?.[0];
+        /**
+         * When item is a `virtual-playlist` should play first thumbnail dream
+         */
+        const firstDream = thumbnailDreams?.[0];
         if (firstDream) {
           emitPlayDream(
             socket,
@@ -188,7 +209,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         }
       }
     },
-    [t, socket, item, type],
+    [t, socket, item, type, thumbnailDreams],
   );
 
   const handleDragStart = useCallback(
@@ -361,10 +382,9 @@ export const ItemCard: React.FC<ItemCardProps> = ({
     () => () => {
 
       if (type === 'virtual-playlist') {
-        const gridDreams = (item as PlaylistWithDreams).dreams.slice(0, 4);
         return (
           <ThumbnailGrid size={size}>
-            {gridDreams.map((dream, index) => (
+            {thumbnailDreams.map((dream, index) => (
               <ThumbnailGridItem key={index}>
                 <ItemCardImage
                   size={size}
@@ -386,7 +406,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         </ThumbnailPlaceholder>
       )
     },
-    [item, type, thumbnail, size, thumbnailUrl],
+    [type, thumbnail, thumbnailDreams, size, thumbnailUrl],
   );
 
   const ThumbnailAndPlayButton = useMemo(
@@ -430,7 +450,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           </Row>
         )}
 
-        {type == "virtual-playlist" && (
+        {type == "virtual-playlist" && shouldVirtualPlaylistDisplayDots((item as PlaylistWithDreams).dreams) && (
           <Row
             justifyContent="flex-end"
             style={{ position: "absolute", bottom: 0, right: 0 }}
@@ -443,11 +463,11 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         )}
       </Row>
     ),
-    [Thumbnail, handlePlay, type, inline, showPlayButton],
+    [Thumbnail, handlePlay, item, type, inline, showPlayButton],
   );
 
   return (
-    <StyledItemCard ref={cardRef} size={size} draggable={draggable}>
+    <StyledItemCard data-element-uuid={uuid} ref={cardRef} size={size} draggable={draggable}>
       <>
         <ItemCardAnchor to={navigateRoute ?? ""} onClick={onClick}>
           <Row

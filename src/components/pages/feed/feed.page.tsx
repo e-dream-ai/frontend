@@ -25,6 +25,7 @@ import { isAdmin } from "@/utils/user.util";
 import { ItemType } from "@/components/shared/item-card/item-card";
 import { usePaginateProps } from "@/hooks/usePaginateProps";
 import { groupFeedDreamItemsByPlaylist } from "@/utils/feed.util";
+import { getVirtualPlaylistDisplayedDreams } from "@/utils/virtual-playlist.util";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -34,9 +35,9 @@ const USER_TAKE = {
 const SECTION_ID = "feed";
 
 // Helper function to determine if item should be skipped from render
+// Only should skip dreams that are included on dreamsInVirtualPlaylists
 const shouldSkipItem = (item: FeedItem, dreamsInVirtualPlaylists: string[]): boolean => {
-  return (item.type === 'playlist' ||
-    (item.dreamItem && dreamsInVirtualPlaylists.includes(item.dreamItem.uuid))) ?? false;
+  return (item.dreamItem && dreamsInVirtualPlaylists.includes(item.dreamItem.uuid)) ?? false;
 }
 
 export const FeedPage: React.FC = () => {
@@ -82,9 +83,6 @@ export const FeedPage: React.FC = () => {
   const feed = useMemo(() => feedData?.data?.feed ?? [], [feedData]);
   const pageCount = useMemo(() => Math.ceil((feedData?.data?.count ?? 1) / PAGINATION.TAKE), [feedData]);
 
-  // Lazy initial state for expandedm virtual playlists
-  const [expandedVirtualPlaylists, setExpandedVirtualPlaylists] = useState<Set<string>>(() => new Set());
-
   // Memoize the virtual playlists grouping operation
   const { virtualPlaylistGroups, dreamsInVirtualPlaylists } = useMemo(() => {
     const groups = groupFeedDreamItemsByPlaylist(feed);
@@ -102,19 +100,6 @@ export const FeedPage: React.FC = () => {
       dreamsInVirtualPlaylists: Array.from(dreamUUIDs)
     };
   }, [feed]); // Only recompute when feed changes
-
-  // Memoize toggle handler
-  const togglePlaylist = useCallback((playlistUUID: string) => {
-    setExpandedVirtualPlaylists(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(playlistUUID)) {
-        newSet.delete(playlistUUID);
-      } else {
-        newSet.add(playlistUUID);
-      }
-      return newSet;
-    });
-  }, []);
 
   // Memoize the playlist entries array
   const virtualPlaylists = useMemo(() =>
@@ -206,8 +191,6 @@ export const FeedPage: React.FC = () => {
                     feed={feed}
                     virtualPlaylists={virtualPlaylists}
                     dreamsInVirtualPlaylists={dreamsInVirtualPlaylists}
-                    expandedVirtualPlaylists={Array.from(expandedVirtualPlaylists)}
-                    togglePlaylist={togglePlaylist}
                   />
                 </>
               }
@@ -239,9 +222,7 @@ const FeedList: React.FC<{
   feed?: FeedItem[],
   virtualPlaylists: PlaylistWithDreams[],
   dreamsInVirtualPlaylists: string[],
-  expandedVirtualPlaylists: string[],
-  togglePlaylist: (uuid: string) => void
-}> = ({ feed, virtualPlaylists, dreamsInVirtualPlaylists, expandedVirtualPlaylists, togglePlaylist }) => {
+}> = ({ feed, virtualPlaylists, dreamsInVirtualPlaylists, }) => {
   const { t } = useTranslation();
   return (
     <>
@@ -281,30 +262,25 @@ const FeedList: React.FC<{
             }
             {
               virtualPlaylists.map((pl) => {
-                const handleTogglePlaylist = () => togglePlaylist(pl.uuid);
-                const isExpanded = expandedVirtualPlaylists.includes(pl.uuid);
-
+                const dreamsToShow = getVirtualPlaylistDisplayedDreams(pl.dreams);
                 return (
                   <>
-                    <ItemCard
-                      showPlayButton
-                      key={pl.uuid}
-                      type="virtual-playlist"
-                      item={pl}
-                      size="lg"
-                      onClick={handleTogglePlaylist}
-                    />
-
-                    {isExpanded && pl.dreams.map(dream =>
+                    {dreamsToShow.map(dream =>
                       <ItemCard
                         showPlayButton
                         key={`${pl.uuid}_${dream.uuid}`}
                         type="dream"
                         item={dream}
                         size="lg"
-                        onClick={handleTogglePlaylist}
                       />
                     )}
+                    <ItemCard
+                      showPlayButton
+                      key={pl.uuid}
+                      type="virtual-playlist"
+                      item={pl}
+                      size="lg"
+                    />
                   </>
                 )
               })

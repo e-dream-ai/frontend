@@ -147,13 +147,7 @@ export const ThumbnailGrid = styled.div<{ size: Sizes }>`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
-  gap: 2px;
   width: 100%;
-  height: ${({ size }) =>
-    size === 'sm' ? '80px' :
-      size === 'md' ? '120px' :
-        '160px'};
-  border-radius: red;
   overflow: hidden;
 `;
 
@@ -162,19 +156,6 @@ export const ThumbnailGridItem = styled.div`
   overflow: hidden;
   width: 100%;
   height: 100%;
-  
-  &:nth-child(1) {
-    border-top-left-radius: red;
-  }
-  &:nth-child(2) {
-    border-top-right-radius: red;
-  }
-  &:nth-child(3) {
-    border-bottom-left-radius: red;
-  }
-  &:nth-child(4) {
-    border-bottom-right-radius: red;
-  }
 `;
 
 export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`

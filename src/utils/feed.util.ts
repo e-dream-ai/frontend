@@ -51,7 +51,7 @@ export const groupFeedDreamItemsByPlaylist = (
     }
   });
 
-  // Filter playlists with 4 dreams or more
+  // Filter to have playlists with 4 dreams or more only
   const playlists = new Map(
     [...playlistsMap].filter(([, playlist]) => playlist.dreams.length >= 4),
   );
