@@ -19,13 +19,13 @@ export enum DreamFileType {
 
 export type Dream = {
   id: number;
+  uuid: string;
   name: string;
   activityLevel: number;
   featureRank: number;
   thumbnail: string;
   displayedOwner: Omit<User, "token">;
   user: Omit<User, "token">;
-  uuid: string;
   video: string;
   original_video?: string;
   processedVideoSize?: number;

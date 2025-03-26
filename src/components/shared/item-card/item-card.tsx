@@ -23,11 +23,14 @@ import {
   PlayButton,
   StyledItemCard,
   StyledItemCardSkeleton,
+  ThumbnailGrid,
+  ThumbnailGridItem,
   ThumbnailPlaceholder,
   UsernameText,
 } from "./item-card.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faEllipsis,
   faFilm,
   faListUl,
   faPhotoFilm,
@@ -43,14 +46,19 @@ import { useImage } from "@/hooks/useImage";
 import { useItemCardListState } from "../item-card-list/item-card-list";
 import { HighlightPosition } from "@/types/item-card.types";
 import { Keyframe } from "@/types/keyframe.types";
+import { PlaylistWithDreams } from "@/types/feed.types";
+import Text from "../text/text";
 
 type DNDMode = "local" | "cross-window";
-export type ItemType = "dream" | "playlist" | "keyframe";
+/**
+ * "dream" - used to show dreams
+ * "playlist" - used to show playlists
+ * "keyframe" - used to show keyframes
+ * "virtual-playlist" - used to show virtual playlists generated on frontend if dreams on feed shares same playlist
+ */
+export type ItemType = "dream" | "playlist" | "keyframe" | "virtual-playlist";
 
-const DND_MODES: { [key: string]: DNDMode } = {
-  LOCAL: "local",
-  CROSS_WINDOW: "cross-window",
-};
+type Item = Dream | Omit<Playlist, "items"> | Keyframe | PlaylistWithDreams;
 
 type ItemCardProps = {
   /**
@@ -58,7 +66,7 @@ type ItemCardProps = {
    */
   itemId?: number;
   type?: ItemType;
-  item?: Dream | Omit<Playlist, "items"> | Keyframe;
+  item?: Item;
   draggable?: boolean;
   size?: Sizes;
   dndMode?: DNDMode;
@@ -67,9 +75,38 @@ type ItemCardProps = {
   showPlayButton?: boolean;
   inline?: boolean;
   droppable?: boolean;
+  onClick?: MouseEventHandler<HTMLAnchorElement>;
   onOrder?: (dropItem: SetItemOrder) => void;
   onDelete?: (event: React.MouseEvent) => void;
 };
+
+const DND_MODES: { [key: string]: DNDMode } = {
+  LOCAL: "local",
+  CROSS_WINDOW: "cross-window",
+} as const;
+
+const ROUTE_MAP = {
+  "dream": ROUTES.VIEW_DREAM,
+  "playlist": ROUTES.VIEW_PLAYLIST,
+  "keyframe": ROUTES.VIEW_KEYFRAME,
+  "virtual-playlist": undefined
+} as const;
+
+const getThumbnail = (type: string, item?: Item) => {
+  switch (type) {
+    case "dream":
+      return (item as Dream)?.thumbnail;
+    case "playlist":
+      return (item as Playlist)?.thumbnail;
+    case "keyframe":
+      return (item as Keyframe)?.image;
+    case "virtual-playlist":
+      return null
+    default:
+      return null;
+  }
+};
+
 
 export const ItemCard: React.FC<ItemCardProps> = ({
   itemId = 0,
@@ -83,15 +120,14 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   dndMode = DND_MODES.CROSS_WINDOW,
   order = 0,
   droppable = false,
+  onClick,
   onOrder,
   onDelete,
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
   const { uuid, name, user, displayedOwner } = item ?? {};
-  const thumbnail = type === "dream" || type === "playlist"
-    ? (item as Dream | Playlist)?.thumbnail
-    : (item as Keyframe).image;
+  const thumbnail = getThumbnail(type, item);
 
   const avatarUrl = useImage(
     displayedOwner ? displayedOwner?.avatar : user?.avatar,
@@ -111,15 +147,12 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   const [highlightPosition, setHighlightPosition] =
     useState<HighlightPosition>();
 
-  const thumbnailUrl = useImage(thumbnail, {
+  const thumbnailUrl = useImage(thumbnail ?? "", {
     width: 420,
     fit: "cover",
   });
 
-  const navigateRoute =
-    type === "dream"
-      ? `${ROUTES.VIEW_DREAM}/${item?.uuid}`
-      : type === "playlist" ? `${ROUTES.VIEW_PLAYLIST}/${item?.uuid}` : `${ROUTES.VIEW_KEYFRAME}/${item?.uuid}`;
+  const navigateRoute = ROUTE_MAP[type] && `${ROUTE_MAP[type]}/${item?.uuid}`;
 
   const handlePlay: MouseEventHandler<HTMLButtonElement> = useCallback(
     (event) => {
@@ -132,12 +165,27 @@ export const ItemCard: React.FC<ItemCardProps> = ({
           item as Dream,
           t("toasts.play_dream", { name: (item as Dream)?.name }),
         );
-      } else {
+      } else if (type == "playlist") {
         emitPlayPlaylist(
           socket,
           item as Playlist,
           t("toasts.play_playlist", { name: (item as Playlist)?.name }),
         );
+      } else if (type === "virtual-playlist") {
+        emitPlayPlaylist(
+          socket,
+          item as Playlist,
+          t("toasts.play_playlist", { name: (item as PlaylistWithDreams)?.name }),
+        );
+
+        const firstDream = (item as PlaylistWithDreams).dreams?.[0];
+        if (firstDream) {
+          emitPlayDream(
+            socket,
+            firstDream,
+            t("toasts.play_dream", { name: firstDream.name }),
+          );
+        }
       }
     },
     [t, socket, item, type],
@@ -310,15 +358,35 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   }, [registerEvents, unregisterEvents]);
 
   const Thumbnail = useMemo(
-    () => () =>
-      thumbnail ? (
-        <ItemCardImage size={size} src={thumbnailUrl} />
-      ) : (
+    () => () => {
+
+      if (type === 'virtual-playlist') {
+        const gridDreams = (item as PlaylistWithDreams).dreams.slice(0, 4);
+        return (
+          <ThumbnailGrid size={size}>
+            {gridDreams.map((dream, index) => (
+              <ThumbnailGridItem key={index}>
+                <ItemCardImage
+                  size={size}
+                  src={dream.thumbnail}
+                />
+              </ThumbnailGridItem>
+            ))}
+          </ThumbnailGrid>
+        );
+      }
+
+      if (thumbnail) {
+        return <ItemCardImage size={size} src={thumbnailUrl} />
+      }
+
+      return (
         <ThumbnailPlaceholder size={size}>
           <FontAwesomeIcon icon={faPhotoFilm} />
         </ThumbnailPlaceholder>
-      ),
-    [thumbnail, size, thumbnailUrl],
+      )
+    },
+    [item, type, thumbnail, size, thumbnailUrl],
   );
 
   const ThumbnailAndPlayButton = useMemo(
@@ -335,16 +403,18 @@ export const ItemCard: React.FC<ItemCardProps> = ({
         {showPlayButton && (
           <Row
             justifyContent="flex-end"
-            mb="2"
             style={{ position: "absolute", top: 0, right: 0 }}
           >
             <PlayButton
               type="button"
               buttonType="default"
               transparent
+              playType={type}
               after={
                 type === "dream" ? (
-                  <FontAwesomeIcon icon={faPlay} />
+                  <span>
+                    <FontAwesomeIcon icon={faPlay} />
+                  </span>
                 ) : (
                   <span className="fa-stack">
                     <FontAwesomeIcon icon={faPlay} />
@@ -359,6 +429,18 @@ export const ItemCard: React.FC<ItemCardProps> = ({
             />
           </Row>
         )}
+
+        {type == "virtual-playlist" && (
+          <Row
+            justifyContent="flex-end"
+            style={{ position: "absolute", bottom: 0, right: 0 }}
+            mb="0"
+          >
+            <Text mr="1rem" fontSize="2rem">
+              <FontAwesomeIcon icon={faEllipsis} />
+            </Text>
+          </Row>
+        )}
       </Row>
     ),
     [Thumbnail, handlePlay, type, inline, showPlayButton],
@@ -367,7 +449,7 @@ export const ItemCard: React.FC<ItemCardProps> = ({
   return (
     <StyledItemCard ref={cardRef} size={size} draggable={draggable}>
       <>
-        <ItemCardAnchor to={navigateRoute}>
+        <ItemCardAnchor to={navigateRoute ?? ""} onClick={onClick}>
           <Row
             flex="auto"
             margin="0"

@@ -5,6 +5,7 @@ import { DEVICES } from "@/constants/devices.constants";
 import Text from "@/components/shared/text/text";
 import { Button } from "../button/button";
 import { HighlightPosition } from "@/types/item-card.types";
+import { ItemType } from "./item-card";
 
 const ItemCardSizes = {
   sm: css``,
@@ -102,7 +103,7 @@ export const StyledItemCardSkeleton = styled.li<{
   background-color: ${(props) => props.theme.colorBackgroundQuaternary};
 `;
 
-export const ItemCardAnchor = styled(Link)<{
+export const ItemCardAnchor = styled(Link) <{
   isDragging?: boolean;
   highlightPosition?: "top" | "bottom";
 }>`
@@ -142,6 +143,40 @@ export const ItemCardImage = styled.img<{ size: Sizes }>`
   }
 `;
 
+export const ThumbnailGrid = styled.div<{ size: Sizes }>`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 2px;
+  width: 100%;
+  height: ${({ size }) =>
+    size === 'sm' ? '80px' :
+      size === 'md' ? '120px' :
+        '160px'};
+  border-radius: red;
+  overflow: hidden;
+`;
+
+export const ThumbnailGridItem = styled.div`
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+  
+  &:nth-child(1) {
+    border-top-left-radius: red;
+  }
+  &:nth-child(2) {
+    border-top-right-radius: red;
+  }
+  &:nth-child(3) {
+    border-bottom-left-radius: red;
+  }
+  &:nth-child(4) {
+    border-bottom-right-radius: red;
+  }
+`;
+
 export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`
   // 16:9 ratio
   aspect-ratio: 16 / 9;
@@ -163,7 +198,10 @@ export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`
   }
 `;
 
-export const PlayButton = styled(Button)`
+export const PlayButton = styled(Button) <{ playType: ItemType }>`
+  padding: ${(props) =>
+    props.playType == "playlist" || props.playType == "virtual-playlist" ? 0 : "default"
+  };
   svg {
     filter: drop-shadow(0.2rem 0.2rem 0.2rem #000);
   }

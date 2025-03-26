@@ -41,3 +41,12 @@ export type UserFeedType =
   | "upvote"
   | "downvote"
   | "hidden";
+
+export type PlaylistWithDreams = {
+  id: number;
+  uuid: string;
+  name: string;
+  user?: User;
+  displayedOwner?: User;
+  dreams: Dream[];
+};

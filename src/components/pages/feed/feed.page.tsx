@@ -15,7 +15,7 @@ import UserCard, { UserCardList } from "../user-card/user-card";
 import { FEED_FILTERS, getFeedFilterData } from "@/constants/feed.constants";
 import { useUsers } from "@/api/user/query/useUsers";
 import { useCallback, useMemo, useState } from "react";
-import { FeedItem, FeedItemFilterType, FeedItemType } from "@/types/feed.types";
+import { FeedItem, FeedItemFilterType, FeedItemType, PlaylistWithDreams } from "@/types/feed.types";
 import { User } from "@/types/auth.types";
 import Text from "@/components/shared/text/text";
 import { ROLES } from "@/constants/role.constants";
@@ -24,6 +24,7 @@ import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
 import { ItemType } from "@/components/shared/item-card/item-card";
 import { usePaginateProps } from "@/hooks/usePaginateProps";
+import { groupFeedDreamItemsByPlaylist } from "@/utils/feed.util";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -31,6 +32,12 @@ const USER_TAKE = {
 };
 
 const SECTION_ID = "feed";
+
+// Helper function to determine if item should be skipped from render
+const shouldSkipItem = (item: FeedItem, dreamsInVirtualPlaylists: string[]): boolean => {
+  return (item.type === 'playlist' ||
+    (item.dreamItem && dreamsInVirtualPlaylists.includes(item.dreamItem.uuid))) ?? false;
+}
 
 export const FeedPage: React.FC = () => {
   const { t } = useTranslation();
@@ -51,7 +58,6 @@ export const FeedPage: React.FC = () => {
     renderOnZeroPageCount
   } = usePaginateProps();
 
-
   const getUserFeedType: (type?: FeedItemType) => RoleType | undefined =
     useCallback((type) => {
       if (type === FEED_FILTERS.ALL) return undefined;
@@ -60,7 +66,6 @@ export const FeedPage: React.FC = () => {
       if (type === FEED_FILTERS.USER) return ROLES.USER_GROUP;
       if (type === FEED_FILTERS.CREATOR) return ROLES.CREATOR_GROUP;
       if (type === FEED_FILTERS.ADMIN) return ROLES.ADMIN_GROUP;
-
       return undefined;
     }, []);
 
@@ -73,8 +78,49 @@ export const FeedPage: React.FC = () => {
     search,
     type: radioGroupState as FeedItemFilterType,
   });
-  const feed = feedData?.data?.feed;
-  const pageCount = Math.ceil((feedData?.data?.count ?? 1) / PAGINATION.TAKE);
+
+  const feed = useMemo(() => feedData?.data?.feed ?? [], [feedData]);
+  const pageCount = useMemo(() => Math.ceil((feedData?.data?.count ?? 1) / PAGINATION.TAKE), [feedData]);
+
+  // Lazy initial state for expandedm virtual playlists
+  const [expandedVirtualPlaylists, setExpandedVirtualPlaylists] = useState<Set<string>>(() => new Set());
+
+  // Memoize the virtual playlists grouping operation
+  const { virtualPlaylistGroups, dreamsInVirtualPlaylists } = useMemo(() => {
+    const groups = groupFeedDreamItemsByPlaylist(feed);
+    const dreamUUIDs = new Set<string>();
+
+    // Build set of dream IDs in playlists in the same loop
+    groups.forEach(group => {
+      group.dreams.forEach(dream => {
+        dreamUUIDs.add(dream.uuid);
+      });
+    });
+
+    return {
+      virtualPlaylistGroups: groups,
+      dreamsInVirtualPlaylists: Array.from(dreamUUIDs)
+    };
+  }, [feed]); // Only recompute when feed changes
+
+  // Memoize toggle handler
+  const togglePlaylist = useCallback((playlistUUID: string) => {
+    setExpandedVirtualPlaylists(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(playlistUUID)) {
+        newSet.delete(playlistUUID);
+      } else {
+        newSet.add(playlistUUID);
+      }
+      return newSet;
+    });
+  }, []);
+
+  // Memoize the playlist entries array
+  const virtualPlaylists = useMemo(() =>
+    Array.from(virtualPlaylistGroups.entries()).map(([, pl]) => pl),
+    [virtualPlaylistGroups]
+  );
 
   const {
     data: usersData,
@@ -154,7 +200,17 @@ export const FeedPage: React.FC = () => {
           ) : (
             <>
               {showUserList && <UserList users={users} />}
-              {!showUserList && <FeedList feed={feed} />}
+              {
+                !showUserList && <>
+                  <FeedList
+                    feed={feed}
+                    virtualPlaylists={virtualPlaylists}
+                    dreamsInVirtualPlaylists={dreamsInVirtualPlaylists}
+                    expandedVirtualPlaylists={Array.from(expandedVirtualPlaylists)}
+                    togglePlaylist={togglePlaylist}
+                  />
+                </>
+              }
             </>
           )}
         </Column>
@@ -179,7 +235,13 @@ export const FeedPage: React.FC = () => {
   );
 };
 
-const FeedList: React.FC<{ feed?: FeedItem[] }> = ({ feed }) => {
+const FeedList: React.FC<{
+  feed?: FeedItem[],
+  virtualPlaylists: PlaylistWithDreams[],
+  dreamsInVirtualPlaylists: string[],
+  expandedVirtualPlaylists: string[],
+  togglePlaylist: (uuid: string) => void
+}> = ({ feed, virtualPlaylists, dreamsInVirtualPlaylists, expandedVirtualPlaylists, togglePlaylist }) => {
   const { t } = useTranslation();
   return (
     <>
@@ -187,32 +249,68 @@ const FeedList: React.FC<{ feed?: FeedItem[] }> = ({ feed }) => {
         {t("page.feed.feed")}
       </Row>
       {feed?.length ? (
-        <ItemCardList grid columns={3}>
-          {feed?.map((feedItem) => {
-            let item;
-            if (feedItem.type === "dream") {
-              item = {
-                ...feedItem.dreamItem,
-                user: feedItem.user,
-              } as Dream;
-            } else if (feedItem.type === "playlist") {
-              item = {
-                ...feedItem.playlistItem,
-                user: feedItem.user,
-              } as Playlist;
-            }
+        <>
+          <ItemCardList grid columns={3}>
+            {
+              feed?.map((feedItem) => {
+                if (shouldSkipItem(feedItem, dreamsInVirtualPlaylists)) return null;
 
-            return (
-              <ItemCard
-                showPlayButton
-                key={feedItem.id}
-                type={feedItem.type as ItemType}
-                item={item}
-                size="lg"
-              />
-            );
-          })}
-        </ItemCardList>
+                let item;
+                if (feedItem.type === "dream") {
+                  item = {
+                    ...feedItem.dreamItem,
+                    user: feedItem.user,
+                  } as Dream;
+                } else if (feedItem.type === "playlist") {
+                  item = {
+                    ...feedItem.playlistItem,
+                    user: feedItem.user,
+                  } as Playlist;
+                }
+
+                return (
+                  <ItemCard
+                    showPlayButton
+                    key={feedItem.id}
+                    type={feedItem.type as ItemType}
+                    item={item}
+                    size="lg"
+                  />
+                );
+              })
+            }
+            {
+              virtualPlaylists.map((pl) => {
+                const handleTogglePlaylist = () => togglePlaylist(pl.uuid);
+                const isExpanded = expandedVirtualPlaylists.includes(pl.uuid);
+
+                return (
+                  <>
+                    <ItemCard
+                      showPlayButton
+                      key={pl.uuid}
+                      type="virtual-playlist"
+                      item={pl}
+                      size="lg"
+                      onClick={handleTogglePlaylist}
+                    />
+
+                    {isExpanded && pl.dreams.map(dream =>
+                      <ItemCard
+                        showPlayButton
+                        key={`${pl.uuid}_${dream.uuid}`}
+                        type="dream"
+                        item={dream}
+                        size="lg"
+                        onClick={handleTogglePlaylist}
+                      />
+                    )}
+                  </>
+                )
+              })
+            }
+          </ItemCardList>
+        </>
       ) : (
         <Text mb={4}>{t("page.feed.empty_feed")}</Text>
       )}
