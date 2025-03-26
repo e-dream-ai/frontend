@@ -43,6 +43,8 @@ export const groupFeedDreamItemsByPlaylist = (
           playlistsMap.set(playlistUUID, playlist);
         }
 
+        // Take user from the item and add it to the dream to show it in the card
+        dream.user = item.user;
         // Add dream to this playlist
         playlist.dreams.push(dream);
       });
