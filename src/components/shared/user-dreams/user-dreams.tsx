@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useFeed } from "@/api/feed/query/useFeed";
 import { Column, ItemCard, ItemCardList, Row } from "@/components/shared";
 import { Paginate } from "@/components/shared/paginate/paginate";
@@ -35,13 +35,18 @@ const UserDreams: React.FC<UserDreamsProps> = ({
     renderOnZeroPageCount
   } = usePaginateProps();
   const [page, setPage] = useState<number>(0);
-  const { data, isLoading, isRefetching } = useFeed({
+  const { data: feedData, isLoading, isRefetching } = useFeed({
     page,
     userUUID,
     type
   });
-  const feed = data?.data?.feed;
-  const pageCount = Math.ceil((data?.data?.count ?? 1) / PAGINATION.TAKE);
+  const feed = useMemo(() => feedData?.pages.flatMap(page => page.data?.feed ?? []) ?? [], [feedData]);
+  const pageCount = useMemo(() =>
+    Math.ceil(
+      (feedData?.pages.find(page => Boolean(page.data?.count))?.data?.count ?? 0)
+      / PAGINATION.TAKE
+    ), [feedData]);
+
   const handleonPageChange = ({ selected }: { selected: number }) => {
     setPage(selected);
   };

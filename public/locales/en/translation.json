@@ -536,6 +536,9 @@
       "confirm_signout_modal_body": "Are you sure to sign out?",
       "confirm_text": "Sign out"
     },
+    "infinity_scroll": {
+      "end_message": "You have seen it all"
+    },
     "not_found": {
       "title": "Not found",
       "go_home": "go home"

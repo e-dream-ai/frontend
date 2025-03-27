@@ -14,7 +14,7 @@ import { Playlist } from "@/types/playlist.types";
 import UserCard, { UserCardList } from "../user-card/user-card";
 import { FEED_FILTERS, getFeedFilterData } from "@/constants/feed.constants";
 import { useUsers } from "@/api/user/query/useUsers";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FeedItem, FeedItemFilterType, FeedItemType, PlaylistWithDreams } from "@/types/feed.types";
 import { User } from "@/types/auth.types";
 import Text from "@/components/shared/text/text";
@@ -27,6 +27,7 @@ import { ItemType } from "@/components/shared/item-card/item-card";
 import { groupFeedDreamItemsByPlaylist } from "@/utils/feed.util";
 import { getVirtualPlaylistDisplayedDreams } from "@/utils/virtual-playlist.util";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { PAGINATION } from "@/constants/pagination.constants";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -84,6 +85,7 @@ export const FeedPage: React.FC = () => {
   });
 
   const feed = useMemo(() => feedData?.pages.flatMap(page => page.data?.feed ?? []) ?? [], [feedData]);
+  const feedDataLength = feedData?.pages.flatMap(page => page.data?.feed).length || 0;
   // const pageCount = useMemo(() => Math.ceil((feedData?.data?.count ?? 1) / PAGINATION.TAKE), [feedData]);
   // const pageCount = useMemo(() =>
   //   Math.ceil(
@@ -169,6 +171,12 @@ export const FeedPage: React.FC = () => {
     setUsersPage(0);
   };
 
+  useEffect(() => {
+    if (hasNextPage && (feedDataLength - dreamsInVirtualPlaylists.length) < PAGINATION.TAKE) {
+      fetchNextPage();
+    }
+  }, [feedDataLength, dreamsInVirtualPlaylists, hasNextPage, fetchNextPage]);
+
   return (
     <Container>
       <Section id={SECTION_ID}>
@@ -192,14 +200,18 @@ export const FeedPage: React.FC = () => {
             </Row>
           ) : (
             <InfiniteScroll
-              dataLength={feedData?.pages.flatMap(page => page.data?.feed).length || 0}
+              dataLength={feedDataLength}
               next={fetchNextPage}
               hasMore={hasNextPage ?? false}
-              loader={<span>Loading...</span>}
+              loader={
+                <Row justifyContent="center">
+                  <Spinner />
+                </Row>
+              }
               endMessage={
-                <p style={{ textAlign: 'center' }}>
-                  <b>You have seen it all</b>
-                </p>
+                <Row justifyContent="center" mt="2rem">
+                  <Text>{t("components.infinity_scroll.end_message")}</Text>
+                </Row>
               }
             >
               {showUserList && <UserList users={users} />}

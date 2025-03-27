@@ -63,10 +63,10 @@ export function isRequestFeedItemType(
 export const useFeed = ({ page = 0, userUUID, search, type }: HookParams) => {
   const { user } = useAuth();
   const take = PAGINATION.TAKE;
-  const skip = page * take;
+  // const skip = page * take;
   // Don't send onlyHidden if is not needed
   const onlyHidden = type === "hidden" ? true : undefined;
-  let feedItemType;
+  let feedItemType: FeedItemFilterType;
   if (isRequestFeedItemType(type)) {
     feedItemType = type;
   }
@@ -76,7 +76,16 @@ export const useFeed = ({ page = 0, userUUID, search, type }: HookParams) => {
     Error
   >(
     [FEED_QUERY_KEY, page, search, type],
-    getFeed({ take, skip, userUUID, search, type: feedItemType, onlyHidden }),
+    ({ pageParam = 0 }) =>
+      getFeed({
+        take,
+        skip: pageParam * take,
+        userUUID,
+        search,
+        type: feedItemType,
+        onlyHidden,
+      })(),
+    // getFeed({ take, skip, userUUID, search, type: feedItemType, onlyHidden }),
     {
       enabled: Boolean(user),
       getNextPageParam: (lastPage, allPages) => {
