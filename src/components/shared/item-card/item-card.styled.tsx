@@ -1,4 +1,4 @@
-import styled, { css } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { Sizes } from "@/types/sizes.types";
 import { Link } from "react-router-dom";
 import { DEVICES } from "@/constants/devices.constants";
@@ -23,6 +23,19 @@ const ImageSizes = {
 };
 
 const HighlightBorderHeightPx = 4;
+
+// Pulse animation
+const pulse = keyframes`
+  0% {
+    opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.5;
+  }
+`;
 
 export const UsernameText = styled(Text)`
   display: flex;
@@ -126,7 +139,23 @@ export const ItemCardAnchor = styled(Link) <{
   }
 `;
 
-export const ItemCardImage = styled.img<{ size: Sizes }>`
+// Image Skeleton Loader
+export const ImageSkeleton = styled.div`
+  width: 100%;
+  // 16:9 ratio
+  aspect-ratio: 16 / 9;
+  background-color: #222;
+  animation: ${pulse} 1.5s infinite ease-in-out;
+`;
+
+export const StyledErrorContainer = styled.div`
+  // 16:9 ratio
+  aspect-ratio: 16 / 9;
+  background-color: #222;
+  animation: ${pulse} 1.5s infinite ease-in-out;
+`;
+
+export const StyledItemCardImage = styled.img<{ size: Sizes }>`
   // 16:9 ratio
   aspect-ratio: 16 / 9;
   display: flex;

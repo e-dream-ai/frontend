@@ -18,7 +18,6 @@ import Row, { Column } from "../row/row";
 import {
   HighlightBorder,
   ItemCardAnchor,
-  ItemCardImage,
   ItemTitleText,
   PlayButton,
   StyledItemCard,
@@ -49,6 +48,7 @@ import { Keyframe } from "@/types/keyframe.types";
 import { PlaylistWithDreams } from "@/types/feed.types";
 import Text from "../text/text";
 import { getVirtualPlaylistThumbnailDreams, shouldVirtualPlaylistDisplayDots } from "@/utils/virtual-playlist.util";
+import { ItemCardImage } from "./item-card-image";
 
 type DNDMode = "local" | "cross-window";
 /**

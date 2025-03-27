@@ -33,11 +33,11 @@ import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_FILE_SIZE_MB } from "@/constants/file.co
 import { useUpdateImageKeyframe } from "@/api/keyframe/mutation/useUpdateImageKeyframe";
 import { handleFileUploaderSizeError, handleFileUploaderTypeError } from "@/utils/file-uploader.util";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
-import { ItemCardImage } from "@/components/shared/item-card/item-card.styled";
 import router from "@/routes/router";
 import { useSearchParams } from "react-router-dom";
 import { PLAYLIST_QUERY_KEY, usePlaylist } from "@/api/playlist/query/usePlaylist";
 import queryClient from "@/api/query-client";
+import { ItemCardImage } from "@/components/shared/item-card/item-card-image";
 
 export const CreateKeyframe: React.FC = () => {
   const { t } = useTranslation();
