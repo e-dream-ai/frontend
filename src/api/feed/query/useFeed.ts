@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { PAGINATION } from "@/constants/pagination.constants";
 import useAuth from "@/hooks/useAuth";
@@ -71,11 +71,24 @@ export const useFeed = ({ page = 0, userUUID, search, type }: HookParams) => {
     feedItemType = type;
   }
 
-  return useQuery<ApiResponse<{ feed: FeedItem[]; count: number }>, Error>(
+  return useInfiniteQuery<
+    ApiResponse<{ feed: FeedItem[]; count: number }>,
+    Error
+  >(
     [FEED_QUERY_KEY, page, search, type],
     getFeed({ take, skip, userUUID, search, type: feedItemType, onlyHidden }),
     {
       enabled: Boolean(user),
+      getNextPageParam: (lastPage, allPages) => {
+        const totalItems = lastPage.data?.count ?? 0;
+        const currentItemCount = allPages.reduce(
+          (total, page) => total + (page?.data?.feed?.length ?? 0),
+          0,
+        );
+
+        // Check if there are more items to load
+        return currentItemCount < totalItems ? allPages.length : undefined;
+      },
     },
   );
 };

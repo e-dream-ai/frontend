@@ -86,6 +86,9 @@ importers:
       react-icons:
         specifier: ^5.4.0
         version: 5.4.0(react@18.2.0)
+      react-infinite-scroll-component:
+        specifier: ^6.1.0
+        version: 6.1.0(react@18.2.0)
       react-ios-pwa-prompt:
         specifier: ^2.0.6
         version: 2.0.6(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -3116,6 +3119,11 @@ packages:
     peerDependencies:
       react: '*'
 
+  react-infinite-scroll-component@6.1.0:
+    resolution: {integrity: sha512-SQu5nCqy8DxQWpnUVLx7V7b7LcA37aM7tvoWjTLZp1dk6EJibM5/4EJKzOnl07/BsM1Y40sKLuqjCwwH/xV0TQ==}
+    peerDependencies:
+      react: '>=16.0.0'
+
   react-ios-pwa-prompt@2.0.6:
     resolution: {integrity: sha512-slRvFlcYsOL01D8gbJW4agOQ64pk7V+0EBk+d8z8wQ40vtcaoSw/JJkh+fJQrWSfWFVvZESu3FHP0+un4YUjJg==}
     peerDependencies:
@@ -3523,6 +3531,10 @@ packages:
 
   text-table@0.2.0:
     resolution: {integrity: sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==}
+
+  throttle-debounce@2.3.0:
+    resolution: {integrity: sha512-H7oLPV0P7+jgvrk+6mwwwBDmxTaxnu9HMXmloNLXwnNO0ZxZ31Orah2n8lU1eMPvsaowP2CX+USCgyovXfdOFQ==}
+    engines: {node: '>=8'}
 
   tiny-case@1.0.3:
     resolution: {integrity: sha512-Eet/eeMhkO6TX8mnUteS9zgPbUMQa4I6Kkp5ORiBD5476/m+PIRiumP5tmh5ioJpH7k51Kehawy2UDfsnxxY8Q==}
@@ -7218,6 +7230,11 @@ snapshots:
     dependencies:
       react: 18.2.0
 
+  react-infinite-scroll-component@6.1.0(react@18.2.0):
+    dependencies:
+      react: 18.2.0
+      throttle-debounce: 2.3.0
+
   react-ios-pwa-prompt@2.0.6(react-dom@18.2.0(react@18.2.0))(react@18.2.0):
     dependencies:
       react: 18.2.0
@@ -7738,6 +7755,8 @@ snapshots:
       source-map-support: 0.5.21
 
   text-table@0.2.0: {}
+
+  throttle-debounce@2.3.0: {}
 
   tiny-case@1.0.3: {}
 

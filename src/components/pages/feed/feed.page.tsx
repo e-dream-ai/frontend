@@ -2,12 +2,12 @@ import { useFeed } from "@/api/feed/query/useFeed";
 import { Column, Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import { ItemCard, ItemCardList } from "@/components/shared";
-import { Paginate } from "@/components/shared/paginate/paginate";
+// import { Paginate } from "@/components/shared/paginate/paginate";
 import RadioButtonGroup from "@/components/shared/radio-button-group/radio-button-group";
 import SearchBar from "@/components/shared/search-bar/search-bar";
 import { Section } from "@/components/shared/section/section";
 import { Spinner } from "@/components/shared/spinner/spinner";
-import { PAGINATION } from "@/constants/pagination.constants";
+// import { PAGINATION } from "@/constants/pagination.constants";
 import { useTranslation } from "react-i18next";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
@@ -23,9 +23,10 @@ import { RoleType } from "@/types/role.types";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
 import { ItemType } from "@/components/shared/item-card/item-card";
-import { usePaginateProps } from "@/hooks/usePaginateProps";
+// import { usePaginateProps } from "@/hooks/usePaginateProps";
 import { groupFeedDreamItemsByPlaylist } from "@/utils/feed.util";
 import { getVirtualPlaylistDisplayedDreams } from "@/utils/virtual-playlist.util";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -50,14 +51,14 @@ export const FeedPage: React.FC = () => {
   const [radioGroupState, setRadioGroupState] = useState<
     FeedItemType | undefined
   >(FEED_FILTERS.ALL);
-  const {
-    marginPagesDisplayed,
-    pageRangeDisplayed,
-    breakLabel,
-    previousLabel,
-    nextLabel,
-    renderOnZeroPageCount
-  } = usePaginateProps();
+  // const {
+  //   marginPagesDisplayed,
+  //   pageRangeDisplayed,
+  //   breakLabel,
+  //   previousLabel,
+  //   nextLabel,
+  //   renderOnZeroPageCount
+  // } = usePaginateProps();
 
   const getUserFeedType: (type?: FeedItemType) => RoleType | undefined =
     useCallback((type) => {
@@ -74,14 +75,21 @@ export const FeedPage: React.FC = () => {
     data: feedData,
     isLoading: isFeedLoading,
     isRefetching: isFeedRefetching,
+    fetchNextPage,
+    hasNextPage,
   } = useFeed({
     page,
     search,
     type: radioGroupState as FeedItemFilterType,
   });
 
-  const feed = useMemo(() => feedData?.data?.feed ?? [], [feedData]);
-  const pageCount = useMemo(() => Math.ceil((feedData?.data?.count ?? 1) / PAGINATION.TAKE), [feedData]);
+  const feed = useMemo(() => feedData?.pages.flatMap(page => page.data?.feed ?? []) ?? [], [feedData]);
+  // const pageCount = useMemo(() => Math.ceil((feedData?.data?.count ?? 1) / PAGINATION.TAKE), [feedData]);
+  // const pageCount = useMemo(() =>
+  //   Math.ceil(
+  //     (feedData?.pages.find(page => Boolean(page.data?.count))?.data?.count ?? 0)
+  //     / PAGINATION.TAKE
+  //   ), [feedData]);
 
   // Memoize the virtual playlists grouping operation
   const { virtualPlaylistGroups, dreamsInVirtualPlaylists } = useMemo(() => {
@@ -121,9 +129,9 @@ export const FeedPage: React.FC = () => {
     role: getUserFeedType(radioGroupState as FeedItemType),
   });
   const users = usersData?.data?.users;
-  const usersPageCount = Math.ceil(
-    (usersData?.data?.count ?? 1) / PAGINATION.TAKE,
-  );
+  // const usersPageCount = Math.ceil(
+  //   (usersData?.data?.count ?? 1) / PAGINATION.TAKE,
+  // );
 
   const isLoading =
     isFeedLoading || isFeedRefetching || isUsersLoading || isUsersRefetching;
@@ -134,7 +142,7 @@ export const FeedPage: React.FC = () => {
     FEED_FILTERS.ADMIN,
   ].includes(radioGroupState as FeedItemType);
 
-  const showUserListTab = showUserList;
+  // const showUserListTab = showUserList;
 
   const handleRadioButtonGroupChange = (value?: string) => {
     setRadioGroupState(value as FeedItemType);
@@ -142,13 +150,13 @@ export const FeedPage: React.FC = () => {
     setUsersPage(0);
   };
 
-  const handleOnPageChange = ({ selected }: { selected: number }) => {
-    setPage(selected);
-  };
+  // const handleOnPageChange = ({ selected }: { selected: number }) => {
+  //   setPage(selected);
+  // };
 
-  const handleOnUserPageChange = ({ selected }: { selected: number }) => {
-    setUsersPage(selected);
-  };
+  // const handleOnUserPageChange = ({ selected }: { selected: number }) => {
+  //   setUsersPage(selected);
+  // };
 
   const handleOnSearch = (value?: string) => {
     if (!value && value !== "") return;
@@ -183,7 +191,17 @@ export const FeedPage: React.FC = () => {
               <Spinner />
             </Row>
           ) : (
-            <>
+            <InfiniteScroll
+              dataLength={feedData?.pages.flatMap(page => page.data?.feed).length || 0}
+              next={fetchNextPage}
+              hasMore={hasNextPage ?? false}
+              loader={<span>Loading...</span>}
+              endMessage={
+                <p style={{ textAlign: 'center' }}>
+                  <b>You have seen it all</b>
+                </p>
+              }
+            >
               {showUserList && <UserList users={users} />}
               {
                 !showUserList && <>
@@ -194,11 +212,11 @@ export const FeedPage: React.FC = () => {
                   />
                 </>
               }
-            </>
+            </InfiniteScroll>
           )}
         </Column>
 
-        <Row justifyContent="center" margin="0">
+        {/* <Row justifyContent="center" margin="0">
           <Paginate
             breakLabel={breakLabel}
             previousLabel={previousLabel}
@@ -212,7 +230,7 @@ export const FeedPage: React.FC = () => {
             }
             pageCount={showUserListTab ? usersPageCount : pageCount}
           />
-        </Row>
+        </Row> */}
       </Section>
     </Container>
   );
