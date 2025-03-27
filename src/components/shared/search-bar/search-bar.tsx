@@ -16,11 +16,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 type SearchBarProps = {
   showClearButton?: boolean;
   onSearch?: (value?: string) => void;
+  onChange?: (value?: string) => void;
   onClear?: () => void;
 };
 
 const SearchBar: React.FC<SearchBarProps> = ({
   showClearButton,
+  onChange,
   onSearch,
   onClear,
 }) => {
@@ -28,11 +30,12 @@ const SearchBar: React.FC<SearchBarProps> = ({
 
   const handleSearchInputChange: ChangeEventHandler<HTMLInputElement> = (
     event,
-  ) => setSearch(event.target.value);
-
-  const handleSearchBarIconClick: MouseEventHandler<HTMLButtonElement> = (
-    _,
   ) => {
+    setSearch(event.target.value)
+    onChange?.(event.target.value);
+  };
+
+  const handleSearchBarIconClick: MouseEventHandler<HTMLButtonElement> = () => {
     onSearch?.(search);
   };
 
@@ -43,9 +46,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
   };
 
-  const handleSearchBarClearClick: MouseEventHandler<HTMLButtonElement> = (
-    _,
-  ) => {
+  const handleSearchBarClearClick: MouseEventHandler<HTMLButtonElement> = () => {
     onClear?.();
     setSearch("");
   };

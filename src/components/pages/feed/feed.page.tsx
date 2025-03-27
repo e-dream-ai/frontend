@@ -65,7 +65,7 @@ export const FeedPage: React.FC = () => {
    * Debounce search value after keyboard press
    * Default - 500
    */
-  const debouncedSearch = useDebounce(() => searchValue, 500);
+  const debouncedSearch = useDebounce(searchValue, 1000);
 
   const {
     data: feedData,
@@ -133,9 +133,14 @@ export const FeedPage: React.FC = () => {
     }
   };
 
-  const handleOnSearch = (value?: string) => {
+  const handleOnChange = (value?: string) => {
     if (!value && value !== "") return;
     setSearchValue(value);
+  };
+
+  const handleOnSearch = (value?: string) => {
+    if (!value && value !== "") return;
+    setSearch(value);
   };
 
   const handleOnClearSearch = () => {
@@ -161,6 +166,7 @@ export const FeedPage: React.FC = () => {
         <Column flex="auto">
           <SearchBar
             showClearButton={Boolean(searchValue)}
+            onChange={handleOnChange}
             onSearch={handleOnSearch}
             onClear={handleOnClearSearch}
           />

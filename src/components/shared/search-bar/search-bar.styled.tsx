@@ -9,6 +9,10 @@ export const SearchInput = styled.input`
   border: 0;
   color: ${(props) => props.theme.inputTextColorPrimary};
   font-size: 1rem;
+
+  &:focus {
+    outline: none;
+  }
 `;
 
 export const StyledSearchBar = styled.div`
