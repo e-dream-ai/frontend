@@ -20,10 +20,15 @@ export const groupFeedDreamItemsByPlaylist = (
     if (dream && dream.playlistItems) {
       // Add dream to each playlist it belongs to
       dream.playlistItems.forEach((playlistItem) => {
-        const playlistId = playlistItem.playlist!.id;
-        const playlistUUID = playlistItem.playlist!.uuid;
-        const playlistName =
-          playlistItem.playlist!.name ?? playlistItem.playlist!.uuid;
+        const dreamPlaylist = playlistItem.playlist;
+
+        if (!dreamPlaylist) {
+          return;
+        }
+
+        const playlistId = dreamPlaylist.id;
+        const playlistUUID = dreamPlaylist.uuid;
+        const playlistName = dreamPlaylist.name || dreamPlaylist.uuid;
 
         let playlist: PlaylistWithDreams | undefined;
 

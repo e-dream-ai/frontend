@@ -1,12 +1,13 @@
 import { DND_ACTIONS, DND_METADATA } from "@/constants/dnd.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import {
-  MouseEventHandler,
   useMemo,
   useCallback,
   useEffect,
   useRef,
   useState,
+  memo,
+  MouseEventHandler,
 } from "react";
 import { useTranslation } from "react-i18next";
 import { SetItemOrder } from "@/types/dnd.types";
@@ -109,7 +110,7 @@ const getThumbnail = (type: string, item?: Item) => {
 };
 
 
-export const ItemCard: React.FC<ItemCardProps> = ({
+const ItemCardComponent: React.FC<ItemCardProps> = ({
   itemId = 0,
   type = "dream",
   item,
@@ -543,4 +544,5 @@ export const ItemCardSkeleton: React.FC<ItemCardSkeletonProps> = ({
   children,
 }) => <StyledItemCardSkeleton size={size}>{children}</StyledItemCardSkeleton>;
 
+export const ItemCard = memo(ItemCardComponent);
 export default ItemCard;

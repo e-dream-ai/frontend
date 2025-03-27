@@ -40,7 +40,7 @@ export const ItemCardImage: React.FC<ImgHTMLAttributes<unknown> & { size: Sizes 
   }, [src]);
 
   if (isLoading) {
-    return <ImageSkeleton />;
+    return <ImageSkeleton size={size} />;
   }
 
   if (hasError) {

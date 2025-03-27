@@ -139,9 +139,10 @@ export const ItemCardAnchor = styled(Link) <{
   }
 `;
 
-// Image Skeleton Loader
-export const ImageSkeleton = styled.div`
+// Imagge Skeleton Loader
+export const ImageSkeleton = styled.div<{ size: Sizes }>`
   width: 100%;
+  ${(props) => ImageSizes[props.size]}
   // 16:9 ratio
   aspect-ratio: 16 / 9;
   background-color: #222;
@@ -149,7 +150,6 @@ export const ImageSkeleton = styled.div`
 `;
 
 export const StyledErrorContainer = styled.div`
-  // 16:9 ratio
   aspect-ratio: 16 / 9;
   background-color: #222;
   animation: ${pulse} 1.5s infinite ease-in-out;
@@ -171,6 +171,7 @@ export const StyledItemCardImage = styled.img<{ size: Sizes }>`
     width: auto;
   }
 `;
+
 
 export const ThumbnailGrid = styled.div<{ size: Sizes }>`
   display: grid;
