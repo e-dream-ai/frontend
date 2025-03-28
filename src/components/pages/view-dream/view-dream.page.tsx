@@ -66,27 +66,6 @@ const ViewDreamPage: React.FC = () => {
   const { t } = useTranslation();
   const { uuid } = useParams<Params>();
   const { user } = useAuth();
-  const {
-    data,
-    isLoading: isDreamLoading,
-    refetch,
-    isError,
-  } = useDream(uuid, {
-    activeRefetchInterval: true,
-  });
-
-  const { data: voteData, refetch: refetchVote } = useDreamVote(uuid, {
-    activeRefetchInterval: true,
-  });
-  const vote = voteData?.data?.vote;
-
-  const upvoteMutation = useUpvoteDream(uuid);
-  const downvoteMutation = useDownvoteDream(uuid);
-  const unvoteMutation = useUnvoteDream(uuid);
-
-  const { socket } = useSocket();
-  const dream = data?.data?.dream;
-  const playlistItems = dream?.playlistItems;
 
   const [editMode, setEditMode] = useState<boolean>(false);
   const [video, setVideo] = useState<MultiMediaState>();
@@ -99,6 +78,30 @@ const ViewDreamPage: React.FC = () => {
     useState<boolean>(false);
   const [showReportModal, setShowReportModal] =
     useState<boolean>(false);
+
+  const upvoteMutation = useUpvoteDream(uuid);
+  const downvoteMutation = useDownvoteDream(uuid);
+  const unvoteMutation = useUnvoteDream(uuid);
+
+  const {
+    data,
+    isLoading: isDreamLoading,
+    refetch,
+    isError,
+  } = useDream(uuid, {
+    // If edit mode is disabled then remove refetch
+    activeRefetchInterval: !editMode,
+  });
+
+  const { data: voteData, refetch: refetchVote } = useDreamVote(uuid, {
+    // If edit mode is disabled then remove refetch
+    activeRefetchInterval: !editMode,
+  });
+  const vote = voteData?.data?.vote;
+
+  const { socket } = useSocket();
+  const dream = data?.data?.dream;
+  const playlistItems = dream?.playlistItems;
 
   const { mutate: mutateDream, isLoading: isLoadingDreamMutation } =
     useUpdateDream(uuid);
