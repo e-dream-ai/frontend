@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, memo, useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { StyledItemCardList } from "@/components/shared/item-card-list/item-card-list.styled";
 
@@ -8,7 +8,7 @@ const ItemCardListContext = createContext({
   setDragging: (value: boolean) => value,
 });
 
-export const ItemCardList: React.FC<{
+const ItemCardListComponent: React.FC<{
   children: React.ReactNode;
   grid?: boolean;
   columns?: number;
@@ -33,6 +33,8 @@ export const ItemCardList: React.FC<{
     </ItemCardListContext.Provider>
   );
 };
+
+export const ItemCardList = memo(ItemCardListComponent);
 
 // Custom hook to use context
 export function useItemCardListState() {

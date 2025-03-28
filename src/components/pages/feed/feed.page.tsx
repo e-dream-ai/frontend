@@ -72,7 +72,7 @@ export const FeedPage: React.FC = () => {
   });
 
   const feed = useMemo(() => feedData?.pages.flatMap(page => page.data?.feed ?? []) ?? [], [feedData]);
-  const feedDataLength = feedData?.pages.flatMap(page => page.data?.feed).length || 0;
+  const feedDataLength = useMemo(() => feed.length, [feed]);
 
   // Memoize the virtual playlists grouping operation
   const { virtualPlaylists, dreamsInVirtualPlaylists } = useMemo(() => {

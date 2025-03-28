@@ -130,7 +130,7 @@ export const FeedList: React.FC<FeedListProps> = ({ feed = [], virtualPlaylists,
           <ItemCard
             showPlayButton
             key={itemData.key}
-            type={itemData.type as ItemType}
+            type={itemData.type}
             item={itemData.item}
             size="lg"
           />

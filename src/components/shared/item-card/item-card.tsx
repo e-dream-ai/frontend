@@ -544,5 +544,12 @@ export const ItemCardSkeleton: React.FC<ItemCardSkeletonProps> = ({
   children,
 }) => <StyledItemCardSkeleton size={size}>{children}</StyledItemCardSkeleton>;
 
-export const ItemCard = memo(ItemCardComponent);
+
+// Try rerender component only when order changes 
+export const ItemCard = memo(ItemCardComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.order === nextProps.order
+  );
+});
+
 export default ItemCard;
