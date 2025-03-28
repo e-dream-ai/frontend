@@ -507,7 +507,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                 <Column justifyContent="center">
                   {/* card title */}
                   <ItemTitleText ref={tooltipRef} className="itemCard__title">
-                    {type === "playlist" ? (
+                    {type === "playlist" || type === "virtual-playlist" ? (
                       <FontAwesomeIcon icon={faListUl} />
                     ) : (
                       <FontAwesomeIcon icon={faFilm} />
