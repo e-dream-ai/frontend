@@ -44,6 +44,7 @@ export const groupFeedDreamItemsByPlaylist = (
             user: item.user,
             displayedOwner: item.user,
             dreams: [],
+            created_at: item.created_at,
           };
           playlistsMap.set(playlistUUID, playlist);
         }

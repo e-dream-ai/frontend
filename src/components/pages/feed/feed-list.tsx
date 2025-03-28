@@ -14,9 +14,10 @@ type FeedListProps = {
 }
 
 type ProcessedItem = {
-  id: number;
+  key: string | number;
   type: ItemType;
   item: Dream | Playlist;
+  created_at: string;
 }
 
 export const FeedList: React.FC<FeedListProps> = ({ feed = [], virtualPlaylists, dreamsInVirtualPlaylists, }) => {
@@ -54,11 +55,14 @@ export const FeedList: React.FC<FeedListProps> = ({ feed = [], virtualPlaylists,
         return null;
       }
 
-      return {
-        id: feedItem.id,
+      const processedItem: ProcessedItem = {
+        key: feedItem.id,
         type,
-        item
-      } as ProcessedItem;
+        item,
+        created_at: feedItem.created_at
+      }
+
+      return processedItem;
     }).filter(Boolean) as ProcessedItem[];
   }, [feed, dreamsInVirtualPlaylists]);
 
@@ -66,31 +70,40 @@ export const FeedList: React.FC<FeedListProps> = ({ feed = [], virtualPlaylists,
   const virtualPlaylistItems = useMemo(() => {
     return virtualPlaylists.flatMap(pl => {
       const dreamsToShow = getVirtualPlaylistDisplayedDreams(pl.dreams);
+      const lastDreamToShow = dreamsToShow[dreamsToShow.length - 1];
       return [
         ...dreamsToShow.map(dream => ({
-          // Set dream uuid as feed item id to use on key for renderization
-          id: dream.uuid,
+          // Set dream uuid as feed item key to use it on key for renderization
+          key: `${pl.uuid}_${dream.uuid}`,
           type: "dream" as const,
           item: dream,
-          key: `${pl.uuid}_${dream.uuid}`
-        })),
+          // Need to take lastDreamToShow `created_at` value to render virtual playlist just after the dreams
+          created_at: lastDreamToShow?.created_at ?? pl.created_at,
+        } as ProcessedItem)),
         {
-          // Set playlist uuid as feed item id to use on key for renderization
-          id: pl.uuid,
+          // Set playlist uuid as feed item key to use it on key for renderization
+          key: pl.uuid,
           type: "virtual-playlist" as const,
           item: pl,
-          key: pl.uuid
+          // Need to take lastDreamToShow `created_at` value to render virtual playlist just after the dreams
+          created_at: lastDreamToShow?.created_at ?? pl.created_at
         }
       ];
     });
   }, [virtualPlaylists]);
 
   // Memoize the combination of all items
-  const allItems = useMemo(() => {
-    return [...processedFeedItems, ...virtualPlaylistItems];
-  }, [processedFeedItems, virtualPlaylistItems]);
+  const allItems = useMemo(() =>
+    [...processedFeedItems, ...virtualPlaylistItems]
+      // Need to sort by `created_at` since generating virtual playlist breaks the order feed order
+      .sort((a, b) =>
+        b.created_at.localeCompare(a.created_at)
+      )
+    , [processedFeedItems, virtualPlaylistItems]);
 
   // Render logic
+
+  // Render empty feed
   if (allItems.length === 0) {
     return <Text mb={4}>{t("page.feed.empty_feed")}</Text>;
   }
@@ -116,7 +129,7 @@ export const FeedList: React.FC<FeedListProps> = ({ feed = [], virtualPlaylists,
         {allItems.map(itemData => (
           <ItemCard
             showPlayButton
-            key={itemData.id}
+            key={itemData.key}
             type={itemData.type as ItemType}
             item={itemData.item}
             size="lg"

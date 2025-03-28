@@ -49,4 +49,5 @@ export type PlaylistWithDreams = {
   user?: User;
   displayedOwner?: User;
   dreams: Dream[];
+  created_at: string;
 };
