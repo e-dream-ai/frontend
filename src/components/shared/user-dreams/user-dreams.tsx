@@ -9,6 +9,7 @@ import { FeedItemFilterType } from "@/types/feed.types";
 import { ItemType } from "../item-card/item-card";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Loader } from "../loader/loader";
+import { useTheme } from "styled-components";
 
 type UserDreamsProps = {
   userUUID?: string;
@@ -24,6 +25,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({
   type
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const {
     data: feedData,
@@ -37,7 +39,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({
   });
 
   const feed = useMemo(() => feedData?.pages.flatMap(page => page.data?.feed ?? []) ?? [], [feedData]);
-  const feedDataLength = feedData?.pages.flatMap(page => page.data?.feed).length || 0;
+  const feedDataLength = useMemo(() => feed.length, [feed]);
 
   return (
     <Row flex="auto">
@@ -53,7 +55,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({
             endMessage={
               !isFeedLoading &&
               <Row justifyContent="center" mt="2rem">
-                <Text>{t("components.infinite_scroll.end_message")}</Text>
+                <Text color={theme.textPrimaryColor}>{t("components.infinite_scroll.end_message")}</Text>
               </Row>
             }
           >

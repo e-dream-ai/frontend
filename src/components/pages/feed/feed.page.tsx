@@ -22,6 +22,7 @@ import { UserFeedList } from "./user-feed-list";
 import { useInfiniteUsers } from "@/api/user/query/useInfiniteUsers";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Loader } from "@/components/shared/loader/loader";
+import { useTheme } from "styled-components";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -48,6 +49,7 @@ const isFeedItemType = (value: string): value is FeedItemType => {
 export const FeedPage: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const theme = useTheme();
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const [searchValue, setSearchValue] = useState<string | undefined>();
   const [search, setSearch] = useState<string | undefined>();
@@ -181,7 +183,7 @@ export const FeedPage: React.FC = () => {
                 endMessage={
                   !isFeedLoading &&
                   <Row justifyContent="center" mt="2rem">
-                    <Text>{t("components.infinite_scroll.end_message")}</Text>
+                    <Text color={theme.textPrimaryColor}>{t("components.infinite_scroll.end_message")}</Text>
                   </Row>
                 }
               >
@@ -204,7 +206,7 @@ export const FeedPage: React.FC = () => {
                 endMessage={
                   !isUsersLoading &&
                   <Row justifyContent="center" mt="2rem">
-                    <Text>{t("components.infinite_scroll.end_message")}</Text>
+                    <Text color={theme.textPrimaryColor}>{t("components.infinite_scroll.end_message")}</Text>
                   </Row>
                 }
               >

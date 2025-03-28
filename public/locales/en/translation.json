@@ -537,7 +537,7 @@
       "confirm_text": "Sign out"
     },
     "infinite_scroll": {
-      "end_message": "You have seen it all"
+      "end_message": "No more items to show"
     },
     "not_found": {
       "title": "Not found",

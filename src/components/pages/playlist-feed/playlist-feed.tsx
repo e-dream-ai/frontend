@@ -8,11 +8,13 @@ import { useRankedFeed } from "@/api/feed/query/useRankedFeed";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Loader } from "@/components/shared/loader/loader";
 import { FeedList } from "../feed/feed-list";
+import { useTheme } from "styled-components";
 
 const SECTION_ID = "ranked";
 
 export const PlaylistsFeedPage: React.FC = () => {
   const { t } = useTranslation();
+  const theme = useTheme();
 
   const {
     data: feedData,
@@ -40,7 +42,7 @@ export const PlaylistsFeedPage: React.FC = () => {
             endMessage={
               !isLoading &&
               <Row justifyContent="center" mt="2rem">
-                <Text>{t("components.infinite_scroll.end_message")}</Text>
+                <Text color={theme.textPrimaryColor}>{t("components.infinite_scroll.end_message")}</Text>
               </Row>
             }
           >
