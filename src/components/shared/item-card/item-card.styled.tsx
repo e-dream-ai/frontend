@@ -51,6 +51,7 @@ export const UsernameText = styled(Text)`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
+  word-break: break-all;
 `;
 
 export const ItemTitleText = styled(Text)`
@@ -67,6 +68,7 @@ export const ItemTitleText = styled(Text)`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
+  word-break: break-all;
 `;
 
 export const StyledItemCard = styled.li<{
