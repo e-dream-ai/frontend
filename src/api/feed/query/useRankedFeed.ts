@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useInfiniteQuery } from "@tanstack/react-query";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { PAGINATION } from "@/constants/pagination.constants";
 import useAuth from "@/hooks/useAuth";
@@ -28,19 +28,27 @@ const getRankedFeed = ({ take, skip }: QueryFunctionParams) => {
       .then((res) => res.data);
 };
 
-type HookParams = {
-  page?: number;
-};
-
-export const useRankedFeed = ({ page = 0 }: HookParams) => {
+export const useRankedFeed = () => {
   const take = PAGINATION.TAKE;
-  const skip = page * take;
   const { user } = useAuth();
-  return useQuery<ApiResponse<{ feed: FeedItem[]; count: number }>, Error>(
-    [RANKED_FEED_QUERY_KEY, page],
-    getRankedFeed({ take, skip }),
+  return useInfiniteQuery<
+    ApiResponse<{ feed: FeedItem[]; count: number }>,
+    Error
+  >(
+    [RANKED_FEED_QUERY_KEY],
+    ({ pageParam = 0 }) => getRankedFeed({ take, skip: pageParam * take })(),
     {
       enabled: Boolean(user),
+      getNextPageParam: (lastPage, allPages) => {
+        const totalItems = lastPage.data?.count ?? 0;
+        const currentItemCount = allPages.reduce(
+          (total, page) => total + (page?.data?.feed?.length ?? 0),
+          0,
+        );
+
+        // Check if there are more items to load
+        return currentItemCount < totalItems ? allPages.length : undefined;
+      },
     },
   );
 };

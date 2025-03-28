@@ -4,7 +4,6 @@ import Container from "@/components/shared/container/container";
 import RadioButtonGroup from "@/components/shared/radio-button-group/radio-button-group";
 import SearchBar from "@/components/shared/search-bar/search-bar";
 import { Section } from "@/components/shared/section/section";
-import { Spinner } from "@/components/shared/spinner/spinner";
 import { useTranslation } from "react-i18next";
 import { FEED_FILTERS, getFeedFilterData } from "@/constants/feed.constants";
 import { useEffect, useMemo, useState } from "react";
@@ -22,6 +21,7 @@ import { FeedList } from "./feed-list";
 import { UserFeedList } from "./user-feed-list";
 import { useInfiniteUsers } from "@/api/user/query/useInfiniteUsers";
 import { useDebounce } from "@/hooks/useDebounce";
+import { Loader } from "@/components/shared/loader/loader";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -44,12 +44,6 @@ const getUserFeedType: (type?: FeedItemType) => RoleType | undefined = (type) =>
 const isFeedItemType = (value: string): value is FeedItemType => {
   return Object.values(FEED_FILTERS).includes(value as FeedItemType);
 };
-
-const Loader: React.FC = () => (
-  <Row justifyContent="center" mt="2rem">
-    <Spinner />
-  </Row>
-);
 
 export const FeedPage: React.FC = () => {
   const { t } = useTranslation();

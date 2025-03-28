@@ -1,7 +1,6 @@
 import { useMemo } from "react";
 import { useFeed } from "@/api/feed/query/useFeed";
 import { Column, ItemCard, ItemCardList, Row } from "@/components/shared";
-import { Spinner } from "@/components/shared/spinner/spinner";
 import Text from "@/components/shared/text/text";
 import { useTranslation } from "react-i18next";
 import { Dream } from "@/types/dream.types";
@@ -9,6 +8,7 @@ import { Playlist } from "@/types/playlist.types";
 import { FeedItemFilterType } from "@/types/feed.types";
 import { ItemType } from "../item-card/item-card";
 import InfiniteScroll from "react-infinite-scroll-component";
+import { Loader } from "../loader/loader";
 
 type UserDreamsProps = {
   userUUID?: string;
@@ -16,12 +16,6 @@ type UserDreamsProps = {
   columns?: number;
   type?: FeedItemFilterType;
 };
-
-const Loader: React.FC = () => (
-  <Row justifyContent="center" mt="2rem">
-    <Spinner />
-  </Row>
-);
 
 const UserDreams: React.FC<UserDreamsProps> = ({
   userUUID,
