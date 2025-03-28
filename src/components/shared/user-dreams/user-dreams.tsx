@@ -1,16 +1,14 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useFeed } from "@/api/feed/query/useFeed";
 import { Column, ItemCard, ItemCardList, Row } from "@/components/shared";
-import { Paginate } from "@/components/shared/paginate/paginate";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import Text from "@/components/shared/text/text";
-import { PAGINATION } from "@/constants/pagination.constants";
 import { useTranslation } from "react-i18next";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 import { FeedItemFilterType } from "@/types/feed.types";
 import { ItemType } from "../item-card/item-card";
-import { usePaginateProps } from "@/hooks/usePaginateProps";
+import InfiniteScroll from "react-infinite-scroll-component";
 
 type UserDreamsProps = {
   userUUID?: string;
@@ -19,6 +17,12 @@ type UserDreamsProps = {
   type?: FeedItemFilterType;
 };
 
+const Loader: React.FC = () => (
+  <Row justifyContent="center" mt="2rem">
+    <Spinner />
+  </Row>
+);
+
 const UserDreams: React.FC<UserDreamsProps> = ({
   userUUID,
   grid,
@@ -26,86 +30,68 @@ const UserDreams: React.FC<UserDreamsProps> = ({
   type
 }) => {
   const { t } = useTranslation();
+
   const {
-    marginPagesDisplayed,
-    pageRangeDisplayed,
-    breakLabel,
-    previousLabel,
-    nextLabel,
-    renderOnZeroPageCount
-  } = usePaginateProps();
-  const [page, setPage] = useState<number>(0);
-  const { data: feedData, isLoading, isRefetching } = useFeed({
-    page,
+    data: feedData,
+    isLoading: isFeedLoading,
+    isRefetching: isFeedRefetching,
+    fetchNextPage: fetchNextFeedPage,
+    hasNextPage: hasNextFeedPage,
+  } = useFeed({
     userUUID,
     type
   });
+
   const feed = useMemo(() => feedData?.pages.flatMap(page => page.data?.feed ?? []) ?? [], [feedData]);
-  const pageCount = useMemo(() =>
-    Math.ceil(
-      (feedData?.pages.find(page => Boolean(page.data?.count))?.data?.count ?? 0)
-      / PAGINATION.TAKE
-    ), [feedData]);
-
-  const handleonPageChange = ({ selected }: { selected: number }) => {
-    setPage(selected);
-  };
-
-  // reset page to 0 when type changes
-  useEffect(() => {
-    setPage(0);
-  }, [type]);
+  const feedDataLength = feedData?.pages.flatMap(page => page.data?.feed).length || 0;
 
   return (
     <Row flex="auto">
       <Column flex="auto">
-        {isLoading || isRefetching ? (
-          <Row justifyContent="center">
-            <Spinner />
-          </Row>
+        {isFeedLoading || isFeedRefetching ? (
+          <Loader />
         ) : feed?.length ? (
-          <ItemCardList grid={grid} columns={columns}>
-            {feed?.map((feedItem) => {
-              let item;
-              if (feedItem.type === "dream") {
-                item = {
-                  ...feedItem.dreamItem,
-                  user: feedItem.user,
-                } as Dream;
-              } else if (feedItem.type === "playlist") {
-                item = {
-                  ...feedItem.playlistItem,
-                  user: feedItem.user,
-                } as Playlist;
-              }
-              return (
-                <ItemCard
-                  type={feedItem.type as ItemType}
-                  item={item}
-                  key={feedItem.id}
-                  size="lg"
-                  showPlayButton
-                />
-              );
-            })}
-          </ItemCardList>
+          <InfiniteScroll
+            dataLength={feedDataLength}
+            next={fetchNextFeedPage}
+            hasMore={hasNextFeedPage ?? false}
+            loader={<Loader />}
+            endMessage={
+              !isFeedLoading &&
+              <Row justifyContent="center" mt="2rem">
+                <Text>{t("components.infinite_scroll.end_message")}</Text>
+              </Row>
+            }
+          >
+            <ItemCardList grid={grid} columns={columns}>
+              {feed?.map((feedItem) => {
+                let item;
+                if (feedItem.type === "dream") {
+                  item = {
+                    ...feedItem.dreamItem,
+                    user: feedItem.user,
+                  } as Dream;
+                } else if (feedItem.type === "playlist") {
+                  item = {
+                    ...feedItem.playlistItem,
+                    user: feedItem.user,
+                  } as Playlist;
+                }
+                return (
+                  <ItemCard
+                    type={feedItem.type as ItemType}
+                    item={item}
+                    key={feedItem.id}
+                    size="lg"
+                    showPlayButton
+                  />
+                );
+              })}
+            </ItemCardList>
+          </InfiniteScroll>
         ) : (
           <Text>{t("components.my_dreams.empty")}</Text>
         )}
-
-        <Row justifyContent="center" margin="0">
-          <Paginate
-            breakLabel={breakLabel}
-            previousLabel={previousLabel}
-            nextLabel={nextLabel}
-            marginPagesDisplayed={marginPagesDisplayed}
-            pageRangeDisplayed={pageRangeDisplayed}
-            renderOnZeroPageCount={renderOnZeroPageCount}
-            forcePage={page}
-            onPageChange={handleonPageChange}
-            pageCount={pageCount}
-          />
-        </Row>
       </Column>
     </Row>
   );

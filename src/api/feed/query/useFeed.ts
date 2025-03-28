@@ -60,7 +60,7 @@ export function isRequestFeedItemType(
   return value === "playlist" || value === "dream";
 }
 
-export const useFeed = ({ userUUID, search, type }: HookParams) => {
+export const useFeed = ({ search, userUUID, type }: HookParams) => {
   const { user } = useAuth();
   const take = PAGINATION.TAKE;
   // Don't send onlyHidden if is not needed
@@ -74,7 +74,7 @@ export const useFeed = ({ userUUID, search, type }: HookParams) => {
     ApiResponse<{ feed: FeedItem[]; count: number }>,
     Error
   >(
-    [FEED_QUERY_KEY, search, type],
+    [FEED_QUERY_KEY, search, type, userUUID],
     ({ pageParam = 0 }) =>
       getFeed({
         take,
@@ -85,7 +85,6 @@ export const useFeed = ({ userUUID, search, type }: HookParams) => {
         type: feedItemType,
         onlyHidden,
       })(),
-    // getFeed({ take, skip, userUUID, search, type: feedItemType, onlyHidden }),
     {
       enabled: Boolean(user),
       getNextPageParam: (lastPage, allPages) => {
