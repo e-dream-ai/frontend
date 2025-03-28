@@ -50,6 +50,7 @@ export const PlaylistsFeedPage: React.FC = () => {
               isLoading
                 ? <Loader />
                 : <FeedList
+                  title={t("page.playlists.feed")}
                   feed={feed}
                   virtualPlaylists={[]}
                   dreamsInVirtualPlaylists={[]}

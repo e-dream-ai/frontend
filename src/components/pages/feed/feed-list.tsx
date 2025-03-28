@@ -9,6 +9,7 @@ import { useMemo } from "react";
 
 type FeedListProps = {
   feed?: FeedItem[];
+  title?: string;
   virtualPlaylists: PlaylistWithDreams[];
   dreamsInVirtualPlaylists: string[];
 }
@@ -20,8 +21,9 @@ type ProcessedItem = {
   created_at: string;
 }
 
-export const FeedList: React.FC<FeedListProps> = ({ feed = [], virtualPlaylists, dreamsInVirtualPlaylists, }) => {
+export const FeedList: React.FC<FeedListProps> = ({ feed = [], title, virtualPlaylists, dreamsInVirtualPlaylists, }) => {
   const { t } = useTranslation();
+  const listTitle = useMemo(() => title ?? t("page.feed.feed"), [t, title])
 
   // Memoize the processing of feed items to improve performance
   const processedFeedItems = useMemo(() => {
@@ -123,7 +125,7 @@ export const FeedList: React.FC<FeedListProps> = ({ feed = [], virtualPlaylists,
   return (
     <>
       <Row separator pb="1rem" mb="1rem">
-        {t("page.feed.feed")}
+        {listTitle}
       </Row>
       <ItemCardList grid columns={3}>
         {allItems.map(itemData => (
