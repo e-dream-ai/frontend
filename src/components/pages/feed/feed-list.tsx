@@ -95,13 +95,18 @@ export const FeedList: React.FC<FeedListProps> = ({ feed = [], title, virtualPla
   }, [virtualPlaylists]);
 
   // Memoize the combination of all items
-  const allItems = useMemo(() =>
-    [...processedFeedItems, ...virtualPlaylistItems]
-      // Need to sort by `created_at` since generating virtual playlist breaks the order feed order
-      .sort((a, b) =>
+  const allItems = useMemo(() => {
+    const items = [...processedFeedItems, ...virtualPlaylistItems];
+    // Need to sort by `created_at` since generating virtual playlist breaks the order feed order
+    // If there are no `virtual PlaylistItems` not need to filter
+    if (virtualPlaylistItems.length) {
+      items.sort((a, b) =>
         b.created_at.localeCompare(a.created_at)
       )
-    , [processedFeedItems, virtualPlaylistItems]);
+    }
+
+    return items
+  }, [processedFeedItems, virtualPlaylistItems]);
 
   // Render logic
 
