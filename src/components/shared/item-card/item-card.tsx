@@ -566,17 +566,22 @@ const areItemsEqual = (
     const prevDreams = prevItem.dreams || [];
     const nextDreams = nextItem.dreams || [];
 
-    // Length check, if have same length consider it equal
-    if (prevDreams.length === nextDreams.length) return true;
+    // Length check, if have different length consider it not equal
+    if (prevDreams.length !== nextDreams.length) return false;
+  }
+
+  // If items has same uuid consider it equal
+  if (prevItem.uuid === nextItem.uuid) {
+    return true
   }
 
   // If types don't match or aren't VirtualPlaylist, consider them not equal
   return false;
 }
 
-// Try rerender component only when order or item changes 
+// Try rerender component only when order or some item properties changes 
 export const ItemCard = memo(ItemCardComponent, (prevProps, nextProps) => (
-  prevProps.order === nextProps.order ||
+  prevProps.order === nextProps.order &&
   areItemsEqual(prevProps.item, nextProps.item)
 ));
 
