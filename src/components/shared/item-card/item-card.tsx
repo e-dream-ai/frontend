@@ -46,7 +46,7 @@ import { useImage } from "@/hooks/useImage";
 import { useItemCardListState } from "../item-card-list/item-card-list";
 import { HighlightPosition } from "@/types/item-card.types";
 import { Keyframe } from "@/types/keyframe.types";
-import { PlaylistWithDreams } from "@/types/feed.types";
+import { VirtualPlaylist } from "@/types/feed.types";
 import Text from "../text/text";
 import { getVirtualPlaylistThumbnailDreams, shouldVirtualPlaylistDisplayDots } from "@/utils/virtual-playlist.util";
 import { ItemCardImage } from "./item-card-image";
@@ -60,7 +60,7 @@ type DNDMode = "local" | "cross-window";
  */
 export type ItemType = "dream" | "playlist" | "keyframe" | "virtual-playlist";
 
-type Item = Dream | Omit<Playlist, "items"> | Keyframe | PlaylistWithDreams;
+type Item = Dream | Omit<Playlist, "items"> | Keyframe | VirtualPlaylist;
 
 type ItemCardProps = {
   /**
@@ -130,7 +130,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   const tooltipRef = useRef<HTMLAnchorElement>(null);
   const { uuid, name, user, displayedOwner } = item ?? {};
   const thumbnail = useMemo(() => getThumbnail(type, item), [type, item]);
-  const thumbnailDreams = useMemo(() => getVirtualPlaylistThumbnailDreams((item as PlaylistWithDreams)?.dreams), [item]);
+  const thumbnailDreams = useMemo(() => getVirtualPlaylistThumbnailDreams((item as VirtualPlaylist)?.dreams), [item]);
 
   const avatarUrl = useImage(
     displayedOwner ? displayedOwner?.avatar : user?.avatar,
@@ -194,7 +194,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
         emitPlayPlaylist(
           socket,
           item as Playlist,
-          t("toasts.play_playlist", { name: (item as PlaylistWithDreams)?.name }),
+          t("toasts.play_playlist", { name: (item as VirtualPlaylist)?.name }),
         );
 
         /**
@@ -451,7 +451,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
           </Row>
         )}
 
-        {type == "virtual-playlist" && shouldVirtualPlaylistDisplayDots((item as PlaylistWithDreams).dreams) && (
+        {type == "virtual-playlist" && shouldVirtualPlaylistDisplayDots((item as VirtualPlaylist).dreams) && (
           <Row
             justifyContent="flex-end"
             style={{ position: "absolute", bottom: 0, right: 0 }}
@@ -539,17 +539,45 @@ type ItemCardSkeletonProps = {
   size?: Sizes;
   children?: React.ReactNode;
 };
+
 export const ItemCardSkeleton: React.FC<ItemCardSkeletonProps> = ({
   size = "md",
   children,
 }) => <StyledItemCardSkeleton size={size}>{children}</StyledItemCardSkeleton>;
 
+const isVirtualPlaylist = (item: Item): item is VirtualPlaylist => {
+  return item && 'dreams' in item;
+}
 
-// Try rerender component only when order changes 
-export const ItemCard = memo(ItemCardComponent, (prevProps, nextProps) => {
-  return (
-    prevProps.order === nextProps.order
-  );
-});
+// Verifies if changes on item should rerender the component
+const areItemsEqual = (
+  prevItem: Item | undefined,
+  nextItem: Item | undefined
+): boolean => {
+  // If both items are undefined, considered it equal
+  if (!prevItem && !nextItem) return true;
+
+  // If one is undefined and the other isn't, they're not equal
+  if (!prevItem || !nextItem) return false;
+
+  // Check if both are VirtualPlaylists
+  if (isVirtualPlaylist(prevItem) && isVirtualPlaylist(nextItem)) {
+    // Deep comparison of dreams length
+    const prevDreams = prevItem.dreams || [];
+    const nextDreams = nextItem.dreams || [];
+
+    // Length check, if have same length consider it equal
+    if (prevDreams.length === nextDreams.length) return true;
+  }
+
+  // If types don't match or aren't VirtualPlaylist, consider them not equal
+  return false;
+}
+
+// Try rerender component only when order or item changes 
+export const ItemCard = memo(ItemCardComponent, (prevProps, nextProps) => (
+  prevProps.order === nextProps.order ||
+  areItemsEqual(prevProps.item, nextProps.item)
+));
 
 export default ItemCard;

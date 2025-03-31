@@ -1,5 +1,5 @@
 import { Dream } from "@/types/dream.types";
-import { FeedItem, PlaylistWithDreams } from "@/types/feed.types";
+import { FeedItem, VirtualPlaylist } from "@/types/feed.types";
 
 /**
  * Groups feed dreams by playlist
@@ -8,9 +8,9 @@ import { FeedItem, PlaylistWithDreams } from "@/types/feed.types";
  */
 export const groupFeedDreamItemsByPlaylist = (
   feedItems: FeedItem[] = [],
-): Map<string, PlaylistWithDreams> => {
+): Map<string, VirtualPlaylist> => {
   // Initialize map to store playlist UUID → playlist data with dreams
-  const playlistsMap = new Map<string, PlaylistWithDreams>();
+  const playlistsMap = new Map<string, VirtualPlaylist>();
 
   // Associate dreams with playlists
   feedItems.forEach((item) => {
@@ -30,7 +30,7 @@ export const groupFeedDreamItemsByPlaylist = (
         const playlistUUID = dreamPlaylist.uuid;
         const playlistName = dreamPlaylist.name || dreamPlaylist.uuid;
 
-        let playlist: PlaylistWithDreams | undefined;
+        let playlist: VirtualPlaylist | undefined;
 
         // Look for the playlist by various possible keys
         playlist = playlistsMap.get(playlistUUID);

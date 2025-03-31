@@ -42,7 +42,7 @@ export type UserFeedType =
   | "downvote"
   | "hidden";
 
-export type PlaylistWithDreams = {
+export type VirtualPlaylist = {
   id: number;
   uuid: string;
   name: string;

@@ -1,4 +1,4 @@
-import { FeedItem, PlaylistWithDreams } from "@/types/feed.types";
+import { FeedItem, VirtualPlaylist } from "@/types/feed.types";
 import { ItemCard, ItemCardList, Row, Text } from "@/components/shared";
 import { useTranslation } from "react-i18next";
 import { Dream } from "@/types/dream.types";
@@ -10,7 +10,7 @@ import { useMemo } from "react";
 type FeedListProps = {
   feed?: FeedItem[];
   title?: string;
-  virtualPlaylists: PlaylistWithDreams[];
+  virtualPlaylists: VirtualPlaylist[];
   dreamsInVirtualPlaylists: string[];
 }
 
