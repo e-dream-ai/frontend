@@ -115,13 +115,15 @@ export const FeedPage: React.FC = () => {
   });
 
   const users = useMemo(() => usersData?.pages.flatMap(page => page.data?.users ?? []) ?? [], [usersData]);
-  const usersDataLength = feedData?.pages.flatMap(page => page.data?.feed).length || 0;
+  const usersDataLength = useMemo(() => users.length, [users]);
 
-  const showUserList = [
-    FEED_FILTERS.USER,
-    FEED_FILTERS.CREATOR,
-    FEED_FILTERS.ADMIN,
-  ].includes(radioGroupState);
+  const showUserList = useMemo(() =>
+    [
+      FEED_FILTERS.USER,
+      FEED_FILTERS.CREATOR,
+      FEED_FILTERS.ADMIN,
+    ].includes(radioGroupState)
+    , [radioGroupState]);
 
   const handleRadioButtonGroupChange = (value?: string) => {
     if (value && isFeedItemType(value)) {
@@ -143,6 +145,7 @@ export const FeedPage: React.FC = () => {
     setSearchValue("");
   };
 
+  // If there are not enough items, fetch more
   useEffect(() => {
     if (hasNextFeedPage && (feedDataLength - dreamsInVirtualPlaylists.length) < PAGINATION.TAKE) {
       fetchNextFeedPage();

@@ -14,8 +14,13 @@ import { Dream } from "@/types/dream.types";
  * - 7 dreams -> 3 dreams + 1 multicard
  * - 8+ dreams -> 3 dreams + 1 multicard (and shows "...")
  */
-export const getVirtualPlaylistDisplayedDreams = (dreams: Dream[]): Dream[] =>
-  dreams.slice(0, Math.min(dreams.length - 4, 3));
+export const getVirtualPlaylistDisplayedDreams = (dreams: Dream[]): Dream[] => {
+  const len = dreams.length;
+  if (len <= 4) {
+    return [];
+  }
+  return dreams.slice(0, Math.min(len - 4, 3));
+};
 
 /*
  * Filters thumbnail dreams for virtual playlists:
