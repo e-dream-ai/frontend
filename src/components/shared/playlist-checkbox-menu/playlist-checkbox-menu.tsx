@@ -21,6 +21,7 @@ import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
 import { Button } from "../button/button";
+import { PLAYLIST_REFERENCES_QUERY_KEY } from "@/api/playlist/query/usePlaylistReferences";
 
 const StyledInput = styled.input`
   background: ${(props) => props.theme.inputBackgroundColor};
@@ -60,7 +61,7 @@ export const PlaylistCheckboxMenu = ({
 
   const targetItemPlaylistItems: PlaylistItem[] = useMemo(
     () => targetItem?.playlistItems ?? [],
-    [targetItem],
+    [targetItem?.playlistItems],
   );
 
   const menuPlaylistsList = useMemo(() => {
@@ -200,7 +201,8 @@ const PlaylistMenuItem = ({
         if (type === "dream") {
           queryClient.refetchQueries([DREAM_QUERY_KEY, targetItem?.uuid]);
         } else {
-          queryClient.refetchQueries([PLAYLIST_QUERY_KEY, targetItem?.uuid]);
+          // Refetch playlist references
+          queryClient.refetchQueries([PLAYLIST_REFERENCES_QUERY_KEY, targetItem?.uuid]);
         }
 
         /**
@@ -239,7 +241,8 @@ const PlaylistMenuItem = ({
         if (type === "dream") {
           queryClient.refetchQueries([DREAM_QUERY_KEY, targetItem?.uuid]);
         } else {
-          queryClient.refetchQueries([PLAYLIST_QUERY_KEY, targetItem?.uuid]);
+          // Refetch playlist references
+          queryClient.refetchQueries([PLAYLIST_REFERENCES_QUERY_KEY, targetItem?.uuid]);
         }
 
         /**

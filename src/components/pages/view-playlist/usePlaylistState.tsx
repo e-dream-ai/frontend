@@ -10,6 +10,7 @@ import usePermission from "@/hooks/usePermission";
 import { isAdmin } from "@/utils/user.util";
 import { PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
 import useAuth from "@/hooks/useAuth";
+import { usePlaylistReferences } from "@/api/playlist/query/usePlaylistReferences";
 
 type Params = { uuid: string };
 
@@ -41,11 +42,24 @@ export const usePlaylistState = () => {
   /**
    *
    */
-  const { data, isLoading: isPlaylistLoading, isError } = usePlaylist(uuid);
+  const { data, isLoading, isError } = usePlaylist(uuid);
+  const { data: playlistReferencesData, isLoading: isPlaylistReferencesLoading } = usePlaylistReferences(uuid);
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
   });
-  const playlist = data?.data?.playlist;
+
+  // Calculate playlist value and attatch playlistItems with references (playlists where this playlist is included)
+  const playlist = useMemo(() => {
+    const pl = data?.data?.playlist;
+    if (pl) {
+      pl.playlistItems = playlistReferencesData?.data?.references;
+    }
+
+    return pl;
+  }, [data, playlistReferencesData]);
+
+  const isPlaylistLoading = useMemo(() => isLoading || isPlaylistReferencesLoading, [isLoading, isPlaylistReferencesLoading])
+
   const thumbnailUrl = useImage(playlist?.thumbnail, {
     width: 500,
     fit: "cover",
