@@ -560,14 +560,15 @@ const areItemsEqual = (
   // If one is undefined and the other isn't, they're not equal
   if (!prevItem || !nextItem) return false;
 
-  // Check if both are VirtualPlaylists
+  // Check if both (prev and next item) are VirtualPlaylists and thumbnail dreams changes
   if (isVirtualPlaylist(prevItem) && isVirtualPlaylist(nextItem)) {
-    // Deep comparison of dreams length
-    const prevDreams = prevItem.dreams || [];
-    const nextDreams = nextItem.dreams || [];
+    const prevThumbnailDreams = getVirtualPlaylistThumbnailDreams(prevItem?.dreams);
+    const nextThumbnailDreams = getVirtualPlaylistThumbnailDreams(nextItem?.dreams);
 
-    // Length check, if have different length consider it not equal
-    if (prevDreams.length !== nextDreams.length) return false;
+    // If every thumbnail dream is the same, then do not rerender
+    return prevThumbnailDreams.every((prevDream, index) =>
+      prevDream.id === nextThumbnailDreams[index]?.id
+    );
   }
 
   // If items has same uuid consider it equal
