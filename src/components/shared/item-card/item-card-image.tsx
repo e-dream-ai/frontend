@@ -1,51 +1,49 @@
 import { Sizes } from "@/types/sizes.types";
-import { useState, ImgHTMLAttributes, useEffect } from "react";
+import { useState, ImgHTMLAttributes, useCallback } from "react";
 import { ImageSkeleton, StyledErrorContainer, StyledItemCardImage } from "./item-card.styled";
 
 export const ItemCardImage: React.FC<ImgHTMLAttributes<unknown> & { size: Sizes }> = ({
   src,
-  size = 'md',
+  size = "md",
+  alt = "",
   ...props
 }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [imageSrc, setImageSrc] = useState<string | undefined>(undefined);
+  const [status, setStatus] = useState<"loading" | "loaded" | "error">(() => src ? "loading" : "error");
 
-  // Preload the image
-  useEffect(() => {
-    if (!src) {
-      setHasError(true);
-      setIsLoading(false);
+  const handleLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    // Verify the image is actually valid
+    if (e.currentTarget.naturalWidth === 0) {
+      setStatus("error");
       return;
     }
+    setStatus("loaded");
+    props.onLoad?.(e);
+  }, [props]);
 
-    const img = new Image();
-    img.src = src;
+  const handleError = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
+    setStatus("error");
+    props.onError?.(e);
+  }, [props]);
 
-    img.onload = () => {
-      // Only set the image source after it's loaded
-      setImageSrc(src);
-      setIsLoading(false);
-    };
-
-    img.onerror = () => {
-      setIsLoading(false);
-      setHasError(true);
-    };
-
-    return () => {
-      img.onload = null;
-      img.onerror = null;
-    };
-  }, [src]);
-
-  if (isLoading) {
-    return <ImageSkeleton size={size} />;
+  if (status === "loading") {
+    return (
+      <>
+        <ImageSkeleton size={size} />
+        <img
+          src={src}
+          alt={alt}
+          onLoad={handleLoad}
+          onError={handleError}
+          style={{ display: "none" }}
+          {...props}
+        />
+      </>
+    );
   }
 
-  if (hasError) {
+  if (status === "error") {
     return (
-      <StyledErrorContainer>
+      <StyledErrorContainer size={size}>
         Image Not Available
       </StyledErrorContainer>
     );
@@ -53,8 +51,11 @@ export const ItemCardImage: React.FC<ImgHTMLAttributes<unknown> & { size: Sizes 
 
   return (
     <StyledItemCardImage
-      src={imageSrc}
+      src={src}
       size={size}
+      alt={alt}
+      onLoad={handleLoad}
+      onError={handleError}
       {...props}
     />
   );

@@ -151,10 +151,15 @@ export const ImageSkeleton = styled.div<{ size: Sizes }>`
   animation: ${pulse} 1.5s infinite ease-in-out;
 `;
 
-export const StyledErrorContainer = styled.div`
+export const StyledErrorContainer = styled.div<{ size: Sizes }>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  ${(props) => ImageSizes[props.size]}
+  // 16:9 ratio
   aspect-ratio: 16 / 9;
   background-color: #222;
-  animation: ${pulse} 1.5s infinite ease-in-out;
 `;
 
 export const StyledItemCardImage = styled.img<{ size: Sizes }>`

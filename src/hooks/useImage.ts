@@ -22,10 +22,7 @@ export const useImage = (url?: string, resizeOptions?: ResizeOptions) => {
     const updateURL = () => {
       const objectKey = url?.replace(`${BUCKET_URL}/`, "");
       if (objectKey) {
-        return (
-          generateImageURL(objectKey, resizeOptions) +
-          `?v=${new Date().getTime()}`
-        );
+        return generateImageURL(objectKey, resizeOptions);
       }
       return undefined;
     };
