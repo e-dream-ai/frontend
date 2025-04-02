@@ -29,6 +29,7 @@ import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { fetchDream } from "@/api/dream/query/useDream";
 import { joinPaths } from "@/utils/router.util";
 import { setCurrentUserDreamOptimistically } from "@/api/dream/utils/dream-utils";
+import { useUserDislikes } from "@/api/user/query/useUserDislikes";
 
 type WebClientContextType = {
   isWebClientActive: boolean;
@@ -59,6 +60,7 @@ export const WebClientProvider: React.FC<{
 
   // user
   const { user, currentDream: cd, refreshCurrentDream, refreshCurrentPlaylist } = useAuth()
+  const { data: dislikesData } = useUserDislikes();
 
   // videojs
   const {
@@ -108,13 +110,22 @@ export const WebClientProvider: React.FC<{
 
   const currentPlaylist = useMemo(() => {
     const playlist = currentPlaylistData?.data?.playlist;
+    const dislikes = dislikesData?.data?.dislikes ?? [];
     // ensure items order
     if (playlist?.items) {
-      playlist.items.sort((a, b) => a.order - b.order);
+      playlist.items = playlist.items
+        .sort((a, b) => a.order - b.order)
+        .filter(item => Boolean(item.dreamItem))
+        /**
+         * Excludes dislikes of playing
+         */
+        .filter(item =>
+          !dislikes.includes(item.dreamItem!.uuid)
+        );
     }
 
     return playlist;
-  }, [currentPlaylistData]);
+  }, [currentPlaylistData, dislikesData]);
 
   /** 
    * indicates if the web player is currently active
