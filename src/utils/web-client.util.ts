@@ -4,23 +4,22 @@ import {
   SPEEDS,
 } from "@/constants/web-client.constants";
 import { Dream } from "@/types/dream.types";
-import { Playlist } from "@/types/playlist.types";
 import { HistoryItem, PlaylistNavigation } from "@/types/web-client.types";
 
 // playlist navigation using keyframe concatenation based on -> https://github.com/e-dream-ai/client/issues/89
 export const getPlaylistNavigation = ({
   playingDream,
-  playingPlaylist,
+  playingPlaylistDreams,
   history,
   historyPosition,
 }: {
   playingDream?: Dream;
-  playingPlaylist?: Playlist;
+  playingPlaylistDreams?: Dream[];
   history: HistoryItem[];
   historyPosition: number;
 }): PlaylistNavigation => {
   // if there are no items or current dream return null values
-  if (!playingPlaylist?.items) {
+  if (!playingPlaylistDreams) {
     return {
       previous: null,
       next: null,
@@ -54,13 +53,9 @@ export const getPlaylistNavigation = ({
   }
 
   // calculate unplayed dreams
-  const unplayedDreams: Dream[] =
-    playingPlaylist?.items
-      ?.filter((pi) => Boolean(pi.dreamItem))
-      ?.filter(
-        (pi) => !history.find((h) => h.dream.uuid === pi.dreamItem!.uuid),
-      )
-      ?.map((pi) => pi.dreamItem!) ?? [];
+  const unplayedDreams: Dream[] = playingPlaylistDreams?.filter(
+    (d) => !history.find((h) => h.dream.uuid === d.uuid),
+  );
 
   const allDreamsPlayed = !unplayedDreams.length;
 
