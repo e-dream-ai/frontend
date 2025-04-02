@@ -12,7 +12,6 @@ import { Playlist } from "@/types/playlist.types";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import useStatusCallback from "@/hooks/useStatusCallback";
 import { useVideoJs } from "@/hooks/useVideoJS";
-import useCurrentPlaylist from "@/api/dream/query/useCurrentPlaylist";
 import { RemoteControlEventData, RemoteEvent } from "@/types/remote-control.types";
 import { calculatePlaybackRateFromSpeed, getPlaylistNavigation, multiplyPerceptualFPS, tapsToBrightness } from "@/utils/web-client.util";
 import { toast } from "react-toastify";
@@ -58,11 +57,11 @@ export const WebClientProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
   const { t } = useTranslation();
-
-  // user
-  const { user, currentDream: cd, refreshCurrentDream, refreshCurrentPlaylist } = useAuth();
-  const { data: defaultPlaylistData } = useDefaultPlaylist();
-  const { data: dislikesData } = useUserDislikes();
+  // location
+  const location = useLocation();
+  // socket
+  const { emit } = useSocket();
+  const { user, currentDream, currentPlaylist, refreshCurrentDream, refreshCurrentPlaylist } = useAuth();
 
   // videojs
   const {
@@ -84,12 +83,6 @@ export const WebClientProvider: React.FC<{
     [players, activePlayer]
   );
 
-  // socket
-  const { emit } = useSocket();
-
-  // location
-  const location = useLocation();
-
   // overlay
   const { showOverlay, hideOverlay } = useVideoJSOverlay(playerInstance?.player ? [playerInstance.player] : []);
 
@@ -104,30 +97,6 @@ export const WebClientProvider: React.FC<{
   const showCreditOverlayRef = useRef(false);
   // used to prevent multiple calls to handlers.next() on automatic video change
   const transitioningRef = useRef(false);
-
-  // user current values
-  const currentDream = useMemo(() => cd, [cd]);
-
-  const { data: currentPlaylistData } = useCurrentPlaylist();
-
-  const currentPlaylist = useMemo(() => {
-    const playlist = currentPlaylistData?.data?.playlist;
-    const dislikes = dislikesData?.data?.dislikes ?? [];
-    // ensure items order
-    if (playlist?.items) {
-      playlist.items = playlist.items
-        .sort((a, b) => a.order - b.order)
-        .filter(item => Boolean(item.dreamItem))
-        /**
-         * Excludes dislikes of playing
-         */
-        .filter(item =>
-          !dislikes.includes(item.dreamItem!.uuid)
-        );
-    }
-
-    return playlist;
-  }, [currentPlaylistData, dislikesData]);
 
   /** 
    * indicates if the web player is currently active
@@ -145,6 +114,12 @@ export const WebClientProvider: React.FC<{
   const [playbackRate, setPlaybackRate] = useState<number>(() => calculatePlaybackRateFromSpeed(8, 1));
   const [brightness, setBrightness] = useState<number>(40);
 
+  // API data hooks
+  const { data: defaultPlaylistData } = useDefaultPlaylist();
+  const { data: dislikesData } = useUserDislikes();
+
+  const dislikedDreams = useMemo(() => dislikesData?.data?.dislikes ?? [], [dislikesData])
+
   const setWebClientActive = useCallback((isActive: boolean) => {
     setIsWebClientActive(isActive);
   }, []);
@@ -154,14 +129,33 @@ export const WebClientProvider: React.FC<{
   }, []);
 
   const updateCreditOverlay = useCallback(() => {
-    // hide overlay if is already showing one
+    // Hide overlay if is showing one already
     hideOverlay(CREDIT_OVERLAY_ID);
 
-    const dreamName = playingDreamRef.current?.name ?? playingDreamRef.current?.uuid;
-    const artist = playingDreamRef.current?.displayedOwner?.name ?? playingDreamRef.current?.user?.name;
-    const playlist = playingPlaylistRef.current?.name ?? playingPlaylistRef.current?.uuid ?? "Default";
+    // Early return if no current dream is playing
+    if (!playingDreamRef.current) {
+      return;
+    }
 
-    // update overlay with new content
+    // Destructure playing dream and playlist values
+    const {
+      name = "",
+      uuid = "",
+      displayedOwner,
+      user
+    } = playingDreamRef.current;
+
+    const {
+      name: playlistName = "",
+      uuid: playlistUuid = ""
+    } = playingPlaylistRef.current || {};
+
+    // Display values
+    const dreamName = name || uuid;
+    const artist = displayedOwner?.name || user?.name || "Unknown Artist";
+    const playlist = playlistName || playlistUuid || "Default Playlist";
+
+    // Update overlay with new content
     const overlayContent = `
         <div>
           ${dreamName ? `<div>title: ${dreamName}</div>` : ""}
@@ -223,14 +217,19 @@ export const WebClientProvider: React.FC<{
    * Obtains next and previous dream in the playlist. Calculates isNextConcatenated value too.
    */
   const updatePlaylistNavigation = useCallback(() => {
-    const playingPlaylistDreams: Dream[] =
-      // Get dreams from current playlist
-      playingPlaylistRef.current ?
-        playingPlaylistRef.current?.items
-          ?.filter((pi) => Boolean(pi.dreamItem))
-          ?.map((pi) => pi.dreamItem!) ?? []
-        // If there's no current playlist then fallback into default playlist
-        : defaultPlaylistData?.data?.dreams ?? [];
+    // Extract dreams based on available source
+    const extractedDreams = playingPlaylistRef.current
+      // Get dreams from the playing playlist
+      ? (playingPlaylistRef.current.items ?? [])
+        .filter(playlistItem => Boolean(playlistItem.dreamItem))
+        .map(playlistItem => playlistItem.dreamItem!)
+      // Otherwise fallbacks into the default playlist
+      : defaultPlaylistData?.data?.dreams ?? [];
+
+    // Filter out any disliked dreams
+    const playingPlaylistDreams: Dream[] = extractedDreams.filter(
+      dream => !dislikedDreams.includes(dream.uuid)
+    );
 
     const navigation = getPlaylistNavigation({
       playingDream: playingDreamRef.current,
@@ -249,7 +248,7 @@ export const WebClientProvider: React.FC<{
     console.log("next", navigation.next?.uuid);
 
     preloadNavigationVideos(navigation);
-  }, [preloadNavigationVideos, resetHistory, defaultPlaylistData]);
+  }, [defaultPlaylistData, dislikedDreams, preloadNavigationVideos, resetHistory]);
 
   // plays dream and updates state
   const playDream = useCallback(
@@ -579,7 +578,7 @@ export const WebClientProvider: React.FC<{
     }
   }, [location.pathname, isReady, isWebClientActive, playDreamWithHistory]);
 
-  // preload video when there's a current dream
+  // Preload starting video
   useEffect(() => {
     if (
       // location should be remote control
@@ -588,8 +587,8 @@ export const WebClientProvider: React.FC<{
       && isReady
     ) {
       // Prioritize the current dream if it exists
+      // Set it as playing dream and preload it
       if (currentDream) {
-        // Set current playing dream reference and preload it
         playingDreamRef.current = currentDream;
         preloadVideo(currentDream.video);
         return;
@@ -598,6 +597,7 @@ export const WebClientProvider: React.FC<{
       // If no current dream, attempt to use the first dream from the default playlist
       const defaultDream = defaultPlaylistData?.data?.dreams?.[0];
 
+      // Set it as playing dream and preload it
       if (defaultDream) {
         playingDreamRef.current = defaultDream;
         preloadVideo(defaultDream.video);
