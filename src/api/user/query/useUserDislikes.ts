@@ -8,7 +8,7 @@ type UserDislikesResponse = { dislikes: string[] };
 export const useUserDislikes = () => {
   return useApiQuery<UserDislikesResponse>(
     [USER_DISLIKES_QUERY_KEY],
-    `/v1/user/current/dislikes`,
+    `/v1/user/me/dislikes`,
     {
       headers: getRequestHeaders({
         contentType: ContentType.json,
