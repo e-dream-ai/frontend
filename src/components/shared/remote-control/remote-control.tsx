@@ -44,11 +44,13 @@ export const RemoteControl: React.FC = () => {
 
   // Emit an event to the server
   const sendMessage = (event: RemoteControlEvent) => () => {
+    // Emit event
     emit(NEW_REMOTE_CONTROL_EVENT, { event: event, isWebClientEvent: isWebClientActive });
 
     /**
      * if isWebClientActive then execute handler
      */
+
     if (isWebClientActive) {
       handlers?.[event]();
     }
@@ -72,6 +74,8 @@ export const RemoteControl: React.FC = () => {
 
       if (eventName) {
         event.preventDefault();
+        // Emit event
+        emit(NEW_REMOTE_CONTROL_EVENT, { event: eventName, isWebClientEvent: isWebClientActive });
       }
 
       /**

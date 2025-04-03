@@ -86,16 +86,19 @@ export const WebClientProvider: React.FC<{
   // overlay
   const { showOverlay, hideOverlay } = useVideoJSOverlay(playerInstance?.player ? [playerInstance.player] : []);
 
-  // dream and playlist values
+  // Dream and playlist values
   const playingDreamRef = useRef<Dream>();
   const playingPlaylistRef = useRef<Playlist>();
-  // playlist navigation state
+  // Playlist navigation state
   const playlistNavigationRef = useRef<PlaylistNavigation>();
   const playlistHistoryPositionRef = useRef<number>(0);
-  // played dreams to control dreams concatenation -> https://github.com/e-dream-ai/client/issues/89
+  // Played dreams to control dreams concatenation -> https://github.com/e-dream-ai/client/issues/89
   const historyRef = useRef<Array<HistoryItem>>([]);
+  // Disliked dreams ref
+  const dislikedDreamsRef = useRef<Array<string>>([]);
+  // Show credits overlay ref
   const showCreditOverlayRef = useRef(false);
-  // used to prevent multiple calls to handlers.next() on automatic video change
+  // Used to prevent multiple calls to handlers.next() on automatic video change
   const transitioningRef = useRef(false);
 
   /** 
@@ -118,6 +121,7 @@ export const WebClientProvider: React.FC<{
   const { data: defaultPlaylistData } = useDefaultPlaylist();
   const { data: dislikesData } = useUserDislikes();
 
+  const defaultPlaylistDreams = useMemo(() => defaultPlaylistData?.data?.dreams ?? [], [defaultPlaylistData])
   const dislikedDreams = useMemo(() => dislikesData?.data?.dislikes ?? [], [dislikesData])
 
   const setWebClientActive = useCallback((isActive: boolean) => {
@@ -180,14 +184,13 @@ export const WebClientProvider: React.FC<{
     }
   }, [updateCreditOverlay, hideOverlay]);
 
-  // get next dream to play having direction
+  // Get next dream to play having direction
   const getNextDream = useCallback((direction: PlaylistDirection) => {
     return playlistNavigationRef?.current?.[direction];
   }, []);
 
   const addDreamToHistory = useCallback((dream: Dream, wasConcatenated: boolean) => {
-    // add dream to played dreams array if is not included
-
+    // Add dream to history if is not already included
     if (!historyRef.current.some(pd => dream.uuid === pd.dream.uuid)) {
       historyRef.current.push({ dream, wasConcatenated });
       return true;
@@ -224,11 +227,11 @@ export const WebClientProvider: React.FC<{
         .filter(playlistItem => Boolean(playlistItem.dreamItem))
         .map(playlistItem => playlistItem.dreamItem!)
       // Otherwise fallbacks into the default playlist
-      : defaultPlaylistData?.data?.dreams ?? [];
+      : defaultPlaylistDreams;
 
     // Filter out any disliked dreams
     const playingPlaylistDreams: Dream[] = extractedDreams.filter(
-      dream => !dislikedDreams.includes(dream.uuid)
+      dream => !dislikedDreamsRef.current.includes(dream.uuid)
     );
 
     const navigation = getPlaylistNavigation({
@@ -248,7 +251,7 @@ export const WebClientProvider: React.FC<{
     console.log("next", navigation.next?.uuid);
 
     preloadNavigationVideos(navigation);
-  }, [defaultPlaylistData, dislikedDreams, preloadNavigationVideos, resetHistory]);
+  }, [defaultPlaylistDreams, preloadNavigationVideos, resetHistory]);
 
   // plays dream and updates state
   const playDream = useCallback(
@@ -291,7 +294,7 @@ export const WebClientProvider: React.FC<{
 
     if (added) {
       // set position at last item
-      playlistHistoryPositionRef.current = historyRef.current.length - 1;
+      playlistHistoryPositionRef.current = Math.max(historyRef.current.length - 1, 0);
     } else {
       // find position on played dreams
       playlistHistoryPositionRef.current = Math.max(historyRef.current.findIndex(h => h.dream.uuid === dream.uuid), 0);
@@ -387,7 +390,36 @@ export const WebClientProvider: React.FC<{
     like: () => { },
     dislike: () => { },
     like_current_dream: () => { },
-    dislike_current_dream: () => { },
+    dislike_current_dream: async () => {
+      if (!playingDreamRef.current) {
+        return;
+      }
+
+      // Getting disliked dream uuid before playing next
+      const dislikedDreamUUID = playingDreamRef.current.uuid;
+      // Play next dream
+      const played = await handlePlaylistControl(PlaylistDirection.NEXT);
+      // await queryClient.refetchQueries([USER_DISLIKES_QUERY_KEY]);
+
+      if (!played) {
+        return
+      }
+
+      // Get disliked dream index
+      const dislikedDreamIndex = historyRef.current.findIndex(h => h.dream.uuid === dislikedDreamUUID);
+
+      // Add it to disliked dreams locally
+      if (!dislikedDreamsRef.current.includes(dislikedDreamUUID)) {
+        dislikedDreamsRef.current.push(dislikedDreamUUID);
+      }
+
+      // If found an index (index !== -1) remove it from history and update navigation
+      if (dislikedDreamIndex !== -1) {
+        historyRef.current.splice(dislikedDreamIndex, 1);
+        playlistHistoryPositionRef.current = Math.max(playlistHistoryPositionRef.current - 1, 0);
+        updatePlaylistNavigation();
+      }
+    },
     previous: async () => handlePlaylistControl(PlaylistDirection.PREVIOUS),
     // @ts-expect-error options?.longTransition exists 
     next: async (options?: NextHandlerProps) => handlePlaylistControl(PlaylistDirection.NEXT, options?.longTransition),
@@ -437,6 +469,7 @@ export const WebClientProvider: React.FC<{
     toggleFullscreen,
     handlePlaylistControl,
     setPlayerPlaybackRate,
+    updatePlaylistNavigation
   ]);
 
   // handles when a video ends playing
@@ -595,33 +628,43 @@ export const WebClientProvider: React.FC<{
       }
 
       // If no current dream, attempt to use the first dream from the default playlist
-      const defaultDream = defaultPlaylistData?.data?.dreams?.[0];
+      const defaultPlaylistDream = defaultPlaylistDreams.find(d => !dislikedDreamsRef.current.includes(d.uuid));
 
       // Set it as playing dream and preload it
-      if (defaultDream) {
-        playingDreamRef.current = defaultDream;
-        preloadVideo(defaultDream.video);
+      if (defaultPlaylistDream) {
+        playingDreamRef.current = defaultPlaylistDream;
+        preloadVideo(defaultPlaylistDream.video);
       }
     }
-  }, [location.pathname, isReady, currentDream, defaultPlaylistData, preloadVideo]);
+  }, [location.pathname, isReady, currentDream, defaultPlaylistDreams, preloadVideo]);
 
-  // update playing playlist ref
+  // Update playing playlist ref
   useEffect(() => {
-    // if same playlist, skip
+    // If same playlist, skip
     if (playingPlaylistRef.current?.uuid === currentPlaylist?.uuid) {
       return
     }
-    // update playingPlaylistRef playlist
+    // Update playingPlaylistRef playlist
     playingPlaylistRef.current = currentPlaylist;
   }, [currentPlaylist]);
 
-  // show web client available toast
+  // Update disliked dreams ref
   useEffect(() => {
-    // if pathname is RC and isWebClientAvailable but not isWebClientActive, then show toast
+    dislikedDreamsRef.current = dislikedDreams;
+  }, [dislikedDreams]);
+
+  // Show web client available toast
+  useEffect(() => {
+    // If pathname is RC and isWebClientAvailable but not isWebClientActive, then show toast
     if (location.pathname === ROUTES.REMOTE_CONTROL && !isWebClientActive && isWebClientAvailable) {
       toast.info(t("web_client.web_client_available"));
     }
   }, [t, location.pathname, isWebClientActive, isWebClientAvailable]);
+
+  // Cleans disliked dreams from history when dislikedDreams are updated
+  useEffect(() => {
+    historyRef.current = historyRef.current.filter(h => !dislikedDreams.includes(h.dream.uuid));
+  }, [dislikedDreams]);
 
   const memoedValue = useMemo(
     () => ({
