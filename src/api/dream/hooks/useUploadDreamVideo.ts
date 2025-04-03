@@ -183,7 +183,6 @@ export const generateDreamVideoFormRequest = (
 ): AsyncMutationProps => ({
   file: video,
   nsfw: data.nsfw,
-  hidden: data.hidden,
   description: data.description,
   sourceUrl: data.sourceUrl,
   ccbyLicense: data.ccbyLicense,
@@ -204,6 +203,7 @@ const initiateUpload = async ({
   file,
   dream,
   nsfw,
+  hidden,
   ccbyLicense,
   description,
   sourceUrl,
@@ -214,6 +214,7 @@ const initiateUpload = async ({
   dream?: Dream;
   totalNumberOfParts?: number;
   nsfw?: boolean;
+  hidden?: boolean;
   ccbyLicense?: boolean;
   description?: string;
   sourceUrl?: string;
@@ -235,6 +236,7 @@ const initiateUpload = async ({
       ccbyLicense,
       description,
       sourceUrl,
+      hidden,
     });
 
   return {
@@ -760,6 +762,7 @@ export const useUploadDreamVideo = ({
     ccbyLicense,
     description,
     sourceUrl,
+    hidden,
   } = {}) => {
     if (!file) {
       toast.error(t("page.create.error_uploading_dream"));
@@ -793,6 +796,7 @@ export const useUploadDreamVideo = ({
         createMultipartUploadMutation,
         description,
         sourceUrl,
+        hidden,
       });
 
       dispatchMultipleUpdates({

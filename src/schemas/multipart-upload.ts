@@ -6,6 +6,7 @@ export type CreateMultipartUploadFormValues = {
   extension?: string;
   parts?: number;
   nsfw?: boolean;
+  hidden?: boolean;
   ccbyLicense?: boolean;
   description?: string;
   sourceUrl?: string;
