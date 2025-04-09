@@ -2,6 +2,7 @@ import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
 } from "@/constants/remote-control.constants";
+import Grid from "@/components/shared/grid/grid";
 import useSocket from "@/hooks/useSocket";
 import { Dream, Frame } from "@/types/dream.types";
 import { useTranslation } from "react-i18next";
@@ -59,10 +60,13 @@ export const FilmstripGallery: React.FC<FilmstripProps> = ({ dream }) => {
   }
 
   return (
-    <>
+    <Grid
+      style={{ width: "100%", gap: "1rem" }}
+      gridTemplateColumns={["repeat(2, 1fr)", "repeat(2, 1fr)", "repeat(2, 1fr)", "repeat(3, 1fr)"]}
+    >
       {dream?.filmstrip.map((frame) => (
         <FrameImage key={frame.frameNumber} frame={frame} dream={dream} />
       ))}
-    </>
+    </Grid>
   );
 };

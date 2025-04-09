@@ -60,6 +60,7 @@ import { KeyframeSelect } from "./keyframe-select";
 import { useTooltipPlaces } from "@/hooks/useFormTooltipPlaces";
 import { FormInput } from "@/components/shared/input/input";
 import { FormTextArea } from "@/components/shared/text-area/text-area";
+import { VideoJS } from "@/components/shared/video-js/video-js";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -73,6 +74,7 @@ type ViewDreamInputsProps = {
   // thumbnail
   thumbnailState: MultiMediaState;
   isThumbnailRemoved: boolean;
+  handlePlay: () => void;
   handleThumbnailChange: HandleChangeFile;
   handleRemoveThumbnail: () => void;
 };
@@ -84,6 +86,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   // thumbnail
   thumbnailState,
   isThumbnailRemoved,
+  handlePlay,
   handleThumbnailChange,
   handleRemoveThumbnail
 }) => {
@@ -151,9 +154,12 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             editMode={editMode}
             isProcessing={isProcessing}
             isRemoved={isThumbnailRemoved}
+            handlePlay={handlePlay}
             handleChange={handleThumbnailChange}
             handleRemove={handleRemoveThumbnail}
           />
+
+          <VideoJS />
         </Column>
         <Column
           flex="1"

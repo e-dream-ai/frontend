@@ -1,6 +1,6 @@
 import { useVideoJs } from '@/hooks/useVideoJS';
 import { FC, memo, useEffect, useRef } from 'react';
-import { Row, Column, Text } from '@/components/shared';
+import { Row } from '@/components/shared';
 import { PlayerWrapper, VideoContainer, VideoWrapper } from './video-js.styled';
 import { PoolConfig, VIDEOJS_OPTIONS } from '@/constants/video-js.constants';
 import { useWebClient } from '@/hooks/useWebClient';
@@ -24,7 +24,6 @@ export const VideoJS: FC<VideoJSProps> = () => {
   } = useVideoJs();
   const { isWebClientActive } = useWebClient();
 
-
   useEffect(() => {
     // creates min initial player slots
     for (let i = 0; i < PoolConfig.minPlayers; i++) {
@@ -39,24 +38,17 @@ export const VideoJS: FC<VideoJSProps> = () => {
 
   return (
     <Row style={{ display: isWebClientActive ? "flex" : "none" }}>
-      <Column flex="auto">
-        <Row>
-          <Text mb="1rem" fontSize="1rem" fontWeight={600}>
-            Web Client
-          </Text>
-        </Row>
-        <VideoWrapper ref={videoWrapperRef}>
-          {players.map(({ id, skipCrossfade, longTransition }) => (
-            <PlayerSlot
-              key={id}
-              id={id}
-              isActive={id === activePlayer}
-              skipCrossfade={skipCrossfade}
-              longTransition={longTransition}
-            />
-          ))}
-        </VideoWrapper>
-      </Column>
+      <VideoWrapper ref={videoWrapperRef}>
+        {players.map(({ id, skipCrossfade, longTransition }) => (
+          <PlayerSlot
+            key={id}
+            id={id}
+            isActive={id === activePlayer}
+            skipCrossfade={skipCrossfade}
+            longTransition={longTransition}
+          />
+        ))}
+      </VideoWrapper>
     </Row>
   );
 };

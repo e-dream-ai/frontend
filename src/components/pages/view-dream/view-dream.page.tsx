@@ -32,7 +32,6 @@ import {
   faFlag,
   faGears,
   faPencil,
-  faPlay,
   faSave,
   faThumbsDown,
   faThumbsUp,
@@ -57,6 +56,7 @@ import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu
 import { NotFound } from "@/components/shared/not-found/not-found";
 import { formatDreamForm, formatDreamRequest } from "@/utils/dream.util";
 import { ReportDreamModal } from "@/components/modals/report-dream.modal";
+import { useWebClient } from "@/hooks/useWebClient";
 
 type Params = { uuid: string };
 
@@ -100,7 +100,10 @@ const ViewDreamPage: React.FC = () => {
   const vote = voteData?.data?.vote;
 
   const { socket } = useSocket();
-  const dream = data?.data?.dream;
+
+  const { isWebClientAvailable, setWebClientActive, playDreamWithHistory } = useWebClient();
+
+  const dream = useMemo(() => data?.data?.dream, [data]);
   const playlistItems = dream?.playlistItems;
 
   const { mutate: mutateDream, isLoading: isLoadingDreamMutation } =
@@ -298,8 +301,16 @@ const ViewDreamPage: React.FC = () => {
     });
   };
 
+  const handleWebClient = useCallback(() => {
+    if (isWebClientAvailable) {
+      setWebClientActive(true);
+      playDreamWithHistory(dream);
+    }
+  }, [dream, isWebClientAvailable, setWebClientActive, playDreamWithHistory]);
+
   const handlePlayDream = () => {
     emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
+    handleWebClient();
   };
 
   const handleThumbsUpDream = async () => {
@@ -408,15 +419,6 @@ const ViewDreamPage: React.FC = () => {
               {!editMode && (
                 <Row margin={0} alignItems="center">
                   <PlaylistCheckboxMenu type="dream" targetItem={dream} />
-                  <Button
-                    type="button"
-                    buttonType="default"
-                    transparent
-                    style={{ width: "3rem" }}
-                    onClick={handlePlayDream}
-                  >
-                    <FontAwesomeIcon icon={faPlay} />
-                  </Button>
                   <Button
                     type="button"
                     buttonType="default"
@@ -562,6 +564,7 @@ const ViewDreamPage: React.FC = () => {
                 // thumbnail props
                 thumbnailState={thumbnail}
                 isThumbnailRemoved={isThumbnailRemoved}
+                handlePlay={handlePlayDream}
                 handleThumbnailChange={handleThumbnailChange}
                 handleRemoveThumbnail={handleRemoveThumbnail}
               />

@@ -39,6 +39,11 @@ type WebClientContextType = {
   setWebClientActive: (isActive: boolean) => void;
   setWebPlayerAvailable: (isActive: boolean) => void;
   handleOnEnded: () => void;
+  playDream: (dreamToPlay?: Dream | null, options?: {
+    skipCrossfade: boolean;
+    longTransition: boolean;
+  }) => Promise<boolean>;
+  playDreamWithHistory: (dream?: Dream) => Promise<void>
 };
 
 type NextHandlerProps = {
@@ -674,7 +679,9 @@ export const WebClientProvider: React.FC<{
       handlers,
       setWebClientActive,
       setWebPlayerAvailable,
-      handleOnEnded
+      handleOnEnded,
+      playDream,
+      playDreamWithHistory
     }),
     [
       isWebClientActive,
@@ -682,7 +689,9 @@ export const WebClientProvider: React.FC<{
       handlers,
       setWebClientActive,
       setWebPlayerAvailable,
-      handleOnEnded
+      handleOnEnded,
+      playDream,
+      playDreamWithHistory
     ],
   );
 
