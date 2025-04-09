@@ -32,13 +32,19 @@ import { useUserDislikes } from "@/api/user/query/useUserDislikes";
 import { useDefaultPlaylist } from "@/api/playlist/query/useDefaultPlaylist";
 
 type WebClientContextType = {
+  isMounted: boolean;
   isWebClientActive: boolean;
   isWebClientAvailable: boolean;
   playingDream?: Dream;
   handlers: Record<RemoteEvent, () => void>;
   setWebClientActive: (isActive: boolean) => void;
-  setWebPlayerAvailable: (isActive: boolean) => void;
   handleOnEnded: () => void;
+  preloadVideo: (src: string) => Promise<boolean>;
+  playDream: (dreamToPlay?: Dream | null, options?: {
+    skipCrossfade: boolean;
+    longTransition: boolean;
+  }) => Promise<boolean>;
+  playDreamWithHistory: (dream?: Dream) => Promise<void>
 };
 
 type NextHandlerProps = {
@@ -66,7 +72,7 @@ export const WebClientProvider: React.FC<{
   // videojs
   const {
     players,
-    isReady,
+    isMounted,
     activePlayer,
     addEventListener,
     setBrightness: setPlayerBrightness,
@@ -111,9 +117,7 @@ export const WebClientProvider: React.FC<{
   const [isWebClientAvailable, setIsWebClientAvailable] = useState<boolean>(false);
   const { isActive } = useDesktopClient();
 
-
   // player states
-  const [, setPaused] = useState<boolean>(false);
   const [playbackRate, setPlaybackRate] = useState<number>(() => calculatePlaybackRateFromSpeed(8, 1));
   const [brightness, setBrightness] = useState<number>(40);
 
@@ -126,10 +130,6 @@ export const WebClientProvider: React.FC<{
 
   const setWebClientActive = useCallback((isActive: boolean) => {
     setIsWebClientActive(isActive);
-  }, []);
-
-  const setWebPlayerAvailable = useCallback((isActive: boolean) => {
-    setIsWebClientAvailable(isActive)
   }, []);
 
   const updateCreditOverlay = useCallback(() => {
@@ -382,7 +382,6 @@ export const WebClientProvider: React.FC<{
       } else {
         playerInstance?.player?.pause();
       }
-      setPaused(!isPaused);
     },
     playing: () => { },
     play_dream: () => { },
@@ -601,7 +600,7 @@ export const WebClientProvider: React.FC<{
       // location should be remote control
       location.pathname === ROUTES.REMOTE_CONTROL
       // videojs instances should be ready
-      && isReady
+      && isMounted
       // web client should be active
       && isWebClientActive
       // should be a dream with the video source
@@ -609,7 +608,7 @@ export const WebClientProvider: React.FC<{
     ) {
       playDreamWithHistory(playingDreamRef.current)
     }
-  }, [location.pathname, isReady, isWebClientActive, playDreamWithHistory]);
+  }, [location.pathname, isMounted, isWebClientActive, playDreamWithHistory]);
 
   // Preload starting video
   useEffect(() => {
@@ -617,7 +616,7 @@ export const WebClientProvider: React.FC<{
       // location should be remote control
       location.pathname === ROUTES.REMOTE_CONTROL
       // videojs instances should be ready
-      && isReady
+      && isMounted
     ) {
       // Prioritize the current dream if it exists
       // Set it as playing dream and preload it
@@ -636,7 +635,7 @@ export const WebClientProvider: React.FC<{
         preloadVideo(defaultPlaylistDream.video);
       }
     }
-  }, [location.pathname, isReady, currentDream, defaultPlaylistDreams, preloadVideo]);
+  }, [location.pathname, isMounted, currentDream, defaultPlaylistDreams, preloadVideo]);
 
   // Update playing playlist ref
   useEffect(() => {
@@ -668,21 +667,27 @@ export const WebClientProvider: React.FC<{
 
   const memoedValue = useMemo(
     () => ({
+      isMounted,
       isWebClientActive,
       isWebClientAvailable,
       playingDream: playingDreamRef.current,
       handlers,
       setWebClientActive,
-      setWebPlayerAvailable,
-      handleOnEnded
+      handleOnEnded,
+      preloadVideo,
+      playDream,
+      playDreamWithHistory
     }),
     [
+      isMounted,
       isWebClientActive,
       isWebClientAvailable,
       handlers,
       setWebClientActive,
-      setWebPlayerAvailable,
-      handleOnEnded
+      handleOnEnded,
+      preloadVideo,
+      playDream,
+      playDreamWithHistory
     ],
   );
 

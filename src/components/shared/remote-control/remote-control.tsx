@@ -91,7 +91,7 @@ export const RemoteControl: React.FC = () => {
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [handlers, isWebClientActive]);
+  }, [emit, handlers, isWebClientActive]);
 
   return (
     <RemoteControlContainer>

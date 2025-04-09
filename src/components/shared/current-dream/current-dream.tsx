@@ -23,7 +23,7 @@ export const CurrentDream = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const { currentDream, isLoadingCurrentDream, refreshCurrentDream } = useAuth();
-  const { isWebClientAvailable, setWebClientActive, setWebPlayerAvailable } = useWebClient()
+  const { isWebClientAvailable, setWebClientActive } = useWebClient()
 
   const handleRemoteControlEvent = async (data?: RemoteControlEventData): Promise<void | undefined> => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
@@ -49,7 +49,6 @@ export const CurrentDream = () => {
 
   const handleActivateWebClient = () => {
     setWebClientActive(true);
-    setWebPlayerAvailable(false);
   };
 
   // update current dream on component mount
