@@ -99,10 +99,10 @@ const ViewDreamPage: React.FC = () => {
   });
 
   const dream = useMemo(() => data?.data?.dream, [data]);
-  const reports = useMemo(() => dream?.reports ?? [], [dream])
-  const isDreamReported = useMemo(() => Boolean(dream?.reports?.length), [dream])
   const vote = useMemo(() => voteData?.data?.vote, [voteData]);
   const playlistItems = useMemo(() => dream?.playlistItems ?? [], [dream]);
+  const reports = useMemo(() => dream?.reports ?? [], [dream])
+  const isDreamReported = useMemo(() => Boolean(dream?.reports?.length), [dream])
 
   const { mutate: mutateDream, isLoading: isLoadingDreamMutation } =
     useUpdateDream(uuid);
