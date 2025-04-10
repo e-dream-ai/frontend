@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Column, ItemCardList, ItemCard, Text, Row, Button } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import {
@@ -18,12 +18,19 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 import { useWebClient } from "@/hooks/useWebClient";
 import useAuth from "@/hooks/useAuth";
+import useStatusCallback from "@/hooks/useStatusCallback";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
+import { IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
+import { toast } from "react-toastify";
 
 export const CurrentDream = () => {
-  const { t } = useTranslation();
   const theme = useTheme();
+  const { t } = useTranslation();
+  const { user } = useAuth();
   const { currentDream, isLoadingCurrentDream, refreshCurrentDream } = useAuth();
-  const { isWebClientAvailable, setWebClientActive } = useWebClient()
+  const { setWebClientActive } = useWebClient();
+  const { isActive } = useDesktopClient();
+  const [isWebClientAvailable, setIsWebClientAvailable] = useState(false);
 
   const handleRemoteControlEvent = async (data?: RemoteControlEventData): Promise<void | undefined> => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
@@ -50,6 +57,27 @@ export const CurrentDream = () => {
   const handleActivateWebClient = () => {
     setWebClientActive(true);
   };
+
+  useStatusCallback(
+    isActive,
+    {
+      onActive: () => {
+        if (IS_WEB_CLIENT_ACTIVE && user) {
+          setIsWebClientAvailable(false);
+        }
+      },
+      onInactive: () => {
+        // Show web client available toast and play button
+        if (IS_WEB_CLIENT_ACTIVE && user) {
+          setIsWebClientAvailable(true);
+          toast.info(t("web_client.web_client_available"));
+        }
+      },
+    },
+    {},
+    // Add user to deps to refresh callbacks when user logs in
+    [user]
+  );
 
   // update current dream on component mount
   useEffect(() => {

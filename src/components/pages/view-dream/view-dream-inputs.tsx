@@ -89,13 +89,14 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const { t } = useTranslation();
   const { user } = useAuth();
   const { socket } = useSocket();
-  const { isMounted, isWebClientActive, isWebClientAvailable, preloadVideo, setWebClientActive, playDreamWithHistory } = useWebClient();
+  const { isMounted, isWebClientActive, preloadVideo, setWebClientActive, playDreamWithHistory } = useWebClient();
 
   const tooltipPlaces = useTooltipPlaces();
   const [userSearch, setUserSearch] = useState<string>("");
   const [showMore, setShowMore] = useState<boolean>(false);
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
+  const isSocketOpen = useMemo(() => Boolean(socket?.active), [socket])
 
   const {
     control,
@@ -142,11 +143,12 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const handlePlay = useCallback(() => {
     emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
 
-    if (isWebClientAvailable && isMounted) {
+    // If socket is open and web player mounted on the DOM, should start to play
+    if (isSocketOpen && isMounted) {
       handleWebClient();
     }
 
-  }, [t, socket, dream, isMounted, isWebClientAvailable, handleWebClient]);
+  }, [t, dream, socket, isSocketOpen, isMounted, handleWebClient]);
 
   useEffect(() => {
     if (isMounted && dream?.video) {
