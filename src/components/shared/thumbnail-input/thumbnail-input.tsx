@@ -68,9 +68,24 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
 
   if (!editMode && (!hasThumbnail || isLoading || isRemoved)) {
     return (
-      <ThumbnailPlaceholder>
-        <FontAwesomeIcon icon={faPhotoFilm} />
-      </ThumbnailPlaceholder>
+      <ThumbnailContainer editMode={editMode}>
+        <ThumbnailButtons>
+          {
+            Boolean(handlePlay) && !editMode && <Button
+              type="button"
+              buttonType="default"
+              transparent
+              style={{ width: "3rem", fontSize: "2rem" }}
+              onClick={handlePlay}
+            >
+              <FontAwesomeIcon icon={faPlay} />
+            </Button>
+          }
+        </ThumbnailButtons>
+        <ThumbnailPlaceholder>
+          <FontAwesomeIcon icon={faPhotoFilm} />
+        </ThumbnailPlaceholder>
+      </ThumbnailContainer>
     );
   }
 
@@ -78,7 +93,6 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
     <>
       {hasThumbnail && !isRemoved ? (
         <ThumbnailContainer editMode={editMode}>
-
           <ThumbnailButtons>
             {
               Boolean(handleRemove) && editMode && (
@@ -87,7 +101,6 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
                 </Button>
               )
             }
-
             {
               Boolean(handlePlay) && !editMode && <Button
                 type="button"
@@ -102,6 +115,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
           </ThumbnailButtons>
 
           {editMode && <ThumbnailOverlay />}
+
           <Thumbnail
             url={localMultimedia?.url || thumbnail}
             src="/images/blank.gif"
