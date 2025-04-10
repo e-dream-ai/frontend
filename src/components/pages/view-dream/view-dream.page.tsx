@@ -57,6 +57,7 @@ import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu
 import { NotFound } from "@/components/shared/not-found/not-found";
 import { formatDreamForm, formatDreamRequest } from "@/utils/dream.util";
 import { ReportDreamModal } from "@/components/modals/report-dream.modal";
+import { useUpdateReport } from "@/api/report/mutation/useUpdateReport";
 
 type Params = { uuid: string };
 
@@ -78,6 +79,8 @@ const ViewDreamPage: React.FC = () => {
     useState<boolean>(false);
   const [showReportModal, setShowReportModal] =
     useState<boolean>(false);
+  const [showProcessDreamReportModal, setShowProcessDreamReportModal] =
+    useState<boolean>(false);
 
   const upvoteMutation = useUpvoteDream(uuid);
   const downvoteMutation = useDownvoteDream(uuid);
@@ -97,11 +100,13 @@ const ViewDreamPage: React.FC = () => {
     // If edit mode is disabled then remove refetch
     activeRefetchInterval: !editMode,
   });
-  const vote = voteData?.data?.vote;
 
   const { socket } = useSocket();
-  const dream = data?.data?.dream;
-  const playlistItems = dream?.playlistItems;
+  const dream = useMemo(() => data?.data?.dream, [data]);
+  const vote = useMemo(() => voteData?.data?.vote, [voteData]);
+  const playlistItems = useMemo(() => dream?.playlistItems, [dream]);
+  const reports = useMemo(() => dream?.reports ?? [], [dream])
+  const isDreamReported = useMemo(() => Boolean(dream?.reports?.length), [dream])
 
   const { mutate: mutateDream, isLoading: isLoadingDreamMutation } =
     useUpdateDream(uuid);
@@ -120,6 +125,8 @@ const ViewDreamPage: React.FC = () => {
     isLoadingDreamMutation ||
     uploadDreamVideoMutation.isLoading ||
     isLoadingThumbnailDreamMutation;
+
+  const { mutateAsync: processReportMutateAsync, isLoading: isProcessingReport } = useUpdateReport();
 
   const formMethods = useForm<UpdateDreamFormValues>({
     resolver: yupResolver(UpdateDreamSchema),
@@ -143,7 +150,6 @@ const ViewDreamPage: React.FC = () => {
   const showEditButton = !editMode && !isDreamProcessing;
   const showSaveAndCancelButtons = editMode && !isDreamProcessing;
   // Handlers
-
   const handleMutateVideoDream = async (data: UpdateDreamFormValues) => {
     if (isVideoRemoved || video?.file) {
       try {
@@ -233,6 +239,17 @@ const ViewDreamPage: React.FC = () => {
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
   const onShowReportModal = () => setShowReportModal(true);
   const onHideReportModal = () => setShowReportModal(false);
+  const onShowProcessDreamReportModal = () => setShowProcessDreamReportModal(true);
+  const onHideProcessDreamReportModal = () => setShowProcessDreamReportModal(false);
+
+  const handleFlagButton = useCallback(() => {
+    // Show process report dream modal when dream is reported and authenticated user is admin
+    if (isDreamReported && isUserAdmin) {
+      onShowProcessDreamReportModal();
+    } else {
+      onShowReportModal();
+    }
+  }, [isDreamReported, isUserAdmin]);
 
   const resetRemoteDreamForm = useCallback(() => {
     formMethods.reset(formatDreamForm({ dream, isAdmin: isUserAdmin, t }));
@@ -320,6 +337,51 @@ const ViewDreamPage: React.FC = () => {
     await refetchVote();
   };
 
+  const onConfirmProcessDreamReport = async () => {
+    try {
+      const results = await Promise.all(
+        reports.map(async (report) => {
+          try {
+            const data = await processReportMutateAsync({
+              uuid: report.uuid,
+              values: { processed: true }
+            });
+
+            return {
+              uuid: report.uuid,
+              success: data.success,
+              message: data.message
+            };
+          } catch (error) {
+            return {
+              uuid: report.uuid,
+              success: false,
+              message: "Error processing report"
+            };
+          }
+        })
+      );
+
+      const allSucceeded = results.every(result => result.success);
+      const failedReports = results.filter(result => !result.success);
+
+      if (allSucceeded) {
+        toast.success(t("page.view_dream.reports_processed_successfully"));
+        onHideProcessDreamReportModal();
+      } else {
+        failedReports.forEach(failedReport => {
+          toast.error(
+            `${t("page.view_dream.error_processing_report")} ${failedReport.uuid}: ${failedReport.message}`
+          );
+        });
+      }
+
+      return results;
+    } catch (error) {
+      toast.error(t("page.view_dream.error_processing_reports"));
+    }
+  }
+
   /**
    * Setting api values to form
    */
@@ -381,6 +443,25 @@ const ViewDreamPage: React.FC = () => {
           </Text>
         }
       />
+      {/**
+       * Process report dream modal
+       */}
+      <ConfirmModal
+        isOpen={showProcessDreamReportModal}
+        onCancel={onHideProcessDreamReportModal}
+        onConfirm={onConfirmProcessDreamReport}
+        isConfirming={isProcessingReport}
+        title={t("page.view_dream.confirm_process_dream_report_modal_title")}
+        text={
+          <Text>
+            {t("page.view_dream.confirm_process_dream_report_modal_body")}{" "}
+            <em>
+              <strong>{truncateString(dream?.name, 30)}</strong>
+            </em>
+          </Text>
+        }
+      />
+
       {/**
        * Report dream modal
        */}
@@ -463,9 +544,9 @@ const ViewDreamPage: React.FC = () => {
                     buttonType="default"
                     transparent
                     style={{ width: "3rem" }}
-                    onClick={onShowReportModal}
+                    onClick={handleFlagButton}
                   >
-                    {(dream.reports?.length) ? (
+                    {(isDreamReported) ? (
                       <span className="fa-stack fa-sm">
                         <FontAwesomeIcon icon={faCircle} className="fa-2x" />
                         <FontAwesomeIcon
