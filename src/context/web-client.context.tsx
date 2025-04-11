@@ -27,6 +27,11 @@ import { setCurrentUserDreamOptimistically } from "@/api/dream/utils/dream-utils
 import { useUserDislikes } from "@/api/user/query/useUserDislikes";
 import { useDefaultPlaylist } from "@/api/playlist/query/useDefaultPlaylist";
 
+type PlayOptions = {
+  skipCrossfade: boolean;
+  longTransition: boolean;
+};
+
 type WebClientContextType = {
   isMounted: boolean;
   isWebClientActive: boolean;
@@ -35,11 +40,8 @@ type WebClientContextType = {
   setWebClientActive: (isActive: boolean) => void;
   handleOnEnded: () => void;
   preloadVideo: (src: string) => Promise<boolean>;
-  playDream: (dreamToPlay?: Dream | null, options?: {
-    skipCrossfade: boolean;
-    longTransition: boolean;
-  }) => Promise<boolean>;
-  playDreamWithHistory: (dream?: Dream) => Promise<void>
+  playDream: (dreamToPlay?: Dream | null, options?: PlayOptions) => Promise<boolean>;
+  playDreamWithHistory: (dream?: Dream, options?: PlayOptions) => Promise<void>
 };
 
 type NextHandlerProps = {
@@ -275,9 +277,9 @@ export const WebClientProvider: React.FC<{
     }, [emit, playVideo]);
 
   // used to play dreams that are not handled by navigation events (next/prev) 
-  const playDreamWithHistory = useCallback(async (dream?: Dream) => {
+  const playDreamWithHistory = useCallback(async (dream?: Dream, options?: PlayOptions) => {
     if (!dream) return;
-    await playDream(dream);
+    await playDream(dream, options);
     // add dream to played dreams
     const added = addDreamToHistory(dream, false);
 

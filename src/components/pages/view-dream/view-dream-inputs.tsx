@@ -137,7 +137,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
 
   const handleWebClient = useCallback(() => {
     setWebClientActive(true);
-    playDreamWithHistory(dream);
+    playDreamWithHistory(dream, { skipCrossfade: true, longTransition: false });
   }, [dream, setWebClientActive, playDreamWithHistory]);
 
   const handlePlay = useCallback(() => {
