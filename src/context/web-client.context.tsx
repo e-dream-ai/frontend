@@ -578,7 +578,7 @@ export const WebClientProvider: React.FC<{
       // should be a dream with the video source
       && playingDreamRef.current?.video
     ) {
-      playDreamWithHistory(playingDreamRef.current)
+      playDreamWithHistory(playingDreamRef.current, { skipCrossfade: true, longTransition: false });
     }
   }, [location.pathname, isMounted, isWebClientActive, playDreamWithHistory]);
 

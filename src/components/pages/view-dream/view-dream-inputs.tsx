@@ -89,8 +89,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const { t } = useTranslation();
   const { user } = useAuth();
   const { socket } = useSocket();
+  const [isVideoPreloaded, setIsVideoPreloaded] = useState(false);
   const { isMounted, isWebClientActive, preloadVideo, setWebClientActive, playDreamWithHistory } = useWebClient();
-
   const tooltipPlaces = useTooltipPlaces();
   const [userSearch, setUserSearch] = useState<string>("");
   const [showMore, setShowMore] = useState<boolean>(false);
@@ -151,9 +151,12 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   }, [t, dream, socket, isSocketOpen, isMounted, handleWebClient]);
 
   useEffect(() => {
-    if (isMounted && dream?.video) {
-      preloadVideo(dream.video)
-    }
+    (async () => {
+      if (isMounted && dream?.video) {
+        await preloadVideo(dream.video)
+        setIsVideoPreloaded(true);
+      }
+    })();
   }, [isMounted, dream, preloadVideo]);
 
   return (
@@ -177,7 +180,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               editMode={editMode}
               isProcessing={isProcessing}
               isRemoved={isThumbnailRemoved}
-              handlePlay={handlePlay}
+              handlePlay={isVideoPreloaded ? handlePlay : null}
               handleChange={handleThumbnailChange}
               handleRemove={handleRemoveThumbnail}
             />

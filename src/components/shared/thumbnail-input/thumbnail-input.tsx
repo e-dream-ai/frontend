@@ -32,7 +32,7 @@ type ThumbnailInputProps = {
   isProcessing?: boolean;
   isRemoved: boolean;
   handleChange: HandleChangeFile;
-  handlePlay?: () => void;
+  handlePlay?: (() => void) | null;
   handleRemove?: () => void;
 };
 
@@ -76,7 +76,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
               buttonType="default"
               transparent
               style={{ width: "3rem", fontSize: "2rem" }}
-              onClick={handlePlay}
+              onClick={handlePlay!}
             >
               <FontAwesomeIcon icon={faPlay} />
             </Button>
@@ -107,7 +107,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
                 buttonType="default"
                 transparent
                 style={{ width: "3rem", fontSize: "2rem" }}
-                onClick={handlePlay}
+                onClick={handlePlay!}
               >
                 <FontAwesomeIcon icon={faPlay} />
               </Button>
