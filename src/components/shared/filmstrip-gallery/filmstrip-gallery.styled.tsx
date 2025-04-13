@@ -2,8 +2,7 @@ import styled from "styled-components";
 import Text from "../text/text";
 
 export const StyledFrameImage = styled.img<{ url?: string }>`
-  min-width: 300px;
-  max-width: 300px;
+  width: -webkit-fill-available;
   height: auto;
   aspect-ratio: 16 / 9;
   background-repeat: no-repeat;
@@ -14,6 +13,7 @@ export const StyledFrameImage = styled.img<{ url?: string }>`
 `;
 
 export const ImageContainer = styled.div`
+  width: auto;
   position: relative;
   display: inline-block;
   cursor: pointer;
