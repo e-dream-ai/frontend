@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Column, ItemCardList, ItemCard, Text, Row, Button } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import {
@@ -18,12 +18,16 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 import { useWebClient } from "@/hooks/useWebClient";
 import useAuth from "@/hooks/useAuth";
+import useStatusCallback from "@/hooks/useStatusCallback";
+import { IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
 
 export const CurrentDream = () => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { currentDream, isLoadingCurrentDream, refreshCurrentDream } = useAuth();
+  const { user, currentDream, isLoadingCurrentDream, refreshCurrentDream } = useAuth();
   const { isWebClientAvailable, setWebClientActive, setWebPlayerAvailable } = useWebClient()
+  const { isActive } = useDesktopClient();
+  const [isWebClientAvailable, setIsWebClientAvailable] = useState(false);
 
   const handleRemoteControlEvent = async (data?: RemoteControlEventData): Promise<void | undefined> => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
@@ -51,6 +55,28 @@ export const CurrentDream = () => {
     setWebClientActive(true);
     setWebPlayerAvailable(false);
   };
+
+  useStatusCallback(
+    isActive,
+    {
+      onActive: () => {
+        if (IS_WEB_CLIENT_ACTIVE && user) {
+          setIsWebClientAvailable(false);
+        }
+      },
+      onInactive: () => {
+        // Show web client available toast and play button
+        if (IS_WEB_CLIENT_ACTIVE && user) {
+          setIsWebClientAvailable(true);
+	  setWebClientActive(true);
+          toast.info(t("web_client.web_client_available"));
+        }
+      },
+    },
+    {},
+    // Add user to deps to refresh callbacks when user logs in
+    [user]
+  );
 
   // update current dream on component mount
   useEffect(() => {
