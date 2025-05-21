@@ -43,7 +43,7 @@ import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import Restricted from "@/components/shared/restricted/restricted";
 import Select from "@/components/shared/select/select";
 import usePermission from "@/hooks/usePermission";
-import { useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useUsers } from "@/api/user/query/useUsers";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
@@ -53,6 +53,8 @@ import {
   getHiddenOptions,
   getNsfwOptions,
 } from "@/constants/select.constants";
+import useSocket from "@/hooks/useSocket";
+import { useWebClient } from "@/hooks/useWebClient";
 import { useImage } from "@/hooks/useImage";
 import { FormContainer, FormItem } from "@/components/shared/form/form";
 import { getUserProfileRoute } from "@/utils/router.util";
@@ -60,16 +62,13 @@ import { KeyframeSelect } from "./keyframe-select";
 import { useTooltipPlaces } from "@/hooks/useFormTooltipPlaces";
 import { FormInput } from "@/components/shared/input/input";
 import { FormTextArea } from "@/components/shared/text-area/text-area";
+import { VideoJS } from "@/components/shared/video-js/video-js";
+import { emitPlayDream } from "@/utils/socket.util";
 
 type ViewDreamInputsProps = {
   dream?: Dream;
   isProcessing?: boolean;
-  // values: UpdateDreamFormValues;
-  // register: UseFormRegister<UpdateDreamFormValues>;
-  // errors: FieldErrors<UpdateDreamFormValues>;
-  // control: Control<UpdateDreamFormValues>;
   editMode: boolean;
-
   // thumbnail
   thumbnailState: MultiMediaState;
   isThumbnailRemoved: boolean;
@@ -89,19 +88,22 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { socket } = useSocket();
+  const [isVideoPreloaded, setIsVideoPreloaded] = useState(false);
+  const { isMounted, isWebClientActive, preloadVideo, setWebClientActive, playDreamWithHistory } = useWebClient();
   const tooltipPlaces = useTooltipPlaces();
   const [userSearch, setUserSearch] = useState<string>("");
   const [showMore, setShowMore] = useState<boolean>(false);
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
+  const isSocketOpen = useMemo(() => Boolean(socket?.active), [socket])
 
   const {
     control,
     register,
   } = useFormContext<UpdateDreamFormValues>();
 
-  // always shows user for admins
-  // for normal users look for 'displayed owner' or user instead
+  // Always shows user for admins, for normal users look for 'displayed owner' or user instead
   const dreamOwnerToShow =
     isUserAdmin
       ? dream?.user?.name
@@ -133,6 +135,30 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
     fit: "cover",
   });
 
+  const handleWebClient = useCallback(() => {
+    setWebClientActive(true);
+    playDreamWithHistory(dream, { skipCrossfade: true, longTransition: false });
+  }, [dream, setWebClientActive, playDreamWithHistory]);
+
+  const handlePlay = useCallback(() => {
+    emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
+
+    // If socket is open and web player mounted on the DOM, should start to play
+    if (isSocketOpen && isMounted) {
+      handleWebClient();
+    }
+
+  }, [t, dream, socket, isSocketOpen, isMounted, handleWebClient]);
+
+  useEffect(() => {
+    (async () => {
+      if (isMounted && dream?.video) {
+        await preloadVideo(dream.video)
+        setIsVideoPreloaded(true);
+      }
+    })();
+  }, [isMounted, dream, preloadVideo]);
+
   return (
     <>
       <Row
@@ -145,15 +171,22 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           mr={[0, 2, 2, 2]}
           mb={4}
         >
-          <ThumbnailInput
-            localMultimedia={thumbnailState}
-            thumbnail={thumbnailUrl}
-            editMode={editMode}
-            isProcessing={isProcessing}
-            isRemoved={isThumbnailRemoved}
-            handleChange={handleThumbnailChange}
-            handleRemove={handleRemoveThumbnail}
-          />
+          {
+            // If client not active or is editing, should show the input
+            (!isWebClientActive || editMode) &&
+            <ThumbnailInput
+              localMultimedia={thumbnailState}
+              thumbnail={thumbnailUrl}
+              editMode={editMode}
+              isProcessing={isProcessing}
+              isRemoved={isThumbnailRemoved}
+              handlePlay={isVideoPreloaded ? handlePlay : null}
+              handleChange={handleThumbnailChange}
+              handleRemove={handleRemoveThumbnail}
+            />
+          }
+
+          <VideoJS visible={!editMode} />
         </Column>
         <Column
           flex="1"
@@ -276,7 +309,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             {...register("sourceUrl")}
           />
         </FormItem>
-
 
         {/* If user is admin, show editable hidden field */}
         <Restricted to={DREAM_PERMISSIONS.CAN_EDIT_VISIBILITY}>

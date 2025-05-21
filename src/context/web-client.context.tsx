@@ -9,21 +9,17 @@ import React, {
 import useAuth from "@/hooks/useAuth";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
-import { useDesktopClient } from "@/hooks/useDesktopClient";
-import useStatusCallback from "@/hooks/useStatusCallback";
 import { useVideoJs } from "@/hooks/useVideoJS";
 import { RemoteControlEventData, RemoteEvent } from "@/types/remote-control.types";
 import { calculatePlaybackRateFromSpeed, getPlaylistNavigation, multiplyPerceptualFPS, tapsToBrightness } from "@/utils/web-client.util";
-import { toast } from "react-toastify";
 import useSocket from "@/hooks/useSocket";
 import { NEW_REMOTE_CONTROL_EVENT, REMOTE_CONTROLS } from "@/constants/remote-control.constants";
-import { CREDIT_OVERLAY_ID, IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
+import { CREDIT_OVERLAY_ID } from "@/constants/web-client.constants";
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
 import { HistoryItem, PlaylistDirection, PlaylistNavigation, SpeedControls, SpeedLevels } from "@/types/web-client.types";
 import { LONG_CROSSFADE_DURATION, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
 import { useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
-import { useTranslation } from "react-i18next";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { fetchDream } from "@/api/dream/query/useDream";
 import { joinPaths } from "@/utils/router.util";
@@ -31,14 +27,21 @@ import { setCurrentUserDreamOptimistically } from "@/api/dream/utils/dream-utils
 import { useUserDislikes } from "@/api/user/query/useUserDislikes";
 import { useDefaultPlaylist } from "@/api/playlist/query/useDefaultPlaylist";
 
+type PlayOptions = {
+  skipCrossfade: boolean;
+  longTransition: boolean;
+};
+
 type WebClientContextType = {
+  isMounted: boolean;
   isWebClientActive: boolean;
-  isWebClientAvailable: boolean;
   playingDream?: Dream;
   handlers: Record<RemoteEvent, () => void>;
   setWebClientActive: (isActive: boolean) => void;
-  setWebPlayerAvailable: (isActive: boolean) => void;
   handleOnEnded: () => void;
+  preloadVideo: (src: string) => Promise<boolean>;
+  playDream: (dreamToPlay?: Dream | null, options?: PlayOptions) => Promise<boolean>;
+  playDreamWithHistory: (dream?: Dream, options?: PlayOptions) => Promise<void>
 };
 
 type NextHandlerProps = {
@@ -56,17 +59,16 @@ export const WebClientContext = createContext<WebClientContextType>(
 export const WebClientProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
-  const { t } = useTranslation();
   // location
   const location = useLocation();
   // socket
   const { emit } = useSocket();
-  const { user, currentDream, currentPlaylist, refreshCurrentDream, refreshCurrentPlaylist } = useAuth();
+  const { currentDream, currentPlaylist, refreshCurrentDream, refreshCurrentPlaylist } = useAuth();
 
   // videojs
   const {
     players,
-    isReady,
+    isMounted,
     activePlayer,
     addEventListener,
     setBrightness: setPlayerBrightness,
@@ -105,15 +107,8 @@ export const WebClientProvider: React.FC<{
    * indicates if the web player is currently active
    */
   const [isWebClientActive, setIsWebClientActive] = useState<boolean>(false);
-  /** 
-   * indicates if the web client play button can be shown to the user
-   */
-  const [isWebClientAvailable, setIsWebClientAvailable] = useState<boolean>(false);
-  const { isActive } = useDesktopClient();
-
 
   // player states
-  const [, setPaused] = useState<boolean>(false);
   const [playbackRate, setPlaybackRate] = useState<number>(() => calculatePlaybackRateFromSpeed(8, 1));
   const [brightness, setBrightness] = useState<number>(40);
 
@@ -126,10 +121,6 @@ export const WebClientProvider: React.FC<{
 
   const setWebClientActive = useCallback((isActive: boolean) => {
     setIsWebClientActive(isActive);
-  }, []);
-
-  const setWebPlayerAvailable = useCallback((isActive: boolean) => {
-    setIsWebClientAvailable(isActive)
   }, []);
 
   const updateCreditOverlay = useCallback(() => {
@@ -286,9 +277,9 @@ export const WebClientProvider: React.FC<{
     }, [emit, playVideo]);
 
   // used to play dreams that are not handled by navigation events (next/prev) 
-  const playDreamWithHistory = useCallback(async (dream?: Dream) => {
+  const playDreamWithHistory = useCallback(async (dream?: Dream, options?: PlayOptions) => {
     if (!dream) return;
-    await playDream(dream);
+    await playDream(dream, options);
     // add dream to played dreams
     const added = addDreamToHistory(dream, false);
 
@@ -382,7 +373,6 @@ export const WebClientProvider: React.FC<{
       } else {
         playerInstance?.player?.pause();
       }
-      setPaused(!isPaused);
     },
     playing: () => { },
     play_dream: () => { },
@@ -523,25 +513,6 @@ export const WebClientProvider: React.FC<{
     },
   );
 
-  useStatusCallback(
-    isActive,
-    {
-      onActive: () => {
-        if (IS_WEB_CLIENT_ACTIVE && user) {
-          setIsWebClientAvailable(false);
-        }
-      },
-      onInactive: () => {
-        if (IS_WEB_CLIENT_ACTIVE && user) {
-          setIsWebClientAvailable(true);
-        }
-      },
-    },
-    {},
-    // Add user to deps to refresh callbacks when user logs in
-    [user]
-  );
-
   // register events on videojs instance
   useEffect(() => {
     const handleTimeUpdate = async () => {
@@ -601,15 +572,15 @@ export const WebClientProvider: React.FC<{
       // location should be remote control
       location.pathname === ROUTES.REMOTE_CONTROL
       // videojs instances should be ready
-      && isReady
+      && isMounted
       // web client should be active
       && isWebClientActive
       // should be a dream with the video source
       && playingDreamRef.current?.video
     ) {
-      playDreamWithHistory(playingDreamRef.current)
+      playDreamWithHistory(playingDreamRef.current, { skipCrossfade: true, longTransition: false });
     }
-  }, [location.pathname, isReady, isWebClientActive, playDreamWithHistory]);
+  }, [location.pathname, isMounted, isWebClientActive, playDreamWithHistory]);
 
   // Preload starting video
   useEffect(() => {
@@ -617,7 +588,7 @@ export const WebClientProvider: React.FC<{
       // location should be remote control
       location.pathname === ROUTES.REMOTE_CONTROL
       // videojs instances should be ready
-      && isReady
+      && isMounted
     ) {
       // Prioritize the current dream if it exists
       // Set it as playing dream and preload it
@@ -636,7 +607,7 @@ export const WebClientProvider: React.FC<{
         preloadVideo(defaultPlaylistDream.video);
       }
     }
-  }, [location.pathname, isReady, currentDream, defaultPlaylistDreams, preloadVideo]);
+  }, [location.pathname, isMounted, currentDream, defaultPlaylistDreams, preloadVideo]);
 
   // Update playing playlist ref
   useEffect(() => {
@@ -653,14 +624,6 @@ export const WebClientProvider: React.FC<{
     dislikedDreamsRef.current = dislikedDreams;
   }, [dislikedDreams]);
 
-  // Show web client available toast
-  useEffect(() => {
-    // If pathname is RC and isWebClientAvailable but not isWebClientActive, then show toast
-    if (location.pathname === ROUTES.REMOTE_CONTROL && !isWebClientActive && isWebClientAvailable) {
-      toast.info(t("web_client.web_client_available"));
-    }
-  }, [t, location.pathname, isWebClientActive, isWebClientAvailable]);
-
   // Cleans disliked dreams from history when dislikedDreams are updated
   useEffect(() => {
     historyRef.current = historyRef.current.filter(h => !dislikedDreams.includes(h.dream.uuid));
@@ -668,21 +631,25 @@ export const WebClientProvider: React.FC<{
 
   const memoedValue = useMemo(
     () => ({
+      isMounted,
       isWebClientActive,
-      isWebClientAvailable,
       playingDream: playingDreamRef.current,
       handlers,
       setWebClientActive,
-      setWebPlayerAvailable,
-      handleOnEnded
+      handleOnEnded,
+      preloadVideo,
+      playDream,
+      playDreamWithHistory
     }),
     [
+      isMounted,
       isWebClientActive,
-      isWebClientAvailable,
       handlers,
       setWebClientActive,
-      setWebPlayerAvailable,
-      handleOnEnded
+      handleOnEnded,
+      preloadVideo,
+      playDream,
+      playDreamWithHistory
     ],
   );
 

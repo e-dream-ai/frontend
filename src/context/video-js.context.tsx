@@ -5,7 +5,6 @@ import Player from "video.js/dist/types/player";
 import Component from "video.js/dist/types/component";
 import { v4 as uuidv4 } from 'uuid';
 import {
-  PoolConfig,
   VIDEOJS_EVENTS,
   LONG_CROSSFADE_DURATION,
   SHORT_CROSSFADE_DURATION,
@@ -13,7 +12,7 @@ import {
 } from "@/constants/video-js.constants";
 
 type VideoJSContextType = {
-  isReady: boolean;
+  isMounted: boolean;
   activePlayer: string | null;
   players: PlayerInstance[];
   videoWrapperRef: RefObject<HTMLDivElement>;
@@ -64,8 +63,9 @@ export const VideoJSProvider = ({
   const activePlayerIdRef = useRef<string | null>(null);
   const globalEventHandlersRef = useRef<Map<string, VideoJSEventHandler[]>>(new Map());
   const videoWrapperRef = useRef<HTMLDivElement>(null);
-  const [isReady, setIsReady] = useState(false);
-  // players pool
+  // Indicates if the players dom references are mountend and ready to be used
+  const [isMounted, setIsMounted] = useState(false);
+  // Players pool
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
 
   const updateActivePlayer = useCallback((ap: string | null) => {
@@ -107,11 +107,6 @@ export const VideoJSProvider = ({
       updateActivePlayer(id);
     }
 
-    if (playersPoolRef.current.size >= PoolConfig.minPlayers) {
-      // setIsReady(true) should be changed to register player? 
-      setIsReady(true);
-    }
-
     return id;
   }, [updateActivePlayer]);
 
@@ -149,6 +144,8 @@ export const VideoJSProvider = ({
     }
 
     playerInstance.player = player;
+    // Set isMounted flag as true
+    setIsMounted(true);
 
     // add existing global event handlers to new player
     globalEventHandlersRef.current.forEach((handlers, event) => {
@@ -167,6 +164,7 @@ export const VideoJSProvider = ({
 
     // replace fullscreen properties to work with video wrapper
     player.ready(() => {
+      setIsMounted(true);
       // get the fullscreen toggle button component
       const fullscreenToggle = player?.getChild('ControlBar')?.getChild('FullscreenToggle') as Component & {
         handleClick: (event: Event) => void;
@@ -256,8 +254,8 @@ export const VideoJSProvider = ({
     // reset active player
     updateActivePlayer(null);
 
-    // reset ready
-    setIsReady(false);
+    // reset mounted
+    setIsMounted(false);
   }, [updateActivePlayer]);
 
   const addEventListener = useCallback((event: string, handler: VideoJSEventHandler) => {
@@ -402,7 +400,8 @@ export const VideoJSProvider = ({
         }
 
         return true;
-      } catch (_) {
+      } catch (e) {
+        console.error(e);
         nextPlayerInstance.isPreloaded = false;
         return false;
       }
@@ -469,7 +468,7 @@ export const VideoJSProvider = ({
 
   const contextValue = useMemo(
     () => ({
-      isReady,
+      isMounted,
       activePlayer: activePlayerId,
       players: Array.from(playersPoolRef.current.values()),
       videoWrapperRef,
@@ -486,7 +485,7 @@ export const VideoJSProvider = ({
       clearPlayers,
     }),
     [
-      isReady,
+      isMounted,
       activePlayerId,
       videoWrapperRef,
       playersPoolRef,

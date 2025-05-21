@@ -19,7 +19,7 @@ import {
   handleFileUploaderTypeError,
 } from "@/utils/file-uploader.util";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPhotoFilm, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faPhotoFilm, faPlay, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { Spinner } from "../spinner/spinner";
 import { useTheme } from "styled-components";
 import Text from "../text/text";
@@ -32,6 +32,7 @@ type ThumbnailInputProps = {
   isProcessing?: boolean;
   isRemoved: boolean;
   handleChange: HandleChangeFile;
+  handlePlay?: (() => void) | null;
   handleRemove?: () => void;
 };
 
@@ -42,6 +43,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   editMode,
   isProcessing,
   isRemoved,
+  handlePlay,
   handleChange,
   handleRemove,
 }) => {
@@ -66,9 +68,24 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
 
   if (!editMode && (!hasThumbnail || isLoading || isRemoved)) {
     return (
-      <ThumbnailPlaceholder>
-        <FontAwesomeIcon icon={faPhotoFilm} />
-      </ThumbnailPlaceholder>
+      <ThumbnailContainer editMode={editMode}>
+        <ThumbnailButtons>
+          {
+            Boolean(handlePlay) && !editMode && <Button
+              type="button"
+              buttonType="default"
+              transparent
+              style={{ width: "3rem", fontSize: "2rem" }}
+              onClick={handlePlay!}
+            >
+              <FontAwesomeIcon icon={faPlay} />
+            </Button>
+          }
+        </ThumbnailButtons>
+        <ThumbnailPlaceholder>
+          <FontAwesomeIcon icon={faPhotoFilm} />
+        </ThumbnailPlaceholder>
+      </ThumbnailContainer>
     );
   }
 
@@ -76,14 +93,29 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
     <>
       {hasThumbnail && !isRemoved ? (
         <ThumbnailContainer editMode={editMode}>
-          {Boolean(handleRemove) && editMode && (
-            <ThumbnailButtons>
-              <Button type="button" buttonType="danger" onClick={handleRemove}>
-                <FontAwesomeIcon icon={faTrash} />
+          <ThumbnailButtons>
+            {
+              Boolean(handleRemove) && editMode && (
+                <Button type="button" buttonType="danger" onClick={handleRemove}>
+                  <FontAwesomeIcon icon={faTrash} />
+                </Button>
+              )
+            }
+            {
+              Boolean(handlePlay) && !editMode && <Button
+                type="button"
+                buttonType="default"
+                transparent
+                style={{ width: "3rem", fontSize: "2rem" }}
+                onClick={handlePlay!}
+              >
+                <FontAwesomeIcon icon={faPlay} />
               </Button>
-            </ThumbnailButtons>
-          )}
+            }
+          </ThumbnailButtons>
+
           {editMode && <ThumbnailOverlay />}
+
           <Thumbnail
             url={localMultimedia?.url || thumbnail}
             src="/images/blank.gif"
