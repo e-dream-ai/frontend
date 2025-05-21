@@ -1,21 +1,20 @@
-import { FC, memo, useEffect, useLayoutEffect, useRef } from 'react';
-import { useBlocker } from 'react-router-dom';
 import { useVideoJs } from '@/hooks/useVideoJS';
-import { Row } from '@/components/shared';
+import { FC, memo, useEffect, useRef } from 'react';
+import { Row, Column, Text } from '@/components/shared';
 import { PlayerWrapper, VideoContainer, VideoWrapper } from './video-js.styled';
 import { PoolConfig, VIDEOJS_OPTIONS } from '@/constants/video-js.constants';
 import { useWebClient } from '@/hooks/useWebClient';
 import 'video.js/dist/video-js.css';
 
 type VideoJSProps = {
-  visible?: boolean;
+  //
 }
 
 /**
  * Renders and manages multiple video.js player instances. 
  * It works with the VideoJS Context to create a pool of video players, where each player is used to have smooth video transitions. 
  */
-export const VideoJS: FC<VideoJSProps> = ({ visible = true }) => {
+export const VideoJS: FC<VideoJSProps> = () => {
   const {
     players,
     videoWrapperRef,
@@ -23,32 +22,31 @@ export const VideoJS: FC<VideoJSProps> = ({ visible = true }) => {
     createPlayer,
     clearPlayers
   } = useVideoJs();
-  const { isWebClientActive, setWebClientActive } = useWebClient();
-  // Blocker used to block navigation until player instances are cleanup from the DOM
-  const blocker = useBlocker(true);
+  const { isWebClientActive } = useWebClient();
+
 
   useEffect(() => {
     // creates min initial player slots
     for (let i = 0; i < PoolConfig.minPlayers; i++) {
       createPlayer();
     }
-  }, [createPlayer, clearPlayers, setWebClientActive]);
 
-  useEffect(() => {
-    if (blocker.state === "blocked") {
-      // Start cleanup when navigation is detected
-      setWebClientActive(false);
+    return () => {
+      // cleanup player instances
       clearPlayers();
-      // Allow navigation after cleanup
-      blocker.proceed();
     }
-  }, [blocker, setWebClientActive, clearPlayers]);
+  }, [createPlayer, clearPlayers]);
 
   return (
-    <Row style={{ display: isWebClientActive && visible ? "flex" : "none" }}>
-      <VideoWrapper ref={videoWrapperRef}>
-        {
-          players.map(({ id, skipCrossfade, longTransition }) => (
+    <Row style={{ display: isWebClientActive ? "flex" : "none" }}>
+      <Column flex="auto">
+        <Row>
+          <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+            Web Client
+          </Text>
+        </Row>
+        <VideoWrapper ref={videoWrapperRef}>
+          {players.map(({ id, skipCrossfade, longTransition }) => (
             <PlayerSlot
               key={id}
               id={id}
@@ -56,9 +54,9 @@ export const VideoJS: FC<VideoJSProps> = ({ visible = true }) => {
               skipCrossfade={skipCrossfade}
               longTransition={longTransition}
             />
-          ))
-        }
-      </VideoWrapper>
+          ))}
+        </VideoWrapper>
+      </Column>
     </Row>
   );
 };
@@ -82,7 +80,7 @@ const PlayerSlot = memo(
     const videoRef = useRef<HTMLVideoElement>(null);
     const { registerPlayer, unregisterPlayer } = useVideoJs();
 
-    useLayoutEffect(() => {
+    useEffect(() => {
       if (videoRef.current) {
         const id = registerPlayer(videoRef.current, VIDEOJS_OPTIONS);
 
