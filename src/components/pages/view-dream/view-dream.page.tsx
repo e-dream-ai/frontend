@@ -32,6 +32,7 @@ import {
   faFlag,
   faGears,
   faPencil,
+  faPlay,
   faSave,
   faThumbsDown,
   faThumbsUp,
@@ -41,6 +42,8 @@ import { DreamStatusType } from "@/types/dream.types";
 import { Video } from "./view-dream.styled";
 import { isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
+import useSocket from "@/hooks/useSocket";
+import { emitPlayDream } from "@/utils/socket.util";
 import { truncateString } from "@/utils/string.util";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 import { User } from "@/types/auth.types";
@@ -98,9 +101,10 @@ const ViewDreamPage: React.FC = () => {
     activeRefetchInterval: !editMode,
   });
 
+  const { socket } = useSocket();
   const dream = useMemo(() => data?.data?.dream, [data]);
   const vote = useMemo(() => voteData?.data?.vote, [voteData]);
-  const playlistItems = useMemo(() => dream?.playlistItems ?? [], [dream]);
+  const playlistItems = useMemo(() => dream?.playlistItems, [dream]);
   const reports = useMemo(() => dream?.reports ?? [], [dream])
   const isDreamReported = useMemo(() => Boolean(dream?.reports?.length), [dream])
 
@@ -311,6 +315,10 @@ const ViewDreamPage: React.FC = () => {
     });
   };
 
+  const handlePlayDream = () => {
+    emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
+  };
+
   const handleThumbsUpDream = async () => {
     if (vote?.vote === VoteType.UPVOTE) {
       await unvoteMutation.mutateAsync();
@@ -481,6 +489,15 @@ const ViewDreamPage: React.FC = () => {
               {!editMode && (
                 <Row margin={0} alignItems="center">
                   <PlaylistCheckboxMenu type="dream" targetItem={dream} />
+                  <Button
+                    type="button"
+                    buttonType="default"
+                    transparent
+                    style={{ width: "3rem" }}
+                    onClick={handlePlayDream}
+                  >
+                    <FontAwesomeIcon icon={faPlay} />
+                  </Button>
                   <Button
                     type="button"
                     buttonType="default"
