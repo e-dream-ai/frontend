@@ -9,21 +9,17 @@ import React, {
 import useAuth from "@/hooks/useAuth";
 import { Dream } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
-import { useDesktopClient } from "@/hooks/useDesktopClient";
-import useStatusCallback from "@/hooks/useStatusCallback";
 import { useVideoJs } from "@/hooks/useVideoJS";
 import { RemoteControlEventData, RemoteEvent } from "@/types/remote-control.types";
 import { calculatePlaybackRateFromSpeed, getPlaylistNavigation, multiplyPerceptualFPS, tapsToBrightness } from "@/utils/web-client.util";
-import { toast } from "react-toastify";
 import useSocket from "@/hooks/useSocket";
 import { NEW_REMOTE_CONTROL_EVENT, REMOTE_CONTROLS } from "@/constants/remote-control.constants";
-import { CREDIT_OVERLAY_ID, IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
+import { CREDIT_OVERLAY_ID } from "@/constants/web-client.constants";
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
 import { HistoryItem, PlaylistDirection, PlaylistNavigation, SpeedControls, SpeedLevels } from "@/types/web-client.types";
 import { LONG_CROSSFADE_DURATION, VIDEOJS_EVENTS } from "@/constants/video-js.constants";
 import { useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
-import { useTranslation } from "react-i18next";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { fetchDream } from "@/api/dream/query/useDream";
 import { joinPaths } from "@/utils/router.util";
@@ -56,12 +52,11 @@ export const WebClientContext = createContext<WebClientContextType>(
 export const WebClientProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
-  const { t } = useTranslation();
   // location
   const location = useLocation();
   // socket
   const { emit } = useSocket();
-  const { user, currentDream, currentPlaylist, refreshCurrentDream, refreshCurrentPlaylist } = useAuth();
+  const { currentDream, currentPlaylist, refreshCurrentDream, refreshCurrentPlaylist } = useAuth();
 
   // videojs
   const {
@@ -109,7 +104,6 @@ export const WebClientProvider: React.FC<{
    * indicates if the web client play button can be shown to the user
    */
   const [isWebClientAvailable, setIsWebClientAvailable] = useState<boolean>(false);
-  const { isActive } = useDesktopClient();
 
 
   // player states
@@ -523,25 +517,6 @@ export const WebClientProvider: React.FC<{
     },
   );
 
-  useStatusCallback(
-    isActive,
-    {
-      onActive: () => {
-        if (IS_WEB_CLIENT_ACTIVE && user) {
-          setIsWebClientAvailable(false);
-        }
-      },
-      onInactive: () => {
-        if (IS_WEB_CLIENT_ACTIVE && user) {
-          setIsWebClientAvailable(true);
-        }
-      },
-    },
-    {},
-    // Add user to deps to refresh callbacks when user logs in
-    [user]
-  );
-
   // register events on videojs instance
   useEffect(() => {
     const handleTimeUpdate = async () => {
@@ -652,14 +627,6 @@ export const WebClientProvider: React.FC<{
   useEffect(() => {
     dislikedDreamsRef.current = dislikedDreams;
   }, [dislikedDreams]);
-
-  // Show web client available toast
-  useEffect(() => {
-    // If pathname is RC and isWebClientAvailable but not isWebClientActive, then show toast
-    if (location.pathname === ROUTES.REMOTE_CONTROL && !isWebClientActive && isWebClientAvailable) {
-      toast.info(t("web_client.web_client_available"));
-    }
-  }, [t, location.pathname, isWebClientActive, isWebClientAvailable]);
 
   // Cleans disliked dreams from history when dislikedDreams are updated
   useEffect(() => {
