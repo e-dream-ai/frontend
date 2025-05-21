@@ -19,13 +19,15 @@ import { faPlay } from "@fortawesome/free-solid-svg-icons";
 import { useWebClient } from "@/hooks/useWebClient";
 import useAuth from "@/hooks/useAuth";
 import useStatusCallback from "@/hooks/useStatusCallback";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
+import { toast } from "react-toastify";
 
 export const CurrentDream = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const { user, currentDream, isLoadingCurrentDream, refreshCurrentDream } = useAuth();
-  const { isWebClientAvailable, setWebClientActive, setWebPlayerAvailable } = useWebClient()
+  const { setWebClientActive, setWebPlayerAvailable } = useWebClient();
   const { isActive } = useDesktopClient();
   const [isWebClientAvailable, setIsWebClientAvailable] = useState(false);
 
