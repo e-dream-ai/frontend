@@ -21,7 +21,7 @@ const useStatusCallback = (
   /**
    * delays default values
    */
-  const { activeDelay = 5000, inactiveDelay = 5000 } = delays;
+  const { activeDelay = 1000, inactiveDelay = 1000 } = delays;
 
   // store callbacks references
   const onActiveRef = useRef(onActive);

@@ -97,6 +97,7 @@ const PlayerSlot = memo(
             ref={videoRef}
             className={`video-js vjs-big-play-centered ${isActive ? "active" : "inactive"}`}
             data-player-id={id}
+            muted
           />
         </PlayerWrapper>
       </VideoContainer >
