@@ -70,6 +70,7 @@ export const CurrentDream = () => {
         // Show web client available toast and play button
         if (IS_WEB_CLIENT_ACTIVE && user) {
           setIsWebClientAvailable(true);
+	  setWebClientActive(false);
 	  setWebClientActive(true);
 	  console.log('setWebClientActive(true) done');
           toast.info(t("web_client.web_client_available"));
