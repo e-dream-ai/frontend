@@ -71,6 +71,7 @@ export const CurrentDream = () => {
         if (IS_WEB_CLIENT_ACTIVE && user) {
           setIsWebClientAvailable(true);
 	  setWebClientActive(true);
+	  console.log('setWebClientActive(true) done');
           toast.info(t("web_client.web_client_available"));
         }
       },
