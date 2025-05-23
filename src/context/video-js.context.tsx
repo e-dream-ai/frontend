@@ -345,11 +345,9 @@ export const VideoJSProvider = ({
         });
 
       const nextPlayerInstance = nextPlayers[0];
-
       if (!nextPlayerInstance || !nextPlayerInstance.player) {
         return false;
       }
-
       const nextPlayer = nextPlayerInstance.player;
       const currentPlaybackRate = currentPlayer?.player?.playbackRate() || 1;
 
@@ -369,7 +367,9 @@ export const VideoJSProvider = ({
         nextPlayerInstance.skipCrossfade = options?.skipCrossfade ?? false;
         nextPlayerInstance.longTransition = options?.longTransition ?? false;
 
+	console.log('playVideo4', nextPlayer);
         await nextPlayer.play();
+        console.log('playVideo5');
 
         if (currentPlayer) {
           // set current player as inactive

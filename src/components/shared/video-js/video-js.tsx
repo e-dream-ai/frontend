@@ -42,7 +42,7 @@ export const VideoJS: FC<VideoJSProps> = () => {
       <Column flex="auto">
         <Row>
           <Text mb="1rem" fontSize="1rem" fontWeight={600}>
-            Web Client
+            Web Player
           </Text>
         </Row>
         <VideoWrapper ref={videoWrapperRef}>
@@ -97,6 +97,7 @@ const PlayerSlot = memo(
             ref={videoRef}
             className={`video-js vjs-big-play-centered ${isActive ? "active" : "inactive"}`}
             data-player-id={id}
+            muted
           />
         </PlayerWrapper>
       </VideoContainer >
