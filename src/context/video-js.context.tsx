@@ -316,7 +316,6 @@ export const VideoJSProvider = ({
       src: string,
       options = { skipCrossfade: false, longTransition: false }
     ): Promise<boolean> => {
-      console.log('playVideo', src)
       const currentPlayer = activePlayerIdRef.current ?
         playersPoolRef.current.get(activePlayerIdRef.current) : null;
 
@@ -346,11 +345,9 @@ export const VideoJSProvider = ({
         });
 
       const nextPlayerInstance = nextPlayers[0];
-      console.log('playVideo2');
       if (!nextPlayerInstance || !nextPlayerInstance.player) {
         return false;
       }
-      console.log('playVideo3');
       const nextPlayer = nextPlayerInstance.player;
       const currentPlaybackRate = currentPlayer?.player?.playbackRate() || 1;
 

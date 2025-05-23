@@ -282,7 +282,6 @@ export const WebClientProvider: React.FC<{
 
   // used to play dreams that are not handled by navigation events (next/prev) 
   const playDreamWithHistory = useCallback(async (dream?: Dream) => {
-    console.log('playDreamWithHistory ', dream);
     if (!dream) return;
     await playDream(dream);
     // add dream to played dreams
@@ -574,8 +573,6 @@ export const WebClientProvider: React.FC<{
   // play current dream when user comes back to remote control page or isWebClientActive first time
   useEffect(() => {
     // if pathname is RC and isWebClientActive, then play current dream
-    console.log('useEffect: play current dream when user comes back to remote control page or isWebClientActive first time');
-    console.log(location.pathname, isReady, isWebClientActive, playingDreamRef.current);
     if (
       // location should be remote control
       location.pathname === ROUTES.REMOTE_CONTROL
@@ -586,7 +583,7 @@ export const WebClientProvider: React.FC<{
       // should be a dream with the video source
       && playingDreamRef.current?.video
     ) {
-      console.log('playDreamWithHistory(playingDreamRef.current)');
+      console.log('playDreamWithHistory()');
       playDreamWithHistory(playingDreamRef.current)
     }
   }, [location.pathname, isReady, isWebClientActive, playDreamWithHistory]);
