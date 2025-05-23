@@ -595,6 +595,7 @@
     "play_playlist": "Playlist {{name}} played."
   },
   "web_client": {
-    "web_client_available": "Desktop client is inactive, you're able to play something on the web client clicking play button."
+    "web_client_available": "Remote app not found, running locally.",
+    "web_client_unavailable": "Remote app found, working as remote control."
   }
 }

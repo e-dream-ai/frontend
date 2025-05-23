@@ -65,7 +65,7 @@ export const CurrentDream = () => {
         if (IS_WEB_CLIENT_ACTIVE && user) {
           setIsWebClientAvailable(false);
 	  setWebClientActive(false);
-          toast.info("desktop client is active, switching to remote control");
+          toast.info(t("web_client.web_client_unavailable"));
         }
       },
       onInactive: () => {
