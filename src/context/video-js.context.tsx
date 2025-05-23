@@ -370,7 +370,7 @@ export const VideoJSProvider = ({
         nextPlayerInstance.skipCrossfade = options?.skipCrossfade ?? false;
         nextPlayerInstance.longTransition = options?.longTransition ?? false;
 
-	console.log('playVideo4');
+	console.log('playVideo4', nextPlayer);
         await nextPlayer.play();
         console.log('playVideo5');
 
