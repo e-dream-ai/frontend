@@ -42,7 +42,7 @@ export const VideoJS: FC<VideoJSProps> = () => {
       <Column flex="auto">
         <Row>
           <Text mb="1rem" fontSize="1rem" fontWeight={600}>
-            Web Client
+            Web Player
           </Text>
         </Row>
         <VideoWrapper ref={videoWrapperRef}>
