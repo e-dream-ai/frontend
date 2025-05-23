@@ -370,7 +370,9 @@ export const VideoJSProvider = ({
         nextPlayerInstance.skipCrossfade = options?.skipCrossfade ?? false;
         nextPlayerInstance.longTransition = options?.longTransition ?? false;
 
+	console.log('playVideo4');
         await nextPlayer.play();
+        console.log('playVideo5');
 
         if (currentPlayer) {
           // set current player as inactive
