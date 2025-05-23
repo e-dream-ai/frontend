@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { Column, ItemCardList, ItemCard, Text, Row } from "@/components/shared";
+import { Column, ItemCardList, ItemCard, Text, Row, Button } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import {
   NEW_REMOTE_CONTROL_EVENT,
@@ -14,12 +14,16 @@ import { getRemoteControlEvent } from "@/utils/remote-control.util";
 import { useTranslation } from "react-i18next";
 import { ItemCardSkeleton } from "../item-card/item-card";
 import { useTheme } from "styled-components";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlay } from "@fortawesome/free-solid-svg-icons";
+import { useWebClient } from "@/hooks/useWebClient";
 import useAuth from "@/hooks/useAuth";
 
 export const CurrentDream = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const { currentDream, isLoadingCurrentDream, refreshCurrentDream } = useAuth();
+  const { isWebClientAvailable, setWebClientActive, setWebPlayerAvailable } = useWebClient()
 
   const handleRemoteControlEvent = async (data?: RemoteControlEventData): Promise<void | undefined> => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
@@ -43,6 +47,11 @@ export const CurrentDream = () => {
     handleRemoteControlEvent,
   );
 
+  const handleActivateWebClient = () => {
+    setWebClientActive(true);
+    setWebPlayerAvailable(false);
+  };
+
   // update current dream on component mount
   useEffect(() => {
     refreshCurrentDream();
@@ -54,6 +63,16 @@ export const CurrentDream = () => {
         <Text mb="1rem" fontSize="1rem" fontWeight={600}>
           {t("components.current_dream.title")}
         </Text>
+
+        {isWebClientAvailable && <Button
+          type="button"
+          buttonType="default"
+          size="md"
+          transparent
+          onClick={handleActivateWebClient}
+        >
+          <FontAwesomeIcon icon={faPlay} />
+        </Button>}
       </Row>
       {isLoadingCurrentDream ? (
         <ItemCardSkeleton>
