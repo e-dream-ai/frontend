@@ -280,9 +280,12 @@ export const WebClientProvider: React.FC<{
       return true;
     }, [emit, playVideo]);
 
+  const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
   // used to play dreams that are not handled by navigation events (next/prev) 
   const playDreamWithHistory = useCallback(async (dream?: Dream) => {
     if (!dream) return;
+    await sleep(1000);
     await playDream(dream);
     // add dream to played dreams
     const added = addDreamToHistory(dream, false);
