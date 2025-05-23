@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Column, ItemCardList, ItemCard, Text, Row, Button } from "@/components/shared";
+import { useEffect } from "react";
+import { Column, ItemCardList, ItemCard, Text, Row } from "@/components/shared";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import {
   NEW_REMOTE_CONTROL_EVENT,
@@ -14,8 +14,6 @@ import { getRemoteControlEvent } from "@/utils/remote-control.util";
 import { useTranslation } from "react-i18next";
 import { ItemCardSkeleton } from "../item-card/item-card";
 import { useTheme } from "styled-components";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlay } from "@fortawesome/free-solid-svg-icons";
 import { useWebClient } from "@/hooks/useWebClient";
 import useAuth from "@/hooks/useAuth";
 import useStatusCallback from "@/hooks/useStatusCallback";
@@ -27,9 +25,8 @@ export const CurrentDream = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const { user, currentDream, isLoadingCurrentDream, refreshCurrentDream } = useAuth();
-  const { setWebClientActive, setWebPlayerAvailable } = useWebClient();
+  const { setWebClientActive } = useWebClient();
   const { isActive } = useDesktopClient();
-  const [isWebClientAvailable, setIsWebClientAvailable] = useState(false);
 
   const handleRemoteControlEvent = async (data?: RemoteControlEventData): Promise<void | undefined> => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
@@ -53,17 +50,11 @@ export const CurrentDream = () => {
     handleRemoteControlEvent,
   );
 
-  const handleActivateWebClient = () => {
-    setWebClientActive(true);
-    setWebPlayerAvailable(false);
-  };
-
   useStatusCallback(
     isActive,
     {
       onActive: () => {
         if (IS_WEB_CLIENT_ACTIVE && user) {
-          setIsWebClientAvailable(false);
 	  setWebClientActive(false);
           toast.info(t("web_client.web_client_unavailable"));
         }
@@ -71,7 +62,6 @@ export const CurrentDream = () => {
       onInactive: () => {
         // Show web client available toast and play button
         if (IS_WEB_CLIENT_ACTIVE && user) {
-          setIsWebClientAvailable(true);
 	  setWebClientActive(true);
           toast.info(t("web_client.web_client_available"));
         }
@@ -93,16 +83,6 @@ export const CurrentDream = () => {
         <Text mb="1rem" fontSize="1rem" fontWeight={600}>
           {t("components.current_dream.title")}
         </Text>
-
-        {isWebClientAvailable && <Button
-          type="button"
-          buttonType="default"
-          size="md"
-          transparent
-          onClick={handleActivateWebClient}
-        >
-          <FontAwesomeIcon icon={faPlay} />
-        </Button>}
       </Row>
       {isLoadingCurrentDream ? (
         <ItemCardSkeleton>
