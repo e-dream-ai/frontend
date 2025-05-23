@@ -285,7 +285,7 @@ export const WebClientProvider: React.FC<{
   // used to play dreams that are not handled by navigation events (next/prev) 
   const playDreamWithHistory = useCallback(async (dream?: Dream) => {
     if (!dream) return;
-    await sleep(1000);
+    await sleep(100);
     await playDream(dream);
     // add dream to played dreams
     const added = addDreamToHistory(dream, false);
