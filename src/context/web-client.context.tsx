@@ -253,6 +253,7 @@ export const WebClientProvider: React.FC<{
       dreamToPlay?: Dream | null,
       options: { skipCrossfade: boolean, longTransition: boolean } = { skipCrossfade: false, longTransition: false }
     ) => {
+      console.log('playDream', dreamToPlay);
       if (!dreamToPlay?.video) return false;
       // playing log
       console.log("-----");
@@ -281,6 +282,7 @@ export const WebClientProvider: React.FC<{
 
   // used to play dreams that are not handled by navigation events (next/prev) 
   const playDreamWithHistory = useCallback(async (dream?: Dream) => {
+    console.log('playDreamWithHistory ', dream);
     if (!dream) return;
     await playDream(dream);
     // add dream to played dreams
