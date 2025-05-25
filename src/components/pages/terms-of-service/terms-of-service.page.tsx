@@ -23,7 +23,7 @@ export const TermsOfServicePage: React.FC = () => {
               <ol type="a">
                 <li>
                   These Terms of Service, which include our End User License
-                  Agreement (&ldquo;EULA&rdquo;) govern your use of the e-dream
+                  Agreement (&ldquo;EULA&rdquo;) govern your use of the infinidream
                   service, hereafter, &ldquo;The Service&rdquo;.
                 </li>
                 <li>
@@ -119,7 +119,7 @@ export const TermsOfServicePage: React.FC = () => {
                     </li>
                   </ol>
                 </li>
-                <li>Prohibited content may not be uploaded to e-dream.</li>
+                <li>Prohibited content may not be uploaded to the service.</li>
                 <li>
                   We define &ldquo;not safe for work&rdquo; (NSFW) as any
                   content that:
