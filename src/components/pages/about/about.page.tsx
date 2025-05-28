@@ -78,7 +78,7 @@ export const AboutPage: React.FC = () => {
             <li>
               Install infinidream on your Mac to get the best experience. The
               infinidream app provides unsurpassed support for ambient interaction,
-              including adjustable slow and smooth playback.
+              including speed control.
             </li>
             <li>
               Install the screensaver so it runs automatically when you're not
