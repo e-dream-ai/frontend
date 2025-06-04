@@ -41,7 +41,7 @@ const InstallSection = () => {
           {!isMacOS && (
             <p>
               <b>
-                Warning: currently e-dream is for macOS only, but this computer
+                Warning: currently infinidream is for macOS only, but this computer
                 appears to be something else.
               </b>
             </p>
@@ -95,7 +95,7 @@ const InstallSection = () => {
                   Unzip, and double-click to install. If prompted, install for
                   all users. Then to enable it, go into System Settings, select
                   the "Screen Saver" panel, and then in the "Other" section
-                  click on "Show More" and then click on "e-dream". Whew!
+                  click on "Show More" and then click on "infinidream". Whew!
                 </Text>
               </Column>
             </Card>
@@ -168,7 +168,7 @@ const RemoteControlSection = () => {
 	    <Row>
 	      <Text><p>
 	        Just click to install the remote control on your phone or tablet.
-		Run it, sign-in, and enjoy complete control of e-dream on your
+		Run it, sign-in, and enjoy complete control of infinidream on your
                 laptop or computer from a distance.
 	      </p></Text>
 	    </Row>
@@ -188,7 +188,7 @@ const RemoteControlSection = () => {
 	    <Row>
 	      <Text><p>
 	        Just click to install the remote control on your phone or tablet.
-		Run it, sign-in, and enjoy complete control of e-dream on your
+		Run it, sign-in, and enjoy complete control of infinidream on your
                 laptop or computer from a distance.
 	      </p></Text>
 	    </Row>

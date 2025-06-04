@@ -76,16 +76,16 @@ export const AboutPage: React.FC = () => {
           </p>
           <ul>
             <li>
-              Install e-dream on your Mac to get the best experience. The
-              e-dream app provides unsurpassed support for ambient interaction,
-              including adjustable slow and smooth playback.
+              Install infinidream on your Mac to get the best experience. The
+              infinidream app provides unsurpassed support for ambient interaction,
+              including speed control.
             </li>
             <li>
               Install the screensaver so it runs automatically when you're not
               using your computer.
             </li>
             <li>
-              Install the web app on your phone to remote-control your e-dream
+              Install the web app on your phone to remote-control your infinidream
               from anywhere.
             </li>
           </ul>

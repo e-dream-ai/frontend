@@ -31,9 +31,9 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024, // 5 MB
       },
       manifest: {
-        name: "e-dream",
-        short_name: "e-dream",
-        description: "e-dream app",
+        name: "infinidream",
+        short_name: "infinidream",
+        description: "infinidream remote control app",
         theme_color: "#000000",
         screenshots: [
           {

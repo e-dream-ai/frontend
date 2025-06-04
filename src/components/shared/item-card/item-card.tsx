@@ -511,7 +511,8 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                       <FontAwesomeIcon icon={faListUl} />
                     ) : (
                       <FontAwesomeIcon icon={faFilm} />
-                    )}{" "}
+                    )}
+		    {" "}
                     {name || t("components.item_card.unnamed")}
                   </ItemTitleText>
 

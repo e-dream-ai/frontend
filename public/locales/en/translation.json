@@ -1,12 +1,12 @@
 {
   "header": {
-    "e_dream": "e-dream",
+    "e_dream": "infinidream",
     "hello": "Hello",
     "signup": "Create account",
     "login": "Sign in",
     "logout": "Sign out",
     "profile": "Profile",
-    "remote_control": "Remote Control",
+    "remote_control": "Remote",
     "about": "About",
     "install": "Install",
     "forum": "Forum",
@@ -357,7 +357,7 @@
       "error_creating_report": "Error creating report."
     },
     "add_home_screen": {
-      "app_functionality_description": "e-dream has app functionality, add it to your home screen to use it.",
+      "app_functionality_description": "infinidream can run as an app, add it to your home screen to use it.",
       "mobile_ios_safari_step1": "Press the 'Share' button on the menu bar below",
       "mobile_ios_safari_step2": "Press 'Add to Home Screen'",
       "mobile_chrome_step1": "Press the 'Share' button on the menu bar below",

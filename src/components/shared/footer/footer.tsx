@@ -18,7 +18,7 @@ const FooterIcons: React.FC = () => (
   <>
     <Anchor
       type="secondary"
-      href="https://www.threads.net/@e_dream_ai"
+      href="https://www.threads.com/@infinidream_ai"
       target="_blank"
     >
       <span className="fa-stack fa-lg --fa-li-margin">
@@ -31,7 +31,7 @@ const FooterIcons: React.FC = () => (
     </Anchor>
     <Anchor
       type="secondary"
-      href="https://twitter.com/e_dream_ai"
+      href="https://x.com/infinidream_ai"
       target="_blank"
     >
       <span className="fa-stack fa-lg">
@@ -71,7 +71,7 @@ const FooterIcons: React.FC = () => (
     </Anchor>
     <Anchor
       type="secondary"
-      href="https://www.facebook.com/groups/edreamai/"
+      href="https://www.facebook.com/groups/infinidream/"
       target="_blank"
     >
       <span className="fa-stack fa-lg">
@@ -84,7 +84,7 @@ const FooterIcons: React.FC = () => (
     </Anchor>
     <Anchor
       type="secondary"
-      href="https://bsky.app/profile/e-dream.ai"
+      href="https://bsky.app/profile/infinidream.ai"
       target="_blank"
     >
       <span className="fa-stack fa-lg">

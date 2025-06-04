@@ -68,7 +68,8 @@ export const ItemTitleText = styled(Text)`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: normal;
-  word-break: break-all;
+  word-break: break-word;
+  overflow-wrap: break-word;
 `;
 
 export const StyledItemCard = styled.li<{
