@@ -50,9 +50,7 @@ export const TermsOfServicePage: React.FC = () => {
             <li>
               <b>Changes to Terms of Service.</b> The company may, from time to
               time, change these Terms of Service. We will post announcements
-              through social media and on{" "}
-              <Anchor href="https://e-dream.ai/">e-dream.ai</Anchor> when we do
-              so.
+              through social media and discord when we do so.
             </li>
             <li>
               <b>Communication Preferences.</b> You are required to give us a
