@@ -34,7 +34,7 @@ export const AuthenticatePage: React.FC = () => {
                 username: user.name ?? user.email,
               })}.`,
             );
-            router.navigate(ROUTES.INSTALL);
+            router.navigate(ROUTES.PLAYLISTS);
           } else {
             toast.error(`${t("page.login.error_logging_in")} ${data.message}`);
           }
