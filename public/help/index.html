@@ -21,11 +21,23 @@
   <link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600&display=swap" rel="stylesheet">
   <div class="wrapper">
     <nav class="site-nav">
-      <a class="page-link" href="/help/" target="_parent">Video Overvew</a>
-      <a class="page-link" href="/help/creating-dreams" target="_parent">Creating Dreams</a>
+      <a class="page-link" href="#" onclick="navigateInIframe('/help/'); return false;">Video Overvew</a>
+      <a class="page-link" href="#" onclick="navigateInIframe('/help/creating-dreams'); return false;">Creating Dreams</a>
     </nav>
   </div>
 </header>
+
+<script>
+function navigateInIframe(path) {
+  // Try to send message to parent window
+  if (window.parent !== window) {
+    window.parent.postMessage({ type: 'navigate', path: path }, '*');
+  } else {
+    // If not in iframe, navigate normally
+    window.location.href = path;
+  }
+}
+</script>
 
 <style>
 .site-header {
