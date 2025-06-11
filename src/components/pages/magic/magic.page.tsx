@@ -62,7 +62,7 @@ export const MagicPage: React.FC = () => {
               })}.`,
             );
             reset();
-            router.navigate(ROUTES.PLAYLISTS);
+            router.navigate(ROUTES.INSTALL);
           } else {
             toast.error(
               `${t("page.magic.error_verifying_code")} ${data.message}`,
