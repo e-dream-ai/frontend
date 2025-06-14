@@ -23,7 +23,7 @@ export const TermsOfServicePage: React.FC = () => {
               <ol type="a">
                 <li>
                   These Terms of Service, which include our End User License
-                  Agreement (&ldquo;EULA&rdquo;) govern your use of the Infinidream
+                  Agreement (&ldquo;EULA&rdquo;) govern your use of the infinidream
                   service, hereafter, &ldquo;The Service&rdquo;.
                 </li>
                 <li>
