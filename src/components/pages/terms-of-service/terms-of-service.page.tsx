@@ -323,7 +323,7 @@ export const TermsOfServicePage: React.FC = () => {
               <b>Customer Support.</b> To find more information about our
               service and its features, or if you need assistance with your
               account, please visit our web site,{" "}
-              <Anchor href="https://e-dream.ai/">e-dream.ai</Anchor> and if
+              <Anchor href="https://infinidream.ai/">infinidream.ai</Anchor> and if
               necessary, contact us from your verified account email address.
               The company does not provide live help desk service. You may find
               us on social media, but the company does not guarantee any

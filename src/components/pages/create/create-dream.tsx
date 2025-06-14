@@ -1,3 +1,4 @@
+import { Anchor } from "@/components/shared";
 import { useMemo, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useTranslation } from "react-i18next";
@@ -111,7 +112,11 @@ export const CreateDream: React.FC = () => {
           </>
         ) : (
           <>
-            <Text my={3}>{t("page.create.dream_instructions")}</Text>
+            <Text my={3}>
+	      {t("page.create.dream_instructions")}{" "}
+	      See the {" "}<Anchor href="https://docs.google.com/document/u/1/d/e/2PACX-1vTQnJMCLOqenrCADZyrXxgBTahQ4sPyRRj7GrhMEu_DkmScRRGOjRJQmd2rkH1-_K0WRjfGYd04rhJB/pub">Creators' Guide</Anchor> and
+	      {" "}<Anchor href="https://github.com/e-dream-ai/python-api">Python API</Anchor> for more ways to make and share dreams.
+	    </Text>
             <FileUploader
               maxSize={MAX_FILE_SIZE_MB}
               handleChange={handleChange}
