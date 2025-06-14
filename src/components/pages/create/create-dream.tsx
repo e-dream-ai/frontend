@@ -113,8 +113,10 @@ export const CreateDream: React.FC = () => {
         ) : (
           <>
             <Text my={3}>{t("page.create.dream_instructions")}</Text>
-	    See the {" "}<Anchor href="https://docs.google.com/document/u/1/d/e/2PACX-1vTQnJMCLOqenrCADZyrXxgBTahQ4sPyRRj7GrhMEu_DkmScRRGOjRJQmd2rkH1-_K0WRjfGYd04rhJB/pub">Creators' Guide</Anchor> and
-	    {" "}<Anchor href="https://github.com/e-dream-ai/python-api">Python API</Anchor> for more ways to make and share dreams.
+	    <Text my={3}>
+	      See the {" "}<Anchor href="https://docs.google.com/document/u/1/d/e/2PACX-1vTQnJMCLOqenrCADZyrXxgBTahQ4sPyRRj7GrhMEu_DkmScRRGOjRJQmd2rkH1-_K0WRjfGYd04rhJB/pub">Creators' Guide</Anchor> and
+	      {" "}<Anchor href="https://github.com/e-dream-ai/python-api">Python API</Anchor> for more ways to make and share dreams.
+	    </Text>
             <FileUploader
               maxSize={MAX_FILE_SIZE_MB}
               handleChange={handleChange}
