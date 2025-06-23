@@ -490,6 +490,7 @@ const ViewDreamPage: React.FC = () => {
         onConfirm={onHideClientNotConnectedModal}
         title={t("page.view_dream.client_not_connected_modal_title")}
         confirmText={t("page.view_dream.client_not_connected_modal_ok")}
+        cancelText=""
         text={
           <Text>
             {t("page.view_dream.client_not_connected_modal_body")}

@@ -42,6 +42,7 @@ import { useTheme } from "styled-components";
 import { Avatar } from "@/components/shared/avatar/avatar";
 import { emitPlayDream, emitPlayPlaylist } from "@/utils/socket.util";
 import useSocket from "@/hooks/useSocket";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { useImage } from "@/hooks/useImage";
 import { useItemCardListState } from "../item-card-list/item-card-list";
 import { HighlightPosition } from "@/types/item-card.types";
@@ -50,6 +51,7 @@ import { VirtualPlaylist } from "@/types/feed.types";
 import Text from "../text/text";
 import { getVirtualPlaylistThumbnailDreams, shouldVirtualPlaylistDisplayDots } from "@/utils/virtual-playlist.util";
 import { ItemCardImage } from "./item-card-image";
+import { ConfirmModal } from "@/components/modals/confirm.modal";
 
 type DNDMode = "local" | "cross-window";
 /**
@@ -142,6 +144,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const { socket } = useSocket();
+  const { isActive: isClientActive } = useDesktopClient();
   const { isDragging, setDragging } = useItemCardListState();
 
   /**
@@ -149,6 +152,9 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
    */
   const [highlightPosition, setHighlightPosition] =
     useState<HighlightPosition>();
+
+  const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
+    useState<boolean>(false);
 
   const thumbnailUrl = useImage(thumbnail ?? "", {
     width: 420,
@@ -177,6 +183,11 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     (event) => {
       event.preventDefault();
       event.stopPropagation();
+
+      if (!isClientActive) {
+        setShowClientNotConnectedModal(true);
+        return;
+      }
 
       if (type === "dream") {
         emitPlayDream(
@@ -210,7 +221,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
         }
       }
     },
-    [t, socket, item, type, thumbnailDreams],
+    [t, socket, item, type, thumbnailDreams, isClientActive],
   );
 
   const handleDragStart = useCallback(
@@ -467,10 +478,26 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     [Thumbnail, handlePlay, item, type, inline, showPlayButton],
   );
 
+  const onHideClientNotConnectedModal = () => setShowClientNotConnectedModal(false);
+
   return (
-    <StyledItemCard data-element-uuid={uuid} ref={cardRef} size={size} draggable={draggable}>
-      <>
-        <ItemCardAnchor to={navigateRoute ?? ""} onClick={onClick}>
+    <>
+      <ConfirmModal
+        isOpen={showClientNotConnectedModal}
+        onCancel={onHideClientNotConnectedModal}
+        onConfirm={onHideClientNotConnectedModal}
+        title={t("page.view_dream.client_not_connected_modal_title")}
+        confirmText={t("page.view_dream.client_not_connected_modal_ok")}
+        cancelText=""
+        text={
+          <Text>
+            {t("page.view_dream.client_not_connected_modal_body")}
+          </Text>
+        }
+      />
+      <StyledItemCard data-element-uuid={uuid} ref={cardRef} size={size} draggable={draggable}>
+        <>
+          <ItemCardAnchor to={navigateRoute ?? ""} onClick={onClick}>
           <Row
             flex="auto"
             margin="0"
@@ -524,15 +551,16 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
               </Row>
             </Column>
           </Row>
-        </ItemCardAnchor>
-        {droppable && (
-          <HighlightBorder
-            isHighlighted={!!highlightPosition}
-            position={highlightPosition}
-          />
-        )}
-      </>
-    </StyledItemCard>
+          </ItemCardAnchor>
+          {droppable && (
+            <HighlightBorder
+              isHighlighted={!!highlightPosition}
+              position={highlightPosition}
+            />
+          )}
+        </>
+      </StyledItemCard>
+    </>
   );
 };
 
