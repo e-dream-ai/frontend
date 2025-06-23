@@ -43,8 +43,10 @@ import { Video } from "./view-dream.styled";
 import { isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import useSocket from "@/hooks/useSocket";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { emitPlayDream } from "@/utils/socket.util";
 import { truncateString } from "@/utils/string.util";
+import { AnchorLink } from "@/components/shared";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 import { User } from "@/types/auth.types";
 import { useUpvoteDream } from "@/api/dream/mutation/useUpvoteDream";
@@ -81,6 +83,8 @@ const ViewDreamPage: React.FC = () => {
     useState<boolean>(false);
   const [showProcessDreamReportModal, setShowProcessDreamReportModal] =
     useState<boolean>(false);
+  const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
+    useState<boolean>(false);
 
   const upvoteMutation = useUpvoteDream(uuid);
   const downvoteMutation = useDownvoteDream(uuid);
@@ -102,6 +106,7 @@ const ViewDreamPage: React.FC = () => {
   });
 
   const { socket } = useSocket();
+  const { isActive: isClientActive } = useDesktopClient();
   const dream = useMemo(() => data?.data?.dream, [data]);
   const vote = useMemo(() => voteData?.data?.vote, [voteData]);
   const playlistItems = useMemo(() => dream?.playlistItems, [dream]);
@@ -241,6 +246,8 @@ const ViewDreamPage: React.FC = () => {
   const onHideReportModal = () => setShowReportModal(false);
   const onShowProcessDreamReportModal = () => setShowProcessDreamReportModal(true);
   const onHideProcessDreamReportModal = () => setShowProcessDreamReportModal(false);
+  const onShowClientNotConnectedModal = () => setShowClientNotConnectedModal(true);
+  const onHideClientNotConnectedModal = () => setShowClientNotConnectedModal(false);
 
   const handleFlagButton = useCallback(() => {
     // Show process report dream modal when dream is reported and authenticated user is admin
@@ -316,7 +323,11 @@ const ViewDreamPage: React.FC = () => {
   };
 
   const handlePlayDream = () => {
-    emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
+    if (isClientActive) {
+      emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
+    } else {
+      onShowClientNotConnectedModal();
+    }
   };
 
   const handleThumbsUpDream = async () => {
@@ -469,6 +480,34 @@ const ViewDreamPage: React.FC = () => {
         isOpen={showReportModal}
         onCancel={onHideReportModal}
         dream={dream}
+      />
+
+      {/**
+       * Client not connected modal
+       */}
+      <ConfirmModal
+        isOpen={showClientNotConnectedModal}
+        onCancel={onHideClientNotConnectedModal}
+        onConfirm={onHideClientNotConnectedModal}
+        title={t("page.view_dream.client_not_connected_modal_title")}
+        confirmText={t("page.view_dream.client_not_connected_modal_ok")}
+        cancelText=""
+        text={
+          <Text>
+            Start the app for the remote control, and try again.
+            <br /><br />
+            <AnchorLink to={ROUTES.INSTALL} type="primary">
+              Install
+            </AnchorLink>
+            {" "}it first if needed.
+            <br /><br />
+            You can also play with the{" "}
+            <AnchorLink to={ROUTES.REMOTE_CONTROL} type="primary">
+              web client
+            </AnchorLink>
+            .
+          </Text>
+        }
       />
       <Container>
         <Section id={SectionID}>

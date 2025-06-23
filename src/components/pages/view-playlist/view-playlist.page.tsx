@@ -50,6 +50,7 @@ import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 import Input, { FormInput } from "@/components/shared/input/input";
 import { formatPlaylistForm } from "@/utils/playlist.util";
+import { AnchorLink } from "@/components/shared";
 
 const SectionID = "playlist";
 
@@ -88,6 +89,8 @@ export const ViewPlaylistPage = () => {
   const [radioGroupState, setRadioGroupState] = useState<
     PlaylistTabs | undefined
   >(PLAYLIST_TABS.ITEMS);
+  const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
+    useState<boolean>(false);
 
   const handleRadioButtonGroupChange = (value?: string) => {
     setRadioGroupState(value as PlaylistTabs);
@@ -131,6 +134,8 @@ export const ViewPlaylistPage = () => {
 
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
+  const onShowClientNotConnectedModal = () => setShowClientNotConnectedModal(true);
+  const onHideClientNotConnectedModal = () => setShowClientNotConnectedModal(false);
 
   const {
     isLoading,
@@ -159,6 +164,7 @@ export const ViewPlaylistPage = () => {
     setVideos,
     setIsUploadingFiles,
     onHideConfirmDeleteModal,
+    onShowClientNotConnectedModal,
   });
 
   const handleCancel = (event: React.MouseEvent) => {
@@ -262,6 +268,31 @@ export const ViewPlaylistPage = () => {
             <em>
               <strong>{playlist?.name}</strong>
             </em>
+          </Text>
+        }
+      />
+
+      <ConfirmModal
+        isOpen={showClientNotConnectedModal}
+        onCancel={onHideClientNotConnectedModal}
+        onConfirm={onHideClientNotConnectedModal}
+        title={t("page.view_dream.client_not_connected_modal_title")}
+        confirmText={t("page.view_dream.client_not_connected_modal_ok")}
+        cancelText=""
+        text={
+          <Text>
+            Start the app for the remote control, and try again.
+            <br /><br />
+            <AnchorLink to={ROUTES.INSTALL} type="primary">
+              Install
+            </AnchorLink>
+            {" "}it first if needed.
+            <br /><br />
+            You can also play with the{" "}
+            <AnchorLink to={ROUTES.REMOTE_CONTROL} type="primary">
+              web client
+            </AnchorLink>
+            .
           </Text>
         }
       />
