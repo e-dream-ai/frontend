@@ -492,11 +492,14 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
         cancelText=""
         text={
           <Text>
-            Start the app for the remote control, and try again.{" "}
+            Start the app for the remote control, and try again.
+            <br />
             <AnchorLink to={ROUTES.INSTALL} type="primary">
               Install
             </AnchorLink>
-            {" "}it first if needed. You can also play with the{" "}
+            {" "}it first if needed.
+            <br />
+            You can also play with the{" "}
             <AnchorLink to={ROUTES.REMOTE_CONTROL} type="primary">
               web client
             </AnchorLink>
