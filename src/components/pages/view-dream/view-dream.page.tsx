@@ -46,6 +46,7 @@ import useSocket from "@/hooks/useSocket";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { emitPlayDream } from "@/utils/socket.util";
 import { truncateString } from "@/utils/string.util";
+import { AnchorLink } from "@/components/shared";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 import { User } from "@/types/auth.types";
 import { useUpvoteDream } from "@/api/dream/mutation/useUpvoteDream";
@@ -493,7 +494,15 @@ const ViewDreamPage: React.FC = () => {
         cancelText=""
         text={
           <Text>
-            {t("page.view_dream.client_not_connected_modal_body")}
+            Start the app for the remote control, and try again.{" "}
+            <AnchorLink to={ROUTES.INSTALL} type="primary">
+              Install
+            </AnchorLink>
+            {" "}it first if needed. You can also play with the{" "}
+            <AnchorLink to={ROUTES.REMOTE_CONTROL} type="primary">
+              web client
+            </AnchorLink>
+            .
           </Text>
         }
       />

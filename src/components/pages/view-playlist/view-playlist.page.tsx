@@ -50,6 +50,7 @@ import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 import Input, { FormInput } from "@/components/shared/input/input";
 import { formatPlaylistForm } from "@/utils/playlist.util";
+import { AnchorLink } from "@/components/shared";
 
 const SectionID = "playlist";
 
@@ -280,7 +281,15 @@ export const ViewPlaylistPage = () => {
         cancelText=""
         text={
           <Text>
-            {t("page.view_dream.client_not_connected_modal_body")}
+            Start the app for the remote control, and try again.{" "}
+            <AnchorLink to={ROUTES.INSTALL} type="primary">
+              Install
+            </AnchorLink>
+            {" "}it first if needed. You can also play with the{" "}
+            <AnchorLink to={ROUTES.REMOTE_CONTROL} type="primary">
+              web client
+            </AnchorLink>
+            .
           </Text>
         }
       />

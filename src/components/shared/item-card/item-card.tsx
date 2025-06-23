@@ -52,6 +52,7 @@ import Text from "../text/text";
 import { getVirtualPlaylistThumbnailDreams, shouldVirtualPlaylistDisplayDots } from "@/utils/virtual-playlist.util";
 import { ItemCardImage } from "./item-card-image";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
+import { AnchorLink } from "@/components/shared";
 
 type DNDMode = "local" | "cross-window";
 /**
@@ -491,7 +492,15 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
         cancelText=""
         text={
           <Text>
-            {t("page.view_dream.client_not_connected_modal_body")}
+            Start the app for the remote control, and try again.{" "}
+            <AnchorLink to={ROUTES.INSTALL} type="primary">
+              Install
+            </AnchorLink>
+            {" "}it first if needed. You can also play with the{" "}
+            <AnchorLink to={ROUTES.REMOTE_CONTROL} type="primary">
+              web client
+            </AnchorLink>
+            .
           </Text>
         }
       />
