@@ -26,16 +26,18 @@ export const ConfirmModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({
       <Row>{text}</Row>
 
       <Row justifyContent="flex-end">
-        <Button
-          disabled={isConfirming}
-          onClick={isConfirming ? VoidFunction : onCancel}
-        >
-          {cancelText ?? t("modal.confirm.cancel")}
-        </Button>
+        {cancelText !== "" && (
+          <Button
+            disabled={isConfirming}
+            onClick={isConfirming ? VoidFunction : onCancel}
+          >
+            {cancelText ?? t("modal.confirm.cancel")}
+          </Button>
+        )}
         <Button
           buttonType={confirmButtonType}
           isLoading={isConfirming}
-          ml="1rem"
+          ml={cancelText !== "" ? "1rem" : "0"}
           onClick={isConfirming ? VoidFunction : onConfirm}
         >
           {confirmText ?? t("modal.confirm.confirm")}
