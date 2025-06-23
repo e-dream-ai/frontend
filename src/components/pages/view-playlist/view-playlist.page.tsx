@@ -88,6 +88,8 @@ export const ViewPlaylistPage = () => {
   const [radioGroupState, setRadioGroupState] = useState<
     PlaylistTabs | undefined
   >(PLAYLIST_TABS.ITEMS);
+  const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
+    useState<boolean>(false);
 
   const handleRadioButtonGroupChange = (value?: string) => {
     setRadioGroupState(value as PlaylistTabs);
@@ -131,6 +133,8 @@ export const ViewPlaylistPage = () => {
 
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
+  const onShowClientNotConnectedModal = () => setShowClientNotConnectedModal(true);
+  const onHideClientNotConnectedModal = () => setShowClientNotConnectedModal(false);
 
   const {
     isLoading,
@@ -159,6 +163,7 @@ export const ViewPlaylistPage = () => {
     setVideos,
     setIsUploadingFiles,
     onHideConfirmDeleteModal,
+    onShowClientNotConnectedModal,
   });
 
   const handleCancel = (event: React.MouseEvent) => {
@@ -262,6 +267,19 @@ export const ViewPlaylistPage = () => {
             <em>
               <strong>{playlist?.name}</strong>
             </em>
+          </Text>
+        }
+      />
+
+      <ConfirmModal
+        isOpen={showClientNotConnectedModal}
+        onCancel={onHideClientNotConnectedModal}
+        onConfirm={onHideClientNotConnectedModal}
+        title={t("page.view_dream.client_not_connected_modal_title")}
+        confirmText={t("page.view_dream.client_not_connected_modal_ok")}
+        text={
+          <Text>
+            {t("page.view_dream.client_not_connected_modal_body")}
           </Text>
         }
       />

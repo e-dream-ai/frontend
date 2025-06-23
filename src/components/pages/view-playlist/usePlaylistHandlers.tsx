@@ -47,6 +47,7 @@ type HookParams = {
   setVideos: (value: SetStateAction<FileState[]>) => void;
   setIsUploadingFiles: (value: SetStateAction<boolean>) => void;
   onHideConfirmDeleteModal: () => void;
+  onShowClientNotConnectedModal: () => void;
 };
 
 type SortType = "name" | "date";
@@ -64,9 +65,10 @@ export const usePlaylistHandlers = ({
   setVideos,
   setIsUploadingFiles,
   onHideConfirmDeleteModal,
+  onShowClientNotConnectedModal,
 }: HookParams) => {
   const { t } = useTranslation();
-  const { socket } = useSocket();
+  const { socket, isConnected } = useSocket();
   const { user } = useAuth();
 
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
@@ -418,11 +420,15 @@ export const usePlaylistHandlers = ({
   };
 
   const handlePlayPlaylist = () => {
-    emitPlayPlaylist(
-      socket,
-      playlist,
-      t("toasts.play_playlist", { name: playlist?.name }),
-    );
+    if (isConnected) {
+      emitPlayPlaylist(
+        socket,
+        playlist,
+        t("toasts.play_playlist", { name: playlist?.name }),
+      );
+    } else {
+      onShowClientNotConnectedModal();
+    }
   };
 
   const handleNavigateAddToPlaylist = () => {

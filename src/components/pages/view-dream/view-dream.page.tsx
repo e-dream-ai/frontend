@@ -81,6 +81,8 @@ const ViewDreamPage: React.FC = () => {
     useState<boolean>(false);
   const [showProcessDreamReportModal, setShowProcessDreamReportModal] =
     useState<boolean>(false);
+  const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
+    useState<boolean>(false);
 
   const upvoteMutation = useUpvoteDream(uuid);
   const downvoteMutation = useDownvoteDream(uuid);
@@ -101,7 +103,7 @@ const ViewDreamPage: React.FC = () => {
     activeRefetchInterval: !editMode,
   });
 
-  const { socket } = useSocket();
+  const { socket, isConnected } = useSocket();
   const dream = useMemo(() => data?.data?.dream, [data]);
   const vote = useMemo(() => voteData?.data?.vote, [voteData]);
   const playlistItems = useMemo(() => dream?.playlistItems, [dream]);
@@ -241,6 +243,8 @@ const ViewDreamPage: React.FC = () => {
   const onHideReportModal = () => setShowReportModal(false);
   const onShowProcessDreamReportModal = () => setShowProcessDreamReportModal(true);
   const onHideProcessDreamReportModal = () => setShowProcessDreamReportModal(false);
+  const onShowClientNotConnectedModal = () => setShowClientNotConnectedModal(true);
+  const onHideClientNotConnectedModal = () => setShowClientNotConnectedModal(false);
 
   const handleFlagButton = useCallback(() => {
     // Show process report dream modal when dream is reported and authenticated user is admin
@@ -316,7 +320,11 @@ const ViewDreamPage: React.FC = () => {
   };
 
   const handlePlayDream = () => {
-    emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
+    if (isConnected) {
+      emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
+    } else {
+      onShowClientNotConnectedModal();
+    }
   };
 
   const handleThumbsUpDream = async () => {
@@ -469,6 +477,22 @@ const ViewDreamPage: React.FC = () => {
         isOpen={showReportModal}
         onCancel={onHideReportModal}
         dream={dream}
+      />
+
+      {/**
+       * Client not connected modal
+       */}
+      <ConfirmModal
+        isOpen={showClientNotConnectedModal}
+        onCancel={onHideClientNotConnectedModal}
+        onConfirm={onHideClientNotConnectedModal}
+        title={t("page.view_dream.client_not_connected_modal_title")}
+        confirmText={t("page.view_dream.client_not_connected_modal_ok")}
+        text={
+          <Text>
+            {t("page.view_dream.client_not_connected_modal_body")}
+          </Text>
+        }
       />
       <Container>
         <Section id={SectionID}>
