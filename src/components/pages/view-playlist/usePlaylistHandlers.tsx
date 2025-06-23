@@ -29,6 +29,7 @@ import { FULL_CREATE_ROUTES, ROUTES } from "@/constants/routes.constants";
 import { FileState } from "@/constants/file.constants";
 import { getFileNameWithoutExtension } from "@/utils/file-uploader.util";
 import useSocket from "@/hooks/useSocket";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { emitPlayPlaylist } from "@/utils/socket.util";
 import { createAddFileHandler } from "@/utils/file.util";
 import useAuth from "@/hooks/useAuth";
@@ -68,7 +69,8 @@ export const usePlaylistHandlers = ({
   onShowClientNotConnectedModal,
 }: HookParams) => {
   const { t } = useTranslation();
-  const { socket, isConnected } = useSocket();
+  const { socket } = useSocket();
+  const { isActive: isClientActive } = useDesktopClient();
   const { user } = useAuth();
 
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
@@ -420,7 +422,7 @@ export const usePlaylistHandlers = ({
   };
 
   const handlePlayPlaylist = () => {
-    if (isConnected) {
+    if (isClientActive) {
       emitPlayPlaylist(
         socket,
         playlist,
