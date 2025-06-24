@@ -517,9 +517,8 @@ export const ViewPlaylistPage = () => {
 
                   <Input
                     disabled
-                    outlined
                     type="text"
-                    placeholder={t("page.view_playlist.dream_count")}
+                    placeholder="Dream Count"
                     before={<FontAwesomeIcon icon={faListOl} />}
                     value={countDreamsInPlaylist(items).toString()}
                     name="dream-count"
@@ -527,9 +526,8 @@ export const ViewPlaylistPage = () => {
 
                   <Input
                     disabled
-                    outlined
                     type="text"
-                    placeholder={t("page.view_playlist.total_duration")}
+                    placeholder="Total Duration"
                     before={<FontAwesomeIcon icon={faClock} />}
                     value={getPlaylistTotalDurationFormatted(items)}
                     name="total-duration"
