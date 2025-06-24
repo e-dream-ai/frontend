@@ -49,8 +49,9 @@ import RadioButtonGroup from "@/components/shared/radio-button-group/radio-butto
 import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 import Input, { FormInput } from "@/components/shared/input/input";
-import { formatPlaylistForm } from "@/utils/playlist.util";
+import { formatPlaylistForm, countDreamsInPlaylist, getPlaylistTotalDurationFormatted } from "@/utils/playlist.util";
 import { AnchorLink } from "@/components/shared";
+import { faClock, faListOl } from "@fortawesome/free-solid-svg-icons";
 
 const SectionID = "playlist";
 
@@ -512,6 +513,24 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     before={<FontAwesomeIcon icon={faCalendar} />}
                     {...formMethods.register("created_at")}
+                  />
+
+                  <Input
+                    disabled
+                    type="text"
+                    placeholder="Dream Count"
+                    before={<FontAwesomeIcon icon={faListOl} />}
+                    value={countDreamsInPlaylist(items).toString()}
+                    name="dream-count"
+                  />
+
+                  <Input
+                    disabled
+                    type="text"
+                    placeholder="Total Duration"
+                    before={<FontAwesomeIcon icon={faClock} />}
+                    value={getPlaylistTotalDurationFormatted(items)}
+                    name="total-duration"
                   />
                 </Column>
               </Row>
