@@ -1,5 +1,8 @@
 import { VideoJSEvents } from "@/types/video-js.types";
 
+// Control bar visibility timeout in milliseconds
+export const CONTROL_BAR_TIMEOUT_MS = 2000;
+
 // VideoJS preload option
 // https://videojs.com/guides/options/#preload
 // `auto` starts loading the video immediately (if the browser supports it), maybe should be changed for some types of devices to `metadata`
@@ -13,7 +16,7 @@ export const VIDEOJS_OPTIONS = {
   controlBar: true,
   disablePictureInPicture: true,
   // time on ms to consider an user inactive
-  inactivityTimeout: 200,
+  inactivityTimeout: CONTROL_BAR_TIMEOUT_MS,
   // disable videojs native hotkeys
   hotkeys: false,
   // render controlbar only
