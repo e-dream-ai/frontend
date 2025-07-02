@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "install";
 
-const APP_VERSION = "0.7.0";
+const APP_VERSION = "0.8.0";
 const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
 const APP_URL = `https://github.com/e-dream-ai/public/releases/download/${APP_VERSION}/infinidream-app-${APP_VERSION}.zip`;
 const SCREENSAVER_URL = `https://github.com/e-dream-ai/public/releases/download/${APP_VERSION}/infinidream-screensaver-${APP_VERSION}.zip`;
