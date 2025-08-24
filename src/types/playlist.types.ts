@@ -37,6 +37,7 @@ export type Playlist = {
   id: number;
   uuid: string;
   name: string;
+  description?: string;
   thumbnail: string;
   updated_at: string;
   user: User;

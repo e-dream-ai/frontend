@@ -196,6 +196,7 @@
       "saving": "Saving",
       "cancel": "Cancel",
       "name": "Name",
+      "description": "Description",
       "date": "Date",
       "owner": "Owner",
       "displayed_owner": "Displayed Owner",
