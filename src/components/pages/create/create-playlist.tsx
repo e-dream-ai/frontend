@@ -37,11 +37,17 @@ import {
   MAX_FILE_SIZE_MB,
 } from "@/constants/file.constants";
 import { HandleChangeFile } from "@/types/media.types";
-import { generateDreamVideoFormRequest, useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
+import {
+  generateDreamVideoFormRequest,
+  useUploadDreamVideo,
+} from "@/api/dream/hooks/useUploadDreamVideo";
 import { Playlist } from "@/types/playlist.types";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import Restricted from "@/components/shared/restricted/restricted";
-import { DREAM_PERMISSIONS, PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
+import {
+  DREAM_PERMISSIONS,
+  PLAYLIST_PERMISSIONS,
+} from "@/constants/permissions.constants";
 import { VideoList } from "@/components/shared/video-list/video-list";
 import { UploadVideosProgress } from "@/components/shared/upload-videos-progress/upload-videos-progress";
 import { Tooltip } from "react-tooltip";
@@ -114,7 +120,7 @@ export const CreatePlaylist: React.FC = () => {
       setCurrentUploadFile(i);
 
       const createdDream = await mutateAsync(
-        generateDreamVideoFormRequest(data, videos[i]?.fileBlob, isUserAdmin)
+        generateDreamVideoFormRequest(data, videos[i]?.fileBlob, isUserAdmin),
       );
 
       setVideoUploaded(i);
@@ -235,7 +241,6 @@ export const CreatePlaylist: React.FC = () => {
                   content={t("page.create.ccby_license_dream_tooltip")}
                 />
                 {t("page.create.license_dream")}
-                {" "}
                 <AnchorLink to={`${ROUTES.TERMS_OF_SERVICE}#${CCBY_ID}`}>
                   {t("page.create.license_dream_ccby")}
                 </AnchorLink>

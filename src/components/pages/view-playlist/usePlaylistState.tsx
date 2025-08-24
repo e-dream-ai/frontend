@@ -43,7 +43,10 @@ export const usePlaylistState = () => {
    *
    */
   const { data, isLoading, isError } = usePlaylist(uuid);
-  const { data: playlistReferencesData, isLoading: isPlaylistReferencesLoading } = usePlaylistReferences(uuid);
+  const {
+    data: playlistReferencesData,
+    isLoading: isPlaylistReferencesLoading,
+  } = usePlaylistReferences(uuid);
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
   });
@@ -58,7 +61,10 @@ export const usePlaylistState = () => {
     return pl;
   }, [data, playlistReferencesData]);
 
-  const isPlaylistLoading = useMemo(() => isLoading || isPlaylistReferencesLoading, [isLoading, isPlaylistReferencesLoading])
+  const isPlaylistLoading = useMemo(
+    () => isLoading || isPlaylistReferencesLoading,
+    [isLoading, isPlaylistReferencesLoading],
+  );
 
   const thumbnailUrl = useImage(playlist?.thumbnail, {
     width: 500,

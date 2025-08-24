@@ -1,9 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import {
-  Button,
-  ItemCardList,
-  Row,
-} from "@/components/shared";
+import { Button, ItemCardList, Row, TextArea } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
@@ -26,6 +22,7 @@ import useAuth from "@/hooks/useAuth";
 import { HandleChangeFile } from "@/types/media.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faAlignLeft,
   faCalendar,
   faEye,
   faFileVideo,
@@ -49,7 +46,11 @@ import RadioButtonGroup from "@/components/shared/radio-button-group/radio-butto
 import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 import Input, { FormInput } from "@/components/shared/input/input";
-import { formatPlaylistForm, countDreamsInPlaylist, getPlaylistTotalDurationFormatted } from "@/utils/playlist.util";
+import {
+  formatPlaylistForm,
+  countDreamsInPlaylist,
+  getPlaylistTotalDurationFormatted,
+} from "@/utils/playlist.util";
 import { AnchorLink } from "@/components/shared";
 import { faClock, faListOl } from "@fortawesome/free-solid-svg-icons";
 
@@ -62,7 +63,7 @@ type PlaylistTabs = "items" | "keyframes";
 
 const PLAYLIST_TABS: Record<Uppercase<PlaylistTabs>, PlaylistTabs> = {
   ITEMS: "items",
-  KEYFRAMES: "keyframes"
+  KEYFRAMES: "keyframes",
 } as const;
 
 const FEED_FILTERS_NAMES: Record<Uppercase<PlaylistTabs>, string> = {
@@ -75,7 +76,10 @@ const getPlaylistTabsFilterData: (
 ) => Array<{ key: string; value: string }> = (t) => {
   return [
     { key: t(FEED_FILTERS_NAMES.ITEMS), value: PLAYLIST_TABS.ITEMS.toString() },
-    { key: t(FEED_FILTERS_NAMES.KEYFRAMES), value: PLAYLIST_TABS.KEYFRAMES.toString() },
+    {
+      key: t(FEED_FILTERS_NAMES.KEYFRAMES),
+      value: PLAYLIST_TABS.KEYFRAMES.toString(),
+    },
   ];
 };
 
@@ -130,13 +134,15 @@ export const ViewPlaylistPage = () => {
 
   const formMethods = useForm<UpdatePlaylistFormValues>({
     resolver: yupResolver(UpdatePlaylistSchema),
-    defaultValues: { name: "" },
+    defaultValues: { name: "", description: "" },
   });
 
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
-  const onShowClientNotConnectedModal = () => setShowClientNotConnectedModal(true);
-  const onHideClientNotConnectedModal = () => setShowClientNotConnectedModal(false);
+  const onShowClientNotConnectedModal = () =>
+    setShowClientNotConnectedModal(true);
+  const onHideClientNotConnectedModal = () =>
+    setShowClientNotConnectedModal(false);
 
   const {
     isLoading,
@@ -151,7 +157,7 @@ export const ViewPlaylistPage = () => {
     handleConfirmDeletePlaylist,
     handlePlayPlaylist,
     handleNavigateAddToPlaylist,
-    handleNavigateAddKeyframeToPlaylist
+    handleNavigateAddKeyframeToPlaylist,
   } = usePlaylistHandlers({
     uuid,
     playlist,
@@ -205,7 +211,9 @@ export const ViewPlaylistPage = () => {
   };
 
   const resetRemotePlaylistForm = useCallback(() => {
-    formMethods.reset(formatPlaylistForm({ playlist, isAdmin: isUserAdmin, t }));
+    formMethods.reset(
+      formatPlaylistForm({ playlist, isAdmin: isUserAdmin, t }),
+    );
   }, [formMethods, playlist, isUserAdmin, t]);
 
   /**
@@ -220,19 +228,21 @@ export const ViewPlaylistPage = () => {
    */
   useEffect(() => {
     // Extract the target element UUID from the URL hash
-    const targetElementUUID = location.hash.replace('#', '');
+    const targetElementUUID = location.hash.replace("#", "");
 
     // Only attempt to scroll after loading is complete and if we have a target
     // We need to wait when request is completed, since the component will not be rendered initially
     if (!isPlaylistLoading && targetElementUUID) {
       // Use data attribute for more reliable selection
-      const targetElement = document.querySelector(`[data-element-uuid="${targetElementUUID}"]`);
+      const targetElement = document.querySelector(
+        `[data-element-uuid="${targetElementUUID}"]`,
+      );
 
       if (targetElement) {
         // Scroll to the element
         targetElement.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center'
+          behavior: "smooth",
+          block: "center",
         });
       }
     }
@@ -283,12 +293,14 @@ export const ViewPlaylistPage = () => {
         text={
           <Text>
             Start the app for the remote control, and try again.
-            <br /><br />
+            <br />
+            <br />
             <AnchorLink to={ROUTES.INSTALL} type="primary">
               Install
-            </AnchorLink>
-            {" "}it first if needed.
-            <br /><br />
+            </AnchorLink>{" "}
+            it first if needed.
+            <br />
+            <br />
             You can also play with the{" "}
             <AnchorLink to={ROUTES.REMOTE_CONTROL} type="primary">
               web client
@@ -349,7 +361,10 @@ export const ViewPlaylistPage = () => {
           </Row>
 
           <FormProvider {...formMethods}>
-            <form style={{ minWidth: "320px" }} onSubmit={formMethods.handleSubmit(onSubmit)}>
+            <form
+              style={{ minWidth: "320px" }}
+              onSubmit={formMethods.handleSubmit(onSubmit)}
+            >
               <Row justifyContent="space-between">
                 <span />
                 <div>
@@ -408,16 +423,17 @@ export const ViewPlaylistPage = () => {
                 <Column ml={[0, 2, 2]} flex={["1 1 320px", "1", "1"]}>
                   {
                     // Show only for owners when playlist is hidden
-                    isOwner && playlist.hidden &&
-                    <Input
-                      disabled
-                      outlined
-                      type="text"
-                      placeholder={t("page.view_playlist.visibility")}
-                      before={<FontAwesomeIcon icon={faEye} />}
-                      value={t("playlist.hidden.hidden")}
-                      name="visibility-for-owner"
-                    />
+                    isOwner && playlist.hidden && (
+                      <Input
+                        disabled
+                        outlined
+                        type="text"
+                        placeholder={t("page.view_playlist.visibility")}
+                        before={<FontAwesomeIcon icon={faEye} />}
+                        value={t("playlist.hidden.hidden")}
+                        name="visibility-for-owner"
+                      />
+                    )
                   }
                   <FormInput
                     disabled={!editMode}
@@ -425,6 +441,13 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     before={<FontAwesomeIcon icon={faFileVideo} />}
                     {...formMethods.register("name")}
+                  />
+                  <TextArea
+                    disabled={!editMode}
+                    placeholder={t("page.view_playlist.description")}
+                    before={<FontAwesomeIcon icon={faAlignLeft} />}
+                    value={playlist?.description || "-"}
+                    {...formMethods.register("description")}
                   />
                   <Restricted to={PLAYLIST_PERMISSIONS.CAN_VIEW_FEATURE_RANK}>
                     <FormInput
@@ -500,7 +523,11 @@ export const ViewPlaylistPage = () => {
                         isDisabled={!editMode || !allowedEditOwner}
                         isLoading={isUsersLoading}
                         before={<FontAwesomeIcon icon={faUser} />}
-                        to={getDisplayedOwnerProfileRoute(isUserAdmin, playlist?.user, playlist?.displayedOwner)}
+                        to={getDisplayedOwnerProfileRoute(
+                          isUserAdmin,
+                          playlist?.user,
+                          playlist?.displayedOwner,
+                        )}
                         options={usersOptions}
                         onInputChange={(newValue) => setUserSearch(newValue)}
                       />
@@ -548,8 +575,8 @@ export const ViewPlaylistPage = () => {
                   isOwner={user?.id === playlist?.user?.id}
                 >
                   <Column>
-                    {radioGroupState === "items" &&
-                      (<>
+                    {radioGroupState === "items" && (
+                      <>
                         <Row mb={2} justifyContent="flex-end">
                           <Text>{t("page.view_playlist.sort_by")}</Text>
                         </Row>
@@ -597,96 +624,101 @@ export const ViewPlaylistPage = () => {
                           </Column>
                         </Row>
                       </>
-                      )
-                    }
+                    )}
 
-                    {radioGroupState === "keyframes" &&
-                      (
-                        <>
-                          <Row mb={0}>
-                            <Column mr="2">
-                              <Button
-                                type="button"
-                                buttonType="default"
-                                transparent
-                                ml="1rem"
-                                onClick={handleNavigateAddKeyframeToPlaylist}
-                                data-tooltip-id="add-keyframes"
-                              >
-                                <Tooltip
-                                  id="add-keyframes"
-                                  place="right-end"
-                                  content={t(
-                                    "page.view_playlist.add_keyframes_to_playlist",
-                                  )}
-                                />
-                                <FontAwesomeIcon icon={faPlus} />
-                              </Button>
-                            </Column>
-                          </Row>
-                        </>
-                      )
-                    }
-
+                    {radioGroupState === "keyframes" && (
+                      <>
+                        <Row mb={0}>
+                          <Column mr="2">
+                            <Button
+                              type="button"
+                              buttonType="default"
+                              transparent
+                              ml="1rem"
+                              onClick={handleNavigateAddKeyframeToPlaylist}
+                              data-tooltip-id="add-keyframes"
+                            >
+                              <Tooltip
+                                id="add-keyframes"
+                                place="right-end"
+                                content={t(
+                                  "page.view_playlist.add_keyframes_to_playlist",
+                                )}
+                              />
+                              <FontAwesomeIcon icon={faPlus} />
+                            </Button>
+                          </Column>
+                        </Row>
+                      </>
+                    )}
                   </Column>
                 </Restricted>
               </Row>
               {
                 // if items are selected, show item cardlist and data
-                radioGroupState === "items" && <Row flex="auto">
-                  {items.length ? (
-                    <ItemCardList>
-                      {items.map((i) => (
-                        <ItemCard
-                          key={i.id}
-                          draggable
-                          itemId={i.id}
-                          dndMode="local"
-                          size="sm"
-                          type={i.type}
-                          item={i.type === "dream" ? i.dreamItem : i.playlistItem}
-                          order={i.order}
-                          deleteDisabled={!allowedEditPlaylist}
-                          showPlayButton
-                          inline
-                          droppable
-                          onDelete={handleDeletePlaylistItem(i.id)}
-                          onOrder={handleOrderPlaylist}
-                        />
-                      ))}
-                    </ItemCardList>
-                  ) : (
-                    <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
-                  )}
-                </Row>
+                radioGroupState === "items" && (
+                  <Row flex="auto">
+                    {items.length ? (
+                      <ItemCardList>
+                        {items.map((i) => (
+                          <ItemCard
+                            key={i.id}
+                            draggable
+                            itemId={i.id}
+                            dndMode="local"
+                            size="sm"
+                            type={i.type}
+                            item={
+                              i.type === "dream" ? i.dreamItem : i.playlistItem
+                            }
+                            order={i.order}
+                            deleteDisabled={!allowedEditPlaylist}
+                            showPlayButton
+                            inline
+                            droppable
+                            onDelete={handleDeletePlaylistItem(i.id)}
+                            onOrder={handleOrderPlaylist}
+                          />
+                        ))}
+                      </ItemCardList>
+                    ) : (
+                      <Text mb={4}>
+                        {t("page.view_playlist.empty_playlist")}
+                      </Text>
+                    )}
+                  </Row>
+                )
               }
               {
                 // if items are selected, show item cardlist and data
-                radioGroupState === "keyframes" && <Row flex="auto">
-                  {playlistKeyframes.length ? (
-                    <ItemCardList>
-                      {playlistKeyframes.map((k) => (
-                        <ItemCard
-                          key={k.id}
-                          draggable
-                          itemId={k.id}
-                          dndMode="local"
-                          size="sm"
-                          type="keyframe"
-                          item={k.keyframe}
-                          order={k.order}
-                          deleteDisabled={!allowedEditPlaylist}
-                          inline
-                          onDelete={handleDeleteKeyframe(k.id)}
-                        />
-                      ))}
-                    </ItemCardList>
-                  ) : (
-                    <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
-                  )}
-                </Row>
+                radioGroupState === "keyframes" && (
+                  <Row flex="auto">
+                    {playlistKeyframes.length ? (
+                      <ItemCardList>
+                        {playlistKeyframes.map((k) => (
+                          <ItemCard
+                            key={k.id}
+                            draggable
+                            itemId={k.id}
+                            dndMode="local"
+                            size="sm"
+                            type="keyframe"
+                            item={k.keyframe}
+                            order={k.order}
+                            deleteDisabled={!allowedEditPlaylist}
+                            inline
+                            onDelete={handleDeleteKeyframe(k.id)}
+                          />
+                        ))}
+                      </ItemCardList>
+                    ) : (
+                      <Text mb={4}>
+                        {t("page.view_playlist.empty_playlist")}
+                      </Text>
+                    )}
+                  </Row>
+                )
               }
-
 
               {/* Removing add item playlist dropzone, probably next to be deprecated  */}
               {/* <Restricted
@@ -710,7 +742,7 @@ export const ViewPlaylistPage = () => {
             </form>
           </FormProvider>
         </Section>
-      </Container >
+      </Container>
     </>
   );
 };

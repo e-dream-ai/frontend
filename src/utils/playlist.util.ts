@@ -132,6 +132,7 @@ export const formatPlaylistForm = ({
   t: TFunction;
 }) => ({
   name: playlist?.name,
+  description: playlist?.description,
   user: playlist?.user?.name,
   /**
    * set displayedOwner
@@ -161,6 +162,7 @@ export const formatPlaylistRequest = (
   uuid: uuid,
   values: {
     name: data.name,
+    description: data.description,
     featureRank: data?.featureRank,
     displayedOwner: data?.displayedOwner?.value,
     nsfw: data?.nsfw.value === NSFW.TRUE,
