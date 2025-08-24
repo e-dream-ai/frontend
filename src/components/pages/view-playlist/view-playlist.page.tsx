@@ -1,5 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Button, ItemCardList, Row, TextArea } from "@/components/shared";
+import { Button, ItemCardList, Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
@@ -46,6 +46,7 @@ import RadioButtonGroup from "@/components/shared/radio-button-group/radio-butto
 import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 import Input, { FormInput } from "@/components/shared/input/input";
+import { FormTextArea } from "@/components/shared/text-area/text-area";
 import {
   formatPlaylistForm,
   countDreamsInPlaylist,
@@ -442,58 +443,6 @@ export const ViewPlaylistPage = () => {
                     before={<FontAwesomeIcon icon={faFileVideo} />}
                     {...formMethods.register("name")}
                   />
-                  <TextArea
-                    disabled={!editMode}
-                    placeholder={t("page.view_playlist.description")}
-                    before={<FontAwesomeIcon icon={faAlignLeft} />}
-                    value={playlist?.description || "-"}
-                    {...formMethods.register("description")}
-                  />
-                  <Restricted to={PLAYLIST_PERMISSIONS.CAN_VIEW_FEATURE_RANK}>
-                    <FormInput
-                      disabled={!editMode}
-                      placeholder={t("page.view_playlist.feature_rank")}
-                      type="text"
-                      before={<FontAwesomeIcon icon={faRankingStar} />}
-                      {...formMethods.register("featureRank")}
-                    />
-                  </Restricted>
-
-                  <Restricted
-                    to={PLAYLIST_PERMISSIONS.CAN_VIEW_NSFW}
-                    isOwner={isOwner}
-                  >
-                    <Controller
-                      name="nsfw"
-                      control={formMethods.control}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          isDisabled={!editMode || !allowedEditOwner}
-                          placeholder={t("page.view_playlist.nsfw")}
-                          before={<FontAwesomeIcon icon={faShield} />}
-                          options={getNsfwOptions(t)}
-                        />
-                      )}
-                    />
-                  </Restricted>
-
-                  {/* If user is admin, show editable hidden field */}
-                  <Restricted to={PLAYLIST_PERMISSIONS.CAN_VIEW_VISIBILITY}>
-                    <Controller
-                      name="hidden"
-                      control={formMethods.control}
-                      render={({ field }) => (
-                        <Select
-                          {...field}
-                          isDisabled={!editMode || !allowedEditVisibility}
-                          placeholder={t("page.view_playlist.visibility")}
-                          before={<FontAwesomeIcon icon={faEye} />}
-                          options={getHiddenOptions(t)}
-                        />
-                      )}
-                    />
-                  </Restricted>
 
                   <Restricted
                     to={PLAYLIST_PERMISSIONS.CAN_VIEW_ORIGINAL_OWNER}
@@ -508,31 +457,6 @@ export const ViewPlaylistPage = () => {
                       {...formMethods.register("user")}
                     />
                   </Restricted>
-
-                  <Controller
-                    name="displayedOwner"
-                    control={formMethods.control}
-                    render={({ field }) => (
-                      <Select
-                        {...field}
-                        placeholder={
-                          isUserAdmin
-                            ? t("page.view_dream.displayed_owner")
-                            : t("page.view_dream.owner")
-                        }
-                        isDisabled={!editMode || !allowedEditOwner}
-                        isLoading={isUsersLoading}
-                        before={<FontAwesomeIcon icon={faUser} />}
-                        to={getDisplayedOwnerProfileRoute(
-                          isUserAdmin,
-                          playlist?.user,
-                          playlist?.displayedOwner,
-                        )}
-                        options={usersOptions}
-                        onInputChange={(newValue) => setUserSearch(newValue)}
-                      />
-                    )}
-                  />
 
                   <FormInput
                     disabled
@@ -559,6 +483,110 @@ export const ViewPlaylistPage = () => {
                     value={getPlaylistTotalDurationFormatted(items)}
                     name="total-duration"
                   />
+
+                  <Restricted
+                    to={PLAYLIST_PERMISSIONS.CAN_VIEW_NSFW}
+                    isOwner={isOwner}
+                  >
+                    <Controller
+                      name="nsfw"
+                      control={formMethods.control}
+                      render={({ field }) => (
+                        <Select
+                          {...field}
+                          isDisabled={!editMode || !allowedEditOwner}
+                          placeholder={t("page.view_playlist.nsfw")}
+                          before={<FontAwesomeIcon icon={faShield} />}
+                          options={getNsfwOptions(t)}
+                        />
+                      )}
+                    />
+                  </Restricted>
+                </Column>
+              </Row>
+              <Row flex="auto" m={0}>
+                <Column flex="auto" m={0}>
+                  <FormTextArea
+                    linkify
+                    disabled={!editMode}
+                    placeholder={t("page.view_playlist.description")}
+                    before={<FontAwesomeIcon icon={faAlignLeft} />}
+                    {...formMethods.register("description")}
+                  />
+                </Column>
+              </Row>
+              <Row flex="auto" m={0}>
+                <Column flex="auto" m={0}>
+                  <Row flexWrap="wrap">
+                    <Column
+                      flex={["1 1 33.33%", "1 1 33.33%", "1 1 33.33%"]}
+                      pr={[1, 1, 1]}
+                    >
+                      <Controller
+                        name="displayedOwner"
+                        control={formMethods.control}
+                        render={({ field }) => (
+                          <Select
+                            {...field}
+                            placeholder={
+                              isUserAdmin
+                                ? t("page.view_dream.displayed_owner")
+                                : t("page.view_dream.owner")
+                            }
+                            isDisabled={!editMode || !allowedEditOwner}
+                            isLoading={isUsersLoading}
+                            before={<FontAwesomeIcon icon={faUser} />}
+                            to={getDisplayedOwnerProfileRoute(
+                              isUserAdmin,
+                              playlist?.user,
+                              playlist?.displayedOwner,
+                            )}
+                            options={usersOptions}
+                            onInputChange={(newValue) =>
+                              setUserSearch(newValue)
+                            }
+                          />
+                        )}
+                      />
+                    </Column>
+                    <Column
+                      flex={["1 1 33.33%", "1 1 33.33%", "1 1 33.33%"]}
+                      px={[1, 1, 1]}
+                    >
+                      <Restricted
+                        to={PLAYLIST_PERMISSIONS.CAN_VIEW_FEATURE_RANK}
+                      >
+                        <FormInput
+                          disabled={!editMode}
+                          placeholder={t("page.view_playlist.feature_rank")}
+                          type="text"
+                          before={<FontAwesomeIcon icon={faRankingStar} />}
+                          {...formMethods.register("featureRank")}
+                        />
+                      </Restricted>
+                    </Column>
+                    <Column
+                      flex={["1 1 33.33%", "1 1 33.33%", "1 1 33.33%"]}
+                      pl={[1, 1, 1]}
+                    >
+                      {/* If user is admin, show editable hidden field */}
+                      <Restricted to={PLAYLIST_PERMISSIONS.CAN_VIEW_VISIBILITY}>
+                        <Controller
+                          name="hidden"
+                          control={formMethods.control}
+                          render={({ field }) => (
+                            <Select
+                              {...field}
+                              isDisabled={!editMode || !allowedEditVisibility}
+                              placeholder={t("page.view_playlist.visibility")}
+                              before={<FontAwesomeIcon icon={faEye} />}
+                              options={getHiddenOptions(t)}
+                            />
+                          )}
+                        />
+                      </Restricted>
+                    </Column>
+                  </Row>
                 </Column>
               </Row>
               <Row justifyContent="space-between" alignItems="center">
