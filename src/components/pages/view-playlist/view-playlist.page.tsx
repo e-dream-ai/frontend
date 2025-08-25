@@ -569,7 +569,7 @@ export const ViewPlaylistPage = () => {
                       flex={["1 1 33.33%", "1 1 33.33%", "1 1 33.33%"]}
                       pl={[1, 1, 1]}
                     >
-                      {/* if user is admin, show editable hidden field */}
+                      {/* if user is admin, then show editable hidden field */}
                       <Restricted to={PLAYLIST_PERMISSIONS.CAN_VIEW_VISIBILITY}>
                         <Controller
                           name="hidden"
