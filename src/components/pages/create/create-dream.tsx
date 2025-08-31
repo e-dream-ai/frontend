@@ -33,7 +33,10 @@ import {
 } from "@/constants/file.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import { Video } from "./create.styled";
-import { generateDreamVideoFormRequest, useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
+import {
+  generateDreamVideoFormRequest,
+  useUploadDreamVideo,
+} from "@/api/dream/hooks/useUploadDreamVideo";
 import { toast } from "react-toastify";
 import { useTheme } from "styled-components";
 import { useForm } from "react-hook-form";
@@ -86,7 +89,9 @@ export const CreateDream: React.FC = () => {
 
   const onSubmit = async (data: CreateDreamFormValues) => {
     try {
-      await mutateAsync(generateDreamVideoFormRequest(data, video?.fileBlob, isUserAdmin));
+      await mutateAsync(
+        generateDreamVideoFormRequest(data, video?.fileBlob, isUserAdmin),
+      );
     } catch (error) {
       toast.error(t("page.create.error_uploading_dream"));
     }
@@ -113,10 +118,16 @@ export const CreateDream: React.FC = () => {
         ) : (
           <>
             <Text my={3}>
-	      {t("page.create.dream_instructions")}{" "}
-	      See the {" "}<Anchor href="https://docs.google.com/document/u/1/d/e/2PACX-1vTQnJMCLOqenrCADZyrXxgBTahQ4sPyRRj7GrhMEu_DkmScRRGOjRJQmd2rkH1-_K0WRjfGYd04rhJB/pub">Creators' Guide</Anchor> and
-	      {" "}<Anchor href="https://github.com/e-dream-ai/python-api">Python API</Anchor> for more ways to make and share dreams.
-	    </Text>
+              {t("page.create.dream_instructions")} See the{" "}
+              <Anchor href="https://docs.google.com/document/u/1/d/e/2PACX-1vTQnJMCLOqenrCADZyrXxgBTahQ4sPyRRj7GrhMEu_DkmScRRGOjRJQmd2rkH1-_K0WRjfGYd04rhJB/pub">
+                Creators' Guide
+              </Anchor>{" "}
+              and{" "}
+              <Anchor href="https://github.com/e-dream-ai/python-api">
+                Python API
+              </Anchor>{" "}
+              for more ways to make and share dreams.
+            </Text>
             <FileUploader
               maxSize={MAX_FILE_SIZE_MB}
               handleChange={handleChange}
@@ -162,8 +173,7 @@ export const CreateDream: React.FC = () => {
                   place="right-end"
                   content={t("page.create.ccby_license_dream_tooltip")}
                 />
-                {t("page.create.license_dream")}
-                {" "}
+                {t("page.create.license_dream")}{" "}
                 <AnchorLink to={`${ROUTES.TERMS_OF_SERVICE}#${CCBY_ID}`}>
                   {t("page.create.license_dream_ccby")}
                 </AnchorLink>

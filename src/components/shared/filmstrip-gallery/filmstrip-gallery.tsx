@@ -14,12 +14,14 @@ import {
 import { calculateTimeFromFrames } from "@/utils/dream.util";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
+import { useImage } from "@/hooks/useImage";
 
 const FrameImage: React.FC<{ frame: Frame; dream?: Dream }> = ({
   frame,
   dream,
 }) => {
   const { socket } = useSocket();
+  const frameUrl = useImage(frame.url);
 
   const handlePlayDreamAtFrameNumber = () => {
     socket?.emit(NEW_REMOTE_CONTROL_EVENT, {
@@ -32,7 +34,7 @@ const FrameImage: React.FC<{ frame: Frame; dream?: Dream }> = ({
 
   return (
     <ImageContainer onClick={handlePlayDreamAtFrameNumber}>
-      <StyledFrameImage url={frame.url} src="/images/blank.gif" />
+      <StyledFrameImage url={frameUrl} src="/images/blank.gif" />
       <OverlayText>
         {calculateTimeFromFrames({
           frameNumber: frame.frameNumber,

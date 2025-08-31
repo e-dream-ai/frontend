@@ -25,17 +25,15 @@ export function generateCloudflareImageURL(
 ): string | undefined {
   if (!imageUrl) return undefined;
 
-  // Normalize the input URL to remove protocol
-  const cleanUrl = normalizeUrl(imageUrl);
-
+  // If URL already has protocol, return as-is when no resize options
   if (!resizeOptions) {
-    return `https://${cleanUrl}`;
+    return imageUrl.startsWith("http") ? imageUrl : `https://${imageUrl}`;
   }
 
+  // Normalize the input URL to remove protocol for transformation
+  const cleanUrl = normalizeUrl(imageUrl);
   const normalizedDomain = normalizeUrl(CLOUDFLARE_DOMAIN || "");
-
   const imagePath = cleanUrl.replace(`${normalizedDomain}/`, "");
-
   const params = buildTransformParams(resizeOptions);
 
   return `https://${normalizedDomain}/cdn-cgi/image/${params.join(
