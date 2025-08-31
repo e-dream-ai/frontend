@@ -25,16 +25,20 @@ export function generateCloudflareImageURL(
 ): string | undefined {
   if (!imageUrl) return undefined;
 
+  // Normalize the input URL to remove protocol
   const cleanUrl = normalizeUrl(imageUrl);
 
   if (!resizeOptions) {
     return `https://${cleanUrl}`;
   }
 
-  const params = buildTransformParams(resizeOptions);
-  const imagePath = cleanUrl.replace(`${CLOUDFLARE_DOMAIN}/`, "");
+  const normalizedDomain = normalizeUrl(CLOUDFLARE_DOMAIN || "");
 
-  return `https://${CLOUDFLARE_DOMAIN}/cdn-cgi/image/${params.join(
+  const imagePath = cleanUrl.replace(`${normalizedDomain}/`, "");
+
+  const params = buildTransformParams(resizeOptions);
+
+  return `https://${normalizedDomain}/cdn-cgi/image/${params.join(
     ",",
   )}/${imagePath}`;
 }
