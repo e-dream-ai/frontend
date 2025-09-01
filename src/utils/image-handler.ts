@@ -25,9 +25,9 @@ export function generateCloudflareImageURL(
 ): string | undefined {
   if (!imageUrl) return undefined;
 
-  // If URL already has protocol, return as-is when no resize options
+  // If no resize options, return imageUrl as-is
   if (!resizeOptions) {
-    return imageUrl.startsWith("http") ? imageUrl : `https://${imageUrl}`;
+    return imageUrl;
   }
 
   // Normalize the input URL to remove protocol for transformation

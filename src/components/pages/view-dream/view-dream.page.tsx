@@ -48,7 +48,6 @@ import { emitPlayDream } from "@/utils/socket.util";
 import { truncateString } from "@/utils/string.util";
 import { AnchorLink } from "@/components/shared";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
-import { useVideo } from "@/hooks/useVideo";
 import { User } from "@/types/auth.types";
 import { useUpvoteDream } from "@/api/dream/mutation/useUpvoteDream";
 import { useDownvoteDream } from "@/api/dream/mutation/useDownvoteDream";
@@ -144,8 +143,6 @@ const ViewDreamPage: React.FC = () => {
     resolver: yupResolver(UpdateDreamSchema),
     defaultValues: { name: "" },
   });
-
-  const dreamVideoUrl = useVideo(dream?.video);
 
   const isDreamProcessing: boolean = useMemo(
     () =>
@@ -744,7 +741,7 @@ const ViewDreamPage: React.FC = () => {
                     <h3>{t("page.view_dream.video")}</h3>
                   </Row>
                   <Row justifyContent={["center", "center", "flex-start"]}>
-                    <Video controls src={video?.url || dreamVideoUrl} />
+                    <Video controls src={video?.url || dream?.video} />
                   </Row>
                   <Row>
                     <h3>{t("page.view_dream.playlists")}</h3>

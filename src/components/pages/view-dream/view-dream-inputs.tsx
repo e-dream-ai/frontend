@@ -51,7 +51,6 @@ import {
   getNsfwOptions,
 } from "@/constants/select.constants";
 import { useImage } from "@/hooks/useImage";
-import { useVideo } from "@/hooks/useVideo";
 import { FormContainer, FormItem } from "@/components/shared/form/form";
 import { getUserProfileRoute } from "@/utils/router.util";
 import { KeyframeSelect } from "./keyframe-select";
@@ -425,9 +424,6 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
   const { t } = useTranslation();
   const hasVideo = Boolean(dream?.original_video) || video;
 
-  const localVideoUrl = useVideo(video?.url);
-  const dreamVideoUrl = useVideo(dream?.original_video);
-
   if (!hasVideo && (!editMode || isLoading)) {
     return (
       <VideoPlaceholder>
@@ -439,7 +435,7 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
   return (
     <>
       {hasVideo && !isRemoved ? (
-        <Video controls src={localVideoUrl || dreamVideoUrl} />
+        <Video controls src={video?.url || dream?.original_video} />
       ) : (
         <FileUploader
           maxSize={MAX_FILE_SIZE_MB}
