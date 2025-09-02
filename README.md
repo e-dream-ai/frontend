@@ -90,3 +90,4 @@ See the section about [deployment](https://facebook.github.io/create-react-app/d
 On Netlify, we use "prod" instead of "production" value, since "production" removes dev dependencies, needed to build this project, read [here](https://docs.netlify.com/configure-builds/manage-dependencies/#node-js-environment).
 
 changed.
+
