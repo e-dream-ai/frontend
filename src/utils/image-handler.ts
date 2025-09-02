@@ -1,36 +1,42 @@
-import { ImageData, ResizeOptions } from "@/types/image.types";
+import { ResizeOptions } from "@/types/image.types";
 
-export const BUCKET_NAME = import.meta.env.VITE_BUCKET_NAME;
-export const BUCKET_URL = import.meta.env.VITE_BUCKET_URL;
-export const IMAGE_HANDLER_BACKEND_URL = import.meta.env
-  .VITE_IMAGE_HANDLER_BACKEND_URL;
+const CLOUDFLARE_DOMAIN = import.meta.env.VITE_BUCKET_URL;
+const DEFAULT_FORMAT = "auto";
 
-export const generateImageURL = (
-  objectKey?: string,
+function normalizeUrl(url: string): string {
+  return url.replace(/^https?:\/\//, "");
+}
+
+function buildTransformParams(options: ResizeOptions): string[] {
+  const params: string[] = [];
+
+  if (options.width) params.push(`width=${options.width}`);
+  if (options.height) params.push(`height=${options.height}`);
+  if (options.fit) params.push(`fit=${options.fit}`);
+
+  params.push(`format=${DEFAULT_FORMAT}`);
+
+  return params;
+}
+
+export function generateCloudflareImageURL(
+  imageUrl: string,
   resizeOptions?: ResizeOptions,
-) => {
-  if (!objectKey) {
-    return undefined;
+): string | undefined {
+  if (!imageUrl) return undefined;
+
+  // If no resize options, return imageUrl as-is
+  if (!resizeOptions) {
+    return imageUrl;
   }
 
-  const data: ImageData = {
-    key: objectKey!,
-    bucket: BUCKET_NAME,
-    edits: { resize: resizeOptions },
-  };
-  const encoded = btoa(JSON.stringify(data));
-  return `${IMAGE_HANDLER_BACKEND_URL}/${encoded}`;
-};
+  // Normalize the input URL to remove protocol for transformation
+  const cleanUrl = normalizeUrl(imageUrl);
+  const normalizedDomain = normalizeUrl(CLOUDFLARE_DOMAIN || "");
+  const imagePath = cleanUrl.replace(`${normalizedDomain}/`, "");
+  const params = buildTransformParams(resizeOptions);
 
-export const generateImageURLFromResource = (
-  url?: string,
-  resizeOptions?: ResizeOptions,
-) => {
-  if (!url) {
-    return undefined;
-  }
-
-  const objectKey = url!.replace(`${BUCKET_URL}/`, "");
-  const generatedUrl = generateImageURL(objectKey, resizeOptions);
-  return `${generatedUrl}?v=${new Date().getTime()}`;
-};
+  return `https://${normalizedDomain}/cdn-cgi/image/${params.join(
+    ",",
+  )}/${imagePath}`;
+}

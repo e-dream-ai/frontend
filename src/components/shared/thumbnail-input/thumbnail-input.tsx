@@ -11,7 +11,10 @@ import {
   ThumbnailContainer,
   ThumbnailOverlay,
 } from "@/components/shared/thumbnail/thumbnail";
-import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_FILE_SIZE_MB } from "@/constants/file.constants";
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_IMAGE_FILE_SIZE_MB,
+} from "@/constants/file.constants";
 import { useTranslation } from "react-i18next";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import {
@@ -23,6 +26,7 @@ import { faPhotoFilm, faTrash } from "@fortawesome/free-solid-svg-icons";
 import { Spinner } from "../spinner/spinner";
 import { useTheme } from "styled-components";
 import Text from "../text/text";
+import { useImage } from "@/hooks/useImage";
 
 type ThumbnailInputProps = {
   isLoading?: boolean;
@@ -48,6 +52,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const hasThumbnail = Boolean(thumbnail) || localMultimedia;
+  const localUrl = useImage(localMultimedia?.url);
 
   if (isProcessing && !isLoading) {
     return (
@@ -84,10 +89,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
             </ThumbnailButtons>
           )}
           {editMode && <ThumbnailOverlay />}
-          <Thumbnail
-            url={localMultimedia?.url || thumbnail}
-            src="/images/blank.gif"
-          />
+          <Thumbnail url={localUrl || thumbnail} src="/images/blank.gif" />
         </ThumbnailContainer>
       ) : (
         <FileUploader

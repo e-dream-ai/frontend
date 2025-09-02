@@ -75,12 +75,12 @@ const ViewDreamPage: React.FC = () => {
   const [thumbnail, setTumbnail] = useState<MultiMediaState>();
   const [isVideoRemoved, setIsVideoRemoved] = useState<boolean>(false);
   const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
+
   const [showConfirmProcessModal, setShowConfirmProcessModal] =
     useState<boolean>(false);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
     useState<boolean>(false);
-  const [showReportModal, setShowReportModal] =
-    useState<boolean>(false);
+  const [showReportModal, setShowReportModal] = useState<boolean>(false);
   const [showProcessDreamReportModal, setShowProcessDreamReportModal] =
     useState<boolean>(false);
   const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
@@ -110,8 +110,11 @@ const ViewDreamPage: React.FC = () => {
   const dream = useMemo(() => data?.data?.dream, [data]);
   const vote = useMemo(() => voteData?.data?.vote, [voteData]);
   const playlistItems = useMemo(() => dream?.playlistItems, [dream]);
-  const reports = useMemo(() => dream?.reports ?? [], [dream])
-  const isDreamReported = useMemo(() => Boolean(dream?.reports?.length), [dream])
+  const reports = useMemo(() => dream?.reports ?? [], [dream]);
+  const isDreamReported = useMemo(
+    () => Boolean(dream?.reports?.length),
+    [dream],
+  );
 
   const { mutate: mutateDream, isLoading: isLoadingDreamMutation } =
     useUpdateDream(uuid);
@@ -131,7 +134,10 @@ const ViewDreamPage: React.FC = () => {
     uploadDreamVideoMutation.isLoading ||
     isLoadingThumbnailDreamMutation;
 
-  const { mutateAsync: processReportMutateAsync, isLoading: isProcessingReport } = useUpdateReport();
+  const {
+    mutateAsync: processReportMutateAsync,
+    isLoading: isProcessingReport,
+  } = useUpdateReport();
 
   const formMethods = useForm<UpdateDreamFormValues>({
     resolver: yupResolver(UpdateDreamSchema),
@@ -181,7 +187,8 @@ const ViewDreamPage: React.FC = () => {
               handleMutateDream(data);
             } else {
               toast.error(
-                `${t("page.view_dream.error_updating_dream")} ${response.message
+                `${t("page.view_dream.error_updating_dream")} ${
+                  response.message
                 }`,
               );
             }
@@ -197,26 +204,23 @@ const ViewDreamPage: React.FC = () => {
   };
 
   const handleMutateDream = (data: UpdateDreamFormValues) => {
-    mutateDream(
-      formatDreamRequest(data, isUserAdmin),
-      {
-        onSuccess: (data) => {
-          const dream = data?.data?.dream;
-          if (data.success) {
-            queryClient.setQueryData([DREAM_QUERY_KEY, dream?.uuid], data);
-            toast.success(t("page.view_dream.dream_updated_successfully"));
-            setEditMode(false);
-          } else {
-            toast.error(
-              `${t("page.view_dream.error_updating_dream")} ${data.message}`,
-            );
-          }
-        },
-        onError: () => {
-          toast.error(t("page.view_dream.error_updating_dream"));
-        },
+    mutateDream(formatDreamRequest(data, isUserAdmin), {
+      onSuccess: (data) => {
+        const dream = data?.data?.dream;
+        if (data.success) {
+          queryClient.setQueryData([DREAM_QUERY_KEY, dream?.uuid], data);
+          toast.success(t("page.view_dream.dream_updated_successfully"));
+          setEditMode(false);
+        } else {
+          toast.error(
+            `${t("page.view_dream.error_updating_dream")} ${data.message}`,
+          );
+        }
       },
-    );
+      onError: () => {
+        toast.error(t("page.view_dream.error_updating_dream"));
+      },
+    });
   };
 
   const onSubmit = (data: UpdateDreamFormValues) => {
@@ -244,10 +248,14 @@ const ViewDreamPage: React.FC = () => {
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
   const onShowReportModal = () => setShowReportModal(true);
   const onHideReportModal = () => setShowReportModal(false);
-  const onShowProcessDreamReportModal = () => setShowProcessDreamReportModal(true);
-  const onHideProcessDreamReportModal = () => setShowProcessDreamReportModal(false);
-  const onShowClientNotConnectedModal = () => setShowClientNotConnectedModal(true);
-  const onHideClientNotConnectedModal = () => setShowClientNotConnectedModal(false);
+  const onShowProcessDreamReportModal = () =>
+    setShowProcessDreamReportModal(true);
+  const onHideProcessDreamReportModal = () =>
+    setShowProcessDreamReportModal(false);
+  const onShowClientNotConnectedModal = () =>
+    setShowClientNotConnectedModal(true);
+  const onHideClientNotConnectedModal = () =>
+    setShowClientNotConnectedModal(false);
 
   const handleFlagButton = useCallback(() => {
     // Show process report dream modal when dream is reported and authenticated user is admin
@@ -324,7 +332,11 @@ const ViewDreamPage: React.FC = () => {
 
   const handlePlayDream = () => {
     if (isClientActive) {
-      emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
+      emitPlayDream(
+        socket,
+        dream,
+        t("toasts.play_dream", { name: dream?.name }),
+      );
     } else {
       onShowClientNotConnectedModal();
     }
@@ -355,34 +367,36 @@ const ViewDreamPage: React.FC = () => {
           try {
             const data = await processReportMutateAsync({
               uuid: report.uuid,
-              values: { processed: true }
+              values: { processed: true },
             });
 
             return {
               uuid: report.uuid,
               success: data.success,
-              message: data.message
+              message: data.message,
             };
           } catch (error) {
             return {
               uuid: report.uuid,
               success: false,
-              message: "Error processing report"
+              message: "Error processing report",
             };
           }
-        })
+        }),
       );
 
-      const allSucceeded = results.every(result => result.success);
-      const failedReports = results.filter(result => !result.success);
+      const allSucceeded = results.every((result) => result.success);
+      const failedReports = results.filter((result) => !result.success);
 
       if (allSucceeded) {
         toast.success(t("page.view_dream.reports_processed_successfully"));
         onHideProcessDreamReportModal();
       } else {
-        failedReports.forEach(failedReport => {
+        failedReports.forEach((failedReport) => {
           toast.error(
-            `${t("page.view_dream.error_processing_report")} ${failedReport.uuid}: ${failedReport.message}`
+            `${t("page.view_dream.error_processing_report")} ${
+              failedReport.uuid
+            }: ${failedReport.message}`,
           );
         });
       }
@@ -391,7 +405,7 @@ const ViewDreamPage: React.FC = () => {
     } catch (error) {
       toast.error(t("page.view_dream.error_processing_reports"));
     }
-  }
+  };
 
   /**
    * Setting api values to form
@@ -407,13 +421,14 @@ const ViewDreamPage: React.FC = () => {
    */
   if (isError) return <NotFound />;
 
-  if (isDreamLoading || !dream) return (
-    <Container>
-      <Row justifyContent="center">
-        <Spinner />
-      </Row>
-    </Container>
-  );
+  if (isDreamLoading || !dream)
+    return (
+      <Container>
+        <Row justifyContent="center">
+          <Spinner />
+        </Row>
+      </Container>
+    );
 
   return (
     <React.Fragment>
@@ -495,12 +510,14 @@ const ViewDreamPage: React.FC = () => {
         text={
           <Text>
             Start the app for the remote control, and try again.
-            <br /><br />
+            <br />
+            <br />
             <AnchorLink to={ROUTES.INSTALL} type="primary">
               Install
-            </AnchorLink>
-            {" "}it first if needed.
-            <br /><br />
+            </AnchorLink>{" "}
+            it first if needed.
+            <br />
+            <br />
             You can also play with the{" "}
             <AnchorLink to={ROUTES.REMOTE_CONTROL} type="primary">
               web client
@@ -585,7 +602,7 @@ const ViewDreamPage: React.FC = () => {
                     style={{ width: "3rem" }}
                     onClick={handleFlagButton}
                   >
-                    {(isDreamReported) ? (
+                    {isDreamReported ? (
                       <span className="fa-stack fa-sm">
                         <FontAwesomeIcon icon={faCircle} className="fa-2x" />
                         <FontAwesomeIcon
@@ -678,7 +695,6 @@ const ViewDreamPage: React.FC = () => {
                 dream={dream}
                 isProcessing={isDreamProcessing}
                 editMode={editMode}
-
                 // thumbnail props
                 thumbnailState={thumbnail}
                 isThumbnailRemoved={isThumbnailRemoved}

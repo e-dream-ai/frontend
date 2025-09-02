@@ -4,10 +4,7 @@ import {
   ALLOWED_VIDEO_TYPES,
   MAX_FILE_SIZE_MB,
 } from "@/constants/file.constants";
-import {
-  Controller,
-  useFormContext,
-} from "react-hook-form";
+import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { UpdateDreamFormValues } from "@/schemas/update-dream.schema";
 import { Dream } from "@/types/dream.types";
@@ -85,7 +82,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   thumbnailState,
   isThumbnailRemoved,
   handleThumbnailChange,
-  handleRemoveThumbnail
+  handleRemoveThumbnail,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -95,23 +92,19 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
 
-  const {
-    control,
-    register,
-  } = useFormContext<UpdateDreamFormValues>();
+  const { control, register } = useFormContext<UpdateDreamFormValues>();
 
   // always shows user for admins
   // for normal users look for 'displayed owner' or user instead
-  const dreamOwnerToShow =
-    isUserAdmin
-      ? dream?.user?.name
-      : dream?.displayedOwner?.name ?? dream?.user?.name;
+  const dreamOwnerToShow = isUserAdmin
+    ? dream?.user?.name
+    : dream?.displayedOwner?.name ?? dream?.user?.name;
 
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
   });
 
-  const switchShowMore = () => setShowMore(v => !v);
+  const switchShowMore = () => setShowMore((v) => !v);
 
   const usersOptions = (usersData?.data?.users ?? [])
     .filter((user) => user.name)
@@ -135,16 +128,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
 
   return (
     <>
-      <Row
-        flex="auto"
-        flexDirection={["column", "row", "row", "row"]}
-        m={0}
-      >
-        <Column
-          flex="1"
-          mr={[0, 2, 2, 2]}
-          mb={4}
-        >
+      <Row flex="auto" flexDirection={["column", "row", "row", "row"]} m={0}>
+        <Column flex="1" mr={[0, 2, 2, 2]} mb={4}>
           <ThumbnailInput
             localMultimedia={thumbnailState}
             thumbnail={thumbnailUrl}
@@ -155,22 +140,20 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             handleRemove={handleRemoveThumbnail}
           />
         </Column>
-        <Column
-          flex="1"
-          ml={[0, 2, 2]}
-        >
+        <Column flex="1" ml={[0, 2, 2]}>
           {
             // Show only for owners when dream is hidden
-            isOwner && dream?.hidden &&
-            <Input
-              disabled
-              outlined
-              type="text"
-              placeholder={t("page.view_playlist.visibility")}
-              before={<FontAwesomeIcon icon={faEye} />}
-              value={t("dream.hidden.hidden")}
-              name="visibility-for-owner"
-            />
+            isOwner && dream?.hidden && (
+              <Input
+                disabled
+                outlined
+                type="text"
+                placeholder={t("page.view_playlist.visibility")}
+                before={<FontAwesomeIcon icon={faEye} />}
+                value={t("dream.hidden.hidden")}
+                name="visibility-for-owner"
+              />
+            )
           }
           <FormInput
             disabled={!editMode}
@@ -277,7 +260,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           />
         </FormItem>
 
-
         {/* If user is admin, show editable hidden field */}
         <Restricted to={DREAM_PERMISSIONS.CAN_EDIT_VISIBILITY}>
           <FormItem>
@@ -297,16 +279,21 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             />
           </FormItem>
         </Restricted>
-
       </FormContainer>
 
       <Row flex="auto" justifyContent="center">
-        <Button type="button" size="sm" buttonType="tertiary" onClick={switchShowMore}>
-          {showMore ? t("page.view_dream.less") : t("page.view_dream.more")} {showMore ? "-" : "+"}
+        <Button
+          type="button"
+          size="sm"
+          buttonType="tertiary"
+          onClick={switchShowMore}
+        >
+          {showMore ? t("page.view_dream.less") : t("page.view_dream.more")}{" "}
+          {showMore ? "-" : "+"}
         </Button>
       </Row>
 
-      {showMore &&
+      {showMore && (
         <FormContainer>
           <FormItem>
             <FormInput
@@ -412,7 +399,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             />
           </FormItem>
         </FormContainer>
-      }
+      )}
     </>
   );
 };
