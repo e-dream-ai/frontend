@@ -1,11 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { yupResolver } from "@hookform/resolvers/yup";
-import {
-  faImage,
-  faList,
-  faUpload,
-} from "@fortawesome/free-solid-svg-icons";
+import { faImage, faList, faUpload } from "@fortawesome/free-solid-svg-icons";
 import { useCreateKeyframe } from "@/api/keyframe/mutation/useCreateKeyframe";
 import {
   AnchorLink,
@@ -29,13 +25,24 @@ import { usePlaylists } from "@/api/playlist/query/usePlaylists";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
-import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_FILE_SIZE_MB } from "@/constants/file.constants";
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_IMAGE_FILE_SIZE_MB,
+} from "@/constants/file.constants";
 import { useUpdateImageKeyframe } from "@/api/keyframe/mutation/useUpdateImageKeyframe";
-import { handleFileUploaderSizeError, handleFileUploaderTypeError } from "@/utils/file-uploader.util";
+import {
+  handleFileUploaderSizeError,
+  handleFileUploaderTypeError,
+} from "@/utils/file-uploader.util";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
 import router from "@/routes/router";
 import { useSearchParams } from "react-router-dom";
-import { PLAYLIST_QUERY_KEY, usePlaylist } from "@/api/playlist/query/usePlaylist";
+import {
+  PLAYLIST_QUERY_KEY,
+  usePlaylist,
+} from "@/api/playlist/query/usePlaylist";
+import { PLAYLIST_ITEMS_QUERY_KEY } from "@/api/playlist/query/usePlaylistItems";
+import { PLAYLIST_KEYFRAMES_QUERY_KEY } from "@/api/playlist/query/usePlaylistKeyframes";
 import queryClient from "@/api/query-client";
 import { ItemCardImage } from "@/components/shared/item-card/item-card-image";
 
@@ -48,13 +55,11 @@ export const CreateKeyframe: React.FC = () => {
   const [image, setImage] = useState<MultiMediaState>();
   const hasSetDefaultPlaylistValue = useRef(false);
 
-
   /**
    * Default playlist from navigation
    */
   const defaultPlaylistUUID = params.get("playlist") ?? undefined;
   const defaultPlaylistQuery = usePlaylist(defaultPlaylistUUID);
-
 
   const {
     mutateAsync: mutateCreateKeyframe,
@@ -89,9 +94,9 @@ export const CreateKeyframe: React.FC = () => {
   }, [playlistsData]);
 
   const isLoading =
-    updateImageKeyframeMutation.isLoading
-    || isLoadingCreateKeyframe
-    || addKeyframeItemMutation.isLoading;
+    updateImageKeyframeMutation.isLoading ||
+    isLoadingCreateKeyframe ||
+    addKeyframeItemMutation.isLoading;
 
   const {
     register,
@@ -113,32 +118,39 @@ export const CreateKeyframe: React.FC = () => {
 
   const handleCancel = async () => {
     setImage(undefined);
-    toast.success(
-      `${t("page.create.keyframe_upload_cancelled_successfully")}`,
-    );
+    toast.success(`${t("page.create.keyframe_upload_cancelled_successfully")}`);
   };
 
   const onSubmit = async (data: CreateKeyframeFormValues) => {
     try {
       const createKeyframeRequest = await mutateCreateKeyframe({
-        name: data.name
+        name: data.name,
       });
 
       const newKeyframe = createKeyframeRequest?.data?.keyframe;
       const playlistUUID = data.playlist.value;
 
       if (image) {
-        await updateImageKeyframeMutation.updateImageKeyframe(newKeyframe!.uuid, image!.file);
+        await updateImageKeyframeMutation.updateImageKeyframe(
+          newKeyframe!.uuid,
+          image!.file,
+        );
       }
 
       if (data.playlist) {
         await addKeyframeItemMutation.mutateAsync({
-          uuid: playlistUUID, values: {
-            uuid: newKeyframe!.uuid
-          }
+          uuid: playlistUUID,
+          values: {
+            uuid: newKeyframe!.uuid,
+          },
         });
 
         queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistUUID]);
+        queryClient.invalidateQueries([PLAYLIST_ITEMS_QUERY_KEY, playlistUUID]);
+        queryClient.invalidateQueries([
+          PLAYLIST_KEYFRAMES_QUERY_KEY,
+          playlistUUID,
+        ]);
       }
 
       router.navigate(`${ROUTES.VIEW_KEYFRAME}/${newKeyframe!.uuid}`);
@@ -171,7 +183,6 @@ export const CreateKeyframe: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Column>
-
         <Text marginY={3}>{t("page.create.keyframe_instructions")}</Text>
 
         <Input

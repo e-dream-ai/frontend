@@ -1,5 +1,7 @@
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
+import { PLAYLIST_ITEMS_QUERY_KEY } from "@/api/playlist/query/usePlaylistItems";
+import { PLAYLIST_KEYFRAMES_QUERY_KEY } from "@/api/playlist/query/usePlaylistKeyframes";
 import queryClient from "@/api/query-client";
 import { DND_ACTIONS, DND_METADATA } from "@/constants/dnd.constants";
 import { TOAST_DEFAULT_CONFIG } from "@/constants/toast.constants";
@@ -54,6 +56,11 @@ export const AddItemPlaylistDropzone: React.FC<
           onSuccess: (data) => {
             if (data.success) {
               queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
+              queryClient.invalidateQueries([PLAYLIST_ITEMS_QUERY_KEY, uuid]);
+              queryClient.invalidateQueries([
+                PLAYLIST_KEYFRAMES_QUERY_KEY,
+                uuid,
+              ]);
               toast.update(toastId, {
                 render: t(
                   "components.playlist_dropzone.playlist_item_successfully_added",
