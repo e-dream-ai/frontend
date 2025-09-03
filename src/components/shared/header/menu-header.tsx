@@ -1,4 +1,4 @@
-import { ROUTES } from "@/constants/routes.constants";
+import { FULL_CREATE_ROUTES, ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { StyledNavList, NavListItem } from "./header.styled";
@@ -40,7 +40,7 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
     },
     {
       component: t("header.create"),
-      route: ROUTES.CREATE,
+      route: FULL_CREATE_ROUTES.DREAM,
       // using display props from styled-system to setup mobile, tablet, laptop, desktop breakpoints
       display: ["none", "none", "none", "inline-flex"]
     },
