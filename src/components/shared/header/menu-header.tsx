@@ -1,4 +1,4 @@
-import { FULL_CREATE_ROUTES, ROUTES } from "@/constants/routes.constants";
+import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import { StyledNavList, NavListItem } from "./header.styled";
