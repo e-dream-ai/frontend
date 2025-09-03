@@ -31,7 +31,7 @@ export const CreatePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [tabIndex, setTabIndex] = useState(CREATE_TYPE.PLAYLIST);
+  const [tabIndex, setTabIndex] = useState(0);
 
   useEffect(() => {
     switch (location.pathname) {
