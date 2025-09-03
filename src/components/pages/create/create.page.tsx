@@ -47,11 +47,8 @@ export const CreatePage: React.FC = () => {
       case FULL_CREATE_ROUTES.ADD_KEYFRAME_TO_PLAYLIST:
         setTabIndex(CREATE_TYPE.KEYFRAME);
         break;
-      case "/create":
-        setTabIndex(CREATE_TYPE.PLAYLIST);
-        break;
       default:
-        setTabIndex(CREATE_TYPE.PLAYLIST);
+        setTabIndex(0);
     }
   }, [location.pathname]);
 
