@@ -40,7 +40,7 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
     },
     {
       component: t("header.create"),
-      route: FULL_CREATE_ROUTES.DREAM,
+      route: ROUTES.CREATE,
       // using display props from styled-system to setup mobile, tablet, laptop, desktop breakpoints
       display: ["none", "none", "none", "inline-flex"]
     },
