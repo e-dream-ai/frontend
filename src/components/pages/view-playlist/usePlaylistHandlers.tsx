@@ -1,5 +1,7 @@
 import queryClient from "@/api/query-client";
 import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
+import { PLAYLIST_ITEMS_QUERY_KEY } from "@/api/playlist/query/usePlaylistItems";
+import { PLAYLIST_KEYFRAMES_QUERY_KEY } from "@/api/playlist/query/usePlaylistKeyframes";
 import { UpdatePlaylistFormValues } from "@/schemas/update-playlist.schema";
 import { useUpdatePlaylist } from "@/api/playlist/mutation/useUpdatePlaylist";
 import { toast } from "react-toastify";
@@ -34,6 +36,8 @@ import { emitPlayPlaylist } from "@/utils/socket.util";
 import { createAddFileHandler } from "@/utils/file.util";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
+import { axiosClient } from "@/client/axios.client";
+import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 
 type HookParams = {
   uuid?: string;
@@ -49,6 +53,19 @@ type HookParams = {
   setIsUploadingFiles: (value: SetStateAction<boolean>) => void;
   onHideConfirmDeleteModal: () => void;
   onShowClientNotConnectedModal: () => void;
+  fetchNextPlaylistItemsPage: () => void;
+  hasNextPlaylistItemsPage: boolean | undefined;
+  fetchNextPlaylistKeyframesPage: () => void;
+  hasNextPlaylistKeyframesPage: boolean | undefined;
+  playlistItemsTotalCount: number;
+  playlistKeyframesTotalCount: number;
+  playlistKeyframes: any[];
+  isJumpingToEnd: boolean;
+  setIsJumpingToEnd: (value: SetStateAction<boolean>) => void;
+  hasJumpedToEndItems: boolean;
+  setHasJumpedToEndItems: (value: SetStateAction<boolean>) => void;
+  hasJumpedToEndKeyframes: boolean;
+  setHasJumpedToEndKeyframes: (value: SetStateAction<boolean>) => void;
 };
 
 type SortType = "name" | "date";
@@ -67,6 +84,12 @@ export const usePlaylistHandlers = ({
   setIsUploadingFiles,
   onHideConfirmDeleteModal,
   onShowClientNotConnectedModal,
+  playlistItemsTotalCount,
+  playlistKeyframesTotalCount,
+  isJumpingToEnd,
+  setIsJumpingToEnd,
+  setHasJumpedToEndItems,
+  setHasJumpedToEndKeyframes,
 }: HookParams) => {
   const { t } = useTranslation();
   const { socket } = useSocket();
@@ -110,29 +133,27 @@ export const usePlaylistHandlers = ({
   };
 
   const handleMutatePlaylist = (data: UpdatePlaylistFormValues) => {
-    mutatePlaylist(
-      formatPlaylistRequest(uuid!, data, isUserAdmin),
-      {
-        onSuccess: (response) => {
-          if (response.success) {
-            queryClient.setQueryData([PLAYLIST_QUERY_KEY, uuid], response);
-            reset({ name: response?.data?.playlist.name });
-            toast.success(
-              `${t("page.view_playlist.playlist_updated_successfully")}`,
-            );
-            setEditMode(false);
-          } else {
-            toast.error(
-              `${t("page.view_playlist.error_updating_playlist")} ${response.message
-              }`,
-            );
-          }
-        },
-        onError: () => {
-          toast.error(t("page.view_playlist.error_updating_playlist"));
-        },
+    mutatePlaylist(formatPlaylistRequest(uuid!, data, isUserAdmin), {
+      onSuccess: (response) => {
+        if (response.success) {
+          queryClient.setQueryData([PLAYLIST_QUERY_KEY, uuid], response);
+          reset({ name: response?.data?.playlist.name });
+          toast.success(
+            `${t("page.view_playlist.playlist_updated_successfully")}`,
+          );
+          setEditMode(false);
+        } else {
+          toast.error(
+            `${t("page.view_playlist.error_updating_playlist")} ${
+              response.message
+            }`,
+          );
+        }
       },
-    );
+      onError: () => {
+        toast.error(t("page.view_playlist.error_updating_playlist"));
+      },
+    });
   };
 
   const handleMutateThumbnailPlaylist = (data: UpdatePlaylistFormValues) => {
@@ -145,7 +166,8 @@ export const usePlaylistHandlers = ({
               handleMutatePlaylist(data);
             } else {
               toast.error(
-                `${t("page.view_playlist.error_updating_playlist")} ${response.message
+                `${t("page.view_playlist.error_updating_playlist")} ${
+                  response.message
                 }`,
               );
             }
@@ -173,6 +195,11 @@ export const usePlaylistHandlers = ({
           onSuccess: (response) => {
             if (response.success) {
               queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
+              queryClient.invalidateQueries([PLAYLIST_ITEMS_QUERY_KEY, uuid]);
+              queryClient.invalidateQueries([
+                PLAYLIST_KEYFRAMES_QUERY_KEY,
+                uuid,
+              ]);
               toast.update(toastId, {
                 render: t(
                   "page.view_playlist.playlist_item_deleted_successfully",
@@ -212,12 +239,20 @@ export const usePlaylistHandlers = ({
         t("page.view_playlist.deleting_playlist_keyframe"),
       );
       mutateDeletePlaylistKeyframe(
-        { playlistUUID: playlist!.uuid, playlistKeyframeId: playlistKeyframeId },
+        {
+          playlistUUID: playlist!.uuid,
+          playlistKeyframeId: playlistKeyframeId,
+        },
         {
           onSuccess: (response) => {
             if (response.success) {
               // invalidates playlist query to bring new data without deleted keyframe
               queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
+              queryClient.invalidateQueries([PLAYLIST_ITEMS_QUERY_KEY, uuid]);
+              queryClient.invalidateQueries([
+                PLAYLIST_KEYFRAMES_QUERY_KEY,
+                uuid,
+              ]);
               toast.update(toastId, {
                 render: t(
                   "page.view_playlist.playlist_keyframe_deleted_successfully",
@@ -239,7 +274,9 @@ export const usePlaylistHandlers = ({
           },
           onError: () => {
             toast.update(toastId, {
-              render: `${t("page.view_playlist.error_deleting_playlist_keyframe")}`,
+              render: `${t(
+                "page.view_playlist.error_deleting_playlist_keyframe",
+              )}`,
               type: "error",
               isLoading: false,
               ...TOAST_DEFAULT_CONFIG,
@@ -248,7 +285,6 @@ export const usePlaylistHandlers = ({
         },
       );
     };
-
 
   const handleOrderPlaylist = async (dropItem: SetItemOrder) => {
     /**
@@ -285,8 +321,9 @@ export const usePlaylistHandlers = ({
         });
       } else {
         toast.update(toastId, {
-          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${response.message
-            }`,
+          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
+            response.message
+          }`,
           type: "error",
           isLoading: false,
           ...TOAST_DEFAULT_CONFIG,
@@ -332,8 +369,9 @@ export const usePlaylistHandlers = ({
         });
       } else {
         toast.update(toastId, {
-          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${response.message
-            }`,
+          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
+            response.message
+          }`,
           type: "error",
           isLoading: false,
           ...TOAST_DEFAULT_CONFIG,
@@ -410,7 +448,8 @@ export const usePlaylistHandlers = ({
           router.navigate(ROUTES.FEED);
         } else {
           toast.error(
-            `${t("page.view_playlist.error_deleting_playlist")} ${response.message
+            `${t("page.view_playlist.error_deleting_playlist")} ${
+              response.message
             }`,
           );
         }
@@ -439,7 +478,9 @@ export const usePlaylistHandlers = ({
       playlistName: String(playlist?.name ?? ""),
     }).toString();
 
-    router.navigate(`${FULL_CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST}?${queryParams}`);
+    router.navigate(
+      `${FULL_CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST}?${queryParams}`,
+    );
   };
 
   const handleNavigateAddKeyframeToPlaylist = () => {
@@ -448,9 +489,116 @@ export const usePlaylistHandlers = ({
       playlistName: String(playlist?.name ?? ""),
     }).toString();
 
-    router.navigate(`${FULL_CREATE_ROUTES.ADD_KEYFRAME_TO_PLAYLIST}?${queryParams}`);
+    router.navigate(
+      `${FULL_CREATE_ROUTES.ADD_KEYFRAME_TO_PLAYLIST}?${queryParams}`,
+    );
   };
 
+  const handleJumpToEndItems = async () => {
+    if (isJumpingToEnd) return;
+
+    setIsJumpingToEnd(true);
+
+    try {
+      // Make a single API call to get ALL items
+      const response = await axiosClient.get(`/v1/playlist/${uuid}/items`, {
+        params: {
+          take: playlistItemsTotalCount,
+          skip: 0,
+        },
+        headers: getRequestHeaders({
+          contentType: ContentType.json,
+        }),
+      });
+
+      if (response.data.success) {
+        // Replace the query cache with all items in a single page
+        queryClient.setQueryData([PLAYLIST_ITEMS_QUERY_KEY, uuid], {
+          pages: [
+            {
+              data: {
+                items: response.data.data.items,
+                totalCount: playlistItemsTotalCount,
+              },
+            },
+          ],
+          pageParams: [0],
+        });
+      }
+
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 100);
+
+      // Mark that we've jumped to end for items
+      setHasJumpedToEndItems(true);
+
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 200);
+    } finally {
+      setIsJumpingToEnd(false);
+    }
+  };
+
+  const handleJumpToEndKeyframes = async () => {
+    if (isJumpingToEnd) return;
+
+    setIsJumpingToEnd(true);
+
+    try {
+      // Make a single API call to get ALL keyframes
+      const response = await axiosClient.get(`/v1/playlist/${uuid}/keyframes`, {
+        params: {
+          take: playlistKeyframesTotalCount,
+          skip: 0,
+        },
+        headers: getRequestHeaders({
+          contentType: ContentType.json,
+        }),
+      });
+
+      if (response.data.success) {
+        // Replace the query cache with all keyframes in a single page
+        queryClient.setQueryData([PLAYLIST_KEYFRAMES_QUERY_KEY, uuid], {
+          pages: [
+            {
+              data: {
+                keyframes: response.data.data.keyframes,
+                totalCount: playlistKeyframesTotalCount,
+              },
+            },
+          ],
+          pageParams: [0],
+        });
+      }
+
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 100);
+
+      setHasJumpedToEndKeyframes(true);
+
+      // Scroll to the bottom after loading all keyframes
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.documentElement.scrollHeight,
+          behavior: "smooth",
+        });
+      }, 200);
+    } finally {
+      setIsJumpingToEnd(false);
+    }
+  };
 
   return {
     isLoading,
@@ -469,6 +617,8 @@ export const usePlaylistHandlers = ({
     handleConfirmDeletePlaylist,
     handlePlayPlaylist,
     handleNavigateAddToPlaylist,
-    handleNavigateAddKeyframeToPlaylist
+    handleNavigateAddKeyframeToPlaylist,
+    handleJumpToEndItems,
+    handleJumpToEndKeyframes,
   };
 };

@@ -21,7 +21,7 @@ export const usePlaylistState = ({ control, setValue }: Props) => {
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const [params] = useSearchParams();
   const hasSetDefaultValue = useRef(false);
-  
+
   /**
    * Default playlist from navigation
    */

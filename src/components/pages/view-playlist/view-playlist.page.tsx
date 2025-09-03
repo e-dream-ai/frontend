@@ -49,13 +49,88 @@ import Input, { FormInput } from "@/components/shared/input/input";
 import { FormTextArea } from "@/components/shared/text-area/text-area";
 import {
   formatPlaylistForm,
-  countDreamsInPlaylist,
   getPlaylistTotalDurationFormatted,
 } from "@/utils/playlist.util";
 import { AnchorLink } from "@/components/shared";
 import { faClock, faListOl } from "@fortawesome/free-solid-svg-icons";
+import InfiniteScroll from "react-infinite-scroll-component";
+import { Loader } from "@/components/shared/loader/loader";
+import { useTheme } from "styled-components";
+import styled from "styled-components";
+import { faChevronUp } from "@fortawesome/free-solid-svg-icons";
 
 const SectionID = "playlist";
+
+const JumpToEndButton = styled.button<{ disabled?: boolean }>`
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.4rem 0.8rem;
+  margin-left: 0.2rem;
+  margin-bottom: 0.6rem;
+  border-radius: 15px;
+  border: none;
+  font-size: inherit;
+  font-family: inherit;
+  color: ${(props) =>
+    props.disabled ? props.theme.textBodyColor : props.theme.textBodyColor};
+  background-color: ${(props) =>
+    props.disabled
+      ? props.theme.colorBackgroundQuaternary
+      : props.theme.colorBackgroundQuaternary};
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
+  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
+  transition:
+    color linear 0.4s,
+    background-color linear 0.4s,
+    border-color linear 0.4s;
+
+  :hover {
+    background-color: ${(props) =>
+      props.disabled
+        ? props.theme.colorBackgroundQuaternary
+        : props.theme.colorBackgroundSecondary};
+  }
+`;
+
+const ScrollToTopButton = styled.button<{ visible?: boolean }>`
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 1000;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: none;
+  background-color: ${(props) => props.theme.colorPrimary};
+  color: ${(props) => props.theme.black};
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  opacity: ${(props) => (props.visible ? 1 : 0)};
+  visibility: ${(props) => (props.visible ? "visible" : "hidden")};
+  transform: ${(props) =>
+    props.visible ? "translateY(0)" : "translateY(10px)"};
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease,
+    transform 0.3s ease,
+    filter 0.3s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+
+  &:hover {
+    filter: brightness(140%);
+    transform: ${(props) =>
+      props.visible ? "translateY(-2px)" : "translateY(10px)"};
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+  }
+
+  &:active {
+    transform: ${(props) =>
+      props.visible ? "translateY(0)" : "translateY(10px)"};
+  }
+`;
 
 /**
  * Playlist tabs handling
@@ -91,15 +166,21 @@ export const ViewPlaylistPage = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const location = useLocation();
+  const theme = useTheme();
 
   const [radioGroupState, setRadioGroupState] = useState<
     PlaylistTabs | undefined
   >(PLAYLIST_TABS.ITEMS);
   const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
     useState<boolean>(false);
+  const [showScrollToTop, setShowScrollToTop] = useState<boolean>(false);
 
   const handleRadioButtonGroupChange = (value?: string) => {
     setRadioGroupState(value as PlaylistTabs);
+    // Reset jump to end state when switching tabs
+    setIsJumpingToEnd(false);
+    setHasJumpedToEndItems(false);
+    setHasJumpedToEndKeyframes(false);
   };
 
   const {
@@ -117,6 +198,12 @@ export const ViewPlaylistPage = () => {
     allowedEditVisibility,
     items,
     playlistKeyframes,
+    playlistItemsTotalCount,
+    playlistKeyframesTotalCount,
+    fetchNextPlaylistItemsPage,
+    hasNextPlaylistItemsPage,
+    fetchNextPlaylistKeyframesPage,
+    hasNextPlaylistKeyframesPage,
     setUserSearch,
     videos,
     setVideos,
@@ -131,6 +218,12 @@ export const ViewPlaylistPage = () => {
     showConfirmDeleteModal,
     setShowConfirmDeleteModal,
     totalVideos,
+    isJumpingToEnd,
+    setIsJumpingToEnd,
+    hasJumpedToEndItems,
+    setHasJumpedToEndItems,
+    hasJumpedToEndKeyframes,
+    setHasJumpedToEndKeyframes,
   } = usePlaylistState();
 
   const formMethods = useForm<UpdatePlaylistFormValues>({
@@ -144,6 +237,42 @@ export const ViewPlaylistPage = () => {
     setShowClientNotConnectedModal(true);
   const onHideClientNotConnectedModal = () =>
     setShowClientNotConnectedModal(false);
+
+  const handleScrollToTop = () => {
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  };
+
+  const handleScrollToEnd = () => {
+    window.scrollTo({
+      top: document.documentElement.scrollHeight,
+      behavior: "smooth",
+    });
+  };
+
+  const handleJumpToEndClick = (event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const isJumpedToEnd =
+      radioGroupState === "items"
+        ? hasJumpedToEndItems
+        : hasJumpedToEndKeyframes;
+
+    if (isJumpedToEnd) {
+      // If data is already loaded, scroll to the bottom
+      handleScrollToEnd();
+    } else {
+      // If data is not loaded, trigger the original jump to end logic
+      if (radioGroupState === "items") {
+        handleJumpToEndItems();
+      } else {
+        handleJumpToEndKeyframes();
+      }
+    }
+  };
 
   const {
     isLoading,
@@ -159,6 +288,8 @@ export const ViewPlaylistPage = () => {
     handlePlayPlaylist,
     handleNavigateAddToPlaylist,
     handleNavigateAddKeyframeToPlaylist,
+    handleJumpToEndItems,
+    handleJumpToEndKeyframes,
   } = usePlaylistHandlers({
     uuid,
     playlist,
@@ -173,6 +304,19 @@ export const ViewPlaylistPage = () => {
     setIsUploadingFiles,
     onHideConfirmDeleteModal,
     onShowClientNotConnectedModal,
+    fetchNextPlaylistItemsPage,
+    hasNextPlaylistItemsPage,
+    fetchNextPlaylistKeyframesPage,
+    hasNextPlaylistKeyframesPage,
+    playlistItemsTotalCount,
+    playlistKeyframesTotalCount,
+    playlistKeyframes,
+    isJumpingToEnd,
+    setIsJumpingToEnd,
+    hasJumpedToEndItems,
+    setHasJumpedToEndItems,
+    hasJumpedToEndKeyframes,
+    setHasJumpedToEndKeyframes,
   });
 
   const handleCancel = (event: React.MouseEvent) => {
@@ -223,6 +367,20 @@ export const ViewPlaylistPage = () => {
   useEffect(() => {
     resetRemotePlaylistForm();
   }, [formMethods, resetRemotePlaylistForm]);
+
+  /**
+   * Handle scroll-to-top button visibility
+   */
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollTop =
+        window.pageYOffset || document.documentElement.scrollTop;
+      setShowScrollToTop(scrollTop > 300);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   /**
    * Handles automatic scrolling when navigation comes from a virtual playlist
@@ -471,7 +629,7 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     placeholder="Dream Count"
                     before={<FontAwesomeIcon icon={faListOl} />}
-                    value={countDreamsInPlaylist(items).toString()}
+                    value={playlistItemsTotalCount.toString()}
                     name="dream-count"
                   />
 
@@ -591,12 +749,26 @@ export const ViewPlaylistPage = () => {
               </Row>
               <Row justifyContent="space-between" alignItems="center">
                 <Column>
-                  <RadioButtonGroup
-                    name="search-filter"
-                    value={radioGroupState as string}
-                    data={getPlaylistTabsFilterData(t)}
-                    onChange={handleRadioButtonGroupChange}
-                  />
+                  <Row alignItems="center">
+                    <RadioButtonGroup
+                      name="search-filter"
+                      value={radioGroupState as string}
+                      data={getPlaylistTabsFilterData(t)}
+                      onChange={handleRadioButtonGroupChange}
+                    />
+                    <JumpToEndButton
+                      onClick={handleJumpToEndClick}
+                      disabled={
+                        isJumpingToEnd ||
+                        (radioGroupState === "items"
+                          ? !hasNextPlaylistItemsPage && !hasJumpedToEndItems
+                          : !hasNextPlaylistKeyframesPage &&
+                            !hasJumpedToEndKeyframes)
+                      }
+                    >
+                      {isJumpingToEnd ? "Jumping..." : "Jump to End"}
+                    </JumpToEndButton>
+                  </Row>
                 </Column>
                 <Restricted
                   to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
@@ -685,30 +857,99 @@ export const ViewPlaylistPage = () => {
               {
                 // if items are selected, show item cardlist and data
                 radioGroupState === "items" && (
-                  <Row flex="auto">
+                  <Row style={{ display: "block" }}>
                     {items.length ? (
-                      <ItemCardList>
-                        {items.map((i) => (
-                          <ItemCard
-                            key={i.id}
-                            draggable
-                            itemId={i.id}
-                            dndMode="local"
-                            size="sm"
-                            type={i.type}
-                            item={
-                              i.type === "dream" ? i.dreamItem : i.playlistItem
-                            }
-                            order={i.order}
-                            deleteDisabled={!allowedEditPlaylist}
-                            showPlayButton
-                            inline
-                            droppable
-                            onDelete={handleDeletePlaylistItem(i.id)}
-                            onOrder={handleOrderPlaylist}
-                          />
-                        ))}
-                      </ItemCardList>
+                      hasJumpedToEndItems || isJumpingToEnd ? (
+                        // When jumped to end or jumping, render without InfiniteScroll
+                        <>
+                          {isJumpingToEnd ? (
+                            <Row justifyContent="center" mt="2rem">
+                              <Spinner />
+                              <Text color={theme.textPrimaryColor} ml="1rem">
+                                Loading all items...
+                              </Text>
+                            </Row>
+                          ) : (
+                            <>
+                              <ItemCardList>
+                                {items.map((i, index) => (
+                                  <ItemCard
+                                    key={i.id}
+                                    draggable
+                                    itemId={i.id}
+                                    dndMode="local"
+                                    size="sm"
+                                    type={i.type}
+                                    item={
+                                      i.type === "dream"
+                                        ? i.dreamItem
+                                        : i.playlistItem
+                                    }
+                                    order={i.order}
+                                    deleteDisabled={!allowedEditPlaylist}
+                                    showPlayButton
+                                    showOrderNumber
+                                    indexNumber={index + 1}
+                                    inline
+                                    droppable
+                                    onDelete={handleDeletePlaylistItem(i.id)}
+                                    onOrder={handleOrderPlaylist}
+                                  />
+                                ))}
+                              </ItemCardList>
+                              <Row justifyContent="center" mt="2rem">
+                                <Text color={theme.textPrimaryColor}>
+                                  {t("components.infinite_scroll.end_message")}
+                                </Text>
+                              </Row>
+                            </>
+                          )}
+                        </>
+                      ) : (
+                        // Normal infinite scroll behavior
+                        <InfiniteScroll
+                          dataLength={items.length}
+                          next={fetchNextPlaylistItemsPage}
+                          hasMore={hasNextPlaylistItemsPage ?? false}
+                          loader={<Loader />}
+                          endMessage={
+                            !isPlaylistLoading && (
+                              <Row justifyContent="center" mt="2rem">
+                                <Text color={theme.textPrimaryColor}>
+                                  {t("components.infinite_scroll.end_message")}
+                                </Text>
+                              </Row>
+                            )
+                          }
+                        >
+                          <ItemCardList>
+                            {items.map((i, index) => (
+                              <ItemCard
+                                key={i.id}
+                                draggable
+                                itemId={i.id}
+                                dndMode="local"
+                                size="sm"
+                                type={i.type}
+                                item={
+                                  i.type === "dream"
+                                    ? i.dreamItem
+                                    : i.playlistItem
+                                }
+                                order={i.order}
+                                deleteDisabled={!allowedEditPlaylist}
+                                showPlayButton
+                                showOrderNumber
+                                indexNumber={index + 1}
+                                inline
+                                droppable
+                                onDelete={handleDeletePlaylistItem(i.id)}
+                                onOrder={handleOrderPlaylist}
+                              />
+                            ))}
+                          </ItemCardList>
+                        </InfiniteScroll>
+                      )
                     ) : (
                       <Text mb={4}>
                         {t("page.view_playlist.empty_playlist")}
@@ -717,36 +958,90 @@ export const ViewPlaylistPage = () => {
                   </Row>
                 )
               }
-              {
-                // if items are selected, show item cardlist and data
-                radioGroupState === "keyframes" && (
-                  <Row flex="auto">
-                    {playlistKeyframes.length ? (
-                      <ItemCardList>
-                        {playlistKeyframes.map((k) => (
-                          <ItemCard
-                            key={k.id}
-                            draggable
-                            itemId={k.id}
-                            dndMode="local"
-                            size="sm"
-                            type="keyframe"
-                            item={k.keyframe}
-                            order={k.order}
-                            deleteDisabled={!allowedEditPlaylist}
-                            inline
-                            onDelete={handleDeleteKeyframe(k.id)}
-                          />
-                        ))}
-                      </ItemCardList>
+              {radioGroupState === "keyframes" && (
+                <Row style={{ display: "block" }}>
+                  {playlistKeyframes.length ? (
+                    hasJumpedToEndKeyframes || isJumpingToEnd ? (
+                      <>
+                        {isJumpingToEnd ? (
+                          <Row justifyContent="center" mt="2rem">
+                            <Spinner />
+                            <Text color={theme.textPrimaryColor} ml="1rem">
+                              Loading all keyframes...
+                            </Text>
+                          </Row>
+                        ) : (
+                          <>
+                            <ItemCardList>
+                              {playlistKeyframes.map((k, index) => (
+                                <ItemCard
+                                  key={k.id}
+                                  draggable
+                                  itemId={k.id}
+                                  dndMode="local"
+                                  size="sm"
+                                  type="keyframe"
+                                  item={k.keyframe}
+                                  order={k.order}
+                                  deleteDisabled={!allowedEditPlaylist}
+                                  showOrderNumber
+                                  indexNumber={index + 1}
+                                  inline
+                                  onDelete={handleDeleteKeyframe(k.id)}
+                                />
+                              ))}
+                            </ItemCardList>
+                            <Row justifyContent="center" mt="2rem">
+                              <Text color={theme.textPrimaryColor}>
+                                {t("components.infinite_scroll.end_message")}
+                              </Text>
+                            </Row>
+                          </>
+                        )}
+                      </>
                     ) : (
-                      <Text mb={4}>
-                        {t("page.view_playlist.empty_playlist")}
-                      </Text>
-                    )}
-                  </Row>
-                )
-              }
+                      // Normal infinite scroll behavior
+                      <InfiniteScroll
+                        dataLength={playlistKeyframes.length}
+                        next={fetchNextPlaylistKeyframesPage}
+                        hasMore={hasNextPlaylistKeyframesPage ?? false}
+                        loader={<Loader />}
+                        endMessage={
+                          !isPlaylistLoading && (
+                            <Row justifyContent="center" mt="2rem">
+                              <Text color={theme.textPrimaryColor}>
+                                {t("components.infinite_scroll.end_message")}
+                              </Text>
+                            </Row>
+                          )
+                        }
+                      >
+                        <ItemCardList>
+                          {playlistKeyframes.map((k, index) => (
+                            <ItemCard
+                              key={k.id}
+                              draggable
+                              itemId={k.id}
+                              dndMode="local"
+                              size="sm"
+                              type="keyframe"
+                              item={k.keyframe}
+                              order={k.order}
+                              deleteDisabled={!allowedEditPlaylist}
+                              showOrderNumber
+                              indexNumber={index + 1}
+                              inline
+                              onDelete={handleDeleteKeyframe(k.id)}
+                            />
+                          ))}
+                        </ItemCardList>
+                      </InfiniteScroll>
+                    )
+                  ) : (
+                    <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
+                  )}
+                </Row>
+              )}
 
               {/* Removing add item playlist dropzone, probably next to be deprecated  */}
               {/* <Restricted
@@ -771,6 +1066,14 @@ export const ViewPlaylistPage = () => {
           </FormProvider>
         </Section>
       </Container>
+
+      <ScrollToTopButton
+        visible={showScrollToTop}
+        onClick={handleScrollToTop}
+        aria-label="Scroll to top"
+      >
+        <FontAwesomeIcon icon={faChevronUp} />
+      </ScrollToTopButton>
     </>
   );
 };

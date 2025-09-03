@@ -49,7 +49,10 @@ import { HighlightPosition } from "@/types/item-card.types";
 import { Keyframe } from "@/types/keyframe.types";
 import { VirtualPlaylist } from "@/types/feed.types";
 import Text from "../text/text";
-import { getVirtualPlaylistThumbnailDreams, shouldVirtualPlaylistDisplayDots } from "@/utils/virtual-playlist.util";
+import {
+  getVirtualPlaylistThumbnailDreams,
+  shouldVirtualPlaylistDisplayDots,
+} from "@/utils/virtual-playlist.util";
 import { ItemCardImage } from "./item-card-image";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { AnchorLink } from "@/components/shared";
@@ -80,6 +83,8 @@ type ItemCardProps = {
   showPlayButton?: boolean;
   inline?: boolean;
   droppable?: boolean;
+  showOrderNumber?: boolean;
+  indexNumber?: number;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
   onOrder?: (dropItem: SetItemOrder) => void;
   onDelete?: (event: React.MouseEvent) => void;
@@ -91,9 +96,9 @@ const DND_MODES: { [key: string]: DNDMode } = {
 } as const;
 
 const ROUTE_MAP = {
-  "dream": ROUTES.VIEW_DREAM,
-  "playlist": ROUTES.VIEW_PLAYLIST,
-  "keyframe": ROUTES.VIEW_KEYFRAME,
+  dream: ROUTES.VIEW_DREAM,
+  playlist: ROUTES.VIEW_PLAYLIST,
+  keyframe: ROUTES.VIEW_KEYFRAME,
   "virtual-playlist": ROUTES.VIEW_PLAYLIST,
 } as const;
 
@@ -106,12 +111,11 @@ const getThumbnail = (type: string, item?: Item) => {
     case "keyframe":
       return (item as Keyframe)?.image;
     case "virtual-playlist":
-      return null
+      return null;
     default:
       return null;
   }
 };
-
 
 const ItemCardComponent: React.FC<ItemCardProps> = ({
   itemId = 0,
@@ -122,6 +126,8 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   deleteDisabled = false,
   inline = false,
   showPlayButton = false,
+  showOrderNumber = false,
+  indexNumber,
   dndMode = DND_MODES.CROSS_WINDOW,
   order = 0,
   droppable = false,
@@ -133,7 +139,10 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   const tooltipRef = useRef<HTMLAnchorElement>(null);
   const { uuid, name, user, displayedOwner } = item ?? {};
   const thumbnail = useMemo(() => getThumbnail(type, item), [type, item]);
-  const thumbnailDreams = useMemo(() => getVirtualPlaylistThumbnailDreams((item as VirtualPlaylist)?.dreams), [item]);
+  const thumbnailDreams = useMemo(
+    () => getVirtualPlaylistThumbnailDreams((item as VirtualPlaylist)?.dreams),
+    [item],
+  );
 
   const avatarUrl = useImage(
     displayedOwner ? displayedOwner?.avatar : user?.avatar,
@@ -163,8 +172,8 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   });
 
   /**
-    * Generate a navigation route 
-    */
+   * Generate a navigation route
+   */
   const generateNavigationRoute = (): string | undefined => {
     // Get base route
     const baseRoute = ROUTE_MAP[type];
@@ -176,7 +185,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     return firstDream
       ? `${baseRoute}/${item.uuid}#${firstDream.uuid}`
       : `${baseRoute}/${item.uuid}`;
-  }
+  };
 
   const navigateRoute = generateNavigationRoute();
 
@@ -393,16 +402,12 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
 
   const Thumbnail = useMemo(
     () => () => {
-
-      if (type === 'virtual-playlist') {
+      if (type === "virtual-playlist") {
         return (
           <ThumbnailGrid size={size}>
             {thumbnailDreams.map((dream, index) => (
               <ThumbnailGridItem key={index}>
-                <ItemCardImage
-                  size={size}
-                  src={dream.thumbnail}
-                />
+                <ItemCardImage size={size} src={dream.thumbnail} />
               </ThumbnailGridItem>
             ))}
           </ThumbnailGrid>
@@ -410,14 +415,14 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       }
 
       if (thumbnail) {
-        return <ItemCardImage size={size} src={thumbnailUrl} />
+        return <ItemCardImage size={size} src={thumbnailUrl} />;
       }
 
       return (
         <ThumbnailPlaceholder size={size}>
           <FontAwesomeIcon icon={faPhotoFilm} />
         </ThumbnailPlaceholder>
-      )
+      );
     },
     [type, thumbnail, thumbnailDreams, size, thumbnailUrl],
   );
@@ -463,23 +468,27 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
           </Row>
         )}
 
-        {type == "virtual-playlist" && shouldVirtualPlaylistDisplayDots((item as VirtualPlaylist).dreams) && (
-          <Row
-            justifyContent="flex-end"
-            style={{ position: "absolute", bottom: 0, right: 0 }}
-            mb="0"
-          >
-            <Text mr="1rem" fontSize="2rem">
-              <FontAwesomeIcon icon={faEllipsis} />
-            </Text>
-          </Row>
-        )}
+        {type == "virtual-playlist" &&
+          shouldVirtualPlaylistDisplayDots(
+            (item as VirtualPlaylist).dreams,
+          ) && (
+            <Row
+              justifyContent="flex-end"
+              style={{ position: "absolute", bottom: 0, right: 0 }}
+              mb="0"
+            >
+              <Text mr="1rem" fontSize="2rem">
+                <FontAwesomeIcon icon={faEllipsis} />
+              </Text>
+            </Row>
+          )}
       </Row>
     ),
     [Thumbnail, handlePlay, item, type, inline, showPlayButton],
   );
 
-  const onHideClientNotConnectedModal = () => setShowClientNotConnectedModal(false);
+  const onHideClientNotConnectedModal = () =>
+    setShowClientNotConnectedModal(false);
 
   return (
     <>
@@ -493,12 +502,14 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
         text={
           <Text>
             Start the app for the remote control, and try again.
-            <br /><br />
+            <br />
+            <br />
             <AnchorLink to={ROUTES.INSTALL} type="primary">
               Install
-            </AnchorLink>
-            {" "}it first if needed.
-            <br /><br />
+            </AnchorLink>{" "}
+            it first if needed.
+            <br />
+            <br />
             You can also play with the{" "}
             <AnchorLink to={ROUTES.REMOTE_CONTROL} type="primary">
               web client
@@ -507,62 +518,93 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
           </Text>
         }
       />
-      <StyledItemCard data-element-uuid={uuid} ref={cardRef} size={size} draggable={draggable}>
+      <StyledItemCard
+        data-element-uuid={uuid}
+        ref={cardRef}
+        size={size}
+        draggable={draggable}
+      >
         <>
           <ItemCardAnchor to={navigateRoute ?? ""} onClick={onClick}>
-          <Row
-            flex="auto"
-            margin="0"
-            padding="3"
-            justifyContent="space-between"
-            flexDirection={["column", "row", "row", "row"]}
-          >
-            {onDelete && (
-              <Row alignItems="flex-start" m={0}>
-                {!deleteDisabled && (
-                  <Button
-                    type="button"
-                    buttonType="danger"
-                    transparent
-                    onClick={onDelete}
-                    style={{
-                      fontSize: "1.6rem",
-                      alignItems: "flex-start",
-                      padding: "0rem 1rem 0rem 0rem",
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faXmark} style={{ paddingTop: 0 }} />
-                  </Button>
-                )}
-              </Row>
-            )}
-            {inline && <ThumbnailAndPlayButton />}
-            <Column flex="auto" margin="0" padding="0" justifyContent="center">
-              {!inline && <ThumbnailAndPlayButton />}
-              <Row mb={0}>
-                <Column mr="3">
-                  <Avatar size="sm" url={avatarUrl} />
-                </Column>
-                <Column justifyContent="center">
-                  {/* card title */}
-                  <ItemTitleText ref={tooltipRef} className="itemCard__title">
-                    {type === "playlist" || type === "virtual-playlist" ? (
-                      <FontAwesomeIcon icon={faListUl} />
-                    ) : (
-                      <FontAwesomeIcon icon={faFilm} />
-                    )}
-		    {" "}
-                    {name || t("components.item_card.unnamed")}
-                  </ItemTitleText>
+            <Row
+              flex="auto"
+              margin="0"
+              padding="3"
+              justifyContent="space-between"
+              flexDirection={["column", "row", "row", "row"]}
+            >
+              {(onDelete || showOrderNumber) && (
+                <Row
+                  alignItems="center"
+                  m={0}
+                  flexDirection={["row", "column", "column", "column"]}
+                >
+                  {onDelete && !deleteDisabled && (
+                    <Button
+                      type="button"
+                      buttonType="danger"
+                      transparent
+                      onClick={onDelete}
+                      style={{
+                        fontSize: "1.6rem",
+                        alignItems: "flex-start",
+                      }}
+                    >
+                      <FontAwesomeIcon
+                        icon={faXmark}
+                        style={{ paddingTop: 0 }}
+                      />
+                    </Button>
+                  )}
+                  {showOrderNumber && (
+                    <Text
+                      style={{
+                        fontSize:
+                          indexNumber && indexNumber >= 1000
+                            ? "0.8rem"
+                            : "1.2rem",
+                        fontWeight: "bold",
+                        color: theme.textBodyColor,
+                        marginBottom: "4px",
+                        marginRight: "6px",
+                      }}
+                    >
+                      #{indexNumber}
+                    </Text>
+                  )}
+                </Row>
+              )}
+              {inline && <ThumbnailAndPlayButton />}
+              <Column
+                flex="auto"
+                margin="0"
+                padding="0"
+                justifyContent="center"
+              >
+                {!inline && <ThumbnailAndPlayButton />}
+                <Row mb={0}>
+                  <Column mr="3">
+                    <Avatar size="sm" url={avatarUrl} />
+                  </Column>
+                  <Column justifyContent="center">
+                    {/* card title */}
+                    <ItemTitleText ref={tooltipRef} className="itemCard__title">
+                      {type === "playlist" || type === "virtual-playlist" ? (
+                        <FontAwesomeIcon icon={faListUl} />
+                      ) : (
+                        <FontAwesomeIcon icon={faFilm} />
+                      )}{" "}
+                      {name || t("components.item_card.unnamed")}
+                    </ItemTitleText>
 
-                  {/* user name */}
-                  <UsernameText color={theme.textPrimaryColor} mt="2">
-                    {getUserName(displayedOwner ?? user)}
-                  </UsernameText>
-                </Column>
-              </Row>
-            </Column>
-          </Row>
+                    {/* user name */}
+                    <UsernameText color={theme.textPrimaryColor} mt="2">
+                      {getUserName(displayedOwner ?? user)}
+                    </UsernameText>
+                  </Column>
+                </Row>
+              </Column>
+            </Row>
           </ItemCardAnchor>
           {droppable && (
             <HighlightBorder
@@ -587,13 +629,13 @@ export const ItemCardSkeleton: React.FC<ItemCardSkeletonProps> = ({
 }) => <StyledItemCardSkeleton size={size}>{children}</StyledItemCardSkeleton>;
 
 const isVirtualPlaylist = (item: Item): item is VirtualPlaylist => {
-  return item && 'dreams' in item;
-}
+  return item && "dreams" in item;
+};
 
 // Verifies if changes on item should rerender the component
 const areItemsEqual = (
   prevItem: Item | undefined,
-  nextItem: Item | undefined
+  nextItem: Item | undefined,
 ): boolean => {
   // If both items are undefined, considered it equal
   if (!prevItem && !nextItem) return true;
@@ -603,28 +645,34 @@ const areItemsEqual = (
 
   // Check if both (prev and next item) are VirtualPlaylists and thumbnail dreams changes
   if (isVirtualPlaylist(prevItem) && isVirtualPlaylist(nextItem)) {
-    const prevThumbnailDreams = getVirtualPlaylistThumbnailDreams(prevItem?.dreams);
-    const nextThumbnailDreams = getVirtualPlaylistThumbnailDreams(nextItem?.dreams);
+    const prevThumbnailDreams = getVirtualPlaylistThumbnailDreams(
+      prevItem?.dreams,
+    );
+    const nextThumbnailDreams = getVirtualPlaylistThumbnailDreams(
+      nextItem?.dreams,
+    );
 
     // If every thumbnail dream is the same, then do not rerender
-    return prevThumbnailDreams.every((prevDream, index) =>
-      prevDream.id === nextThumbnailDreams[index]?.id
+    return prevThumbnailDreams.every(
+      (prevDream, index) => prevDream.id === nextThumbnailDreams[index]?.id,
     );
   }
 
   // If items has same uuid consider it equal
   if (prevItem.uuid === nextItem.uuid) {
-    return true
+    return true;
   }
 
   // If types don't match or aren't VirtualPlaylist, consider them not equal
   return false;
-}
+};
 
-// Try rerender component only when order or some item properties changes 
-export const ItemCard = memo(ItemCardComponent, (prevProps, nextProps) => (
-  prevProps.order === nextProps.order &&
-  areItemsEqual(prevProps.item, nextProps.item)
-));
+// Try rerender component only when order or some item properties changes
+export const ItemCard = memo(
+  ItemCardComponent,
+  (prevProps, nextProps) =>
+    prevProps.order === nextProps.order &&
+    areItemsEqual(prevProps.item, nextProps.item),
+);
 
 export default ItemCard;

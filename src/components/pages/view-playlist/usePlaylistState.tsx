@@ -11,6 +11,8 @@ import { isAdmin } from "@/utils/user.util";
 import { PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
 import useAuth from "@/hooks/useAuth";
 import { usePlaylistReferences } from "@/api/playlist/query/usePlaylistReferences";
+import { usePlaylistItems } from "@/api/playlist/query/usePlaylistItems";
+import { usePlaylistKeyframes } from "@/api/playlist/query/usePlaylistKeyframes";
 
 type Params = { uuid: string };
 
@@ -26,6 +28,11 @@ export const usePlaylistState = () => {
   const [thumbnail, setTumbnail] = useState<MultiMediaState>();
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
     useState<boolean>(false);
+  const [isJumpingToEnd, setIsJumpingToEnd] = useState<boolean>(false);
+  const [hasJumpedToEndItems, setHasJumpedToEndItems] =
+    useState<boolean>(false);
+  const [hasJumpedToEndKeyframes, setHasJumpedToEndKeyframes] =
+    useState<boolean>(false);
 
   /**
    * videos data
@@ -40,18 +47,29 @@ export const usePlaylistState = () => {
   );
 
   /**
-   *
+   * API queries
    */
   const { data, isLoading, isError } = usePlaylist(uuid);
   const {
     data: playlistReferencesData,
     isLoading: isPlaylistReferencesLoading,
   } = usePlaylistReferences(uuid);
+  const {
+    data: playlistItemsData,
+    isLoading: isPlaylistItemsLoading,
+    fetchNextPage: fetchNextPlaylistItemsPage,
+    hasNextPage: hasNextPlaylistItemsPage,
+  } = usePlaylistItems({ uuid });
+  const {
+    data: playlistKeyframesData,
+    isLoading: isPlaylistKeyframesLoading,
+    fetchNextPage: fetchNextPlaylistKeyframesPage,
+    hasNextPage: hasNextPlaylistKeyframesPage,
+  } = usePlaylistKeyframes({ uuid });
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
   });
 
-  // Calculate playlist value and attatch playlistItems with references (playlists where this playlist is included)
   const playlist = useMemo(() => {
     const pl = data?.data?.playlist;
     if (pl) {
@@ -62,8 +80,17 @@ export const usePlaylistState = () => {
   }, [data, playlistReferencesData]);
 
   const isPlaylistLoading = useMemo(
-    () => isLoading || isPlaylistReferencesLoading,
-    [isLoading, isPlaylistReferencesLoading],
+    () =>
+      isLoading ||
+      isPlaylistReferencesLoading ||
+      isPlaylistItemsLoading ||
+      isPlaylistKeyframesLoading,
+    [
+      isLoading,
+      isPlaylistReferencesLoading,
+      isPlaylistItemsLoading,
+      isPlaylistKeyframesLoading,
+    ],
   );
 
   const thumbnailUrl = useImage(playlist?.thumbnail, {
@@ -97,13 +124,29 @@ export const usePlaylistState = () => {
   });
 
   const items = useMemo(
-    () => playlist?.items?.sort((a, b) => a.order - b.order) ?? [],
-    [playlist?.items],
+    () =>
+      playlistItemsData?.pages
+        .flatMap((page) => page.data?.items ?? [])
+        .sort((a, b) => a.order - b.order) ?? [],
+    [playlistItemsData?.pages],
+  );
+
+  const playlistItemsTotalCount = useMemo(
+    () => playlistItemsData?.pages?.[0]?.data?.totalCount ?? 0,
+    [playlistItemsData?.pages],
   );
 
   const playlistKeyframes = useMemo(
-    () => playlist?.playlistKeyframes?.sort((a, b) => a.order - b.order) ?? [],
-    [playlist?.playlistKeyframes],
+    () =>
+      playlistKeyframesData?.pages
+        .flatMap((page) => page.data?.keyframes ?? [])
+        .sort((a, b) => a.order - b.order) ?? [],
+    [playlistKeyframesData?.pages],
+  );
+
+  const playlistKeyframesTotalCount = useMemo(
+    () => playlistKeyframesData?.pages?.[0]?.data?.totalCount ?? 0,
+    [playlistKeyframesData?.pages],
   );
 
   return {
@@ -121,6 +164,12 @@ export const usePlaylistState = () => {
     allowedEditVisibility,
     items,
     playlistKeyframes,
+    playlistItemsTotalCount,
+    playlistKeyframesTotalCount,
+    fetchNextPlaylistItemsPage,
+    hasNextPlaylistItemsPage,
+    fetchNextPlaylistKeyframesPage,
+    hasNextPlaylistKeyframesPage,
     userSearch,
     setUserSearch,
     videos,
@@ -140,5 +189,11 @@ export const usePlaylistState = () => {
     totalVideos,
     totalUploadedVideos,
     totalUploadedVideosPercentage,
+    isJumpingToEnd,
+    setIsJumpingToEnd,
+    hasJumpedToEndItems,
+    setHasJumpedToEndItems,
+    hasJumpedToEndKeyframes,
+    setHasJumpedToEndKeyframes,
   };
 };
