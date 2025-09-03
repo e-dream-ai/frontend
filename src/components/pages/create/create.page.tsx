@@ -94,8 +94,8 @@ export const CreatePage: React.FC = () => {
                     <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_BECOME_CREATOR}>
                       <Text>
                         {t("page.create.become_creator")}{" "}
-                        <Anchor href="mailto:support@e-dream.ai">
-                          support@e-dream.ai
+                        <Anchor href="https://forms.gle/JsZb4TRdw3jq65Bc8">
+                          Creators Program
                         </Anchor>
                         .
                       </Text>
