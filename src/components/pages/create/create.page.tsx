@@ -31,7 +31,7 @@ export const CreatePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [tabIndex, setTabIndex] = useState(0);
+  const [tabIndex, setTabIndex] = useState(DREAM_PERMISSIONS.CAN_VIEW_BECOME_CREATOR ? 1 : 0);
 
   useEffect(() => {
     switch (location.pathname) {
