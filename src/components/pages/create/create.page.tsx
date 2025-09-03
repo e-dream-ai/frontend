@@ -31,7 +31,7 @@ export const CreatePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [tabIndex, setTabIndex] = useState(1);
+  const [tabIndex, setTabIndex] = useState(CREATE_TYPE.PLAYLIST);
 
   useEffect(() => {
     switch (location.pathname) {
@@ -48,7 +48,7 @@ export const CreatePage: React.FC = () => {
         setTabIndex(CREATE_TYPE.KEYFRAME);
         break;
       default:
-        setTabIndex(0);
+        setTabIndex(CREATE_TYPE.PLAYLIST);
     }
   }, [location.pathname]);
 
