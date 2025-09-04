@@ -37,8 +37,6 @@ export const CreatePage: React.FC = () => {
     permission: DREAM_PERMISSIONS.CAN_CREATE_DREAM,
   });
 
-  console.log("isCreator", isCreator);
-
   const defaultTabIndex = isCreator ? CREATE_TYPE.DREAM : CREATE_TYPE.PLAYLIST;
   const [tabIndex, setTabIndex] = useState(defaultTabIndex);
 
