@@ -17,6 +17,7 @@ import {
   CREATE_ROUTES,
   FULL_CREATE_ROUTES,
 } from "@/constants/routes.constants";
+import usePermission from "@/hooks/usePermission";
 
 enum CREATE_TYPE {
   DREAM = 0,
@@ -31,7 +32,15 @@ export const CreatePage: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const [tabIndex, setTabIndex] = useState(0);
+
+  const isCreator = usePermission({
+    permission: DREAM_PERMISSIONS.CAN_CREATE_DREAM,
+  });
+
+  console.log("isCreator", isCreator);
+
+  const defaultTabIndex = isCreator ? CREATE_TYPE.DREAM : CREATE_TYPE.PLAYLIST;
+  const [tabIndex, setTabIndex] = useState(defaultTabIndex);
 
   useEffect(() => {
     switch (location.pathname) {
@@ -48,9 +57,9 @@ export const CreatePage: React.FC = () => {
         setTabIndex(CREATE_TYPE.KEYFRAME);
         break;
       default:
-        setTabIndex(0);
+        setTabIndex(defaultTabIndex);
     }
-  }, [location.pathname]);
+  }, [location.pathname, defaultTabIndex]);
 
   const handleSelect = (index: number) => {
     const paths = [
@@ -119,7 +128,22 @@ export const CreatePage: React.FC = () => {
             <Routes>
               <Route
                 path={CREATE_ROUTES.ADD_ITEM_TO_PLAYLIST}
-                element={<UpdatePlaylist />}
+                element={
+                  <>
+                    <Restricted to={DREAM_PERMISSIONS.CAN_CREATE_DREAM}>
+                      <UpdatePlaylist />
+                    </Restricted>
+                    <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_BECOME_CREATOR}>
+                      <Text>
+                        {t("page.create.become_creator")}{" "}
+                        <Anchor href="https://forms.gle/JsZb4TRdw3jq65Bc8">
+                          Creators Program
+                        </Anchor>
+                        .
+                      </Text>
+                    </Restricted>
+                  </>
+                }
               />
             </Routes>
           </TabPanel>

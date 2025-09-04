@@ -11,70 +11,74 @@ import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
 import { joinPaths } from "@/utils/router.util";
 import { VoidFunction } from "@/utils/function.util";
+import usePermission from "@/hooks/usePermission";
+import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 
-const createMenuRoutes = (user?: User | null) => {
+const createMenuRoutes = (user?: User | null, isCreator?: boolean) => {
+  const createRoute = isCreator
+    ? FULL_CREATE_ROUTES.DREAM
+    : FULL_CREATE_ROUTES.PLAYLIST;
 
   const USER_ROUTES = [
     {
       title: "header.playlists",
       route: ROUTES.PLAYLISTS,
-      display: "none"
+      display: "none",
     },
     {
       title: "header.remote_control",
       route: ROUTES.REMOTE_CONTROL,
-      display: "none"
+      display: "none",
     },
     {
       title: "header.feed",
       route: ROUTES.FEED,
-      display: ["block", "block", "none", "none"]
+      display: ["block", "block", "none", "none"],
     },
     {
       title: "header.create",
-      route: FULL_CREATE_ROUTES.DREAM,
+      route: createRoute,
       // using display props from styled-system to setup mobile, tablet, laptop, desktop breakpoints
-      display: ["block", "block", "block", "none"]
+      display: ["block", "block", "block", "none"],
     },
     {
       title: "header.my_dreams",
-      route: `/${joinPaths(
-        [
-          ROUTES.PROFILE,
-          user?.uuid ?? "",
-          ROUTES.USER_FEED
-        ])}`,
-      display: ["block", "block", "block", "none"]
+      route: `/${joinPaths([
+        ROUTES.PROFILE,
+        user?.uuid ?? "",
+        ROUTES.USER_FEED,
+      ])}`,
+      display: ["block", "block", "block", "none"],
     },
     {
       title: "header.profile",
       route: ROUTES.MY_PROFILE,
-      display: "block"
+      display: "block",
     },
     {
       title: "header.about",
       route: ROUTES.ABOUT,
-      display: "block"
+      display: "block",
     },
     {
       title: "header.install",
       route: ROUTES.INSTALL,
-      display: "block"
+      display: "block",
     },
     {
       title: "header.help",
       route: ROUTES.HELP,
-      display: "block"
+      display: "block",
     },
     {
       title: "header.invites",
       route: ROUTES.INVITES,
-      display: "block"
+      display: "block",
     },
     {
       title: "header.reports",
       route: ROUTES.REPORTS,
-      display: "block"
+      display: "block",
     },
   ];
 
@@ -83,32 +87,38 @@ const createMenuRoutes = (user?: User | null) => {
     {
       title: "header.about",
       route: ROUTES.ABOUT,
-      display: "block"
+      display: "block",
     },
     {
       title: "header.install",
       route: ROUTES.INSTALL,
-      display: "block"
+      display: "block",
     },
-  ]
+  ];
 
   if (!user) {
     return {
       user: GUEST_ROUTES,
-      admin: GUEST_ROUTES
-    }
+      admin: GUEST_ROUTES,
+    };
   }
 
   return {
     // remove invites and reports from routes for normal users
-    user: USER_ROUTES.filter(r => r.title !== "header.invites" && r.title !== "header.reports"),
-    admin: USER_ROUTES
+    user: USER_ROUTES.filter(
+      (r) => r.title !== "header.invites" && r.title !== "header.reports",
+    ),
+    admin: USER_ROUTES,
   };
 };
 
 export const KebabMenu: React.FC = () => {
   const { user, logout, isLoggingOut } = useAuth();
   const { t } = useTranslation();
+
+  const isCreator = usePermission({
+    permission: DREAM_PERMISSIONS.CAN_CREATE_DREAM,
+  });
 
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const [showConfirmSignoutModal, setShowConfirmSignoutModal] =
@@ -121,14 +131,16 @@ export const KebabMenu: React.FC = () => {
     onHideConfirmSignoutModal();
   };
 
-  const routes = useMemo(() => createMenuRoutes(user)[isUserAdmin ? "admin" : "user"], [user, isUserAdmin]);
+  const routes = useMemo(
+    () => createMenuRoutes(user, isCreator)[isUserAdmin ? "admin" : "user"],
+    [user, isUserAdmin, isCreator],
+  );
 
   return (
     <Fragment>
-
       {/**
-        * Confirm signout modal
-        */}
+       * Confirm signout modal
+       */}
       <ConfirmModal
         isOpen={showConfirmSignoutModal}
         onCancel={onHideConfirmSignoutModal}
@@ -152,31 +164,29 @@ export const KebabMenu: React.FC = () => {
         align="end"
         menuClassName="my-kebab-menu"
       >
-        {(routes).map(
-          (r) => (
-            <AnchorLink
-              key={r.route}
-              type="tertiary"
-              to={r.route}
-              display={r.display}
-              style={{ textDecoration: "none", textTransform: "lowercase" }}
-            >
-              <MenuItem onClick={VoidFunction}>{t(r.title)}</MenuItem>
-            </AnchorLink>
-          ),
-        )}
+        {routes.map((r) => (
+          <AnchorLink
+            key={r.route}
+            type="tertiary"
+            to={r.route}
+            display={r.display}
+            style={{ textDecoration: "none", textTransform: "lowercase" }}
+          >
+            <MenuItem onClick={VoidFunction}>{t(r.title)}</MenuItem>
+          </AnchorLink>
+        ))}
 
-        {
-          user ?
-            <MenuItem
-              key="logout"
-              onClick={onShowConfirmSignoutModal}
-              style={{ textDecoration: "none", textTransform: "lowercase" }}
-            >
-              {t("header.logout")}
-            </MenuItem>
-            : <></>
-        }
+        {user ? (
+          <MenuItem
+            key="logout"
+            onClick={onShowConfirmSignoutModal}
+            style={{ textDecoration: "none", textTransform: "lowercase" }}
+          >
+            {t("header.logout")}
+          </MenuItem>
+        ) : (
+          <></>
+        )}
       </Menu>
     </Fragment>
   );
