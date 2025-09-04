@@ -6,6 +6,8 @@ import { AnchorLink } from "../anchor/anchor";
 import { MouseEventHandler } from "react";
 import { joinPaths } from "@/utils/router.util";
 import { DisplayProps } from "styled-system";
+import usePermission from "@/hooks/usePermission";
+import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 
 export type DeviceType = "mobile" | "tablet" | "laptop" | "desktop";
 
@@ -22,62 +24,69 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
   const { user, isLoading } = useAuth();
   const { t } = useTranslation();
 
+  const isCreator = usePermission({
+    permission: DREAM_PERMISSIONS.CAN_CREATE_DREAM,
+  });
+
+  const createRoute = isCreator
+    ? FULL_CREATE_ROUTES.DREAM
+    : FULL_CREATE_ROUTES.PLAYLIST;
+
   const USER_NAV_ROUTES: Array<RouteLink> = [
     {
       component: t("header.playlists"),
       route: ROUTES.PLAYLISTS,
-      display: "inline-flex"
+      display: "inline-flex",
     },
     {
       component: t("header.remote_control"),
       route: ROUTES.REMOTE_CONTROL,
-      display: "inline-flex"
+      display: "inline-flex",
     },
     {
       component: t("header.feed"),
       route: ROUTES.FEED,
-      display: ["none", "none", "inline-flex", "inline-flex"]
+      display: ["none", "none", "inline-flex", "inline-flex"],
     },
     {
       component: t("header.create"),
-      route: FULL_CREATE_ROUTES.DREAM,
+      route: createRoute,
       // using display props from styled-system to setup mobile, tablet, laptop, desktop breakpoints
-      display: ["none", "none", "none", "inline-flex"]
+      display: ["none", "none", "none", "inline-flex"],
     },
     {
       component: t("header.my_dreams"),
-      route: `/${joinPaths(
-        [
-          ROUTES.PROFILE,
-          user?.uuid ?? "",
-          ROUTES.USER_FEED
-        ])}`,
-      display: ["none", "none", "none", "inline-flex"]
+      route: `/${joinPaths([
+        ROUTES.PROFILE,
+        user?.uuid ?? "",
+        ROUTES.USER_FEED,
+      ])}`,
+      display: ["none", "none", "none", "inline-flex"],
     },
     {
       component: t("header.profile"),
       route: ROUTES.MY_PROFILE,
-      display: "none"
+      display: "none",
     },
     {
       component: t("header.about"),
       route: ROUTES.ABOUT,
-      display: "none"
+      display: "none",
     },
     {
       component: t("header.install"),
       route: ROUTES.INSTALL,
-      display: "none"
+      display: "none",
     },
     {
       component: t("header.help"),
       route: ROUTES.HELP,
-      display: "none"
+      display: "none",
     },
     {
       component: t("header.invites"),
       route: ROUTES.INVITES,
-      display: "none"
+      display: "none",
     },
   ];
 
@@ -86,13 +95,12 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
     {
       component: t("header.about"),
       route: ROUTES.ABOUT,
-      display: ["none", "inline-flex", "inline-flex", "inline-flex"]
-
+      display: ["none", "inline-flex", "inline-flex", "inline-flex"],
     },
     {
       component: t("header.install"),
       route: ROUTES.INSTALL,
-      display: ["none", "inline-flex", "inline-flex", "inline-flex"]
+      display: ["none", "inline-flex", "inline-flex", "inline-flex"],
     },
   ];
 
@@ -107,11 +115,12 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
         };
 
         return (
-          <NavListItem
-            key={route.route}
-            display={route.display}
-          >
-            <AnchorLink to={route.route} onClick={handleOnClick} style={{ textDecoration: "none" }}>
+          <NavListItem key={route.route} display={route.display}>
+            <AnchorLink
+              to={route.route}
+              onClick={handleOnClick}
+              style={{ textDecoration: "none" }}
+            >
               {route.component}
             </AnchorLink>
           </NavListItem>
