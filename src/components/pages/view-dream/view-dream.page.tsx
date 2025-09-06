@@ -96,13 +96,11 @@ const ViewDreamPage: React.FC = () => {
     refetch,
     isError,
   } = useDream(uuid, {
-    // If edit mode is disabled then remove refetch
-    activeRefetchInterval: !editMode,
+    activeRefetchInterval: false,
   });
 
   const { data: voteData, refetch: refetchVote } = useDreamVote(uuid, {
-    // If edit mode is disabled then remove refetch
-    activeRefetchInterval: !editMode,
+    activeRefetchInterval: false,
   });
 
   const { socket } = useSocket();
