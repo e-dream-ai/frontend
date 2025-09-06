@@ -34,7 +34,7 @@ const FrameImage: React.FC<{ frame: Frame; dream?: Dream }> = ({
 
   return (
     <ImageContainer onClick={handlePlayDreamAtFrameNumber}>
-      <StyledFrameImage url={frameUrl} src="/images/blank.gif" />
+      <StyledFrameImage src={frameUrl || "/images/blank.gif"} />
       <OverlayText>
         {calculateTimeFromFrames({
           frameNumber: frame.frameNumber,

@@ -46,10 +46,7 @@ import {
 import Select from "@/components/shared/select/select";
 import { useRoles } from "@/api/user/query/useRoles";
 import { useImage } from "@/hooks/useImage";
-import {
-  NSFW,
-  getNsfwOptions,
-} from "@/constants/select.constants";
+import { NSFW, getNsfwOptions } from "@/constants/select.constants";
 import usePermission from "@/hooks/usePermission";
 import { formatDateToYYYYMMDD } from "@/utils/date.util";
 import {
@@ -85,14 +82,18 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
   });
 
   const avatarUrl = useImage(user?.avatar, {
-    width: 142,
+    width: 400,
     fit: "cover",
   });
 
   const handleNavigateDreams = () => {
-    const path = `/${joinPaths([ROUTES.PROFILE, user?.uuid ?? "", ROUTES.USER_FEED])}`;
+    const path = `/${joinPaths([
+      ROUTES.PROFILE,
+      user?.uuid ?? "",
+      ROUTES.USER_FEED,
+    ])}`;
     router.navigate(path);
-  }
+  };
 
   return (
     <Row flexWrap="wrap">
@@ -242,7 +243,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   const [avatar, setAvatar] = useState<MultiMediaState>();
 
   const avatarUrl = useImage(user?.avatar, {
-    width: 142,
+    width: 400,
     fit: "cover",
   });
 
@@ -259,9 +260,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       description: user?.description ?? "",
       role: user?.role
         ? {
-          value: user.role?.id,
-          label: formatRoleName(user?.role?.name),
-        }
+            value: user.role?.id,
+            label: formatRoleName(user?.role?.name),
+          }
         : {},
       nsfw: filterNsfwOption(user?.nsfw, t),
       enableMarketingEmails: filterMarketingEmailOption(
@@ -290,7 +291,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
               handleMutateUpdateUser(formData);
             } else {
               toast.error(
-                `${t("components.profile_card.error_updating_profile")} ${response.message
+                `${t("components.profile_card.error_updating_profile")} ${
+                  response.message
                 }`,
               );
             }
@@ -335,7 +337,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           reset();
         } else {
           toast.error(
-            `${t("components.profile_card.error_updating_profile")} ${response.message
+            `${t("components.profile_card.error_updating_profile")} ${
+              response.message
             }`,
           );
         }
@@ -370,7 +373,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         </Button>
       </Row>
       <Row mb="2rem" flexWrap="wrap">
-        <Column flex={["0 0 100%", "0 0 33.333333%"]} alignItems="center" mb={4}>
+        <Column
+          flex={["0 0 100%", "0 0 33.333333%"]}
+          alignItems="center"
+          mb={4}
+        >
           <AvatarUploader
             handleChange={handleAvatarChange}
             src={avatar?.url ? avatar?.url : avatarUrl}

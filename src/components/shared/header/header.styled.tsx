@@ -9,7 +9,7 @@ import {
   FlexboxProps,
   SpaceProps,
   space,
-} from "styled-system"
+} from "styled-system";
 import { Link } from "react-router-dom";
 
 const StyledHeader = styled.header<FlexboxProps>`
@@ -109,7 +109,9 @@ export const Nav = styled.nav`
   overflow: hidden;
 `;
 
-export const NavContainer = styled.div<OrderProps & FlexboxProps & DisplayProps>`
+export const NavContainer = styled.div<
+  OrderProps & FlexboxProps & DisplayProps
+>`
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -168,10 +170,12 @@ export const NavListItem = styled.li<DisplayProps>`
       display: none;
     }
   }
-  
+
   // remove dot • menu separator from last child on tablets or lower
   @media (max-width: calc(${DEVICES.TABLET} - (0.0625em))) {
-    &[display="none,none,inline-flex,inline-flex"]:not(:has(~ li[display="none,none,inline-flex,inline-flex"]))::after {
+    &[display="none,none,inline-flex,inline-flex"]:not(
+        :has(~ li[display="none,none,inline-flex,inline-flex"])
+      )::after {
       display: none;
     }
   }
@@ -225,7 +229,8 @@ export const HeaderAvatar = styled.div<{
   ${AvatarStyle}
   background-color: rgba(30, 30, 30, 1);
   background-image: ${(props) => `url(${props?.url})`};
-  background-size: contain;
+  background-size: cover;
+  background-position: center;
   position: relative;
 `;
 

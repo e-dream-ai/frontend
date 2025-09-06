@@ -1,15 +1,13 @@
 import styled from "styled-components";
 import Text from "../text/text";
 
-export const StyledFrameImage = styled.img<{ url?: string }>`
+export const StyledFrameImage = styled.img`
   min-width: 300px;
   max-width: 300px;
   height: auto;
   aspect-ratio: 16 / 9;
-  background-repeat: no-repeat;
-  background-position: left;
-  background-size: cover;
-  background-image: ${({ url }) => `url(${url})`};
+  object-fit: cover;
+  object-position: left;
   border: 0;
 `;
 

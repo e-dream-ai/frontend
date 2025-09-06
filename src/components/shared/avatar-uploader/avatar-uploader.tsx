@@ -4,7 +4,10 @@ import { HandleChangeFile } from "@/types/media.types";
 import { Avatar } from "@/components/shared/avatar/avatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusSquare } from "@fortawesome/free-solid-svg-icons";
-import { ALLOWED_IMAGE_TYPES, MAX_IMAGE_FILE_SIZE_MB } from "@/constants/file.constants";
+import {
+  ALLOWED_IMAGE_TYPES,
+  MAX_IMAGE_FILE_SIZE_MB,
+} from "@/constants/file.constants";
 
 const StyledFileUploaderDropzone = styled.div`
   width: 100%;
