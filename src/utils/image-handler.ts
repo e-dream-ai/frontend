@@ -1,8 +1,8 @@
 import { ResizeOptions } from "@/types/image.types";
 
 const WORKER_URL = import.meta.env.VITE_WORKER_URL;
-const DEFAULT_FORMAT = "auto";
-const DEFAULT_QUALITY = 100;
+const DEFAULT_FORMAT = "webp";
+const DEFAULT_QUALITY = 85;
 const DEFAULT_FIT = "cover";
 
 function buildWorkerParams(
