@@ -32,13 +32,11 @@ export const ThumbnailOverlay = styled.div`
   height: 100%;
 `;
 
-export const Thumbnail = styled.img<{ url?: string }>`
+export const Thumbnail = styled.img`
   width: 100%;
   height: 100%;
   aspect-ratio: 16 / 9;
-  background-repeat: no-repeat;
-  background-position: left;
-  background-size: cover;
-  background-image: ${({ url }) => `url(${url})`};
+  object-fit: cover;
+  object-position: left;
   border: 0;
 `;

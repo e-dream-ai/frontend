@@ -1,20 +1,23 @@
 import { ResizeOptions } from "@/types/image.types";
 
-const CLOUDFLARE_DOMAIN = import.meta.env.VITE_BUCKET_URL;
-const DEFAULT_FORMAT = "auto";
+const WORKER_URL = import.meta.env.VITE_WORKER_URL;
+const DEFAULT_FORMAT = "webp";
+const DEFAULT_QUALITY = 85;
+const DEFAULT_FIT = "cover";
 
-function normalizeUrl(url: string): string {
-  return url.replace(/^https?:\/\//, "");
-}
+function buildWorkerParams(
+  imageUrl: string,
+  options: ResizeOptions,
+): URLSearchParams {
+  const params = new URLSearchParams();
 
-function buildTransformParams(options: ResizeOptions): string[] {
-  const params: string[] = [];
+  params.set("url", imageUrl);
 
-  if (options.width) params.push(`width=${options.width}`);
-  if (options.height) params.push(`height=${options.height}`);
-  if (options.fit) params.push(`fit=${options.fit}`);
-
-  params.push(`format=${DEFAULT_FORMAT}`);
+  if (options.width) params.set("w", options.width.toString());
+  if (options.height) params.set("h", options.height.toString());
+  params.set("fit", options.fit || DEFAULT_FIT);
+  params.set("format", options.format || DEFAULT_FORMAT);
+  params.set("q", (options.quality || DEFAULT_QUALITY).toString());
 
   return params;
 }
@@ -24,19 +27,12 @@ export function generateCloudflareImageURL(
   resizeOptions?: ResizeOptions,
 ): string | undefined {
   if (!imageUrl) return undefined;
+  if (!WORKER_URL) return imageUrl;
 
-  // If no resize options, return imageUrl as-is
   if (!resizeOptions) {
     return imageUrl;
   }
 
-  // Normalize the input URL to remove protocol for transformation
-  const cleanUrl = normalizeUrl(imageUrl);
-  const normalizedDomain = normalizeUrl(CLOUDFLARE_DOMAIN || "");
-  const imagePath = cleanUrl.replace(`${normalizedDomain}/`, "");
-  const params = buildTransformParams(resizeOptions);
-
-  return `https://${normalizedDomain}/cdn-cgi/image/${params.join(
-    ",",
-  )}/${imagePath}`;
+  const params = buildWorkerParams(imageUrl, resizeOptions);
+  return `${WORKER_URL}?${params.toString()}`;
 }

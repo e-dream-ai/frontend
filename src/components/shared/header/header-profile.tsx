@@ -3,7 +3,11 @@ import { AnchorLink } from "@/components/shared";
 import { ROUTES } from "@/constants/routes.constants";
 import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-import { AnchorIcon, Divider, StyledHeaderProfile } from "./header-profile.styled";
+import {
+  AnchorIcon,
+  Divider,
+  StyledHeaderProfile,
+} from "./header-profile.styled";
 import StyledHeader, {
   HeaderAvatar,
   HeaderAvatarPlaceholder,
@@ -15,11 +19,7 @@ import StyledHeader, {
   StyledStatusDot,
 } from "./header.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faLock,
-  faPencil,
-  faUser,
-} from "@fortawesome/free-solid-svg-icons";
+import { faLock, faPencil, faUser } from "@fortawesome/free-solid-svg-icons";
 import { getUserNameOrEmail } from "@/utils/user.util";
 import { useImage } from "@/hooks/useImage";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
@@ -45,7 +45,7 @@ export const HeaderProfile: React.FC = () => {
   const { isConnected } = useSocket();
 
   const avatarUrl = useImage(user?.avatar, {
-    width: 30,
+    width: 90,
     fit: "cover",
   });
 
@@ -63,9 +63,7 @@ export const HeaderProfile: React.FC = () => {
                   desktopClientConnected={isActive}
                 />
                 {user?.avatar ? (
-                  <HeaderAvatar
-                    url={avatarUrl}
-                  />
+                  <HeaderAvatar url={avatarUrl} />
                 ) : (
                   <HeaderAvatarPlaceholder>
                     <HeaderAvatarPlaceholderIcon>
@@ -105,7 +103,9 @@ export const StatusDot: React.FC<{
 }> = ({ socketConnected, desktopClientConnected }) => {
   return (
     <StyledStatusDot desktopClientConnected={desktopClientConnected}>
-      <StyledSocketStatus socketConnected={socketConnected}>x</StyledSocketStatus>
+      <StyledSocketStatus socketConnected={socketConnected}>
+        x
+      </StyledSocketStatus>
     </StyledStatusDot>
   );
-}
+};

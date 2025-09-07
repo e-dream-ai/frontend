@@ -26,7 +26,8 @@ export const StyledAvatar = styled.div<{ url?: string; size: Sizes }>`
   border-radius: 100%;
   background-color: rgba(30, 30, 30, 1);
   background-image: ${(props) => `url(${props?.url})`};
-  background-size: contain;
+  background-size: cover;
+  background-position: center;
 `;
 
 export const AvatarPlaceholder = styled.div<

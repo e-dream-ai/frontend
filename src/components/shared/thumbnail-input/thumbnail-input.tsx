@@ -89,7 +89,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
             </ThumbnailButtons>
           )}
           {editMode && <ThumbnailOverlay />}
-          <Thumbnail url={localUrl || thumbnail} src="/images/blank.gif" />
+          <Thumbnail src={localUrl || thumbnail || "/images/blank.gif"} />
         </ThumbnailContainer>
       ) : (
         <FileUploader
