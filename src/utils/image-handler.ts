@@ -1,6 +1,6 @@
 import { ResizeOptions } from "@/types/image.types";
 
-const CLOUDFLARE_DOMAIN = "storage-alpha.infinidream.ai";
+const CLOUDFLARE_DOMAIN = import.meta.env.VITE_BUCKET_URL;
 const DEFAULT_FORMAT = "auto";
 
 function normalizeUrl(url: string): string {
