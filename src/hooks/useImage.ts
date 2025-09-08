@@ -1,9 +1,9 @@
-import { ResizeOptions } from "@/types/image.types";
 import { useMemo } from "react";
+import { ResizeOptions } from "@/types/image.types";
+import { generateCloudflareImageURL } from "@/utils/image-handler";
 
 export const useImage = (url?: string, resizeOptions?: ResizeOptions) => {
-  console.log("resizeOptions", resizeOptions);
   return useMemo(() => {
-    return url;
-  }, [url]);
+    return url ? generateCloudflareImageURL(url, resizeOptions) : undefined;
+  }, [url, resizeOptions]);
 };
