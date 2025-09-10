@@ -47,7 +47,6 @@ export const SocketProvider: React.FC<{
   // ref to save socket instance
   const socketRef = useRef<Socket | null>();
 
-
   const emitListeners = React.useRef<Set<EmitListener>>(new Set());
 
   const generateSocketInstance = useCallback(() => {
@@ -63,6 +62,7 @@ export const SocketProvider: React.FC<{
       // attempts limited to 2, continue under observation
       reconnectionAttempts: 2,
       withCredentials: true,
+      transports: ["websocket"],
       extraHeaders: {
         "Edream-Client-Type": "react",
         "Edream-Client-Version": import.meta.env.VITE_COMMIT_REF,
@@ -152,18 +152,21 @@ export const SocketProvider: React.FC<{
     emitListeners.current.delete(listener);
   }, []);
 
-  const emit = useCallback(<Ev extends keyof EmitEvents>(
-    ev: Ev,
-    ...args: Parameters<EmitEvents[Ev]>
-  ) => {
-    // notify listeners
-    emitListeners.current.forEach(listener => {
-      // @ts-expect-error unknonw type error on args
-      listener(ev, ...args);
-    });
-    // emit to socket
-    socketRef.current?.emit(ev, ...args);
-  }, []);
+  const emit = useCallback(
+    <Ev extends keyof EmitEvents>(
+      ev: Ev,
+      ...args: Parameters<EmitEvents[Ev]>
+    ) => {
+      // notify listeners
+      emitListeners.current.forEach((listener) => {
+        // @ts-expect-error unknonw type error on args
+        listener(ev, ...args);
+      });
+      // emit to socket
+      socketRef.current?.emit(ev, ...args);
+    },
+    [],
+  );
 
   useEffect(() => {
     // if there's user generate instance
@@ -207,10 +210,11 @@ export const SocketProvider: React.FC<{
   // useMemo to memoize context value
   const contextValue = useMemo(
     () => ({
-      socket: socketRef.current, isConnected,
+      socket: socketRef.current,
+      isConnected,
       emit,
       addEmitListener,
-      removeEmitListener
+      removeEmitListener,
     }),
     [isConnected, emit, addEmitListener, removeEmitListener],
   );
