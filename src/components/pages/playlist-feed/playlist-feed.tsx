@@ -24,8 +24,12 @@ export const PlaylistsFeedPage: React.FC = () => {
     hasNextPage: hasNextFeedPage,
   } = useRankedFeed();
 
-  const feed = useMemo(() => feedData?.pages.flatMap(page => page.data?.feed ?? []) ?? [], [feedData]);
-  const feedDataLength = feedData?.pages.flatMap(page => page.data?.feed).length || 0;
+  const feed = useMemo(
+    () => feedData?.pages.flatMap((page) => page.data?.feed ?? []) ?? [],
+    [feedData],
+  );
+  const feedDataLength =
+    feedData?.pages.flatMap((page) => page.data?.feed).length || 0;
   const isLoading = isFeedLoading || isFeedRefetching;
 
   return (
@@ -40,22 +44,24 @@ export const PlaylistsFeedPage: React.FC = () => {
             hasMore={hasNextFeedPage ?? false}
             loader={<Loader />}
             endMessage={
-              !isLoading &&
-              <Row justifyContent="center" mt="2rem">
-                <Text color={theme.textPrimaryColor}>{t("components.infinite_scroll.end_message")}</Text>
-              </Row>
+              !isLoading && (
+                <Row justifyContent="center" mt="2rem">
+                  <Text color={theme.textPrimaryColor}>
+                    {t("components.infinite_scroll.end_message")}
+                  </Text>
+                </Row>
+              )
             }
           >
-            {
-              isLoading
-                ? <Loader />
-                : <FeedList
-                  title={t("page.playlists.feed")}
-                  feed={feed}
-                  virtualPlaylists={[]}
-                  dreamsInVirtualPlaylists={[]}
-                />
-            }
+            {isLoading ? (
+              <Loader />
+            ) : (
+              <FeedList
+                title={t("page.playlists.feed")}
+                feed={feed}
+                virtualPlaylists={[]}
+              />
+            )}
           </InfiniteScroll>
         </Column>
       </Section>
