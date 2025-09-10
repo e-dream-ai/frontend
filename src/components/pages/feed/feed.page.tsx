@@ -71,6 +71,7 @@ export const FeedPage: React.FC = () => {
     isLoading: isFeedLoading,
     fetchNextPage: fetchNextFeedPage,
     hasNextPage: hasNextFeedPage,
+    isFetchingNextPage,
   } = useFeed({
     search,
     type: radioGroupState as FeedItemFilterType,
@@ -182,10 +183,19 @@ export const FeedPage: React.FC = () => {
 
   // If there are not enough rendered items, fetch more
   useEffect(() => {
-    if (hasNextFeedPage && actualRenderedItemsCount < PAGINATION.TAKE) {
+    if (
+      hasNextFeedPage &&
+      !isFetchingNextPage &&
+      actualRenderedItemsCount < PAGINATION.TAKE
+    ) {
       fetchNextFeedPage();
     }
-  }, [actualRenderedItemsCount, hasNextFeedPage, fetchNextFeedPage]);
+  }, [
+    actualRenderedItemsCount,
+    hasNextFeedPage,
+    isFetchingNextPage,
+    fetchNextFeedPage,
+  ]);
 
   // Update search state only after debounce
   useEffect(() => {
@@ -213,8 +223,12 @@ export const FeedPage: React.FC = () => {
 
           {!showUserList ? (
             <InfiniteScroll
-              dataLength={actualRenderedItemsCount}
-              next={fetchNextFeedPage}
+              dataLength={feedDataLength}
+              next={() => {
+                if (!isFetchingNextPage) {
+                  fetchNextFeedPage();
+                }
+              }}
               hasMore={hasNextFeedPage ?? false}
               loader={<Loader />}
               endMessage={
