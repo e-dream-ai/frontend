@@ -23,6 +23,7 @@ import { useInfiniteUsers } from "@/api/user/query/useInfiniteUsers";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Loader } from "@/components/shared/loader/loader";
 import { useTheme } from "styled-components";
+import { getVirtualPlaylistDisplayedDreams } from "@/utils/virtual-playlist.util";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -32,7 +33,9 @@ const USER_TAKE = {
 const SECTION_ID = "feed";
 
 // Gets user role using `FEED_FILTERS` to fetch users by its type
-const getUserFeedType: (type?: FeedItemType) => RoleType | undefined = (type) => {
+const getUserFeedType: (type?: FeedItemType) => RoleType | undefined = (
+  type,
+) => {
   if (type === FEED_FILTERS.ALL) return undefined;
   if (type === FEED_FILTERS.DREAM) return undefined;
   if (type === FEED_FILTERS.PLAYLIST) return undefined;
@@ -53,9 +56,9 @@ export const FeedPage: React.FC = () => {
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const [searchValue, setSearchValue] = useState<string | undefined>();
   const [search, setSearch] = useState<string | undefined>();
-  const [radioGroupState, setRadioGroupState] = useState<
-    FeedItemType
-  >(FEED_FILTERS.ALL);
+  const [radioGroupState, setRadioGroupState] = useState<FeedItemType>(
+    FEED_FILTERS.ALL,
+  );
 
   /**
    * Debounce search value after keyboard press
@@ -73,7 +76,10 @@ export const FeedPage: React.FC = () => {
     type: radioGroupState as FeedItemFilterType,
   });
 
-  const feed = useMemo(() => feedData?.pages.flatMap(page => page.data?.feed ?? []) ?? [], [feedData]);
+  const feed = useMemo(
+    () => feedData?.pages.flatMap((page) => page.data?.feed ?? []) ?? [],
+    [feedData],
+  );
   const feedDataLength = useMemo(() => feed.length, [feed]);
 
   // Memoize the virtual playlists grouping operation
@@ -88,8 +94,8 @@ export const FeedPage: React.FC = () => {
 
     const virtualPlaylists = Array.from(groups.entries()).map(([, pl]) => pl);
 
-    groups.forEach(group => {
-      group.dreams.forEach(dream => {
+    groups.forEach((group) => {
+      group.dreams.forEach((dream) => {
         dreamUUIDs.add(dream.uuid);
       });
     });
@@ -114,16 +120,45 @@ export const FeedPage: React.FC = () => {
     role: getUserFeedType(radioGroupState),
   });
 
-  const users = useMemo(() => usersData?.pages.flatMap(page => page.data?.users ?? []) ?? [], [usersData]);
+  const users = useMemo(
+    () => usersData?.pages.flatMap((page) => page.data?.users ?? []) ?? [],
+    [usersData],
+  );
   const usersDataLength = useMemo(() => users.length, [users]);
 
-  const showUserList = useMemo(() =>
-    [
-      FEED_FILTERS.USER,
-      FEED_FILTERS.CREATOR,
-      FEED_FILTERS.ADMIN,
-    ].includes(radioGroupState)
-    , [radioGroupState]);
+  const actualRenderedItemsCount = useMemo(() => {
+    if (radioGroupState !== FEED_FILTERS.ALL) {
+      return feedDataLength;
+    }
+
+    const nonVirtualPlaylistItems =
+      feedDataLength - dreamsInVirtualPlaylists.length;
+
+    const virtualPlaylistRenderedItems = virtualPlaylists.reduce(
+      (count, playlist) => {
+        const displayedDreams = getVirtualPlaylistDisplayedDreams(
+          playlist.dreams,
+        );
+        return count + displayedDreams.length + 1;
+      },
+      0,
+    );
+
+    return nonVirtualPlaylistItems + virtualPlaylistRenderedItems;
+  }, [
+    feedDataLength,
+    dreamsInVirtualPlaylists,
+    virtualPlaylists,
+    radioGroupState,
+  ]);
+
+  const showUserList = useMemo(
+    () =>
+      [FEED_FILTERS.USER, FEED_FILTERS.CREATOR, FEED_FILTERS.ADMIN].includes(
+        radioGroupState,
+      ),
+    [radioGroupState],
+  );
 
   const handleRadioButtonGroupChange = (value?: string) => {
     if (value && isFeedItemType(value)) {
@@ -145,12 +180,12 @@ export const FeedPage: React.FC = () => {
     setSearchValue("");
   };
 
-  // If there are not enough items, fetch more
+  // If there are not enough rendered items, fetch more
   useEffect(() => {
-    if (hasNextFeedPage && (feedDataLength - dreamsInVirtualPlaylists.length) < PAGINATION.TAKE) {
+    if (hasNextFeedPage && actualRenderedItemsCount < PAGINATION.TAKE) {
       fetchNextFeedPage();
     }
-  }, [feedDataLength, dreamsInVirtualPlaylists, hasNextFeedPage, fetchNextFeedPage]);
+  }, [actualRenderedItemsCount, hasNextFeedPage, fetchNextFeedPage]);
 
   // Update search state only after debounce
   useEffect(() => {
@@ -176,56 +211,55 @@ export const FeedPage: React.FC = () => {
             onChange={handleRadioButtonGroupChange}
           />
 
-          {
-            !showUserList ?
-              <InfiniteScroll
-                dataLength={feedDataLength}
-                next={fetchNextFeedPage}
-                hasMore={hasNextFeedPage ?? false}
-                loader={<Loader />}
-                endMessage={
-                  !isFeedLoading &&
+          {!showUserList ? (
+            <InfiniteScroll
+              dataLength={actualRenderedItemsCount}
+              next={fetchNextFeedPage}
+              hasMore={hasNextFeedPage ?? false}
+              loader={<Loader />}
+              endMessage={
+                !isFeedLoading && (
                   <Row justifyContent="center" mt="2rem">
-                    <Text color={theme.textPrimaryColor}>{t("components.infinite_scroll.end_message")}</Text>
+                    <Text color={theme.textPrimaryColor}>
+                      {t("components.infinite_scroll.end_message")}
+                    </Text>
                   </Row>
-                }
-              >
-                {
-                  isFeedLoading
-                    ? <Loader />
-                    : <FeedList
-                      feed={feed}
-                      virtualPlaylists={virtualPlaylists}
-                      dreamsInVirtualPlaylists={dreamsInVirtualPlaylists}
-                    />
-                }
-              </InfiniteScroll>
-              :
-              <InfiniteScroll
-                dataLength={usersDataLength}
-                next={fetchNextUsersPage}
-                hasMore={hasNextUsersPage ?? false}
-                loader={<Loader />}
-                endMessage={
-                  !isUsersLoading &&
+                )
+              }
+            >
+              {isFeedLoading ? (
+                <Loader />
+              ) : (
+                <FeedList
+                  feed={feed}
+                  virtualPlaylists={virtualPlaylists}
+                  dreamsInVirtualPlaylists={dreamsInVirtualPlaylists}
+                />
+              )}
+            </InfiniteScroll>
+          ) : (
+            <InfiniteScroll
+              dataLength={usersDataLength}
+              next={fetchNextUsersPage}
+              hasMore={hasNextUsersPage ?? false}
+              loader={<Loader />}
+              endMessage={
+                !isUsersLoading && (
                   <Row justifyContent="center" mt="2rem">
-                    <Text color={theme.textPrimaryColor}>{t("components.infinite_scroll.end_message")}</Text>
+                    <Text color={theme.textPrimaryColor}>
+                      {t("components.infinite_scroll.end_message")}
+                    </Text>
                   </Row>
-                }
-              >
-                {
-                  isUsersLoading
-                    ? <Loader />
-                    : <UserFeedList users={users} />
-                }
-              </InfiniteScroll>
-          }
-
+                )
+              }
+            >
+              {isUsersLoading ? <Loader /> : <UserFeedList users={users} />}
+            </InfiniteScroll>
+          )}
         </Column>
       </Section>
     </Container>
   );
 };
-
 
 export default FeedPage;
