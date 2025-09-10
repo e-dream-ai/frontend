@@ -11,85 +11,85 @@ type FeedListProps = {
   feed?: FeedItem[];
   title?: string;
   virtualPlaylists: VirtualPlaylist[];
-  dreamsInVirtualPlaylists: string[];
-}
+};
 
 type ProcessedItem = {
   key: string | number;
   type: ItemType;
   item: Dream | Playlist;
   created_at: string;
-}
+};
 
-export const FeedList: React.FC<FeedListProps> = ({ feed = [], title, virtualPlaylists, dreamsInVirtualPlaylists, }) => {
+export const FeedList: React.FC<FeedListProps> = ({
+  feed = [],
+  title,
+  virtualPlaylists,
+}) => {
   const { t } = useTranslation();
-  const listTitle = useMemo(() => title ?? t("page.feed.feed"), [t, title])
+  const listTitle = useMemo(() => title ?? t("page.feed.feed"), [t, title]);
 
   // Memoize the processing of feed items to improve performance
   const processedFeedItems = useMemo(() => {
-    // Filter out dreams already in virtual playlists
-    const filteredFeed = feed.filter(
-      feedItem => !(
-        feedItem.dreamItem &&
-        dreamsInVirtualPlaylists.includes(feedItem.dreamItem.uuid)
-      )
-    );
+    // Backend now handles filtering, so we just transform feed items into renderable items
+    return feed
+      .map((feedItem) => {
+        let item: Dream | Playlist;
+        let type: ItemType;
 
-    // Transform feed items into renderable items
-    return filteredFeed.map(feedItem => {
-      let item: Dream | Playlist;
-      let type: ItemType;
+        if (feedItem.type === "dream") {
+          item = {
+            ...feedItem.dreamItem,
+            user: feedItem.user,
+          } as Dream;
+          type = "dream";
+        } else if (feedItem.type === "playlist") {
+          item = {
+            ...feedItem.playlistItem,
+            user: feedItem.user,
+          } as Playlist;
+          type = "playlist";
+        } else {
+          // Fallback for unexpected types
+          return null;
+        }
 
-      if (feedItem.type === "dream") {
-        item = {
-          ...feedItem.dreamItem,
-          user: feedItem.user,
-        } as Dream;
-        type = "dream";
-      } else if (feedItem.type === "playlist") {
-        item = {
-          ...feedItem.playlistItem,
-          user: feedItem.user,
-        } as Playlist;
-        type = "playlist";
-      } else {
-        // Fallback for unexpected types
-        return null;
-      }
+        const processedItem: ProcessedItem = {
+          key: feedItem.id,
+          type,
+          item,
+          created_at: feedItem.created_at,
+        };
 
-      const processedItem: ProcessedItem = {
-        key: feedItem.id,
-        type,
-        item,
-        created_at: feedItem.created_at
-      }
-
-      return processedItem;
-    }).filter(Boolean) as ProcessedItem[];
-  }, [feed, dreamsInVirtualPlaylists]);
+        return processedItem;
+      })
+      .filter(Boolean) as ProcessedItem[];
+  }, [feed]);
 
   // Memoize virtual playlist dreams rendering
   const virtualPlaylistItems = useMemo(() => {
-    return virtualPlaylists.flatMap(pl => {
+    return virtualPlaylists.flatMap((pl) => {
       const dreamsToShow = getVirtualPlaylistDisplayedDreams(pl.dreams);
       const lastDreamToShow = dreamsToShow[dreamsToShow.length - 1];
       return [
-        ...dreamsToShow.map(dream => ({
-          // Set dream uuid as feed item key to use it on key for renderization
-          key: `${pl.uuid}_${dream.uuid}`,
-          type: "dream" as const,
-          item: dream,
-          // Need to take lastDreamToShow `created_at` value to render virtual playlist just after the dreams
-          created_at: lastDreamToShow?.created_at ?? pl.created_at,
-        } as ProcessedItem)),
+        ...dreamsToShow.map(
+          (dream) =>
+            ({
+              // Set dream uuid as feed item key to use it on key for renderization
+              key: `${pl.uuid}_${dream.uuid}`,
+              type: "dream" as const,
+              item: dream,
+              // Need to take lastDreamToShow `created_at` value to render virtual playlist just after the dreams
+              created_at: lastDreamToShow?.created_at ?? pl.created_at,
+            }) as ProcessedItem,
+        ),
         {
           // Set playlist uuid as feed item key to use it on key for renderization
           key: pl.uuid,
           type: "virtual-playlist" as const,
           item: pl,
           // Need to take lastDreamToShow `created_at` value to render virtual playlist just after the dreams
-          created_at: lastDreamToShow?.created_at ?? pl.created_at
-        }
+          created_at: lastDreamToShow?.created_at ?? pl.created_at,
+        },
       ];
     });
   }, [virtualPlaylists]);
@@ -97,34 +97,19 @@ export const FeedList: React.FC<FeedListProps> = ({ feed = [], title, virtualPla
   // Memoize the combination of all items
   const allItems = useMemo(() => {
     const items = [...processedFeedItems, ...virtualPlaylistItems];
+
     // Need to sort by `created_at` since generating virtual playlist breaks the order feed order
     // If there are no `virtual PlaylistItems` not need to filter
     if (virtualPlaylistItems.length) {
-      items.sort((a, b) =>
-        b.created_at.localeCompare(a.created_at)
-      )
+      items.sort((a, b) => b.created_at.localeCompare(a.created_at));
     }
 
-    return items
+    return items;
   }, [processedFeedItems, virtualPlaylistItems]);
-
-  // Render logic
 
   // Render empty feed
   if (allItems.length === 0) {
     return <Text mb={4}>{t("page.feed.empty_feed")}</Text>;
-  }
-
-  // Render empty items
-  if (allItems.length === 0) {
-    return (
-      <>
-        <Row separator pb="1rem" mb="1rem">
-          {t("page.feed.feed")}
-        </Row>
-        <Text mb={4}>{t("page.feed.empty_feed")}</Text>;
-      </>
-    )
   }
 
   return (
@@ -133,7 +118,7 @@ export const FeedList: React.FC<FeedListProps> = ({ feed = [], title, virtualPla
         {listTitle}
       </Row>
       <ItemCardList grid columns={3}>
-        {allItems.map(itemData => (
+        {allItems.map((itemData) => (
           <ItemCard
             showPlayButton
             key={itemData.key}
