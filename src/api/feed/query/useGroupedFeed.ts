@@ -10,6 +10,7 @@ import {
   VirtualPlaylist,
 } from "@/types/feed.types";
 import { axiosClient } from "@/client/axios.client";
+import { useRef } from "react";
 
 export const GROUPED_FEED_QUERY_KEY = "getGroupedFeed";
 
@@ -20,6 +21,7 @@ type QueryFunctionParams = {
   userUUID?: string;
   type?: FeedItemFilterType;
   onlyHidden?: boolean;
+  excludedPlaylistUUIDs?: string;
 };
 
 type GroupedFeedResponse = {
@@ -35,6 +37,7 @@ const getGroupedFeed = ({
   search,
   type,
   onlyHidden,
+  excludedPlaylistUUIDs,
 }: QueryFunctionParams) => {
   return async () =>
     axiosClient
@@ -46,6 +49,7 @@ const getGroupedFeed = ({
           search,
           type,
           onlyHidden,
+          excludedPlaylistUUIDs,
         },
         headers: getRequestHeaders({
           contentType: ContentType.json,
@@ -77,10 +81,17 @@ export const useGroupedFeed = ({ search, userUUID, type }: HookParams) => {
     feedItemType = type;
   }
 
-  return useInfiniteQuery<ApiResponse<GroupedFeedResponse>, Error>(
+  const seenPlaylistUUIDs = useRef<Set<string>>(new Set());
+
+  const query = useInfiniteQuery<ApiResponse<GroupedFeedResponse>, Error>(
     [GROUPED_FEED_QUERY_KEY, search, type, userUUID],
-    ({ pageParam = 0 }) =>
-      getGroupedFeed({
+    ({ pageParam = 0 }) => {
+      const excludedPlaylistUUIDs =
+        seenPlaylistUUIDs.current.size > 0
+          ? Array.from(seenPlaylistUUIDs.current).join(",")
+          : undefined;
+
+      return getGroupedFeed({
         take,
         skip: pageParam * take,
         userUUID,
@@ -88,7 +99,9 @@ export const useGroupedFeed = ({ search, userUUID, type }: HookParams) => {
         search: search?.trim() || undefined,
         type: feedItemType,
         onlyHidden,
-      })(),
+        excludedPlaylistUUIDs,
+      })();
+    },
     {
       enabled: Boolean(user),
       getNextPageParam: (lastPage, allPages) => {
@@ -104,6 +117,24 @@ export const useGroupedFeed = ({ search, userUUID, type }: HookParams) => {
         // Check if there are more items to load
         return currentItemCount < totalItems ? allPages.length : undefined;
       },
+      onSuccess: (data) => {
+        data.pages.forEach((page) => {
+          page?.data?.virtualPlaylists?.forEach((playlist) => {
+            seenPlaylistUUIDs.current.add(playlist.uuid);
+          });
+        });
+      },
     },
   );
+
+  // Reset seen playlists when search parameters change
+  const queryKey = [GROUPED_FEED_QUERY_KEY, search, type, userUUID].join("|");
+  const previousQueryKey = useRef<string>(queryKey);
+
+  if (previousQueryKey.current !== queryKey) {
+    seenPlaylistUUIDs.current.clear();
+    previousQueryKey.current = queryKey;
+  }
+
+  return query;
 };
