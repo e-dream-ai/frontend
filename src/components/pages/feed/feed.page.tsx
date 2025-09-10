@@ -1,4 +1,4 @@
-import { useFeed } from "@/api/feed/query/useFeed";
+import { useGroupedFeed } from "@/api/feed/query/useGroupedFeed";
 import { Column, Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import RadioButtonGroup from "@/components/shared/radio-button-group/radio-button-group";
@@ -14,16 +14,13 @@ import { ROLES } from "@/constants/role.constants";
 import { RoleType } from "@/types/role.types";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
-import { groupFeedDreamItemsByPlaylist } from "@/utils/feed.util";
 import InfiniteScroll from "react-infinite-scroll-component";
-import { PAGINATION } from "@/constants/pagination.constants";
 import { FeedList } from "./feed-list";
 import { UserFeedList } from "./user-feed-list";
 import { useInfiniteUsers } from "@/api/user/query/useInfiniteUsers";
 import { useDebounce } from "@/hooks/useDebounce";
 import { Loader } from "@/components/shared/loader/loader";
 import { useTheme } from "styled-components";
-import { getVirtualPlaylistDisplayedDreams } from "@/utils/virtual-playlist.util";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -72,40 +69,32 @@ export const FeedPage: React.FC = () => {
     fetchNextPage: fetchNextFeedPage,
     hasNextPage: hasNextFeedPage,
     isFetchingNextPage,
-  } = useFeed({
+  } = useGroupedFeed({
     search,
     type: radioGroupState as FeedItemFilterType,
   });
 
-  const feed = useMemo(
-    () => feedData?.pages.flatMap((page) => page.data?.feed ?? []) ?? [],
-    [feedData],
-  );
-  const feedDataLength = useMemo(() => feed.length, [feed]);
+  // Extract feed items and virtual playlists from the grouped feed response
+  const { feedItems, virtualPlaylists } = useMemo(() => {
+    const allFeedItems =
+      feedData?.pages.flatMap((page) => page.data?.feedItems ?? []) ?? [];
+    const allVirtualPlaylists =
+      feedData?.pages.flatMap((page) => page.data?.virtualPlaylists ?? []) ??
+      [];
 
-  // Memoize the virtual playlists grouping operation
-  const { virtualPlaylists, dreamsInVirtualPlaylists } = useMemo(() => {
-    // if radioGroupState is FEED_FILTERS.ALL then don't calculate virtual playlist grouping
-    if (radioGroupState !== FEED_FILTERS.ALL) {
-      return { virtualPlaylists: [], dreamsInVirtualPlaylists: [] };
-    }
-
-    const groups = groupFeedDreamItemsByPlaylist(feed);
-    const dreamUUIDs = new Set<string>();
-
-    const virtualPlaylists = Array.from(groups.entries()).map(([, pl]) => pl);
-
-    groups.forEach((group) => {
-      group.dreams.forEach((dream) => {
-        dreamUUIDs.add(dream.uuid);
-      });
-    });
+    // Only use virtual playlists when showing all items (not filtered)
+    const shouldUseVirtualPlaylists = radioGroupState === FEED_FILTERS.ALL;
 
     return {
-      virtualPlaylists,
-      dreamsInVirtualPlaylists: Array.from(dreamUUIDs),
+      feedItems: allFeedItems,
+      virtualPlaylists: shouldUseVirtualPlaylists ? allVirtualPlaylists : [],
     };
-  }, [radioGroupState, feed]);
+  }, [feedData, radioGroupState]);
+
+  const feedDataLength = useMemo(
+    () => feedItems.length + virtualPlaylists.length,
+    [feedItems, virtualPlaylists],
+  );
 
   const {
     data: usersData,
@@ -126,32 +115,6 @@ export const FeedPage: React.FC = () => {
     [usersData],
   );
   const usersDataLength = useMemo(() => users.length, [users]);
-
-  const actualRenderedItemsCount = useMemo(() => {
-    if (radioGroupState !== FEED_FILTERS.ALL) {
-      return feedDataLength;
-    }
-
-    const nonVirtualPlaylistItems =
-      feedDataLength - dreamsInVirtualPlaylists.length;
-
-    const virtualPlaylistRenderedItems = virtualPlaylists.reduce(
-      (count, playlist) => {
-        const displayedDreams = getVirtualPlaylistDisplayedDreams(
-          playlist.dreams,
-        );
-        return count + displayedDreams.length + 1;
-      },
-      0,
-    );
-
-    return nonVirtualPlaylistItems + virtualPlaylistRenderedItems;
-  }, [
-    feedDataLength,
-    dreamsInVirtualPlaylists,
-    virtualPlaylists,
-    radioGroupState,
-  ]);
 
   const showUserList = useMemo(
     () =>
@@ -180,22 +143,6 @@ export const FeedPage: React.FC = () => {
   const handleOnClearSearch = () => {
     setSearchValue("");
   };
-
-  // If there are not enough rendered items, fetch more
-  useEffect(() => {
-    if (
-      hasNextFeedPage &&
-      !isFetchingNextPage &&
-      actualRenderedItemsCount < PAGINATION.TAKE
-    ) {
-      fetchNextFeedPage();
-    }
-  }, [
-    actualRenderedItemsCount,
-    hasNextFeedPage,
-    isFetchingNextPage,
-    fetchNextFeedPage,
-  ]);
 
   // Update search state only after debounce
   useEffect(() => {
@@ -245,9 +192,8 @@ export const FeedPage: React.FC = () => {
                 <Loader />
               ) : (
                 <FeedList
-                  feed={feed}
+                  feed={feedItems}
                   virtualPlaylists={virtualPlaylists}
-                  dreamsInVirtualPlaylists={dreamsInVirtualPlaylists}
                 />
               )}
             </InfiniteScroll>
