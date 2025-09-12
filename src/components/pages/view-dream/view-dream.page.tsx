@@ -15,6 +15,7 @@ import Text from "@/components/shared/text/text";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
+import useSocketEventListener from "@/hooks/useSocketEventListener";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -25,6 +26,7 @@ import UpdateDreamSchema, {
   UpdateDreamFormValues,
 } from "@/schemas/update-dream.schema";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
+import { Dream } from "@/types/dream.types";
 import { DreamVideoInput, ViewDreamInputs } from "./view-dream-inputs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -141,6 +143,18 @@ const ViewDreamPage: React.FC = () => {
     resolver: yupResolver(UpdateDreamSchema),
     defaultValues: { name: "" },
   });
+
+  // Listen for dream processing completion events
+  useSocketEventListener<{ dreamUUID: string; dream: Dream }>(
+    "dream_processed",
+    async (data) => {
+      if (data?.dreamUUID === uuid) {
+        await refetch();
+        await refetchVote();
+        toast.success("Dream processing completed!");
+      }
+    },
+  );
 
   const isDreamProcessing: boolean = useMemo(
     () =>
