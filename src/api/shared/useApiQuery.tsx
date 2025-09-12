@@ -57,6 +57,7 @@ function useApiQuery<T>(
     refetchOnMount: options.refetchOnMount ?? false,
     refetchOnWindowFocus: options.refetchOnWindowFocus ?? false,
     enabled: Boolean(user),
+    keepPreviousData: true,
     refetchInterval: (_, query) => {
       if (!options.activeRefetchInterval) return false;
       // Don't refetch on 404 errors
