@@ -1,4 +1,4 @@
-import { Button, Column, Row } from "@/components/shared";
+import { Button, Row } from "@/components/shared";
 import { Anchor } from "@/components/shared";
 import AddToHomeScreen from "@/components/shared/add-home-screen/add-home-screen";
 import { Card } from "@/components/shared/card/card";
