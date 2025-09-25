@@ -34,7 +34,8 @@ export default defineConfig({
         name: "infinidream",
         short_name: "infinidream",
         description: "infinidream remote control app",
-        theme_color: "#000000",
+        theme_color: "#ffdab7",
+        background_color: "#ffdab7",
         screenshots: [
           {
             src: "screenshot-1.jpeg",
@@ -49,28 +50,15 @@ export default defineConfig({
         ],
         icons: [
           {
-            src: "icons/ios/128.png",
-            sizes: "128x128",
-            type: "image/png",
-          },
-          {
-            src: "icons/ios/144.png",
-            sizes: "144x144",
-            type: "image/png",
-          },
-          {
-            src: "icons/ios/180.png",
-            sizes: "180x180",
-            type: "image/png",
-          },
-          {
-            src: "icons/ios/192.png",
+            purpose: "maskable",
             sizes: "192x192",
+            src: "icons/maskable/maskable_icon_x192.png",
             type: "image/png",
           },
           {
-            src: "icons/ios/512.png",
+            purpose: "maskable",
             sizes: "512x512",
+            src: "icons/maskable/maskable_icon_x512.png",
             type: "image/png",
           },
         ],
