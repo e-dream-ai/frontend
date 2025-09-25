@@ -12,10 +12,9 @@ import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "install";
 
-const APP_VERSION = "0.8.1";
+const APP_VERSION = "0.9.0";
 const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
-const APP_URL = `https://github.com/e-dream-ai/public/releases/download/${APP_VERSION}/infinidream-app-${APP_VERSION}.zip`;
-const SCREENSAVER_URL = `https://github.com/e-dream-ai/public/releases/download/${APP_VERSION}/infinidream-screensaver-${APP_VERSION}.zip`;
+const APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.zip`;
 
 const InstallSection = () => {
   const { t } = useTranslation();
@@ -23,10 +22,6 @@ const InstallSection = () => {
 
   const handleDownloadApp = () => {
     window.open(APP_URL, "_blank");
-  };
-
-  const handleDownloadScreensaver = () => {
-    window.open(SCREENSAVER_URL, "_blank");
   };
 
   return (
@@ -48,58 +43,27 @@ const InstallSection = () => {
           )}
         </Text>
         <Row flexWrap={["wrap", "nowrap", "nowrap"]}>
-          <Column
-            flex={[
-              "0 0 100%", // full width on small screens
-              "0 0 50%", // half width on medium screens and up
-            ]}
-            pr={[0, 1, 2]}
-          >
             <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
               <Row justifyContent="center">
                 <Button buttonType="secondary" onClick={handleDownloadApp}>
-                  Download app
+                  Download app and screen saver
                 </Button>
               </Row>
               <Row>
                 <Text>
                   Unzip, and drag it to your Applications folder. Run it,
                   sign-in by entering your e-mail, then enter the code e-mailed
-                  to you, and close the settings. The app will automatically
-                  download and play visuals. Press the A and D keys to adjust
-                  the speed of the experience, or the F1 key for help with all
-                  the commands.
-                </Text>
+                  to you, and close the settings.
+		</Text>
               </Row>
-            </Card>
-          </Column>
-          <Column
-            flex={[
-              "0 0 100%", // full width on small screens
-              "0 0 50%", // half width on medium screens and up
-            ]}
-            pr={[0, 1, 2]}
-          >
-            <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
-              <Row justifyContent="center">
-                <Button
-                  buttonType="secondary"
-                  onClick={handleDownloadScreensaver}
-                >
-                  Download screensaver
-                </Button>
-              </Row>
-
-              <Column>
+              <Row>
                 <Text>
-                  Unzip, and double-click to install. If prompted, install for
-                  all users. Then to enable it, go into System Settings, select
+		  To enable the screen saver, go into System Settings, select
                   the "Screen Saver" panel, and then in the "Other" section
-                  click on "Show More" and then click on "infinidream". Whew!
+                  click on "Show More" and then click on "infinidream".
                 </Text>
-              </Column>
+              </Row>
             </Card>
-          </Column>
         </Row>
         <Text>
           <p>
@@ -116,14 +80,14 @@ const InstallSection = () => {
             Current release: {DISPLAY_APP_VERSION}. See the{" "}
             <Anchor
               target="_blank"
-              href="https://github.com/e-dream-ai/public/releases/latest"
+              href="https://github.com/e-dream-ai/client/releases/latest"
             >
               release notes
             </Anchor>{" "}
             and{" "}
             <Anchor
               target="_blank"
-              href="https://github.com/e-dream-ai/public/releases"
+              href="https://github.com/e-dream-ai/client/releases"
             >
               past releases
             </Anchor>
