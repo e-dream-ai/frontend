@@ -585,7 +585,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                     <ItemTitleText ref={tooltipRef} className="itemCard__title">
                       {type === "playlist" || type === "virtual-playlist" ? (
                         <PlaylistPlay
-                          style={{ transform: "translateY(1px)" }}
+                          style={{ transform: "translateY(3px)" }}
                         />
                       ) : (
                         <FontAwesomeIcon icon={faFilm} />
