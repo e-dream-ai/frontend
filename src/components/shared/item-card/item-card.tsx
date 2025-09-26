@@ -32,7 +32,6 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEllipsis,
   faFilm,
-  faListUl,
   faPhotoFilm,
   faPlay,
   faXmark,
@@ -56,6 +55,7 @@ import {
 import { ItemCardImage } from "./item-card-image";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { AnchorLink } from "@/components/shared";
+import PlaylistPlay from "@/icons/playlist-play";
 
 type DNDMode = "local" | "cross-window";
 /**
@@ -454,18 +454,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                     <FontAwesomeIcon icon={faPlay} />
                   </span>
                 ) : (
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: "2px",
-                      marginRight: "6px",
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faListUl} size="sm" />
-                    <FontAwesomeIcon icon={faPlay} />
-                  </span>
+                  <PlaylistPlay />
                 )
               }
               onClick={handlePlay}
@@ -595,7 +584,9 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                     {/* card title */}
                     <ItemTitleText ref={tooltipRef} className="itemCard__title">
                       {type === "playlist" || type === "virtual-playlist" ? (
-                        <FontAwesomeIcon icon={faListUl} />
+                        <PlaylistPlay
+                          style={{ transform: "translateY(1px)" }}
+                        />
                       ) : (
                         <FontAwesomeIcon icon={faFilm} />
                       )}{" "}
