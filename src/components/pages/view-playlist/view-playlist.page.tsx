@@ -488,7 +488,7 @@ export const ViewPlaylistPage = () => {
                   type="button"
                   buttonType="default"
                   transparent
-                  style={{ width: "3rem" }}
+                  style={{ width: "3rem", padding: "4px" }}
                   onClick={handlePlayPlaylist}
                   data-tooltip-id="play-playlist"
                 >
@@ -497,7 +497,7 @@ export const ViewPlaylistPage = () => {
                     place="right-end"
                     content={t("page.view_playlist.play_playlist")}
                   />
-                  <PlaylistPlay />
+                  <PlaylistPlay width={"1.6em"} height={"1.6em"} />
                 </Button>
                 {!editMode && (
                   <Restricted
