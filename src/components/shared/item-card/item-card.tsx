@@ -32,6 +32,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEllipsis,
   faFilm,
+  faListUl,
   faPhotoFilm,
   faPlay,
   faXmark,
@@ -454,7 +455,15 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                     <FontAwesomeIcon icon={faPlay} />
                   </span>
                 ) : (
-                  <PlaylistPlay />
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <PlaylistPlay />
+                  </span>
                 )
               }
               onClick={handlePlay}
@@ -584,9 +593,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                     {/* card title */}
                     <ItemTitleText ref={tooltipRef} className="itemCard__title">
                       {type === "playlist" || type === "virtual-playlist" ? (
-                        <PlaylistPlay
-                          style={{ transform: "translateY(3px)" }}
-                        />
+                        <FontAwesomeIcon icon={faListUl} />
                       ) : (
                         <FontAwesomeIcon icon={faFilm} />
                       )}{" "}

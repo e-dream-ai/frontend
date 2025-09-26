@@ -217,10 +217,7 @@ export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`
 `;
 
 export const PlayButton = styled(Button)<{ playType: ItemType }>`
-  padding: ${(props) =>
-    props.playType == "playlist" || props.playType == "virtual-playlist"
-      ? 0
-      : "default"};
+  padding: "default";
   svg {
     filter: drop-shadow(0.2rem 0.2rem 0.2rem #000);
   }
@@ -229,7 +226,6 @@ export const PlayButton = styled(Button)<{ playType: ItemType }>`
   &:hover {
     color: rgb(0, 208, 219);
   }
-  margin-right: 6px;
 `;
 
 const ICStyledBorder = styled.div<{ position: HighlightPosition }>`
