@@ -454,12 +454,17 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                     <FontAwesomeIcon icon={faPlay} />
                   </span>
                 ) : (
-                  <span className="fa-stack">
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "2px",
+                      marginRight: "6px",
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faListUl} size="sm" />
                     <FontAwesomeIcon icon={faPlay} />
-                    <FontAwesomeIcon
-                      icon={faPlay}
-                      style={{ transform: "translate(-30%, 0%)" }}
-                    />
                   </span>
                 )
               }

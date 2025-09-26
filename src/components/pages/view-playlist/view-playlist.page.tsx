@@ -26,6 +26,7 @@ import {
   faCalendar,
   faEye,
   faFileVideo,
+  faListUl,
   faPlay,
   faPlus,
   faRankingStar,
@@ -491,12 +492,16 @@ export const ViewPlaylistPage = () => {
                   style={{ width: "3rem" }}
                   onClick={handlePlayPlaylist}
                 >
-                  <span className="fa-stack">
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "2px",
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faListUl} size="sm" />
                     <FontAwesomeIcon icon={faPlay} />
-                    <FontAwesomeIcon
-                      icon={faPlay}
-                      style={{ transform: "translate(-30%, 0%)" }}
-                    />
                   </span>
                 </Button>
                 {!editMode && (
