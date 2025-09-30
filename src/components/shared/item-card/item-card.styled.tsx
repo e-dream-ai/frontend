@@ -119,7 +119,7 @@ export const StyledItemCardSkeleton = styled.li<{
   background-color: ${(props) => props.theme.colorBackgroundQuaternary};
 `;
 
-export const ItemCardAnchor = styled(Link) <{
+export const ItemCardAnchor = styled(Link)<{
   isDragging?: boolean;
   highlightPosition?: "top" | "bottom";
 }>`
@@ -180,7 +180,6 @@ export const StyledItemCardImage = styled.img<{ size: Sizes }>`
   }
 `;
 
-
 export const ThumbnailGrid = styled.div<{ size: Sizes }>`
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -217,12 +216,15 @@ export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`
   }
 `;
 
-export const PlayButton = styled(Button) <{ playType: ItemType }>`
-  padding: ${(props) =>
-    props.playType == "playlist" || props.playType == "virtual-playlist" ? 0 : "default"
-  };
+export const PlayButton = styled(Button)<{ playType: ItemType }>`
+  padding: "default";
   svg {
     filter: drop-shadow(0.2rem 0.2rem 0.2rem #000);
+  }
+  /* Inherit icon color from button text color */
+  color: rgb(252, 217, 183);
+  &:hover {
+    color: rgb(0, 208, 219);
   }
 `;
 

@@ -56,6 +56,7 @@ import {
 import { ItemCardImage } from "./item-card-image";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { AnchorLink } from "@/components/shared";
+import PlaylistPlay from "@/icons/playlist-play";
 
 type DNDMode = "local" | "cross-window";
 /**
@@ -454,12 +455,14 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                     <FontAwesomeIcon icon={faPlay} />
                   </span>
                 ) : (
-                  <span className="fa-stack">
-                    <FontAwesomeIcon icon={faPlay} />
-                    <FontAwesomeIcon
-                      icon={faPlay}
-                      style={{ transform: "translate(-30%, 0%)" }}
-                    />
+                  <span
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <PlaylistPlay />
                   </span>
                 )
               }

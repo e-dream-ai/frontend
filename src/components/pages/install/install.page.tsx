@@ -1,4 +1,4 @@
-import { Button, Row } from "@/components/shared";
+import { Button, Column, Row } from "@/components/shared";
 import { Anchor } from "@/components/shared";
 import AddToHomeScreen from "@/components/shared/add-home-screen/add-home-screen";
 import { Card } from "@/components/shared/card/card";
@@ -184,11 +184,14 @@ export const InstallPage: React.FC = () => {
             <InstallSection />
           </>
         ) : (
-          <>
-            <InstallSection />
-            <p>&nbsp;</p>
-            <RemoteControlSection />
-          </>
+          <Row flexDirection={["column", "column", "row"]} alignItems="stretch">
+            <Column flex="1" pr={[0, 0, 3]}>
+              <InstallSection />
+            </Column>
+            <Column flex="1" pl={[0, 0, 3]}>
+              <RemoteControlSection />
+            </Column>
+          </Row>
         )}
       </Container>
     </>

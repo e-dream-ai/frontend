@@ -96,7 +96,8 @@ export const AboutPage: React.FC = () => {
           <p>
             <AnchorLink to={ROUTES.SIGNUP}>Create an account</AnchorLink>,{" "}
             <AnchorLink to={ROUTES.INSTALL}>install the app</AnchorLink>, and begin the
-            experience.
+            experience. Learn more on the <AnchorLink to="https://infinidream.ai/">
+	    landing page</AnchorLink>.
           </p>
         </Text>
       </Section>

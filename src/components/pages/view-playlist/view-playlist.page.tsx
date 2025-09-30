@@ -21,12 +21,12 @@ import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import { HandleChangeFile } from "@/types/media.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import PlaylistPlay from "@/icons/playlist-play";
 import {
   faAlignLeft,
   faCalendar,
   faEye,
   faFileVideo,
-  faPlay,
   faPlus,
   faRankingStar,
   faSave,
@@ -488,16 +488,16 @@ export const ViewPlaylistPage = () => {
                   type="button"
                   buttonType="default"
                   transparent
-                  style={{ width: "3rem" }}
+                  style={{ width: "3rem", padding: "4px" }}
                   onClick={handlePlayPlaylist}
+                  data-tooltip-id="play-playlist"
                 >
-                  <span className="fa-stack">
-                    <FontAwesomeIcon icon={faPlay} />
-                    <FontAwesomeIcon
-                      icon={faPlay}
-                      style={{ transform: "translate(-30%, 0%)" }}
-                    />
-                  </span>
+                  <Tooltip
+                    id="play-playlist"
+                    place="right-end"
+                    content={t("page.view_playlist.play_playlist")}
+                  />
+                  <PlaylistPlay width={"1.6em"} height={"1.6em"} />
                 </Button>
                 {!editMode && (
                   <Restricted
