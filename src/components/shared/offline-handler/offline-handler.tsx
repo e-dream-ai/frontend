@@ -1,40 +1,14 @@
 import { useEffect, useState } from "react";
 import Row, { Column } from "../row/row";
 
-const checkRealConnectivity = async (timeout = 5000): Promise<boolean> => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), timeout);
-
-  try {
-    await fetch("https://www.google.com/favicon.ico", {
-      mode: "no-cors",
-      signal: controller.signal,
-      cache: "no-cache",
-    });
-    clearTimeout(timeoutId);
-    return true;
-  } catch {
-    return false;
-  }
-};
-
 const OfflineHandler: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-  const [isReallyOnline, setIsReallyOnline] = useState(true);
 
   useEffect(() => {
-    const handleOnline = async () => {
-      setIsOnline(true);
-      const reallyOnline = await checkRealConnectivity();
-      setIsReallyOnline(reallyOnline);
-    };
-
-    const handleOffline = () => {
-      setIsOnline(false);
-      setIsReallyOnline(false);
-    };
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -45,25 +19,7 @@ const OfflineHandler: React.FC<{
     };
   }, []);
 
-  // Periodic check to verify real connectivity
-  useEffect(() => {
-    if (!isOnline) return;
-
-    const checkConnectivity = async () => {
-      const reallyOnline = await checkRealConnectivity();
-      setIsReallyOnline(reallyOnline);
-    };
-
-    // Initial check
-    checkConnectivity();
-
-    // Check every 30 seconds
-    const interval = setInterval(checkConnectivity, 30000);
-
-    return () => clearInterval(interval);
-  }, [isOnline]);
-
-  if (!isOnline || !isReallyOnline) {
+  if (!isOnline) {
     return (
       <Row>
         <Column justifyItems="center" alignItems="center" flex="auto" mt="3rem">
