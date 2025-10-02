@@ -1,21 +1,69 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Row, { Column } from "../row/row";
 
 const OfflineHandler: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
   const [isOnline, setIsOnline] = useState(navigator.onLine);
+  const isMountedRef = useRef(true);
+
+  const probeConnectivity = async (timeoutMs = 4000): Promise<boolean> => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), timeoutMs);
+      const url = `/robots.txt?__reachability__=${Date.now()}`;
+      const response = await fetch(url, {
+        method: "GET",
+        cache: "no-store",
+        credentials: "omit",
+        headers: {
+          "cache-control": "no-store",
+          pragma: "no-cache",
+        },
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      return !!response && response.type !== "error";
+    } catch {
+      return false;
+    }
+  };
+
+  const refreshOnlineStatus = async () => {
+    const reachable = await probeConnectivity();
+    if (!isMountedRef.current) return;
+    setIsOnline(reachable || navigator.onLine);
+  };
 
   useEffect(() => {
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    isMountedRef.current = true;
+
+    const handleOnline = () => {
+      refreshOnlineStatus();
+    };
+    const handleOffline = () => {
+      refreshOnlineStatus();
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        refreshOnlineStatus();
+      }
+    };
 
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    refreshOnlineStatus();
+
+    const intervalId = window.setInterval(refreshOnlineStatus, 30000);
 
     return () => {
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.clearInterval(intervalId);
+      isMountedRef.current = false;
     };
   }, []);
 
