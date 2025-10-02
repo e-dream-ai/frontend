@@ -7,6 +7,7 @@ import Bugsnag from "@bugsnag/js";
 import BugsnagPluginReact from "@bugsnag/plugin-react";
 import BugsnagPerformance from "@bugsnag/browser-performance";
 import { ErrorFallback } from "./components/shared/error-fallback/error-fallback";
+import OfflineHandler from "./components/shared/offline-handler/offline-handler";
 import { getReleaseStage } from "@/utils/bugsnag.util";
 import ThemeProvider from "@/providers/theme.provider";
 import { IS_DEV } from "./constants/env.constantes";
@@ -68,7 +69,9 @@ root.render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>
     {/* Theme Provider should be here since offline handler needs it */}
     <ThemeProvider>
-      <App />
+      <OfflineHandler>
+        <App />
+      </OfflineHandler>
     </ThemeProvider>
   </ErrorBoundary>,
 );
