@@ -55,6 +55,7 @@ import { Loader } from "@/components/shared/loader/loader";
 import { useTheme } from "styled-components";
 import styled from "styled-components";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons";
+import { secondsToTimeFormat } from "@/utils/video.utils";
 
 const SectionID = "playlist";
 
@@ -635,7 +636,11 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     placeholder="Total Duration"
                     before={<FontAwesomeIcon icon={faClock} />}
-                    value={playlist?.totalDurationFormatted}
+                    value={
+                      typeof playlist?.totalDurationSeconds === "number"
+                        ? secondsToTimeFormat(playlist.totalDurationSeconds)
+                        : ""
+                    }
                     name="total-duration"
                   />
 
