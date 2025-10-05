@@ -50,6 +50,8 @@ export type Playlist = {
   featureRank?: number;
   nsfw?: boolean;
   hidden?: boolean;
+  totalDurationSeconds?: number;
+  totalDurationFormatted?: string;
 };
 
 export type PlaylistMediaState =

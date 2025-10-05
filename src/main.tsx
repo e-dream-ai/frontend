@@ -53,9 +53,9 @@ export const ErrorBoundary =
 
 /**
  * Initialize GA4
- * 
+ *
  * using react-ga4 since is the latest package for Google Analytics
-*  recommended keep up to date with new Google releases and changes for GA
+ *  recommended keep up to date with new Google releases and changes for GA
  * https://www.npmjs.com/package/react-ga4
  */
 ReactGA.initialize(import.meta.env.VITE_GA_MEASUREMENT_ID, {
