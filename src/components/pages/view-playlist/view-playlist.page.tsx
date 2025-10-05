@@ -47,10 +47,7 @@ import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 import Input, { FormInput } from "@/components/shared/input/input";
 import { FormTextArea } from "@/components/shared/text-area/text-area";
-import {
-  formatPlaylistForm,
-  getPlaylistTotalDurationFormatted,
-} from "@/utils/playlist.util";
+import { formatPlaylistForm } from "@/utils/playlist.util";
 import { AnchorLink } from "@/components/shared";
 import { faClock, faListOl } from "@fortawesome/free-solid-svg-icons";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -638,7 +635,7 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     placeholder="Total Duration"
                     before={<FontAwesomeIcon icon={faClock} />}
-                    value={getPlaylistTotalDurationFormatted(items)}
+                    value={playlist?.totalDurationFormatted}
                     name="total-duration"
                   />
 
