@@ -47,10 +47,7 @@ import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 import Input, { FormInput } from "@/components/shared/input/input";
 import { FormTextArea } from "@/components/shared/text-area/text-area";
-import {
-  formatPlaylistForm,
-  getPlaylistTotalDurationFormatted,
-} from "@/utils/playlist.util";
+import { formatPlaylistForm } from "@/utils/playlist.util";
 import { AnchorLink } from "@/components/shared";
 import { faClock, faListOl } from "@fortawesome/free-solid-svg-icons";
 import InfiniteScroll from "react-infinite-scroll-component";
@@ -58,6 +55,7 @@ import { Loader } from "@/components/shared/loader/loader";
 import { useTheme } from "styled-components";
 import styled from "styled-components";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons";
+import { secondsToTimeFormat } from "@/utils/video.utils";
 
 const SectionID = "playlist";
 
@@ -629,7 +627,11 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     placeholder="Dream Count"
                     before={<FontAwesomeIcon icon={faListOl} />}
-                    value={playlistItemsTotalCount.toString()}
+                    value={
+                      typeof playlist?.totalDreamCount === "number"
+                        ? playlist.totalDreamCount.toString()
+                        : playlistItemsTotalCount.toString()
+                    }
                     name="dream-count"
                   />
 
@@ -638,7 +640,11 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     placeholder="Total Duration"
                     before={<FontAwesomeIcon icon={faClock} />}
-                    value={getPlaylistTotalDurationFormatted(items)}
+                    value={
+                      typeof playlist?.totalDurationSeconds === "number"
+                        ? secondsToTimeFormat(playlist.totalDurationSeconds)
+                        : ""
+                    }
                     name="total-duration"
                   />
 
