@@ -627,7 +627,11 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     placeholder="Dream Count"
                     before={<FontAwesomeIcon icon={faListOl} />}
-                    value={playlistItemsTotalCount.toString()}
+                    value={
+                      typeof playlist?.totalDreamCount === "number"
+                        ? playlist.totalDreamCount.toString()
+                        : playlistItemsTotalCount.toString()
+                    }
                     name="dream-count"
                   />
 
