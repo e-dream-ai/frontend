@@ -52,6 +52,7 @@ export type Playlist = {
   hidden?: boolean;
   totalDurationSeconds?: number;
   totalDurationFormatted?: string;
+  totalDreamCount?: number;
 };
 
 export type PlaylistMediaState =
