@@ -50,13 +50,13 @@ export default defineConfig({
         ],
         icons: [
           {
-            purpose: "any",
+            purpose: "maskable",
             sizes: "192x192",
             src: "icons/maskable/maskable_icon_x192.png",
             type: "image/png",
           },
           {
-            purpose: "any",
+            purpose: "maskable",
             sizes: "512x512",
             src: "icons/maskable/maskable_icon_x512.png",
             type: "image/png",
