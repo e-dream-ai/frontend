@@ -11,7 +11,7 @@
     "@fortawesome/free-brands-svg-icons": "^6.7.1",
     "@fortawesome/free-regular-svg-icons": "^7.1.0",
     "@fortawesome/free-solid-svg-icons": "^7.1.0",
-    "@fortawesome/react-fontawesome": "^0.2.2",
+    "@fortawesome/react-fontawesome": "^3.1.0",
     "@hookform/resolvers": "^5.2.2",
     "@ramonak/react-progress-bar": "^5.4.0",
     "@szhsin/react-menu": "^4.5.0",
