@@ -122,13 +122,14 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
   },
 );
 
-export const FormTextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
-  (props, ref) => {
-    const { watch } = useFormContext();
-    const watchedValue = props.name ? watch(props.name) : props.value;
+export const FormTextArea = React.forwardRef<
+  HTMLTextAreaElement,
+  TextAreaProps
+>((props, ref) => {
+  const { watch } = useFormContext();
+  const watchedValue = props.name ? watch(props.name) : props.value;
 
-    return <TextArea {...props} value={watchedValue} ref={ref} />;
-  }
-);
+  return <TextArea {...props} value={watchedValue} ref={ref} />;
+});
 
 export default TextArea;

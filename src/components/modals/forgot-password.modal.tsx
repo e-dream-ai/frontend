@@ -6,7 +6,7 @@ import useModal from "@/hooks/useModal";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import  {
+import {
   CreatePasswordResetSchema,
   CreatePasswordResetFormValues,
 } from "@/schemas/forgot-password.schema";

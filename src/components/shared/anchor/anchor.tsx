@@ -43,9 +43,8 @@ const commonStyles = css`
 export const Anchor = styled.a<
   {
     type?: Types;
-  }
-  & SpaceProps
-  & DisplayProps
+  } & SpaceProps &
+    DisplayProps
 >`
   ${(props) => AnchorType[props.type || "primary"]}
   ${display}
@@ -53,12 +52,11 @@ export const Anchor = styled.a<
   ${commonStyles}
 `;
 
-export const AnchorLink = styled(Link) <
+export const AnchorLink = styled(Link)<
   {
     type?: Types;
-  }
-  & SpaceProps
-  & DisplayProps
+  } & SpaceProps &
+    DisplayProps
 >`
   ${(props) => AnchorType[props.type || "primary"]}
   ${display}

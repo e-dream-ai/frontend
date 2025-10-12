@@ -175,7 +175,10 @@ export const UpdatePlaylist: React.FC = () => {
                 {t("page.create.nsfw_dream")}
               </Checkbox>
               <Restricted to={DREAM_PERMISSIONS.CAN_EDIT_VISIBILITY}>
-                <Checkbox {...register("hidden")} error={errors.hidden?.message}>
+                <Checkbox
+                  {...register("hidden")}
+                  error={errors.hidden?.message}
+                >
                   {t("page.create.hidden_dream")}
                 </Checkbox>
               </Restricted>
@@ -184,8 +187,7 @@ export const UpdatePlaylist: React.FC = () => {
                   {...register("ccbyLicense")}
                   error={errors.ccbyLicense?.message}
                 >
-                  {t("page.create.license_dream")}
-                  {" "}
+                  {t("page.create.license_dream")}{" "}
                   <AnchorLink to={`${ROUTES.TERMS_OF_SERVICE}#${CCBY_ID}`}>
                     {t("page.create.license_dream_ccby")}
                   </AnchorLink>

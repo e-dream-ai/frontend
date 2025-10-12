@@ -1,31 +1,49 @@
-
 import { useMemo } from "react";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { Button, Input, Modal, Row, Select, TextArea } from "@/components/shared";
+import {
+  Button,
+  Input,
+  Modal,
+  Row,
+  Select,
+  TextArea,
+} from "@/components/shared";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { CreateReportFormValues, CreateReportSchema } from "@/schemas/create-report.schema";
+import {
+  CreateReportFormValues,
+  CreateReportSchema,
+} from "@/schemas/create-report.schema";
 import { ConfirmModalTypes, ModalComponent } from "@/types/modal.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAngleRight, faFileText, faLink, faWarning } from "@fortawesome/free-solid-svg-icons";
+import {
+  faAngleRight,
+  faFileText,
+  faLink,
+  faWarning,
+} from "@fortawesome/free-solid-svg-icons";
 import { useCreateReport } from "@/api/report/mutation/useCreateReport";
 import { UNLICENSED_TYPE_ID } from "@/constants/report.constants";
 import { useReportTypes } from "@/api/report/query/useReportTypes";
 import { Dream } from "@/types/dream.types";
 import { removeEmptyString } from "@/utils/string.util";
 
-export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes> & { dream: Dream }> = ({ isOpen = false, onCancel, dream }) => {
+export const ReportDreamModal: React.FC<
+  ModalComponent<ConfirmModalTypes> & { dream: Dream }
+> = ({ isOpen = false, onCancel, dream }) => {
   const { t } = useTranslation();
   const { mutate, isLoading } = useCreateReport();
-  const { data, isLoading: loadingTypes } = useReportTypes()
+  const { data, isLoading: loadingTypes } = useReportTypes();
 
-  const typesOptions = useMemo(() => (data?.data?.reportTypes ?? [])
-    .map((f) => ({
-      value: f.id,
-      label: f.description,
-    }))
-    , [data]);
+  const typesOptions = useMemo(
+    () =>
+      (data?.data?.reportTypes ?? []).map((f) => ({
+        value: f.id,
+        label: f.description,
+      })),
+    [data],
+  );
 
   const {
     control,
@@ -33,12 +51,12 @@ export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes> & { dr
     register,
     handleSubmit,
     reset,
-    watch
+    watch,
   } = useForm<CreateReportFormValues>({
     resolver: yupResolver(CreateReportSchema),
   });
 
-  const watchedType = watch('type');
+  const watchedType = watch("type");
 
   const onSubmit = (formData: CreateReportFormValues) => {
     mutate(
@@ -47,20 +65,17 @@ export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes> & { dr
         typeId: formData.type.value,
         // set undefined if value is an empty string
         comments: removeEmptyString(formData.comments),
-        link: removeEmptyString(formData.link)
+        link: removeEmptyString(formData.link),
       },
       {
         onSuccess: (data) => {
           if (data.success) {
-            toast.success(
-              t("modal.report.report_created_successfully"),
-            );
+            toast.success(t("modal.report.report_created_successfully"));
             reset();
             onCancel?.();
           } else {
             toast.error(
-              `${t("modal.report.error_creating_report")} ${data.message
-              }`,
+              `${t("modal.report.error_creating_report")} ${data.message}`,
             );
           }
         },
@@ -79,7 +94,6 @@ export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes> & { dr
       hideModal={onCancel}
     >
       <form onSubmit={handleSubmit(onSubmit)}>
-
         <Controller
           name="type"
           control={control}
@@ -104,23 +118,18 @@ export const ReportDreamModal: React.FC<ModalComponent<ConfirmModalTypes> & { dr
           {...register("comments")}
         />
 
-        {
-          watchedType?.value === UNLICENSED_TYPE_ID && <Input
+        {watchedType?.value === UNLICENSED_TYPE_ID && (
+          <Input
             placeholder={t("modal.report.link")}
             type="text"
             before={<FontAwesomeIcon icon={faLink} />}
             error={errors.link?.message}
             {...register("link")}
           />
-        }
+        )}
 
         <Row justifyContent="flex-end">
-          <Button
-            type="button"
-            disabled={isLoading}
-            mr="1"
-            onClick={onCancel}
-          >
+          <Button type="button" disabled={isLoading} mr="1" onClick={onCancel}>
             {t("modal.report.cancel")}
           </Button>
           <Button

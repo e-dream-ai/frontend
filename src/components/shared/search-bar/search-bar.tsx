@@ -31,7 +31,7 @@ const SearchBar: React.FC<SearchBarProps> = ({
   const handleSearchInputChange: ChangeEventHandler<HTMLInputElement> = (
     event,
   ) => {
-    setSearch(event.target.value)
+    setSearch(event.target.value);
     onChange?.(event.target.value);
   };
 
@@ -46,7 +46,9 @@ const SearchBar: React.FC<SearchBarProps> = ({
     }
   };
 
-  const handleSearchBarClearClick: MouseEventHandler<HTMLButtonElement> = () => {
+  const handleSearchBarClearClick: MouseEventHandler<
+    HTMLButtonElement
+  > = () => {
     onClear?.();
     setSearch("");
   };

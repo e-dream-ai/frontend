@@ -21,13 +21,20 @@ import useAuth from "@/hooks/useAuth";
 
 const SECTION_ID = "user-feed";
 
-const USER_DREAMS_COMPONENT = [USER_FEED_TYPES.ALL, USER_FEED_TYPES.DREAM, USER_FEED_TYPES.PLAYLIST, USER_FEED_TYPES.HIDDEN]
+const USER_DREAMS_COMPONENT = [
+  USER_FEED_TYPES.ALL,
+  USER_FEED_TYPES.DREAM,
+  USER_FEED_TYPES.PLAYLIST,
+  USER_FEED_TYPES.HIDDEN,
+];
 
 export const UserFeedPage: React.FC = () => {
-  const { user: authUser } = useAuth()
+  const { user: authUser } = useAuth();
   const { t } = useTranslation();
   const { uuid: userUUID } = useParams<{ uuid: string }>();
-  const [radioGroupState, setRadioGroupState] = useState<UserFeedType>(USER_FEED_TYPES.ALL);
+  const [radioGroupState, setRadioGroupState] = useState<UserFeedType>(
+    USER_FEED_TYPES.ALL,
+  );
 
   const isOwner = userUUID === authUser?.uuid;
   const radioGroupData = useUserFeedFilter(isOwner);
@@ -69,7 +76,8 @@ export const UserFeedPage: React.FC = () => {
           <Avatar size="sm" url={avatarUrl} />
         </Column>
         <h2>
-          {getUserNameOrEmail(user)}{"'s "}
+          {getUserNameOrEmail(user)}
+          {"'s "}
           {t("page.user_feed.title")}
         </h2>
       </Row>
@@ -82,21 +90,21 @@ export const UserFeedPage: React.FC = () => {
             onChange={handleRadioButtonGroupChange}
           />
         </Row>
-        {
-          USER_DREAMS_COMPONENT.includes(radioGroupState)
-            ? <UserDreams
-              grid
-              columns={3}
-              userUUID={user?.uuid}
-              type={radioGroupState as FeedItemFilterType}
-            />
-            : <UserVotedDreams
-              grid
-              columns={3}
-              userUUID={user?.uuid}
-              type={radioGroupState as VoteType}
-            />
-        }
+        {USER_DREAMS_COMPONENT.includes(radioGroupState) ? (
+          <UserDreams
+            grid
+            columns={3}
+            userUUID={user?.uuid}
+            type={radioGroupState as FeedItemFilterType}
+          />
+        ) : (
+          <UserVotedDreams
+            grid
+            columns={3}
+            userUUID={user?.uuid}
+            type={radioGroupState as VoteType}
+          />
+        )}
       </Section>
     </Container>
   );

@@ -70,16 +70,15 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
                 <AnchorLink type="secondary" to={to}>
                   {value}
                 </AnchorLink>
-              )
-                : href ? (
-                  <Anchor type="secondary" href={href}>
-                    {value}
-                  </Anchor>
-                ) : typeof value === "string" || value === 0 ? (
-                  value
-                ) : (
-                  value || "-"
-                )}
+              ) : href ? (
+                <Anchor type="secondary" href={href}>
+                  {value}
+                </Anchor>
+              ) : typeof value === "string" || value === 0 ? (
+                value
+              ) : (
+                value || "-"
+              )}
             </DisabledInput>
           ) : (
             <StyledInput
@@ -100,15 +99,19 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
 export const FormInput = React.forwardRef<HTMLInputElement, InputProps>(
   (props, ref) => {
-    const { watch, formState: { errors } } = useFormContext();
+    const {
+      watch,
+      formState: { errors },
+    } = useFormContext();
     const watchedValue = props.name ? watch(props.name) : props.value;
 
     // Get the error for this specific field
-    const error = props.name ? errors?.[props.name]?.message?.toString() : undefined;
+    const error = props.name
+      ? errors?.[props.name]?.message?.toString()
+      : undefined;
 
     return <Input {...props} value={watchedValue} error={error} ref={ref} />;
-  }
+  },
 );
-
 
 export default Input;

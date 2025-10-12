@@ -120,7 +120,7 @@ export const InvitesList: React.FC = () => {
     breakLabel,
     previousLabel,
     nextLabel,
-    renderOnZeroPageCount
+    renderOnZeroPageCount,
   } = usePaginateProps();
 
   const [page, setPage] = useState<number>(0);

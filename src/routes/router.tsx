@@ -61,7 +61,7 @@ export const RootElement = () => {
   );
 };
 
-const RootElementWithProviders = withProviders(...Providers)(RootElement)
+const RootElementWithProviders = withProviders(...Providers)(RootElement);
 
 export const router = createBrowserRouter([
   {

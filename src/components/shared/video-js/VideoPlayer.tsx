@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
-import videojs from 'video.js';
-import Player from 'video.js/dist/types/player';
-import 'video.js/dist/video-js.css';
-import styled from 'styled-components';
+import { useEffect, useRef, useState } from "react";
+import videojs from "video.js";
+import Player from "video.js/dist/types/player";
+import "video.js/dist/video-js.css";
+import styled from "styled-components";
 
 const Container = styled.div`
   width: 100%;
@@ -21,8 +21,8 @@ const VideoContainer = styled.div<{ isActive: boolean }>`
   width: 100%;
   height: 100%;
   transition: opacity 1000ms ease;
-  opacity: ${props => props.isActive ? 1 : 0};
-  z-index: ${props => props.isActive ? 2 : 1};
+  opacity: ${(props) => (props.isActive ? 1 : 0)};
+  z-index: ${(props) => (props.isActive ? 2 : 1)};
 
   .video-js {
     position: absolute;
@@ -52,9 +52,9 @@ const VideoPlayer = () => {
   const [activePlayer, setActivePlayer] = useState<1 | 2>(1);
 
   const sources = [
-    'https://edream-storage-dreams-staging.s3.us-east-1.amazonaws.com/da14db51-59b1-4592-85e8-d24c749eabc8/7d42578e-15c7-435f-b0b1-369c8959b54a/7d42578e-15c7-435f-b0b1-369c8959b54a_processed.mp4',
-    'https://edream-storage-dreams-staging.s3.us-east-1.amazonaws.com/da14db51-59b1-4592-85e8-d24c749eabc8/00254001-5889-4f9d-aa1e-fb56da20ba60/00254001-5889-4f9d-aa1e-fb56da20ba60_processed.mp4',
-    'https://edream-storage-dreams-staging.s3.us-east-1.amazonaws.com/92e1c95c-031f-46b8-ab7e-b67b52423828/6c8912dd-0f5c-45e3-9284-60a96bf630b7/6c8912dd-0f5c-45e3-9284-60a96bf630b7_processed.mp4',
+    "https://edream-storage-dreams-staging.s3.us-east-1.amazonaws.com/da14db51-59b1-4592-85e8-d24c749eabc8/7d42578e-15c7-435f-b0b1-369c8959b54a/7d42578e-15c7-435f-b0b1-369c8959b54a_processed.mp4",
+    "https://edream-storage-dreams-staging.s3.us-east-1.amazonaws.com/da14db51-59b1-4592-85e8-d24c749eabc8/00254001-5889-4f9d-aa1e-fb56da20ba60/00254001-5889-4f9d-aa1e-fb56da20ba60_processed.mp4",
+    "https://edream-storage-dreams-staging.s3.us-east-1.amazonaws.com/92e1c95c-031f-46b8-ab7e-b67b52423828/6c8912dd-0f5c-45e3-9284-60a96bf630b7/6c8912dd-0f5c-45e3-9284-60a96bf630b7_processed.mp4",
   ];
 
   // initialize video players
@@ -66,7 +66,7 @@ const VideoPlayer = () => {
       const player = videojs(element, {
         controls: true,
         fluid: true,
-        preload: 'metadata'
+        preload: "metadata",
       });
       return player;
     };
@@ -75,27 +75,27 @@ const VideoPlayer = () => {
     player2Ref.current = initPlayer(video2Ref.current);
 
     // listeners
-    player1Ref.current.on('loadstart', () => {
-      console.log('video 1 state:', player1Ref.current?.readyState());
+    player1Ref.current.on("loadstart", () => {
+      console.log("video 1 state:", player1Ref.current?.readyState());
     });
 
-    player1Ref.current.on('loadeddata', () => {
-      console.log('video 1 loaded and ready to play');
+    player1Ref.current.on("loadeddata", () => {
+      console.log("video 1 loaded and ready to play");
     });
 
-    player2Ref.current.on('loadstart', () => {
-      console.log('video 2 state:', player2Ref.current?.readyState());
+    player2Ref.current.on("loadstart", () => {
+      console.log("video 2 state:", player2Ref.current?.readyState());
     });
 
-    player2Ref.current.on('loadeddata', () => {
-      console.log('video 2 loaded and ready to play');
+    player2Ref.current.on("loadeddata", () => {
+      console.log("video 2 loaded and ready to play");
     });
 
     // set initial source for first player
     if (player1Ref.current) {
       player1Ref.current.src({
         src: sources[0],
-        type: 'video/mp4'
+        type: "video/mp4",
       });
     }
 
@@ -111,8 +111,10 @@ const VideoPlayer = () => {
   }, []);
 
   const handleCrossfade = async (newIndex: number) => {
-    const currentPlayer = activePlayer === 1 ? player1Ref.current : player2Ref.current;
-    const nextPlayer = activePlayer === 1 ? player2Ref.current : player1Ref.current;
+    const currentPlayer =
+      activePlayer === 1 ? player1Ref.current : player2Ref.current;
+    const nextPlayer =
+      activePlayer === 1 ? player2Ref.current : player1Ref.current;
 
     if (!currentPlayer || !nextPlayer) return;
 
@@ -122,12 +124,12 @@ const VideoPlayer = () => {
       // prepare next player
       nextPlayer.src({
         src: sources[newIndex],
-        type: 'video/mp4'
+        type: "video/mp4",
       });
 
       // wait for next player to be ready
       await new Promise<void>((resolve) => {
-        nextPlayer.one('canplay', () => {
+        nextPlayer.one("canplay", () => {
           resolve();
         });
       });
@@ -137,7 +139,7 @@ const VideoPlayer = () => {
         try {
           await nextPlayer.play();
         } catch (error) {
-          console.error('Play error:', error);
+          console.error("Play error:", error);
         }
       }
 
@@ -145,7 +147,7 @@ const VideoPlayer = () => {
       setActivePlayer(activePlayer === 1 ? 2 : 1);
       setCurrentIndex(newIndex);
     } catch (error) {
-      console.error('Crossfade error:', error);
+      console.error("Crossfade error:", error);
     }
   };
 
@@ -163,7 +165,7 @@ const VideoPlayer = () => {
     const hasStarted = player.hasStarted_;
 
     if (!hasStarted || player.paused()) {
-      player.play()?.catch(error => console.error('Play error:', error));
+      player.play()?.catch((error) => console.error("Play error:", error));
     } else {
       player.pause();
     }
@@ -175,7 +177,9 @@ const VideoPlayer = () => {
         <VideoContainer isActive={activePlayer === 1}>
           <PlayerWrapper
             data-vjs-player
-            onClick={() => player1Ref.current && handleVideoClick(player1Ref.current)}
+            onClick={() =>
+              player1Ref.current && handleVideoClick(player1Ref.current)
+            }
           >
             <video
               ref={video1Ref}
@@ -186,7 +190,9 @@ const VideoPlayer = () => {
         <VideoContainer isActive={activePlayer === 2}>
           <PlayerWrapper
             data-vjs-player
-            onClick={() => player2Ref.current && handleVideoClick(player2Ref.current)}
+            onClick={() =>
+              player2Ref.current && handleVideoClick(player2Ref.current)
+            }
           >
             <video
               ref={video2Ref}
@@ -196,12 +202,8 @@ const VideoPlayer = () => {
         </VideoContainer>
       </VideoWrapper>
       <ButtonContainer>
-        <button onClick={playPrevious}>
-          Prev
-        </button>
-        <button onClick={playNext}>
-          Next
-        </button>
+        <button onClick={playPrevious}>Prev</button>
+        <button onClick={playNext}>Next</button>
       </ButtonContainer>
     </Container>
   );

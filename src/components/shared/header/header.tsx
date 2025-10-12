@@ -23,7 +23,11 @@ export const Header: React.FC = () => {
   return (
     <>
       <HeaderContainer>
-        <StyledHeader flexDirection="row" flexWrap={["wrap", "wrap", "nowrap", "nowrap"]} justifyContent="space-between">
+        <StyledHeader
+          flexDirection="row"
+          flexWrap={["wrap", "wrap", "nowrap", "nowrap"]}
+          justifyContent="space-between"
+        >
           <LogoContainer order={1}>
             <LogoAnchor to={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
               <LogoIcon
