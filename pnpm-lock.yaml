@@ -160,8 +160,8 @@ importers:
         specifier: ^1.2.5
         version: 1.2.5
       '@types/styled-system':
-        specifier: ^5.1.22
-        version: 5.1.22
+        specifier: ^5.1.24
+        version: 5.1.24
       '@types/uuid':
         specifier: ^10.0.0
         version: 10.0.0
@@ -1459,8 +1459,8 @@ packages:
   '@types/styled-react-modal@1.2.5':
     resolution: {integrity: sha512-Uzrn62S7FP7gkOF4HlYUT3RXJpOcSUnZQRMw9RQUyd5qoVGdBj81UMqZrI1q3x1fhV7J7XQY2jQaVS1Mp2VzIA==}
 
-  '@types/styled-system@5.1.22':
-    resolution: {integrity: sha512-NbRp37zWcrf/+Qf2NumdyZfhSx1dzJ50zgfKvnezYJx1HTRUMVYY8jtWvK1eoIAa6F5sXwHLhE8oXNu15ThBAA==}
+  '@types/styled-system@5.1.24':
+    resolution: {integrity: sha512-bItgWb7lQsynxuSoyfPj2LZCNB9aeRCv70NYvMKZN1xbcQ/j6IS2PWsIlQqkIzDQgHbdcrRbWEIg9vKlbbgnGw==}
 
   '@types/trusted-types@2.0.7':
     resolution: {integrity: sha512-ScaPdn1dQczgbl0QFTeTOmVHFULt394XJgOQNoyVhZ6r2vLnMLJfBPd53SB52T/3G36VI1/g2MZaX0cwDuXsfw==}
@@ -5497,7 +5497,7 @@ snapshots:
       '@types/react': 18.2.45
       '@types/styled-components': 5.1.34
 
-  '@types/styled-system@5.1.22':
+  '@types/styled-system@5.1.24':
     dependencies:
       csstype: 3.1.3
 
