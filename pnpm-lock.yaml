@@ -96,8 +96,8 @@ importers:
         specifier: 1.0.0-alpha
         version: 1.0.0-alpha
       react-paginate:
-        specifier: ^8.2.0
-        version: 8.2.0(react@18.2.0)
+        specifier: ^8.3.0
+        version: 8.3.0(react@18.2.0)
       react-router-dom:
         specifier: ^6.21.1
         version: 6.21.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -3262,10 +3262,10 @@ packages:
   react-linkify@1.0.0-alpha:
     resolution: {integrity: sha512-7gcIUvJkAXXttt1fmBK9cwn+1jTa4hbKLGCZ9J1U6EOkyb2/+LKL1Z28d9rtDLMnpvImlNlLPdTPooorl5cpmg==}
 
-  react-paginate@8.2.0:
-    resolution: {integrity: sha512-sJCz1PW+9PNIjUSn919nlcRVuleN2YPoFBOvL+6TPgrH/3lwphqiSOgdrLafLdyLDxsgK+oSgviqacF4hxsDIw==}
+  react-paginate@8.3.0:
+    resolution: {integrity: sha512-TptZE37HPkT3R+7AszWA++LOTIsIHXcCSWMP9WW/abeF8sLpJzExFB/dVs7xbtqteJ5njF6kk+udTDC0AR3y5w==}
     peerDependencies:
-      react: ^16 || ^17 || ^18
+      react: ^16 || ^17 || ^18 || ^19
 
   react-refresh@0.14.0:
     resolution: {integrity: sha512-wViHqhAd8OHeLS/IRMJjTSDHF3U9eWi62F/MledQGPdJGDhodXJ9PBLNGr6WWL7qlH12Mt3TyTpbS+hGXMjCzQ==}
@@ -7552,7 +7552,7 @@ snapshots:
       linkify-it: 2.2.0
       tlds: 1.248.0
 
-  react-paginate@8.2.0(react@18.2.0):
+  react-paginate@8.3.0(react@18.2.0):
     dependencies:
       prop-types: 15.8.1
       react: 18.2.0
