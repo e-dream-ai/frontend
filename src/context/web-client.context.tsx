@@ -57,11 +57,9 @@ type WebClientContextType = {
   handleOnEnded: () => void;
 };
 
-type NextHandlerProps =
-  | {
-      longTransition?: boolean;
-    }
-  | unknown;
+type NextHandlerProps = {
+  longTransition?: boolean;
+};
 
 /**
  *  Web Client Context serves as a high-level controller for dream and playlist management, building upon the VideoJS Context to provide advanced playlist handling and controls.
@@ -423,7 +421,11 @@ export const WebClientProvider: React.FC<{
     ]),
   ) as SpeedControls;
 
-  const handlers: Record<RemoteEvent, (options?: unknown) => void> = useMemo(
+  const handlers: Record<
+    RemoteEvent,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (options?: any) => void | Promise<boolean> | Promise<void>
+  > = useMemo(
     () => ({
       playback_slower: () => {
         const newPlaybackRate = multiplyPerceptualFPS(1 / 1.1224, playbackRate);
@@ -497,9 +499,11 @@ export const WebClientProvider: React.FC<{
         }
       },
       previous: async () => handlePlaylistControl(PlaylistDirection.PREVIOUS),
-      // @ts-expect-error options?.longTransition exists
       next: async (options?: NextHandlerProps) =>
-        handlePlaylistControl(PlaylistDirection.NEXT, options?.longTransition),
+        handlePlaylistControl(
+          PlaylistDirection.NEXT,
+          options?.longTransition ?? false,
+        ),
       forward: () => {
         if (playerInstance?.player) {
           const currentTime = playerInstance?.player.currentTime() ?? 0;
