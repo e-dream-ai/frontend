@@ -1,8 +1,6 @@
 import { useTheme } from "styled-components";
 import Row, { Column } from "../row/row";
 import Text from "../text/text";
-import { HiDotsVertical } from 'react-icons/hi';
-import { MdAddToHomeScreen } from 'react-icons/md';
 import { LogoIcon } from "./add-home-screen";
 import { useTranslation } from "react-i18next";
 
@@ -21,40 +19,21 @@ export const AddToFirefox = () => {
             />
           </Column>
           <Column justifyContent="center">
-            <Text color={theme.textPrimaryColor}>
-              {t('modal.add_home_screen.app_functionality_description')}
+            <Text color={theme.textSecondaryColor}>
+              {t("modal.add_home_screen.app_functionality_description")}
             </Text>
           </Column>
         </Row>
         <Row separator />
 
         <Row>
-          <Column mx={3}>
-            <Text fontSize={4} color={theme.colorSecondary} >
-              <HiDotsVertical />
-            </Text>
-          </Column>
           <Column>
-            <Text color={theme.textPrimaryColor}>
-              {t('modal.add_home_screen.mobile_safari_step1')}
-            </Text>
-          </Column>
-        </Row>
-
-        <Row>
-          <Column mx={3}>
-            <Text fontSize={4} color={theme.colorSecondary}>
-              <MdAddToHomeScreen />
-            </Text>
-          </Column>
-
-          <Column>
-            <Text color={theme.textPrimaryColor}>
-              {t('modal.add_home_screen.mobile_safari_step2')}
+            <Text color={theme.textSecondaryColor}>
+              {t("modal.add_home_screen.install_message")}
             </Text>
           </Column>
         </Row>
       </Column>
     </Row>
   );
-}
+};

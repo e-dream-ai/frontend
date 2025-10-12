@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
+import useUserAgent from "./useUserAgent";
 
 type BeforeInstallPromptEvent = Event & {
   readonly platforms: string[];
@@ -10,10 +11,14 @@ type BeforeInstallPromptEvent = Event & {
   prompt(): Promise<void>;
 };
 
-// custom hook for pwa installation
+export type InstallationType = "prompt" | "manual" | "desktop" | "none";
+
 export const usePWAInstall = () => {
   const [installPrompt, setInstallPrompt] = useState<Event>();
   const [isInstallable, setIsInstallable] = useState(false);
+  const { isMobile, isIOS, isStandalone } = useUserAgent();
+  const [installationType, setInstallationType] =
+    useState<InstallationType>("none");
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -41,6 +46,28 @@ export const usePWAInstall = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (isStandalone) {
+      setInstallationType("none");
+      return;
+    }
+
+    switch (true) {
+      case isMobile && isIOS:
+        setInstallationType("manual");
+        break;
+      case isMobile && isInstallable:
+        setInstallationType("prompt");
+        break;
+      case isMobile:
+        setInstallationType("manual");
+        break;
+      default:
+        setInstallationType("desktop");
+        break;
+    }
+  }, [isMobile, isIOS, isInstallable, isStandalone]);
+
   const install = async () => {
     if (!installPrompt) {
       toast.warning("Installation prompt not available.");
@@ -57,6 +84,7 @@ export const usePWAInstall = () => {
   return {
     isInstallable,
     install,
+    installationType,
   };
 };
 

@@ -28,15 +28,17 @@ type AddToHomeScreenPromptType =
   | "";
 
 type AddToHomeScreenProps = {
-  isOpen?: boolean
-  onClose?: () => void
-}
+  isOpen?: boolean;
+  onClose?: () => void;
+};
 
-export const AddToHomeScreen: React.FC<AddToHomeScreenProps> = ({ isOpen, onClose }) => {
+export const AddToHomeScreen: React.FC<AddToHomeScreenProps> = ({
+  isOpen,
+  onClose,
+}) => {
   const [displayPrompt, setDisplayPrompt] =
     useState<AddToHomeScreenPromptType>("");
   const { userAgent, isMobile, isStandalone, isIOS } = useUserAgent();
-
 
   useEffect(() => {
     if (isMobile && !isStandalone) {
@@ -62,35 +64,20 @@ export const AddToHomeScreen: React.FC<AddToHomeScreenProps> = ({ isOpen, onClos
         setDisplayPrompt("other");
       }
     }
-
   }, [userAgent, isMobile, isStandalone, isIOS]);
 
   const Prompt = () => (
     <>
       {
         {
-          safari: (
-            <AddToIosSafari />
-          ),
-          chrome: (
-            <AddToMobileChrome />
-          ),
-          firefox: (
-            <AddToFirefox />
-          ),
-          firefoxIos: (
-            <AddToFirefoxIos />
-          ),
-          chromeIos: (
-            <AddToMobileChromeIos />
-          ),
-          chromeDesktop: (<AddToDesktopChrome />),
-          samsung: (
-            <AddToSamsung />
-          ),
-          other: (
-            <AddToOtherBrowser />
-          ),
+          safari: <AddToIosSafari />,
+          chrome: <AddToMobileChrome />,
+          firefox: <AddToFirefox />,
+          firefoxIos: <AddToFirefoxIos />,
+          chromeIos: <AddToMobileChromeIos />,
+          chromeDesktop: <AddToDesktopChrome />,
+          samsung: <AddToSamsung />,
+          other: <AddToOtherBrowser />,
           "": <></>,
         }[displayPrompt]
       }

@@ -36,34 +36,34 @@ const InstallSection = () => {
           {!isMacOS && (
             <p>
               <b>
-                Warning: currently infinidream is for macOS only, but this computer
-                appears to be something else.
+                Warning: currently infinidream is for macOS only, but this
+                computer appears to be something else.
               </b>
             </p>
           )}
         </Text>
         <Row flexWrap={["wrap", "nowrap", "nowrap"]}>
-            <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
-              <Row justifyContent="center">
-                <Button buttonType="secondary" onClick={handleDownloadApp}>
-                  Download app and screen saver
-                </Button>
-              </Row>
-              <Row>
-                <Text>
-                  Unzip, and drag it to your Applications folder. Run it,
-                  sign-in by entering your e-mail, then enter the code e-mailed
-                  to you, and close the settings.
-		</Text>
-              </Row>
-              <Row>
-                <Text>
-		  To enable the screen saver, go into System Settings, select
-                  the "Screen Saver" panel, and then in the "Other" section
-                  click on "Show More" and then click on "infinidream".
-                </Text>
-              </Row>
-            </Card>
+          <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+            <Row justifyContent="center">
+              <Button buttonType="secondary" onClick={handleDownloadApp}>
+                Download app and screen saver
+              </Button>
+            </Row>
+            <Row>
+              <Text>
+                Unzip, and drag it to your Applications folder. Run it, sign-in
+                by entering your e-mail, then enter the code e-mailed to you,
+                and close the settings.
+              </Text>
+            </Row>
+            <Row>
+              <Text>
+                To enable the screen saver, go into System Settings, select the
+                "Screen Saver" panel, and then in the "Other" section click on
+                "Show More" and then click on "infinidream".
+              </Text>
+            </Row>
+          </Card>
         </Row>
         <Text>
           <p>
@@ -101,45 +101,52 @@ const InstallSection = () => {
 
 const RemoteControlSection = () => {
   const { t } = useTranslation();
-  const { isInstallable, install } = usePWAInstall();
+  const { installationType, install } = usePWAInstall();
   const [showAddHomeScreen, setShowAddHomeScreen] = useState(false);
 
   const onShowAddHomeScreen = () => setShowAddHomeScreen(true);
   const onHideAddHomeScreen = () => setShowAddHomeScreen(false);
 
-  const handleInstallRemoteControl = () => {
-    install();
+  const handleInstallRemoteControl = async () => {
+    if (installationType === "prompt") {
+      await install();
+    } else if (installationType === "manual") {
+      onShowAddHomeScreen();
+    }
   };
 
   return (
     <>
-      <AddToHomeScreen isOpen={showAddHomeScreen} onClose={onHideAddHomeScreen} />
+      <AddToHomeScreen
+        isOpen={showAddHomeScreen}
+        onClose={onHideAddHomeScreen}
+      />
 
       <h2>{t("page.install.title_remote")}</h2>
       <Section id="install_remote">
         <Row justifyContent="space-between" separator />
 
-        {!isInstallable && (
+        {installationType === "desktop" && (
           <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
-            <Row justifyContent="center" m={0}>
-              <Button
-                buttonType="secondary"
-                onClick={onShowAddHomeScreen}
-              >
-                Install Remote Control
-              </Button>
+            <Row>
+              <Text>
+                <p>
+                  <strong>
+                    Install the remote control on your mobile device
+                  </strong>
+                </p>
+                <p>
+                  The remote control is designed for phones and tablets. Open
+                  this page on your mobile device to install it and enjoy
+                  complete control of infinidream on your laptop or computer
+                  from a distance.
+                </p>
+              </Text>
             </Row>
-	    <Row>
-	      <Text><p>
-	        Just click to install the remote control on your phone or tablet.
-		Run it, sign-in, and enjoy complete control of infinidream on your
-                laptop or computer from a distance.
-	      </p></Text>
-	    </Row>
           </Card>
         )}
 
-        {isInstallable && (
+        {installationType === "prompt" && (
           <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
             <Row justifyContent="center" m={0}>
               <Button
@@ -149,22 +156,65 @@ const RemoteControlSection = () => {
                 Install Remote Control
               </Button>
             </Row>
-	    <Row>
-	      <Text><p>
-	        Just click to install the remote control on your phone or tablet.
-		Run it, sign-in, and enjoy complete control of infinidream on your
-                laptop or computer from a distance.
-	      </p></Text>
-	    </Row>
+            <Row>
+              <Text>
+                <p>
+                  Click to install the remote control. Your browser will show an
+                  install dialog - just confirm to add it to your home screen.
+                  Once installed, sign-in and enjoy complete control of
+                  infinidream on your laptop or computer from a distance.
+                </p>
+              </Text>
+            </Row>
+          </Card>
+        )}
+
+        {installationType === "manual" && (
+          <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+            <Row justifyContent="center" m={0}>
+              <Button
+                buttonType="secondary"
+                onClick={handleInstallRemoteControl}
+              >
+                Install Remote Control
+              </Button>
+            </Row>
+            <Row>
+              <Text>
+                <p>
+                  Click the button above to see instructions for adding the
+                  remote control to your home screen. Once installed, sign-in
+                  and enjoy complete control of infinidream on your laptop or
+                  computer from a distance.
+                </p>
+              </Text>
+            </Row>
+          </Card>
+        )}
+
+        {installationType === "none" && (
+          <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+            <Row>
+              <Text>
+                <p>
+                  <strong>Remote control is already installed!</strong>
+                </p>
+                <p>
+                  You're currently using the installed version of the remote
+                  control. Sign-in to enjoy complete control of infinidream on
+                  your laptop or computer from a distance.
+                </p>
+              </Text>
+            </Row>
           </Card>
         )}
 
         <Text>
-	  <p>
-	    The remote control feature works from any web browser where
-	    you sign in, not just a mobile device. The remote control is a PWA
-	    (Progressive Web App) that can be installed without the app store.
-	  </p>
+          <p>
+            The remote control feature works from any web browser where you sign
+            in, not just a mobile device. The remote control is a PWA
+            (Progressive Web App) that can be installed without the app store.
+          </p>
         </Text>
       </Section>
     </>

@@ -19,8 +19,8 @@ export const AddToSamsung = () => {
             />
           </Column>
           <Column justifyContent="center">
-            <Text color={theme.textPrimaryColor}>
-              {t('modal.add_home_screen.app_functionality_description')}
+            <Text color={theme.textSecondaryColor}>
+              {t("modal.add_home_screen.app_functionality_description")}
             </Text>
           </Column>
         </Row>
@@ -28,12 +28,12 @@ export const AddToSamsung = () => {
 
         <Row>
           <Column>
-            <Text color={theme.textPrimaryColor}>
-              {t('modal.add_home_screen.samsung_step1')}
+            <Text color={theme.textSecondaryColor}>
+              {t("modal.add_home_screen.install_message")}
             </Text>
           </Column>
         </Row>
       </Column>
     </Row>
   );
-}
+};
