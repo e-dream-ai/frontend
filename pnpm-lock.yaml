@@ -126,8 +126,8 @@ importers:
         specifier: ^5.1.5
         version: 5.1.5
       uuid:
-        specifier: ^11.0.5
-        version: 11.0.5
+        specifier: ^13.0.0
+        version: 13.0.0
       video.js:
         specifier: ^8.21.0
         version: 8.21.0
@@ -3854,8 +3854,8 @@ packages:
     peerDependencies:
       react: ^16.8.0 || ^17.0.0 || ^18.0.0
 
-  uuid@11.0.5:
-    resolution: {integrity: sha512-508e6IcKLrhxKdBbcA2b4KQZlLVp2+J5UwQ6F7Drckkc5N9ZJwFa4TgWtsww9UG8fGHbm6gbV19TdM5pQ4GaIA==}
+  uuid@13.0.0:
+    resolution: {integrity: sha512-XQegIaBTVUjSHliKqcnFqYypAd4S+WCYt5NIeRs6w/UAry7z8Y9j5ZwRRL4kzq9U3sD6v+85er9FvkEaBpji2w==}
     hasBin: true
 
   video.js@8.21.0:
@@ -8228,7 +8228,7 @@ snapshots:
     dependencies:
       react: 18.2.0
 
-  uuid@11.0.5: {}
+  uuid@13.0.0: {}
 
   video.js@8.21.0:
     dependencies:
