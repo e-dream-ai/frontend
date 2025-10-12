@@ -101,8 +101,11 @@ const InstallSection = () => {
 
 const RemoteControlSection = () => {
   const { t } = useTranslation();
-  const { installationType, install, isPWAInstalled } = usePWAInstall();
+  const { installationType, install, isPWAInstalled, isCheckingInstallation } =
+    usePWAInstall();
+  const { isStandalone } = useUserAgent();
   const [showAddHomeScreen, setShowAddHomeScreen] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   const onShowAddHomeScreen = () => setShowAddHomeScreen(true);
   const onHideAddHomeScreen = () => setShowAddHomeScreen(false);
@@ -126,6 +129,47 @@ const RemoteControlSection = () => {
       <h2>{t("page.install.title_remote")}</h2>
       <Section id="install_remote">
         <Row justifyContent="space-between" separator />
+
+        {/* Debug Panel - Triple tap to toggle */}
+        <Card
+          flex="auto"
+          mt={2}
+          px={[2, 3, 4]}
+          py={2}
+          style={{
+            backgroundColor: "#f0f0f0",
+            border: "2px solid #333",
+            cursor: "pointer",
+          }}
+          onClick={() => setShowDebug(!showDebug)}
+        >
+          <Text>
+            <small>
+              <strong>🐛 DEBUG (tap to {showDebug ? "hide" : "show"})</strong>
+            </small>
+            {showDebug && (
+              <pre style={{ fontSize: "10px", margin: "10px 0" }}>
+                {JSON.stringify(
+                  {
+                    installationType,
+                    isPWAInstalled,
+                    isCheckingInstallation,
+                    isStandalone,
+                    hasGetInstalledRelatedApps:
+                      "getInstalledRelatedApps" in navigator,
+                    displayMode: window.matchMedia("(display-mode: standalone)")
+                      .matches
+                      ? "standalone"
+                      : "browser",
+                    timestamp: new Date().toISOString(),
+                  },
+                  null,
+                  2,
+                )}
+              </pre>
+            )}
+          </Text>
+        </Card>
 
         {installationType === "desktop" && (
           <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>

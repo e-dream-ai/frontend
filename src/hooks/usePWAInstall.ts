@@ -36,7 +36,15 @@ export const usePWAInstall = () => {
         if ("getInstalledRelatedApps" in nav && nav.getInstalledRelatedApps) {
           const relatedApps = await nav.getInstalledRelatedApps();
           const installed = relatedApps.length > 0;
+          console.log("PWA Installation Check:", {
+            relatedApps,
+            installed,
+            isStandalone: window.matchMedia("(display-mode: standalone)")
+              .matches,
+          });
           setIsPWAInstalled(installed);
+        } else {
+          console.log("getInstalledRelatedApps API not available");
         }
       } catch (error) {
         console.warn("Could not check PWA installation status:", error);
@@ -76,29 +84,45 @@ export const usePWAInstall = () => {
   }, []);
 
   useEffect(() => {
+    console.log("installationType effect:", {
+      isCheckingInstallation,
+      isStandalone,
+      isPWAInstalled,
+      isMobile,
+      isIOS,
+      isInstallable,
+    });
+
     if (isCheckingInstallation) {
       return;
     }
 
     if (isStandalone || isPWAInstalled) {
+      console.log("Setting installationType to 'none' because:", {
+        isStandalone,
+        isPWAInstalled,
+      });
       setInstallationType("none");
       return;
     }
 
+    let newType: InstallationType;
     switch (true) {
       case isMobile && isIOS:
-        setInstallationType("manual");
+        newType = "manual";
         break;
       case isMobile && isInstallable:
-        setInstallationType("prompt");
+        newType = "prompt";
         break;
       case isMobile:
-        setInstallationType("manual");
+        newType = "manual";
         break;
       default:
-        setInstallationType("desktop");
+        newType = "desktop";
         break;
     }
+    console.log("Setting installationType to:", newType);
+    setInstallationType(newType);
   }, [
     isMobile,
     isIOS,
