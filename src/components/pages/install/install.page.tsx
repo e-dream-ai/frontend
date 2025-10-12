@@ -101,8 +101,7 @@ const InstallSection = () => {
 
 const RemoteControlSection = () => {
   const { t } = useTranslation();
-  const { installationType, install, isPWAInstalled, isCheckingInstallation } =
-    usePWAInstall();
+  const { installationType, install, isPWAInstalled } = usePWAInstall();
   const [showAddHomeScreen, setShowAddHomeScreen] = useState(false);
 
   const onShowAddHomeScreen = () => setShowAddHomeScreen(true);
