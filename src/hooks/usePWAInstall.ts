@@ -85,7 +85,6 @@ export const usePWAInstall = () => {
     isInstallable,
     install,
     installationType,
-    hasNativePrompt: !!installPrompt,
   };
 };
 

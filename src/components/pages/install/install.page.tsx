@@ -101,7 +101,7 @@ const InstallSection = () => {
 
 const RemoteControlSection = () => {
   const { t } = useTranslation();
-  const { installationType, install, hasNativePrompt } = usePWAInstall();
+  const { installationType, install } = usePWAInstall();
   const [showAddHomeScreen, setShowAddHomeScreen] = useState(false);
 
   const onShowAddHomeScreen = () => setShowAddHomeScreen(true);
@@ -110,7 +110,7 @@ const RemoteControlSection = () => {
   const handleInstallRemoteControl = async () => {
     if (installationType === "prompt") {
       await install();
-    } else if (installationType === "manual" && !hasNativePrompt) {
+    } else if (installationType === "manual") {
       onShowAddHomeScreen();
     }
   };
