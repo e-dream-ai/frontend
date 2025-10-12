@@ -12,11 +12,11 @@ importers:
         specifier: ^2.2.0
         version: 2.2.0
       '@bugsnag/js':
-        specifier: ^7.22.4
-        version: 7.22.4
-      '@bugsnag/plugin-react':
         specifier: ^8.6.0
         version: 8.6.0
+      '@bugsnag/plugin-react':
+        specifier: ^8.6.0
+        version: 8.6.0(@bugsnag/core@8.6.0)
       '@fortawesome/fontawesome-svg-core':
         specifier: ^6.7.1
         version: 6.7.1
@@ -856,26 +856,29 @@ packages:
   '@bugsnag/browser-performance@2.2.0':
     resolution: {integrity: sha512-BScPfjlQ06d2y1caXsrbpSW1p4GU+CgM8j6YClgji5Y+5aapOgI18UrJh1XrJyk7tVfP6Hovp6SXmBfKLVNV3w==}
 
-  '@bugsnag/browser@7.22.4':
-    resolution: {integrity: sha512-h2o9RZhAEIgJAUsECd7a00IkLnvQvLT7dUyUYx/s8VLvcq89gKa8E59rlM7f15wtkJ5MPfozhErXDpsdOvF4Rg==}
+  '@bugsnag/browser@8.6.0':
+    resolution: {integrity: sha512-7UGqTGnQqXUQ09gOlWbDTFUSbeLIIrP+hML3kTOq8Zdc8nP/iuOEflXGLV2TxWBWW8xIUPc928caFPr9EcaDuw==}
 
   '@bugsnag/core-performance@2.2.0':
     resolution: {integrity: sha512-Yb8n2oOzSQw/SqoWdDjpJB92ik6BlfNeRSl5lNEVGLJvwV7go2FIr1VvnQJEGiQWQzHtvkuCR4xRub+75a4HUg==}
 
-  '@bugsnag/core@7.19.0':
-    resolution: {integrity: sha512-2KGwdaLD9PhR7Wk7xPi3jGuGsKTatc/28U4TOZIDU3CgC2QhGjubwiXSECel5gwxhZ3jACKcMKSV2ovHhv1NrA==}
+  '@bugsnag/core@8.6.0':
+    resolution: {integrity: sha512-94Jo443JegaiKV8z8NXMFdyTGubiUnwppWhq3kG2ldlYKtEvrmIaO5+JA58B6oveySvoRu3cCe2W9ysY7G7mDw==}
 
   '@bugsnag/cuid@3.0.2':
     resolution: {integrity: sha512-cIwzC93r3PQ/INeuwtZwkZIG2K8WWN0rRLZQhu+mr48Ay+i6sEki4GYfTsflse7hZ1BeDWrNb/Q9vgY3B31xHQ==}
 
+  '@bugsnag/cuid@3.2.1':
+    resolution: {integrity: sha512-zpvN8xQ5rdRWakMd/BcVkdn2F8HKlDSbM3l7duueK590WmI1T0ObTLc1V/1e55r14WNjPd5AJTYX4yPEAFVi+Q==}
+
   '@bugsnag/delivery-fetch-performance@2.2.0':
     resolution: {integrity: sha512-0cDe0LedVS1c9PoMe69CGljv6LSnlHn0jUZzA8+QCf3YyM6MwHNYLpSqO8DpknOtBGan4LxAwqW7arux4fEzRw==}
 
-  '@bugsnag/js@7.22.4':
-    resolution: {integrity: sha512-GjU3YmCNxVl1QZ64e8D4hKSfhHiymHu4hyYlyKxIdqmnhpHvoFnADcdAHEnWPG82O9j9w+JoDXvL460aiOEgHg==}
+  '@bugsnag/js@8.6.0':
+    resolution: {integrity: sha512-U+ofNTTMA2Z6tCrOhK/QhHBhLoQHoalk8Y82WWc7FAcVSoJZYadND/QuXUriNRZpC4YgJ/s/AxPeQ2y+WvMxzw==}
 
-  '@bugsnag/node@7.22.3':
-    resolution: {integrity: sha512-vDXu0mrduonyCjUkTp+zKSh1WHAtA2VjB49xK5s1f/HnTASiJvzUOQBRXrkqaj37sndYHUSMxUCPvLawyc75nA==}
+  '@bugsnag/node@8.6.0':
+    resolution: {integrity: sha512-O91sELo6zBjflVeP3roRC9l68iYaafVs5lz2N0FDkrT08mP2UljtNWpjjoR/0h1so5Ny1OxHgnZ1IrsXhz5SMQ==}
 
   '@bugsnag/plugin-react@8.6.0':
     resolution: {integrity: sha512-bJP2N5XZZb7Kzb7ZS60peTskWdSIC210w7ufPKyL/WYLFnF/BwC0VKt6BcxIOzCqdUBmPKGIdbRLInnStH3thQ==}
@@ -888,8 +891,8 @@ packages:
   '@bugsnag/request-tracker-performance@2.2.0':
     resolution: {integrity: sha512-OVjjx64AUnzUmM1dkvb4lrP1hzxNPgnCUEZfYd3jMRiXtHh038Stf0igNCdy4zsCr2D5HvJEfF1cZ3BbkPff+w==}
 
-  '@bugsnag/safe-json-stringify@6.0.0':
-    resolution: {integrity: sha512-htzFO1Zc57S8kgdRK9mLcPVTW1BY2ijfH7Dk2CeZmspTWKdKqSo1iwmqrq2WtRjFlo8aRZYgLX0wFrDXF/9DLA==}
+  '@bugsnag/safe-json-stringify@6.1.0':
+    resolution: {integrity: sha512-ImA35rnM7bGr+J30R979FQ95BhRB4UO1KfJA0J2sVqc8nwnrS9hhE5mkTmQWMs8Vh1Da+hkLKs5jJB4JjNZp4A==}
 
   '@emotion/babel-plugin@11.11.0':
     resolution: {integrity: sha512-m4HEDZleaaCH+XgDDsPF15Ht6wTLsgDTeR3WYj9Q/k76JtWhrJjcP4+/XlG8LGT/Rol9qUfOIztXeA84ATpqPQ==}
@@ -2030,8 +2033,8 @@ packages:
   emoji-regex@9.2.2:
     resolution: {integrity: sha512-L18DaJsXSUk2+42pv8mLs5jJT2hqFkFE4j21wOmgbUqsZ2hL72NsUU785g9RXgo3s0ZNgVl42TiHp3ZtOv/Vyg==}
 
-  end-of-stream@1.4.4:
-    resolution: {integrity: sha512-+uw1inIHVPQoaVuHzRyXd21icM+cnt4CzD5rW+NC1wjOUSTOs+Te7FOv7AhN7vS9x/oIyhLP5PR1H+phQAHu5Q==}
+  end-of-stream@1.4.5:
+    resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
 
   engine.io-client@6.5.3:
     resolution: {integrity: sha512-9Z0qLB0NIisTRt1DZ/8U2k12RJn8yls/nXMZLn+/N8hANT3TcYjKFKcwbw5zFQiN4NTde3TSY9zb79e1ij6j9Q==}
@@ -3172,8 +3175,8 @@ packages:
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
 
-  pump@3.0.0:
-    resolution: {integrity: sha512-LwZy+p3SFs1Pytd/jYct4wpv49HiYCqd9Rlc5ZVdk0V+8Yzv6jR5Blk3TRmPL1ft69TxP0IMZGJ+WPFU2BFhww==}
+  pump@3.0.3:
+    resolution: {integrity: sha512-todwxLMY7/heScKmntwQG8CXVkWUOdYxIvY2s0VWAAMh/nd8SoYiRaKjlr7+iCs984f2P8zvrfWcDDYVb73NfA==}
 
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
@@ -4910,47 +4913,51 @@ snapshots:
       '@bugsnag/delivery-fetch-performance': 2.2.0
       '@bugsnag/request-tracker-performance': 2.2.0
 
-  '@bugsnag/browser@7.22.4':
+  '@bugsnag/browser@8.6.0':
     dependencies:
-      '@bugsnag/core': 7.19.0
+      '@bugsnag/core': 8.6.0
 
   '@bugsnag/core-performance@2.2.0': {}
 
-  '@bugsnag/core@7.19.0':
+  '@bugsnag/core@8.6.0':
     dependencies:
-      '@bugsnag/cuid': 3.0.2
-      '@bugsnag/safe-json-stringify': 6.0.0
+      '@bugsnag/cuid': 3.2.1
+      '@bugsnag/safe-json-stringify': 6.1.0
       error-stack-parser: 2.1.4
       iserror: 0.0.2
       stack-generator: 2.0.10
 
   '@bugsnag/cuid@3.0.2': {}
 
+  '@bugsnag/cuid@3.2.1': {}
+
   '@bugsnag/delivery-fetch-performance@2.2.0':
     dependencies:
       '@bugsnag/core-performance': 2.2.0
 
-  '@bugsnag/js@7.22.4':
+  '@bugsnag/js@8.6.0':
     dependencies:
-      '@bugsnag/browser': 7.22.4
-      '@bugsnag/node': 7.22.3
+      '@bugsnag/browser': 8.6.0
+      '@bugsnag/node': 8.6.0
 
-  '@bugsnag/node@7.22.3':
+  '@bugsnag/node@8.6.0':
     dependencies:
-      '@bugsnag/core': 7.19.0
+      '@bugsnag/core': 8.6.0
       byline: 5.0.0
       error-stack-parser: 2.1.4
       iserror: 0.0.2
-      pump: 3.0.0
+      pump: 3.0.3
       stack-generator: 2.0.10
 
-  '@bugsnag/plugin-react@8.6.0': {}
+  '@bugsnag/plugin-react@8.6.0(@bugsnag/core@8.6.0)':
+    optionalDependencies:
+      '@bugsnag/core': 8.6.0
 
   '@bugsnag/request-tracker-performance@2.2.0':
     dependencies:
       '@bugsnag/core-performance': 2.2.0
 
-  '@bugsnag/safe-json-stringify@6.0.0': {}
+  '@bugsnag/safe-json-stringify@6.1.0': {}
 
   '@emotion/babel-plugin@11.11.0':
     dependencies:
@@ -6126,7 +6133,7 @@ snapshots:
 
   emoji-regex@9.2.2: {}
 
-  end-of-stream@1.4.4:
+  end-of-stream@1.4.5:
     dependencies:
       once: 1.4.0
 
@@ -7474,9 +7481,9 @@ snapshots:
 
   proxy-from-env@1.1.0: {}
 
-  pump@3.0.0:
+  pump@3.0.3:
     dependencies:
-      end-of-stream: 1.4.4
+      end-of-stream: 1.4.5
       once: 1.4.0
 
   punycode@2.3.1: {}
