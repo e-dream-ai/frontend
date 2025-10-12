@@ -120,8 +120,8 @@ importers:
         specifier: ^5.3.11
         version: 5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
       styled-react-modal:
-        specifier: ^3.1.0
-        version: 3.1.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(styled-components@5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0))
+        specifier: ^3.1.1
+        version: 3.1.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(styled-components@5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0))
       styled-system:
         specifier: ^5.1.5
         version: 5.1.5
@@ -157,8 +157,8 @@ importers:
         specifier: ^5.1.34
         version: 5.1.34
       '@types/styled-react-modal':
-        specifier: ^1.2.5
-        version: 1.2.5
+        specifier: ^3.1.0
+        version: 3.1.0
       '@types/styled-system':
         specifier: ^5.1.22
         version: 5.1.22
@@ -1456,8 +1456,8 @@ packages:
   '@types/styled-components@5.1.34':
     resolution: {integrity: sha512-mmiVvwpYklFIv9E8qfxuPyIt/OuyIrn6gMOAMOFUO3WJfSrSE+sGUoa4PiZj77Ut7bKZpaa6o1fBKS/4TOEvnA==}
 
-  '@types/styled-react-modal@1.2.5':
-    resolution: {integrity: sha512-Uzrn62S7FP7gkOF4HlYUT3RXJpOcSUnZQRMw9RQUyd5qoVGdBj81UMqZrI1q3x1fhV7J7XQY2jQaVS1Mp2VzIA==}
+  '@types/styled-react-modal@3.1.0':
+    resolution: {integrity: sha512-KgdhgDMkcn6U+p+yCxBaoHFCya9860dIOmlDY0+izUI/aWoVRLDycEITwzok7rFQ7knZsoVCmO5qTkOCX9v4ow==}
 
   '@types/styled-system@5.1.22':
     resolution: {integrity: sha512-NbRp37zWcrf/+Qf2NumdyZfhSx1dzJ50zgfKvnezYJx1HTRUMVYY8jtWvK1eoIAa6F5sXwHLhE8oXNu15ThBAA==}
@@ -3639,8 +3639,8 @@ packages:
       react-dom: '>= 16.8.0'
       react-is: '>= 16.8.0'
 
-  styled-react-modal@3.1.0:
-    resolution: {integrity: sha512-C8nmfUjkE5E8kmfPksBchPuSSQAR3ZyZa4L5P6LOrjBu62DxUYXDKk7HN5bgFttGK5tZZ4C7RugOe9+y9tWabA==}
+  styled-react-modal@3.1.1:
+    resolution: {integrity: sha512-H6Ga8dBMmIBYQ8s7ZLQbHzToMh7u52WMR65P1n7dmpgJSJs2oDdBipXhwoO518eJF92wTeyqH5tKO7S1p0y/yA==}
     peerDependencies:
       react: ^18.0.0
       react-dom: ^18.0.0
@@ -5491,7 +5491,7 @@ snapshots:
       '@types/react': 18.2.45
       csstype: 3.1.3
 
-  '@types/styled-react-modal@1.2.5':
+  '@types/styled-react-modal@3.1.0':
     dependencies:
       '@types/react': 18.2.45
       '@types/styled-components': 5.1.34
@@ -8049,7 +8049,7 @@ snapshots:
     transitivePeerDependencies:
       - '@babel/core'
 
-  styled-react-modal@3.1.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(styled-components@5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)):
+  styled-react-modal@3.1.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(styled-components@5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)):
     dependencies:
       prop-types: 15.8.1
       react: 18.2.0
