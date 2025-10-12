@@ -148,8 +148,8 @@ importers:
         specifier: ^18.2.18
         version: 18.2.18
       '@types/react-gtm-module':
-        specifier: ^2.0.3
-        version: 2.0.3
+        specifier: ^2.0.4
+        version: 2.0.4
       '@types/react-linkify':
         specifier: ^1.0.4
         version: 1.0.4
@@ -1432,8 +1432,8 @@ packages:
   '@types/react-dom@18.2.18':
     resolution: {integrity: sha512-TJxDm6OfAX2KJWJdMEVTwWke5Sc/E/RlnPGvGfS0W7+6ocy2xhDVQVh/KvC2Uf7kACs+gDytdusDSdWfWkaNzw==}
 
-  '@types/react-gtm-module@2.0.3':
-    resolution: {integrity: sha512-fL2zKdDFN5LckSsVBXEhhm9M4tFTM9oHJfGcfZJzktQkzpOTGtDM8oXIP9d9UBDxO4xLNZhS22dlgRVv6wgK9w==}
+  '@types/react-gtm-module@2.0.4':
+    resolution: {integrity: sha512-5wPMWsUE5AI6O0B0K1/zbs0rFHBKu+7NWXQwDXhqvA12ooLD6W1AYiWZqR4UiOd7ixZDV1H5Ys301zEsqyIfNg==}
 
   '@types/react-linkify@1.0.4':
     resolution: {integrity: sha512-NOMw4X3kjvjY0lT5kXQdxZCXpPNi2hOuuqG+Kz+5EOQpi9rDUJJDitdE1j2JRNmrTnNIjrLnYG0HKyuOWN/uKA==}
@@ -5463,7 +5463,7 @@ snapshots:
     dependencies:
       '@types/react': 18.2.45
 
-  '@types/react-gtm-module@2.0.3': {}
+  '@types/react-gtm-module@2.0.4': {}
 
   '@types/react-linkify@1.0.4':
     dependencies:
