@@ -51,8 +51,8 @@ importers:
         specifier: ^23.7.11
         version: 23.7.11
       i18next-http-backend:
-        specifier: ^2.4.2
-        version: 2.4.2
+        specifier: ^3.0.2
+        version: 3.0.2
       jwt-decode:
         specifier: ^3.1.2
         version: 3.1.2
@@ -2496,8 +2496,8 @@ packages:
     engines: {node: '>=14'}
     hasBin: true
 
-  i18next-http-backend@2.4.2:
-    resolution: {integrity: sha512-wKrgGcaFQ4EPjfzBTjzMU0rbFTYpa0S5gv9N/d8WBmWS64+IgJb7cHddMvV+tUkse7vUfco3eVs2lB+nJhPo3w==}
+  i18next-http-backend@3.0.2:
+    resolution: {integrity: sha512-PdlvPnvIp4E1sYi46Ik4tBYh/v/NbYfFFgTjkwFl0is8A18s7/bx9aXqsrOax9WUbeNS6mD2oix7Z0yGGf6m5g==}
 
   i18next@23.7.11:
     resolution: {integrity: sha512-A/vOkw8vY99YHU9A1Td3I1dcTiYaPnwBWzrpVzfXUXSYgogK3cmBcmop/0cnXPc6QpUWIyqaugKNxRUEZVk9Nw==}
@@ -6815,7 +6815,7 @@ snapshots:
 
   husky@8.0.3: {}
 
-  i18next-http-backend@2.4.2:
+  i18next-http-backend@3.0.2:
     dependencies:
       cross-fetch: 4.0.0
     transitivePeerDependencies:
