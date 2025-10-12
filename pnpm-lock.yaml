@@ -36,8 +36,8 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2(react-hook-form@7.65.0(react@18.2.0))
       '@ramonak/react-progress-bar':
-        specifier: ^5.1.1
-        version: 5.1.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
+        specifier: ^5.4.0
+        version: 5.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
       '@szhsin/react-menu':
         specifier: ^4.1.0
         version: 4.1.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)
@@ -1203,11 +1203,11 @@ packages:
     resolution: {integrity: sha512-POgTXhjrTfbTV63DiFXav4lBHiICLKKwDeaKn9Nphwj7WH6m0hMMCaJkMyRWjgtPFyRKRVoMXXjczsTQRDEhYw==}
     engines: {node: ^12.20.0 || ^14.18.0 || >=16.0.0}
 
-  '@ramonak/react-progress-bar@5.1.1':
-    resolution: {integrity: sha512-4aYbvGaM14f7iQBD9uO99rdyOVa1zlOWGcGhbhPPwmAIrehXUF0UdoDlmjTxmEcPplmPgRVe2G4rotOxfCS+0w==}
+  '@ramonak/react-progress-bar@5.4.0':
+    resolution: {integrity: sha512-3MJ0TKPw7xhearDuO6egIRQrvuERoLn6CVc2hKnw89iEegUL6DzMY7Rptmz2KaHjK0zbev+PGyyvDW+IK4FJBg==}
     peerDependencies:
-      react: ^16.0.0 || ^17 || ^18
-      react-dom: ^16.0.0 || ^17 || ^18
+      react: ^16.0.0 || ^17 || ^18 || ^19
+      react-dom: ^16.0.0 || ^17 || ^18 || ^19
 
   '@remix-run/router@1.14.1':
     resolution: {integrity: sha512-Qg4DMQsfPNAs88rb2xkdk03N3bjK4jgX5fR24eHCTR9q6PrhZQZ4UJBPzCHJkIpTRN1UKxx2DzjZmnC+7Lj0Ow==}
@@ -5279,7 +5279,7 @@ snapshots:
       picocolors: 1.0.0
       tslib: 2.6.2
 
-  '@ramonak/react-progress-bar@5.1.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
+  '@ramonak/react-progress-bar@5.4.0(react-dom@18.2.0(react@18.2.0))(react@18.2.0)':
     dependencies:
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
