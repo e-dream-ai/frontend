@@ -22,7 +22,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({
   userUUID,
   grid,
   columns = 2,
-  type
+  type,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -35,10 +35,13 @@ const UserDreams: React.FC<UserDreamsProps> = ({
     hasNextPage: hasNextFeedPage,
   } = useFeed({
     userUUID,
-    type
+    type,
   });
 
-  const feed = useMemo(() => feedData?.pages.flatMap(page => page.data?.feed ?? []) ?? [], [feedData]);
+  const feed = useMemo(
+    () => feedData?.pages.flatMap((page) => page.data?.feed ?? []) ?? [],
+    [feedData],
+  );
   const feedDataLength = useMemo(() => feed.length, [feed]);
 
   return (
@@ -53,10 +56,13 @@ const UserDreams: React.FC<UserDreamsProps> = ({
             hasMore={hasNextFeedPage ?? false}
             loader={<Loader />}
             endMessage={
-              !isFeedLoading &&
-              <Row justifyContent="center" mt="2rem">
-                <Text color={theme.textPrimaryColor}>{t("components.infinite_scroll.end_message")}</Text>
-              </Row>
+              !isFeedLoading && (
+                <Row justifyContent="center" mt="2rem">
+                  <Text color={theme.textPrimaryColor}>
+                    {t("components.infinite_scroll.end_message")}
+                  </Text>
+                </Row>
+              )
             }
           >
             <ItemCardList grid={grid} columns={columns}>

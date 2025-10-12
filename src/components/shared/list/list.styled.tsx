@@ -9,7 +9,7 @@ export const Ul = styled.ul`
 
 export const Li = styled.li<{ isNew?: boolean }>`
   background-color: ${(props) =>
-        props.isNew ? props.theme.colorLightPrimary : "transparent"};
+    props.isNew ? props.theme.colorLightPrimary : "transparent"};
   display: flex;
   flex: auto;
   flex-flow: row;

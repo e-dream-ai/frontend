@@ -122,7 +122,7 @@ export const Select = React.forwardRef<
     const handleMenuClose = useCallback(() => tooltipRef.current?.close(), []);
 
     return (
-      <InputGroup data-tooltip-id={name} >
+      <InputGroup data-tooltip-id={name}>
         <Tooltip
           id={name}
           ref={tooltipRef}
@@ -132,27 +132,24 @@ export const Select = React.forwardRef<
             maxWidth: "14rem",
             wordBreak: "break-word",
           }}
-
         />
         <InputRow>
           {before && <InputBefore>{before}</InputBefore>}
           {isDisabled ? (
             <DisabledInput>
-              {
-                to ? (
-                  <AnchorLink type="secondary" to={to}>
-                    {label}
-                  </AnchorLink>
-                ) :
-                  href ? (
-                    <Anchor type="secondary" href={href}>
-                      {label}
-                    </Anchor>
-                  ) : typeof label === "string" ? (
-                    truncateString(label, 30)
-                  ) : (
-                    label ?? "-"
-                  )}
+              {to ? (
+                <AnchorLink type="secondary" to={to}>
+                  {label}
+                </AnchorLink>
+              ) : href ? (
+                <Anchor type="secondary" href={href}>
+                  {label}
+                </Anchor>
+              ) : typeof label === "string" ? (
+                truncateString(label, 30)
+              ) : (
+                label ?? "-"
+              )}
             </DisabledInput>
           ) : (
             <StyledSelect

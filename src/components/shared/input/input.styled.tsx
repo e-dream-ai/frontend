@@ -16,7 +16,6 @@ export const StyledInput = styled.input`
   font-size: 1rem;
   font-family: inherit;
 
-
   &:disabled {
     cursor: not-allowed;
   }
@@ -62,7 +61,7 @@ export const InputRow = styled.div<{ outlined?: boolean }>`
   flex: auto;
   border-collapse: separate;
   min-height: 2.375rem;
-  border: ${props => props.outlined ? "1px solid red" : "0"};
+  border: ${(props) => (props.outlined ? "1px solid red" : "0")};
 `;
 
 export const InputBefore = styled.div`

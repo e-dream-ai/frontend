@@ -5,9 +5,7 @@ import { useContext } from "react";
 export const useWebClient = () => {
   const context = useContext(WebClientContext);
   if (context === undefined) {
-    throw new Error(
-      "useWebClient must be used within a DesktopClientProvider",
-    );
+    throw new Error("useWebClient must be used within a DesktopClientProvider");
   }
   return context;
 };

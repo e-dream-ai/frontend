@@ -9,7 +9,10 @@ import useSocket from "@/hooks/useSocket";
 import { RemoteControlContainer } from "./remote-control.styled";
 import { onNewRemoteControlEvent } from "@/utils/socket.util";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
-import { RemoteControlEvent, RemoteControlEventData } from "@/types/remote-control.types";
+import {
+  RemoteControlEvent,
+  RemoteControlEventData,
+} from "@/types/remote-control.types";
 import { useWebClient } from "@/hooks/useWebClient";
 
 const ROW_1 = [REMOTE_CONTROLS.HELP, REMOTE_CONTROLS.STATUS];
@@ -45,7 +48,10 @@ export const RemoteControl: React.FC = () => {
   // Emit an event to the server
   const sendMessage = (event: RemoteControlEvent) => () => {
     // Emit event
-    emit(NEW_REMOTE_CONTROL_EVENT, { event: event, isWebClientEvent: isWebClientActive });
+    emit(NEW_REMOTE_CONTROL_EVENT, {
+      event: event,
+      isWebClientEvent: isWebClientActive,
+    });
 
     /**
      * if isWebClientActive then execute handler
@@ -62,7 +68,7 @@ export const RemoteControl: React.FC = () => {
     Object.values(REMOTE_CONTROLS).forEach(({ event, triggerKey }) => {
       if (triggerKey) {
         // handle multiple keys for same event
-        triggerKey.split(', ').forEach(k => keyToEventMap.set(k, event));
+        triggerKey.split(", ").forEach((k) => keyToEventMap.set(k, event));
       }
     });
 
@@ -75,7 +81,10 @@ export const RemoteControl: React.FC = () => {
       if (eventName) {
         event.preventDefault();
         // Emit event
-        emit(NEW_REMOTE_CONTROL_EVENT, { event: eventName, isWebClientEvent: isWebClientActive });
+        emit(NEW_REMOTE_CONTROL_EVENT, {
+          event: eventName,
+          isWebClientEvent: isWebClientActive,
+        });
       }
 
       /**
@@ -86,10 +95,10 @@ export const RemoteControl: React.FC = () => {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
   }, [handlers, isWebClientActive]);
 

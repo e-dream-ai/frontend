@@ -31,7 +31,7 @@ export const Providers = [
   SocketProvider,
   DesktopClientProvider,
   VideoJSProvider,
-  WebClientProvider
+  WebClientProvider,
 ];
 
 export default Providers;

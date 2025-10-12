@@ -38,7 +38,7 @@ const GAP = "1rem";
 const ReportItem: React.FC<{
   report: Report;
 }> = ({ report }) => {
-  const reportType = TYPES.find(rt => rt.id === report?.type?.id);
+  const reportType = TYPES.find((rt) => rt.id === report?.type?.id);
   const { state } = useHighlight();
   const { t } = useTranslation();
   const [showConfirmProcessModal, setShowConfirmProcessModal] =
@@ -55,20 +55,27 @@ const ReportItem: React.FC<{
 
   const handleProcessReport = async () => {
     try {
-      const data = await mutateAsync({ uuid: report.uuid, values: { processed: true } })
+      const data = await mutateAsync({
+        uuid: report.uuid,
+        values: { processed: true },
+      });
 
       if (data.success) {
-        toast.success(t("components.reports_list.report_processed_successfully"));
+        toast.success(
+          t("components.reports_list.report_processed_successfully"),
+        );
         onHideConfirmProcessModal();
       } else {
         toast.error(
-          `${t("components.reports_list.error_processing_report")} ${data.message}`,
+          `${t("components.reports_list.error_processing_report")} ${
+            data.message
+          }`,
         );
       }
     } catch (error) {
       toast.error(t("components.reports_list.error_processing_report"));
     }
-  }
+  };
 
   return (
     <>
@@ -99,19 +106,22 @@ const ReportItem: React.FC<{
           alignItems="center"
           style={{ gap: GAP }}
         >
-
           <Column flex={["3"]}>
-            <AnchorLink to={`${ROUTES.VIEW_DREAM}/${report.dream.uuid}`} type="secondary">
+            <AnchorLink
+              to={`${ROUTES.VIEW_DREAM}/${report.dream.uuid}`}
+              type="secondary"
+            >
               {truncateString(getDreamNameOrUUID(report.dream), 20)}
             </AnchorLink>
           </Column>
           <Column flex={["1"]}>
-            <Text>
-              {reportType?.short ?? 'Other'}
-            </Text>
+            <Text>{reportType?.short ?? "Other"}</Text>
           </Column>
           <Column flex={["1"]}>
-            <AnchorLink to={`${ROUTES.PROFILE}/${report.reportedBy?.uuid}`} type="secondary">
+            <AnchorLink
+              to={`${ROUTES.PROFILE}/${report.reportedBy?.uuid}`}
+              type="secondary"
+            >
               {getUserNameOrEmail(report?.reportedBy)}
             </AnchorLink>
           </Column>
@@ -120,18 +130,18 @@ const ReportItem: React.FC<{
           </Column>
           <Column flex={["1"]}>
             <Row m="0" alignItems="center">
-              {
-                report?.processed
-                  ? <Text mr="2">{t("components.reports_list.yes")}</Text>
-                  : <Button
-                    data-tooltip-id="navigate-to-url"
-                    buttonType="tertiary"
-                    size="sm"
-                    onClick={onShowConfirmProcessModal}
-                    isLoading={isProcessingReport}
-                    before={<FontAwesomeIcon icon={faGears} />}
-                  />
-              }
+              {report?.processed ? (
+                <Text mr="2">{t("components.reports_list.yes")}</Text>
+              ) : (
+                <Button
+                  data-tooltip-id="navigate-to-url"
+                  buttonType="tertiary"
+                  size="sm"
+                  onClick={onShowConfirmProcessModal}
+                  isLoading={isProcessingReport}
+                  before={<FontAwesomeIcon icon={faGears} />}
+                />
+              )}
             </Row>
           </Column>
           <Column flex={["2"]}>
@@ -140,7 +150,9 @@ const ReportItem: React.FC<{
                 <Tooltip
                   id={`comments-${report.uuid}`}
                   place="right-end"
-                  content={`${t("components.reports_list.comments")}: ${report.comments ?? ""}`}
+                  content={`${t("components.reports_list.comments")}: ${
+                    report.comments ?? ""
+                  }`}
                 />
                 {truncateWords(report.comments, 10)}
               </Text>
@@ -162,14 +174,16 @@ const ReportItem: React.FC<{
             </Row>
           </Column>
           <Column flex={["3"]}>
-            {report.link ?
+            {report.link ? (
               <Row m="0">
-                <Anchor type="secondary" href={report.link}>{truncateString(report.link, 20)}</Anchor>
+                <Anchor type="secondary" href={report.link}>
+                  {truncateString(report.link, 20)}
+                </Anchor>
               </Row>
-              : <>{t("components.reports_list.no")}</>
-            }
+            ) : (
+              <>{t("components.reports_list.no")}</>
+            )}
           </Column>
-
         </Row>
       </Li>
     </>
@@ -187,7 +201,7 @@ export const ReportsList: React.FC = () => {
     breakLabel,
     previousLabel,
     nextLabel,
-    renderOnZeroPageCount
+    renderOnZeroPageCount,
   } = usePaginateProps();
   const { data, isLoading, isRefetching } = useReports({
     page,

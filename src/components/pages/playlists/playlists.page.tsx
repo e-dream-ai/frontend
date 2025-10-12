@@ -20,7 +20,7 @@ export const PlaylistsPage: React.FC = () => {
     breakLabel,
     previousLabel,
     nextLabel,
-    renderOnZeroPageCount
+    renderOnZeroPageCount,
   } = usePaginateProps();
   const [page, setPage] = useState<number>(0);
   const { data, isLoading, isRefetching } = useMyPlaylists({ page });

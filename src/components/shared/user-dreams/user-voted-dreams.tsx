@@ -19,23 +19,21 @@ const UserVotedDreams: React.FC<UserVotedDreamsProps> = ({
   userUUID,
   grid,
   columns = 2,
-  type
+  type,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
 
-  const {
-    data,
-    isLoading,
-    isRefetching,
-    fetchNextPage,
-    hasNextPage,
-  } = useInfiniteUserVotedDreams({
-    userUUID,
-    type
-  });
+  const { data, isLoading, isRefetching, fetchNextPage, hasNextPage } =
+    useInfiniteUserVotedDreams({
+      userUUID,
+      type,
+    });
 
-  const dreams = useMemo(() => data?.pages.flatMap(page => page.data?.dreams ?? []) ?? [], [data]);
+  const dreams = useMemo(
+    () => data?.pages.flatMap((page) => page.data?.dreams ?? []) ?? [],
+    [data],
+  );
   const dreamsLength = useMemo(() => dreams.length, [dreams]);
 
   return (
@@ -50,14 +48,17 @@ const UserVotedDreams: React.FC<UserVotedDreamsProps> = ({
             hasMore={hasNextPage ?? false}
             loader={<Loader />}
             endMessage={
-              !isLoading &&
-              <Row justifyContent="center" mt="2rem">
-                <Text color={theme.textPrimaryColor}>{t("components.infinite_scroll.end_message")}</Text>
-              </Row>
+              !isLoading && (
+                <Row justifyContent="center" mt="2rem">
+                  <Text color={theme.textPrimaryColor}>
+                    {t("components.infinite_scroll.end_message")}
+                  </Text>
+                </Row>
+              )
             }
           >
             <ItemCardList grid={grid} columns={columns}>
-              {dreams?.map((dream) =>
+              {dreams?.map((dream) => (
                 <ItemCard
                   type="dream"
                   item={dream}
@@ -65,8 +66,9 @@ const UserVotedDreams: React.FC<UserVotedDreamsProps> = ({
                   size="lg"
                   showPlayButton
                 />
-              )}
-            </ItemCardList></InfiniteScroll>
+              ))}
+            </ItemCardList>
+          </InfiniteScroll>
         ) : (
           <Text>{t("components.item_card_list.empty")}</Text>
         )}

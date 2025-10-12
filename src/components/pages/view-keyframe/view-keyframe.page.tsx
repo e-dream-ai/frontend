@@ -1,10 +1,5 @@
 import { yupResolver } from "@hookform/resolvers/yup";
-import {
-  Button,
-  ItemCard,
-  ItemCardList,
-  Row,
-} from "@/components/shared";
+import { Button, ItemCard, ItemCardList, Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
@@ -38,7 +33,10 @@ import { getUserName, isAdmin } from "@/utils/user.util";
 import { Select } from "@/components/shared/select/select";
 import { toast } from "react-toastify";
 import { NotFound } from "@/components/shared/not-found/not-found";
-import { KEYFRAME_QUERY_KEY, useKeyframe } from "@/api/keyframe/query/useKeyframe";
+import {
+  KEYFRAME_QUERY_KEY,
+  useKeyframe,
+} from "@/api/keyframe/query/useKeyframe";
 import { User } from "@/types/auth.types";
 import { useUsers } from "@/api/user/query/useUsers";
 import usePermission from "@/hooks/usePermission";
@@ -84,12 +82,14 @@ export const ViewKeyframePage = () => {
 
   const updateKeyframeMutation = useUpdateKeyframe();
   const updateImageKeyframeMutation = useUpdateImageKeyframe();
-  const { mutate: mutateDeleteKeyframe, isLoading: isLoadingDeleteKeyframe } = useDeleteKeyframe();
+  const { mutate: mutateDeleteKeyframe, isLoading: isLoadingDeleteKeyframe } =
+    useDeleteKeyframe();
   const deleteImageKeyframeMutation = useDeleteImageKeyframe();
 
-  const isLoading = updateKeyframeMutation.isLoading
-    || updateImageKeyframeMutation.isLoading
-    || deleteImageKeyframeMutation.isLoading;
+  const isLoading =
+    updateKeyframeMutation.isLoading ||
+    updateImageKeyframeMutation.isLoading ||
+    deleteImageKeyframeMutation.isLoading;
 
   const usersOptions = (usersData?.data?.users ?? [])
     .filter((user) => user.name)
@@ -147,7 +147,10 @@ export const ViewKeyframePage = () => {
     try {
       if (image && !isImageRemoved) {
         // update image for keyframe
-        await updateImageKeyframeMutation.updateImageKeyframe(uuid!, image!.file);
+        await updateImageKeyframeMutation.updateImageKeyframe(
+          uuid!,
+          image!.file,
+        );
       }
 
       if (isImageRemoved && !image) {
@@ -156,15 +159,13 @@ export const ViewKeyframePage = () => {
       }
 
       // update keyframe values
-      const response = await updateKeyframeMutation.mutateAsync(
-        {
-          uuid: uuid!,
-          values: {
-            name: data.name,
-            displayedOwner: data?.displayedOwner?.value,
-          },
-        }
-      );
+      const response = await updateKeyframeMutation.mutateAsync({
+        uuid: uuid!,
+        values: {
+          name: data.name,
+          displayedOwner: data?.displayedOwner?.value,
+        },
+      });
 
       if (response.success) {
         queryClient.setQueryData([KEYFRAME_QUERY_KEY, uuid], response);
@@ -178,16 +179,15 @@ export const ViewKeyframePage = () => {
         setImage(undefined);
       } else {
         toast.error(
-          `${t("page.view_keyframe.error_updating_keyframe")} ${response.message
+          `${t("page.view_keyframe.error_updating_keyframe")} ${
+            response.message
           }`,
         );
       }
-
     } catch (_) {
       toast.error(t("page.view_keyframe.error_updating_keyframe"));
     }
   };
-
 
   const handleConfirmDeleteKeyframe = () => {
     mutateDeleteKeyframe(uuid!, {
@@ -200,7 +200,8 @@ export const ViewKeyframePage = () => {
           router.navigate(ROUTES.FEED);
         } else {
           toast.error(
-            `${t("page.view_keyframe.error_deleting_keyframe")} ${response.message
+            `${t("page.view_keyframe.error_deleting_keyframe")} ${
+              response.message
             }`,
           );
         }
@@ -210,7 +211,6 @@ export const ViewKeyframePage = () => {
       },
     });
   };
-
 
   const resetRemoteKeyframeForm = useCallback(() => {
     formMethods.reset({
@@ -223,13 +223,13 @@ export const ViewKeyframePage = () => {
        */
       displayedOwner: isUserAdmin
         ? {
-          value: keyframe?.displayedOwner?.id,
-          label: getUserName(keyframe?.displayedOwner),
-        }
+            value: keyframe?.displayedOwner?.id,
+            label: getUserName(keyframe?.displayedOwner),
+          }
         : {
-          value: keyframe?.displayedOwner?.id ?? keyframe?.user?.id,
-          label: getUserName(keyframe?.displayedOwner ?? keyframe?.user),
-        },
+            value: keyframe?.displayedOwner?.id ?? keyframe?.user?.id,
+            label: getUserName(keyframe?.displayedOwner ?? keyframe?.user),
+          },
       created_at: moment(keyframe?.created_at).format(FORMAT),
     });
   }, [formMethods, keyframe, isUserAdmin]);
@@ -312,7 +312,10 @@ export const ViewKeyframePage = () => {
           </Row>
 
           <FormProvider {...formMethods}>
-            <form style={{ minWidth: "320px" }} onSubmit={formMethods.handleSubmit(onSubmit)}>
+            <form
+              style={{ minWidth: "320px" }}
+              onSubmit={formMethods.handleSubmit(onSubmit)}
+            >
               <Row justifyContent="space-between">
                 <span />
                 <div>
@@ -405,7 +408,11 @@ export const ViewKeyframePage = () => {
                         isDisabled={!editMode || !allowedEditOwner}
                         isLoading={isUsersLoading}
                         before={<FontAwesomeIcon icon={faUser} />}
-                        to={getDisplayedOwnerProfileRoute(isUserAdmin, keyframe?.user, keyframe?.displayedOwner)}
+                        to={getDisplayedOwnerProfileRoute(
+                          isUserAdmin,
+                          keyframe?.user,
+                          keyframe?.displayedOwner,
+                        )}
                         options={usersOptions}
                         onInputChange={(newValue) => setUserSearch(newValue)}
                       />
@@ -430,13 +437,7 @@ export const ViewKeyframePage = () => {
           <Row flex="auto">
             <ItemCardList>
               {keyframe?.dreams?.map((d) => (
-                <ItemCard
-                  key={d.id}
-                  type="dream"
-                  item={d}
-                  inline
-                  size="sm"
-                />
+                <ItemCard key={d.id} type="dream" item={d} inline size="sm" />
               ))}
             </ItemCardList>
           </Row>

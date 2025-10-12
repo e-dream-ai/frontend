@@ -53,9 +53,12 @@
     "build": "node generate-git-info.js && tsc && vite build --mode prod",
     "build:stage": "node generate-git-info.js && tsc && vite build --mode stage",
     "serve": "vite preview",
+    "type-check": "tsc --noEmit",
     "lint": "eslint . --ext .js,.ts",
     "lint-staged": "lint-staged",
     "lint:fix": "eslint . --fix --ext .js,.ts",
+    "prettier": "prettier --write .",
+    "prettier:check": "prettier --check .",
     "prepare": "if [ -z \"$HUSKY_SKIP_INSTALL\" ]; then husky install; fi"
   },
   "eslintConfig": {

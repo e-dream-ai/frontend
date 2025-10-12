@@ -2,17 +2,17 @@ import { DEVICES } from "@/constants/devices.constants";
 import styled from "styled-components";
 
 /**
-* To have a proper form layout, use it together as follows
-* @example
-* <FormContainer>
-*   <FormItem>
-*     <Input />
-*   </FormItem>
-*   <FormItem>
-*     <Input />
-*   </FormItem>
-* </FormContainer>
-*/
+ * To have a proper form layout, use it together as follows
+ * @example
+ * <FormContainer>
+ *   <FormItem>
+ *     <Input />
+ *   </FormItem>
+ *   <FormItem>
+ *     <Input />
+ *   </FormItem>
+ * </FormContainer>
+ */
 
 // flex container for form layout
 export const FormContainer = styled.div`
