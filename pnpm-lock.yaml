@@ -15,8 +15,8 @@ importers:
         specifier: ^7.22.4
         version: 7.22.4
       '@bugsnag/plugin-react':
-        specifier: ^7.19.0
-        version: 7.19.0(@bugsnag/core@7.19.0)
+        specifier: ^8.6.0
+        version: 8.6.0
       '@fortawesome/fontawesome-svg-core':
         specifier: ^6.7.1
         version: 6.7.1
@@ -877,10 +877,10 @@ packages:
   '@bugsnag/node@7.22.3':
     resolution: {integrity: sha512-vDXu0mrduonyCjUkTp+zKSh1WHAtA2VjB49xK5s1f/HnTASiJvzUOQBRXrkqaj37sndYHUSMxUCPvLawyc75nA==}
 
-  '@bugsnag/plugin-react@7.19.0':
-    resolution: {integrity: sha512-owC4QXYJWGllMoOPcH5P7sbDIDuFLMCbjGAU6FwH5mBMObSQo+1ViSKImlTJQUFXATM8ySISTBVt7w3C6FFHng==}
+  '@bugsnag/plugin-react@8.6.0':
+    resolution: {integrity: sha512-bJP2N5XZZb7Kzb7ZS60peTskWdSIC210w7ufPKyL/WYLFnF/BwC0VKt6BcxIOzCqdUBmPKGIdbRLInnStH3thQ==}
     peerDependencies:
-      '@bugsnag/core': ^7.0.0
+      '@bugsnag/core': ^8.0.0
     peerDependenciesMeta:
       '@bugsnag/core':
         optional: true
@@ -4962,9 +4962,7 @@ snapshots:
       pump: 3.0.0
       stack-generator: 2.0.10
 
-  '@bugsnag/plugin-react@7.19.0(@bugsnag/core@7.19.0)':
-    optionalDependencies:
-      '@bugsnag/core': 7.19.0
+  '@bugsnag/plugin-react@8.6.0': {}
 
   '@bugsnag/request-tracker-performance@2.2.0':
     dependencies:
