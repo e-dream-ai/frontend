@@ -363,7 +363,8 @@
     },
     "add_home_screen": {
       "app_functionality_description": "infinidream can run as an app, add it to your home screen to use it.",
-      "install_message": "You have installed it already or it needs to be installed manually. Use your browser's main menu to 'Add to Home screen' or 'Install App'."
+      "install_message": "You have installed it already or it needs to be installed manually. Use your browser's main menu to 'Add to Home screen' or 'Install App'.",
+      "ios_install_message": "Click the share button and then click 'Add to Home Screen'"
     }
   },
   "components": {

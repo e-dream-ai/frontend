@@ -19,7 +19,7 @@ export const AddToDesktopChrome = () => {
             />
           </Column>
           <Column justifyContent="center">
-            <Text color={theme.textPrimaryColor}>
+            <Text color={theme.textSecondaryColor}>
               {t("modal.add_home_screen.app_functionality_description")}
             </Text>
           </Column>
@@ -28,7 +28,7 @@ export const AddToDesktopChrome = () => {
 
         <Row>
           <Column>
-            <Text color={theme.textPrimaryColor}>
+            <Text color={theme.textSecondaryColor}>
               {t("modal.add_home_screen.install_message")}
             </Text>
           </Column>
