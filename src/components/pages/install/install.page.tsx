@@ -101,7 +101,8 @@ const InstallSection = () => {
 
 const RemoteControlSection = () => {
   const { t } = useTranslation();
-  const { installationType, install } = usePWAInstall();
+  const { installationType, install, isPWAInstalled, isCheckingInstallation } =
+    usePWAInstall();
   const [showAddHomeScreen, setShowAddHomeScreen] = useState(false);
 
   const onShowAddHomeScreen = () => setShowAddHomeScreen(true);
@@ -120,6 +121,7 @@ const RemoteControlSection = () => {
       <AddToHomeScreen
         isOpen={showAddHomeScreen}
         onClose={onHideAddHomeScreen}
+        isPWAInstalled={isPWAInstalled}
       />
 
       <h2>{t("page.install.title_remote")}</h2>
@@ -197,12 +199,16 @@ const RemoteControlSection = () => {
             <Row>
               <Text>
                 <p>
-                  <strong>Remote control is already installed!</strong>
+                  <strong>
+                    {isPWAInstalled
+                      ? "Remote control is already installed!"
+                      : "Remote control is already installed or running!"}
+                  </strong>
                 </p>
                 <p>
-                  You're currently using the installed version of the remote
-                  control. Sign-in to enjoy complete control of infinidream on
-                  your laptop or computer from a distance.
+                  {isPWAInstalled
+                    ? "The infinidream remote control app is already installed on this device. You can launch it from your home screen or app drawer. Sign-in to enjoy complete control of infinidream on your laptop or computer from a distance."
+                    : "You're currently using the installed version of the remote control. Sign-in to enjoy complete control of infinidream on your laptop or computer from a distance."}
                 </p>
               </Text>
             </Row>

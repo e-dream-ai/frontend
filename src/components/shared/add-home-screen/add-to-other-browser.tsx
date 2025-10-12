@@ -20,7 +20,7 @@ export const AddToOtherBrowser = () => {
           </Column>
           <Column justifyContent="center">
             <Text color={theme.textPrimaryColor}>
-              {t('modal.add_home_screen.app_functionality_description')}
+              {t("modal.add_home_screen.app_functionality_description")}
             </Text>
           </Column>
         </Row>
@@ -29,11 +29,11 @@ export const AddToOtherBrowser = () => {
         <Row>
           <Column>
             <Text color={theme.textPrimaryColor}>
-              {t('modal.add_home_screen.other_step1')}
+              {t("modal.add_home_screen.install_message")}
             </Text>
           </Column>
         </Row>
       </Column>
     </Row>
   );
-}
+};

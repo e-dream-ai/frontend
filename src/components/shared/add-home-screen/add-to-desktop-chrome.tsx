@@ -3,7 +3,6 @@ import Row, { Column } from "../row/row";
 import Text from "../text/text";
 import { LogoIcon } from "./add-home-screen";
 import { useTranslation } from "react-i18next";
-import { MdInstallDesktop } from "react-icons/md";
 
 export const AddToDesktopChrome = () => {
   const theme = useTheme();
@@ -21,26 +20,20 @@ export const AddToDesktopChrome = () => {
           </Column>
           <Column justifyContent="center">
             <Text color={theme.textPrimaryColor}>
-              {t('modal.add_home_screen.app_functionality_description')}
+              {t("modal.add_home_screen.app_functionality_description")}
             </Text>
           </Column>
         </Row>
         <Row separator />
 
         <Row>
-          <Column mx={3}>
-            <Text fontSize={4} color={theme.colorSecondary} >
-              <MdInstallDesktop />
-            </Text>
-          </Column>
           <Column>
             <Text color={theme.textPrimaryColor}>
-              {t('modal.add_home_screen.desktop_chrome_step1')}
+              {t("modal.add_home_screen.install_message")}
             </Text>
           </Column>
         </Row>
-
       </Column>
     </Row>
   );
-}
+};

@@ -36,6 +36,14 @@ export default defineConfig({
         description: "infinidream remote control app",
         theme_color: "#ffdab7",
         background_color: "#ffdab7",
+        related_applications: [
+          {
+            platform: "webapp",
+            url: `${
+              process.env.VITE_APP_URL || "https://stage.infinidream.app"
+            }/manifest.json`,
+          },
+        ],
         screenshots: [
           {
             src: "screenshot-1.jpeg",

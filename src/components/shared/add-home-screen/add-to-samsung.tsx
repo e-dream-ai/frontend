@@ -29,17 +29,9 @@ export const AddToSamsung = () => {
         <Row>
           <Column>
             <Text color={theme.textPrimaryColor}>
-              {t("modal.add_home_screen.samsung_step1")}
+              {t("modal.add_home_screen.install_message")}
             </Text>
           </Column>
-        </Row>
-
-        <Row mt={3} justifyContent="center">
-          <img
-            src="/pwa/android.png"
-            alt="Samsung Browser installation guide"
-            style={{ maxWidth: "100%", height: "300px", borderRadius: "8px" }}
-          />
         </Row>
       </Column>
     </Row>

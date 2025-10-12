@@ -13,12 +13,40 @@ type BeforeInstallPromptEvent = Event & {
 
 export type InstallationType = "prompt" | "manual" | "desktop" | "none";
 
+interface NavigatorWithRelatedApps extends Navigator {
+  getInstalledRelatedApps?: () => Promise<
+    Array<{ platform: string; url?: string }>
+  >;
+}
+
 export const usePWAInstall = () => {
   const [installPrompt, setInstallPrompt] = useState<Event>();
   const [isInstallable, setIsInstallable] = useState(false);
+  const [isPWAInstalled, setIsPWAInstalled] = useState(false);
+  const [isCheckingInstallation, setIsCheckingInstallation] = useState(true);
   const { isMobile, isIOS, isStandalone } = useUserAgent();
   const [installationType, setInstallationType] =
     useState<InstallationType>("none");
+
+  useEffect(() => {
+    const checkIfPWAInstalled = async () => {
+      try {
+        const nav = navigator as NavigatorWithRelatedApps;
+
+        if ("getInstalledRelatedApps" in nav && nav.getInstalledRelatedApps) {
+          const relatedApps = await nav.getInstalledRelatedApps();
+          const installed = relatedApps.length > 0;
+          setIsPWAInstalled(installed);
+        }
+      } catch (error) {
+        console.warn("Could not check PWA installation status:", error);
+      } finally {
+        setIsCheckingInstallation(false);
+      }
+    };
+
+    checkIfPWAInstalled();
+  }, []);
 
   useEffect(() => {
     const handleBeforeInstallPrompt = (e: Event) => {
@@ -31,6 +59,7 @@ export const usePWAInstall = () => {
     const handleAppInstalled = () => {
       setIsInstallable(false);
       setInstallPrompt(undefined);
+      setIsPWAInstalled(true);
       toast.success("PWA installed successfully!");
     };
 
@@ -47,7 +76,7 @@ export const usePWAInstall = () => {
   }, []);
 
   useEffect(() => {
-    if (isStandalone) {
+    if (isStandalone || isPWAInstalled) {
       setInstallationType("none");
       return;
     }
@@ -66,7 +95,7 @@ export const usePWAInstall = () => {
         setInstallationType("desktop");
         break;
     }
-  }, [isMobile, isIOS, isInstallable, isStandalone]);
+  }, [isMobile, isIOS, isInstallable, isStandalone, isPWAInstalled]);
 
   const install = async () => {
     if (!installPrompt) {
@@ -85,6 +114,8 @@ export const usePWAInstall = () => {
     isInstallable,
     install,
     installationType,
+    isPWAInstalled,
+    isCheckingInstallation,
   };
 };
 
