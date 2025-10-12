@@ -13,22 +13,41 @@ type BeforeInstallPromptEvent = Event & {
 
 export type InstallationType = "prompt" | "manual" | "desktop" | "none";
 
+let globalInstallPrompt: BeforeInstallPromptEvent | undefined;
+
+// Set up global listener once
+if (typeof window !== "undefined") {
+  window.addEventListener("beforeinstallprompt", (e: Event) => {
+    e.preventDefault();
+    globalInstallPrompt = e as BeforeInstallPromptEvent;
+  });
+}
+
 export const usePWAInstall = () => {
-  const [installPrompt, setInstallPrompt] = useState<Event>();
-  const [isInstallable, setIsInstallable] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState<Event | undefined>(
+    globalInstallPrompt,
+  );
+  const [isInstallable, setIsInstallable] = useState(!!globalInstallPrompt);
   const { isMobile, isIOS, isStandalone } = useUserAgent();
   const [installationType, setInstallationType] =
     useState<InstallationType>("none");
 
   useEffect(() => {
+    if (globalInstallPrompt && !installPrompt) {
+      setInstallPrompt(globalInstallPrompt);
+      setIsInstallable(true);
+    }
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
       const promptEvent = e as BeforeInstallPromptEvent;
+      globalInstallPrompt = promptEvent;
       setInstallPrompt(promptEvent);
       setIsInstallable(true);
     };
 
     const handleAppInstalled = () => {
+      globalInstallPrompt = undefined;
       setIsInstallable(false);
       setInstallPrompt(undefined);
       toast.success("PWA installed successfully!");
@@ -44,7 +63,7 @@ export const usePWAInstall = () => {
       );
       window.removeEventListener("appinstalled", handleAppInstalled);
     };
-  }, []);
+  }, [installPrompt]);
 
   useEffect(() => {
     if (isStandalone) {
