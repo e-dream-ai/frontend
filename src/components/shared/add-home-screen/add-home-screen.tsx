@@ -10,8 +10,6 @@ import { AddToOtherBrowser } from "./add-to-other-browser";
 import { AddToFirefox } from "./add-to-firefox";
 import { AddToFirefoxIos } from "./add-to-firefox-ios";
 import { AddToDesktopChrome } from "./add-to-desktop-chrome";
-import { useTranslation } from "react-i18next";
-import Text from "../text/text";
 
 export const LogoIcon = styled.img`
   width: auto;
@@ -32,15 +30,12 @@ type AddToHomeScreenPromptType =
 type AddToHomeScreenProps = {
   isOpen?: boolean;
   onClose?: () => void;
-  isPWAInstalled?: boolean;
 };
 
 export const AddToHomeScreen: React.FC<AddToHomeScreenProps> = ({
   isOpen,
   onClose,
-  isPWAInstalled = false,
 }) => {
-  const { t } = useTranslation();
   const [displayPrompt, setDisplayPrompt] =
     useState<AddToHomeScreenPromptType>("");
   const { userAgent, isMobile, isStandalone, isIOS } = useUserAgent();
@@ -71,34 +66,23 @@ export const AddToHomeScreen: React.FC<AddToHomeScreenProps> = ({
     }
   }, [userAgent, isMobile, isStandalone, isIOS]);
 
-  const Prompt = () => {
-    if (isPWAInstalled) {
-      return (
-        <Text>
-          <h3>{t("modal.add_home_screen.already_installed_title")}</h3>
-          <p>{t("modal.add_home_screen.already_installed_browser_message")}</p>
-        </Text>
-      );
-    }
-
-    return (
-      <>
+  const Prompt = () => (
+    <>
+      {
         {
-          {
-            safari: <AddToIosSafari />,
-            chrome: <AddToMobileChrome />,
-            firefox: <AddToFirefox />,
-            firefoxIos: <AddToFirefoxIos />,
-            chromeIos: <AddToMobileChromeIos />,
-            chromeDesktop: <AddToDesktopChrome />,
-            samsung: <AddToSamsung />,
-            other: <AddToOtherBrowser />,
-            "": <></>,
-          }[displayPrompt]
-        }
-      </>
-    );
-  };
+          safari: <AddToIosSafari />,
+          chrome: <AddToMobileChrome />,
+          firefox: <AddToFirefox />,
+          firefoxIos: <AddToFirefoxIos />,
+          chromeIos: <AddToMobileChromeIos />,
+          chromeDesktop: <AddToDesktopChrome />,
+          samsung: <AddToSamsung />,
+          other: <AddToOtherBrowser />,
+          "": <></>,
+        }[displayPrompt]
+      }
+    </>
+  );
 
   return (
     <>

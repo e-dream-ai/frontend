@@ -363,10 +363,7 @@
     },
     "add_home_screen": {
       "app_functionality_description": "infinidream can run as an app, add it to your home screen to use it.",
-      "install_message": "You have installed it already or it needs to be installed manually. Use your browser's main menu to 'Add to Home screen' or 'Install App'.",
-      "already_installed_title": "Already Installed",
-      "already_installed_message": "The infinidream remote control app is already installed on this device. You can launch it from your home screen or app drawer.",
-      "already_installed_browser_message": "It looks like you've already installed the infinidream remote control app. If you can't find it, you can manually add it using your browser's 'Add to Home screen' or 'Install App' option from the menu."
+      "install_message": "You have installed it already or it needs to be installed manually. Use your browser's main menu to 'Add to Home screen' or 'Install App'."
     }
   },
   "components": {
