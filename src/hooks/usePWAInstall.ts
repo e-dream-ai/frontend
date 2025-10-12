@@ -76,6 +76,10 @@ export const usePWAInstall = () => {
   }, []);
 
   useEffect(() => {
+    if (isCheckingInstallation) {
+      return;
+    }
+
     if (isStandalone || isPWAInstalled) {
       setInstallationType("none");
       return;
@@ -95,7 +99,14 @@ export const usePWAInstall = () => {
         setInstallationType("desktop");
         break;
     }
-  }, [isMobile, isIOS, isInstallable, isStandalone, isPWAInstalled]);
+  }, [
+    isMobile,
+    isIOS,
+    isInstallable,
+    isStandalone,
+    isPWAInstalled,
+    isCheckingInstallation,
+  ]);
 
   const install = async () => {
     if (!installPrompt) {
