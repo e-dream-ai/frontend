@@ -6,7 +6,7 @@
   "dependencies": {
     "@bugsnag/browser-performance": "^2.2.0",
     "@bugsnag/js": "^7.22.4",
-    "@bugsnag/plugin-react": "^7.19.0",
+    "@bugsnag/plugin-react": "^8.6.0",
     "@fortawesome/fontawesome-svg-core": "^6.7.1",
     "@fortawesome/free-brands-svg-icons": "^6.7.1",
     "@fortawesome/free-regular-svg-icons": "^7.1.0",
@@ -28,7 +28,7 @@
     "react-ga4": "^2.1.0",
     "react-gtm-module": "^2.0.11",
     "react-hook-form": "^7.49.2",
-    "react-i18next": "^13.5.0",
+    "react-i18next": "^15.7.4",
     "react-icons": "^5.4.0",
     "react-infinite-scroll-component": "^6.1.0",
     "react-ios-pwa-prompt": "^2.0.6",
