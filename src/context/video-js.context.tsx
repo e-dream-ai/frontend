@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useEffect,
 } from "react";
 import videojs from "video.js";
 import Player from "video.js/dist/types/player";
@@ -24,6 +25,8 @@ type VideoJSContextType = {
   activePlayer: string | null;
   players: PlayerInstance[];
   videoWrapperRef: RefObject<HTMLDivElement>;
+  currentTime: number;
+  duration: number;
   createPlayer: () => string;
   removePlayer: (id: string) => void;
   registerPlayer: (
@@ -82,6 +85,9 @@ export const VideoJSProvider = ({
   const [isReady, setIsReady] = useState(false);
   // players pool
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
+  // playback state
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
 
   const updateActivePlayer = useCallback((ap: string | null) => {
     activePlayerIdRef.current = ap;
@@ -349,6 +355,61 @@ export const VideoJSProvider = ({
     [],
   );
 
+  useEffect(() => {
+    const offTime = addEventListener(VIDEOJS_EVENTS.TIMEUPDATE, () => {
+      const active = activePlayerIdRef.current
+        ? playersPoolRef.current.get(activePlayerIdRef.current)
+        : null;
+      const ct = active?.player?.currentTime?.() ?? 0;
+      setCurrentTime(typeof ct === "number" && !Number.isNaN(ct) ? ct : 0);
+      const dur = active?.player?.duration?.();
+      if (typeof dur === "number" && !Number.isNaN(dur)) {
+        setDuration(dur);
+      }
+    });
+
+    const offMeta = addEventListener(VIDEOJS_EVENTS.LOADEDMETADATA, () => {
+      const active = activePlayerIdRef.current
+        ? playersPoolRef.current.get(activePlayerIdRef.current)
+        : null;
+      const dur = active?.player?.duration?.();
+      setDuration(typeof dur === "number" && !Number.isNaN(dur) ? dur : 0);
+      const ct = active?.player?.currentTime?.() ?? 0;
+      setCurrentTime(typeof ct === "number" && !Number.isNaN(ct) ? ct : 0);
+    });
+
+    const offLoadStart = addEventListener(VIDEOJS_EVENTS.LOADSTART, () => {
+      setCurrentTime(0);
+      setDuration(0);
+    });
+
+    return () => {
+      offTime();
+      offMeta();
+      offLoadStart();
+    };
+  }, [addEventListener]);
+
+  useEffect(() => {
+    const intervalId = window.setInterval(() => {
+      const active = activePlayerIdRef.current
+        ? playersPoolRef.current.get(activePlayerIdRef.current)
+        : null;
+      const ct = active?.player?.currentTime?.();
+      if (typeof ct === "number" && !Number.isNaN(ct)) {
+        setCurrentTime(ct);
+      }
+      const dur = active?.player?.duration?.();
+      if (typeof dur === "number" && !Number.isNaN(dur)) {
+        setDuration(dur);
+      }
+    }, 250);
+
+    return () => {
+      window.clearInterval(intervalId);
+    };
+  }, []);
+
   const playVideo = useCallback(
     async (
       src: string,
@@ -519,6 +580,8 @@ export const VideoJSProvider = ({
       activePlayer: activePlayerId,
       players: Array.from(playersPoolRef.current.values()),
       videoWrapperRef,
+      currentTime,
+      duration,
       registerPlayer,
       unregisterPlayer,
       addEventListener,
@@ -535,6 +598,8 @@ export const VideoJSProvider = ({
       isReady,
       activePlayerId,
       videoWrapperRef,
+      currentTime,
+      duration,
       playersPoolRef,
       registerPlayer,
       unregisterPlayer,

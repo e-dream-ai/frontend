@@ -17,7 +17,6 @@ import {
 import {
   calculatePlaybackRateFromSpeed,
   getPlaylistNavigation,
-  multiplyPerceptualFPS,
   tapsToBrightness,
 } from "@/utils/web-client.util";
 import useSocket from "@/hooks/useSocket";
@@ -52,6 +51,7 @@ type WebClientContextType = {
   isWebClientAvailable: boolean;
   playingDream?: Dream;
   handlers: Record<RemoteEvent, () => void>;
+  speedLevel: number;
   setWebClientActive: (isActive: boolean) => void;
   setWebPlayerAvailable: (isActive: boolean) => void;
   handleOnEnded: () => void;
@@ -139,6 +139,8 @@ export const WebClientProvider: React.FC<{
     calculatePlaybackRateFromSpeed(8, 1),
   );
   const [brightness, setBrightness] = useState<number>(40);
+  const [speedLevel, setSpeedLevel] = useState<number>(9);
+  const lastNonZeroSpeedRef = useRef<number>(8);
 
   // API data hooks
   const { data: defaultPlaylistData } = useDefaultPlaylist();
@@ -410,8 +412,17 @@ export const WebClientProvider: React.FC<{
       );
       setPlayerPlaybackRate(playbackRate);
       setPlaybackRate(playbackRate);
+      setSpeedLevel(speed);
+      if (speed > 0) {
+        lastNonZeroSpeedRef.current = speed;
+        const isPaused = playerInstance?.player?.paused();
+        if (isPaused) {
+          playerInstance?.player?.play();
+          setPaused(false);
+        }
+      }
     },
-    [setPlayerPlaybackRate],
+    [setPlayerPlaybackRate, playerInstance],
   );
 
   const speedControls = Object.fromEntries(
@@ -428,14 +439,10 @@ export const WebClientProvider: React.FC<{
   > = useMemo(
     () => ({
       playback_slower: () => {
-        const newPlaybackRate = multiplyPerceptualFPS(1 / 1.1224, playbackRate);
-        setPlaybackRate(newPlaybackRate);
-        setPlayerPlaybackRate(newPlaybackRate);
+        setSpeed(Math.max(0, speedLevel - 1));
       },
       playback_faster: () => {
-        const newPlaybackRate = multiplyPerceptualFPS(1.1224, playbackRate);
-        setPlaybackRate(newPlaybackRate);
-        setPlayerPlaybackRate(newPlaybackRate);
+        setSpeed(Math.min(9, speedLevel + 1));
       },
       brighter: () => {
         const newBrightness = brightness + 1;
@@ -452,8 +459,10 @@ export const WebClientProvider: React.FC<{
         const isPaused = playerInstance?.player?.paused();
         if (isPaused) {
           playerInstance?.player?.play();
+          setSpeedLevel(lastNonZeroSpeedRef.current);
         } else {
           playerInstance?.player?.pause();
+          setSpeedLevel(0);
         }
         setPaused(!isPaused);
       },
@@ -546,6 +555,7 @@ export const WebClientProvider: React.FC<{
       playbackRate,
       brightness,
       speedControls,
+      speedLevel,
       setPlayerBrightness,
       toggleCreditOverlay,
       toggleFullscreen,
@@ -741,14 +751,17 @@ export const WebClientProvider: React.FC<{
       isWebClientAvailable,
       playingDream: playingDreamRef.current,
       handlers,
+      speedLevel,
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,
+      // Note: currentTime/duration are available from useVideoJs if needed by consumers
     }),
     [
       isWebClientActive,
       isWebClientAvailable,
       handlers,
+      speedLevel,
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,

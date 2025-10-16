@@ -13,3 +13,4 @@ export { Thumbnail, ThumbnailPlaceholder } from "./thumbnail/thumbnail";
 export { Text } from "./text/text";
 export { TextArea } from "./text-area/text-area";
 export { Select } from "./select/select";
+export { default as PlayerTray } from "./player-tray/player-tray";

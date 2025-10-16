@@ -22,6 +22,21 @@
     "license": "License / Re-use policy",
     "terms_of_service": "Terms of Service"
   },
+  "common": {
+    "unknown_author": "Unknown author"
+  },
+  "actions": {
+    "open": "Open",
+    "hide": "Hide",
+    "previous": "Previous",
+    "like": "Like",
+    "dislike": "Dislike",
+    "next": "Next",
+    "repeat": "Repeat"
+  },
+  "remote_control": {
+    "player_tray": "Player tray"
+  },
   "page": {
     "error": {
       "title": "Error",

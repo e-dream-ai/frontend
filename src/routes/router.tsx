@@ -38,9 +38,12 @@ import ReactGA from "react-ga4";
 import { PageContainer } from "@/components/shared/container/page-container";
 import RemoteControlPage from "@/components/pages/remote-control/remote-control.page";
 import Providers, { withProviders } from "@/providers/providers";
+import { PlayerTray } from "@/components/shared/player-tray/player-tray";
+import useAuth from "@/hooks/useAuth";
 
 export const RootElement = () => {
   const location = useLocation();
+  const { user, currentDream, isLoadingCurrentDream } = useAuth();
 
   /**
    * Register pageview on location changes
@@ -57,6 +60,10 @@ export const RootElement = () => {
       <Header />
       <Outlet />
       <Footer />
+      {user &&
+        location.pathname !== ROUTES.REMOTE_CONTROL &&
+        !isLoadingCurrentDream &&
+        currentDream && <PlayerTray />}
     </PageContainer>
   );
 };
