@@ -53,33 +53,33 @@ export const LoginPage: React.FC = () => {
 
   const onSubmit =
     (submitType: SubmitType) =>
-      async (data: LoginFormValues | MagicLoginFormValues) => {
-        clearErrors();
-        const schema = submitType === "login" ? LoginSchema : MagicLoginSchema;
+    async (data: LoginFormValues | MagicLoginFormValues) => {
+      clearErrors();
+      const schema = submitType === "login" ? LoginSchema : MagicLoginSchema;
 
-        try {
-          await schema.validate(data, { abortEarly: false });
+      try {
+        await schema.validate(data, { abortEarly: false });
 
-          if (submitType === "login" && "password" in data) {
-            handleLogin(data.email, data.password);
-          } else {
-            handleMagicLogin(data.email);
-          }
-        } catch (error) {
-          if (error instanceof yup.ValidationError) {
-            error.inner.forEach((err) => {
-              if (err.path) {
-                setError(err.path as keyof MagicLoginFormValues, {
-                  type: "manual",
-                  message: err.message,
-                });
-              }
-            });
-          } else {
-            // Handle unexpected errors
-          }
+        if (submitType === "login" && "password" in data) {
+          handleLogin(data.email, data.password);
+        } else {
+          handleMagicLogin(data.email);
         }
-      };
+      } catch (error) {
+        if (error instanceof yup.ValidationError) {
+          error.inner.forEach((err) => {
+            if (err.path) {
+              setError(err.path as keyof MagicLoginFormValues, {
+                type: "manual",
+                message: err.message,
+              });
+            }
+          });
+        } else {
+          // Handle unexpected errors
+        }
+      }
+    };
 
   const handleLogin = (email: string, password: string) => {
     mutate(

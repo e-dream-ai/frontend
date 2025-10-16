@@ -23,8 +23,8 @@ export const TermsOfServicePage: React.FC = () => {
               <ol type="a">
                 <li>
                   These Terms of Service, which include our End User License
-                  Agreement (&ldquo;EULA&rdquo;) govern your use of the infinidream
-                  service, hereafter, &ldquo;The Service&rdquo;.
+                  Agreement (&ldquo;EULA&rdquo;) govern your use of the
+                  infinidream service, hereafter, &ldquo;The Service&rdquo;.
                 </li>
                 <li>
                   The user of the service may be referred to as
@@ -36,8 +36,8 @@ export const TermsOfServicePage: React.FC = () => {
                   use our service.
                 </li>
                 <li>
-                  The service is provided by e-dream, inc, hereafter,
-                  &ldquo;The Company&rdquo;.
+                  The service is provided by e-dream, inc, hereafter, &ldquo;The
+                  Company&rdquo;.
                 </li>
                 <li>
                   Age Requirements: You must be at least 13 years old to use the
@@ -139,7 +139,8 @@ export const TermsOfServicePage: React.FC = () => {
               <b>Basic License for User Generated Content</b>
               <ol type="a">
                 <li>
-                  When a user uploads content to the service, they become a creator.
+                  When a user uploads content to the service, they become a
+                  creator.
                 </li>
                 <li>
                   The user attests that the content is legal and the uploader
@@ -153,8 +154,8 @@ export const TermsOfServicePage: React.FC = () => {
                   permission for the company to create derived works such as
                   changing resolution and re-encoding in different formats,
                   playing back at different speeds, mixing with other content,
-                  generating transitions, and transforming or editing
-                  for interactive display.
+                  generating transitions, and transforming or editing for
+                  interactive display.
                 </li>
                 <li>
                   Uploading also grants each other user of the Service a
@@ -175,22 +176,23 @@ export const TermsOfServicePage: React.FC = () => {
                   or deleted.
                 </li>
                 <li>
-                  No Generative Training Without Consent. The Basic License does not grant
-                  the company or anyone the right to use your content for
-                  training generative AI models. The company may analyze the content with
-		  AI for the purpose of running the service, eg search and recommendations,
-		  and training models for these purposes.
+                  No Generative Training Without Consent. The Basic License does
+                  not grant the company or anyone the right to use your content
+                  for training generative AI models. The company may analyze the
+                  content with AI for the purpose of running the service, eg
+                  search and recommendations, and training models for these
+                  purposes.
                 </li>
                 <li>
-                  No Third-Party Remixing or Derivatives outside normal
-                  use. Other users may not copy, remix, alter, or
-                  redistribute your content beyond what is inherently enabled
-                  by using the service.
+                  No Third-Party Remixing or Derivatives outside normal use.
+                  Other users may not copy, remix, alter, or redistribute your
+                  content beyond what is inherently enabled by using the
+                  service.
                 </li>
                 <li>
                   The company is not obligated to distribute or display any
-                  uploaded content. The company may hide or delete content at its
-                  sole discretion.
+                  uploaded content. The company may hide or delete content at
+                  its sole discretion.
                 </li>
                 <li>
                   Uploaded content must respect the Content Policy, above.
@@ -201,8 +203,8 @@ export const TermsOfServicePage: React.FC = () => {
                   generative fill to remove a logo or nudity.
                 </li>
                 <li>
-                  If the content has a source URL or description,
-                  please record this metadata along with the content.
+                  If the content has a source URL or description, please record
+                  this metadata along with the content.
                 </li>
               </ol>
             </li>
@@ -210,48 +212,54 @@ export const TermsOfServicePage: React.FC = () => {
               <b>Granting Additional Rights with a CC BY License</b>
               <ol type="a">
                 <li>
-                  If the ‘CC BY’ option is checked at upload (or later you edit your content’s
-                  license setting accordingly), you agree to license your Content under the
-                  {" "}<Anchor href="https://creativecommons.org/licenses/by/4.0/">Creative
-                    Commons Attribution 4.0 International (CC BY 4.0) license</Anchor>. In
-                  doing so, you grant to the company and the general public a worldwide,
-                  non-exclusive, royalty-free license to reproduce, distribute, create
-                  derivative works of, display, and perform your Content, for both
-                  commercial and non-commercial purposes, as long as proper attribution is
-                  given to you. We summarize those requirements below.
+                  If the ‘CC BY’ option is checked at upload (or later you edit
+                  your content’s license setting accordingly), you agree to
+                  license your Content under the{" "}
+                  <Anchor href="https://creativecommons.org/licenses/by/4.0/">
+                    Creative Commons Attribution 4.0 International (CC BY 4.0)
+                    license
+                  </Anchor>
+                  . In doing so, you grant to the company and the general public
+                  a worldwide, non-exclusive, royalty-free license to reproduce,
+                  distribute, create derivative works of, display, and perform
+                  your Content, for both commercial and non-commercial purposes,
+                  as long as proper attribution is given to you. We summarize
+                  those requirements below.
                 </li>
                 <li>
-                  <b>AI Training and Remixing.</b>  By selecting CC BY, you also explicitly grant
-                  the company permission to include your content in datasets for training AI
-                  models or other algorithmic processes and to make it available for
-                  remixing and transformation by other users or third parties, subject to
+                  <b>AI Training and Remixing.</b> By selecting CC BY, you also
+                  explicitly grant the company permission to include your
+                  content in datasets for training AI models or other
+                  algorithmic processes and to make it available for remixing
+                  and transformation by other users or third parties, subject to
                   CC BY attribution requirements.
                 </li>
                 <li>
-                  <b>User Remix & Collaboration.</b> Other users may edit, adapt, or build upon
-                  your Content (for instance, to create mashups, collaborative
-                  “wiki-visuals,” or other derivative works) and share those remixes under
-                  the terms of CC BY, which requires that they credit you as the original
-                  creator.
+                  <b>User Remix & Collaboration.</b> Other users may edit,
+                  adapt, or build upon your Content (for instance, to create
+                  mashups, collaborative “wiki-visuals,” or other derivative
+                  works) and share those remixes under the terms of CC BY, which
+                  requires that they credit you as the original creator.
                 </li>
                 <li>
-                  <b>Attribution Requirements.</b>  Anyone using or remixing your Content under
-                  CC BY must provide appropriate credit (e.g., by citing you by name with
-                  link) or other appropriate attribution) and indicate if changes were made
-                  to the original work.
+                  <b>Attribution Requirements.</b> Anyone using or remixing your
+                  Content under CC BY must provide appropriate credit (e.g., by
+                  citing you by name with link) or other appropriate
+                  attribution) and indicate if changes were made to the original
+                  work.
                 </li>
                 <li>
-                  <b>Changing Your Mind or Removing CC BY.</b>  Selecting or deselecting the CC
-                  BY option only applies on a prospective basis. Once anyone has lawfully
-                  accessed or downloaded your content under CC BY, nobody can
-                  retroactively revoke their rights to content already in use, subject to
-                  applicable laws.
+                  <b>Changing Your Mind or Removing CC BY.</b> Selecting or
+                  deselecting the CC BY option only applies on a prospective
+                  basis. Once anyone has lawfully accessed or downloaded your
+                  content under CC BY, nobody can retroactively revoke their
+                  rights to content already in use, subject to applicable laws.
                 </li>
               </ol>
             </li>
             <li id={CCBY_ID}>
               <b>To summarize:</b>
-	      <CcbyTable />
+              <CcbyTable />
             </li>
             <li>
               <b>Disclaimers of Warranties and Limitations on Liability</b>
@@ -323,8 +331,8 @@ export const TermsOfServicePage: React.FC = () => {
               <b>Customer Support.</b> To find more information about our
               service and its features, or if you need assistance with your
               account, please visit our web site,{" "}
-              <Anchor href="https://infinidream.ai/">infinidream.ai</Anchor> and if
-              necessary, contact us from your verified account email address.
+              <Anchor href="https://infinidream.ai/">infinidream.ai</Anchor> and
+              if necessary, contact us from your verified account email address.
               The company does not provide live help desk service. You may find
               us on social media, but the company does not guarantee any
               response.

@@ -13,8 +13,7 @@ export const ReportsPage: React.FC = () => {
     <Container>
       <Row justifyContent="space-between" mb="4">
         <h2>{t("page.reports.title")}</h2>
-        <Row>
-        </Row>
+        <Row></Row>
       </Row>
       <Section id={SECTION_ID}>
         <ReportsList />

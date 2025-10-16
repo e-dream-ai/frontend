@@ -11,17 +11,17 @@ import { getKeyframeRoute } from "@/utils/router.util";
 type KeyframeSelectProps = {
   name: "startKeyframe" | "endKeyframe";
   placeholder: string;
-  control: Control<UpdateDreamFormValues>
+  control: Control<UpdateDreamFormValues>;
   editMode: boolean;
   tooltipPlace?: PlacesType;
-}
+};
 
 export const KeyframeSelect = ({
   name,
   control,
   placeholder,
   editMode,
-  tooltipPlace
+  tooltipPlace,
 }: KeyframeSelectProps) => {
   const [keyframeSearch, setKeyframeSearch] = useState<string>("");
 

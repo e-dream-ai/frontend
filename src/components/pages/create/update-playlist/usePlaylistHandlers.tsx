@@ -12,7 +12,10 @@ import { useTranslation } from "react-i18next";
 import { UseFormReset, UseFormSetValue } from "react-hook-form";
 import { HandleChangeFile } from "@/types/media.types";
 import { Playlist } from "@/types/playlist.types";
-import { generateDreamVideoFormRequest, useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
+import {
+  generateDreamVideoFormRequest,
+  useUploadDreamVideo,
+} from "@/api/dream/hooks/useUploadDreamVideo";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
@@ -103,7 +106,8 @@ export const usePlaylistHandlers = ({
             );
           } else {
             toast.error(
-              `${t("components.update_playlist.error_updating_playlist")} ${response.message
+              `${t("components.update_playlist.error_updating_playlist")} ${
+                response.message
               }`,
             );
           }
@@ -147,7 +151,9 @@ export const usePlaylistHandlers = ({
         continue;
       }
 
-      const createdDream = await uploadDreamVideoMutateAsync(generateDreamVideoFormRequest(data, videos[i]?.fileBlob, isUserAdmin));
+      const createdDream = await uploadDreamVideoMutateAsync(
+        generateDreamVideoFormRequest(data, videos[i]?.fileBlob, isUserAdmin),
+      );
       setVideoUploaded(i);
       if (createdDream) {
         await addPlaylistItemMutation.mutateAsync({

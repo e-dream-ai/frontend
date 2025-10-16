@@ -92,7 +92,7 @@ const JumpToEndButton = styled.button<{ disabled?: boolean }>`
 
 const ScrollToTopButton = styled.button<{ visible?: boolean }>`
   position: fixed;
-  bottom: 2rem;
+  bottom: 3.5rem;
   right: 2rem;
   z-index: 1000;
   width: 3rem;

@@ -32,7 +32,7 @@ export const Menu = styled(MenuComponent)`
 
   .my-kebab-menu {
     background-color: ${(props) => props.theme.inputBackgroundColor};
-    
+
     .mobile {
       display: none;
     }

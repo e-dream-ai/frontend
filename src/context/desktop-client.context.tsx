@@ -1,14 +1,19 @@
 import { createContext, useEffect, useState } from "react";
-import { GOOD_BYE_EVENT, PING_EVENT } from "@/constants/remote-control.constants";
+import {
+  GOOD_BYE_EVENT,
+  PING_EVENT,
+} from "@/constants/remote-control.constants";
 import useAuth from "@/hooks/useAuth";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
 
 // Create context
 type DesktopClientContextType = {
   isActive: boolean;
-}
+};
 
-const DesktopClientContext = createContext<DesktopClientContextType | undefined>(undefined);
+const DesktopClientContext = createContext<
+  DesktopClientContextType | undefined
+>(undefined);
 
 /**
  * Create provider component
@@ -16,7 +21,7 @@ const DesktopClientContext = createContext<DesktopClientContextType | undefined>
  */
 export const DesktopClientProvider = ({
   children,
-  inactivityTimeout = 60 * 1000
+  inactivityTimeout = 60 * 1000,
 }: {
   children: React.ReactNode;
   inactivityTimeout?: number;
@@ -47,7 +52,6 @@ export const DesktopClientProvider = ({
    */
   useSocketEventListener(PING_EVENT, handlePingEvent);
   useSocketEventListener(GOOD_BYE_EVENT, handleGoodbyeEvent);
-
 
   /**
    * Setup timer from socket

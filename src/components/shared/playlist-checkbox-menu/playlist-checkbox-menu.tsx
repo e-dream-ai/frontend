@@ -202,7 +202,10 @@ const PlaylistMenuItem = ({
           queryClient.refetchQueries([DREAM_QUERY_KEY, targetItem?.uuid]);
         } else {
           // Refetch playlist references
-          queryClient.refetchQueries([PLAYLIST_REFERENCES_QUERY_KEY, targetItem?.uuid]);
+          queryClient.refetchQueries([
+            PLAYLIST_REFERENCES_QUERY_KEY,
+            targetItem?.uuid,
+          ]);
         }
 
         /**
@@ -242,7 +245,10 @@ const PlaylistMenuItem = ({
           queryClient.refetchQueries([DREAM_QUERY_KEY, targetItem?.uuid]);
         } else {
           // Refetch playlist references
-          queryClient.refetchQueries([PLAYLIST_REFERENCES_QUERY_KEY, targetItem?.uuid]);
+          queryClient.refetchQueries([
+            PLAYLIST_REFERENCES_QUERY_KEY,
+            targetItem?.uuid,
+          ]);
         }
 
         /**

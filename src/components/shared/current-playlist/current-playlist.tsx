@@ -24,7 +24,8 @@ export const CurrentPlaylist = () => {
   const { t } = useTranslation();
   const { emit } = useSocket();
   const theme = useTheme();
-  const { currentPlaylist, isLoadingCurrentPlaylist, refreshCurrentPlaylist } = useAuth();
+  const { currentPlaylist, isLoadingCurrentPlaylist, refreshCurrentPlaylist } =
+    useAuth();
 
   const onRemoveCurrentPlaylist = () => {
     emit(NEW_REMOTE_CONTROL_EVENT, {
@@ -37,7 +38,7 @@ export const CurrentPlaylist = () => {
   // update current playlist on component mount
   useEffect(() => {
     refreshCurrentPlaylist();
-  }, [refreshCurrentPlaylist])
+  }, [refreshCurrentPlaylist]);
 
   return (
     <Column mb="2rem">

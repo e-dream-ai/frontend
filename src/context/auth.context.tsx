@@ -63,33 +63,55 @@ export const AuthProvider: React.FC<{
   const [user, setUser] = useState<User | null>(null);
 
   // current dream
-  const { data: currentDreamData, refetch: refetchCurrentDream, isLoading: isLoadingCD, isRefetching: isRefetchingCD } = useCurrentDream();
-  const currentDream = useMemo(() => currentDreamData?.data?.dream, [currentDreamData]);
-  const isLoadingCurrentDream = useMemo(() => isLoadingCD || isRefetchingCD, [isLoadingCD, isRefetchingCD])
+  const {
+    data: currentDreamData,
+    refetch: refetchCurrentDream,
+    isLoading: isLoadingCD,
+    isRefetching: isRefetchingCD,
+  } = useCurrentDream();
+  const currentDream = useMemo(
+    () => currentDreamData?.data?.dream,
+    [currentDreamData],
+  );
+  const isLoadingCurrentDream = useMemo(
+    () => isLoadingCD || isRefetchingCD,
+    [isLoadingCD, isRefetchingCD],
+  );
 
   // current playlist
-  const { data: currentPlaylistData, refetch: refetchCurrentPlaylist, isLoading: isLoadingCP, isRefetching: isRefetchingCP } = useCurrentPlaylist();
-  const currentPlaylist = useMemo(() => currentPlaylistData?.data?.playlist, [currentPlaylistData]);
-  const isLoadingCurrentPlaylist = useMemo(() => isLoadingCP || isRefetchingCP, [isLoadingCP, isRefetchingCP])
-
-  const isLoggingOut = useMemo(() => logoutMutation.isLoading, [logoutMutation.isLoading]);
-
-  const setLoggedUser = useCallback(
-    (user: User | null) => {
-      if (user) {
-        /**
-         * GA set user id
-         */
-        ReactGA.set({
-          // using userId since is the option on GaOptions
-          // https://github.com/react-ga/react-ga/blob/087837dc03d482549ded7669ac559df0c7cc5498/types/index.d.ts#L97
-          userId: String(user.uuid),
-        });
-      }
-      setUser(user);
-    },
-    [],
+  const {
+    data: currentPlaylistData,
+    refetch: refetchCurrentPlaylist,
+    isLoading: isLoadingCP,
+    isRefetching: isRefetchingCP,
+  } = useCurrentPlaylist();
+  const currentPlaylist = useMemo(
+    () => currentPlaylistData?.data?.playlist,
+    [currentPlaylistData],
   );
+  const isLoadingCurrentPlaylist = useMemo(
+    () => isLoadingCP || isRefetchingCP,
+    [isLoadingCP, isRefetchingCP],
+  );
+
+  const isLoggingOut = useMemo(
+    () => logoutMutation.isLoading,
+    [logoutMutation.isLoading],
+  );
+
+  const setLoggedUser = useCallback((user: User | null) => {
+    if (user) {
+      /**
+       * GA set user id
+       */
+      ReactGA.set({
+        // using userId since is the option on GaOptions
+        // https://github.com/react-ga/react-ga/blob/087837dc03d482549ded7669ac559df0c7cc5498/types/index.d.ts#L97
+        userId: String(user.uuid),
+      });
+    }
+    setUser(user);
+  }, []);
 
   const login: (user: User) => void = useCallback(
     (user: User) => {

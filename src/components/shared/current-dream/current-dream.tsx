@@ -24,11 +24,14 @@ import { toast } from "react-toastify";
 export const CurrentDream = () => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const { user, currentDream, isLoadingCurrentDream, refreshCurrentDream } = useAuth();
+  const { user, currentDream, isLoadingCurrentDream, refreshCurrentDream } =
+    useAuth();
   const { setWebClientActive } = useWebClient();
   const { isActive } = useDesktopClient();
 
-  const handleRemoteControlEvent = async (data?: RemoteControlEventData): Promise<void | undefined> => {
+  const handleRemoteControlEvent = async (
+    data?: RemoteControlEventData,
+  ): Promise<void | undefined> => {
     const event: RemoteControlAction | undefined = getRemoteControlEvent(
       data?.event,
     );
@@ -55,27 +58,27 @@ export const CurrentDream = () => {
     {
       onActive: () => {
         if (IS_WEB_CLIENT_ACTIVE && user) {
-	  setWebClientActive(false);
+          setWebClientActive(false);
           toast.info(t("web_client.web_client_unavailable"));
         }
       },
       onInactive: () => {
         // Show web client available toast and play button
         if (IS_WEB_CLIENT_ACTIVE && user) {
-	  setWebClientActive(true);
+          setWebClientActive(true);
           toast.info(t("web_client.web_client_available"));
         }
       },
     },
     {},
     // Add user to deps to refresh callbacks when user logs in
-    [user]
+    [user],
   );
 
   // update current dream on component mount
   useEffect(() => {
     refreshCurrentDream();
-  }, [refreshCurrentDream])
+  }, [refreshCurrentDream]);
 
   return (
     <Column mb="2rem">

@@ -77,16 +77,16 @@ export const AboutPage: React.FC = () => {
           <ul>
             <li>
               Install infinidream on your Mac to get the best experience. The
-              infinidream app provides unsurpassed support for ambient interaction,
-              including speed control.
+              infinidream app provides unsurpassed support for ambient
+              interaction, including speed control.
             </li>
             <li>
               Install the screensaver so it runs automatically when you're not
               using your computer.
             </li>
             <li>
-              Install the web app on your phone to remote-control your infinidream
-              from anywhere.
+              Install the web app on your phone to remote-control your
+              infinidream from anywhere.
             </li>
           </ul>
           <p>
@@ -95,9 +95,9 @@ export const AboutPage: React.FC = () => {
           </p>
           <p>
             <AnchorLink to={ROUTES.SIGNUP}>Create an account</AnchorLink>,{" "}
-            <AnchorLink to={ROUTES.INSTALL}>install the app</AnchorLink>, and begin the
-            experience. Learn more on the <AnchorLink to="https://infinidream.ai/">
-	    landing page</AnchorLink>.
+            <AnchorLink to={ROUTES.INSTALL}>install the app</AnchorLink>, and
+            begin the experience. Learn more on the{" "}
+            <AnchorLink to="https://infinidream.ai/">landing page</AnchorLink>.
           </p>
         </Text>
       </Section>
