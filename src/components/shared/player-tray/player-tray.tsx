@@ -9,6 +9,7 @@ import {
   FaStepForward,
   FaClosedCaptioning,
 } from "react-icons/fa";
+import { LuTurtle, LuRabbit } from "react-icons/lu";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { PiRepeatBold } from "react-icons/pi";
 import useAuth from "@/hooks/useAuth";
@@ -18,11 +19,14 @@ import { DEVICES } from "@/constants/devices.constants";
 import { useSocket } from "@/hooks/useSocket";
 import { useWebClient } from "@/hooks/useWebClient";
 import { useVideoJs } from "@/hooks/useVideoJS";
+import { useVideoFPS } from "@/hooks/useVideoFPS";
 import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
 } from "@/constants/remote-control.constants";
 import { RemoteControlEvent } from "@/types/remote-control.types";
+import { useNavigate } from "react-router-dom";
+import { ROUTES } from "@/constants/routes.constants";
 
 export const PlayerTray: React.FC = () => {
   const { t } = useTranslation();
@@ -30,6 +34,8 @@ export const PlayerTray: React.FC = () => {
   const { emit } = useSocket();
   const { isWebClientActive, handlers, speedLevel } = useWebClient();
   const { currentTime, duration } = useVideoJs();
+  const { fps } = useVideoFPS();
+  const navigate = useNavigate();
 
   const [isHidden, setIsHidden] = useState<boolean>(() => {
     try {
@@ -110,7 +116,9 @@ export const PlayerTray: React.FC = () => {
       <LeftSection>
         <Artwork src={thumbnail} alt={title} />
         <TrackInfo>
-          <TrackTitle>{title}</TrackTitle>
+          <TrackTitle onClick={() => navigate(ROUTES.REMOTE_CONTROL)}>
+            {title}
+          </TrackTitle>
           <TrackMeta>{artist}</TrackMeta>
         </TrackInfo>
         <TrackInfo>
@@ -119,40 +127,43 @@ export const PlayerTray: React.FC = () => {
         </TrackInfo>
       </LeftSection>
 
-      <CenterSection>
-        <PlayerControls
-          t={t}
-          onPrevious={() =>
-            sendMessage(REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event)
-          }
-          onNext={() => sendMessage(REMOTE_CONTROLS.GO_NEXT_DREAM.event)}
-          onLike={() => sendMessage(REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event)}
-          onDislike={() =>
-            sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event)
-          }
-        />
-        <SideControls
-          t={t}
-          onRepeat={() => sendMessage(REMOTE_CONTROLS.PAUSE_2.event)}
-          onCc={() => sendMessage(REMOTE_CONTROLS.CREDIT.event)}
-        />
-      </CenterSection>
-
-      <RightSection>
-        <ColumnControls>
-          <SpeedControl
-            speed={speedLevel}
-            onChange={(value) => {
-              const wasZero = speedLevel === 0;
-              if (wasZero && value > 0) {
-                sendMessage(REMOTE_CONTROLS.PAUSE_1.event);
-              }
-              const event = SPEED_EVENTS[value] as RemoteControlEvent;
-              sendMessage(event);
-            }}
+      <CenterRightRow>
+        <CenterSection>
+          <PlayerControls
+            t={t}
+            onPrevious={() =>
+              sendMessage(REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event)
+            }
+            onNext={() => sendMessage(REMOTE_CONTROLS.GO_NEXT_DREAM.event)}
+            onLike={() => sendMessage(REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event)}
+            onDislike={() =>
+              sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event)
+            }
           />
-        </ColumnControls>
-      </RightSection>
+          <SideControls
+            t={t}
+            onRepeat={() => sendMessage(REMOTE_CONTROLS.PAUSE_2.event)}
+            onCc={() => sendMessage(REMOTE_CONTROLS.CREDIT.event)}
+          />
+        </CenterSection>
+
+        <RightSection>
+          <ColumnControls>
+            <SpeedControl
+              speed={speedLevel}
+              fps={fps}
+              onChange={(value) => {
+                const wasZero = speedLevel === 0;
+                if (wasZero && value > 0) {
+                  sendMessage(REMOTE_CONTROLS.PAUSE_1.event);
+                }
+                const event = SPEED_EVENTS[value] as RemoteControlEvent;
+                sendMessage(event);
+              }}
+            />
+          </ColumnControls>
+        </RightSection>
+      </CenterRightRow>
       <CloseButton
         aria-label={t("actions.hide")}
         onClick={() => setIsHidden(true)}
@@ -217,29 +228,39 @@ const SideControls: React.FC<SideControlsProps> = ({ t, onRepeat, onCc }) => (
 
 interface SpeedControlProps {
   speed: number;
+  fps: number;
   onChange: (value: number) => void;
 }
 
-const SpeedControl: React.FC<SpeedControlProps> = ({ speed, onChange }) => (
-  <SpeedContainer>
-    <TickMarks>
-      {Array.from({ length: 10 }).map((_, i) => (
-        <Tick key={i}>
-          <TickLabel>{i}</TickLabel>
-          <TickLine />
-        </Tick>
-      ))}
-    </TickMarks>
-    <SpeedSlider
-      min={0}
-      max={9}
-      step={1}
-      value={speed}
-      onChange={(e) => onChange(Number(e.target.value))}
-      aria-label="Speed control"
-    />
-  </SpeedContainer>
-);
+const SpeedControl: React.FC<SpeedControlProps> = ({
+  speed,
+  fps,
+  onChange,
+}) => {
+  const handleSlower = () => {
+    const newSpeed = Math.max(0, speed - 1);
+    onChange(newSpeed);
+  };
+
+  const handleFaster = () => {
+    const newSpeed = Math.min(9, speed + 1);
+    onChange(newSpeed);
+  };
+
+  return (
+    <SpeedWrapper>
+      <IconButton aria-label="Slower speed" onClick={handleSlower}>
+        <LuTurtle size={24} color={COLORS.WHITE} />
+      </IconButton>
+
+      <FpsText>{fps} fps</FpsText>
+
+      <IconButton aria-label="Faster speed" onClick={handleFaster}>
+        <LuRabbit size={24} color={COLORS.WHITE} />
+      </IconButton>
+    </SpeedWrapper>
+  );
+};
 
 const TrayContainer = styled.div`
   position: fixed;
@@ -265,17 +286,51 @@ const LeftSection = styled.div`
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  flex: 1 1 320px;
+  min-width: 0;
 `;
 
 const CenterSection = styled(Row)`
   justify-content: center;
   align-items: center;
   gap: 1rem;
+  flex: 1 1 320px;
+  margin: 0;
+  min-width: 0;
+
+  @media (max-width: 1036px) {
+    flex: 1 1 160px;
+    justify-content: flex-end;
+  }
+
+  @media (max-width: 768px) {
+    justify-content: flex-start;
+  }
 `;
 
 const RightSection = styled.div`
   display: flex;
   justify-content: flex-end;
+  align-items: center;
+  flex: 1 1 320px;
+  min-width: 0;
+
+  @media (max-width: 1036px) {
+    flex: 1 1 160px;
+    justify-content: flex-start;
+  }
+
+  @media (max-width: 768px) {
+    justify-content: flex-end;
+  }
+`;
+
+const CenterRightRow = styled.div`
+  display: flex;
+  flex: 2 1 640px;
+  gap: 1rem;
+  min-width: 0;
+  align-items: center;
 `;
 
 const Artwork = styled.img`
@@ -289,12 +344,23 @@ const Artwork = styled.img`
 const TrackInfo = styled.div`
   display: flex;
   flex-direction: column;
+  min-width: 0;
 `;
 
 const TrackTitle = styled(Text)`
   font-size: 1.2rem;
   font-weight: 700;
   color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+  display: block;
+  max-width: 100%;
+
+  :hover {
+    opacity: 0.8;
+  }
 `;
 
 const TrackMeta = styled(Text)`
@@ -310,78 +376,18 @@ const Duration = styled(Text)`
   opacity: 0.8;
 `;
 
-const SpeedContainer = styled.div`
+const SpeedWrapper = styled.div`
   display: flex;
-  flex-direction: column;
   align-items: center;
-  width: 300px;
-  position: relative;
+  justify-content: center;
+  gap: 1rem;
 `;
 
-const TickMarks = styled.div`
-  display: flex;
-  justify-content: space-between;
-  width: calc(100% - 10px);
-  position: absolute;
-  top: -10px;
-`;
-
-const Tick = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
-
-const TickLabel = styled.span`
-  font-size: 0.75rem;
-  color: ${(p) => p.theme.textSecondaryColor};
-  margin-bottom: 2px;
-`;
-
-const TickLine = styled.div`
-  width: 1px;
-  height: 6px;
-  background: #888;
-  opacity: 0.6;
-`;
-
-const SpeedSlider = styled.input.attrs({ type: "range" })`
-  width: 100%;
-  height: 10px;
-  appearance: none;
-  background: linear-gradient(
-    to right,
-    ${(props) => props.theme.textSecondaryColor},
-    ${(props) => (Number(props.value ?? 0) / 9) * 100}%,
-    ${(props) => props.theme.inputBackgroundColor}
-      ${(props) => (Number(props.value ?? 0) / 9) * 100}%
-  );
-  border-radius: 9999px;
-  cursor: pointer;
-  outline: none;
-  transition: background 0.25s ease;
-  border: 1px solid #333;
-  margin-top: 18px;
-
-  &::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #111;
-    border: 2px solid #333;
-    cursor: pointer;
-    z-index: 1000;
-  }
-
-  &::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #111;
-    border: 2px solid #333;
-    z-index: 1000;
-  }
+const FpsText = styled(Text)`
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  text-wrap: nowrap;
 `;
 
 const IconButton = styled.button`

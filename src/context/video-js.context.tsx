@@ -27,6 +27,7 @@ type VideoJSContextType = {
   videoWrapperRef: RefObject<HTMLDivElement>;
   currentTime: number;
   duration: number;
+  getActiveVideoElement: () => HTMLVideoElement | null;
   createPlayer: () => string;
   removePlayer: (id: string) => void;
   registerPlayer: (
@@ -103,6 +104,17 @@ export const VideoJSProvider = ({
     } else {
       await videoWrapperRef.current.requestFullscreen();
     }
+  }, []);
+
+  const getActiveVideoElement = useCallback((): HTMLVideoElement | null => {
+    const active = activePlayerIdRef.current
+      ? playersPoolRef.current.get(activePlayerIdRef.current)
+      : null;
+    const el =
+      (active?.player
+        ?.el()
+        ?.querySelector("video") as HTMLVideoElement | null) ?? null;
+    return el;
   }, []);
 
   // create a new player slot without initializing videojs
@@ -582,6 +594,7 @@ export const VideoJSProvider = ({
       videoWrapperRef,
       currentTime,
       duration,
+      getActiveVideoElement,
       registerPlayer,
       unregisterPlayer,
       addEventListener,
@@ -601,6 +614,7 @@ export const VideoJSProvider = ({
       currentTime,
       duration,
       playersPoolRef,
+      getActiveVideoElement,
       registerPlayer,
       unregisterPlayer,
       addEventListener,
