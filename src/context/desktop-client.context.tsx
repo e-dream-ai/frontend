@@ -44,6 +44,7 @@ export const DesktopClientProvider = ({
   const [fps, setFps] = useState<number>(0);
   const [speedLevel, setSpeedLevel] = useState<number>(9);
   const lastTickRef = useRef<number>(0);
+  const [lastStatusAt, setLastStatusAt] = useState<number | null>(null);
 
   /**
    * Handle ping event, set to active status when it arrives
@@ -96,6 +97,7 @@ export const DesktopClientProvider = ({
         if (Number.isFinite(nextDuration))
           setDuration(Math.max(0, nextDuration));
         if (Number.isFinite(nextFps)) setFps(Math.max(0, Math.round(nextFps)));
+        setLastStatusAt(Date.now());
       }
 
       // Track speed changes from remote control events 1..9 and pause
@@ -114,7 +116,11 @@ export const DesktopClientProvider = ({
       } as const;
 
       if (data.event in speedMap) {
-        setSpeedLevel(speedMap[data.event]);
+        const newSpeed = speedMap[data.event];
+        setSpeedLevel(newSpeed);
+        if (newSpeed === 0) {
+          setFps(0);
+        }
       }
 
       // Handle seek and navigation adjustments
@@ -159,7 +165,9 @@ export const DesktopClientProvider = ({
       }
       const deltaMs = now - lastTickRef.current;
       lastTickRef.current = now;
-      if (isActive && speedLevel > 0) {
+      const hasRecentStatus =
+        lastStatusAt != null && Date.now() - lastStatusAt < 2000;
+      if (isActive && speedLevel > 0 && hasRecentStatus) {
         const rate = calculatePlaybackRateFromSpeed(
           speedLevel,
           currentDream?.activityLevel,
@@ -177,7 +185,13 @@ export const DesktopClientProvider = ({
       if (rafId != null) cancelAnimationFrame(rafId);
       lastTickRef.current = 0;
     };
-  }, [isActive, speedLevel, currentDream?.activityLevel, duration]);
+  }, [
+    isActive,
+    speedLevel,
+    currentDream?.activityLevel,
+    duration,
+    lastStatusAt,
+  ]);
 
   /**
    * Setup timer from socket
