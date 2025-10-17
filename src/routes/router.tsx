@@ -60,7 +60,10 @@ export const RootElement = () => {
       <Header />
       <Outlet />
       <Footer />
-      {user && !isLoadingCurrentDream && currentDream && <PlayerTray />}
+      {user &&
+        location.pathname !== ROUTES.REMOTE_CONTROL &&
+        !isLoadingCurrentDream &&
+        currentDream && <PlayerTray />}
     </PageContainer>
   );
 };
