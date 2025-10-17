@@ -19,7 +19,7 @@ import { DEVICES } from "@/constants/devices.constants";
 import { useSocket } from "@/hooks/useSocket";
 import { useWebClient } from "@/hooks/useWebClient";
 import { useVideoJs } from "@/hooks/useVideoJS";
-import { useVideoFPS } from "@/hooks/useVideoFPS";
+import { usePlaybackMetrics } from "@/hooks/usePlaybackMetrics";
 import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
@@ -34,7 +34,7 @@ export const PlayerTray: React.FC = () => {
   const { emit } = useSocket();
   const { isWebClientActive, handlers, speedLevel } = useWebClient();
   const { currentTime, duration } = useVideoJs();
-  const { fps } = useVideoFPS();
+  const { fps } = usePlaybackMetrics();
   const navigate = useNavigate();
 
   const [isHidden, setIsHidden] = useState<boolean>(() => {
@@ -157,6 +157,7 @@ export const PlayerTray: React.FC = () => {
                 if (wasZero && value > 0) {
                   sendMessage(REMOTE_CONTROLS.PAUSE_1.event);
                 }
+                console.log("value", value);
                 const event = SPEED_EVENTS[value] as RemoteControlEvent;
                 sendMessage(event);
               }}
