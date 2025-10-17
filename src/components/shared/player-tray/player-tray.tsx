@@ -19,6 +19,7 @@ import { DEVICES } from "@/constants/devices.constants";
 import { useSocket } from "@/hooks/useSocket";
 import { useWebClient } from "@/hooks/useWebClient";
 import { usePlaybackMetrics } from "@/hooks/usePlaybackMetrics";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
 import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
@@ -35,7 +36,10 @@ export const PlayerTray: React.FC = () => {
   const { currentTime, duration, fps } = usePlaybackMetrics();
   const navigate = useNavigate();
 
-  const [desktopSpeedLevel, setDesktopSpeedLevel] = useState<number>(9);
+  const {
+    speedLevel: desktopSpeedLevelCtx,
+    setSpeedLevel: setDesktopSpeedCtx,
+  } = useDesktopClient();
 
   const [isHidden, setIsHidden] = useState<boolean>(() => {
     try {
@@ -150,7 +154,7 @@ export const PlayerTray: React.FC = () => {
         <RightSection>
           <ColumnControls>
             <SpeedControl
-              speed={isWebClientActive ? speedLevel : desktopSpeedLevel}
+              speed={isWebClientActive ? speedLevel : desktopSpeedLevelCtx}
               fps={fps}
               onChange={(value) => {
                 if (isWebClientActive) {
@@ -163,11 +167,11 @@ export const PlayerTray: React.FC = () => {
                   return;
                 }
 
-                const wasZero = desktopSpeedLevel === 0;
+                const wasZero = desktopSpeedLevelCtx === 0;
                 if (wasZero && value > 0) {
                   sendMessage(REMOTE_CONTROLS.PAUSE_1.event);
                 }
-                setDesktopSpeedLevel(value);
+                setDesktopSpeedCtx(value);
                 const event = SPEED_EVENTS[value] as RemoteControlEvent;
                 sendMessage(event);
               }}
