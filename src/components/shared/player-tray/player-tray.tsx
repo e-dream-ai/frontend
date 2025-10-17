@@ -18,7 +18,6 @@ import { COLORS } from "@/constants/colors.constants";
 import { DEVICES } from "@/constants/devices.constants";
 import { useSocket } from "@/hooks/useSocket";
 import { useWebClient } from "@/hooks/useWebClient";
-import { useVideoJs } from "@/hooks/useVideoJS";
 import { usePlaybackMetrics } from "@/hooks/usePlaybackMetrics";
 import {
   NEW_REMOTE_CONTROL_EVENT,
@@ -33,9 +32,10 @@ export const PlayerTray: React.FC = () => {
   const { currentDream } = useAuth();
   const { emit } = useSocket();
   const { isWebClientActive, handlers, speedLevel } = useWebClient();
-  const { currentTime, duration } = useVideoJs();
-  const { fps } = usePlaybackMetrics();
+  const { currentTime, duration, fps } = usePlaybackMetrics();
   const navigate = useNavigate();
+
+  const [desktopSpeedLevel, setDesktopSpeedLevel] = useState<number>(9);
 
   const [isHidden, setIsHidden] = useState<boolean>(() => {
     try {
@@ -150,14 +150,24 @@ export const PlayerTray: React.FC = () => {
         <RightSection>
           <ColumnControls>
             <SpeedControl
-              speed={speedLevel}
+              speed={isWebClientActive ? speedLevel : desktopSpeedLevel}
               fps={fps}
               onChange={(value) => {
-                const wasZero = speedLevel === 0;
+                if (isWebClientActive) {
+                  const wasZero = speedLevel === 0;
+                  if (wasZero && value > 0) {
+                    sendMessage(REMOTE_CONTROLS.PAUSE_1.event);
+                  }
+                  const event = SPEED_EVENTS[value] as RemoteControlEvent;
+                  sendMessage(event);
+                  return;
+                }
+
+                const wasZero = desktopSpeedLevel === 0;
                 if (wasZero && value > 0) {
                   sendMessage(REMOTE_CONTROLS.PAUSE_1.event);
                 }
-                console.log("value", value);
+                setDesktopSpeedLevel(value);
                 const event = SPEED_EVENTS[value] as RemoteControlEvent;
                 sendMessage(event);
               }}
