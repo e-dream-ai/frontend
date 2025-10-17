@@ -12,7 +12,7 @@ export type PlaybackMetrics = {
 };
 
 export const usePlaybackMetrics = (): PlaybackMetrics => {
-  const { isWebClientActive } = useWebClient();
+  useWebClient();
   const { currentTime: webCurrentTime = 0, duration: webDuration = 0 } =
     useVideoJs();
   const { fps: webFps = 0 } = useVideoFPS();
@@ -24,24 +24,32 @@ export const usePlaybackMetrics = (): PlaybackMetrics => {
   } = useDesktopClient();
 
   return useMemo(() => {
-    if (isDesktopActive && !isWebClientActive) {
-      return {
-        currentTime: Number.isFinite(currentTime) ? currentTime : 0,
-        duration: Number.isFinite(duration) ? duration : 0,
-        fps: Number.isFinite(fps) ? fps : 0,
-        source: "desktop",
-      };
-    }
+    const desktopMetrics: PlaybackMetrics = {
+      currentTime: Number.isFinite(currentTime) ? currentTime : 0,
+      duration: Number.isFinite(duration) ? duration : 0,
+      fps: Number.isFinite(fps) ? fps : 0,
+      source: "desktop",
+    };
 
-    return {
+    const webMetrics: PlaybackMetrics = {
       currentTime: Number.isFinite(webCurrentTime) ? webCurrentTime : 0,
       duration: Number.isFinite(webDuration) ? webDuration : 0,
       fps: Number.isFinite(webFps) ? webFps : 0,
       source: "web",
     };
+
+    if (isDesktopActive) {
+      const hasDesktopData =
+        desktopMetrics.fps > 0 ||
+        desktopMetrics.duration > 0 ||
+        desktopMetrics.currentTime > 0;
+      return hasDesktopData ? desktopMetrics : webMetrics;
+    }
+
+    // Otherwise use web
+    return webMetrics;
   }, [
     isDesktopActive,
-    isWebClientActive,
     currentTime,
     duration,
     fps,
