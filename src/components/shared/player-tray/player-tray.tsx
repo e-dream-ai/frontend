@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
+import React, { useEffect, useState } from "react";
+import styled, { keyframes } from "styled-components";
 import { Row, Text } from "@/components/shared";
 import { useTranslation } from "react-i18next";
 import {
@@ -14,12 +14,10 @@ import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { PiRepeatBold } from "react-icons/pi";
 import useAuth from "@/hooks/useAuth";
 import { framesToSeconds, secondsToMinutes } from "@/utils/video.utils";
-import { COLORS } from "@/constants/colors.constants";
 import { DEVICES } from "@/constants/devices.constants";
 import { useSocket } from "@/hooks/useSocket";
 import { useWebClient } from "@/hooks/useWebClient";
 import { usePlaybackMetrics } from "@/hooks/usePlaybackMetrics";
-import { useDesktopClient } from "@/hooks/useDesktopClient";
 import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
@@ -30,16 +28,11 @@ import { ROUTES } from "@/constants/routes.constants";
 
 export const PlayerTray: React.FC = () => {
   const { t } = useTranslation();
-  const { currentDream } = useAuth();
+  const { currentDream, isLoadingCurrentDream } = useAuth();
   const { emit } = useSocket();
-  const { isWebClientActive, handlers, speedLevel } = useWebClient();
+  const { isWebClientActive, handlers } = useWebClient();
   const { currentTime, duration, fps } = usePlaybackMetrics();
   const navigate = useNavigate();
-
-  const {
-    speedLevel: desktopSpeedLevelCtx,
-    setSpeedLevel: setDesktopSpeedCtx,
-  } = useDesktopClient();
 
   const [isHidden, setIsHidden] = useState<boolean>(() => {
     try {
@@ -59,22 +52,6 @@ export const PlayerTray: React.FC = () => {
       console.error(error);
     }
   }, [isHidden]);
-
-  const SPEED_EVENTS: readonly RemoteControlEvent[] = useMemo(
-    () => [
-      REMOTE_CONTROLS.PAUSE_1.event,
-      REMOTE_CONTROLS.SET_SPEED_1.event,
-      REMOTE_CONTROLS.SET_SPEED_2.event,
-      REMOTE_CONTROLS.SET_SPEED_3.event,
-      REMOTE_CONTROLS.SET_SPEED_4.event,
-      REMOTE_CONTROLS.SET_SPEED_5.event,
-      REMOTE_CONTROLS.SET_SPEED_6.event,
-      REMOTE_CONTROLS.SET_SPEED_7.event,
-      REMOTE_CONTROLS.SET_SPEED_8.event,
-      REMOTE_CONTROLS.SET_SPEED_9.event,
-    ],
-    [],
-  );
 
   const sendMessage = (event: RemoteControlEvent) => {
     emit(NEW_REMOTE_CONTROL_EVENT, {
@@ -106,7 +83,7 @@ export const PlayerTray: React.FC = () => {
         aria-label={t("actions.open")}
         onClick={() => setIsHidden(false)}
       >
-        <FaChevronUp size={16} color={COLORS.WHITE} />
+        <FaChevronUp size={16} />
         {t("remote_control.player_tray")}
       </TrayReopenButton>
     );
@@ -118,17 +95,33 @@ export const PlayerTray: React.FC = () => {
       aria-label={t("remote_control.player_tray")}
     >
       <LeftSection>
-        <Artwork src={thumbnail} alt={title} />
-        <TrackInfo>
-          <TrackTitle onClick={() => navigate(ROUTES.REMOTE_CONTROL)}>
-            {title}
-          </TrackTitle>
-          <TrackMeta>{artist}</TrackMeta>
-        </TrackInfo>
-        <TrackInfo>
-          <Duration>{elapsedFormatted}</Duration>
-          <Duration>{totalFormatted}</Duration>
-        </TrackInfo>
+        {isLoadingCurrentDream ? (
+          <>
+            <SkeletonArtwork aria-label={t("common.loading")} />
+            <TrackInfo>
+              <SkeletonTitle />
+              <SkeletonMeta />
+            </TrackInfo>
+            <TrackInfo>
+              <SkeletonDuration />
+              <SkeletonDuration />
+            </TrackInfo>
+          </>
+        ) : (
+          <>
+            <Artwork src={thumbnail} alt={title} />
+            <TrackInfo>
+              <TrackTitle onClick={() => navigate(ROUTES.REMOTE_CONTROL)}>
+                {title}
+              </TrackTitle>
+              <TrackMeta>{artist}</TrackMeta>
+            </TrackInfo>
+            <TrackInfo>
+              <Duration>{elapsedFormatted}</Duration>
+              <Duration>{totalFormatted}</Duration>
+            </TrackInfo>
+          </>
+        )}
       </LeftSection>
 
       <CenterRightRow>
@@ -154,27 +147,13 @@ export const PlayerTray: React.FC = () => {
         <RightSection>
           <ColumnControls>
             <SpeedControl
-              speed={isWebClientActive ? speedLevel : desktopSpeedLevelCtx}
               fps={fps}
-              onChange={(value) => {
-                if (isWebClientActive) {
-                  const wasZero = speedLevel === 0;
-                  if (wasZero && value > 0) {
-                    sendMessage(REMOTE_CONTROLS.PAUSE_1.event);
-                  }
-                  const event = SPEED_EVENTS[value] as RemoteControlEvent;
-                  sendMessage(event);
-                  return;
-                }
-
-                const wasZero = desktopSpeedLevelCtx === 0;
-                if (wasZero && value > 0) {
-                  sendMessage(REMOTE_CONTROLS.PAUSE_1.event);
-                }
-                setDesktopSpeedCtx(value);
-                const event = SPEED_EVENTS[value] as RemoteControlEvent;
-                sendMessage(event);
-              }}
+              onSlower={() =>
+                sendMessage(REMOTE_CONTROLS.PLAYBACK_SLOWER.event)
+              }
+              onFaster={() =>
+                sendMessage(REMOTE_CONTROLS.PLAYBACK_FASTER.event)
+              }
             />
           </ColumnControls>
         </RightSection>
@@ -183,7 +162,7 @@ export const PlayerTray: React.FC = () => {
         aria-label={t("actions.hide")}
         onClick={() => setIsHidden(true)}
       >
-        <FaChevronDown size={20} color={COLORS.WHITE} />
+        <FaChevronDown size={20} />
       </CloseButton>
     </TrayContainer>
   );
@@ -206,20 +185,20 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
 }) => (
   <ControlsGroup>
     <IconButton aria-label={t("actions.previous")} onClick={onPrevious}>
-      <FaStepBackward size={24} color={COLORS.WHITE} />
+      <FaStepBackward size={24} />
     </IconButton>
 
     <ColumnControls>
       <IconButton aria-label={t("actions.like")} onClick={onLike}>
-        <FaThumbsUp size={24} color={COLORS.WHITE} />
+        <FaThumbsUp size={24} />
       </IconButton>
       <IconButton aria-label={t("actions.dislike")} onClick={onDislike}>
-        <FaThumbsDown size={24} color={COLORS.WHITE} />
+        <FaThumbsDown size={24} />
       </IconButton>
     </ColumnControls>
 
     <IconButton aria-label={t("actions.next")} onClick={onNext}>
-      <FaStepForward size={24} color={COLORS.WHITE} />
+      <FaStepForward size={24} />
     </IconButton>
   </ControlsGroup>
 );
@@ -233,45 +212,43 @@ interface SideControlsProps {
 const SideControls: React.FC<SideControlsProps> = ({ t, onRepeat, onCc }) => (
   <ColumnControls>
     <IconButton aria-label={t("actions.repeat")} onClick={onRepeat}>
-      <PiRepeatBold size={24} color={COLORS.WHITE} />
+      <PiRepeatBold size={24} />
     </IconButton>
     <IconButton aria-label="CC" onClick={onCc}>
-      <FaClosedCaptioning size={24} color={COLORS.WHITE} />
+      <FaClosedCaptioning size={24} />
     </IconButton>
   </ColumnControls>
 );
 
 interface SpeedControlProps {
-  speed: number;
   fps: number;
-  onChange: (value: number) => void;
+  onSlower: () => void;
+  onFaster: () => void;
 }
 
 const SpeedControl: React.FC<SpeedControlProps> = ({
-  speed,
   fps,
-  onChange,
+  onSlower,
+  onFaster,
 }) => {
   const handleSlower = () => {
-    const newSpeed = Math.max(0, speed - 1);
-    onChange(newSpeed);
+    onSlower();
   };
 
   const handleFaster = () => {
-    const newSpeed = Math.min(9, speed + 1);
-    onChange(newSpeed);
+    onFaster();
   };
 
   return (
     <SpeedWrapper>
       <IconButton aria-label="Slower speed" onClick={handleSlower}>
-        <LuTurtle size={24} color={COLORS.WHITE} />
+        <LuTurtle size={24} />
       </IconButton>
 
       <FpsText>{fps} fps</FpsText>
 
       <IconButton aria-label="Faster speed" onClick={handleFaster}>
-        <LuRabbit size={24} color={COLORS.WHITE} />
+        <LuRabbit size={24} />
       </IconButton>
     </SpeedWrapper>
   );
@@ -356,6 +333,47 @@ const Artwork = styled.img`
   background: ${(p) => p.theme.colorBackgroundQuaternary};
 `;
 
+const shimmer = keyframes`
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+`;
+
+const SkeletonBase = styled.div`
+  background: ${(p) => p.theme.colorBackgroundQuaternary};
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0px,
+    rgba(255, 255, 255, 0.08) 40px,
+    rgba(255, 255, 255, 0) 80px
+  );
+  background-size: 200px 100%;
+  animation: ${shimmer} 1.2s ease-in-out infinite;
+  border-radius: 4px;
+`;
+
+const SkeletonArtwork = styled(SkeletonBase)`
+  width: 96px;
+  height: 54px;
+  border-radius: 2px;
+`;
+
+const SkeletonTitle = styled(SkeletonBase)`
+  width: 160px;
+  height: 20px;
+`;
+
+const SkeletonMeta = styled(SkeletonBase)`
+  width: 120px;
+  height: 16px;
+  margin-top: 6px;
+`;
+
+const SkeletonDuration = styled(SkeletonBase)`
+  width: 48px;
+  height: 16px;
+  margin-top: 2px;
+`;
+
 const TrackInfo = styled.div`
   display: flex;
   flex-direction: column;
@@ -413,9 +431,11 @@ const IconButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: color 0.2s ease-in-out;
+  color: rgb(252, 217, 183);
 
   :hover {
-    opacity: 0.8;
+    color: rgb(0, 208, 219);
   }
 `;
 

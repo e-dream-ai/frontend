@@ -1,4 +1,4 @@
-import { createContext, useEffect, useMemo, useRef, useState } from "react";
+import { createContext, useEffect, useMemo, useState } from "react";
 import {
   GOOD_BYE_EVENT,
   PING_EVENT,
@@ -8,8 +8,6 @@ import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
 import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
 import { RemoteControlEventData } from "@/types/remote-control.types";
-import { framesToSeconds } from "@/utils/video.utils";
-import { calculatePlaybackRateFromSpeed } from "@/utils/web-client.util";
 
 // Create context
 type DesktopClientContextType = {
@@ -36,15 +34,13 @@ export const DesktopClientProvider = ({
   children: React.ReactNode;
   inactivityTimeout?: number;
 }) => {
-  const { user, currentDream } = useAuth();
+  const { user } = useAuth();
   const [lastEventTime, setLastEventTime] = useState<number | undefined>();
   const [isActive, setIsActive] = useState<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [fps, setFps] = useState<number>(0);
   const [speedLevel, setSpeedLevel] = useState<number>(9);
-  const lastTickRef = useRef<number>(0);
-  const [lastStatusAt, setLastStatusAt] = useState<number | null>(null);
 
   /**
    * Handle ping event, set to active status when it arrives
@@ -82,7 +78,6 @@ export const DesktopClientProvider = ({
     NEW_REMOTE_CONTROL_EVENT,
     async (data?: RemoteControlEventData) => {
       if (!data?.event) return;
-      // Mark activity for any event from desktop
       setIsActive(true);
       setLastEventTime(Date.now());
 
@@ -97,7 +92,10 @@ export const DesktopClientProvider = ({
         if (Number.isFinite(nextDuration))
           setDuration(Math.max(0, nextDuration));
         if (Number.isFinite(nextFps)) setFps(Math.max(0, Math.round(nextFps)));
-        setLastStatusAt(Date.now());
+        if (payload?.paused === true) {
+          setSpeedLevel(0);
+          setFps(0);
+        }
       }
 
       // Track speed changes from remote control events 1..9 and pause
@@ -122,76 +120,8 @@ export const DesktopClientProvider = ({
           setFps(0);
         }
       }
-
-      // Handle seek and navigation adjustments
-      if (data.event === REMOTE_CONTROLS.FORWARD.event) {
-        setCurrentTime((prev) =>
-          Math.min(prev + 10, duration || Number.MAX_SAFE_INTEGER),
-        );
-      }
-      if (data.event === REMOTE_CONTROLS.BACKWARD.event) {
-        setCurrentTime((prev) => Math.max(prev - 10, 0));
-      }
-      if (
-        data.event === REMOTE_CONTROLS.GO_NEXT_DREAM.event ||
-        data.event === REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event ||
-        data.event === REMOTE_CONTROLS.PLAYING.event
-      ) {
-        setCurrentTime(0);
-      }
     },
   );
-
-  useEffect(() => {
-    const fallbackDuration = framesToSeconds(
-      currentDream?.processedVideoFrames ?? 0,
-      currentDream?.activityLevel ?? 0,
-    );
-    if (!duration && fallbackDuration > 0) {
-      setDuration(fallbackDuration);
-    }
-    const originalFps = currentDream?.processedVideoFPS ?? 0;
-    if (!fps && originalFps > 0) {
-      setFps(Math.round(originalFps));
-    }
-  }, [currentDream, duration, fps]);
-
-  // Fallback: tick currentTime locally when desktop is active and playing
-  useEffect(() => {
-    let rafId: number | null = null;
-    const loop = (now: number) => {
-      if (lastTickRef.current === 0) {
-        lastTickRef.current = now;
-      }
-      const deltaMs = now - lastTickRef.current;
-      lastTickRef.current = now;
-      const hasRecentStatus =
-        lastStatusAt != null && Date.now() - lastStatusAt < 2000;
-      if (isActive && speedLevel > 0 && hasRecentStatus) {
-        const rate = calculatePlaybackRateFromSpeed(
-          speedLevel,
-          currentDream?.activityLevel,
-        );
-        const deltaSec = (deltaMs / 1000) * (Number.isFinite(rate) ? rate : 1);
-        setCurrentTime((prev) => {
-          const next = prev + deltaSec;
-          return duration ? Math.min(next, duration) : next;
-        });
-      }
-      rafId = requestAnimationFrame(loop);
-    };
-    rafId = requestAnimationFrame(loop);
-    return () => {
-      if (rafId != null) cancelAnimationFrame(rafId);
-      lastTickRef.current = 0;
-    };
-  }, [
-    isActive,
-    speedLevel,
-    currentDream?.activityLevel,
-    duration,
-    lastStatusAt,
-  ]);
 
   /**
    * Setup timer from socket
