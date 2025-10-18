@@ -17,6 +17,7 @@ type DesktopClientContextType = {
   fps: number;
   speedLevel: number;
   setSpeedLevel: (speed: number) => void;
+  isCreditOverlayVisible: boolean;
 };
 
 const DesktopClientContext = createContext<
@@ -41,6 +42,8 @@ export const DesktopClientProvider = ({
   const [duration, setDuration] = useState<number>(0);
   const [fps, setFps] = useState<number>(0);
   const [speedLevel, setSpeedLevel] = useState<number>(9);
+  const [isCreditOverlayVisible, setIsCreditOverlayVisible] =
+    useState<boolean>(false);
 
   /**
    * Handle ping event, set to active status when it arrives
@@ -63,6 +66,7 @@ export const DesktopClientProvider = ({
     setDuration(0);
     setFps(0);
     setSpeedLevel(9);
+    setIsCreditOverlayVisible(false);
   };
 
   /**
@@ -119,6 +123,11 @@ export const DesktopClientProvider = ({
         if (newSpeed === 0) {
           setFps(0);
         }
+      }
+
+      // Toggle credit overlay visibility when CREDIT event is received
+      if (data.event === REMOTE_CONTROLS.CREDIT.event) {
+        setIsCreditOverlayVisible((prev) => !prev);
       }
     },
   );
@@ -205,8 +214,16 @@ export const DesktopClientProvider = ({
           fps,
           speedLevel,
           setSpeedLevel,
+          isCreditOverlayVisible,
         }),
-        [isActive, currentTime, duration, fps, speedLevel],
+        [
+          isActive,
+          currentTime,
+          duration,
+          fps,
+          speedLevel,
+          isCreditOverlayVisible,
+        ],
       )}
     >
       {children}

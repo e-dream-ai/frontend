@@ -52,6 +52,7 @@ type WebClientContextType = {
   playingDream?: Dream;
   handlers: Record<RemoteEvent, () => void>;
   speedLevel: number;
+  isCreditOverlayVisible: boolean;
   setWebClientActive: (isActive: boolean) => void;
   setWebPlayerAvailable: (isActive: boolean) => void;
   handleOnEnded: () => void;
@@ -120,6 +121,8 @@ export const WebClientProvider: React.FC<{
   const dislikedDreamsRef = useRef<Array<string>>([]);
   // Show credits overlay ref
   const showCreditOverlayRef = useRef(false);
+  const [isCreditOverlayVisible, setIsCreditOverlayVisible] =
+    useState<boolean>(false);
   // Used to prevent multiple calls to handlers.next() on automatic video change
   const transitioningRef = useRef(false);
 
@@ -207,9 +210,11 @@ export const WebClientProvider: React.FC<{
     if (showCreditOverlayRef.current) {
       hideOverlay(CREDIT_OVERLAY_ID);
       showCreditOverlayRef.current = false;
+      setIsCreditOverlayVisible(false);
     } else {
       updateCreditOverlay();
       showCreditOverlayRef.current = true;
+      setIsCreditOverlayVisible(true);
     }
   }, [updateCreditOverlay, hideOverlay]);
 
@@ -752,6 +757,7 @@ export const WebClientProvider: React.FC<{
       playingDream: playingDreamRef.current,
       handlers,
       speedLevel,
+      isCreditOverlayVisible,
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,
@@ -762,6 +768,7 @@ export const WebClientProvider: React.FC<{
       isWebClientAvailable,
       handlers,
       speedLevel,
+      isCreditOverlayVisible,
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,
