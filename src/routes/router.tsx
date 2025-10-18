@@ -60,7 +60,7 @@ export const RootElement = () => {
       <Header />
       <Outlet />
       <Footer />
-      {user && <PlayerTray />}
+      {user && location.pathname !== ROUTES.REMOTE_CONTROL && <PlayerTray />}
     </PageContainer>
   );
 };

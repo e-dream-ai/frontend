@@ -7,17 +7,16 @@ import {
   FaThumbsDown,
   FaStepBackward,
   FaStepForward,
+  FaRegClosedCaptioning,
   FaClosedCaptioning,
 } from "react-icons/fa";
 import { LuTurtle, LuRabbit } from "react-icons/lu";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
-import { PiRepeatBold } from "react-icons/pi";
 import useAuth from "@/hooks/useAuth";
-import { framesToSeconds, secondsToMinutes } from "@/utils/video.utils";
 import { DEVICES } from "@/constants/devices.constants";
 import { useSocket } from "@/hooks/useSocket";
 import { useWebClient } from "@/hooks/useWebClient";
-import { usePlaybackMetrics } from "@/hooks/usePlaybackMetrics";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
 import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
@@ -30,8 +29,12 @@ export const PlayerTray: React.FC = () => {
   const { t } = useTranslation();
   const { currentDream, isLoadingCurrentDream } = useAuth();
   const { emit } = useSocket();
-  const { isWebClientActive, handlers } = useWebClient();
-  const { currentTime, duration, fps } = usePlaybackMetrics();
+  const { isWebClientActive, handlers, isCreditOverlayVisible } =
+    useWebClient();
+  const {
+    isActive: isDesktopActive,
+    isCreditOverlayVisible: isDesktopCreditVisible,
+  } = useDesktopClient();
   const navigate = useNavigate();
 
   const [isHidden, setIsHidden] = useState<boolean>(() => {
@@ -53,6 +56,10 @@ export const PlayerTray: React.FC = () => {
     }
   }, [isHidden]);
 
+  const navigateToRemoteControl = (): void => {
+    navigate(ROUTES.REMOTE_CONTROL);
+  };
+
   const sendMessage = (event: RemoteControlEvent) => {
     emit(NEW_REMOTE_CONTROL_EVENT, {
       event,
@@ -66,16 +73,6 @@ export const PlayerTray: React.FC = () => {
   const title = currentDream?.name ?? t("components.current_dream.title");
   const artist = currentDream?.user?.name ?? t("common.unknown_author");
   const thumbnail = currentDream?.thumbnail;
-  const computedDreamSeconds = framesToSeconds(
-    currentDream?.processedVideoFrames ?? 0,
-    currentDream?.activityLevel ?? 0,
-  );
-  const elapsedFormatted = secondsToMinutes(
-    Math.max(0, Math.floor(currentTime)),
-  );
-  const totalFormatted = secondsToMinutes(
-    Math.max(0, Math.floor(duration || computedDreamSeconds)),
-  );
 
   if (isHidden) {
     return (
@@ -93,8 +90,9 @@ export const PlayerTray: React.FC = () => {
     <TrayContainer
       role="contentinfo"
       aria-label={t("remote_control.player_tray")}
+      onClick={navigateToRemoteControl}
     >
-      <LeftSection>
+      <LeftSection onClick={navigateToRemoteControl}>
         {isLoadingCurrentDream ? (
           <>
             <SkeletonArtwork aria-label={t("common.loading")} />
@@ -102,29 +100,25 @@ export const PlayerTray: React.FC = () => {
               <SkeletonTitle />
               <SkeletonMeta />
             </TrackInfo>
-            <TrackInfo>
-              <SkeletonDuration />
-              <SkeletonDuration />
-            </TrackInfo>
           </>
         ) : (
           <>
-            <Artwork src={thumbnail} alt={title} />
+            <Artwork
+              src={thumbnail}
+              alt={title}
+              onClick={navigateToRemoteControl}
+            />
             <TrackInfo>
               <TrackTitle onClick={() => navigate(ROUTES.REMOTE_CONTROL)}>
                 {title}
               </TrackTitle>
-              <TrackMeta>{artist}</TrackMeta>
-            </TrackInfo>
-            <TrackInfo>
-              <Duration>{elapsedFormatted}</Duration>
-              <Duration>{totalFormatted}</Duration>
+              <TrackMeta onClick={navigateToRemoteControl}>{artist}</TrackMeta>
             </TrackInfo>
           </>
         )}
       </LeftSection>
 
-      <CenterRightRow>
+      <CenterRightRow onClick={navigateToRemoteControl}>
         <CenterSection>
           <PlayerControls
             t={t}
@@ -138,16 +132,18 @@ export const PlayerTray: React.FC = () => {
             }
           />
           <SideControls
-            t={t}
-            onRepeat={() => sendMessage(REMOTE_CONTROLS.PAUSE_2.event)}
-            onCc={() => sendMessage(REMOTE_CONTROLS.CREDIT.event)}
+            isOn={
+              isDesktopActive ? isDesktopCreditVisible : isCreditOverlayVisible
+            }
+            onToggle={() => {
+              sendMessage(REMOTE_CONTROLS.CREDIT.event);
+            }}
           />
         </CenterSection>
 
-        <RightSection>
+        <RightSection onClick={navigateToRemoteControl}>
           <ColumnControls>
             <SpeedControl
-              fps={fps}
               onSlower={() =>
                 sendMessage(REMOTE_CONTROLS.PLAYBACK_SLOWER.event)
               }
@@ -204,33 +200,32 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
 );
 
 interface SideControlsProps {
-  t: (key: string) => string;
-  onRepeat: () => void;
-  onCc: () => void;
+  isOn: boolean;
+  onToggle: () => void;
 }
 
-const SideControls: React.FC<SideControlsProps> = ({ t, onRepeat, onCc }) => (
+const SideControls: React.FC<SideControlsProps> = ({ isOn, onToggle }) => (
   <ColumnControls>
-    <IconButton aria-label={t("actions.repeat")} onClick={onRepeat}>
-      <PiRepeatBold size={24} />
-    </IconButton>
-    <IconButton aria-label="CC" onClick={onCc}>
-      <FaClosedCaptioning size={24} />
+    <IconButton
+      aria-label={isOn ? "Turn captions off" : "Turn captions on"}
+      aria-pressed={isOn}
+      onClick={onToggle}
+    >
+      {isOn ? (
+        <FaClosedCaptioning size={24} />
+      ) : (
+        <FaRegClosedCaptioning size={24} />
+      )}
     </IconButton>
   </ColumnControls>
 );
 
 interface SpeedControlProps {
-  fps: number;
   onSlower: () => void;
   onFaster: () => void;
 }
 
-const SpeedControl: React.FC<SpeedControlProps> = ({
-  fps,
-  onSlower,
-  onFaster,
-}) => {
+const SpeedControl: React.FC<SpeedControlProps> = ({ onSlower, onFaster }) => {
   const handleSlower = () => {
     onSlower();
   };
@@ -242,13 +237,11 @@ const SpeedControl: React.FC<SpeedControlProps> = ({
   return (
     <SpeedWrapper>
       <IconButton aria-label="Slower speed" onClick={handleSlower}>
-        <LuTurtle size={24} />
+        <LuTurtle size={30} />
       </IconButton>
 
-      <FpsText>{fps} fps</FpsText>
-
       <IconButton aria-label="Faster speed" onClick={handleFaster}>
-        <LuRabbit size={24} />
+        <LuRabbit size={30} />
       </IconButton>
     </SpeedWrapper>
   );
@@ -331,6 +324,7 @@ const Artwork = styled.img`
   object-fit: cover;
   border-radius: 2px;
   background: ${(p) => p.theme.colorBackgroundQuaternary};
+  cursor: pointer;
 `;
 
 const shimmer = keyframes`
@@ -368,12 +362,6 @@ const SkeletonMeta = styled(SkeletonBase)`
   margin-top: 6px;
 `;
 
-const SkeletonDuration = styled(SkeletonBase)`
-  width: 48px;
-  height: 16px;
-  margin-top: 2px;
-`;
-
 const TrackInfo = styled.div`
   display: flex;
   flex-direction: column;
@@ -400,13 +388,11 @@ const TrackMeta = styled(Text)`
   font-size: 1rem;
   color: #fff;
   opacity: 0.8;
-`;
+  cursor: pointer;
 
-const Duration = styled(Text)`
-  font-size: 1rem;
-  font-weight: 700;
-  color: #fff;
-  opacity: 0.8;
+  :hover {
+    opacity: 1;
+  }
 `;
 
 const SpeedWrapper = styled.div`
@@ -414,13 +400,6 @@ const SpeedWrapper = styled.div`
   align-items: center;
   justify-content: center;
   gap: 1rem;
-`;
-
-const FpsText = styled(Text)`
-  font-size: 1rem;
-  font-weight: 600;
-  color: #fff;
-  text-wrap: nowrap;
 `;
 
 const IconButton = styled.button`
