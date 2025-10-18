@@ -43,7 +43,7 @@ import useAuth from "@/hooks/useAuth";
 
 export const RootElement = () => {
   const location = useLocation();
-  const { user, currentDream, isLoadingCurrentDream } = useAuth();
+  const { user } = useAuth();
 
   /**
    * Register pageview on location changes
@@ -60,7 +60,7 @@ export const RootElement = () => {
       <Header />
       <Outlet />
       <Footer />
-      {user && !isLoadingCurrentDream && currentDream && <PlayerTray />}
+      {user && <PlayerTray />}
     </PageContainer>
   );
 };
