@@ -90,9 +90,8 @@ export const PlayerTray: React.FC = () => {
     <TrayContainer
       role="contentinfo"
       aria-label={t("remote_control.player_tray")}
-      onClick={navigateToRemoteControl}
     >
-      <LeftSection onClick={navigateToRemoteControl}>
+      <LeftSection>
         {isLoadingCurrentDream ? (
           <>
             <SkeletonArtwork aria-label={t("common.loading")} />
@@ -109,16 +108,14 @@ export const PlayerTray: React.FC = () => {
               onClick={navigateToRemoteControl}
             />
             <TrackInfo>
-              <TrackTitle onClick={() => navigate(ROUTES.REMOTE_CONTROL)}>
-                {title}
-              </TrackTitle>
+              <TrackTitle onClick={navigateToRemoteControl}>{title}</TrackTitle>
               <TrackMeta onClick={navigateToRemoteControl}>{artist}</TrackMeta>
             </TrackInfo>
           </>
         )}
       </LeftSection>
 
-      <CenterRightRow onClick={navigateToRemoteControl}>
+      <CenterRightRow>
         <CenterSection>
           <PlayerControls
             t={t}
@@ -141,7 +138,7 @@ export const PlayerTray: React.FC = () => {
           />
         </CenterSection>
 
-        <RightSection onClick={navigateToRemoteControl}>
+        <RightSection>
           <ColumnControls>
             <SpeedControl
               onSlower={() =>
