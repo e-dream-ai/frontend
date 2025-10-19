@@ -136,7 +136,11 @@ export const PlayerTray: React.FC = () => {
           />
           <SideControls
             isOn={
-              isDesktopActive ? isDesktopCreditVisible : isCreditOverlayVisible
+              isWebClientActive
+                ? isCreditOverlayVisible
+                : isDesktopActive
+                  ? isDesktopCreditVisible
+                  : isCreditOverlayVisible
             }
             onToggle={() => {
               sendMessage(REMOTE_CONTROLS.CREDIT.event);
