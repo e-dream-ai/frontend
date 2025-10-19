@@ -165,7 +165,7 @@ export const PlayerTray: React.FC = () => {
         aria-label={t("actions.hide")}
         onClick={() => setIsHidden(true)}
       >
-        <FaChevronDown size={20} />
+        <FaChevronDown size={20} color="#fff" />
       </CloseButton>
     </TrayContainer>
   );
