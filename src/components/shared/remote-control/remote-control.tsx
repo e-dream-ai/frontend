@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect } from "react";
 import { Button } from "@/components/shared";
 import {
   REMOTE_CONTROLS,
@@ -21,6 +21,7 @@ import {
   RemoteControlEventData,
 } from "@/types/remote-control.types";
 import { useWebClient } from "@/hooks/useWebClient";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
 import {
   FaThumbsUp,
   FaThumbsDown,
@@ -51,7 +52,8 @@ export const RemoteControl: React.FC = () => {
   const { emit } = useSocket();
   const { isWebClientActive, handlers, isCreditOverlayVisible } =
     useWebClient();
-  const [captionsOn, setCaptionsOn] = useState<boolean>(isCreditOverlayVisible);
+  const { isActive: isDesktopActive, isCreditOverlayVisible: isDesktopCredit } =
+    useDesktopClient();
 
   const handleRemoteControlEvent = onNewRemoteControlEvent(t);
 
@@ -71,7 +73,6 @@ export const RemoteControl: React.FC = () => {
   };
 
   const handleToggleCaptions = () => {
-    setCaptionsOn((prev) => !prev);
     sendMessage(REMOTE_CONTROLS.CREDIT.event)();
   };
 
@@ -135,10 +136,12 @@ export const RemoteControl: React.FC = () => {
 
           <IconButton
             aria-label="Toggle captions"
-            aria-pressed={captionsOn}
+            aria-pressed={
+              isDesktopActive ? isDesktopCredit : isCreditOverlayVisible
+            }
             onClick={handleToggleCaptions}
           >
-            {captionsOn ? (
+            {(isDesktopActive ? isDesktopCredit : isCreditOverlayVisible) ? (
               <FaClosedCaptioning size={24} />
             ) : (
               <FaRegClosedCaptioning size={24} />

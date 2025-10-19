@@ -35,7 +35,6 @@ export const PlayerTray: React.FC = () => {
   const {
     isActive: isDesktopActive,
     isCreditOverlayVisible: isDesktopCreditVisible,
-    toggleCreditOverlay,
   } = useDesktopClient();
   const { isReady: isVideoReady } = useVideoJs();
   const navigate = useNavigate();
@@ -140,10 +139,6 @@ export const PlayerTray: React.FC = () => {
               isDesktopActive ? isDesktopCreditVisible : isCreditOverlayVisible
             }
             onToggle={() => {
-              // Optimistic toggle for immediate UI feedback
-              if (isDesktopActive) {
-                toggleCreditOverlay();
-              }
               sendMessage(REMOTE_CONTROLS.CREDIT.event);
             }}
           />
