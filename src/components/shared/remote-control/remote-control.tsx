@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import { Button } from "@/components/shared";
 import {
   REMOTE_CONTROLS,
   NEW_REMOTE_CONTROL_EVENT,
@@ -11,7 +10,6 @@ import {
   IconButton,
   IconGroup,
   IconRow,
-  ControlContainer,
   RemoteControlRow,
 } from "./remote-control.styled";
 import { onNewRemoteControlEvent } from "@/utils/socket.util";
@@ -31,21 +29,10 @@ import {
   FaClosedCaptioning,
 } from "react-icons/fa";
 import { LuTurtle, LuRabbit } from "react-icons/lu";
-
-const ROW_1 = [REMOTE_CONTROLS.HELP, REMOTE_CONTROLS.STATUS];
-
-const ROW_2 = [
-  REMOTE_CONTROLS.SET_SPEED_1,
-  REMOTE_CONTROLS.SET_SPEED_2,
-  REMOTE_CONTROLS.SET_SPEED_3,
-  REMOTE_CONTROLS.SET_SPEED_4,
-  REMOTE_CONTROLS.SET_SPEED_5,
-  REMOTE_CONTROLS.SET_SPEED_6,
-  REMOTE_CONTROLS.SET_SPEED_7,
-  REMOTE_CONTROLS.SET_SPEED_8,
-  REMOTE_CONTROLS.SET_SPEED_9,
-  REMOTE_CONTROLS.PAUSE_1,
-];
+import { useWindowSize } from "@/hooks/useWindowSize";
+import { DEVICES_ON_PX } from "@/constants/devices.constants";
+import { ControlContainerDesktop } from "./control-container-desktop";
+import { ControlContainerMobile } from "./control-container-mobile";
 
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
@@ -100,6 +87,9 @@ export const RemoteControl: React.FC = () => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [handlers, isWebClientActive]);
+
+  const { width } = useWindowSize();
+  const isDesktop = (width ?? 0) >= DEVICES_ON_PX.TABLET;
 
   return (
     <RemoteControlContainer>
@@ -165,113 +155,11 @@ export const RemoteControl: React.FC = () => {
         </IconRow>
       </RemoteControlRow>
 
-      <ControlContainer>
-        {ROW_1.map((control) => (
-          <Button
-            key={control.event}
-            buttonType="tertiary"
-            size="sm"
-            fontSize="0.8rem"
-            textTransform="none"
-            onClick={sendMessage(control.event)}
-          >
-            {control.key +
-              " " +
-              t(`components.remote_control.${control.event}`)}
-          </Button>
-        ))}
-
-        {/* Row 2 */}
-        {ROW_2.map((control) => (
-          <Button
-            key={control.event}
-            buttonType="tertiary"
-            size="sm"
-            fontSize="0.8rem"
-            textTransform="none"
-            onClick={sendMessage(control.event)}
-          >
-            {control.key +
-              " " +
-              t(`components.remote_control.${control.event}`)}
-          </Button>
-        ))}
-
-        {/* Row 3 */}
-        <Button
-          buttonType="tertiary"
-          size="sm"
-          fontSize="0.8rem"
-          textTransform="none"
-          onClick={sendMessage(REMOTE_CONTROLS.BRIGHTER.event)}
-        >
-          {REMOTE_CONTROLS.BRIGHTER.key +
-            " " +
-            t(`components.remote_control.${REMOTE_CONTROLS.BRIGHTER.event}`)}
-        </Button>
-
-        <Button
-          buttonType="tertiary"
-          size="sm"
-          fontSize="0.8rem"
-          textTransform="none"
-          onClick={sendMessage(REMOTE_CONTROLS.DARKER.event)}
-        >
-          {REMOTE_CONTROLS.DARKER.key +
-            " " +
-            t(`components.remote_control.${REMOTE_CONTROLS.DARKER.event}`)}
-        </Button>
-
-        {/* Row 4 */}
-        <Button
-          buttonType="tertiary"
-          size="sm"
-          fontSize="0.8rem"
-          textTransform="none"
-          onClick={sendMessage(REMOTE_CONTROLS.BACKWARD.event)}
-        >
-          {REMOTE_CONTROLS.BACKWARD.key +
-            " " +
-            t(`components.remote_control.${REMOTE_CONTROLS.BACKWARD.event}`)}
-        </Button>
-
-        <Button
-          buttonType="tertiary"
-          size="sm"
-          fontSize="0.8rem"
-          textTransform="none"
-          onClick={sendMessage(REMOTE_CONTROLS.PAUSE_2.event)}
-        >
-          {REMOTE_CONTROLS.PAUSE_2.key +
-            " " +
-            t(`components.remote_control.${REMOTE_CONTROLS.PAUSE_2.event}`)}
-        </Button>
-
-        <Button
-          buttonType="tertiary"
-          size="sm"
-          fontSize="0.8rem"
-          textTransform="none"
-          onClick={sendMessage(REMOTE_CONTROLS.FORWARD.event)}
-        >
-          {REMOTE_CONTROLS.FORWARD.key +
-            " " +
-            t(`components.remote_control.${REMOTE_CONTROLS.FORWARD.event}`)}
-        </Button>
-
-        {/* Row 5 */}
-        <Button
-          buttonType="tertiary"
-          size="sm"
-          fontSize="0.8rem"
-          textTransform="none"
-          onClick={sendMessage(REMOTE_CONTROLS.WEB.event)}
-        >
-          {REMOTE_CONTROLS.WEB.key +
-            " " +
-            t(`components.remote_control.${REMOTE_CONTROLS.WEB.event}`)}
-        </Button>
-      </ControlContainer>
+      {isDesktop ? (
+        <ControlContainerDesktop onSend={sendMessage} />
+      ) : (
+        <ControlContainerMobile onSend={sendMessage} />
+      )}
     </RemoteControlContainer>
   );
 };
