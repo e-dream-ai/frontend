@@ -2,24 +2,35 @@ import { DEVICES } from "@/constants/devices.constants";
 import styled from "styled-components";
 
 export const RemoteControlContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(12, 70px);
-  grid-auto-rows: auto;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  flex-direction: column;
   align-items: center;
   gap: 0.8em;
+  width: 100%;
 
   /* Responsive layout for smaller screens */
   @media (max-width: ${DEVICES.TABLET}) {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    flex-direction: column;
-
     button {
       min-width: 44px;
       min-height: 44px;
     }
+  }
+`;
+
+export const Row = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 0.3em;
+
+  button {
+    width: 100%;
+  }
+
+  &.row-3 {
+    padding-left: 16%;
+    padding-right: 7%;
   }
 `;
 
@@ -36,9 +47,17 @@ export const RemoteControlRow = styled.div`
 `;
 
 export const ControlContainer = styled.div`
-  display: flex;
   gap: 0.3em;
+  display: flex;
   flex-wrap: wrap;
+  flex-direction: column;
+  width: 100%;
+  max-width: 80%;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    flex-direction: row;
+    max-width: 100%;
+  }
 `;
 
 export const IconButton = styled.button`
@@ -71,4 +90,15 @@ export const IconGroup = styled.div`
   flex-direction: column;
   gap: 4px;
   align-items: center;
+`;
+
+export const TopControls = styled.div`
+  display: flex;
+  gap: 0.3em;
+  padding-left: 7%;
+`;
+
+export const ButtonGroup = styled.div`
+  display: flex;
+  gap: 0.3em;
 `;
