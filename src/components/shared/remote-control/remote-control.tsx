@@ -127,11 +127,21 @@ export const RemoteControl: React.FC = () => {
           <IconButton
             aria-label="Toggle captions"
             aria-pressed={
-              isDesktopActive ? isDesktopCredit : isCreditOverlayVisible
+              isWebClientActive
+                ? isCreditOverlayVisible
+                : isDesktopActive
+                  ? isDesktopCredit
+                  : isCreditOverlayVisible
             }
             onClick={handleToggleCaptions}
           >
-            {(isDesktopActive ? isDesktopCredit : isCreditOverlayVisible) ? (
+            {(
+              isWebClientActive
+                ? isCreditOverlayVisible
+                : isDesktopActive
+                  ? isDesktopCredit
+                  : isCreditOverlayVisible
+            ) ? (
               <FaClosedCaptioning size={24} />
             ) : (
               <FaRegClosedCaptioning size={24} />
