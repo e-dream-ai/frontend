@@ -40,10 +40,14 @@ import RemoteControlPage from "@/components/pages/remote-control/remote-control.
 import Providers, { withProviders } from "@/providers/providers";
 import { PlayerTray } from "@/components/shared/player-tray/player-tray";
 import useAuth from "@/hooks/useAuth";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
+import { useVideoJs } from "@/hooks/useVideoJS";
 
 export const RootElement = () => {
   const location = useLocation();
   const { user } = useAuth();
+  const { isActive: isDesktopActive } = useDesktopClient();
+  const { isReady: isVideoReady } = useVideoJs();
 
   /**
    * Register pageview on location changes
@@ -60,7 +64,10 @@ export const RootElement = () => {
       <Header />
       <Outlet />
       <Footer />
-      {user && location.pathname !== ROUTES.REMOTE_CONTROL && <PlayerTray />}
+      {user &&
+        location.pathname !== ROUTES.REMOTE_CONTROL &&
+        isDesktopActive &&
+        !isVideoReady && <PlayerTray />}
     </PageContainer>
   );
 };
