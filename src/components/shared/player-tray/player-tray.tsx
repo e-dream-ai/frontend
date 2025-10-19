@@ -17,6 +17,7 @@ import { DEVICES } from "@/constants/devices.constants";
 import { useSocket } from "@/hooks/useSocket";
 import { useWebClient } from "@/hooks/useWebClient";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
+import { useVideoJs } from "@/hooks/useVideoJS";
 import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
@@ -34,7 +35,9 @@ export const PlayerTray: React.FC = () => {
   const {
     isActive: isDesktopActive,
     isCreditOverlayVisible: isDesktopCreditVisible,
+    toggleCreditOverlay,
   } = useDesktopClient();
+  const { isReady: isVideoReady } = useVideoJs();
   const navigate = useNavigate();
 
   const [isHidden, setIsHidden] = useState<boolean>(() => {
@@ -73,6 +76,10 @@ export const PlayerTray: React.FC = () => {
   const title = currentDream?.name ?? t("components.current_dream.title");
   const artist = currentDream?.user?.name ?? t("common.unknown_author");
   const thumbnail = currentDream?.thumbnail;
+
+  if (!isDesktopActive || isVideoReady) {
+    return null;
+  }
 
   if (isHidden) {
     return (
@@ -133,6 +140,10 @@ export const PlayerTray: React.FC = () => {
               isDesktopActive ? isDesktopCreditVisible : isCreditOverlayVisible
             }
             onToggle={() => {
+              // Optimistic toggle for immediate UI feedback
+              if (isDesktopActive) {
+                toggleCreditOverlay();
+              }
               sendMessage(REMOTE_CONTROLS.CREDIT.event);
             }}
           />
