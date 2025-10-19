@@ -261,7 +261,7 @@ const TrayContainer = styled.div`
   width: 100%;
   z-index: 1000;
   background-color: #000;
-  border-top: 1px solid ${(p) => p.theme.colorBackgroundSecondary};
+  border-top: 3px solid ${(p) => p.theme.colorBackgroundSecondary};
   padding: 1rem 2.5rem;
   display: flex;
   justify-content: space-between;
@@ -461,7 +461,7 @@ const TrayReopenButton = styled.button`
 const CloseButton = styled.button`
   position: absolute;
   right: 16px;
-  top: -32.5px;
+  top: -31.5px;
   background: #000;
   border: none;
   padding: 0.25rem;
