@@ -100,59 +100,67 @@ export const RemoteControl: React.FC = () => {
           <IconButton
             aria-label={t("actions.previous")}
             onClick={sendMessage(REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event)}
-            data-tooltip-id="remote-previous"
+            data-tooltip-id={isDesktop ? "remote-previous" : undefined}
           >
             <FaStepBackward size={24} />
           </IconButton>
-          <Tooltip
-            id="remote-previous"
-            place="top"
-            delayShow={TOOLTIP_DELAY_MS}
-            content={t("actions.previous")}
-          />
+          {isDesktop && (
+            <Tooltip
+              id="remote-previous"
+              place="top"
+              delayShow={TOOLTIP_DELAY_MS}
+              content={t("actions.previous")}
+            />
+          )}
 
           <IconGroup>
             <IconButton
               aria-label={t("actions.like")}
               onClick={sendMessage(REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event)}
-              data-tooltip-id="remote-like"
+              data-tooltip-id={isDesktop ? "remote-like" : undefined}
             >
               <FaThumbsUp size={24} />
             </IconButton>
-            <Tooltip
-              id="remote-like"
-              place="top"
-              delayShow={TOOLTIP_DELAY_MS}
-              content={t("actions.like")}
-            />
+            {isDesktop && (
+              <Tooltip
+                id="remote-like"
+                place="top"
+                delayShow={TOOLTIP_DELAY_MS}
+                content={t("actions.like")}
+              />
+            )}
             <IconButton
               aria-label={t("actions.dislike")}
               onClick={sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event)}
-              data-tooltip-id="remote-dislike"
+              data-tooltip-id={isDesktop ? "remote-dislike" : undefined}
             >
               <FaThumbsDown size={24} />
             </IconButton>
-            <Tooltip
-              id="remote-dislike"
-              place="top"
-              delayShow={TOOLTIP_DELAY_MS}
-              content={t("actions.dislike")}
-            />
+            {isDesktop && (
+              <Tooltip
+                id="remote-dislike"
+                place="top"
+                delayShow={TOOLTIP_DELAY_MS}
+                content={t("actions.dislike")}
+              />
+            )}
           </IconGroup>
 
           <IconButton
             aria-label={t("actions.next")}
             onClick={sendMessage(REMOTE_CONTROLS.GO_NEXT_DREAM.event)}
-            data-tooltip-id="remote-next"
+            data-tooltip-id={isDesktop ? "remote-next" : undefined}
           >
             <FaStepForward size={24} />
           </IconButton>
-          <Tooltip
-            id="remote-next"
-            place="top"
-            delayShow={TOOLTIP_DELAY_MS}
-            content={t("actions.next")}
-          />
+          {isDesktop && (
+            <Tooltip
+              id="remote-next"
+              place="top"
+              delayShow={TOOLTIP_DELAY_MS}
+              content={t("actions.next")}
+            />
+          )}
         </IconRow>
 
         <IconButton
@@ -175,7 +183,7 @@ export const RemoteControl: React.FC = () => {
                 : isCreditOverlayVisible
           }
           onClick={handleToggleCaptions}
-          data-tooltip-id="remote-captions"
+          data-tooltip-id={isDesktop ? "remote-captions" : undefined}
         >
           {(
             isWebClientActive
@@ -189,40 +197,46 @@ export const RemoteControl: React.FC = () => {
             <FaRegClosedCaptioning size={24} />
           )}
         </IconButton>
-        <Tooltip
-          id="remote-captions"
-          place="top"
-          delayShow={TOOLTIP_DELAY_MS}
-          content={t("components.remote_control.credit")}
-        />
+        {isDesktop && (
+          <Tooltip
+            id="remote-captions"
+            place="top"
+            delayShow={TOOLTIP_DELAY_MS}
+            content={t("components.remote_control.credit")}
+          />
+        )}
 
         <IconRow>
           <IconButton
             aria-label={t("components.remote_control.playback_slower")}
             onClick={sendMessage(REMOTE_CONTROLS.PLAYBACK_SLOWER.event)}
-            data-tooltip-id="remote-slower"
+            data-tooltip-id={isDesktop ? "remote-slower" : undefined}
           >
             <LuTurtle size={30} />
           </IconButton>
-          <Tooltip
-            id="remote-slower"
-            place="top"
-            delayShow={TOOLTIP_DELAY_MS}
-            content={t("components.remote_control.playback_slower")}
-          />
+          {isDesktop && (
+            <Tooltip
+              id="remote-slower"
+              place="top"
+              delayShow={TOOLTIP_DELAY_MS}
+              content={t("components.remote_control.playback_slower")}
+            />
+          )}
           <IconButton
             aria-label={t("components.remote_control.playback_faster")}
             onClick={sendMessage(REMOTE_CONTROLS.PLAYBACK_FASTER.event)}
-            data-tooltip-id="remote-faster"
+            data-tooltip-id={isDesktop ? "remote-faster" : undefined}
           >
             <LuRabbit size={30} />
           </IconButton>
-          <Tooltip
-            id="remote-faster"
-            place="top"
-            delayShow={TOOLTIP_DELAY_MS}
-            content={t("components.remote_control.playback_faster")}
-          />
+          {isDesktop && (
+            <Tooltip
+              id="remote-faster"
+              place="top"
+              delayShow={TOOLTIP_DELAY_MS}
+              content={t("components.remote_control.playback_faster")}
+            />
+          )}
         </IconRow>
       </RemoteControlRow>
 
