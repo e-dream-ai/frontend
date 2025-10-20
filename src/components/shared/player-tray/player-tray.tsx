@@ -26,6 +26,7 @@ import {
 import { RemoteControlEvent } from "@/types/remote-control.types";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
+import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 
 export const PlayerTray: React.FC = () => {
   const { t } = useTranslation();
@@ -125,38 +126,21 @@ export const PlayerTray: React.FC = () => {
                 sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event)
               }
             />
-            <DontShowOnMobile>
-              <SideControls
-                isOn={
-                  isWebClientActive
-                    ? isCreditOverlayVisible
-                    : isDesktopActive
-                      ? isDesktopCreditVisible
-                      : isCreditOverlayVisible
-                }
-                onToggle={() => {
-                  sendMessage(REMOTE_CONTROLS.CREDIT.event);
-                }}
-                idSuffix="desktop"
-              />
-            </DontShowOnMobile>
           </CenterSection>
 
-          <DontShowOnDesktop>
-            <SideControls
-              isOn={
-                isWebClientActive
-                  ? isCreditOverlayVisible
-                  : isDesktopActive
-                    ? isDesktopCreditVisible
-                    : isCreditOverlayVisible
-              }
-              onToggle={() => {
-                sendMessage(REMOTE_CONTROLS.CREDIT.event);
-              }}
-              idSuffix="mobile"
-            />
-          </DontShowOnDesktop>
+          <SideControls
+            isOn={
+              isWebClientActive
+                ? isCreditOverlayVisible
+                : isDesktopActive
+                  ? isDesktopCreditVisible
+                  : isCreditOverlayVisible
+            }
+            onToggle={() => {
+              sendMessage(REMOTE_CONTROLS.CREDIT.event);
+            }}
+            idSuffix="mobile"
+          />
 
           <RightSection>
             <ColumnControls>
@@ -181,6 +165,7 @@ export const PlayerTray: React.FC = () => {
         <Tooltip
           id="player-tray-hide"
           place="top"
+          delayShow={TOOLTIP_DELAY_MS}
           content={t("actions.hide")}
         />
       </Content>
@@ -214,6 +199,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
     <Tooltip
       id="player-tray-previous"
       place="top"
+      delayShow={TOOLTIP_DELAY_MS}
       content={t("actions.previous")}
     />
 
@@ -225,7 +211,12 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
       >
         <FaThumbsUp size={24} />
       </IconButton>
-      <Tooltip id="player-tray-like" place="top" content={t("actions.like")} />
+      <Tooltip
+        id="player-tray-like"
+        place="top"
+        delayShow={TOOLTIP_DELAY_MS}
+        content={t("actions.like")}
+      />
       <IconButton
         aria-label={t("actions.dislike")}
         onClick={onDislike}
@@ -236,6 +227,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
       <Tooltip
         id="player-tray-dislike"
         place="top"
+        delayShow={TOOLTIP_DELAY_MS}
         content={t("actions.dislike")}
       />
     </ColumnControls>
@@ -247,7 +239,12 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
     >
       <FaStepForward size={24} />
     </IconButton>
-    <Tooltip id="player-tray-next" place="top" content={t("actions.next")} />
+    <Tooltip
+      id="player-tray-next"
+      place="top"
+      delayShow={TOOLTIP_DELAY_MS}
+      content={t("actions.next")}
+    />
   </ControlsGroup>
 );
 
@@ -281,6 +278,7 @@ const SideControls: React.FC<SideControlsProps> = ({
       <Tooltip
         id={tooltipId}
         place="top"
+        delayShow={TOOLTIP_DELAY_MS}
         content={t("components.remote_control.credit")}
       />
     </ColumnControls>
@@ -312,6 +310,7 @@ const SpeedControl: React.FC<SpeedControlProps> = ({ onSlower, onFaster }) => {
       <Tooltip
         id="player-tray-slower"
         place="top"
+        delayShow={TOOLTIP_DELAY_MS}
         content={t("components.remote_control.playback_slower")}
       />
       <IconButton
@@ -324,6 +323,7 @@ const SpeedControl: React.FC<SpeedControlProps> = ({ onSlower, onFaster }) => {
       <Tooltip
         id="player-tray-faster"
         place="top"
+        delayShow={TOOLTIP_DELAY_MS}
         content={t("components.remote_control.playback_faster")}
       />
     </SpeedWrapper>
@@ -361,20 +361,22 @@ const LeftSection = styled.div`
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  flex: 1 1 320px;
   min-width: 0;
+  max-width: 50%;
+
+  @media (max-width: ${DEVICES.MOBILE_S}) {
+    max-width: 100%;
+  }
 `;
 
 const CenterSection = styled(Row)`
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  flex: 1 1 320px;
   margin: 0;
   min-width: 0;
 
   @media (max-width: ${DEVICES.MOBILE_S}) {
-    flex: 0 0 auto;
     justify-content: flex-start;
   }
 `;
@@ -383,46 +385,26 @@ const RightSection = styled.div`
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  flex: 1 1 320px;
   min-width: 0;
 
   @media (max-width: 1036px) {
-    flex: 1 1 160px;
     justify-content: flex-start;
   }
 
   @media (max-width: 768px) {
-    flex: 0 0 auto;
     justify-content: flex-end;
   }
 `;
 
 const CenterRightRow = styled.div`
   display: flex;
-  flex: 2 1 640px;
-  gap: 1rem;
+  gap: 3.5em;
   min-width: 0;
   align-items: center;
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    flex: 0 0 auto;
-  }
 
   @media (max-width: ${DEVICES.MOBILE_S}) {
     justify-content: space-between;
     width: 100%;
-  }
-`;
-
-const DontShowOnMobile = styled.div`
-  @media (max-width: ${DEVICES.TABLET}) {
-    display: none;
-  }
-`;
-
-const DontShowOnDesktop = styled.div`
-  @media (min-width: ${DEVICES.TABLET}) {
-    display: none;
   }
 `;
 
