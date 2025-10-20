@@ -38,7 +38,8 @@ export const RemoteControlRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3em;
+  gap: 5em;
+  width: 100%;
 
   @media (max-width: ${DEVICES.MOBILE_S}) {
     flex-direction: column;
@@ -81,7 +82,6 @@ export const IconRow = styled.div`
   justify-content: center;
   align-items: center;
   gap: 1.2rem;
-  margin-bottom: 0.6rem;
   flex-wrap: wrap;
 `;
 

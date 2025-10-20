@@ -34,6 +34,7 @@ import { useWindowSize } from "@/hooks/useWindowSize";
 import { DEVICES_ON_PX } from "@/constants/devices.constants";
 import { ControlContainerDesktop } from "./control-container-desktop";
 import { ControlContainerMobile } from "./control-container-mobile";
+import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
@@ -106,6 +107,7 @@ export const RemoteControl: React.FC = () => {
           <Tooltip
             id="remote-previous"
             place="top"
+            delayShow={TOOLTIP_DELAY_MS}
             content={t("actions.previous")}
           />
 
@@ -117,7 +119,12 @@ export const RemoteControl: React.FC = () => {
             >
               <FaThumbsUp size={24} />
             </IconButton>
-            <Tooltip id="remote-like" place="top" content={t("actions.like")} />
+            <Tooltip
+              id="remote-like"
+              place="top"
+              delayShow={TOOLTIP_DELAY_MS}
+              content={t("actions.like")}
+            />
             <IconButton
               aria-label={t("actions.dislike")}
               onClick={sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event)}
@@ -128,6 +135,7 @@ export const RemoteControl: React.FC = () => {
             <Tooltip
               id="remote-dislike"
               place="top"
+              delayShow={TOOLTIP_DELAY_MS}
               content={t("actions.dislike")}
             />
           </IconGroup>
@@ -139,48 +147,54 @@ export const RemoteControl: React.FC = () => {
           >
             <FaStepForward size={24} />
           </IconButton>
-          <Tooltip id="remote-next" place="top" content={t("actions.next")} />
-
-          <IconButton
-            aria-label={
-              (
-                isWebClientActive
-                  ? isCreditOverlayVisible
-                  : isDesktopActive
-                    ? isDesktopCredit
-                    : isCreditOverlayVisible
-              )
-                ? t("actions.captions_off")
-                : t("actions.captions_on")
-            }
-            aria-pressed={
-              isWebClientActive
-                ? isCreditOverlayVisible
-                : isDesktopActive
-                  ? isDesktopCredit
-                  : isCreditOverlayVisible
-            }
-            onClick={handleToggleCaptions}
-            data-tooltip-id="remote-captions"
-          >
-            {(
-              isWebClientActive
-                ? isCreditOverlayVisible
-                : isDesktopActive
-                  ? isDesktopCredit
-                  : isCreditOverlayVisible
-            ) ? (
-              <FaClosedCaptioning size={24} />
-            ) : (
-              <FaRegClosedCaptioning size={24} />
-            )}
-          </IconButton>
           <Tooltip
-            id="remote-captions"
+            id="remote-next"
             place="top"
-            content={t("components.remote_control.credit")}
+            delayShow={TOOLTIP_DELAY_MS}
+            content={t("actions.next")}
           />
         </IconRow>
+
+        <IconButton
+          aria-label={
+            (
+              isWebClientActive
+                ? isCreditOverlayVisible
+                : isDesktopActive
+                  ? isDesktopCredit
+                  : isCreditOverlayVisible
+            )
+              ? t("actions.captions_off")
+              : t("actions.captions_on")
+          }
+          aria-pressed={
+            isWebClientActive
+              ? isCreditOverlayVisible
+              : isDesktopActive
+                ? isDesktopCredit
+                : isCreditOverlayVisible
+          }
+          onClick={handleToggleCaptions}
+          data-tooltip-id="remote-captions"
+        >
+          {(
+            isWebClientActive
+              ? isCreditOverlayVisible
+              : isDesktopActive
+                ? isDesktopCredit
+                : isCreditOverlayVisible
+          ) ? (
+            <FaClosedCaptioning size={24} />
+          ) : (
+            <FaRegClosedCaptioning size={24} />
+          )}
+        </IconButton>
+        <Tooltip
+          id="remote-captions"
+          place="top"
+          delayShow={TOOLTIP_DELAY_MS}
+          content={t("components.remote_control.credit")}
+        />
 
         <IconRow>
           <IconButton
@@ -193,6 +207,7 @@ export const RemoteControl: React.FC = () => {
           <Tooltip
             id="remote-slower"
             place="top"
+            delayShow={TOOLTIP_DELAY_MS}
             content={t("components.remote_control.playback_slower")}
           />
           <IconButton
@@ -205,6 +220,7 @@ export const RemoteControl: React.FC = () => {
           <Tooltip
             id="remote-faster"
             place="top"
+            delayShow={TOOLTIP_DELAY_MS}
             content={t("components.remote_control.playback_faster")}
           />
         </IconRow>
