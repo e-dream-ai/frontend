@@ -61,9 +61,9 @@ export const PlayerTray: React.FC = () => {
   const artist = currentDream?.user?.name ?? t("common.unknown_author");
   const thumbnail = currentDream?.thumbnail;
 
-  // if (!isDesktopActive || isVideoReady) {
-  //   return null;
-  // }
+  if (!isDesktopActive || isVideoReady) {
+    return null;
+  }
 
   if (isHidden) {
     return (
