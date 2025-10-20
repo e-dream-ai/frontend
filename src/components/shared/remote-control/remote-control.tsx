@@ -4,6 +4,7 @@ import {
   NEW_REMOTE_CONTROL_EVENT,
 } from "@/constants/remote-control.constants";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "react-tooltip";
 import { useSocket } from "@/hooks/useSocket";
 import {
   RemoteControlContainer,
@@ -98,34 +99,60 @@ export const RemoteControl: React.FC = () => {
           <IconButton
             aria-label={t("actions.previous")}
             onClick={sendMessage(REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event)}
+            data-tooltip-id="remote-previous"
           >
             <FaStepBackward size={24} />
           </IconButton>
+          <Tooltip
+            id="remote-previous"
+            place="top"
+            content={t("actions.previous")}
+          />
 
           <IconGroup>
             <IconButton
               aria-label={t("actions.like")}
               onClick={sendMessage(REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event)}
+              data-tooltip-id="remote-like"
             >
               <FaThumbsUp size={24} />
             </IconButton>
+            <Tooltip id="remote-like" place="top" content={t("actions.like")} />
             <IconButton
               aria-label={t("actions.dislike")}
               onClick={sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event)}
+              data-tooltip-id="remote-dislike"
             >
               <FaThumbsDown size={24} />
             </IconButton>
+            <Tooltip
+              id="remote-dislike"
+              place="top"
+              content={t("actions.dislike")}
+            />
           </IconGroup>
 
           <IconButton
             aria-label={t("actions.next")}
             onClick={sendMessage(REMOTE_CONTROLS.GO_NEXT_DREAM.event)}
+            data-tooltip-id="remote-next"
           >
             <FaStepForward size={24} />
           </IconButton>
+          <Tooltip id="remote-next" place="top" content={t("actions.next")} />
 
           <IconButton
-            aria-label="Toggle captions"
+            aria-label={
+              (
+                isWebClientActive
+                  ? isCreditOverlayVisible
+                  : isDesktopActive
+                    ? isDesktopCredit
+                    : isCreditOverlayVisible
+              )
+                ? t("actions.captions_off")
+                : t("actions.captions_on")
+            }
             aria-pressed={
               isWebClientActive
                 ? isCreditOverlayVisible
@@ -134,6 +161,7 @@ export const RemoteControl: React.FC = () => {
                   : isCreditOverlayVisible
             }
             onClick={handleToggleCaptions}
+            data-tooltip-id="remote-captions"
           >
             {(
               isWebClientActive
@@ -147,21 +175,38 @@ export const RemoteControl: React.FC = () => {
               <FaRegClosedCaptioning size={24} />
             )}
           </IconButton>
+          <Tooltip
+            id="remote-captions"
+            place="top"
+            content={t("components.remote_control.credit")}
+          />
         </IconRow>
 
         <IconRow>
           <IconButton
-            aria-label="Slower"
+            aria-label={t("components.remote_control.playback_slower")}
             onClick={sendMessage(REMOTE_CONTROLS.PLAYBACK_SLOWER.event)}
+            data-tooltip-id="remote-slower"
           >
             <LuTurtle size={30} />
           </IconButton>
+          <Tooltip
+            id="remote-slower"
+            place="top"
+            content={t("components.remote_control.playback_slower")}
+          />
           <IconButton
-            aria-label="Faster"
+            aria-label={t("components.remote_control.playback_faster")}
             onClick={sendMessage(REMOTE_CONTROLS.PLAYBACK_FASTER.event)}
+            data-tooltip-id="remote-faster"
           >
             <LuRabbit size={30} />
           </IconButton>
+          <Tooltip
+            id="remote-faster"
+            place="top"
+            content={t("components.remote_control.playback_faster")}
+          />
         </IconRow>
       </RemoteControlRow>
 
