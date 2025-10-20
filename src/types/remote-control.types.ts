@@ -40,6 +40,7 @@ export type RemoteControlEventData = {
   uuid?: string;
   id?: number;
   key?: string;
+  isWebClientEvent?: boolean;
 };
 
 export type RemoteEvent =

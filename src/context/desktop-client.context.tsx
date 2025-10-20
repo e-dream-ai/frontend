@@ -87,8 +87,11 @@ export const DesktopClientProvider = ({
     NEW_REMOTE_CONTROL_EVENT,
     async (data?: RemoteControlEventData) => {
       if (!data?.event) return;
-      setIsActive(true);
-      setLastEventTime(Date.now());
+
+      if (data.isWebClientEvent !== true) {
+        setIsActive(true);
+        setLastEventTime(Date.now());
+      }
 
       // Update metrics on status payload
       if (data.event === REMOTE_CONTROLS.STATUS.event) {
