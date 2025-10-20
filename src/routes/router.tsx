@@ -64,10 +64,7 @@ export const RootElement = () => {
       <Header />
       <Outlet />
       <Footer />
-      {user &&
-        location.pathname !== ROUTES.REMOTE_CONTROL &&
-        isDesktopActive &&
-        !isVideoReady && <PlayerTray />}
+      {user && <PlayerTray />}
     </PageContainer>
   );
 };
