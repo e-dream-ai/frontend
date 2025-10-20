@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { Row, Text } from "@/components/shared";
 import { useTranslation } from "react-i18next";
+import { Tooltip } from "react-tooltip";
 import {
   FaThumbsUp,
   FaThumbsDown,
@@ -39,24 +40,7 @@ export const PlayerTray: React.FC = () => {
   const { isReady: isVideoReady } = useVideoJs();
   const navigate = useNavigate();
 
-  const [isHidden, setIsHidden] = useState<boolean>(() => {
-    try {
-      return (
-        typeof window !== "undefined" &&
-        window.localStorage.getItem("player-tray:hidden") === "1"
-      );
-    } catch {
-      return false;
-    }
-  });
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem("player-tray:hidden", isHidden ? "1" : "0");
-    } catch (error) {
-      console.error(error);
-    }
-  }, [isHidden]);
+  const [isHidden, setIsHidden] = useState<boolean>(false);
 
   const navigateToRemoteControl = (): void => {
     navigate(ROUTES.REMOTE_CONTROL);
@@ -97,76 +81,109 @@ export const PlayerTray: React.FC = () => {
       role="contentinfo"
       aria-label={t("remote_control.player_tray")}
     >
-      <LeftSection>
-        {isLoadingCurrentDream ? (
-          <>
-            <SkeletonArtwork aria-label={t("common.loading")} />
-            <TrackInfo>
-              <SkeletonTitle />
-              <SkeletonMeta />
-            </TrackInfo>
-          </>
-        ) : (
-          <>
-            <Artwork
-              src={thumbnail}
-              alt={title}
-              onClick={navigateToRemoteControl}
-            />
-            <TrackInfo>
-              <TrackTitle onClick={navigateToRemoteControl}>{title}</TrackTitle>
-              <TrackMeta onClick={navigateToRemoteControl}>{artist}</TrackMeta>
-            </TrackInfo>
-          </>
-        )}
-      </LeftSection>
+      <Content>
+        <LeftSection>
+          {isLoadingCurrentDream ? (
+            <>
+              <SkeletonArtwork aria-label={t("common.loading")} />
+              <TrackInfo>
+                <SkeletonTitle />
+                <SkeletonMeta />
+              </TrackInfo>
+            </>
+          ) : (
+            <>
+              <Artwork
+                src={thumbnail}
+                alt={title}
+                onClick={navigateToRemoteControl}
+              />
+              <TrackInfo>
+                <TrackTitle onClick={navigateToRemoteControl}>
+                  {title}
+                </TrackTitle>
+                <TrackMeta onClick={navigateToRemoteControl}>
+                  {artist}
+                </TrackMeta>
+              </TrackInfo>
+            </>
+          )}
+        </LeftSection>
 
-      <CenterRightRow>
-        <CenterSection>
-          <PlayerControls
-            t={t}
-            onPrevious={() =>
-              sendMessage(REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event)
-            }
-            onNext={() => sendMessage(REMOTE_CONTROLS.GO_NEXT_DREAM.event)}
-            onLike={() => sendMessage(REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event)}
-            onDislike={() =>
-              sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event)
-            }
-          />
-          <SideControls
-            isOn={
-              isWebClientActive
-                ? isCreditOverlayVisible
-                : isDesktopActive
-                  ? isDesktopCreditVisible
-                  : isCreditOverlayVisible
-            }
-            onToggle={() => {
-              sendMessage(REMOTE_CONTROLS.CREDIT.event);
-            }}
-          />
-        </CenterSection>
-
-        <RightSection>
-          <ColumnControls>
-            <SpeedControl
-              onSlower={() =>
-                sendMessage(REMOTE_CONTROLS.PLAYBACK_SLOWER.event)
+        <CenterRightRow>
+          <CenterSection>
+            <PlayerControls
+              t={t}
+              onPrevious={() =>
+                sendMessage(REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event)
               }
-              onFaster={() =>
-                sendMessage(REMOTE_CONTROLS.PLAYBACK_FASTER.event)
+              onNext={() => sendMessage(REMOTE_CONTROLS.GO_NEXT_DREAM.event)}
+              onLike={() =>
+                sendMessage(REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event)
+              }
+              onDislike={() =>
+                sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event)
               }
             />
-          </ColumnControls>
-        </RightSection>
-      </CenterRightRow>
-      <CloseButton
-        aria-label={t("actions.hide")}
-        onClick={() => setIsHidden(true)}
-      >
-        <FaChevronDown size={20} color="#fff" />
-      </CloseButton>
+            <DontShowOnMobile>
+              <SideControls
+                isOn={
+                  isWebClientActive
+                    ? isCreditOverlayVisible
+                    : isDesktopActive
+                      ? isDesktopCreditVisible
+                      : isCreditOverlayVisible
+                }
+                onToggle={() => {
+                  sendMessage(REMOTE_CONTROLS.CREDIT.event);
+                }}
+                idSuffix="desktop"
+              />
+            </DontShowOnMobile>
+          </CenterSection>
+
+          <DontShowOnDesktop>
+            <SideControls
+              isOn={
+                isWebClientActive
+                  ? isCreditOverlayVisible
+                  : isDesktopActive
+                    ? isDesktopCreditVisible
+                    : isCreditOverlayVisible
+              }
+              onToggle={() => {
+                sendMessage(REMOTE_CONTROLS.CREDIT.event);
+              }}
+              idSuffix="mobile"
+            />
+          </DontShowOnDesktop>
+
+          <RightSection>
+            <ColumnControls>
+              <SpeedControl
+                onSlower={() =>
+                  sendMessage(REMOTE_CONTROLS.PLAYBACK_SLOWER.event)
+                }
+                onFaster={() =>
+                  sendMessage(REMOTE_CONTROLS.PLAYBACK_FASTER.event)
+                }
+              />
+            </ColumnControls>
+          </RightSection>
+        </CenterRightRow>
+        <CloseButton
+          aria-label={t("actions.hide")}
+          onClick={() => setIsHidden(true)}
+          data-tooltip-id="player-tray-hide"
+        >
+          <FaChevronDown size={20} color="#fff" />
+        </CloseButton>
+        <Tooltip
+          id="player-tray-hide"
+          place="top"
+          content={t("actions.hide")}
+        />
+      </Content>
     </TrayContainer>
   );
 };
@@ -187,45 +204,88 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
   onDislike,
 }) => (
   <ControlsGroup>
-    <IconButton aria-label={t("actions.previous")} onClick={onPrevious}>
+    <IconButton
+      aria-label={t("actions.previous")}
+      onClick={onPrevious}
+      data-tooltip-id="player-tray-previous"
+    >
       <FaStepBackward size={24} />
     </IconButton>
+    <Tooltip
+      id="player-tray-previous"
+      place="top"
+      content={t("actions.previous")}
+    />
 
     <ColumnControls>
-      <IconButton aria-label={t("actions.like")} onClick={onLike}>
+      <IconButton
+        aria-label={t("actions.like")}
+        onClick={onLike}
+        data-tooltip-id="player-tray-like"
+      >
         <FaThumbsUp size={24} />
       </IconButton>
-      <IconButton aria-label={t("actions.dislike")} onClick={onDislike}>
+      <Tooltip id="player-tray-like" place="top" content={t("actions.like")} />
+      <IconButton
+        aria-label={t("actions.dislike")}
+        onClick={onDislike}
+        data-tooltip-id="player-tray-dislike"
+      >
         <FaThumbsDown size={24} />
       </IconButton>
+      <Tooltip
+        id="player-tray-dislike"
+        place="top"
+        content={t("actions.dislike")}
+      />
     </ColumnControls>
 
-    <IconButton aria-label={t("actions.next")} onClick={onNext}>
+    <IconButton
+      aria-label={t("actions.next")}
+      onClick={onNext}
+      data-tooltip-id="player-tray-next"
+    >
       <FaStepForward size={24} />
     </IconButton>
+    <Tooltip id="player-tray-next" place="top" content={t("actions.next")} />
   </ControlsGroup>
 );
 
 interface SideControlsProps {
   isOn: boolean;
   onToggle: () => void;
+  idSuffix?: string;
 }
 
-const SideControls: React.FC<SideControlsProps> = ({ isOn, onToggle }) => (
-  <ColumnControls>
-    <IconButton
-      aria-label={isOn ? "Turn captions off" : "Turn captions on"}
-      aria-pressed={isOn}
-      onClick={onToggle}
-    >
-      {isOn ? (
-        <FaClosedCaptioning size={24} />
-      ) : (
-        <FaRegClosedCaptioning size={24} />
-      )}
-    </IconButton>
-  </ColumnControls>
-);
+const SideControls: React.FC<SideControlsProps> = ({
+  isOn,
+  onToggle,
+  idSuffix,
+}) => {
+  const { t } = useTranslation();
+  const tooltipId = `player-tray-credit-${idSuffix ?? "default"}`;
+  return (
+    <ColumnControls>
+      <IconButton
+        aria-label={isOn ? t("actions.captions_off") : t("actions.captions_on")}
+        aria-pressed={isOn}
+        onClick={onToggle}
+        data-tooltip-id={tooltipId}
+      >
+        {isOn ? (
+          <FaClosedCaptioning size={24} />
+        ) : (
+          <FaRegClosedCaptioning size={24} />
+        )}
+      </IconButton>
+      <Tooltip
+        id={tooltipId}
+        place="top"
+        content={t("components.remote_control.credit")}
+      />
+    </ColumnControls>
+  );
+};
 
 interface SpeedControlProps {
   onSlower: () => void;
@@ -233,23 +293,39 @@ interface SpeedControlProps {
 }
 
 const SpeedControl: React.FC<SpeedControlProps> = ({ onSlower, onFaster }) => {
+  const { t } = useTranslation();
   const handleSlower = () => {
     onSlower();
   };
-
   const handleFaster = () => {
     onFaster();
   };
-
   return (
     <SpeedWrapper>
-      <IconButton aria-label="Slower speed" onClick={handleSlower}>
+      <IconButton
+        aria-label={t("components.remote_control.playback_slower")}
+        onClick={handleSlower}
+        data-tooltip-id="player-tray-slower"
+      >
         <LuTurtle size={30} />
       </IconButton>
-
-      <IconButton aria-label="Faster speed" onClick={handleFaster}>
+      <Tooltip
+        id="player-tray-slower"
+        place="top"
+        content={t("components.remote_control.playback_slower")}
+      />
+      <IconButton
+        aria-label={t("components.remote_control.playback_faster")}
+        onClick={handleFaster}
+        data-tooltip-id="player-tray-faster"
+      >
         <LuRabbit size={30} />
       </IconButton>
+      <Tooltip
+        id="player-tray-faster"
+        place="top"
+        content={t("components.remote_control.playback_faster")}
+      />
     </SpeedWrapper>
   );
 };
@@ -263,15 +339,22 @@ const TrayContainer = styled.div`
   background-color: #000;
   border-top: 3px solid ${(p) => p.theme.colorBackgroundSecondary};
   padding: 1rem 2.5rem;
+
+  @media (max-width: ${DEVICES.MOBILE_S}) {
+    justify-content: center;
+    padding: 1rem 1.25rem;
+  }
+`;
+
+const Content = styled.div`
   display: flex;
+  max-width: 1024px;
+  width: 100%;
+  margin: 0 auto;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
-  flex-wrap: wrap;
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    justify-content: center;
-  }
 `;
 
 const LeftSection = styled.div`
@@ -290,12 +373,8 @@ const CenterSection = styled(Row)`
   margin: 0;
   min-width: 0;
 
-  @media (max-width: 1036px) {
-    flex: 1 1 160px;
-    justify-content: flex-end;
-  }
-
-  @media (max-width: 768px) {
+  @media (max-width: ${DEVICES.MOBILE_S}) {
+    flex: 0 0 auto;
     justify-content: flex-start;
   }
 `;
@@ -313,6 +392,7 @@ const RightSection = styled.div`
   }
 
   @media (max-width: 768px) {
+    flex: 0 0 auto;
     justify-content: flex-end;
   }
 `;
@@ -323,6 +403,27 @@ const CenterRightRow = styled.div`
   gap: 1rem;
   min-width: 0;
   align-items: center;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    flex: 0 0 auto;
+  }
+
+  @media (max-width: ${DEVICES.MOBILE_S}) {
+    justify-content: space-between;
+    width: 100%;
+  }
+`;
+
+const DontShowOnMobile = styled.div`
+  @media (max-width: ${DEVICES.TABLET}) {
+    display: none;
+  }
+`;
+
+const DontShowOnDesktop = styled.div`
+  @media (min-width: ${DEVICES.TABLET}) {
+    display: none;
+  }
 `;
 
 const Artwork = styled.img`
@@ -462,12 +563,10 @@ const CloseButton = styled.button`
   position: absolute;
   right: 16px;
   top: -31.5px;
-  background: #000;
+  background: transparent;
   border: none;
   padding: 0.25rem;
   cursor: pointer;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
 `;
 
 export default PlayerTray;
