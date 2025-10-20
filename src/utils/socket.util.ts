@@ -51,8 +51,6 @@ export const onNewRemoteControlEvent =
       return;
     }
 
-    const key = event?.key;
-
     /**
      * PLAY_DREAM event doesn't need to be notificated on frontend
      * */
@@ -85,10 +83,4 @@ export const onNewRemoteControlEvent =
       );
       return;
     }
-
-    toast.info(
-      `${t("components.remote_control.event")}: ${key ? `${key}` : ""} ${t(
-        REMOTE_CONTROLS_TRANSLATIONS[event?.event],
-      )}`,
-    );
   };
