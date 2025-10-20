@@ -36,7 +36,7 @@ export const PlayerTray: React.FC = () => {
   const {
     isActive: isDesktopActive,
     isCreditOverlayVisible: isDesktopCreditVisible,
-  } = useDesktopClient(); // TODO: remove this
+  } = useDesktopClient();
   const { isReady: isVideoReady } = useVideoJs();
   const navigate = useNavigate();
 
@@ -60,9 +60,9 @@ export const PlayerTray: React.FC = () => {
   const artist = currentDream?.user?.name ?? t("common.unknown_author");
   const thumbnail = currentDream?.thumbnail;
 
-  // if (!isDesktopActive || isVideoReady) {
-  //   return null;
-  // }
+  if (!isDesktopActive || isVideoReady) {
+    return null;
+  }
 
   if (isHidden) {
     return (
