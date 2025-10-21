@@ -40,16 +40,6 @@ import {
 import { useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
-import {
-  PRESENCE_JOIN_EVENT,
-  ROLES_UPDATE_EVENT,
-} from "@/constants/roles.constants";
-import { RolesUpdatePayload } from "@/types/roles.types";
-import {
-  canPlayVideo,
-  detectDeviceType,
-  getOrCreateDeviceId,
-} from "@/utils/device.util";
 import { fetchDream } from "@/api/dream/query/useDream";
 import { joinPaths } from "@/utils/router.util";
 import { setCurrentUserDreamOptimistically } from "@/api/dream/utils/dream-utils";
@@ -630,34 +620,6 @@ export const WebClientProvider: React.FC<{
       }
     },
   );
-
-  // Listen roles update to toggle player/remote modes
-  useSocketEventListener<RolesUpdatePayload>(
-    ROLES_UPDATE_EVENT,
-    async (payload?: RolesUpdatePayload) => {
-      const localDeviceId = getOrCreateDeviceId();
-      const roles = payload?.roles;
-      const isPlayerByArray = Array.isArray(roles) && roles.includes("player");
-      const isPlayerByIds =
-        payload?.playerDeviceId && payload.playerDeviceId === localDeviceId;
-      const isPlayer = Boolean(isPlayerByArray || isPlayerByIds);
-
-      setWebClientActive(isPlayer);
-      if (isPlayer) setWebPlayerAvailable(true);
-    },
-  );
-
-  // Ensure presence join after listeners are mounted
-  useEffect(() => {
-    try {
-      emit(PRESENCE_JOIN_EVENT, {
-        deviceId: getOrCreateDeviceId(),
-        deviceType: detectDeviceType(),
-        canPlay: canPlayVideo(),
-      });
-    } catch (_) {}
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // register events on videojs instance
   useEffect(() => {
