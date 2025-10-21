@@ -41,25 +41,7 @@ export type RemoteControlEventData = {
   id?: number;
   key?: string;
   isWebClientEvent?: boolean;
-  targetClientId?: string;
 };
 
 export type RemoteEvent =
   (typeof REMOTE_CONTROLS)[keyof typeof REMOTE_CONTROLS]["event"];
-
-export type PresenceUpdate = {
-  type: "add" | "update" | "remove";
-  clientId: string;
-  clientType?: string;
-  clientVersion?: string;
-  updatedAt: number;
-};
-
-export type StatusUpdate = {
-  clientId: string;
-  paused?: boolean;
-  speed?: number;
-  captions?: boolean;
-  fullscreen?: boolean;
-  currentIndex?: number;
-};

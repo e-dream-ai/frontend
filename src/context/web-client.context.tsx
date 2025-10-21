@@ -23,10 +23,6 @@ import useSocket from "@/hooks/useSocket";
 import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
-  PING_EVENT,
-  GOOD_BYE_EVENT,
-  PRESENCE_UPDATE_EVENT,
-  STATUS_UPDATE_EVENT,
 } from "@/constants/remote-control.constants";
 import { CREDIT_OVERLAY_ID } from "@/constants/web-client.constants";
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
@@ -44,7 +40,9 @@ import {
 import { useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
-import { PresenceUpdate, StatusUpdate } from "@/types/remote-control.types";
+import { ROLES_UPDATE_EVENT } from "@/constants/roles.constants";
+import { RolesUpdatePayload } from "@/types/roles.types";
+import { getOrCreateDeviceId } from "@/utils/device.util";
 import { fetchDream } from "@/api/dream/query/useDream";
 import { joinPaths } from "@/utils/router.util";
 import { setCurrentUserDreamOptimistically } from "@/api/dream/utils/dream-utils";
@@ -58,8 +56,6 @@ type WebClientContextType = {
   handlers: Record<RemoteEvent, () => void>;
   speedLevel: number;
   isCreditOverlayVisible: boolean;
-  clientId?: string;
-  activeWebClientId?: string;
   setWebClientActive: (isActive: boolean) => void;
   setWebPlayerAvailable: (isActive: boolean) => void;
   handleOnEnded: () => void;
@@ -83,7 +79,7 @@ export const WebClientProvider: React.FC<{
   // location
   const location = useLocation();
   // socket
-  const { emit, socket } = useSocket();
+  const { emit } = useSocket();
   const {
     currentDream,
     currentPlaylist,
@@ -143,25 +139,6 @@ export const WebClientProvider: React.FC<{
   const [isWebClientAvailable, setIsWebClientAvailable] =
     useState<boolean>(false);
 
-  // presence & identity
-  const [clientId, setClientId] = useState<string | undefined>(undefined);
-  const [activeWebClientId, setActiveWebClientId] = useState<
-    string | undefined
-  >(undefined);
-  const activeClientsRef = useRef<Set<string>>(new Set());
-
-  // emit status update helper
-  const emitStatus = useCallback(
-    (partial: Partial<StatusUpdate>) => {
-      const payload: StatusUpdate = {
-        clientId: clientId ?? "",
-        ...partial,
-      };
-      emit(STATUS_UPDATE_EVENT, payload);
-    },
-    [clientId, emit],
-  );
-
   // player states
   const [, setPaused] = useState<boolean>(false);
   const [playbackRate, setPlaybackRate] = useState<number>(() =>
@@ -191,82 +168,6 @@ export const WebClientProvider: React.FC<{
   const setWebPlayerAvailable = useCallback((isActive: boolean) => {
     setIsWebClientAvailable(isActive);
   }, []);
-
-  // heartbeat ping
-  useEffect(() => {
-    if (!socket) return;
-    const id = socket.id;
-    setClientId(id);
-
-    const interval = window.setInterval(() => {
-      emit(PING_EVENT);
-    }, 10_000);
-
-    const handleBeforeUnload = () => {
-      emit(GOOD_BYE_EVENT);
-    };
-    const handleVisibility = () => {
-      if (document.hidden) {
-        emit(GOOD_BYE_EVENT);
-      }
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    document.addEventListener("visibilitychange", handleVisibility);
-
-    return () => {
-      window.clearInterval(interval);
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-      document.removeEventListener("visibilitychange", handleVisibility);
-    };
-  }, [socket, emit]);
-
-  // presence updates
-  useSocketEventListener<PresenceUpdate>(
-    PRESENCE_UPDATE_EVENT,
-    async (update?: PresenceUpdate) => {
-      if (!update) return;
-      if (update.type === "add" || update.type === "update") {
-        // If this device has an active web player, keep targeting self
-        if (isWebClientActive) {
-          setActiveWebClientId(clientId);
-          return;
-        }
-        activeClientsRef.current.add(update.clientId);
-        setActiveWebClientId((prev) => {
-          const isSelf = update.clientId === clientId;
-          if (!isSelf && (!prev || prev === clientId)) return update.clientId;
-          if (!prev) return isWebClientActive ? clientId : undefined;
-          return prev;
-        });
-      } else if (update.type === "remove") {
-        activeClientsRef.current.delete(update.clientId);
-        setActiveWebClientId((prev) => {
-          if (prev !== update.clientId) return prev;
-          const candidates = Array.from(activeClientsRef.current);
-          const nonSelf = candidates.find((id) => id !== clientId);
-          if (nonSelf) return nonSelf;
-          return isWebClientActive ? clientId : undefined;
-        });
-      }
-    },
-  );
-
-  useEffect(() => {
-    if (!clientId) return;
-    if (isWebClientActive) {
-      setActiveWebClientId(clientId);
-    } else {
-      setActiveWebClientId((prev) => (prev === clientId ? undefined : prev));
-    }
-  }, [isWebClientActive, clientId]);
-
-  // status update listener (for remote UI reflection)
-  useSocketEventListener<StatusUpdate>(
-    STATUS_UPDATE_EVENT,
-    async (_status?: StatusUpdate) => {
-      // reserved for UI reflection of paused/captions/fullscreen if needed
-    },
-  );
 
   const updateCreditOverlay = useCallback(() => {
     // Hide overlay if is showing one already
@@ -528,10 +429,8 @@ export const WebClientProvider: React.FC<{
           setPaused(false);
         }
       }
-      // emit new speed
-      emitStatus({ speed });
     },
-    [setPlayerPlaybackRate, playerInstance, emitStatus],
+    [setPlayerPlaybackRate, playerInstance],
   );
 
   const speedControls = Object.fromEntries(
@@ -574,10 +473,6 @@ export const WebClientProvider: React.FC<{
           setSpeedLevel(0);
         }
         setPaused(!isPaused);
-        emitStatus({
-          paused: !isPaused,
-          speed: !isPaused ? lastNonZeroSpeedRef.current : 0,
-        });
       },
       playing: () => {},
       play_dream: () => {},
@@ -642,8 +537,6 @@ export const WebClientProvider: React.FC<{
       },
       credit: () => {
         toggleCreditOverlay();
-        // reflect captions toggle
-        emitStatus({ captions: !isCreditOverlayVisible });
       },
       web: () => {
         window.open(
@@ -731,6 +624,22 @@ export const WebClientProvider: React.FC<{
     },
   );
 
+  // Listen roles update to toggle player/remote modes
+  useSocketEventListener<RolesUpdatePayload>(
+    ROLES_UPDATE_EVENT,
+    async (payload?: RolesUpdatePayload) => {
+      const localDeviceId = getOrCreateDeviceId();
+      const roles = payload?.roles;
+      const isPlayerByArray = Array.isArray(roles) && roles.includes("player");
+      const isPlayerByIds =
+        payload?.playerDeviceId && payload.playerDeviceId === localDeviceId;
+      const isPlayer = Boolean(isPlayerByArray || isPlayerByIds);
+
+      setWebClientActive(isPlayer);
+      if (isPlayer) setWebPlayerAvailable(true);
+    },
+  );
+
   // register events on videojs instance
   useEffect(() => {
     const handleTimeUpdate = async () => {
@@ -751,9 +660,6 @@ export const WebClientProvider: React.FC<{
       ) {
         // lock transitioning and wait for the change
         await handlers.next({ longTransition: true });
-        emitStatus({
-          currentIndex: (playlistHistoryPositionRef.current ?? 0) + 1,
-        });
       }
     };
 
@@ -761,9 +667,6 @@ export const WebClientProvider: React.FC<{
     const handleEnded = async () => {
       // lock transitioning and wait for the change
       await handlers.next();
-      emitStatus({
-        currentIndex: (playlistHistoryPositionRef.current ?? 0) + 1,
-      });
     };
 
     const cleanup1 = addEventListener(
@@ -874,11 +777,10 @@ export const WebClientProvider: React.FC<{
       handlers,
       speedLevel,
       isCreditOverlayVisible,
-      clientId,
-      activeWebClientId,
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,
+      // Note: currentTime/duration are available from useVideoJs if needed by consumers
     }),
     [
       isWebClientActive,
@@ -886,8 +788,6 @@ export const WebClientProvider: React.FC<{
       handlers,
       speedLevel,
       isCreditOverlayVisible,
-      clientId,
-      activeWebClientId,
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,
