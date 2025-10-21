@@ -11,15 +11,6 @@ import useAuth from "@/hooks/useAuth";
 import { SOCKET_URL } from "@/constants/api.constants";
 import { SOCKET_AUTH_ERROR_MESSAGES } from "@/constants/auth.constants";
 import { EmitEvents, EmitListener } from "@/types/socket.types";
-import {
-  PRESENCE_HEARTBEAT_EVENT,
-  PRESENCE_JOIN_EVENT,
-} from "@/constants/roles.constants";
-import {
-  canPlayVideo,
-  detectDeviceType,
-  getOrCreateDeviceId,
-} from "@/utils/device.util";
 
 type SocketContextType = {
   socket?: Socket | null;
@@ -84,15 +75,6 @@ export const SocketProvider: React.FC<{
     newSocket.on("connect", () => {
       // Socket connected
       setIsConnected(true);
-      // Announce presence
-      try {
-        const deviceId = getOrCreateDeviceId();
-        newSocket.emit(PRESENCE_JOIN_EVENT, {
-          deviceId,
-          deviceType: detectDeviceType(),
-          canPlay: canPlayVideo(),
-        });
-      } catch (_) {}
     });
 
     // Listen disconnection event
@@ -224,16 +206,6 @@ export const SocketProvider: React.FC<{
       window.removeEventListener("offline", handleOffline);
     };
   }, [user, generateSocketInstance, handleReconnect]);
-
-  // Presence heartbeat timer
-  useEffect(() => {
-    if (!socketRef.current) return;
-    const deviceId = getOrCreateDeviceId();
-    const interval = window.setInterval(() => {
-      socketRef.current?.emit(PRESENCE_HEARTBEAT_EVENT, { deviceId });
-    }, 5000);
-    return () => window.clearInterval(interval);
-  }, [isConnected]);
 
   // useMemo to memoize context value
   const contextValue = useMemo(
