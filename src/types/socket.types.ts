@@ -14,6 +14,8 @@ export type EmitEvents = {
   [PING_EVENT]: () => void;
   [GOOD_BYE_EVENT]: () => void;
   [PING_REDIS_EVENT]: () => void;
+  "device:register": (data: Record<string, unknown>) => void;
+  "device:ping": () => void;
 };
 
 export type EmitListener = {

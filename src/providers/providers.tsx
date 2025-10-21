@@ -5,6 +5,7 @@ import QueryClientProvider from "@/providers/query-client.provider";
 import HighlightContext from "@/providers/highlight.provider";
 import PermissionProvider from "./permission.provider";
 import SocketProvider from "./socket.provider";
+import DeviceRoleProvider from "./device-role.provider";
 import DesktopClientProvider from "./desktop-client.provider";
 import WebClientProvider from "./web-client.provider";
 import VideoJSProvider from "./video-js.provider";
@@ -29,6 +30,7 @@ export const Providers = [
   ModalProvider,
   PermissionProvider,
   SocketProvider,
+  DeviceRoleProvider,
   DesktopClientProvider,
   VideoJSProvider,
   WebClientProvider,
