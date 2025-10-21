@@ -45,6 +45,7 @@ import { joinPaths } from "@/utils/router.util";
 import { setCurrentUserDreamOptimistically } from "@/api/dream/utils/dream-utils";
 import { useUserDislikes } from "@/api/user/query/useUserDislikes";
 import { useDefaultPlaylist } from "@/api/playlist/query/useDefaultPlaylist";
+import useDeviceRole from "@/hooks/useDeviceRole";
 
 type WebClientContextType = {
   isWebClientActive: boolean;
@@ -83,6 +84,9 @@ export const WebClientProvider: React.FC<{
     refreshCurrentDream,
     refreshCurrentPlaylist,
   } = useAuth();
+
+  // device role
+  const { shouldShowVideoPlayer } = useDeviceRole();
 
   // videojs
   const {
@@ -685,13 +689,21 @@ export const WebClientProvider: React.FC<{
       isReady &&
       // web client should be active
       isWebClientActive &&
+      // device should show video player
+      shouldShowVideoPlayer &&
       // should be a dream with the video source
       playingDreamRef.current?.video
     ) {
       console.log("playDreamWithHistory()");
       playDreamWithHistory(playingDreamRef.current);
     }
-  }, [location.pathname, isReady, isWebClientActive, playDreamWithHistory]);
+  }, [
+    location.pathname,
+    isReady,
+    isWebClientActive,
+    shouldShowVideoPlayer,
+    playDreamWithHistory,
+  ]);
 
   // Preload starting video
   useEffect(() => {
@@ -699,7 +711,9 @@ export const WebClientProvider: React.FC<{
       // location should be remote control
       location.pathname === ROUTES.REMOTE_CONTROL &&
       // videojs instances should be ready
-      isReady
+      isReady &&
+      // device should show video player
+      shouldShowVideoPlayer
     ) {
       // Prioritize the current dream if it exists
       // Set it as playing dream and preload it
@@ -723,6 +737,7 @@ export const WebClientProvider: React.FC<{
   }, [
     location.pathname,
     isReady,
+    shouldShowVideoPlayer,
     currentDream,
     defaultPlaylistDreams,
     preloadVideo,

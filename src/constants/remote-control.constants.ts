@@ -5,6 +5,17 @@ export const PING_EVENT = "ping";
 export const PING_REDIS_EVENT = "ping_redis";
 export const GOOD_BYE_EVENT = "goodbye";
 
+/**
+ * Device management socket events
+ */
+export const DEVICE_EVENTS = {
+  DEVICE_REGISTER: "device:register",
+  ROLE_ASSIGNED: "device:role-assigned",
+  LIST_UPDATED: "device:list-updated",
+  PING: "device:ping",
+  PONG: "device:pong",
+} as const;
+
 export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
   PLAYING: { event: "playing", key: "", triggerKey: "" },
   PLAY_DREAM: { event: "play_dream", key: "", triggerKey: "" },

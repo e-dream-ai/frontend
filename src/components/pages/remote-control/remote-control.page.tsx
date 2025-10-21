@@ -6,21 +6,25 @@ import { RemoteControl } from "@/components/shared/remote-control/remote-control
 import { CurrentDream } from "@/components/shared/current-dream/current-dream";
 import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
 import { VideoJS } from "@/components/shared/video-js/video-js";
+import useDeviceRole from "@/hooks/useDeviceRole";
 
 const SECTION_ID = "remote-control";
 
 const RemoteControlPage: React.FC = () => {
   const { t } = useTranslation();
+  const { shouldShowVideoPlayer, shouldShowRemoteControls } = useDeviceRole();
 
   return (
     <Container>
       <h2>{t("page.remote_control.title")}</h2>
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
-        <Row justifyContent="center" my="2rem">
-          <RemoteControl />
-        </Row>
-        <VideoJS />
+        {shouldShowRemoteControls && (
+          <Row justifyContent="center" my="2rem">
+            <RemoteControl />
+          </Row>
+        )}
+        {shouldShowVideoPlayer && <VideoJS />}
         <CurrentDream />
         <CurrentPlaylist />
       </Section>
