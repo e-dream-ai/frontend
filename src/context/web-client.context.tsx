@@ -145,9 +145,7 @@ export const WebClientProvider: React.FC<{
 
   // presence & identity
   const [clientId, setClientId] = useState<string | undefined>(undefined);
-  const [activeWebClientId, setActiveWebClientId] = useState<
-    string | undefined
-  >(undefined);
+  const [, setActiveWebClientId] = useState<string | undefined>(undefined);
   const activeClientsRef = useRef<Set<string>>(new Set());
 
   // emit status update helper
