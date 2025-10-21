@@ -145,7 +145,9 @@ export const WebClientProvider: React.FC<{
 
   // presence & identity
   const [clientId, setClientId] = useState<string | undefined>(undefined);
-  const [, setActiveWebClientId] = useState<string | undefined>(undefined);
+  const [activeWebClientId, setActiveWebClientId] = useState<
+    string | undefined
+  >(undefined);
   const activeClientsRef = useRef<Set<string>>(new Set());
 
   // emit status update helper
@@ -225,15 +227,36 @@ export const WebClientProvider: React.FC<{
       if (!update) return;
       if (update.type === "add" || update.type === "update") {
         activeClientsRef.current.add(update.clientId);
-        setActiveWebClientId((prev) => prev ?? update.clientId);
+        setActiveWebClientId((prev) => {
+          const isSelf = update.clientId === clientId;
+          if (!isSelf && (!prev || prev === clientId)) return update.clientId;
+          if (!prev) return isWebClientActive ? clientId : undefined;
+          return prev;
+        });
       } else if (update.type === "remove") {
         activeClientsRef.current.delete(update.clientId);
-        setActiveWebClientId((prev) =>
-          prev === update.clientId ? undefined : prev,
-        );
+        setActiveWebClientId((prev) => {
+          if (prev !== update.clientId) return prev;
+          const candidates = Array.from(activeClientsRef.current);
+          const nonSelf = candidates.find((id) => id !== clientId);
+          if (nonSelf) return nonSelf;
+          return isWebClientActive ? clientId : undefined;
+        });
       }
     },
   );
+
+  useEffect(() => {
+    if (!clientId) return;
+    if (isWebClientActive) {
+      setActiveWebClientId((prev) => {
+        if (prev && prev !== clientId) return prev;
+        return clientId;
+      });
+    } else {
+      setActiveWebClientId((prev) => (prev === clientId ? undefined : prev));
+    }
+  }, [isWebClientActive, clientId]);
 
   // status update listener (for remote UI reflection)
   useSocketEventListener<StatusUpdate>(
@@ -849,10 +872,11 @@ export const WebClientProvider: React.FC<{
       handlers,
       speedLevel,
       isCreditOverlayVisible,
+      clientId,
+      activeWebClientId,
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,
-      // Note: currentTime/duration are available from useVideoJs if needed by consumers
     }),
     [
       isWebClientActive,
@@ -860,6 +884,8 @@ export const WebClientProvider: React.FC<{
       handlers,
       speedLevel,
       isCreditOverlayVisible,
+      clientId,
+      activeWebClientId,
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,
