@@ -226,6 +226,11 @@ export const WebClientProvider: React.FC<{
     async (update?: PresenceUpdate) => {
       if (!update) return;
       if (update.type === "add" || update.type === "update") {
+        // If this device has an active web player, keep targeting self
+        if (isWebClientActive) {
+          setActiveWebClientId(clientId);
+          return;
+        }
         activeClientsRef.current.add(update.clientId);
         setActiveWebClientId((prev) => {
           const isSelf = update.clientId === clientId;
@@ -249,10 +254,7 @@ export const WebClientProvider: React.FC<{
   useEffect(() => {
     if (!clientId) return;
     if (isWebClientActive) {
-      setActiveWebClientId((prev) => {
-        if (prev && prev !== clientId) return prev;
-        return clientId;
-      });
+      setActiveWebClientId(clientId);
     } else {
       setActiveWebClientId((prev) => (prev === clientId ? undefined : prev));
     }
