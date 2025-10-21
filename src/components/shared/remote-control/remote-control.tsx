@@ -39,8 +39,12 @@ import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
   const { emit } = useSocket();
-  const { isWebClientActive, handlers, isCreditOverlayVisible } =
-    useWebClient();
+  const {
+    isWebClientActive,
+    handlers,
+    isCreditOverlayVisible,
+    activeWebClientId,
+  } = useWebClient();
   const { isActive: isDesktopActive, isCreditOverlayVisible: isDesktopCredit } =
     useDesktopClient();
 
@@ -55,6 +59,7 @@ export const RemoteControl: React.FC = () => {
     emit(NEW_REMOTE_CONTROL_EVENT, {
       event,
       isWebClientEvent: isWebClientActive,
+      targetClientId: !isWebClientActive ? activeWebClientId : undefined,
     });
     if (isWebClientActive) {
       handlers?.[event]?.();
