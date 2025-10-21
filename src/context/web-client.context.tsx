@@ -23,6 +23,10 @@ import useSocket from "@/hooks/useSocket";
 import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
+  PING_EVENT,
+  GOOD_BYE_EVENT,
+  PRESENCE_UPDATE_EVENT,
+  STATUS_UPDATE_EVENT,
 } from "@/constants/remote-control.constants";
 import { CREDIT_OVERLAY_ID } from "@/constants/web-client.constants";
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
@@ -40,6 +44,7 @@ import {
 import { useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
+import { PresenceUpdate, StatusUpdate } from "@/types/remote-control.types";
 import { fetchDream } from "@/api/dream/query/useDream";
 import { joinPaths } from "@/utils/router.util";
 import { setCurrentUserDreamOptimistically } from "@/api/dream/utils/dream-utils";
@@ -53,6 +58,8 @@ type WebClientContextType = {
   handlers: Record<RemoteEvent, () => void>;
   speedLevel: number;
   isCreditOverlayVisible: boolean;
+  clientId?: string;
+  activeWebClientId?: string;
   setWebClientActive: (isActive: boolean) => void;
   setWebPlayerAvailable: (isActive: boolean) => void;
   handleOnEnded: () => void;
@@ -76,7 +83,7 @@ export const WebClientProvider: React.FC<{
   // location
   const location = useLocation();
   // socket
-  const { emit } = useSocket();
+  const { emit, socket } = useSocket();
   const {
     currentDream,
     currentPlaylist,
@@ -136,6 +143,23 @@ export const WebClientProvider: React.FC<{
   const [isWebClientAvailable, setIsWebClientAvailable] =
     useState<boolean>(false);
 
+  // presence & identity
+  const [clientId, setClientId] = useState<string | undefined>(undefined);
+  const [, setActiveWebClientId] = useState<string | undefined>(undefined);
+  const activeClientsRef = useRef<Set<string>>(new Set());
+
+  // emit status update helper
+  const emitStatus = useCallback(
+    (partial: Partial<StatusUpdate>) => {
+      const payload: StatusUpdate = {
+        clientId: clientId ?? "",
+        ...partial,
+      };
+      emit(STATUS_UPDATE_EVENT, payload);
+    },
+    [clientId, emit],
+  );
+
   // player states
   const [, setPaused] = useState<boolean>(false);
   const [playbackRate, setPlaybackRate] = useState<number>(() =>
@@ -165,6 +189,59 @@ export const WebClientProvider: React.FC<{
   const setWebPlayerAvailable = useCallback((isActive: boolean) => {
     setIsWebClientAvailable(isActive);
   }, []);
+
+  // heartbeat ping
+  useEffect(() => {
+    if (!socket) return;
+    const id = socket.id;
+    setClientId(id);
+
+    const interval = window.setInterval(() => {
+      emit(PING_EVENT);
+    }, 10_000);
+
+    const handleBeforeUnload = () => {
+      emit(GOOD_BYE_EVENT);
+    };
+    const handleVisibility = () => {
+      if (document.hidden) {
+        emit(GOOD_BYE_EVENT);
+      }
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.clearInterval(interval);
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+  }, [socket, emit]);
+
+  // presence updates
+  useSocketEventListener<PresenceUpdate>(
+    PRESENCE_UPDATE_EVENT,
+    async (update?: PresenceUpdate) => {
+      if (!update) return;
+      if (update.type === "add" || update.type === "update") {
+        activeClientsRef.current.add(update.clientId);
+        setActiveWebClientId((prev) => prev ?? update.clientId);
+      } else if (update.type === "remove") {
+        activeClientsRef.current.delete(update.clientId);
+        setActiveWebClientId((prev) =>
+          prev === update.clientId ? undefined : prev,
+        );
+      }
+    },
+  );
+
+  // status update listener (for remote UI reflection)
+  useSocketEventListener<StatusUpdate>(
+    STATUS_UPDATE_EVENT,
+    async (_status?: StatusUpdate) => {
+      // reserved for UI reflection of paused/captions/fullscreen if needed
+    },
+  );
 
   const updateCreditOverlay = useCallback(() => {
     // Hide overlay if is showing one already
@@ -426,8 +503,10 @@ export const WebClientProvider: React.FC<{
           setPaused(false);
         }
       }
+      // emit new speed
+      emitStatus({ speed });
     },
-    [setPlayerPlaybackRate, playerInstance],
+    [setPlayerPlaybackRate, playerInstance, emitStatus],
   );
 
   const speedControls = Object.fromEntries(
@@ -470,6 +549,10 @@ export const WebClientProvider: React.FC<{
           setSpeedLevel(0);
         }
         setPaused(!isPaused);
+        emitStatus({
+          paused: !isPaused,
+          speed: !isPaused ? lastNonZeroSpeedRef.current : 0,
+        });
       },
       playing: () => {},
       play_dream: () => {},
@@ -534,6 +617,8 @@ export const WebClientProvider: React.FC<{
       },
       credit: () => {
         toggleCreditOverlay();
+        // reflect captions toggle
+        emitStatus({ captions: !isCreditOverlayVisible });
       },
       web: () => {
         window.open(
@@ -641,6 +726,9 @@ export const WebClientProvider: React.FC<{
       ) {
         // lock transitioning and wait for the change
         await handlers.next({ longTransition: true });
+        emitStatus({
+          currentIndex: (playlistHistoryPositionRef.current ?? 0) + 1,
+        });
       }
     };
 
@@ -648,6 +736,9 @@ export const WebClientProvider: React.FC<{
     const handleEnded = async () => {
       // lock transitioning and wait for the change
       await handlers.next();
+      emitStatus({
+        currentIndex: (playlistHistoryPositionRef.current ?? 0) + 1,
+      });
     };
 
     const cleanup1 = addEventListener(
