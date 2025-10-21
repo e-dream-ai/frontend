@@ -59,18 +59,6 @@ export const onNewRemoteControlEvent =
     }
 
     if (
-      event.event === REMOTE_CONTROLS.PLAYING.event ||
-      event.event === REMOTE_CONTROLS.PLAY_PLAYLIST.event
-    ) {
-      toast.info(
-        t(REMOTE_CONTROLS_TRANSLATIONS[event?.event], {
-          name: data?.name ?? data?.uuid,
-        }),
-      );
-      return;
-    }
-
-    if (
       event.event === REMOTE_CONTROLS.LIKE_DREAM.event ||
       event.event === REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event ||
       event.event === REMOTE_CONTROLS.DISLIKE_DREAM.event ||
