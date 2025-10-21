@@ -16,15 +16,18 @@ import { ItemCardSkeleton } from "../item-card/item-card";
 import { useTheme } from "styled-components";
 import { useWebClient } from "@/hooks/useWebClient";
 import useAuth from "@/hooks/useAuth";
-import { toast } from "react-toastify";
+import useStatusCallback from "@/hooks/useStatusCallback";
+import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
+import { toast } from "react-toastify";
 
 export const CurrentDream = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const { user, currentDream, isLoadingCurrentDream, refreshCurrentDream } =
     useAuth();
-  const { setWebClientActive, clientId, activeWebClientId } = useWebClient();
+  const { setWebClientActive } = useWebClient();
+  const { isActive } = useDesktopClient();
 
   const handleRemoteControlEvent = async (
     data?: RemoteControlEventData,
@@ -50,18 +53,27 @@ export const CurrentDream = () => {
     handleRemoteControlEvent,
   );
 
-  useEffect(() => {
-    if (!IS_WEB_CLIENT_ACTIVE || !user) return;
-    if (!activeWebClientId) return;
-    if (activeWebClientId === clientId) {
-      setWebClientActive(true);
-      toast.info(t("web_client.web_client_available"));
-    } else {
-      setWebClientActive(false);
-      toast.info(t("web_client.web_client_unavailable"));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeWebClientId, clientId, user]);
+  useStatusCallback(
+    isActive,
+    {
+      onActive: () => {
+        if (IS_WEB_CLIENT_ACTIVE && user) {
+          setWebClientActive(false);
+          toast.info(t("web_client.web_client_unavailable"));
+        }
+      },
+      onInactive: () => {
+        // Show web client available toast and play button
+        if (IS_WEB_CLIENT_ACTIVE && user) {
+          setWebClientActive(true);
+          toast.info(t("web_client.web_client_available"));
+        }
+      },
+    },
+    {},
+    // Add user to deps to refresh callbacks when user logs in
+    [user],
+  );
 
   // update current dream on component mount
   useEffect(() => {

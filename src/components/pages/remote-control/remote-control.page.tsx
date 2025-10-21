@@ -6,6 +6,7 @@ import { RemoteControl } from "@/components/shared/remote-control/remote-control
 import { CurrentDream } from "@/components/shared/current-dream/current-dream";
 import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
 import { VideoJS } from "@/components/shared/video-js/video-js";
+import WebClientContext from "@/context/web-client.context";
 
 const SECTION_ID = "remote-control";
 
@@ -20,7 +21,9 @@ const RemoteControlPage: React.FC = () => {
         <Row justifyContent="center" my="2rem">
           <RemoteControl />
         </Row>
-        <VideoJS />
+        <WebClientContext.Consumer>
+          {(ctx) => (ctx?.isWebClientActive ? <VideoJS /> : null)}
+        </WebClientContext.Consumer>
         <CurrentDream />
         <CurrentPlaylist />
       </Section>

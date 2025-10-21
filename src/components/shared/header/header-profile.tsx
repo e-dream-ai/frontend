@@ -23,7 +23,6 @@ import { faLock, faPencil, faUser } from "@fortawesome/free-solid-svg-icons";
 import { getUserNameOrEmail } from "@/utils/user.util";
 import { useImage } from "@/hooks/useImage";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
-import { useWebClient } from "@/hooks/useWebClient";
 import useSocket from "@/hooks/useSocket";
 
 const AuthAnchor: React.FC<{
@@ -44,7 +43,6 @@ export const HeaderProfile: React.FC = () => {
   const { user, isLoading } = useAuth();
   const { isActive } = useDesktopClient();
   const { isConnected } = useSocket();
-  const { isWebClientActive } = useWebClient();
 
   const avatarUrl = useImage(user?.avatar, {
     width: 90,
@@ -62,7 +60,7 @@ export const HeaderProfile: React.FC = () => {
               <HeaderAvatarWrapper>
                 <StatusDot
                   socketConnected={isConnected}
-                  desktopClientConnected={isActive || isWebClientActive}
+                  desktopClientConnected={isActive}
                 />
                 {user?.avatar ? (
                   <HeaderAvatar url={avatarUrl} />
