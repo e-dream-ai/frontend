@@ -1,17 +1,12 @@
 import { useVideoJs } from "@/hooks/useVideoJS";
 import { FC, memo, useEffect, useRef } from "react";
-import { Row, Column, Text } from "@/components/shared";
-import {
-  PlayerWrapper,
-  VideoContainer,
-  VideoWrapper,
-  CloseButton,
-} from "./video-js.styled";
+import { Row, Column, Text, Button } from "@/components/shared";
+import { PlayerWrapper, VideoContainer, VideoWrapper } from "./video-js.styled";
 import { PoolConfig, VIDEOJS_OPTIONS } from "@/constants/video-js.constants";
 import { useWebClient } from "@/hooks/useWebClient";
 import "video.js/dist/video-js.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
 type VideoJSProps = {
   //
@@ -41,18 +36,21 @@ export const VideoJS: FC<VideoJSProps> = () => {
   return (
     <Row style={{ display: isWebClientActive ? "flex" : "none" }}>
       <Column flex="auto">
-        <Row>
-          <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+        <Row justifyContent="space-between" alignItems={"center"} mb="1rem">
+          <Text fontSize="1rem" fontWeight={600}>
             Web Player
           </Text>
-        </Row>
-        <VideoWrapper ref={videoWrapperRef}>
-          <CloseButton
-            aria-label="Close web player"
+          <Button
+            type="button"
+            buttonType="danger"
+            size="md"
+            transparent
             onClick={() => setWebClientActive(false)}
           >
-            <FontAwesomeIcon icon={faXmark} size="lg" />
-          </CloseButton>
+            <FontAwesomeIcon icon={faTrash} />
+          </Button>
+        </Row>
+        <VideoWrapper ref={videoWrapperRef}>
           {players.map(({ id, skipCrossfade, longTransition }) => (
             <PlayerSlot
               key={id}
