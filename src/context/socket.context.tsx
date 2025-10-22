@@ -103,6 +103,11 @@ export const SocketProvider: React.FC<{
         try {
           isReconnecting.current = true;
           await authenticateUser();
+          try {
+            newSocket.removeAllListeners();
+            newSocket.disconnect();
+          } catch {}
+          socketRef.current = generateSocketInstance();
         } finally {
           isReconnecting.current = false;
         }
@@ -149,6 +154,8 @@ export const SocketProvider: React.FC<{
           socketRef.current.disconnect();
           socketRef.current = null;
           await authenticateUser();
+          // After re-authentication, immediately create a fresh socket instance
+          socketRef.current = generateSocketInstance();
         } else {
           // Socket already connected
         }
