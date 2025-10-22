@@ -14,6 +14,7 @@ export type EmitEvents = {
   [PING_EVENT]: () => void;
   [GOOD_BYE_EVENT]: () => void;
   [PING_REDIS_EVENT]: () => void;
+  web_client_status: (data: { active: boolean }) => void;
 };
 
 export type EmitListener = {

@@ -42,7 +42,7 @@ export const HeaderProfile: React.FC = () => {
   const { t } = useTranslation();
   const { user, isLoading } = useAuth();
   const { isActive } = useDesktopClient();
-  const { isConnected, connectedDevicesCount } = useSocket();
+  const { isConnected, connectedDevicesCount, hasWebPlayer } = useSocket();
 
   const avatarUrl = useImage(user?.avatar, {
     width: 90,
@@ -61,7 +61,8 @@ export const HeaderProfile: React.FC = () => {
                 <StatusDot
                   socketConnected={isConnected}
                   desktopClientConnected={
-                    isActive || (connectedDevicesCount ?? 0) > 1
+                    isActive ||
+                    ((connectedDevicesCount ?? 0) > 1 && !!hasWebPlayer)
                   }
                 />
                 {user?.avatar ? (

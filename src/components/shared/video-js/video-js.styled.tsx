@@ -58,3 +58,25 @@ export const VideoContainer = styled.div<{
 `;
 
 export const PlayerWrapper = styled.div``;
+
+export const CloseButton = styled.button`
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  z-index: 20;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 18px;
+  border: none;
+  background: rgba(0, 0, 0, 0.7);
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: rgba(0, 0, 0, 0.9);
+  }
+`;

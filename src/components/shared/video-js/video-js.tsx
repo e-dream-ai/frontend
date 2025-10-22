@@ -1,10 +1,17 @@
 import { useVideoJs } from "@/hooks/useVideoJS";
 import { FC, memo, useEffect, useRef } from "react";
 import { Row, Column, Text } from "@/components/shared";
-import { PlayerWrapper, VideoContainer, VideoWrapper } from "./video-js.styled";
+import {
+  PlayerWrapper,
+  VideoContainer,
+  VideoWrapper,
+  CloseButton,
+} from "./video-js.styled";
 import { PoolConfig, VIDEOJS_OPTIONS } from "@/constants/video-js.constants";
 import { useWebClient } from "@/hooks/useWebClient";
 import "video.js/dist/video-js.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 type VideoJSProps = {
   //
@@ -17,7 +24,7 @@ type VideoJSProps = {
 export const VideoJS: FC<VideoJSProps> = () => {
   const { players, videoWrapperRef, activePlayer, createPlayer, clearPlayers } =
     useVideoJs();
-  const { isWebClientActive } = useWebClient();
+  const { isWebClientActive, setWebClientActive } = useWebClient();
 
   useEffect(() => {
     // creates min initial player slots
@@ -40,6 +47,12 @@ export const VideoJS: FC<VideoJSProps> = () => {
           </Text>
         </Row>
         <VideoWrapper ref={videoWrapperRef}>
+          <CloseButton
+            aria-label="Close web player"
+            onClick={() => setWebClientActive(false)}
+          >
+            <FontAwesomeIcon icon={faXmark} size="lg" />
+          </CloseButton>
           {players.map(({ id, skipCrossfade, longTransition }) => (
             <PlayerSlot
               key={id}
