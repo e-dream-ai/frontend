@@ -26,7 +26,7 @@ export const CurrentDream = () => {
   const theme = useTheme();
   const { user, currentDream, isLoadingCurrentDream, refreshCurrentDream } =
     useAuth();
-  const { setWebClientActive } = useWebClient();
+  const { setWebPlayerAvailable, setWebClientActive } = useWebClient();
   const { isActive } = useDesktopClient();
 
   const handleRemoteControlEvent = async (
@@ -58,14 +58,15 @@ export const CurrentDream = () => {
     {
       onActive: () => {
         if (IS_WEB_CLIENT_ACTIVE && user) {
+          setWebPlayerAvailable(false);
           setWebClientActive(false);
           toast.info(t("web_client.web_client_unavailable"));
         }
       },
       onInactive: () => {
-        // Show web client available toast and play button
         if (IS_WEB_CLIENT_ACTIVE && user) {
-          setWebClientActive(true);
+          setWebPlayerAvailable(true);
+          setWebClientActive(false);
           toast.info(t("web_client.web_client_available"));
         }
       },
