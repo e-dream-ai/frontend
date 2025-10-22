@@ -44,6 +44,9 @@ export const HeaderProfile: React.FC = () => {
   const { isActive, connectionsCount } = useDesktopClient();
   const { isConnected } = useSocket();
 
+  console.log("connectionsCount", connectionsCount);
+  console.log("isActive", isActive);
+
   const avatarUrl = useImage(user?.avatar, {
     width: 90,
     fit: "cover",
