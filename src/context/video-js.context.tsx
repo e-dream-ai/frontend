@@ -460,9 +460,6 @@ export const VideoJSProvider = ({
       if (!nextPlayerInstance || !nextPlayerInstance.player) {
         if (currentPlayer?.player) {
           try {
-            console.log(
-              "[VideoJS] Fallback: reuse current player (no inactive match)",
-            );
             currentPlayer.src = src;
             currentPlayer.player.src({ src, preload: PRELOAD_OPTION });
             currentPlayer.player.playbackRate(
@@ -499,9 +496,7 @@ export const VideoJSProvider = ({
         nextPlayerInstance.skipCrossfade = options?.skipCrossfade ?? false;
         nextPlayerInstance.longTransition = options?.longTransition ?? false;
 
-        console.log("playVideo4", nextPlayer);
         await nextPlayer.play();
-        console.log("playVideo5");
 
         if (currentPlayer) {
           // set current player as inactive
@@ -543,9 +538,6 @@ export const VideoJSProvider = ({
         nextPlayerInstance.isPreloaded = false;
         if (currentPlayer?.player) {
           try {
-            console.log(
-              "[VideoJS] Fallback: next player failed, reuse current player",
-            );
             currentPlayer.src = src;
             currentPlayer.player.src({ src, preload: PRELOAD_OPTION });
             currentPlayer.player.playbackRate(currentPlaybackRate);
