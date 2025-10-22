@@ -24,7 +24,6 @@ import { getUserNameOrEmail } from "@/utils/user.util";
 import { useImage } from "@/hooks/useImage";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import useSocket from "@/hooks/useSocket";
-import { useWebClient } from "@/hooks/useWebClient";
 
 const AuthAnchor: React.FC<{
   text: string;
