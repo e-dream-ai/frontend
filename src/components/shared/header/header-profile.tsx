@@ -63,7 +63,7 @@ export const HeaderProfile: React.FC = () => {
               <HeaderAvatarWrapper>
                 <StatusDot
                   socketConnected={isConnected}
-                  desktopClientConnected={isActive}
+                  desktopClientConnected={isActive || connectionsCount > 0}
                 />
                 {user?.avatar ? (
                   <HeaderAvatar url={avatarUrl} />
