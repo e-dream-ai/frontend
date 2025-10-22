@@ -7,24 +7,38 @@ import { CurrentDream } from "@/components/shared/current-dream/current-dream";
 import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
 import { VideoJS } from "@/components/shared/video-js/video-js";
 import useDeviceRole from "@/hooks/useDeviceRole";
+import { useWebClient } from "@/hooks/useWebClient";
+import { Button } from "@/components/shared";
 
 const SECTION_ID = "remote-control";
 
 const RemoteControlPage: React.FC = () => {
   const { t } = useTranslation();
-  const { shouldShowVideoPlayer, shouldShowRemoteControls } = useDeviceRole();
+  const { shouldShowVideoPlayer } = useDeviceRole();
+  const { isWebClientActive, startWebPlayer } = useWebClient();
 
   return (
     <Container>
       <h2>{t("page.remote_control.title")}</h2>
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
-        {shouldShowRemoteControls && (
-          <Row justifyContent="center" my="2rem">
-            <RemoteControl />
+        <Row justifyContent="center" my="2rem">
+          <RemoteControl />
+        </Row>
+        {shouldShowVideoPlayer && !isWebClientActive && (
+          <Row justifyContent="center" my="1rem">
+            <Button
+              buttonType="secondary"
+              onClick={(e) => {
+                e.preventDefault();
+                startWebPlayer();
+              }}
+            >
+              Start Web Player
+            </Button>
           </Row>
         )}
-        {shouldShowVideoPlayer && <VideoJS />}
+        {shouldShowVideoPlayer && isWebClientActive && <VideoJS />}
         <CurrentDream />
         <CurrentPlaylist />
       </Section>

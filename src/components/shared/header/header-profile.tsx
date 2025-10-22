@@ -24,6 +24,7 @@ import { getUserNameOrEmail } from "@/utils/user.util";
 import { useImage } from "@/hooks/useImage";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import useSocket from "@/hooks/useSocket";
+import useDeviceRole from "@/hooks/useDeviceRole";
 
 const AuthAnchor: React.FC<{
   text: string;
@@ -43,6 +44,7 @@ export const HeaderProfile: React.FC = () => {
   const { user, isLoading } = useAuth();
   const { isActive } = useDesktopClient();
   const { isConnected } = useSocket();
+  const { connectedDevices } = useDeviceRole();
 
   const avatarUrl = useImage(user?.avatar, {
     width: 90,
@@ -50,6 +52,10 @@ export const HeaderProfile: React.FC = () => {
   });
 
   if (isLoading) return <StyledHeader />;
+
+  const hasOtherDeviceConnected = connectedDevices.some(
+    (d) => d.isCurrentDevice !== true,
+  );
 
   return (
     <Fragment>
@@ -60,7 +66,7 @@ export const HeaderProfile: React.FC = () => {
               <HeaderAvatarWrapper>
                 <StatusDot
                   socketConnected={isConnected}
-                  desktopClientConnected={isActive}
+                  desktopClientConnected={isActive || hasOtherDeviceConnected}
                 />
                 {user?.avatar ? (
                   <HeaderAvatar url={avatarUrl} />

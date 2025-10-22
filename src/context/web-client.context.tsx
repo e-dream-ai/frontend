@@ -57,6 +57,7 @@ type WebClientContextType = {
   setWebClientActive: (isActive: boolean) => void;
   setWebPlayerAvailable: (isActive: boolean) => void;
   handleOnEnded: () => void;
+  startWebPlayer: () => void;
 };
 
 type NextHandlerProps = {
@@ -129,6 +130,8 @@ export const WebClientProvider: React.FC<{
     useState<boolean>(false);
   // Used to prevent multiple calls to handlers.next() on automatic video change
   const transitioningRef = useRef(false);
+  // Tracks a user-initiated request to start playback
+  const activationRequestedRef = useRef(false);
 
   /**
    * indicates if the web player is currently active
@@ -579,6 +582,34 @@ export const WebClientProvider: React.FC<{
     handlePlaylistControl(PlaylistDirection.NEXT);
   }, [handlePlaylistControl]);
 
+  const startWebPlayer = useCallback(() => {
+    setIsWebClientActive(true);
+    activationRequestedRef.current = true;
+
+    // Try to start immediately; otherwise retry until ready
+    const MAX_TRIES = 20;
+    let tries = 0;
+
+    const attemptStart = async () => {
+      if (!activationRequestedRef.current) return;
+      const canPlay =
+        isReady &&
+        Boolean(playingDreamRef.current?.video) &&
+        shouldShowVideoPlayer;
+      if (canPlay) {
+        await playDreamWithHistory(playingDreamRef.current!);
+        activationRequestedRef.current = false;
+        return;
+      }
+      tries += 1;
+      if (tries < MAX_TRIES) {
+        window.setTimeout(attemptStart, 250);
+      }
+    };
+
+    void attemptStart();
+  }, [isReady, shouldShowVideoPlayer, playDreamWithHistory]);
+
   // Listen new remote control events from the server
   useSocketEventListener<RemoteControlEventData>(
     NEW_REMOTE_CONTROL_EVENT,
@@ -705,7 +736,6 @@ export const WebClientProvider: React.FC<{
     playDreamWithHistory,
   ]);
 
-  // Preload starting video
   useEffect(() => {
     if (
       // location should be remote control
@@ -720,6 +750,12 @@ export const WebClientProvider: React.FC<{
       if (currentDream) {
         playingDreamRef.current = currentDream;
         preloadVideo(currentDream.video);
+        if (activationRequestedRef.current) {
+          void (async () => {
+            await playDreamWithHistory(currentDream);
+            activationRequestedRef.current = false;
+          })();
+        }
         return;
       }
 
@@ -732,6 +768,12 @@ export const WebClientProvider: React.FC<{
       if (defaultPlaylistDream) {
         playingDreamRef.current = defaultPlaylistDream;
         preloadVideo(defaultPlaylistDream.video);
+        if (activationRequestedRef.current) {
+          void (async () => {
+            await playDreamWithHistory(defaultPlaylistDream);
+            activationRequestedRef.current = false;
+          })();
+        }
       }
     }
   }, [
@@ -741,6 +783,7 @@ export const WebClientProvider: React.FC<{
     currentDream,
     defaultPlaylistDreams,
     preloadVideo,
+    playDreamWithHistory,
   ]);
 
   // Update playing playlist ref
@@ -776,7 +819,7 @@ export const WebClientProvider: React.FC<{
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,
-      // Note: currentTime/duration are available from useVideoJs if needed by consumers
+      startWebPlayer,
     }),
     [
       isWebClientActive,
@@ -787,6 +830,7 @@ export const WebClientProvider: React.FC<{
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,
+      startWebPlayer,
     ],
   );
 

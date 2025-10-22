@@ -29,7 +29,6 @@ type DeviceRoleContextType = {
   isRoleAssigned: boolean;
   connectedDevices: ConnectedDevice[];
   shouldShowVideoPlayer: boolean;
-  shouldShowRemoteControls: boolean;
   registerDevice: () => void;
 };
 
@@ -171,24 +170,12 @@ export const DeviceRoleProvider: React.FC<{
   /**
    * Computed properties for UI rendering
    */
-  const hasOtherRemote = useMemo(() => {
-    return connectedDevices.some(
-      (d) => d.role === DeviceRole.REMOTE && !d.isCurrentDevice,
-    );
-  }, [connectedDevices]);
-
   const shouldShowVideoPlayer = useMemo(() => {
     return (
       currentRole === DeviceRole.SELF_REMOTE ||
       currentRole === DeviceRole.PLAYER
     );
   }, [currentRole]);
-
-  const shouldShowRemoteControls = useMemo(() => {
-    if (currentRole === DeviceRole.REMOTE) return true;
-    if (currentRole === DeviceRole.SELF_REMOTE && !hasOtherRemote) return true;
-    return false;
-  }, [currentRole, hasOtherRemote]);
 
   const memoedValue = useMemo(
     () => ({
@@ -197,7 +184,6 @@ export const DeviceRoleProvider: React.FC<{
       isRoleAssigned,
       connectedDevices,
       shouldShowVideoPlayer,
-      shouldShowRemoteControls,
       registerDevice,
     }),
     [
@@ -206,7 +192,6 @@ export const DeviceRoleProvider: React.FC<{
       isRoleAssigned,
       connectedDevices,
       shouldShowVideoPlayer,
-      shouldShowRemoteControls,
       registerDevice,
     ],
   );
