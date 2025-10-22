@@ -41,11 +41,8 @@ const AuthAnchor: React.FC<{
 export const HeaderProfile: React.FC = () => {
   const { t } = useTranslation();
   const { user, isLoading } = useAuth();
-  const { isActive, connectionsCount } = useDesktopClient();
-  const { isConnected } = useSocket();
-
-  console.log("connectionsCount", connectionsCount);
-  console.log("isActive", isActive);
+  const { isActive } = useDesktopClient();
+  const { isConnected, connectedDevicesCount } = useSocket();
 
   const avatarUrl = useImage(user?.avatar, {
     width: 90,
@@ -63,7 +60,9 @@ export const HeaderProfile: React.FC = () => {
               <HeaderAvatarWrapper>
                 <StatusDot
                   socketConnected={isConnected}
-                  desktopClientConnected={isActive || connectionsCount > 0}
+                  desktopClientConnected={
+                    isActive || (connectedDevicesCount ?? 0) > 1
+                  }
                 />
                 {user?.avatar ? (
                   <HeaderAvatar url={avatarUrl} />

@@ -15,6 +15,7 @@ import { EmitEvents, EmitListener } from "@/types/socket.types";
 type SocketContextType = {
   socket?: Socket | null;
   isConnected: boolean;
+  connectedDevicesCount?: number;
   emit: <Ev extends keyof EmitEvents>(
     ev: Ev,
     ...args: Parameters<EmitEvents[Ev]>
@@ -36,6 +37,7 @@ export const SocketProvider: React.FC<{
 
   // boolean flag on state to know if socket is connected
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [connectedDevicesCount, setConnectedDevicesCount] = useState<number>(0);
 
   /**
    * flag to prevent multiple simultaneous authentication attempts during socket reconnection
@@ -109,6 +111,16 @@ export const SocketProvider: React.FC<{
     newSocket.on("reconnect", (/* attemptNumber */) => {
       setIsConnected(true);
     });
+
+    // Listen presence updates
+    newSocket.on(
+      "client_presence",
+      (payload: { connectedDevices?: number }) => {
+        const count = Number(payload?.connectedDevices ?? 0);
+        if (Number.isFinite(count))
+          setConnectedDevicesCount(Math.max(0, count));
+      },
+    );
 
     return newSocket;
   }, [authenticateUser]);
@@ -212,11 +224,18 @@ export const SocketProvider: React.FC<{
     () => ({
       socket: socketRef.current,
       isConnected,
+      connectedDevicesCount,
       emit,
       addEmitListener,
       removeEmitListener,
     }),
-    [isConnected, emit, addEmitListener, removeEmitListener],
+    [
+      isConnected,
+      connectedDevicesCount,
+      emit,
+      addEmitListener,
+      removeEmitListener,
+    ],
   );
 
   return (

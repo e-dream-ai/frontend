@@ -3,8 +3,6 @@ import {
   GOOD_BYE_EVENT,
   PING_EVENT,
 } from "@/constants/remote-control.constants";
-import { CONNECTIONS_COUNT_EVENT } from "@/constants/remote-control.constants";
-import useSocket from "@/hooks/useSocket";
 import useAuth from "@/hooks/useAuth";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
@@ -14,7 +12,6 @@ import { RemoteControlEventData } from "@/types/remote-control.types";
 // Create context
 type DesktopClientContextType = {
   isActive: boolean;
-  connectionsCount: number;
   currentTime: number;
   duration: number;
   fps: number;
@@ -39,11 +36,9 @@ export const DesktopClientProvider = ({
   children: React.ReactNode;
   inactivityTimeout?: number;
 }) => {
-  const { emit, isConnected } = useSocket();
   const { user } = useAuth();
   const [lastEventTime, setLastEventTime] = useState<number | undefined>();
   const [isActive, setIsActive] = useState<boolean>(false);
-  const [connectionsCount, setConnectionsCount] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [fps, setFps] = useState<number>(0);
@@ -84,24 +79,6 @@ export const DesktopClientProvider = ({
    */
   useSocketEventListener(PING_EVENT, handlePingEvent);
   useSocketEventListener(GOOD_BYE_EVENT, handleGoodbyeEvent);
-
-  // Listen connections count updates from server
-  useSocketEventListener<{ count?: number }>(
-    CONNECTIONS_COUNT_EVENT,
-    async (data) => {
-      const count = Number(data?.count);
-      if (Number.isFinite(count)) {
-        // Count other devices excluding this client
-        setConnectionsCount(Math.max(0, count - 1));
-      }
-    },
-  );
-
-  useEffect(() => {
-    if (isConnected) {
-      emit(PING_EVENT);
-    }
-  }, [isConnected, emit]);
 
   /**
    * Handle status updates from desktop client containing playback metrics
@@ -240,7 +217,6 @@ export const DesktopClientProvider = ({
       value={useMemo(
         () => ({
           isActive,
-          connectionsCount,
           currentTime,
           duration,
           fps,
@@ -251,7 +227,6 @@ export const DesktopClientProvider = ({
         }),
         [
           isActive,
-          connectionsCount,
           currentTime,
           duration,
           fps,
