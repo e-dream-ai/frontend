@@ -51,9 +51,6 @@ export const HeaderProfile: React.FC = () => {
 
   if (isLoading) return <StyledHeader />;
 
-  console.log("connectedDevicesCount", connectedDevicesCount);
-  console.log("isActive", isActive);
-
   return (
     <Fragment>
       <StyledHeaderProfile>
