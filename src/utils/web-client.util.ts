@@ -30,9 +30,18 @@ export const getPlaylistNavigation = ({
 
   // check if history position matches last played dream position
   const highestHistoryPosition = Math.max(history.length - 1, 0);
-  const previousHistoryPosition = Math.max(historyPosition - 1, 0);
-  const nextHistoryPosition = Math.max(historyPosition + 1, 0);
-  const isHistoryMatchingPlayback = historyPosition === highestHistoryPosition;
+  // clamp provided historyPosition to valid range
+  const clampedHistoryPosition = Math.min(
+    Math.max(historyPosition, 0),
+    highestHistoryPosition,
+  );
+  const previousHistoryPosition = Math.max(clampedHistoryPosition - 1, 0);
+  const nextHistoryPosition = Math.min(
+    clampedHistoryPosition + 1,
+    highestHistoryPosition,
+  );
+  const isHistoryMatchingPlayback =
+    clampedHistoryPosition === highestHistoryPosition;
 
   // get previous dream
   const previousDream =
@@ -42,7 +51,7 @@ export const getPlaylistNavigation = ({
 
   // if history position doesn't match last played dream, return proper next dream
   if (!isHistoryMatchingPlayback) {
-    const nextDream = history[nextHistoryPosition].dream;
+    const nextDream = history[nextHistoryPosition]?.dream;
 
     return {
       previous: previousDream ?? null,

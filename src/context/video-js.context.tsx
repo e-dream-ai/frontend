@@ -458,6 +458,26 @@ export const VideoJSProvider = ({
 
       const nextPlayerInstance = nextPlayers[0];
       if (!nextPlayerInstance || !nextPlayerInstance.player) {
+        if (currentPlayer?.player) {
+          try {
+            console.log(
+              "[VideoJS] Fallback: reuse current player (no inactive match)",
+            );
+            currentPlayer.src = src;
+            currentPlayer.player.src({ src, preload: PRELOAD_OPTION });
+            currentPlayer.player.playbackRate(
+              currentPlayer?.player?.playbackRate() || 1,
+            );
+            currentPlayer.lastUsed = Date.now();
+            await currentPlayer.player.play();
+            // ensure it remains the active player
+            currentPlayer.isActive = true;
+            updateActivePlayer(currentPlayer.id);
+            return true;
+          } catch (_) {
+            return false;
+          }
+        }
         return false;
       }
       const nextPlayer = nextPlayerInstance.player;
@@ -521,6 +541,23 @@ export const VideoJSProvider = ({
         return true;
       } catch (_) {
         nextPlayerInstance.isPreloaded = false;
+        if (currentPlayer?.player) {
+          try {
+            console.log(
+              "[VideoJS] Fallback: next player failed, reuse current player",
+            );
+            currentPlayer.src = src;
+            currentPlayer.player.src({ src, preload: PRELOAD_OPTION });
+            currentPlayer.player.playbackRate(currentPlaybackRate);
+            currentPlayer.lastUsed = Date.now();
+            await currentPlayer.player.play();
+            currentPlayer.isActive = true;
+            updateActivePlayer(currentPlayer.id);
+            return true;
+          } catch (_) {
+            return false;
+          }
+        }
         return false;
       }
     },

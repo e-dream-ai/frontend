@@ -264,6 +264,14 @@ export const WebClientProvider: React.FC<{
    * Obtains next and previous dream in the playlist. Calculates isNextConcatenated value too.
    */
   const updatePlaylistNavigation = useCallback(() => {
+    console.log("[RC][Web] updatePlaylistNavigation:start", {
+      playingDream: playingDreamRef.current?.uuid,
+      playlistUuid: playingPlaylistRef.current?.uuid,
+      defaultPlaylistLen: defaultPlaylistDreams.length,
+      dislikedLen: dislikedDreamsRef.current.length,
+      historyLen: historyRef.current.length,
+      historyPos: playlistHistoryPositionRef.current,
+    });
     // Extract dreams based on available source
     const extractedDreams = playingPlaylistRef.current
       ? // Get dreams from the playing playlist
@@ -291,8 +299,12 @@ export const WebClientProvider: React.FC<{
       resetHistory();
     }
 
-    console.log("previous", navigation.previous?.uuid);
-    console.log("next", navigation.next?.uuid);
+    console.log("[RC][Web] updatePlaylistNavigation:end", {
+      previous: navigation.previous?.uuid,
+      next: navigation.next?.uuid,
+      allDreamsPlayed: navigation.allDreamsPlayed,
+      isNextConcatenated: navigation.isNextConcatenated,
+    });
 
     preloadNavigationVideos(navigation);
   }, [defaultPlaylistDreams, preloadNavigationVideos, resetHistory]);
@@ -306,18 +318,21 @@ export const WebClientProvider: React.FC<{
         longTransition: false,
       },
     ) => {
-      console.log("playDream", dreamToPlay);
+      console.log("[RC][Web] playDream:start", {
+        dreamUuid: dreamToPlay?.uuid,
+        hasVideo: Boolean(dreamToPlay?.video),
+        options,
+      });
       if (!dreamToPlay?.video) return false;
       // playing log
-      console.log("-----");
-      console.log("playing", dreamToPlay.uuid);
+      console.log("[RC][Web] playing", dreamToPlay.uuid);
 
       playingDreamRef.current = dreamToPlay;
       const played = await playVideo(dreamToPlay.video, options);
 
       // if video was not played return false
       // played log
-      console.log("played", played);
+      console.log("[RC][Web] playDream:end", { played });
       if (!played) {
         return false;
       }
@@ -367,6 +382,15 @@ export const WebClientProvider: React.FC<{
 
   const handlePlaylistControl = useCallback(
     async (direction: PlaylistDirection, longTransition: boolean = false) => {
+      console.log("[RC][Web] handlePlaylistControl", {
+        direction,
+        longTransition,
+        hasNavigation: Boolean(playlistNavigationRef.current),
+        isNextConcatenated: Boolean(
+          playlistNavigationRef.current?.isNextConcatenated,
+        ),
+      });
+
       const dream = getNextDream(direction);
 
       if (!dream) return false;
@@ -381,6 +405,12 @@ export const WebClientProvider: React.FC<{
       const played = await playDream(dream, {
         skipCrossfade: isNextConcatenated,
         longTransition: longTransition,
+      });
+      console.log("[RC][Web] handlePlaylistControl result", {
+        dreamUuid: dream?.uuid,
+        played,
+        historyLen: historyRef.current.length,
+        historyPos: playlistHistoryPositionRef.current,
       });
 
       // +1 on history position if direction is next and there's one played dream at least
@@ -584,19 +614,30 @@ export const WebClientProvider: React.FC<{
     activationRequestedRef.current = true;
 
     // Try to start immediately; otherwise retry until ready
-    const MAX_TRIES = 20;
+    const MAX_TRIES = 8;
     let tries = 0;
 
     const attemptStart = async () => {
       if (!activationRequestedRef.current) return;
-      const canPlay = isReady && Boolean(playingDreamRef.current?.video);
+      // allow start if a playable dream exists, even if isReady is lagging
+      const canPlay = Boolean(playingDreamRef.current?.video);
       if (canPlay) {
+        console.log("[RC][Web] startWebPlayer: starting", {
+          activePlayer,
+          isReady,
+          dreamUuid: playingDreamRef.current?.uuid,
+        });
         await playDreamWithHistory(playingDreamRef.current!);
         activationRequestedRef.current = false;
         return;
       }
       tries += 1;
       if (tries < MAX_TRIES) {
+        console.log("[RC][Web] startWebPlayer: retry", {
+          tries,
+          isReady,
+          hasDream: Boolean(playingDreamRef.current?.video),
+        });
         window.setTimeout(attemptStart, 250);
       }
     };
@@ -617,13 +658,24 @@ export const WebClientProvider: React.FC<{
     async (data?: RemoteControlEventData) => {
       const event = data?.event as RemoteEvent;
       if (!event) {
+        console.log("[RC][Web] Ignored event with no type", { data });
         return;
       }
 
       // Only react to remote control events when the web player is active
       if (!isWebClientActive) {
+        console.log("[RC][Web] Dropping event because web client inactive", {
+          event,
+        });
         return;
       }
+
+      console.log("[RC][Web] Handling event", {
+        event,
+        activePlayer,
+        isReady,
+        hasPlayingDream: Boolean(playingDreamRef.current?.uuid),
+      });
 
       // execute handler synced with event
       handlers?.[event]?.();
@@ -634,10 +686,15 @@ export const WebClientProvider: React.FC<{
       if (event === REMOTE_CONTROLS.PLAY_DREAM.event) {
         const newDream = await fetchDream(data?.uuid);
         // if there's a dream play it
+        console.log("[RC][Web] PLAY_DREAM fetched", {
+          requested: data?.uuid,
+          fetched: newDream?.uuid,
+        });
         playDreamWithHistory(newDream);
       }
 
       if (event === REMOTE_CONTROLS.PLAYING.event) {
+        console.log("[RC][Web] PLAYING -> refresh current dream");
         refreshCurrentDream();
       }
 
@@ -651,12 +708,17 @@ export const WebClientProvider: React.FC<{
 
         // if there's a dream play it and reset history
         if (newDream) {
+          console.log("[RC][Web] PLAY_PLAYLIST first dream", {
+            playlistUuid: playlist?.uuid,
+            dreamUuid: newDream?.uuid,
+          });
           resetHistory();
           playDreamWithHistory(newDream);
         }
       }
 
       if (event === REMOTE_CONTROLS.RESET_PLAYLIST.event) {
+        console.log("[RC][Web] RESET_PLAYLIST -> refresh");
         refreshCurrentPlaylist();
       }
     },
