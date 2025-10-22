@@ -4,6 +4,7 @@ export const NEW_REMOTE_CONTROL_EVENT = "new_remote_control_event";
 export const PING_EVENT = "ping";
 export const PING_REDIS_EVENT = "ping_redis";
 export const GOOD_BYE_EVENT = "goodbye";
+export const WEB_CLIENT_STATUS_EVENT = "web_client_status";
 
 export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
   PLAYING: { event: "playing", key: "", triggerKey: "" },

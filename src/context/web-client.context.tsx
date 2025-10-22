@@ -24,6 +24,7 @@ import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
 } from "@/constants/remote-control.constants";
+import { WEB_CLIENT_STATUS_EVENT } from "@/constants/remote-control.constants";
 import { CREDIT_OVERLAY_ID } from "@/constants/web-client.constants";
 import { useVideoJSOverlay } from "@/hooks/useVideoJSOverlay";
 import {
@@ -602,6 +603,13 @@ export const WebClientProvider: React.FC<{
 
     void attemptStart();
   }, [isReady, playDreamWithHistory]);
+
+  useEffect(() => {
+    emit(WEB_CLIENT_STATUS_EVENT, { active: isWebClientActive });
+    return () => {
+      emit(WEB_CLIENT_STATUS_EVENT, { active: false });
+    };
+  }, [isWebClientActive, emit]);
 
   // Listen new remote control events from the server
   useSocketEventListener<RemoteControlEventData>(

@@ -16,6 +16,7 @@ type SocketContextType = {
   socket?: Socket | null;
   isConnected: boolean;
   connectedDevicesCount?: number;
+  hasWebPlayer?: boolean;
   emit: <Ev extends keyof EmitEvents>(
     ev: Ev,
     ...args: Parameters<EmitEvents[Ev]>
@@ -38,6 +39,7 @@ export const SocketProvider: React.FC<{
   // boolean flag on state to know if socket is connected
   const [isConnected, setIsConnected] = useState<boolean>(false);
   const [connectedDevicesCount, setConnectedDevicesCount] = useState<number>(0);
+  const [hasWebPlayer, setHasWebPlayer] = useState<boolean>(false);
 
   /**
    * flag to prevent multiple simultaneous authentication attempts during socket reconnection
@@ -115,10 +117,11 @@ export const SocketProvider: React.FC<{
     // Listen presence updates
     newSocket.on(
       "client_presence",
-      (payload: { connectedDevices?: number }) => {
+      (payload: { connectedDevices?: number; hasWebPlayer?: boolean }) => {
         const count = Number(payload?.connectedDevices ?? 0);
         if (Number.isFinite(count))
           setConnectedDevicesCount(Math.max(0, count));
+        setHasWebPlayer(Boolean(payload?.hasWebPlayer));
       },
     );
 
@@ -225,6 +228,7 @@ export const SocketProvider: React.FC<{
       socket: socketRef.current,
       isConnected,
       connectedDevicesCount,
+      hasWebPlayer,
       emit,
       addEmitListener,
       removeEmitListener,
@@ -232,6 +236,7 @@ export const SocketProvider: React.FC<{
     [
       isConnected,
       connectedDevicesCount,
+      hasWebPlayer,
       emit,
       addEmitListener,
       removeEmitListener,
