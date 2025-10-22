@@ -3,16 +3,17 @@ import {
   GOOD_BYE_EVENT,
   PING_EVENT,
 } from "@/constants/remote-control.constants";
+import { CONNECTIONS_COUNT_EVENT } from "@/constants/remote-control.constants";
 import useAuth from "@/hooks/useAuth";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
 import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
 import { RemoteControlEventData } from "@/types/remote-control.types";
-import useDeviceRole from "@/hooks/useDeviceRole";
 
 // Create context
 type DesktopClientContextType = {
   isActive: boolean;
+  connectionsCount: number;
   currentTime: number;
   duration: number;
   fps: number;
@@ -38,9 +39,9 @@ export const DesktopClientProvider = ({
   inactivityTimeout?: number;
 }) => {
   const { user } = useAuth();
-  const { shouldShowVideoPlayer } = useDeviceRole();
   const [lastEventTime, setLastEventTime] = useState<number | undefined>();
   const [isActive, setIsActive] = useState<boolean>(false);
+  const [connectionsCount, setConnectionsCount] = useState<number>(0);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [fps, setFps] = useState<number>(0);
@@ -56,10 +57,6 @@ export const DesktopClientProvider = ({
    * Handle ping event, set to active status when it arrives
    */
   const handlePingEvent = async (): Promise<void> => {
-    // If web player is active, ignore desktop client ping
-    if (shouldShowVideoPlayer) {
-      return;
-    }
     setIsActive(true);
     console.log("handlePingEvent", user?.email, isActive);
     const now = Date.now();
@@ -86,6 +83,17 @@ export const DesktopClientProvider = ({
   useSocketEventListener(PING_EVENT, handlePingEvent);
   useSocketEventListener(GOOD_BYE_EVENT, handleGoodbyeEvent);
 
+  // Listen connections count updates from server
+  useSocketEventListener<{ count?: number }>(
+    CONNECTIONS_COUNT_EVENT,
+    async (data) => {
+      const count = Number(data?.count);
+      if (Number.isFinite(count)) {
+        setConnectionsCount(Math.max(0, count));
+      }
+    },
+  );
+
   /**
    * Handle status updates from desktop client containing playback metrics
    */
@@ -93,12 +101,6 @@ export const DesktopClientProvider = ({
     NEW_REMOTE_CONTROL_EVENT,
     async (data?: RemoteControlEventData) => {
       if (!data?.event) return;
-
-      // If web player is active (shouldShowVideoPlayer is true), ignore desktop client events
-      // This prevents desktop client from being marked as active when web player is in use
-      if (shouldShowVideoPlayer) {
-        return;
-      }
 
       if (data.isWebClientEvent !== true) {
         setIsActive(true);
@@ -229,6 +231,7 @@ export const DesktopClientProvider = ({
       value={useMemo(
         () => ({
           isActive,
+          connectionsCount,
           currentTime,
           duration,
           fps,
@@ -239,6 +242,7 @@ export const DesktopClientProvider = ({
         }),
         [
           isActive,
+          connectionsCount,
           currentTime,
           duration,
           fps,
