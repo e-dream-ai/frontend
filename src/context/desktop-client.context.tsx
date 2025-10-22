@@ -4,6 +4,7 @@ import {
   PING_EVENT,
 } from "@/constants/remote-control.constants";
 import { CONNECTIONS_COUNT_EVENT } from "@/constants/remote-control.constants";
+import useSocket from "@/hooks/useSocket";
 import useAuth from "@/hooks/useAuth";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
@@ -38,6 +39,7 @@ export const DesktopClientProvider = ({
   children: React.ReactNode;
   inactivityTimeout?: number;
 }) => {
+  const { emit, isConnected } = useSocket();
   const { user } = useAuth();
   const [lastEventTime, setLastEventTime] = useState<number | undefined>();
   const [isActive, setIsActive] = useState<boolean>(false);
@@ -89,10 +91,17 @@ export const DesktopClientProvider = ({
     async (data) => {
       const count = Number(data?.count);
       if (Number.isFinite(count)) {
-        setConnectionsCount(Math.max(0, count));
+        // Count other devices excluding this client
+        setConnectionsCount(Math.max(0, count - 1));
       }
     },
   );
+
+  useEffect(() => {
+    if (isConnected) {
+      emit(PING_EVENT);
+    }
+  }, [isConnected, emit]);
 
   /**
    * Handle status updates from desktop client containing playback metrics
