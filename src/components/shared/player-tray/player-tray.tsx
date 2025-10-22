@@ -14,6 +14,7 @@ import {
 import { LuTurtle, LuRabbit } from "react-icons/lu";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import useAuth from "@/hooks/useAuth";
+import { usePlaybackStore } from "@/stores/playback.store";
 import { DEVICES } from "@/constants/devices.constants";
 import { useSocket } from "@/hooks/useSocket";
 import { useWebClient } from "@/hooks/useWebClient";
@@ -32,7 +33,12 @@ import { DEVICES_ON_PX } from "@/constants/devices.constants";
 
 export const PlayerTray: React.FC = () => {
   const { t } = useTranslation();
-  const { currentDream, isLoadingCurrentDream } = useAuth();
+  const { currentDream: authCurrentDream, isLoadingCurrentDream: authLoading } =
+    useAuth();
+  const currentDream =
+    usePlaybackStore((s) => s.currentDream) ?? authCurrentDream;
+  const isLoadingCurrentDream =
+    usePlaybackStore((s) => s.isLoadingCurrentDream) || authLoading;
   const { emit } = useSocket();
   const { isWebClientActive, handlers, isCreditOverlayVisible } =
     useWebClient();
@@ -99,6 +105,9 @@ export const PlayerTray: React.FC = () => {
           ) : (
             <>
               <Artwork
+                key={`${currentDream?.id ?? ""}-${
+                  currentDream?.updated_at ?? ""
+                }`}
                 src={thumbnail}
                 alt={title}
                 onClick={navigateToRemoteControl}
