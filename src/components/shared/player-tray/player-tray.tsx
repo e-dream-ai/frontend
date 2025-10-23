@@ -39,7 +39,7 @@ export const PlayerTray: React.FC = () => {
     usePlaybackStore((s) => s.currentDream) ?? authCurrentDream;
   const isLoadingCurrentDream =
     usePlaybackStore((s) => s.isLoadingCurrentDream) || authLoading;
-  const { emit } = useSocket();
+  const { emit, connectedDevicesCount, hasWebPlayer } = useSocket();
   const { isWebClientActive, handlers, isCreditOverlayVisible } =
     useWebClient();
   const {
@@ -71,9 +71,11 @@ export const PlayerTray: React.FC = () => {
   const artist = currentDream?.user?.name ?? t("common.unknown_author");
   const thumbnail = currentDream?.thumbnail;
 
-  if (!isDesktopActive || isVideoReady) {
-    return null;
-  }
+  const shouldRender =
+    !isVideoReady &&
+    (isDesktopActive || ((connectedDevicesCount ?? 0) > 1 && !!hasWebPlayer));
+
+  if (!shouldRender) return null;
 
   if (isHidden) {
     return (
