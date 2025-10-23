@@ -19,7 +19,6 @@ import useAuth from "@/hooks/useAuth";
 import useStatusCallback from "@/hooks/useStatusCallback";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
-import { toast } from "react-toastify";
 
 export const CurrentDream = () => {
   const { t } = useTranslation();
