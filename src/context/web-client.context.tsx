@@ -635,6 +635,10 @@ export const WebClientProvider: React.FC<{
         return;
       }
 
+      if (event === REMOTE_CONTROLS.PLAYING.event) {
+        refreshCurrentDream();
+      }
+
       // Only react to other events when the web player is active
       if (!isWebClientActive) {
         return;
@@ -642,10 +646,6 @@ export const WebClientProvider: React.FC<{
 
       // execute handler synced with event
       handlers?.[event]?.();
-
-      if (event === REMOTE_CONTROLS.PLAYING.event) {
-        refreshCurrentDream();
-      }
 
       /**
        * Handle playlist events
