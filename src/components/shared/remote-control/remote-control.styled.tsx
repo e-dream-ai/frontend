@@ -69,13 +69,24 @@ export const IconButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease-in-out;
+  transition:
+    color 0.2s ease-in-out,
+    opacity 0.2s ease-in-out;
   color: rgb(252, 217, 183);
   min-width: fit-content !important;
   min-height: fit-content !important;
 
   :hover {
     color: rgb(0, 208, 219);
+  }
+
+  :disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+
+    :hover {
+      color: rgb(252, 217, 183);
+    }
   }
 `;
 

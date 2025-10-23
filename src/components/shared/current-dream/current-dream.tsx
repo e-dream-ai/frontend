@@ -19,7 +19,6 @@ import useAuth from "@/hooks/useAuth";
 import useStatusCallback from "@/hooks/useStatusCallback";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
-import { toast } from "react-toastify";
 
 export const CurrentDream = () => {
   const { t } = useTranslation();
@@ -60,14 +59,12 @@ export const CurrentDream = () => {
         if (IS_WEB_CLIENT_ACTIVE && user) {
           setWebPlayerAvailable(false);
           setWebClientActive(false);
-          toast.info(t("web_client.web_client_unavailable"));
         }
       },
       onInactive: () => {
         if (IS_WEB_CLIENT_ACTIVE && user) {
           setWebPlayerAvailable(true);
           setWebClientActive(false);
-          toast.info(t("web_client.web_client_available"));
         }
       },
     },
