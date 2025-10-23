@@ -126,10 +126,12 @@ export const StyledButton = styled.button<
     filter linear 0.4s,
     background-color linear 0.4s,
     border-color linear 0.4s;
+    opacity linear 0.4s;
   transition:
     filter linear 0.4s,
     background-color linear 0.4s,
-    border-color linear 0.4s;
+    border-color linear 0.4s,
+    opacity linear 0.4s;
 
   ${(props) =>
     props.transparent
@@ -139,6 +141,7 @@ export const StyledButton = styled.button<
 
   &:disabled {
     cursor: not-allowed;
+    opacity: 0.5;
   }
 
   .react-tooltip {

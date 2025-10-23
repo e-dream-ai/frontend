@@ -12,6 +12,7 @@ import { RemoteControlEvent } from "@/types/remote-control.types";
 
 export interface ControlContainerDesktopProps {
   onSend: (event: RemoteControlEvent) => () => void;
+  disabled?: boolean;
 }
 
 const ROW_1 = [REMOTE_CONTROLS.HELP, REMOTE_CONTROLS.STATUS];
@@ -31,7 +32,7 @@ const ROW_2 = [
 
 export const ControlContainerDesktop: React.FC<
   ControlContainerDesktopProps
-> = ({ onSend }) => {
+> = ({ onSend, disabled = false }) => {
   const { t } = useTranslation();
 
   return (
@@ -45,6 +46,7 @@ export const ControlContainerDesktop: React.FC<
             fontSize="0.8rem"
             textTransform="none"
             onClick={onSend(control.event)}
+            disabled={disabled}
           >
             {control.key +
               " " +
@@ -62,6 +64,7 @@ export const ControlContainerDesktop: React.FC<
             fontSize="0.8rem"
             textTransform="none"
             onClick={onSend(control.event)}
+            disabled={disabled}
           >
             {control.key +
               " " +
@@ -78,6 +81,7 @@ export const ControlContainerDesktop: React.FC<
             fontSize="0.8rem"
             textTransform="none"
             onClick={onSend(REMOTE_CONTROLS.BRIGHTER.event)}
+            disabled={disabled}
           >
             {REMOTE_CONTROLS.BRIGHTER.key +
               " " +
@@ -89,6 +93,7 @@ export const ControlContainerDesktop: React.FC<
             fontSize="0.8rem"
             textTransform="none"
             onClick={onSend(REMOTE_CONTROLS.DARKER.event)}
+            disabled={disabled}
           >
             {REMOTE_CONTROLS.DARKER.key +
               " " +
@@ -100,6 +105,7 @@ export const ControlContainerDesktop: React.FC<
             fontSize="0.8rem"
             textTransform="none"
             onClick={onSend(REMOTE_CONTROLS.WEB.event)}
+            disabled={disabled}
           >
             {REMOTE_CONTROLS.WEB.key +
               " " +
@@ -114,6 +120,7 @@ export const ControlContainerDesktop: React.FC<
             fontSize="0.8rem"
             textTransform="none"
             onClick={onSend(REMOTE_CONTROLS.BACKWARD.event)}
+            disabled={disabled}
           >
             {REMOTE_CONTROLS.BACKWARD.key +
               " " +
@@ -125,6 +132,7 @@ export const ControlContainerDesktop: React.FC<
             fontSize="0.8rem"
             textTransform="none"
             onClick={onSend(REMOTE_CONTROLS.PAUSE_2.event)}
+            disabled={disabled}
           >
             {REMOTE_CONTROLS.PAUSE_2.key +
               " " +
@@ -136,6 +144,7 @@ export const ControlContainerDesktop: React.FC<
             fontSize="0.8rem"
             textTransform="none"
             onClick={onSend(REMOTE_CONTROLS.FORWARD.event)}
+            disabled={disabled}
           >
             {REMOTE_CONTROLS.FORWARD.key +
               " " +
