@@ -39,8 +39,7 @@ import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
   const { emit } = useSocket();
-  const { isWebClientActive, handlers, isCreditOverlayVisible } =
-    useWebClient();
+  const { isWebClientActive, isCreditOverlayVisible } = useWebClient();
   const { isActive: isDesktopActive, isCreditOverlayVisible: isDesktopCredit } =
     useDesktopClient();
 
@@ -56,9 +55,6 @@ export const RemoteControl: React.FC = () => {
       event,
       isWebClientEvent: isWebClientActive,
     });
-    if (isWebClientActive) {
-      handlers?.[event]?.();
-    }
   };
 
   const handleToggleCaptions = () => {
@@ -82,13 +78,12 @@ export const RemoteControl: React.FC = () => {
           event: eventName,
           isWebClientEvent: isWebClientActive,
         });
-        if (isWebClientActive) handlers?.[eventName]?.();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlers, isWebClientActive]);
+  }, [isWebClientActive, emit]);
 
   const { width } = useWindowSize();
   const isDesktop = (width ?? 0) >= DEVICES_ON_PX.TABLET;
