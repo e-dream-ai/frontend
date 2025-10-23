@@ -615,23 +615,33 @@ export const WebClientProvider: React.FC<{
         return;
       }
 
-      // Only react to remote control events when the web player is active
+      /**
+       * Handle dream events
+       */
+      if (event === REMOTE_CONTROLS.PLAY_DREAM.event) {
+        const newDream = await fetchDream(data?.uuid);
+        if (!newDream?.video) return;
+
+        if (isWebClientActive) {
+          await playDreamWithHistory(newDream);
+        } else {
+          playingDreamRef.current = newDream;
+          preloadVideo(newDream.video);
+          resetHistory();
+          updatePlaylistNavigation();
+          // Update current dream in client cache so UI (e.g., CurrentDream) reflects the change immediately
+          setCurrentUserDreamOptimistically(newDream);
+        }
+        return;
+      }
+
+      // Only react to other events when the web player is active
       if (!isWebClientActive) {
         return;
       }
 
       // execute handler synced with event
       handlers?.[event]?.();
-
-      /**
-       * Handle dream events
-       */
-      if (event === REMOTE_CONTROLS.PLAY_DREAM.event) {
-        const newDream = await fetchDream(data?.uuid);
-        // if there's a dream play it
-
-        playDreamWithHistory(newDream);
-      }
 
       if (event === REMOTE_CONTROLS.PLAYING.event) {
         refreshCurrentDream();

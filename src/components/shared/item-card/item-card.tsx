@@ -57,6 +57,7 @@ import { ItemCardImage } from "./item-card-image";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { AnchorLink } from "@/components/shared";
 import PlaylistPlay from "@/icons/playlist-play";
+import { useNavigate } from "react-router-dom";
 
 type DNDMode = "local" | "cross-window";
 /**
@@ -157,6 +158,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   const { socket } = useSocket();
   const { isActive: isClientActive } = useDesktopClient();
   const { isDragging, setDragging } = useItemCardListState();
+  const navigate = useNavigate();
 
   /**
    * Handles highligth position 'top' or 'bottom'
@@ -195,11 +197,6 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       event.preventDefault();
       event.stopPropagation();
 
-      if (!isClientActive) {
-        setShowClientNotConnectedModal(true);
-        return;
-      }
-
       if (type === "dream") {
         emitPlayDream(
           socket,
@@ -232,7 +229,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
         }
       }
     },
-    [t, socket, item, type, thumbnailDreams, isClientActive],
+    [t, socket, item, type, thumbnailDreams, isClientActive, navigate],
   );
 
   const handleDragStart = useCallback(

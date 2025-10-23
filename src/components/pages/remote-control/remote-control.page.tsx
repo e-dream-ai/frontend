@@ -8,12 +8,20 @@ import { CurrentPlaylist } from "@/components/shared/current-playlist/current-pl
 import { VideoJS } from "@/components/shared/video-js/video-js";
 import { useWebClient } from "@/hooks/useWebClient";
 import { Button } from "@/components/shared";
+import { useEffect } from "react";
 
 const SECTION_ID = "remote-control";
 
 const RemoteControlPage: React.FC = () => {
   const { t } = useTranslation();
-  const { isWebClientActive, startWebPlayer } = useWebClient();
+  const { isWebClientActive, startWebPlayer, setWebClientActive } =
+    useWebClient();
+
+  useEffect(() => {
+    return () => {
+      setWebClientActive(false);
+    };
+  }, [setWebClientActive]);
 
   return (
     <Container>
