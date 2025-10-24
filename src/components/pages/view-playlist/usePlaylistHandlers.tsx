@@ -31,7 +31,6 @@ import { FULL_CREATE_ROUTES, ROUTES } from "@/constants/routes.constants";
 import { FileState } from "@/constants/file.constants";
 import { getFileNameWithoutExtension } from "@/utils/file-uploader.util";
 import useSocket from "@/hooks/useSocket";
-import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { emitPlayPlaylist } from "@/utils/socket.util";
 import { createAddFileHandler } from "@/utils/file.util";
 import useAuth from "@/hooks/useAuth";
@@ -52,7 +51,6 @@ type HookParams = {
   setVideos: (value: SetStateAction<FileState[]>) => void;
   setIsUploadingFiles: (value: SetStateAction<boolean>) => void;
   onHideConfirmDeleteModal: () => void;
-  onShowClientNotConnectedModal: () => void;
   fetchNextPlaylistItemsPage: () => void;
   hasNextPlaylistItemsPage: boolean | undefined;
   fetchNextPlaylistKeyframesPage: () => void;
@@ -83,7 +81,6 @@ export const usePlaylistHandlers = ({
   setVideos,
   setIsUploadingFiles,
   onHideConfirmDeleteModal,
-  onShowClientNotConnectedModal,
   playlistItemsTotalCount,
   playlistKeyframesTotalCount,
   isJumpingToEnd,
@@ -93,7 +90,6 @@ export const usePlaylistHandlers = ({
 }: HookParams) => {
   const { t } = useTranslation();
   const { socket } = useSocket();
-  const { isActive: isClientActive } = useDesktopClient();
   const { user } = useAuth();
 
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
@@ -461,15 +457,11 @@ export const usePlaylistHandlers = ({
   };
 
   const handlePlayPlaylist = () => {
-    if (isClientActive) {
-      emitPlayPlaylist(
-        socket,
-        playlist,
-        t("toasts.play_playlist", { name: playlist?.name }),
-      );
-    } else {
-      onShowClientNotConnectedModal();
-    }
+    emitPlayPlaylist(
+      socket,
+      playlist,
+      t("toasts.play_playlist", { name: playlist?.name }),
+    );
   };
 
   const handleNavigateAddToPlaylist = () => {
