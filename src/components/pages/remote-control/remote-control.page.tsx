@@ -6,11 +6,22 @@ import { RemoteControl } from "@/components/shared/remote-control/remote-control
 import { CurrentDream } from "@/components/shared/current-dream/current-dream";
 import { CurrentPlaylist } from "@/components/shared/current-playlist/current-playlist";
 import { VideoJS } from "@/components/shared/video-js/video-js";
+import { useWebClient } from "@/hooks/useWebClient";
+import { Button } from "@/components/shared";
+import { useEffect } from "react";
 
 const SECTION_ID = "remote-control";
 
 const RemoteControlPage: React.FC = () => {
   const { t } = useTranslation();
+  const { isWebClientActive, startWebPlayer, setWebClientActive } =
+    useWebClient();
+
+  useEffect(() => {
+    return () => {
+      setWebClientActive(false);
+    };
+  }, [setWebClientActive]);
 
   return (
     <Container>
@@ -20,7 +31,20 @@ const RemoteControlPage: React.FC = () => {
         <Row justifyContent="center" my="2rem">
           <RemoteControl />
         </Row>
-        <VideoJS />
+        {!isWebClientActive && (
+          <Row justifyContent="center" my="1rem">
+            <Button
+              buttonType="secondary"
+              onClick={(e) => {
+                e.preventDefault();
+                startWebPlayer();
+              }}
+            >
+              Start Web Player
+            </Button>
+          </Row>
+        )}
+        {isWebClientActive && <VideoJS />}
         <CurrentDream />
         <CurrentPlaylist />
       </Section>

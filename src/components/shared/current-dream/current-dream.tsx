@@ -19,14 +19,13 @@ import useAuth from "@/hooks/useAuth";
 import useStatusCallback from "@/hooks/useStatusCallback";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { IS_WEB_CLIENT_ACTIVE } from "@/constants/web-client.constants";
-import { toast } from "react-toastify";
 
 export const CurrentDream = () => {
   const { t } = useTranslation();
   const theme = useTheme();
   const { user, currentDream, isLoadingCurrentDream, refreshCurrentDream } =
     useAuth();
-  const { setWebClientActive } = useWebClient();
+  const { setWebPlayerAvailable } = useWebClient();
   const { isActive } = useDesktopClient();
 
   const handleRemoteControlEvent = async (
@@ -58,15 +57,12 @@ export const CurrentDream = () => {
     {
       onActive: () => {
         if (IS_WEB_CLIENT_ACTIVE && user) {
-          setWebClientActive(false);
-          toast.info(t("web_client.web_client_unavailable"));
+          setWebPlayerAvailable(false);
         }
       },
       onInactive: () => {
-        // Show web client available toast and play button
         if (IS_WEB_CLIENT_ACTIVE && user) {
-          setWebClientActive(true);
-          toast.info(t("web_client.web_client_available"));
+          setWebPlayerAvailable(true);
         }
       },
     },

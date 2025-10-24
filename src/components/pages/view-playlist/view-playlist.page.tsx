@@ -231,8 +231,6 @@ export const ViewPlaylistPage = () => {
 
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
-  const onShowClientNotConnectedModal = () =>
-    setShowClientNotConnectedModal(true);
   const onHideClientNotConnectedModal = () =>
     setShowClientNotConnectedModal(false);
 
@@ -301,7 +299,6 @@ export const ViewPlaylistPage = () => {
     setVideos,
     setIsUploadingFiles,
     onHideConfirmDeleteModal,
-    onShowClientNotConnectedModal,
     fetchNextPlaylistItemsPage,
     hasNextPlaylistItemsPage,
     fetchNextPlaylistKeyframesPage,

@@ -42,12 +42,20 @@ import { PlayerTray } from "@/components/shared/player-tray/player-tray";
 import useAuth from "@/hooks/useAuth";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { useVideoJs } from "@/hooks/useVideoJS";
+import useSocket from "@/hooks/useSocket";
 
 export const RootElement = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { isActive: isDesktopActive } = useDesktopClient();
   const { isReady: isVideoReady } = useVideoJs();
+  const { connectedDevicesCount, hasWebPlayer } = useSocket();
+
+  const shouldShowTray =
+    Boolean(user) &&
+    location.pathname !== ROUTES.REMOTE_CONTROL &&
+    !isVideoReady &&
+    (isDesktopActive || ((connectedDevicesCount ?? 0) > 1 && !!hasWebPlayer));
 
   /**
    * Register pageview on location changes
@@ -64,10 +72,7 @@ export const RootElement = () => {
       <Header />
       <Outlet />
       <Footer />
-      {user &&
-        location.pathname !== ROUTES.REMOTE_CONTROL &&
-        isDesktopActive &&
-        !isVideoReady && <PlayerTray />}
+      {shouldShowTray && <PlayerTray />}
     </PageContainer>
   );
 };

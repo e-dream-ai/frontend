@@ -602,9 +602,5 @@
   "toasts": {
     "play_dream": "Dream {{name}} played.",
     "play_playlist": "Playlist {{name}} played."
-  },
-  "web_client": {
-    "web_client_available": "Remote app not found, running locally.",
-    "web_client_unavailable": "Remote app found, working as remote control."
   }
 }
