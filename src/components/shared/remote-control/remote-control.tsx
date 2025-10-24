@@ -38,11 +38,15 @@ import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
-  const { emit } = useSocket();
-  const { isWebClientActive, handlers, isCreditOverlayVisible } =
-    useWebClient();
+  const { emit, connectedDevicesCount, hasWebPlayer } = useSocket();
+  const { isWebClientActive, isCreditOverlayVisible } = useWebClient();
   const { isActive: isDesktopActive, isCreditOverlayVisible: isDesktopCredit } =
     useDesktopClient();
+
+  const isAnyClientActive =
+    isDesktopActive ||
+    ((connectedDevicesCount ?? 0) > 1 && !!hasWebPlayer) ||
+    isWebClientActive;
 
   const handleRemoteControlEvent = onNewRemoteControlEvent(t);
 
@@ -56,9 +60,6 @@ export const RemoteControl: React.FC = () => {
       event,
       isWebClientEvent: isWebClientActive,
     });
-    if (isWebClientActive) {
-      handlers?.[event]?.();
-    }
   };
 
   const handleToggleCaptions = () => {
@@ -76,19 +77,18 @@ export const RemoteControl: React.FC = () => {
     const handleKeyDown = (event: KeyboardEvent) => {
       const key = event.key;
       const eventName = keyToEventMap.get(key);
-      if (eventName) {
+      if (eventName && isAnyClientActive) {
         event.preventDefault();
         emit(NEW_REMOTE_CONTROL_EVENT, {
           event: eventName,
           isWebClientEvent: isWebClientActive,
         });
-        if (isWebClientActive) handlers?.[eventName]?.();
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlers, isWebClientActive]);
+  }, [isWebClientActive, emit, isAnyClientActive]);
 
   const { width } = useWindowSize();
   const isDesktop = (width ?? 0) >= DEVICES_ON_PX.TABLET;
@@ -101,6 +101,7 @@ export const RemoteControl: React.FC = () => {
             aria-label={t("actions.previous")}
             onClick={sendMessage(REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event)}
             data-tooltip-id={isDesktop ? "remote-previous" : undefined}
+            disabled={!isAnyClientActive}
           >
             <FaStepBackward size={24} />
           </IconButton>
@@ -118,6 +119,7 @@ export const RemoteControl: React.FC = () => {
               aria-label={t("actions.like")}
               onClick={sendMessage(REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event)}
               data-tooltip-id={isDesktop ? "remote-like" : undefined}
+              disabled={!isAnyClientActive}
             >
               <FaThumbsUp size={24} />
             </IconButton>
@@ -133,6 +135,7 @@ export const RemoteControl: React.FC = () => {
               aria-label={t("actions.dislike")}
               onClick={sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event)}
               data-tooltip-id={isDesktop ? "remote-dislike" : undefined}
+              disabled={!isAnyClientActive}
             >
               <FaThumbsDown size={24} />
             </IconButton>
@@ -150,6 +153,7 @@ export const RemoteControl: React.FC = () => {
             aria-label={t("actions.next")}
             onClick={sendMessage(REMOTE_CONTROLS.GO_NEXT_DREAM.event)}
             data-tooltip-id={isDesktop ? "remote-next" : undefined}
+            disabled={!isAnyClientActive}
           >
             <FaStepForward size={24} />
           </IconButton>
@@ -184,6 +188,7 @@ export const RemoteControl: React.FC = () => {
           }
           onClick={handleToggleCaptions}
           data-tooltip-id={isDesktop ? "remote-captions" : undefined}
+          disabled={!isAnyClientActive}
         >
           {(
             isWebClientActive
@@ -211,6 +216,7 @@ export const RemoteControl: React.FC = () => {
             aria-label={t("components.remote_control.playback_slower")}
             onClick={sendMessage(REMOTE_CONTROLS.PLAYBACK_SLOWER.event)}
             data-tooltip-id={isDesktop ? "remote-slower" : undefined}
+            disabled={!isAnyClientActive}
           >
             <LuTurtle size={30} />
           </IconButton>
@@ -226,6 +232,7 @@ export const RemoteControl: React.FC = () => {
             aria-label={t("components.remote_control.playback_faster")}
             onClick={sendMessage(REMOTE_CONTROLS.PLAYBACK_FASTER.event)}
             data-tooltip-id={isDesktop ? "remote-faster" : undefined}
+            disabled={!isAnyClientActive}
           >
             <LuRabbit size={30} />
           </IconButton>
@@ -241,9 +248,15 @@ export const RemoteControl: React.FC = () => {
       </RemoteControlRow>
 
       {isDesktop ? (
-        <ControlContainerDesktop onSend={sendMessage} />
+        <ControlContainerDesktop
+          onSend={sendMessage}
+          disabled={!isAnyClientActive}
+        />
       ) : (
-        <ControlContainerMobile onSend={sendMessage} />
+        <ControlContainerMobile
+          onSend={sendMessage}
+          disabled={!isAnyClientActive}
+        />
       )}
     </RemoteControlContainer>
   );

@@ -15,6 +15,8 @@ import { EmitEvents, EmitListener } from "@/types/socket.types";
 type SocketContextType = {
   socket?: Socket | null;
   isConnected: boolean;
+  connectedDevicesCount?: number;
+  hasWebPlayer?: boolean;
   emit: <Ev extends keyof EmitEvents>(
     ev: Ev,
     ...args: Parameters<EmitEvents[Ev]>
@@ -36,6 +38,8 @@ export const SocketProvider: React.FC<{
 
   // boolean flag on state to know if socket is connected
   const [isConnected, setIsConnected] = useState<boolean>(false);
+  const [connectedDevicesCount, setConnectedDevicesCount] = useState<number>(0);
+  const [hasWebPlayer, setHasWebPlayer] = useState<boolean>(false);
 
   /**
    * flag to prevent multiple simultaneous authentication attempts during socket reconnection
@@ -99,6 +103,11 @@ export const SocketProvider: React.FC<{
         try {
           isReconnecting.current = true;
           await authenticateUser();
+          try {
+            newSocket.removeAllListeners();
+            newSocket.disconnect();
+          } catch {}
+          socketRef.current = generateSocketInstance();
         } finally {
           isReconnecting.current = false;
         }
@@ -109,6 +118,17 @@ export const SocketProvider: React.FC<{
     newSocket.on("reconnect", (/* attemptNumber */) => {
       setIsConnected(true);
     });
+
+    // Listen presence updates
+    newSocket.on(
+      "client_presence",
+      (payload: { connectedDevices?: number; hasWebPlayer?: boolean }) => {
+        const count = Number(payload?.connectedDevices ?? 0);
+        if (Number.isFinite(count))
+          setConnectedDevicesCount(Math.max(0, count));
+        setHasWebPlayer(Boolean(payload?.hasWebPlayer));
+      },
+    );
 
     return newSocket;
   }, [authenticateUser]);
@@ -134,6 +154,8 @@ export const SocketProvider: React.FC<{
           socketRef.current.disconnect();
           socketRef.current = null;
           await authenticateUser();
+          // After re-authentication, immediately create a fresh socket instance
+          socketRef.current = generateSocketInstance();
         } else {
           // Socket already connected
         }
@@ -212,11 +234,20 @@ export const SocketProvider: React.FC<{
     () => ({
       socket: socketRef.current,
       isConnected,
+      connectedDevicesCount,
+      hasWebPlayer,
       emit,
       addEmitListener,
       removeEmitListener,
     }),
-    [isConnected, emit, addEmitListener, removeEmitListener],
+    [
+      isConnected,
+      connectedDevicesCount,
+      hasWebPlayer,
+      emit,
+      addEmitListener,
+      removeEmitListener,
+    ],
   );
 
   return (
