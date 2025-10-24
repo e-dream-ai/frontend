@@ -43,7 +43,6 @@ import { Video } from "./view-dream.styled";
 import { isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import useSocket from "@/hooks/useSocket";
-import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { emitPlayDream } from "@/utils/socket.util";
 import { truncateString } from "@/utils/string.util";
 import { AnchorLink } from "@/components/shared";
@@ -104,7 +103,6 @@ const ViewDreamPage: React.FC = () => {
   });
 
   const { socket } = useSocket();
-  const { isActive: isClientActive } = useDesktopClient();
   const dream = useMemo(() => data?.data?.dream, [data]);
   const vote = useMemo(() => voteData?.data?.vote, [voteData]);
   const playlistItems = useMemo(() => dream?.playlistItems, [dream]);
@@ -266,8 +264,6 @@ const ViewDreamPage: React.FC = () => {
     setShowProcessDreamReportModal(true);
   const onHideProcessDreamReportModal = () =>
     setShowProcessDreamReportModal(false);
-  const onShowClientNotConnectedModal = () =>
-    setShowClientNotConnectedModal(true);
   const onHideClientNotConnectedModal = () =>
     setShowClientNotConnectedModal(false);
 
@@ -345,15 +341,7 @@ const ViewDreamPage: React.FC = () => {
   };
 
   const handlePlayDream = () => {
-    if (isClientActive) {
-      emitPlayDream(
-        socket,
-        dream,
-        t("toasts.play_dream", { name: dream?.name }),
-      );
-    } else {
-      onShowClientNotConnectedModal();
-    }
+    emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
   };
 
   const handleThumbsUpDream = async () => {
