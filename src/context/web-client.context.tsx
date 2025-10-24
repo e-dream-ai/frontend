@@ -624,6 +624,18 @@ export const WebClientProvider: React.FC<{
     };
   }, [socket, isWebClientActive, emit]);
 
+  useEffect(() => {
+    const handlePresence = (payload?: { hasWebPlayer?: boolean }) => {
+      if (isWebClientActive && !Boolean(payload?.hasWebPlayer)) {
+        emit(WEB_CLIENT_STATUS_EVENT, { active: true });
+      }
+    };
+    socket?.on("client_presence", handlePresence);
+    return () => {
+      socket?.off("client_presence", handlePresence);
+    };
+  }, [socket, isWebClientActive, emit]);
+
   // Listen new remote control events from the server
   useSocketEventListener<RemoteControlEventData>(
     NEW_REMOTE_CONTROL_EVENT,
