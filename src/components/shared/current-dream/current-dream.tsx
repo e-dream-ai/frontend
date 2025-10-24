@@ -25,7 +25,7 @@ export const CurrentDream = () => {
   const theme = useTheme();
   const { user, currentDream, isLoadingCurrentDream, refreshCurrentDream } =
     useAuth();
-  const { setWebPlayerAvailable, setWebClientActive } = useWebClient();
+  const { setWebPlayerAvailable } = useWebClient();
   const { isActive } = useDesktopClient();
 
   const handleRemoteControlEvent = async (
@@ -58,13 +58,11 @@ export const CurrentDream = () => {
       onActive: () => {
         if (IS_WEB_CLIENT_ACTIVE && user) {
           setWebPlayerAvailable(false);
-          setWebClientActive(false);
         }
       },
       onInactive: () => {
         if (IS_WEB_CLIENT_ACTIVE && user) {
           setWebPlayerAvailable(true);
-          setWebClientActive(false);
         }
       },
     },
