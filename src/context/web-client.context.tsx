@@ -78,7 +78,7 @@ export const WebClientProvider: React.FC<{
   // location
   const location = useLocation();
   // socket
-  const { emit } = useSocket();
+  const { emit, socket } = useSocket();
   const {
     currentDream,
     currentPlaylist,
@@ -605,6 +605,24 @@ export const WebClientProvider: React.FC<{
       emit(WEB_CLIENT_STATUS_EVENT, { active: false });
     };
   }, [isWebClientActive, emit]);
+
+  // Re-sync web client active status after socket (re)connect so server has
+  // the correct state for the new socket id
+  useEffect(() => {
+    const handleConnect = () => {
+      emit(WEB_CLIENT_STATUS_EVENT, { active: isWebClientActive });
+    };
+    const handleReconnect = () => {
+      emit(WEB_CLIENT_STATUS_EVENT, { active: isWebClientActive });
+    };
+
+    socket?.on("connect", handleConnect);
+    socket?.on("reconnect", handleReconnect);
+    return () => {
+      socket?.off("connect", handleConnect);
+      socket?.off("reconnect", handleReconnect);
+    };
+  }, [socket, isWebClientActive, emit]);
 
   // Listen new remote control events from the server
   useSocketEventListener<RemoteControlEventData>(
