@@ -108,6 +108,8 @@ const PlayerSlot = memo(
               isActive ? "active" : "inactive"
             }`}
             data-player-id={id}
+            playsInline
+            webkit-playsinline
             muted
           />
         </PlayerWrapper>
