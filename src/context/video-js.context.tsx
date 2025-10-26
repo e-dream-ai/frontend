@@ -1,4 +1,3 @@
-// contexts/video-js.context.tsx
 import { VideoJSOptions } from "@/types/video-js.types";
 import {
   createContext,

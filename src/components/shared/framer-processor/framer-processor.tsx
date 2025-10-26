@@ -1,10 +1,16 @@
 import { useVideoJs } from "@/hooks/useVideoJS";
 import { useEffect, useRef, useState } from "react";
 import { Row, Column, Text, Button } from "@/components/shared";
+import { VIDEOJS_EVENTS } from "@/constants/video-js.constants";
 
-// framer-processor.tsx
 export const FrameProcessor = () => {
-  const { startFrameReading, stopFrameReading } = useVideoJs();
+  const {
+    startFrameReading,
+    stopFrameReading,
+    addEventListener,
+    activePlayer,
+    players,
+  } = useVideoJs();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isReading, setIsReading] = useState(false);
   const [frameInfo, setFrameInfo] = useState({
@@ -15,6 +21,32 @@ export const FrameProcessor = () => {
 
   const lastTimestampRef = useRef<number>(0);
   const frameCountRef = useRef<number>(0);
+
+  // Check if video is playing on mount and when active player changes
+  useEffect(() => {
+    const activePlayerInstance = players.find((p) => p.id === activePlayer);
+    const isPlaying = activePlayerInstance?.player
+      ? !activePlayerInstance.player.paused()
+      : false;
+
+    setIsReading(isPlaying);
+  }, [activePlayer, players]);
+
+  // Listen to video play/pause events
+  useEffect(() => {
+    const offPlay = addEventListener(VIDEOJS_EVENTS.PLAY, () => {
+      setIsReading(true);
+    });
+
+    const offEnded = addEventListener(VIDEOJS_EVENTS.ENDED, () => {
+      setIsReading(false);
+    });
+
+    return () => {
+      offPlay();
+      offEnded();
+    };
+  }, [addEventListener]);
 
   useEffect(() => {
     if (isReading) {
