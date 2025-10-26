@@ -412,7 +412,7 @@ export const VideoJSProvider = ({
   const startCanvasFrameCapture = useCallback(
     (
       videoElement: HTMLVideoElement,
-      onFrame: (frame: VideoFrame, metadata: VideoFrameMetadata) => void, // Add parameter
+      _onFrame: (frame: VideoFrame, metadata: VideoFrameMetadata) => void, // Add parameter
     ) => {
       const canvas = document.createElement("canvas");
       const ctx = canvas.getContext("2d");
