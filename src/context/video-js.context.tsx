@@ -20,14 +20,6 @@ import {
   PRELOAD_OPTION,
 } from "@/constants/video-js.constants";
 
-type VideoFrameMetadata = {
-  presentationTime: number;
-  expectedDisplayTime: number;
-  width: number;
-  height: number;
-  mediaTime: number;
-};
-
 type VideoJSContextType = {
   isReady: boolean;
   activePlayer: string | null;
@@ -53,14 +45,11 @@ type VideoJSContextType = {
   preloadVideo: (src: string) => Promise<boolean>;
   toggleFullscreen: () => void;
   setPlaybackRate: (playbackRate: number) => void;
-  startFrameReading: (
-    onFrame: (frame: VideoFrame, metadata: VideoFrameMetadata) => void,
-  ) => void;
-  stopFrameReading: () => void;
 };
 
 type VideoJSEventHandler = (event: unknown) => void;
 
+// type for player instance
 type PlayerInstance = {
   id: string;
   player: Player | null;
@@ -73,8 +62,14 @@ type PlayerInstance = {
   longTransition: boolean;
 };
 
+/**
+ *  VideoJS Context is wrapper for video.js that manages multiple player instances to enable video transitions and crossfade effects.
+ *  It maintains has a pool of video players where one remains active while others preload content, ensuring smooth playback transitions without interruptions (or try to).
+ *  Context serves exclusively as a controller for video.js instances and their features, events, etc.
+ */
 const VideoJSContext = createContext<VideoJSContextType | undefined>(undefined);
 
+// generate uuuid fn
 const generatePlayerId = () => `player-${uuidv4()}`;
 
 export const VideoJSProvider = ({
@@ -88,13 +83,10 @@ export const VideoJSProvider = ({
     new Map(),
   );
   const videoWrapperRef = useRef<HTMLDivElement>(null);
-  const frameCallbackIdRef = useRef<number | null>(null);
-  const frameCallbackRef = useRef<
-    ((frame: VideoFrame, metadata: VideoFrameMetadata) => void) | null
-  >(null);
-
   const [isReady, setIsReady] = useState(false);
+  // players pool
   const [activePlayerId, setActivePlayerId] = useState<string | null>(null);
+  // playback state
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
 
@@ -103,6 +95,7 @@ export const VideoJSProvider = ({
     setActivePlayerId(ap);
   }, []);
 
+  // toggle fullscreen for video wrapper
   const toggleFullscreen = useCallback(async () => {
     if (!videoWrapperRef.current) return;
 
@@ -124,11 +117,13 @@ export const VideoJSProvider = ({
     return el;
   }, []);
 
+  // create a new player slot without initializing videojs
   const createPlayer = useCallback(() => {
     const id = generatePlayerId();
 
     const playerInstance: PlayerInstance = {
       id,
+      // it'll be initialized when dom element is available
       player: null,
       isActive: playersPoolRef.current.size === 0,
       lastUsed: Date.now(),
@@ -146,12 +141,14 @@ export const VideoJSProvider = ({
     }
 
     if (playersPoolRef.current.size >= PoolConfig.minPlayers) {
+      // setIsReady(true) should be changed to register player?
       setIsReady(true);
     }
 
     return id;
   }, [updateActivePlayer]);
 
+  // remove a player slot
   const removePlayer = useCallback(
     (id: string) => {
       const playerInstance = playersPoolRef.current.get(id);
@@ -176,8 +173,10 @@ export const VideoJSProvider = ({
     [updateActivePlayer, activePlayerId],
   );
 
+  // register player into a pool slot
   const registerPlayer = useCallback(
     (element: HTMLVideoElement, options: VideoJSOptions) => {
+      // create player
       const player = videojs(element, options);
       const playerInstance = Array.from(playersPoolRef.current.values()).find(
         (p) => p.player === null,
@@ -189,6 +188,7 @@ export const VideoJSProvider = ({
 
       playerInstance.player = player;
 
+      // add existing global event handlers to new player
       globalEventHandlersRef.current.forEach((handlers, event) => {
         handlers.forEach((handler) => {
           const wrappedHandler = (e: unknown) => {
@@ -207,7 +207,9 @@ export const VideoJSProvider = ({
         });
       });
 
+      // replace fullscreen properties to work with video wrapper
       player.ready(() => {
+        // get the fullscreen toggle button component
         const fullscreenToggle = player
           ?.getChild("ControlBar")
           ?.getChild("FullscreenToggle") as Component & {
@@ -215,10 +217,18 @@ export const VideoJSProvider = ({
         };
 
         if (fullscreenToggle) {
+          // override all player functions related with fullscreen
+
+          // override handleClick fn
           fullscreenToggle.handleClick = (event: Event) => {
+            // prevent default behavior
             event.preventDefault();
+
+            // call fullscreen toggle
             toggleFullscreen();
 
+            // focus the active player element
+            // needed since fullscreen button got focused after click and don't allow keyboard events
             const activePlayer = activePlayerIdRef.current
               ? playersPoolRef.current.get(activePlayerIdRef.current)
               : null;
@@ -231,14 +241,17 @@ export const VideoJSProvider = ({
             }
           };
 
+          // override isFullscreen fn to check container state
           player.isFullscreen = () => {
             return document.fullscreenElement === videoWrapperRef.current;
           };
 
+          // override requestFullscreen fn
           player.requestFullscreen = async () => {
             videoWrapperRef.current?.requestFullscreen();
           };
 
+          // override exitFullscreen fn
           player.exitFullscreen = () => {
             return document.exitFullscreen();
           };
@@ -250,9 +263,11 @@ export const VideoJSProvider = ({
     [toggleFullscreen],
   );
 
+  // unregister player
   const unregisterPlayer = useCallback((id: string) => {
     const playerInstance = playersPoolRef.current.get(id);
     if (playerInstance && playerInstance.player) {
+      // cleanup event handlers
       playerInstance.eventHandlers.forEach((handlers, event) => {
         handlers.forEach((handler) => {
           playerInstance.player?.off(event, handler);
@@ -268,20 +283,29 @@ export const VideoJSProvider = ({
   }, []);
 
   const clearPlayers = useCallback(() => {
+    // loop through player instances
     playersPoolRef.current.forEach((playerInstance) => {
       if (playerInstance.player && !playerInstance.player.isDisposed()) {
+        // cleanup event handlers
         playerInstance.eventHandlers.forEach((handlers, event) => {
           handlers.forEach((handler) => {
             playerInstance.player?.off(event, handler);
           });
         });
         playerInstance.eventHandlers.clear();
+
+        // dispose instance
         playerInstance.player.dispose();
       }
     });
 
+    // clear pool
     playersPoolRef.current.clear();
+
+    // reset active player
     updateActivePlayer(null);
+
+    // reset ready
     setIsReady(false);
   }, [updateActivePlayer]);
 
@@ -290,21 +314,28 @@ export const VideoJSProvider = ({
       const handlers = globalEventHandlersRef.current.get(event) || [];
       globalEventHandlersRef.current.set(event, [...handlers, handler]);
 
+      // add handler to existing players
       playersPoolRef.current.forEach((playerInstance) => {
         if (playerInstance.player) {
           const wrappedHandler = (e: unknown) => {
+            // run it only if is active
             if (playerInstance.isActive) {
               handler(e);
             }
           };
 
+          // register event
           playerInstance.player.on(event, wrappedHandler);
 
+          // register `playing` event important for all instances
           playerInstance.player.on(VIDEOJS_EVENTS.PLAY, () => {
+            // sets user as inactive to avoid controls flash by end of video
             playerInstance?.player?.userActive(false);
           });
 
+          // register `ended` event important for all instances
           playerInstance.player.on(VIDEOJS_EVENTS.ENDED, () => {
+            // sets user as inactive to avoid controls flash by end of video
             playerInstance?.player?.userActive(false);
           });
 
@@ -335,141 +366,6 @@ export const VideoJSProvider = ({
     },
     [],
   );
-
-  const stopFrameReading = useCallback(() => {
-    const videoElement = getActiveVideoElement();
-
-    if (
-      frameCallbackIdRef.current !== null &&
-      videoElement &&
-      "cancelVideoFrameCallback" in videoElement
-    ) {
-      videoElement.cancelVideoFrameCallback(frameCallbackIdRef.current);
-      frameCallbackIdRef.current = null;
-    }
-
-    frameCallbackRef.current = null;
-  }, [getActiveVideoElement]);
-
-  const startFrameReading = useCallback(
-    (onFrame: (frame: VideoFrame, metadata: VideoFrameMetadata) => void) => {
-      stopFrameReading();
-
-      const videoElement = getActiveVideoElement();
-      if (!videoElement) {
-        console.warn("No active video element found");
-        return;
-      }
-
-      frameCallbackRef.current = onFrame;
-
-      if ("requestVideoFrameCallback" in videoElement) {
-        const processFrame = (
-          _now: DOMHighResTimeStamp,
-          metadata: VideoFrameCallbackMetadata,
-        ) => {
-          const callback = frameCallbackRef.current;
-          if (!callback) return;
-
-          try {
-            const frame = new VideoFrame(videoElement, {
-              timestamp: metadata.mediaTime * 1_000_000,
-            });
-
-            const frameMetadata: VideoFrameMetadata = {
-              presentationTime: metadata.presentationTime,
-              expectedDisplayTime: metadata.expectedDisplayTime,
-              width: metadata.width,
-              height: metadata.height,
-              mediaTime: metadata.mediaTime,
-            };
-
-            callback(frame, frameMetadata);
-            frame.close();
-
-            if (frameCallbackRef.current !== null) {
-              frameCallbackIdRef.current =
-                videoElement.requestVideoFrameCallback(processFrame);
-            }
-          } catch (error) {
-            console.error("Error processing frame:", error);
-          }
-        };
-
-        frameCallbackIdRef.current =
-          videoElement.requestVideoFrameCallback(processFrame);
-      } else {
-        console.warn(
-          "requestVideoFrameCallback not supported, using canvas fallback",
-        );
-        startCanvasFrameCapture(videoElement, onFrame); // Pass onFrame here
-      }
-    },
-    [getActiveVideoElement, stopFrameReading],
-  );
-
-  const startCanvasFrameCapture = useCallback(
-    (
-      videoElement: HTMLVideoElement,
-      _onFrame: (frame: VideoFrame, metadata: VideoFrameMetadata) => void, // Add parameter
-    ) => {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
-
-      canvas.width = videoElement.videoWidth;
-      canvas.height = videoElement.videoHeight;
-
-      const captureFrame = () => {
-        const callback = frameCallbackRef.current;
-        if (!callback) return;
-
-        ctx.drawImage(videoElement, 0, 0);
-
-        createImageBitmap(canvas)
-          .then((bitmap) => {
-            const callback = frameCallbackRef.current;
-            if (!callback) {
-              bitmap.close();
-              return;
-            }
-
-            const frame = new VideoFrame(bitmap, {
-              timestamp: videoElement.currentTime * 1_000_000,
-            });
-
-            const metadata: VideoFrameMetadata = {
-              presentationTime: performance.now(),
-              expectedDisplayTime: performance.now(),
-              width: videoElement.videoWidth,
-              height: videoElement.videoHeight,
-              mediaTime: videoElement.currentTime,
-            };
-
-            callback(frame, metadata);
-
-            frame.close();
-            bitmap.close();
-
-            if (frameCallbackRef.current !== null) {
-              frameCallbackIdRef.current = requestAnimationFrame(captureFrame);
-            }
-          })
-          .catch((error) => {
-            console.error("Error creating bitmap:", error);
-          });
-      };
-
-      captureFrame();
-    },
-    [],
-  );
-
-  useEffect(() => {
-    return () => {
-      stopFrameReading();
-    };
-  }, [stopFrameReading]);
 
   useEffect(() => {
     const offTime = addEventListener(VIDEOJS_EVENTS.TIMEUPDATE, () => {
@@ -535,6 +431,10 @@ export const VideoJSProvider = ({
         ? playersPoolRef.current.get(activePlayerIdRef.current)
         : null;
 
+      // find players by next preferences:
+      // - preloaded players with matching source
+      // - player with matching source
+      // - oldest last used inactive player
       const nextPlayers = Array.from(playersPoolRef.current.values())
         .filter((p) => !p.isActive && p.player)
         .sort((a, b) => {
@@ -544,6 +444,7 @@ export const VideoJSProvider = ({
             NONE: 0,
           };
 
+          // Determines priority level of a player based on preload status and source match
           const getPriority = (player: PlayerInstance) => {
             if (player.src !== src) return PRIORITY.NONE;
             if (player.isPreloaded) return PRIORITY.PRELOADED_WITH_MATCH;
@@ -551,6 +452,7 @@ export const VideoJSProvider = ({
           };
 
           const diff = getPriority(b) - getPriority(a);
+          // Otherwise is sort by last time used
           return diff || a.lastUsed - b.lastUsed;
         });
 
@@ -562,21 +464,31 @@ export const VideoJSProvider = ({
       const currentPlaybackRate = currentPlayer?.player?.playbackRate() || 1;
 
       try {
+        // set source if different from current
         if (nextPlayerInstance.src !== src) {
           nextPlayer.src({ src, preload: PRELOAD_OPTION });
           nextPlayerInstance.src = src;
         }
 
+        // set playback rate for next player
         nextPlayer.playbackRate(currentPlaybackRate);
+
+        // update lastUsed for next player to prevent cleanup
         nextPlayerInstance.lastUsed = Date.now();
+        // set crossfade options for next player
         nextPlayerInstance.skipCrossfade = options?.skipCrossfade ?? false;
         nextPlayerInstance.longTransition = options?.longTransition ?? false;
 
+        console.log("playVideo4", nextPlayer);
         await nextPlayer.play();
+        console.log("playVideo5");
 
         if (currentPlayer) {
+          // set current player as inactive
           currentPlayer.isActive = false;
+          // update lastUsed for current player
           currentPlayer.lastUsed = Date.now();
+          // set crossfade options for current player so can show same effect for next show and current hide
           currentPlayer.skipCrossfade = options?.skipCrossfade ?? false;
           currentPlayer.longTransition = options?.longTransition ?? false;
         }
@@ -585,8 +497,10 @@ export const VideoJSProvider = ({
         nextPlayerInstance.isActive = true;
         updateActivePlayer(nextPlayerInstance.id);
 
+        // Wait for the video transition for crossfade
         if (!options.skipCrossfade) {
           await new Promise<void>((resolve) => {
+            // CROSSFADE_DURATION
             setTimeout(
               resolve,
               (options?.longTransition
@@ -597,8 +511,10 @@ export const VideoJSProvider = ({
         }
 
         if (currentPlayer) {
+          // stop playing current player
           currentPlayer?.player?.pause();
           currentPlayer?.player?.currentTime(0);
+          // removes the vjs-has-started to avoid controls flash by end of video
           currentPlayer?.player?.hasStarted(false);
         }
 
@@ -612,6 +528,7 @@ export const VideoJSProvider = ({
   );
 
   const preloadVideo = useCallback(async (src: string): Promise<boolean> => {
+    // Check if we already have a preloaded player with this src
     const players = Array.from(playersPoolRef.current.values());
     const existingPreloadedPlayer = players.find(
       (p) => p.isPreloaded && p.src === src,
@@ -621,6 +538,7 @@ export const VideoJSProvider = ({
       return true;
     }
 
+    // find inactive players ordered by last used
     const inactivePlayers = players
       .filter((p) => !p.isActive && p.player)
       .sort((a, b) => a.lastUsed - b.lastUsed);
@@ -633,9 +551,11 @@ export const VideoJSProvider = ({
     try {
       const player = preloadPlayerInstance.player;
 
+      // set source
       preloadPlayerInstance.src = src;
       player.src({ src, preload: PRELOAD_OPTION });
 
+      // wait for metadata ready
       await new Promise<void>((resolve) => {
         player.one(VIDEOJS_EVENTS.LOADEDMETADATA, resolve);
       });
@@ -686,8 +606,6 @@ export const VideoJSProvider = ({
       createPlayer,
       removePlayer,
       clearPlayers,
-      startFrameReading,
-      stopFrameReading,
     }),
     [
       isReady,
@@ -695,6 +613,7 @@ export const VideoJSProvider = ({
       videoWrapperRef,
       currentTime,
       duration,
+      playersPoolRef,
       getActiveVideoElement,
       registerPlayer,
       unregisterPlayer,
@@ -707,8 +626,6 @@ export const VideoJSProvider = ({
       createPlayer,
       removePlayer,
       clearPlayers,
-      startFrameReading,
-      stopFrameReading,
     ],
   );
 
