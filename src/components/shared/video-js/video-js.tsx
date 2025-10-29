@@ -4,7 +4,6 @@ import { Row, Column, Text, Button } from "@/components/shared";
 import { PlayerWrapper, VideoContainer, VideoWrapper } from "./video-js.styled";
 import { PoolConfig, VIDEOJS_OPTIONS } from "@/constants/video-js.constants";
 import { useWebClient } from "@/hooks/useWebClient";
-import { FrameProcessor } from "../framer-processor/framer-processor";
 import "video.js/dist/video-js.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
@@ -55,8 +54,6 @@ export const VideoJS: FC<VideoJSProps> = () => {
             />
           ))}
         </VideoWrapper>
-
-        <FrameProcessor />
       </Column>
     </Row>
   );
@@ -101,7 +98,6 @@ const PlayerSlot = memo(
             }`}
             data-player-id={id}
             playsInline
-            crossOrigin="anonymous"
             webkit-playsinline="true"
             muted
           />
