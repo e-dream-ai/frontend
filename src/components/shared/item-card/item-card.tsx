@@ -90,6 +90,7 @@ type ItemCardProps = {
   onClick?: MouseEventHandler<HTMLAnchorElement>;
   onOrder?: (dropItem: SetItemOrder) => void;
   onDelete?: (event: React.MouseEvent) => void;
+  deleteTooltipId?: string;
 };
 
 const DND_MODES: { [key: string]: DNDMode } = {
@@ -136,6 +137,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   onClick,
   onOrder,
   onDelete,
+  deleteTooltipId,
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
@@ -549,6 +551,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                         fontSize: "1.6rem",
                         alignItems: "flex-start",
                       }}
+                      data-tooltip-id={deleteTooltipId}
                     >
                       <FontAwesomeIcon
                         icon={faXmark}
