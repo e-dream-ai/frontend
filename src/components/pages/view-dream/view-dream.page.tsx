@@ -59,6 +59,8 @@ import { NotFound } from "@/components/shared/not-found/not-found";
 import { formatDreamForm, formatDreamRequest } from "@/utils/dream.util";
 import { ReportDreamModal } from "@/components/modals/report-dream.modal";
 import { useUpdateReport } from "@/api/report/mutation/useUpdateReport";
+import { Tooltip } from "react-tooltip";
+import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 
 type Params = { uuid: string };
 
@@ -553,15 +555,23 @@ const ViewDreamPage: React.FC = () => {
                     transparent
                     style={{ width: "3rem" }}
                     onClick={handlePlayDream}
+                    data-tooltip-id="dream-play"
                   >
                     <FontAwesomeIcon icon={faPlay} />
                   </Button>
+                  <Tooltip
+                    id="dream-play"
+                    place="bottom"
+                    delayShow={TOOLTIP_DELAY_MS}
+                    content={t("page.view_dream.play_dream_tooltip")}
+                  />
                   <Button
                     type="button"
                     buttonType="default"
                     transparent
                     style={{ width: "3rem" }}
                     onClick={handleThumbsUpDream}
+                    data-tooltip-id="dream-like"
                   >
                     {vote?.vote === VoteType.UPVOTE ? (
                       <span className="fa-stack fa-sm">
@@ -576,12 +586,19 @@ const ViewDreamPage: React.FC = () => {
                       <FontAwesomeIcon icon={faThumbsUp} />
                     )}
                   </Button>
+                  <Tooltip
+                    id="dream-like"
+                    place="bottom"
+                    delayShow={TOOLTIP_DELAY_MS}
+                    content={t("actions.like")}
+                  />
                   <Button
                     type="button"
                     buttonType="default"
                     transparent
                     style={{ width: "3rem" }}
                     onClick={handleThumbsDownDream}
+                    data-tooltip-id="dream-dislike"
                   >
                     {vote?.vote === VoteType.DOWNVOTE ? (
                       <span className="fa-stack fa-sm">
@@ -596,6 +613,12 @@ const ViewDreamPage: React.FC = () => {
                       <FontAwesomeIcon icon={faThumbsDown} />
                     )}
                   </Button>
+                  <Tooltip
+                    id="dream-dislike"
+                    place="bottom"
+                    delayShow={TOOLTIP_DELAY_MS}
+                    content={t("actions.dislike")}
+                  />
 
                   <Button
                     type="button"
@@ -603,6 +626,7 @@ const ViewDreamPage: React.FC = () => {
                     transparent
                     style={{ width: "3rem" }}
                     onClick={handleFlagButton}
+                    data-tooltip-id="dream-flag"
                   >
                     {isDreamReported ? (
                       <span className="fa-stack fa-sm">
@@ -617,6 +641,12 @@ const ViewDreamPage: React.FC = () => {
                       <FontAwesomeIcon icon={faFlag} />
                     )}
                   </Button>
+                  <Tooltip
+                    id="dream-flag"
+                    place="bottom"
+                    delayShow={TOOLTIP_DELAY_MS}
+                    content={t("components.remote_control.report")}
+                  />
 
                   <Restricted
                     to={DREAM_PERMISSIONS.CAN_DELETE_DREAM}
@@ -628,9 +658,16 @@ const ViewDreamPage: React.FC = () => {
                       transparent
                       style={{ width: "3rem" }}
                       onClick={onShowConfirmDeleteModal}
+                      data-tooltip-id="dream-delete"
                     >
                       <FontAwesomeIcon icon={faTrash} />
                     </Button>
+                    <Tooltip
+                      id="dream-delete"
+                      place="bottom"
+                      delayShow={TOOLTIP_DELAY_MS}
+                      content={t("page.view_dream.delete_dream_tooltip")}
+                    />
                   </Restricted>
                 </Row>
               )}
