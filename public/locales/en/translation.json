@@ -186,6 +186,8 @@
       "filmstrip": "Filmstrip",
       "playlists": "Playlists",
       "play_dream_client": "Dream sent to play on client.",
+      "play_dream_tooltip": "Play dream",
+      "delete_dream_tooltip": "Delete dream",
       "confirm_process_modal_title": "Confirm process dream",
       "confirm_process_modal_body": "Are you sure to process this dream?",
       "confirm_delete_modal_title": "Confirm delete dream",
@@ -230,6 +232,7 @@
       "add_dreams_to_playlist": "Add dreams to this playlist",
       "add_keyframes_to_playlist": "Add keyframes to this playlist",
       "play_playlist": "Play this playlist",
+      "delete_playlist_tooltip": "Delete playlist",
       "dream_already_exists": "dream already exists, omitted.",
       "play_playlist_client": "Playlist sent to play on client.",
       "confirm_delete_modal_title": "Confirm delete playlist",
@@ -433,6 +436,14 @@
     },
     "thumbnail_input": {
       "processing": "Ingesting dream..."
+    },
+    "tooltip": {
+      "play_dream": "Dream {{name}} play.",
+      "play_playlist": "Playlist {{name}} play.",
+      "like": "Dream {{name}} like.",
+      "dislike": "Dream {{name}} dislike.",
+      "like_current_dream": "Like",
+      "dislike_current_dream": "Dislike"
     },
     "remote_control": {
       "event": "Event",
