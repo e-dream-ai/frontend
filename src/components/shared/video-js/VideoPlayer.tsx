@@ -184,6 +184,8 @@ const VideoPlayer = () => {
             <video
               ref={video1Ref}
               className="video-js vjs-big-play-centered vjs-fluid"
+              playsInline
+              webkit-playsinline
             />
           </PlayerWrapper>
         </VideoContainer>
@@ -197,6 +199,8 @@ const VideoPlayer = () => {
             <video
               ref={video2Ref}
               className="video-js vjs-big-play-centered vjs-fluid"
+              playsInline
+              webkit-playsinline
             />
           </PlayerWrapper>
         </VideoContainer>

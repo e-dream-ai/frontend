@@ -22,13 +22,13 @@ import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
 import { Button } from "../button/button";
 import { PLAYLIST_REFERENCES_QUERY_KEY } from "@/api/playlist/query/usePlaylistReferences";
+import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 
 const StyledInput = styled.input`
   background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorPrimary};
   border: 0;
   padding: 0.25rem;
-  font-size: 1rem;
 
   &:disabled {
     cursor: not-allowed;
@@ -100,7 +100,8 @@ export const PlaylistCheckboxMenu = ({
         >
           <Tooltip
             id="add-dream-to-playlist"
-            place="right-end"
+            place="bottom"
+            delayShow={TOOLTIP_DELAY_MS}
             content={t(
               type === "dream"
                 ? "components.playlist_checkbox_menu.add_dream_to_playlist"

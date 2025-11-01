@@ -8,27 +8,19 @@ import "video.js/dist/video-js.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
-type VideoJSProps = {
-  //
-};
+type VideoJSProps = {};
 
-/**
- * Renders and manages multiple video.js player instances.
- * It works with the VideoJS Context to create a pool of video players, where each player is used to have smooth video transitions.
- */
 export const VideoJS: FC<VideoJSProps> = () => {
   const { players, videoWrapperRef, activePlayer, createPlayer, clearPlayers } =
     useVideoJs();
   const { isWebClientActive, setWebClientActive } = useWebClient();
 
   useEffect(() => {
-    // creates min initial player slots
     for (let i = 0; i < PoolConfig.minPlayers; i++) {
       createPlayer();
     }
 
     return () => {
-      // cleanup player instances
       clearPlayers();
     };
   }, [createPlayer, clearPlayers]);
@@ -50,6 +42,7 @@ export const VideoJS: FC<VideoJSProps> = () => {
             <FontAwesomeIcon icon={faTrash} />
           </Button>
         </Row>
+
         <VideoWrapper ref={videoWrapperRef}>
           {players.map(({ id, skipCrossfade, longTransition }) => (
             <PlayerSlot
@@ -66,10 +59,6 @@ export const VideoJS: FC<VideoJSProps> = () => {
   );
 };
 
-/**
- * Renders the video player element that contains videoRef to create videojs instance
- * Using `memo` helps avoid unnecesary rerenders, still rendering when parent does it
- */
 const PlayerSlot = memo(
   ({
     id,
@@ -108,6 +97,8 @@ const PlayerSlot = memo(
               isActive ? "active" : "inactive"
             }`}
             data-player-id={id}
+            playsInline
+            webkit-playsinline="true"
             muted
           />
         </PlayerWrapper>

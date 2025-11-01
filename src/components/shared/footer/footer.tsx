@@ -57,7 +57,7 @@ const FooterIcons: React.FC = () => (
     </Anchor>
     <Anchor
       type="secondary"
-      href="https://github.com/e-dream-ai/client"
+      href="https://github.com/e-dream-ai"
       target="_blank"
       rel="noreferrer"
     >
@@ -71,7 +71,7 @@ const FooterIcons: React.FC = () => (
     </Anchor>
     <Anchor
       type="secondary"
-      href="https://www.facebook.com/groups/infinidream/"
+      href="https://www.facebook.com/groups/infinidreamai"
       target="_blank"
     >
       <span className="fa-stack fa-lg">
