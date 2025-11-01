@@ -80,6 +80,19 @@ type Params = { uuid: string };
 
 const SectionID = "dream";
 
+const updateToast = (
+  toastId: React.ReactText,
+  type: "success" | "error",
+  message: string,
+) => {
+  toast.update(toastId, {
+    render: message,
+    type,
+    isLoading: false,
+    ...TOAST_DEFAULT_CONFIG,
+  });
+};
+
 const ViewDreamPage: React.FC = () => {
   const { t } = useTranslation();
   const { uuid } = useParams<Params>();
@@ -262,89 +275,59 @@ const ViewDreamPage: React.FC = () => {
       (event: React.MouseEvent) => {
         event.preventDefault();
         event.stopPropagation();
-
-        if (!playlistUUID) {
-          return;
-        }
-
-        if (removingPlaylistItemId === playlistItemId) {
-          return;
-        }
+        if (!playlistUUID || removingPlaylistItemId === playlistItemId) return;
 
         const toastId = toast.loading(
           t("page.view_dream.removing_dream_from_playlist"),
         );
-
         setRemovingPlaylistItemId(playlistItemId);
-
         mutateDeletePlaylistItem(
           { playlistUUID, itemId: playlistItemId },
           {
             onSuccess: (response) => {
-              if (response.success) {
-                queryClient.setQueryData<ApiResponse<{ dream: Dream }>>(
-                  [DREAM_QUERY_KEY, uuid],
-                  (oldData) => {
-                    if (!oldData?.data?.dream) {
-                      return oldData;
-                    }
-
-                    const existingPlaylistItems =
-                      oldData.data.dream.playlistItems ?? [];
-                    const updatedPlaylistItems = existingPlaylistItems
-                      .filter((item) => item.id !== playlistItemId)
-                      .map((item, index) => ({
-                        ...item,
-                        order: index,
-                      }));
-
-                    return {
-                      ...oldData,
-                      data: {
-                        ...oldData.data,
-                        dream: {
-                          ...oldData.data.dream,
-                          playlistItems: updatedPlaylistItems,
-                        },
-                      },
-                    };
-                  },
-                );
-
-                toast.update(toastId, {
-                  render: t("page.view_dream.dream_removed_from_playlist"),
-                  type: "success",
-                  isLoading: false,
-                  ...TOAST_DEFAULT_CONFIG,
-                });
-              } else {
-                const errorMessage = response.message
-                  ? `${t(
-                      "page.view_dream.error_removing_dream_from_playlist",
-                    )} ${response.message}`
-                  : t("page.view_dream.error_removing_dream_from_playlist");
-
-                toast.update(toastId, {
-                  render: errorMessage,
-                  type: "error",
-                  isLoading: false,
-                  ...TOAST_DEFAULT_CONFIG,
-                });
+              if (!response.success) {
+                const message =
+                  response.message ??
+                  t("page.view_dream.error_removing_dream_from_playlist");
+                updateToast(toastId, "error", message);
+                return;
               }
-            },
-            onError: () => {
-              toast.update(toastId, {
-                render: t("page.view_dream.error_removing_dream_from_playlist"),
-                type: "error",
-                isLoading: false,
-                ...TOAST_DEFAULT_CONFIG,
-              });
-            },
-            onSettled: () => {
-              setRemovingPlaylistItemId((currentId) =>
-                currentId === playlistItemId ? null : currentId,
+              queryClient.setQueryData<ApiResponse<{ dream: Dream }>>(
+                [DREAM_QUERY_KEY, uuid],
+                (oldData) => {
+                  if (!oldData?.data?.dream) return oldData;
+                  const newPlaylistItems =
+                    oldData.data.dream.playlistItems?.filter(
+                      (item) => item.id !== playlistItemId,
+                    ) ?? [];
+                  return {
+                    ...oldData,
+                    data: {
+                      ...oldData.data,
+                      dream: {
+                        ...oldData.data.dream,
+                        playlistItems: newPlaylistItems,
+                      },
+                    },
+                  };
+                },
+              );
+              updateToast(
+                toastId,
+                "success",
+                t("page.view_dream.dream_removed_from_playlist"),
               );
             },
+            onError: () =>
+              updateToast(
+                toastId,
+                "error",
+                t("page.view_dream.error_removing_dream_from_playlist"),
+              ),
+            onSettled: () =>
+              setRemovingPlaylistItemId((currentId) =>
+                currentId === playlistItemId ? null : currentId,
+              ),
           },
         );
       },
@@ -928,10 +911,11 @@ const ViewDreamPage: React.FC = () => {
                               size="sm"
                               onDelete={
                                 canRemoveFromPlaylist
-                                  ? handleRemoveDreamFromPlaylist(
-                                      pi.id,
-                                      playlistUUID,
-                                    )
+                                  ? (e: React.MouseEvent) =>
+                                      handleRemoveDreamFromPlaylist(
+                                        pi.id,
+                                        playlistUUID,
+                                      )(e)
                                   : undefined
                               }
                               deleteDisabled={
