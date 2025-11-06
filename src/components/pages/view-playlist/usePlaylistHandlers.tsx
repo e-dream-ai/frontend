@@ -107,7 +107,7 @@ export const usePlaylistHandlers = ({
     isLoading: isLoadingThumbnailPlaylistMutation,
   } = useUpdateThumbnailPlaylist(playlist?.uuid);
 
-  const orderPlaylistMutation = useOrderPlaylist(uuid);
+  const orderPlaylistMutation = useOrderPlaylist();
 
   const { mutate: mutateDeletePlaylistItem } = useDeletePlaylistItem();
   const { mutate: mutateDeletePlaylistKeyframe } = useDeletePlaylistKeyframe();
