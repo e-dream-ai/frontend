@@ -107,7 +107,7 @@ export const usePlaylistHandlers = ({
     isLoading: isLoadingThumbnailPlaylistMutation,
   } = useUpdateThumbnailPlaylist(playlist?.uuid);
 
-  const orderPlaylistMutation = useOrderPlaylist(uuid);
+  const orderPlaylistMutation = useOrderPlaylist(uuid, "optimistic");
 
   const { mutate: mutateDeletePlaylistItem } = useDeletePlaylistItem();
   const { mutate: mutateDeletePlaylistKeyframe } = useDeletePlaylistKeyframe();
@@ -408,22 +408,25 @@ export const usePlaylistHandlers = ({
     const toastId = toast.loading(
       t("page.view_playlist.ordering_playlist_items"),
     );
+
     try {
+      // Mutation handles optimistic update and rollback
+      toast.update(toastId, {
+        render: t("page.view_playlist.playlist_items_ordered_successfully"),
+        type: "success",
+        isLoading: false,
+        ...TOAST_DEFAULT_CONFIG,
+      });
+
       const response = await orderPlaylistMutation.mutateAsync({
         uuid: playlist!.uuid,
         values: {
           order: requestPlaylistItems,
         },
+        mode: "optimistic",
       });
 
-      if (response.success) {
-        toast.update(toastId, {
-          render: t("page.view_playlist.playlist_items_ordered_successfully"),
-          type: "success",
-          isLoading: false,
-          ...TOAST_DEFAULT_CONFIG,
-        });
-      } else {
+      if (!response.success) {
         toast.update(toastId, {
           render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
             response.message
@@ -444,10 +447,10 @@ export const usePlaylistHandlers = ({
   };
 
   const handleOrderPlaylistBy = (type: SortType) => async () => {
-    const items = playlist?.items;
-    let orderedItems;
-    if (type === "name") orderedItems = sortPlaylistItemsByName(items);
-    else orderedItems = sortPlaylistItemsByDate(items);
+    const sourceItems = items;
+    let orderedItems: ItemOrder[] | undefined;
+    if (type === "name") orderedItems = sortPlaylistItemsByName(sourceItems);
+    else orderedItems = sortPlaylistItemsByDate(sourceItems);
 
     if (!orderedItems) {
       return;
@@ -457,11 +460,13 @@ export const usePlaylistHandlers = ({
       t("page.view_playlist.ordering_playlist_items"),
     );
     try {
+      // Mutation handles server-driven cache update
       const response = await orderPlaylistMutation.mutateAsync({
         uuid: playlist!.uuid,
         values: {
           order: orderedItems,
         },
+        mode: "server-driven",
       });
 
       if (response.success) {
