@@ -486,13 +486,17 @@ export const usePlaylistHandlers = ({
 
   const handleOrderPlaylistBy = (type: SortType) => async () => {
     const sourceItems = items;
-    let orderedItems;
+    let orderedItems: ItemOrder[] | undefined;
     if (type === "name") orderedItems = sortPlaylistItemsByName(sourceItems);
     else orderedItems = sortPlaylistItemsByDate(sourceItems);
 
     if (!orderedItems) {
       return;
     }
+
+    const idToOrderFallback = new Map<number, number>(
+      orderedItems.map((o) => [o.id, o.order]),
+    );
 
     const toastId = toast.loading(
       t("page.view_playlist.ordering_playlist_items"),
@@ -523,9 +527,7 @@ export const usePlaylistHandlers = ({
                 pageParams: [0],
               });
             } else {
-              const idToOrder = new Map<number, number>(
-                orderedItems.map((o) => [o.id, o.order]),
-              );
+              const idToOrder = idToOrderFallback;
               queryClient.setQueryData(
                 [PLAYLIST_ITEMS_QUERY_KEY, uuid],
                 (oldData: any) => {
