@@ -408,7 +408,47 @@ export const usePlaylistHandlers = ({
     const toastId = toast.loading(
       t("page.view_playlist.ordering_playlist_items"),
     );
+
+    const itemsSnapshot = queryClient.getQueryData([
+      PLAYLIST_ITEMS_QUERY_KEY,
+      uuid,
+    ]);
     try {
+      const idToOrder = new Map<number, number>(
+        requestPlaylistItems.map((o) => [o.id, o.order]),
+      );
+      queryClient.setQueryData(
+        [PLAYLIST_ITEMS_QUERY_KEY, uuid],
+        (oldData: any) => {
+          if (!oldData) return oldData;
+          return {
+            ...oldData,
+            pages: oldData.pages.map((page: any) => {
+              if (!page.data) return page;
+              return {
+                ...page,
+                data: {
+                  ...page.data,
+                  items: page.data.items.map((item: PlaylistItem) => {
+                    const newOrder = idToOrder.get(item.id);
+                    return newOrder !== undefined
+                      ? { ...item, order: newOrder }
+                      : item;
+                  }),
+                },
+              };
+            }),
+          };
+        },
+      );
+
+      toast.update(toastId, {
+        render: t("page.view_playlist.playlist_items_ordered_successfully"),
+        type: "success",
+        isLoading: false,
+        ...TOAST_DEFAULT_CONFIG,
+      });
+
       const response = await orderPlaylistMutation.mutateAsync({
         uuid: playlist!.uuid,
         values: {
@@ -416,14 +456,11 @@ export const usePlaylistHandlers = ({
         },
       });
 
-      if (response.success) {
-        toast.update(toastId, {
-          render: t("page.view_playlist.playlist_items_ordered_successfully"),
-          type: "success",
-          isLoading: false,
-          ...TOAST_DEFAULT_CONFIG,
-        });
-      } else {
+      if (!response.success) {
+        queryClient.setQueryData(
+          [PLAYLIST_ITEMS_QUERY_KEY, uuid],
+          itemsSnapshot as any,
+        );
         toast.update(toastId, {
           render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
             response.message
@@ -434,6 +471,10 @@ export const usePlaylistHandlers = ({
         });
       }
     } catch (_) {
+      queryClient.setQueryData(
+        [PLAYLIST_ITEMS_QUERY_KEY, uuid],
+        itemsSnapshot as any,
+      );
       toast.update(toastId, {
         render: `${t("page.view_playlist.error_ordering_playlist_items")}`,
         type: "error",
@@ -444,10 +485,10 @@ export const usePlaylistHandlers = ({
   };
 
   const handleOrderPlaylistBy = (type: SortType) => async () => {
-    const items = playlist?.items;
+    const sourceItems = items;
     let orderedItems;
-    if (type === "name") orderedItems = sortPlaylistItemsByName(items);
-    else orderedItems = sortPlaylistItemsByDate(items);
+    if (type === "name") orderedItems = sortPlaylistItemsByName(sourceItems);
+    else orderedItems = sortPlaylistItemsByDate(sourceItems);
 
     if (!orderedItems) {
       return;
@@ -457,12 +498,64 @@ export const usePlaylistHandlers = ({
       t("page.view_playlist.ordering_playlist_items"),
     );
     try {
-      const response = await orderPlaylistMutation.mutateAsync({
-        uuid: playlist!.uuid,
-        values: {
-          order: orderedItems,
+      const response = await orderPlaylistMutation.mutateAsync(
+        {
+          uuid: playlist!.uuid,
+          values: {
+            order: orderedItems,
+          },
         },
-      });
+        {
+          onSuccess: (data: any) => {
+            const serverItems = data?.data?.items as PlaylistItem[] | undefined;
+            const totalCount = data?.data?.totalCount as number | undefined;
+
+            if (serverItems && serverItems.length) {
+              queryClient.setQueryData([PLAYLIST_ITEMS_QUERY_KEY, uuid], {
+                pages: [
+                  {
+                    data: {
+                      items: serverItems,
+                      totalCount: totalCount ?? serverItems.length,
+                    },
+                  },
+                ],
+                pageParams: [0],
+              });
+            } else {
+              const idToOrder = new Map<number, number>(
+                orderedItems.map((o) => [o.id, o.order]),
+              );
+              queryClient.setQueryData(
+                [PLAYLIST_ITEMS_QUERY_KEY, uuid],
+                (oldData: any) => {
+                  if (!oldData) return oldData;
+                  return {
+                    ...oldData,
+                    pages: oldData.pages.map((page: any) => {
+                      if (!page.data) return page;
+                      return {
+                        ...page,
+                        data: {
+                          ...page.data,
+                          items: page.data.items.map((item: PlaylistItem) => {
+                            const newOrder = idToOrder.get(item.id);
+                            return newOrder !== undefined
+                              ? { ...item, order: newOrder }
+                              : item;
+                          }),
+                        },
+                      };
+                    }),
+                  };
+                },
+              );
+            }
+            // Refresh playlist entity data
+            queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
+          },
+        },
+      );
 
       if (response.success) {
         toast.update(toastId, {
