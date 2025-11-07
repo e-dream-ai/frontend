@@ -14,6 +14,7 @@ import {
 import { LuTurtle, LuRabbit } from "react-icons/lu";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import useAuth from "@/hooks/useAuth";
+import { usePlaybackStore } from "@/stores/playback.store";
 import { DEVICES } from "@/constants/devices.constants";
 import { useSocket } from "@/hooks/useSocket";
 import { useWebClient } from "@/hooks/useWebClient";
@@ -26,11 +27,19 @@ import {
 import { RemoteControlEvent } from "@/types/remote-control.types";
 import { useNavigate } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
+import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
+import { useWindowSize } from "@/hooks/useWindowSize";
+import { DEVICES_ON_PX } from "@/constants/devices.constants";
 
 export const PlayerTray: React.FC = () => {
   const { t } = useTranslation();
-  const { currentDream, isLoadingCurrentDream } = useAuth();
-  const { emit } = useSocket();
+  const { currentDream: authCurrentDream, isLoadingCurrentDream: authLoading } =
+    useAuth();
+  const currentDream =
+    usePlaybackStore((s) => s.currentDream) ?? authCurrentDream;
+  const isLoadingCurrentDream =
+    usePlaybackStore((s) => s.isLoadingCurrentDream) || authLoading;
+  const { emit, connectedDevicesCount, hasWebPlayer } = useSocket();
   const { isWebClientActive, handlers, isCreditOverlayVisible } =
     useWebClient();
   const {
@@ -39,6 +48,8 @@ export const PlayerTray: React.FC = () => {
   } = useDesktopClient();
   const { isReady: isVideoReady } = useVideoJs();
   const navigate = useNavigate();
+  const { width } = useWindowSize();
+  const isDesktop = (width ?? 0) >= DEVICES_ON_PX.TABLET;
 
   const [isHidden, setIsHidden] = useState<boolean>(false);
 
@@ -60,9 +71,11 @@ export const PlayerTray: React.FC = () => {
   const artist = currentDream?.user?.name ?? t("common.unknown_author");
   const thumbnail = currentDream?.thumbnail;
 
-  if (!isDesktopActive || isVideoReady) {
-    return null;
-  }
+  const shouldRender =
+    !isVideoReady &&
+    (isDesktopActive || ((connectedDevicesCount ?? 0) > 1 && !!hasWebPlayer));
+
+  if (!shouldRender) return null;
 
   if (isHidden) {
     return (
@@ -94,6 +107,9 @@ export const PlayerTray: React.FC = () => {
           ) : (
             <>
               <Artwork
+                key={`${currentDream?.id ?? ""}-${
+                  currentDream?.updated_at ?? ""
+                }`}
                 src={thumbnail}
                 alt={title}
                 onClick={navigateToRemoteControl}
@@ -124,39 +140,24 @@ export const PlayerTray: React.FC = () => {
               onDislike={() =>
                 sendMessage(REMOTE_CONTROLS.DISLIKE_CURRENT_DREAM.event)
               }
+              enableTooltips={isDesktop}
             />
-            <DontShowOnMobile>
-              <SideControls
-                isOn={
-                  isWebClientActive
-                    ? isCreditOverlayVisible
-                    : isDesktopActive
-                      ? isDesktopCreditVisible
-                      : isCreditOverlayVisible
-                }
-                onToggle={() => {
-                  sendMessage(REMOTE_CONTROLS.CREDIT.event);
-                }}
-                idSuffix="desktop"
-              />
-            </DontShowOnMobile>
           </CenterSection>
 
-          <DontShowOnDesktop>
-            <SideControls
-              isOn={
-                isWebClientActive
-                  ? isCreditOverlayVisible
-                  : isDesktopActive
-                    ? isDesktopCreditVisible
-                    : isCreditOverlayVisible
-              }
-              onToggle={() => {
-                sendMessage(REMOTE_CONTROLS.CREDIT.event);
-              }}
-              idSuffix="mobile"
-            />
-          </DontShowOnDesktop>
+          <SideControls
+            isOn={
+              isWebClientActive
+                ? isCreditOverlayVisible
+                : isDesktopActive
+                  ? isDesktopCreditVisible
+                  : isCreditOverlayVisible
+            }
+            onToggle={() => {
+              sendMessage(REMOTE_CONTROLS.CREDIT.event);
+            }}
+            idSuffix="mobile"
+            enableTooltips={isDesktop}
+          />
 
           <RightSection>
             <ColumnControls>
@@ -167,6 +168,7 @@ export const PlayerTray: React.FC = () => {
                 onFaster={() =>
                   sendMessage(REMOTE_CONTROLS.PLAYBACK_FASTER.event)
                 }
+                enableTooltips={isDesktop}
               />
             </ColumnControls>
           </RightSection>
@@ -181,6 +183,7 @@ export const PlayerTray: React.FC = () => {
         <Tooltip
           id="player-tray-hide"
           place="top"
+          delayShow={TOOLTIP_DELAY_MS}
           content={t("actions.hide")}
         />
       </Content>
@@ -194,6 +197,7 @@ interface PlayerControlsProps {
   onNext: () => void;
   onLike: () => void;
   onDislike: () => void;
+  enableTooltips?: boolean;
 }
 
 const PlayerControls: React.FC<PlayerControlsProps> = ({
@@ -202,52 +206,73 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
   onNext,
   onLike,
   onDislike,
+  enableTooltips,
 }) => (
   <ControlsGroup>
     <IconButton
       aria-label={t("actions.previous")}
       onClick={onPrevious}
-      data-tooltip-id="player-tray-previous"
+      data-tooltip-id={enableTooltips ? "player-tray-previous" : undefined}
     >
       <FaStepBackward size={24} />
     </IconButton>
-    <Tooltip
-      id="player-tray-previous"
-      place="top"
-      content={t("actions.previous")}
-    />
+    {enableTooltips && (
+      <Tooltip
+        id="player-tray-previous"
+        place="top"
+        delayShow={TOOLTIP_DELAY_MS}
+        content={t("actions.previous")}
+      />
+    )}
 
     <ColumnControls>
       <IconButton
         aria-label={t("actions.like")}
         onClick={onLike}
-        data-tooltip-id="player-tray-like"
+        data-tooltip-id={enableTooltips ? "player-tray-like" : undefined}
       >
         <FaThumbsUp size={24} />
       </IconButton>
-      <Tooltip id="player-tray-like" place="top" content={t("actions.like")} />
+      {enableTooltips && (
+        <Tooltip
+          id="player-tray-like"
+          place="top"
+          delayShow={TOOLTIP_DELAY_MS}
+          content={t("actions.like")}
+        />
+      )}
       <IconButton
         aria-label={t("actions.dislike")}
         onClick={onDislike}
-        data-tooltip-id="player-tray-dislike"
+        data-tooltip-id={enableTooltips ? "player-tray-dislike" : undefined}
       >
         <FaThumbsDown size={24} />
       </IconButton>
-      <Tooltip
-        id="player-tray-dislike"
-        place="top"
-        content={t("actions.dislike")}
-      />
+      {enableTooltips && (
+        <Tooltip
+          id="player-tray-dislike"
+          place="top"
+          delayShow={TOOLTIP_DELAY_MS}
+          content={t("actions.dislike")}
+        />
+      )}
     </ColumnControls>
 
     <IconButton
       aria-label={t("actions.next")}
       onClick={onNext}
-      data-tooltip-id="player-tray-next"
+      data-tooltip-id={enableTooltips ? "player-tray-next" : undefined}
     >
       <FaStepForward size={24} />
     </IconButton>
-    <Tooltip id="player-tray-next" place="top" content={t("actions.next")} />
+    {enableTooltips && (
+      <Tooltip
+        id="player-tray-next"
+        place="top"
+        delayShow={TOOLTIP_DELAY_MS}
+        content={t("actions.next")}
+      />
+    )}
   </ControlsGroup>
 );
 
@@ -255,12 +280,14 @@ interface SideControlsProps {
   isOn: boolean;
   onToggle: () => void;
   idSuffix?: string;
+  enableTooltips?: boolean;
 }
 
 const SideControls: React.FC<SideControlsProps> = ({
   isOn,
   onToggle,
   idSuffix,
+  enableTooltips,
 }) => {
   const { t } = useTranslation();
   const tooltipId = `player-tray-credit-${idSuffix ?? "default"}`;
@@ -270,7 +297,7 @@ const SideControls: React.FC<SideControlsProps> = ({
         aria-label={isOn ? t("actions.captions_off") : t("actions.captions_on")}
         aria-pressed={isOn}
         onClick={onToggle}
-        data-tooltip-id={tooltipId}
+        data-tooltip-id={enableTooltips ? tooltipId : undefined}
       >
         {isOn ? (
           <FaClosedCaptioning size={24} />
@@ -278,11 +305,14 @@ const SideControls: React.FC<SideControlsProps> = ({
           <FaRegClosedCaptioning size={24} />
         )}
       </IconButton>
-      <Tooltip
-        id={tooltipId}
-        place="top"
-        content={t("components.remote_control.credit")}
-      />
+      {enableTooltips && (
+        <Tooltip
+          id={tooltipId}
+          place="top"
+          delayShow={TOOLTIP_DELAY_MS}
+          content={t("components.remote_control.credit")}
+        />
+      )}
     </ColumnControls>
   );
 };
@@ -290,9 +320,14 @@ const SideControls: React.FC<SideControlsProps> = ({
 interface SpeedControlProps {
   onSlower: () => void;
   onFaster: () => void;
+  enableTooltips?: boolean;
 }
 
-const SpeedControl: React.FC<SpeedControlProps> = ({ onSlower, onFaster }) => {
+const SpeedControl: React.FC<SpeedControlProps> = ({
+  onSlower,
+  onFaster,
+  enableTooltips,
+}) => {
   const { t } = useTranslation();
   const handleSlower = () => {
     onSlower();
@@ -305,27 +340,33 @@ const SpeedControl: React.FC<SpeedControlProps> = ({ onSlower, onFaster }) => {
       <IconButton
         aria-label={t("components.remote_control.playback_slower")}
         onClick={handleSlower}
-        data-tooltip-id="player-tray-slower"
+        data-tooltip-id={enableTooltips ? "player-tray-slower" : undefined}
       >
         <LuTurtle size={30} />
       </IconButton>
-      <Tooltip
-        id="player-tray-slower"
-        place="top"
-        content={t("components.remote_control.playback_slower")}
-      />
+      {enableTooltips && (
+        <Tooltip
+          id="player-tray-slower"
+          place="top"
+          delayShow={TOOLTIP_DELAY_MS}
+          content={t("components.remote_control.playback_slower")}
+        />
+      )}
       <IconButton
         aria-label={t("components.remote_control.playback_faster")}
         onClick={handleFaster}
-        data-tooltip-id="player-tray-faster"
+        data-tooltip-id={enableTooltips ? "player-tray-faster" : undefined}
       >
         <LuRabbit size={30} />
       </IconButton>
-      <Tooltip
-        id="player-tray-faster"
-        place="top"
-        content={t("components.remote_control.playback_faster")}
-      />
+      {enableTooltips && (
+        <Tooltip
+          id="player-tray-faster"
+          place="top"
+          delayShow={TOOLTIP_DELAY_MS}
+          content={t("components.remote_control.playback_faster")}
+        />
+      )}
     </SpeedWrapper>
   );
 };
@@ -361,20 +402,22 @@ const LeftSection = styled.div`
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  flex: 1 1 320px;
   min-width: 0;
+  max-width: 50%;
+
+  @media (max-width: ${DEVICES.MOBILE_S}) {
+    max-width: 100%;
+  }
 `;
 
 const CenterSection = styled(Row)`
   justify-content: center;
   align-items: center;
   gap: 1rem;
-  flex: 1 1 320px;
   margin: 0;
   min-width: 0;
 
   @media (max-width: ${DEVICES.MOBILE_S}) {
-    flex: 0 0 auto;
     justify-content: flex-start;
   }
 `;
@@ -383,46 +426,26 @@ const RightSection = styled.div`
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  flex: 1 1 320px;
   min-width: 0;
 
   @media (max-width: 1036px) {
-    flex: 1 1 160px;
     justify-content: flex-start;
   }
 
   @media (max-width: 768px) {
-    flex: 0 0 auto;
     justify-content: flex-end;
   }
 `;
 
 const CenterRightRow = styled.div`
   display: flex;
-  flex: 2 1 640px;
-  gap: 1rem;
+  gap: 3.5em;
   min-width: 0;
   align-items: center;
-
-  @media (max-width: ${DEVICES.TABLET}) {
-    flex: 0 0 auto;
-  }
 
   @media (max-width: ${DEVICES.MOBILE_S}) {
     justify-content: space-between;
     width: 100%;
-  }
-`;
-
-const DontShowOnMobile = styled.div`
-  @media (max-width: ${DEVICES.TABLET}) {
-    display: none;
-  }
-`;
-
-const DontShowOnDesktop = styled.div`
-  @media (min-width: ${DEVICES.TABLET}) {
-    display: none;
   }
 `;
 

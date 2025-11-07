@@ -7,7 +7,7 @@ export const RemoteControlContainer = styled.div`
   justify-content: center;
   flex-direction: column;
   align-items: center;
-  gap: 0.8em;
+  gap: 2em;
   width: 100%;
 
   /* Responsive layout for smaller screens */
@@ -38,11 +38,12 @@ export const RemoteControlRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 3em;
+  gap: 5em;
+  width: 100%;
 
   @media (max-width: ${DEVICES.MOBILE_S}) {
-    flex-direction: column;
     gap: 0.5em;
+    justify-content: space-between;
   }
 `;
 
@@ -68,11 +69,24 @@ export const IconButton = styled.button`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s ease-in-out;
+  transition:
+    color 0.2s ease-in-out,
+    opacity 0.2s ease-in-out;
   color: rgb(252, 217, 183);
+  min-width: fit-content !important;
+  min-height: fit-content !important;
 
   :hover {
     color: rgb(0, 208, 219);
+  }
+
+  :disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+
+    :hover {
+      color: rgb(252, 217, 183);
+    }
   }
 `;
 
@@ -81,8 +95,11 @@ export const IconRow = styled.div`
   justify-content: center;
   align-items: center;
   gap: 1.2rem;
-  margin-bottom: 0.6rem;
   flex-wrap: wrap;
+
+  @media (max-width: ${DEVICES.MOBILE_S}) {
+    gap: 0.5em;
+  }
 `;
 
 export const IconGroup = styled.div`

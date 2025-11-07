@@ -7,6 +7,7 @@ import { RemoteControlEvent } from "@/types/remote-control.types";
 
 export interface ControlContainerMobileProps {
   onSend: (event: RemoteControlEvent) => () => void;
+  disabled?: boolean;
 }
 
 const ROW_1 = [REMOTE_CONTROLS.HELP, REMOTE_CONTROLS.STATUS];
@@ -26,6 +27,7 @@ const ROW_2 = [
 
 export const ControlContainerMobile: React.FC<ControlContainerMobileProps> = ({
   onSend,
+  disabled = false,
 }) => {
   const { t } = useTranslation();
 
@@ -39,6 +41,7 @@ export const ControlContainerMobile: React.FC<ControlContainerMobileProps> = ({
           fontSize="0.8rem"
           textTransform="none"
           onClick={onSend(control.event)}
+          disabled={disabled}
         >
           {control.key + " " + t(`components.remote_control.${control.event}`)}
         </Button>
@@ -52,6 +55,7 @@ export const ControlContainerMobile: React.FC<ControlContainerMobileProps> = ({
           fontSize="0.8rem"
           textTransform="none"
           onClick={onSend(control.event)}
+          disabled={disabled}
         >
           {control.key + " " + t(`components.remote_control.${control.event}`)}
         </Button>
@@ -63,6 +67,7 @@ export const ControlContainerMobile: React.FC<ControlContainerMobileProps> = ({
         fontSize="0.8rem"
         textTransform="none"
         onClick={onSend(REMOTE_CONTROLS.BRIGHTER.event)}
+        disabled={disabled}
       >
         {REMOTE_CONTROLS.BRIGHTER.key +
           " " +
@@ -74,6 +79,7 @@ export const ControlContainerMobile: React.FC<ControlContainerMobileProps> = ({
         fontSize="0.8rem"
         textTransform="none"
         onClick={onSend(REMOTE_CONTROLS.DARKER.event)}
+        disabled={disabled}
       >
         {REMOTE_CONTROLS.DARKER.key +
           " " +
@@ -85,6 +91,7 @@ export const ControlContainerMobile: React.FC<ControlContainerMobileProps> = ({
         fontSize="0.8rem"
         textTransform="none"
         onClick={onSend(REMOTE_CONTROLS.WEB.event)}
+        disabled={disabled}
       >
         {REMOTE_CONTROLS.WEB.key +
           " " +
@@ -97,6 +104,7 @@ export const ControlContainerMobile: React.FC<ControlContainerMobileProps> = ({
         fontSize="0.8rem"
         textTransform="none"
         onClick={onSend(REMOTE_CONTROLS.BACKWARD.event)}
+        disabled={disabled}
       >
         {REMOTE_CONTROLS.BACKWARD.key +
           " " +
@@ -108,6 +116,7 @@ export const ControlContainerMobile: React.FC<ControlContainerMobileProps> = ({
         fontSize="0.8rem"
         textTransform="none"
         onClick={onSend(REMOTE_CONTROLS.PAUSE_2.event)}
+        disabled={disabled}
       >
         {REMOTE_CONTROLS.PAUSE_2.key +
           " " +
@@ -119,6 +128,7 @@ export const ControlContainerMobile: React.FC<ControlContainerMobileProps> = ({
         fontSize="0.8rem"
         textTransform="none"
         onClick={onSend(REMOTE_CONTROLS.FORWARD.event)}
+        disabled={disabled}
       >
         {REMOTE_CONTROLS.FORWARD.key +
           " " +

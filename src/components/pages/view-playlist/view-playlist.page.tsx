@@ -50,6 +50,7 @@ import { FormTextArea } from "@/components/shared/text-area/text-area";
 import { formatPlaylistForm } from "@/utils/playlist.util";
 import { AnchorLink } from "@/components/shared";
 import { faClock, faListOl } from "@fortawesome/free-solid-svg-icons";
+import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { Loader } from "@/components/shared/loader/loader";
 import { useTheme } from "styled-components";
@@ -231,8 +232,6 @@ export const ViewPlaylistPage = () => {
 
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
-  const onShowClientNotConnectedModal = () =>
-    setShowClientNotConnectedModal(true);
   const onHideClientNotConnectedModal = () =>
     setShowClientNotConnectedModal(false);
 
@@ -301,7 +300,6 @@ export const ViewPlaylistPage = () => {
     setVideos,
     setIsUploadingFiles,
     onHideConfirmDeleteModal,
-    onShowClientNotConnectedModal,
     fetchNextPlaylistItemsPage,
     hasNextPlaylistItemsPage,
     fetchNextPlaylistKeyframesPage,
@@ -492,7 +490,8 @@ export const ViewPlaylistPage = () => {
                 >
                   <Tooltip
                     id="play-playlist"
-                    place="right-end"
+                    place="bottom"
+                    delayShow={TOOLTIP_DELAY_MS}
                     content={t("page.view_playlist.play_playlist")}
                   />
                   <PlaylistPlay width={"1.6em"} height={"1.6em"} />
@@ -508,9 +507,16 @@ export const ViewPlaylistPage = () => {
                       transparent
                       style={{ width: "3rem" }}
                       onClick={onShowConfirmDeleteModal}
+                      data-tooltip-id="playlist-delete"
                     >
                       <FontAwesomeIcon icon={faTrash} />
                     </Button>
+                    <Tooltip
+                      id="playlist-delete"
+                      place="bottom"
+                      delayShow={TOOLTIP_DELAY_MS}
+                      content={t("page.view_playlist.delete_playlist_tooltip")}
+                    />
                   </Restricted>
                 )}
               </Row>

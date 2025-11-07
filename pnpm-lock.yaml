@@ -58,6 +58,9 @@ importers:
       moment:
         specifier: ^2.29.4
         version: 2.29.4
+      mp4box:
+        specifier: ^2.1.2
+        version: 2.1.2
       react:
         specifier: ^18.2.0
         version: 18.2.0
@@ -69,7 +72,7 @@ importers:
         version: 18.2.0(react@18.2.0)
       react-drag-drop-files:
         specifier: ^2.3.10
-        version: 2.3.10(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
+        version: 2.3.10(@babel/core@7.23.6)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
       react-ga4:
         specifier: ^2.1.0
         version: 2.1.0
@@ -117,10 +120,10 @@ importers:
         version: 4.8.1
       styled-components:
         specifier: ^5.3.11
-        version: 5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
+        version: 5.3.11(@babel/core@7.23.6)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
       styled-react-modal:
         specifier: ^3.1.1
-        version: 3.1.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(styled-components@5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0))
+        version: 3.1.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(styled-components@5.3.11(@babel/core@7.23.6)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0))
       styled-system:
         specifier: ^5.1.5
         version: 5.1.5
@@ -133,6 +136,9 @@ importers:
       yup:
         specifier: ^1.3.3
         version: 1.3.3
+      zustand:
+        specifier: ^5.0.8
+        version: 5.0.8(@types/react@18.2.45)(react@18.2.0)(use-sync-external-store@1.2.0(react@18.2.0))
     devDependencies:
       "@types/node":
         specifier: ^24.7.2
@@ -4881,6 +4887,13 @@ packages:
         integrity: sha512-5LC9SOxjSc2HF6vO2CyuTDNivEdoz2IvyJJGj6X8DJ0eFyfszE0QiEd+iXmBvUP3WHxSjFH/vIsA0EN00cgr8w==,
       }
 
+  mp4box@2.1.2:
+    resolution:
+      {
+        integrity: sha512-QdkSSduB4ScH5xjg7/zVapbJzhBM2ttm+3BLRfbttDQieOPB33xpntjxEgSZzp3GVBjM+BIHtzkR4m5lnh9ufQ==,
+      }
+    engines: { node: ">=20.8.1" }
+
   mpd-parser@1.3.1:
     resolution:
       {
@@ -6830,6 +6843,27 @@ packages:
         integrity: sha512-v8QwZSsHH2K3/G9WSkp6mZKO+hugKT1EmnMqLNUcfu51HU9MDyhlETT/JgtzprnrnQHPWsjc6MUDMBp/l9fNnw==,
       }
 
+  zustand@5.0.8:
+    resolution:
+      {
+        integrity: sha512-gyPKpIaxY9XcO2vSMrLbiER7QMAMGOQZVRdJ6Zi782jkbzZygq5GI9nG8g+sMgitRtndwaBSl7uiqC49o1SSiw==,
+      }
+    engines: { node: ">=12.20.0" }
+    peerDependencies:
+      "@types/react": ">=18.0.0"
+      immer: ">=9.0.6"
+      react: ">=18.0.0"
+      use-sync-external-store: ">=1.2.0"
+    peerDependenciesMeta:
+      "@types/react":
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
+
 snapshots:
   "@aashutoshrathi/word-wrap@1.2.6": {}
 
@@ -7161,9 +7195,9 @@ snapshots:
       "@babel/core": 7.25.8
       "@babel/helper-plugin-utils": 7.27.1
 
-  "@babel/plugin-syntax-jsx@7.23.3(@babel/core@7.25.8)":
+  "@babel/plugin-syntax-jsx@7.23.3(@babel/core@7.23.6)":
     dependencies:
-      "@babel/core": 7.25.8
+      "@babel/core": 7.23.6
       "@babel/helper-plugin-utils": 7.22.5
 
   "@babel/plugin-syntax-unicode-sets-regex@7.18.6(@babel/core@7.25.8)":
@@ -8577,14 +8611,14 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  babel-plugin-styled-components@2.1.4(@babel/core@7.25.8)(styled-components@5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)):
+  babel-plugin-styled-components@2.1.4(@babel/core@7.23.6)(styled-components@5.3.11(@babel/core@7.23.6)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)):
     dependencies:
       "@babel/helper-annotate-as-pure": 7.22.5
       "@babel/helper-module-imports": 7.22.15
-      "@babel/plugin-syntax-jsx": 7.23.3(@babel/core@7.25.8)
+      "@babel/plugin-syntax-jsx": 7.23.3(@babel/core@7.23.6)
       lodash: 4.17.21
       picomatch: 2.3.1
-      styled-components: 5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
+      styled-components: 5.3.11(@babel/core@7.23.6)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
     transitivePeerDependencies:
       - "@babel/core"
 
@@ -10009,6 +10043,8 @@ snapshots:
 
   moment@2.29.4: {}
 
+  mp4box@2.1.2: {}
+
   mpd-parser@1.3.1:
     dependencies:
       "@babel/runtime": 7.28.4
@@ -10239,12 +10275,12 @@ snapshots:
       react: 18.2.0
       scheduler: 0.23.0
 
-  react-drag-drop-files@2.3.10(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0):
+  react-drag-drop-files@2.3.10(@babel/core@7.23.6)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0):
     dependencies:
       prop-types: 15.8.1
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      styled-components: 5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
+      styled-components: 5.3.11(@babel/core@7.23.6)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
     transitivePeerDependencies:
       - "@babel/core"
       - react-is
@@ -10769,14 +10805,14 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  styled-components@5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0):
+  styled-components@5.3.11(@babel/core@7.23.6)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0):
     dependencies:
       "@babel/helper-module-imports": 7.22.15
       "@babel/traverse": 7.23.6(supports-color@5.5.0)
       "@emotion/is-prop-valid": 1.2.1
       "@emotion/stylis": 0.8.5
       "@emotion/unitless": 0.7.5
-      babel-plugin-styled-components: 2.1.4(@babel/core@7.25.8)(styled-components@5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0))
+      babel-plugin-styled-components: 2.1.4(@babel/core@7.23.6)(styled-components@5.3.11(@babel/core@7.23.6)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0))
       css-to-react-native: 3.2.0
       hoist-non-react-statics: 3.3.2
       react: 18.2.0
@@ -10787,12 +10823,12 @@ snapshots:
     transitivePeerDependencies:
       - "@babel/core"
 
-  styled-react-modal@3.1.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(styled-components@5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)):
+  styled-react-modal@3.1.1(react-dom@18.2.0(react@18.2.0))(react@18.2.0)(styled-components@5.3.11(@babel/core@7.23.6)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)):
     dependencies:
       prop-types: 15.8.1
       react: 18.2.0
       react-dom: 18.2.0(react@18.2.0)
-      styled-components: 5.3.11(@babel/core@7.25.8)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
+      styled-components: 5.3.11(@babel/core@7.23.6)(react-dom@18.2.0(react@18.2.0))(react-is@18.3.1)(react@18.2.0)
 
   styled-system@5.1.5:
     dependencies:
@@ -11335,3 +11371,9 @@ snapshots:
       tiny-case: 1.0.3
       toposort: 2.0.2
       type-fest: 2.19.0
+
+  zustand@5.0.8(@types/react@18.2.45)(react@18.2.0)(use-sync-external-store@1.2.0(react@18.2.0)):
+    optionalDependencies:
+      "@types/react": 18.2.45
+      react: 18.2.0
+      use-sync-external-store: 1.2.0(react@18.2.0)

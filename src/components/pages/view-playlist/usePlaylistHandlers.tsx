@@ -21,7 +21,11 @@ import {
 import { useOrderPlaylist } from "@/api/playlist/mutation/useOrderPlaylist";
 import { useDeletePlaylistItem } from "@/api/playlist/mutation/useDeletePlaylistItem";
 import { useDeletePlaylistKeyframe } from "@/api/playlist/mutation/useDeletePlaylistKeyframe";
-import { Playlist, PlaylistItem } from "@/types/playlist.types";
+import {
+  Playlist,
+  PlaylistItem,
+  PlaylistKeyframe,
+} from "@/types/playlist.types";
 import { User } from "@/types/auth.types";
 import { useDeletePlaylist } from "@/api/playlist/mutation/useDeletePlaylist";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
@@ -31,13 +35,13 @@ import { FULL_CREATE_ROUTES, ROUTES } from "@/constants/routes.constants";
 import { FileState } from "@/constants/file.constants";
 import { getFileNameWithoutExtension } from "@/utils/file-uploader.util";
 import useSocket from "@/hooks/useSocket";
-import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { emitPlayPlaylist } from "@/utils/socket.util";
 import { createAddFileHandler } from "@/utils/file.util";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
 import { axiosClient } from "@/client/axios.client";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
+import { PAGINATION } from "@/constants/pagination.constants";
 
 type HookParams = {
   uuid?: string;
@@ -52,7 +56,6 @@ type HookParams = {
   setVideos: (value: SetStateAction<FileState[]>) => void;
   setIsUploadingFiles: (value: SetStateAction<boolean>) => void;
   onHideConfirmDeleteModal: () => void;
-  onShowClientNotConnectedModal: () => void;
   fetchNextPlaylistItemsPage: () => void;
   hasNextPlaylistItemsPage: boolean | undefined;
   fetchNextPlaylistKeyframesPage: () => void;
@@ -83,7 +86,6 @@ export const usePlaylistHandlers = ({
   setVideos,
   setIsUploadingFiles,
   onHideConfirmDeleteModal,
-  onShowClientNotConnectedModal,
   playlistItemsTotalCount,
   playlistKeyframesTotalCount,
   isJumpingToEnd,
@@ -93,7 +95,6 @@ export const usePlaylistHandlers = ({
 }: HookParams) => {
   const { t } = useTranslation();
   const { socket } = useSocket();
-  const { isActive: isClientActive } = useDesktopClient();
   const { user } = useAuth();
 
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
@@ -106,7 +107,7 @@ export const usePlaylistHandlers = ({
     isLoading: isLoadingThumbnailPlaylistMutation,
   } = useUpdateThumbnailPlaylist(playlist?.uuid);
 
-  const orderPlaylistMutation = useOrderPlaylist(uuid);
+  const orderPlaylistMutation = useOrderPlaylist(uuid, "optimistic");
 
   const { mutate: mutateDeletePlaylistItem } = useDeletePlaylistItem();
   const { mutate: mutateDeletePlaylistKeyframe } = useDeletePlaylistKeyframe();
@@ -189,17 +190,67 @@ export const usePlaylistHandlers = ({
       const toastId = toast.loading(
         t("page.view_playlist.deleting_playlist_item"),
       );
+
       mutateDeletePlaylistItem(
         { playlistUUID: playlist!.uuid, itemId },
         {
           onSuccess: (response) => {
             if (response.success) {
+              queryClient.setQueryData<{
+                pages: Array<{
+                  data?: { items: PlaylistItem[]; totalCount: number };
+                }>;
+                pageParams: unknown[];
+              }>([PLAYLIST_ITEMS_QUERY_KEY, uuid], (oldData) => {
+                if (!oldData) return oldData;
+
+                const allItems: PlaylistItem[] = [];
+                oldData.pages.forEach((page) => {
+                  if (page.data?.items) {
+                    allItems.push(...page.data.items);
+                  }
+                });
+
+                const remainingItems = allItems
+                  .filter((item) => item.id !== itemId)
+                  .sort((a, b) => a.order - b.order);
+
+                const reorderedItems = remainingItems.map((item, index) => ({
+                  ...item,
+                  order: index,
+                }));
+
+                const take = PAGINATION.TAKE;
+                const updatedPages = oldData.pages.map((page, pageIndex) => {
+                  if (!page.data) return page;
+
+                  // Calculate which items belong to this page
+                  const startIndex = pageIndex * take;
+                  const endIndex = startIndex + take;
+                  const pageItems = reorderedItems.slice(startIndex, endIndex);
+
+                  const newTotalCount =
+                    pageIndex === 0
+                      ? Math.max(0, (page.data.totalCount ?? 0) - 1)
+                      : page.data.totalCount;
+
+                  return {
+                    ...page,
+                    data: {
+                      items: pageItems,
+                      totalCount: newTotalCount,
+                    },
+                  };
+                });
+
+                return {
+                  ...oldData,
+                  pages: updatedPages,
+                };
+              });
+
               queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
-              queryClient.invalidateQueries([PLAYLIST_ITEMS_QUERY_KEY, uuid]);
-              queryClient.invalidateQueries([
-                PLAYLIST_KEYFRAMES_QUERY_KEY,
-                uuid,
-              ]);
+
               toast.update(toastId, {
                 render: t(
                   "page.view_playlist.playlist_item_deleted_successfully",
@@ -238,6 +289,7 @@ export const usePlaylistHandlers = ({
       const toastId = toast.loading(
         t("page.view_playlist.deleting_playlist_keyframe"),
       );
+
       mutateDeletePlaylistKeyframe(
         {
           playlistUUID: playlist!.uuid,
@@ -246,13 +298,65 @@ export const usePlaylistHandlers = ({
         {
           onSuccess: (response) => {
             if (response.success) {
-              // invalidates playlist query to bring new data without deleted keyframe
+              queryClient.setQueryData<{
+                pages: Array<{
+                  data?: { keyframes: PlaylistKeyframe[]; totalCount: number };
+                }>;
+                pageParams: unknown[];
+              }>([PLAYLIST_KEYFRAMES_QUERY_KEY, uuid], (oldData) => {
+                if (!oldData) return oldData;
+
+                const allKeyframes: PlaylistKeyframe[] = [];
+                oldData.pages.forEach((page) => {
+                  if (page.data?.keyframes) {
+                    allKeyframes.push(...page.data.keyframes);
+                  }
+                });
+
+                const remainingKeyframes = allKeyframes
+                  .filter((keyframe) => keyframe.id !== playlistKeyframeId)
+                  .sort((a, b) => a.order - b.order);
+
+                const reorderedKeyframes = remainingKeyframes.map(
+                  (keyframe, index) => ({
+                    ...keyframe,
+                    order: index,
+                  }),
+                );
+
+                const take = PAGINATION.TAKE;
+                const updatedPages = oldData.pages.map((page, pageIndex) => {
+                  if (!page.data) return page;
+
+                  const startIndex = pageIndex * take;
+                  const endIndex = startIndex + take;
+                  const pageKeyframes = reorderedKeyframes.slice(
+                    startIndex,
+                    endIndex,
+                  );
+
+                  const newTotalCount =
+                    pageIndex === 0
+                      ? Math.max(0, (page.data.totalCount ?? 0) - 1)
+                      : page.data.totalCount;
+
+                  return {
+                    ...page,
+                    data: {
+                      keyframes: pageKeyframes,
+                      totalCount: newTotalCount,
+                    },
+                  };
+                });
+
+                return {
+                  ...oldData,
+                  pages: updatedPages,
+                };
+              });
+
               queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
-              queryClient.invalidateQueries([PLAYLIST_ITEMS_QUERY_KEY, uuid]);
-              queryClient.invalidateQueries([
-                PLAYLIST_KEYFRAMES_QUERY_KEY,
-                uuid,
-              ]);
+
               toast.update(toastId, {
                 render: t(
                   "page.view_playlist.playlist_keyframe_deleted_successfully",
@@ -304,22 +408,25 @@ export const usePlaylistHandlers = ({
     const toastId = toast.loading(
       t("page.view_playlist.ordering_playlist_items"),
     );
+
     try {
+      // Mutation handles optimistic update and rollback
+      toast.update(toastId, {
+        render: t("page.view_playlist.playlist_items_ordered_successfully"),
+        type: "success",
+        isLoading: false,
+        ...TOAST_DEFAULT_CONFIG,
+      });
+
       const response = await orderPlaylistMutation.mutateAsync({
         uuid: playlist!.uuid,
         values: {
           order: requestPlaylistItems,
         },
+        mode: "optimistic",
       });
 
-      if (response.success) {
-        toast.update(toastId, {
-          render: t("page.view_playlist.playlist_items_ordered_successfully"),
-          type: "success",
-          isLoading: false,
-          ...TOAST_DEFAULT_CONFIG,
-        });
-      } else {
+      if (!response.success) {
         toast.update(toastId, {
           render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
             response.message
@@ -340,10 +447,10 @@ export const usePlaylistHandlers = ({
   };
 
   const handleOrderPlaylistBy = (type: SortType) => async () => {
-    const items = playlist?.items;
-    let orderedItems;
-    if (type === "name") orderedItems = sortPlaylistItemsByName(items);
-    else orderedItems = sortPlaylistItemsByDate(items);
+    const sourceItems = items;
+    let orderedItems: ItemOrder[] | undefined;
+    if (type === "name") orderedItems = sortPlaylistItemsByName(sourceItems);
+    else orderedItems = sortPlaylistItemsByDate(sourceItems);
 
     if (!orderedItems) {
       return;
@@ -353,11 +460,13 @@ export const usePlaylistHandlers = ({
       t("page.view_playlist.ordering_playlist_items"),
     );
     try {
+      // Mutation handles server-driven cache update
       const response = await orderPlaylistMutation.mutateAsync({
         uuid: playlist!.uuid,
         values: {
           order: orderedItems,
         },
+        mode: "server-driven",
       });
 
       if (response.success) {
@@ -461,15 +570,11 @@ export const usePlaylistHandlers = ({
   };
 
   const handlePlayPlaylist = () => {
-    if (isClientActive) {
-      emitPlayPlaylist(
-        socket,
-        playlist,
-        t("toasts.play_playlist", { name: playlist?.name }),
-      );
-    } else {
-      onShowClientNotConnectedModal();
-    }
+    emitPlayPlaylist(
+      socket,
+      playlist,
+      t("toasts.play_playlist", { name: playlist?.name }),
+    );
   };
 
   const handleNavigateAddToPlaylist = () => {
@@ -500,7 +605,6 @@ export const usePlaylistHandlers = ({
     setIsJumpingToEnd(true);
 
     try {
-      // Make a single API call to get ALL items
       const response = await axiosClient.get(`/v1/playlist/${uuid}/items`, {
         params: {
           take: playlistItemsTotalCount,
@@ -512,7 +616,6 @@ export const usePlaylistHandlers = ({
       });
 
       if (response.data.success) {
-        // Replace the query cache with all items in a single page
         queryClient.setQueryData([PLAYLIST_ITEMS_QUERY_KEY, uuid], {
           pages: [
             {

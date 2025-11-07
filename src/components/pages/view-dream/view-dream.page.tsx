@@ -15,7 +15,13 @@ import Text from "@/components/shared/text/text";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useParams } from "react-router-dom";
@@ -43,7 +49,6 @@ import { Video } from "./view-dream.styled";
 import { isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import useSocket from "@/hooks/useSocket";
-import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { emitPlayDream } from "@/utils/socket.util";
 import { truncateString } from "@/utils/string.util";
 import { AnchorLink } from "@/components/shared";
@@ -60,10 +65,33 @@ import { NotFound } from "@/components/shared/not-found/not-found";
 import { formatDreamForm, formatDreamRequest } from "@/utils/dream.util";
 import { ReportDreamModal } from "@/components/modals/report-dream.modal";
 import { useUpdateReport } from "@/api/report/mutation/useUpdateReport";
+import { Tooltip } from "react-tooltip";
+import {
+  TOAST_DEFAULT_CONFIG,
+  TOOLTIP_DELAY_MS,
+} from "@/constants/toast.constants";
+import { useDeletePlaylistItem } from "@/api/playlist/mutation/useDeletePlaylistItem";
+import { PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
+import PermissionContext from "@/context/permission.context";
+import { Dream } from "@/types/dream.types";
+import { ApiResponse } from "@/types/api.types";
 
 type Params = { uuid: string };
 
 const SectionID = "dream";
+
+const updateToast = (
+  toastId: React.ReactText,
+  type: "success" | "error",
+  message: string,
+) => {
+  toast.update(toastId, {
+    render: message,
+    type,
+    isLoading: false,
+    ...TOAST_DEFAULT_CONFIG,
+  });
+};
 
 const ViewDreamPage: React.FC = () => {
   const { t } = useTranslation();
@@ -85,6 +113,9 @@ const ViewDreamPage: React.FC = () => {
     useState<boolean>(false);
   const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
     useState<boolean>(false);
+  const [removingPlaylistItemId, setRemovingPlaylistItemId] = useState<
+    number | null
+  >(null);
 
   const upvoteMutation = useUpvoteDream(uuid);
   const downvoteMutation = useDownvoteDream(uuid);
@@ -104,7 +135,6 @@ const ViewDreamPage: React.FC = () => {
   });
 
   const { socket } = useSocket();
-  const { isActive: isClientActive } = useDesktopClient();
   const dream = useMemo(() => data?.data?.dream, [data]);
   const vote = useMemo(() => voteData?.data?.vote, [voteData]);
   const playlistItems = useMemo(() => dream?.playlistItems, [dream]);
@@ -136,12 +166,15 @@ const ViewDreamPage: React.FC = () => {
   const uploadDreamVideoMutation = useUploadDreamVideo({
     navigateToDream: false,
   });
+  const { mutate: mutateDeletePlaylistItem } = useDeletePlaylistItem();
   const {
     mutate: mutateThumbnailDream,
     isLoading: isLoadingThumbnailDreamMutation,
   } = useUpdateThumbnailDream(uuid);
   const { mutate: mutateDeleteDream, isLoading: isLoadingDeleteDreamMutation } =
     useDeleteDream(uuid);
+
+  const { isAllowedTo } = useContext(PermissionContext);
 
   const isLoading =
     isLoadingDreamMutation ||
@@ -237,6 +270,70 @@ const ViewDreamPage: React.FC = () => {
     });
   };
 
+  const handleRemoveDreamFromPlaylist = useCallback(
+    (playlistItemId: number, playlistUUID?: string) =>
+      (event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!playlistUUID || removingPlaylistItemId === playlistItemId) return;
+
+        const toastId = toast.loading(
+          t("page.view_dream.removing_dream_from_playlist"),
+        );
+        setRemovingPlaylistItemId(playlistItemId);
+        mutateDeletePlaylistItem(
+          { playlistUUID, itemId: playlistItemId },
+          {
+            onSuccess: (response) => {
+              if (!response.success) {
+                const message =
+                  response.message ??
+                  t("page.view_dream.error_removing_dream_from_playlist");
+                updateToast(toastId, "error", message);
+                return;
+              }
+              queryClient.setQueryData<ApiResponse<{ dream: Dream }>>(
+                [DREAM_QUERY_KEY, uuid],
+                (oldData) => {
+                  if (!oldData?.data?.dream) return oldData;
+                  const newPlaylistItems =
+                    oldData.data.dream.playlistItems?.filter(
+                      (item) => item.id !== playlistItemId,
+                    ) ?? [];
+                  return {
+                    ...oldData,
+                    data: {
+                      ...oldData.data,
+                      dream: {
+                        ...oldData.data.dream,
+                        playlistItems: newPlaylistItems,
+                      },
+                    },
+                  };
+                },
+              );
+              updateToast(
+                toastId,
+                "success",
+                t("page.view_dream.dream_removed_from_playlist"),
+              );
+            },
+            onError: () =>
+              updateToast(
+                toastId,
+                "error",
+                t("page.view_dream.error_removing_dream_from_playlist"),
+              ),
+            onSettled: () =>
+              setRemovingPlaylistItemId((currentId) =>
+                currentId === playlistItemId ? null : currentId,
+              ),
+          },
+        );
+      },
+    [mutateDeletePlaylistItem, removingPlaylistItemId, t, uuid],
+  );
+
   const onSubmit = (data: UpdateDreamFormValues) => {
     handleMutateVideoDream(data);
   };
@@ -266,8 +363,6 @@ const ViewDreamPage: React.FC = () => {
     setShowProcessDreamReportModal(true);
   const onHideProcessDreamReportModal = () =>
     setShowProcessDreamReportModal(false);
-  const onShowClientNotConnectedModal = () =>
-    setShowClientNotConnectedModal(true);
   const onHideClientNotConnectedModal = () =>
     setShowClientNotConnectedModal(false);
 
@@ -345,15 +440,7 @@ const ViewDreamPage: React.FC = () => {
   };
 
   const handlePlayDream = () => {
-    if (isClientActive) {
-      emitPlayDream(
-        socket,
-        dream,
-        t("toasts.play_dream", { name: dream?.name }),
-      );
-    } else {
-      onShowClientNotConnectedModal();
-    }
+    emitPlayDream(socket, dream, t("toasts.play_dream", { name: dream?.name }));
   };
 
   const handleThumbsUpDream = async () => {
@@ -565,15 +652,23 @@ const ViewDreamPage: React.FC = () => {
                     transparent
                     style={{ width: "3rem" }}
                     onClick={handlePlayDream}
+                    data-tooltip-id="dream-play"
                   >
                     <FontAwesomeIcon icon={faPlay} />
                   </Button>
+                  <Tooltip
+                    id="dream-play"
+                    place="bottom"
+                    delayShow={TOOLTIP_DELAY_MS}
+                    content={t("page.view_dream.play_dream_tooltip")}
+                  />
                   <Button
                     type="button"
                     buttonType="default"
                     transparent
                     style={{ width: "3rem" }}
                     onClick={handleThumbsUpDream}
+                    data-tooltip-id="dream-like"
                   >
                     {vote?.vote === VoteType.UPVOTE ? (
                       <span className="fa-stack fa-sm">
@@ -588,12 +683,19 @@ const ViewDreamPage: React.FC = () => {
                       <FontAwesomeIcon icon={faThumbsUp} />
                     )}
                   </Button>
+                  <Tooltip
+                    id="dream-like"
+                    place="bottom"
+                    delayShow={TOOLTIP_DELAY_MS}
+                    content={t("actions.like")}
+                  />
                   <Button
                     type="button"
                     buttonType="default"
                     transparent
                     style={{ width: "3rem" }}
                     onClick={handleThumbsDownDream}
+                    data-tooltip-id="dream-dislike"
                   >
                     {vote?.vote === VoteType.DOWNVOTE ? (
                       <span className="fa-stack fa-sm">
@@ -608,6 +710,12 @@ const ViewDreamPage: React.FC = () => {
                       <FontAwesomeIcon icon={faThumbsDown} />
                     )}
                   </Button>
+                  <Tooltip
+                    id="dream-dislike"
+                    place="bottom"
+                    delayShow={TOOLTIP_DELAY_MS}
+                    content={t("actions.dislike")}
+                  />
 
                   <Button
                     type="button"
@@ -615,6 +723,7 @@ const ViewDreamPage: React.FC = () => {
                     transparent
                     style={{ width: "3rem" }}
                     onClick={handleFlagButton}
+                    data-tooltip-id="dream-flag"
                   >
                     {isDreamReported ? (
                       <span className="fa-stack fa-sm">
@@ -629,6 +738,12 @@ const ViewDreamPage: React.FC = () => {
                       <FontAwesomeIcon icon={faFlag} />
                     )}
                   </Button>
+                  <Tooltip
+                    id="dream-flag"
+                    place="bottom"
+                    delayShow={TOOLTIP_DELAY_MS}
+                    content={t("components.remote_control.report")}
+                  />
 
                   <Restricted
                     to={DREAM_PERMISSIONS.CAN_DELETE_DREAM}
@@ -640,9 +755,16 @@ const ViewDreamPage: React.FC = () => {
                       transparent
                       style={{ width: "3rem" }}
                       onClick={onShowConfirmDeleteModal}
+                      data-tooltip-id="dream-delete"
                     >
                       <FontAwesomeIcon icon={faTrash} />
                     </Button>
+                    <Tooltip
+                      id="dream-delete"
+                      place="bottom"
+                      delayShow={TOOLTIP_DELAY_MS}
+                      content={t("page.view_dream.delete_dream_tooltip")}
+                    />
                   </Restricted>
                 </Row>
               )}
@@ -762,15 +884,59 @@ const ViewDreamPage: React.FC = () => {
                   </Row>
                   <Row flex="auto">
                     <ItemCardList>
-                      {playlistItems?.map((pi) => (
-                        <ItemCard
-                          key={pi.id}
-                          type="playlist"
-                          item={pi.playlist}
-                          inline
-                          size="sm"
-                        />
-                      ))}
+                      {playlistItems?.map((pi) => {
+                        const playlistUUID = pi.playlist?.uuid;
+                        const playlistOwnerId = pi.playlist?.user?.id;
+                        const isPlaylistOwner = Boolean(
+                          playlistOwnerId && user?.id === playlistOwnerId,
+                        );
+                        const canRemoveFromPlaylist =
+                          Boolean(playlistUUID) &&
+                          isAllowedTo({
+                            permission:
+                              PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST,
+                            isOwner: isPlaylistOwner,
+                          });
+
+                        const tooltipId = canRemoveFromPlaylist
+                          ? `remove-dream-from-playlist-${pi.id}`
+                          : undefined;
+
+                        return (
+                          <React.Fragment key={pi.id}>
+                            <ItemCard
+                              type="playlist"
+                              item={pi.playlist}
+                              inline
+                              size="sm"
+                              onDelete={
+                                canRemoveFromPlaylist
+                                  ? (e: React.MouseEvent) =>
+                                      handleRemoveDreamFromPlaylist(
+                                        pi.id,
+                                        playlistUUID,
+                                      )(e)
+                                  : undefined
+                              }
+                              deleteDisabled={
+                                !canRemoveFromPlaylist ||
+                                removingPlaylistItemId === pi.id
+                              }
+                              deleteTooltipId={tooltipId}
+                            />
+                            {tooltipId && (
+                              <Tooltip
+                                id={tooltipId}
+                                place="top"
+                                delayShow={TOOLTIP_DELAY_MS}
+                                content={t(
+                                  "page.view_dream.remove_dream_from_playlist_tooltip",
+                                )}
+                              />
+                            )}
+                          </React.Fragment>
+                        );
+                      })}
                     </ItemCardList>
                   </Row>
                 </React.Fragment>

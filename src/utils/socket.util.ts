@@ -51,24 +51,10 @@ export const onNewRemoteControlEvent =
       return;
     }
 
-    const key = event?.key;
-
     /**
      * PLAY_DREAM event doesn't need to be notificated on frontend
      * */
     if (event.event === REMOTE_CONTROLS.PLAY_DREAM.event) {
-      return;
-    }
-
-    if (
-      event.event === REMOTE_CONTROLS.PLAYING.event ||
-      event.event === REMOTE_CONTROLS.PLAY_PLAYLIST.event
-    ) {
-      toast.info(
-        t(REMOTE_CONTROLS_TRANSLATIONS[event?.event], {
-          name: data?.name ?? data?.uuid,
-        }),
-      );
       return;
     }
 
@@ -85,10 +71,4 @@ export const onNewRemoteControlEvent =
       );
       return;
     }
-
-    toast.info(
-      `${t("components.remote_control.event")}: ${key ? `${key}` : ""} ${t(
-        REMOTE_CONTROLS_TRANSLATIONS[event?.event],
-      )}`,
-    );
   };

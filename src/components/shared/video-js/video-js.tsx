@@ -1,32 +1,26 @@
 import { useVideoJs } from "@/hooks/useVideoJS";
 import { FC, memo, useEffect, useRef } from "react";
-import { Row, Column, Text } from "@/components/shared";
+import { Row, Column, Text, Button } from "@/components/shared";
 import { PlayerWrapper, VideoContainer, VideoWrapper } from "./video-js.styled";
 import { PoolConfig, VIDEOJS_OPTIONS } from "@/constants/video-js.constants";
 import { useWebClient } from "@/hooks/useWebClient";
 import "video.js/dist/video-js.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
-type VideoJSProps = {
-  //
-};
+type VideoJSProps = {};
 
-/**
- * Renders and manages multiple video.js player instances.
- * It works with the VideoJS Context to create a pool of video players, where each player is used to have smooth video transitions.
- */
 export const VideoJS: FC<VideoJSProps> = () => {
   const { players, videoWrapperRef, activePlayer, createPlayer, clearPlayers } =
     useVideoJs();
-  const { isWebClientActive } = useWebClient();
+  const { isWebClientActive, setWebClientActive } = useWebClient();
 
   useEffect(() => {
-    // creates min initial player slots
     for (let i = 0; i < PoolConfig.minPlayers; i++) {
       createPlayer();
     }
 
     return () => {
-      // cleanup player instances
       clearPlayers();
     };
   }, [createPlayer, clearPlayers]);
@@ -34,11 +28,21 @@ export const VideoJS: FC<VideoJSProps> = () => {
   return (
     <Row style={{ display: isWebClientActive ? "flex" : "none" }}>
       <Column flex="auto">
-        <Row>
-          <Text mb="1rem" fontSize="1rem" fontWeight={600}>
+        <Row justifyContent="space-between" alignItems={"center"} mb="1rem">
+          <Text fontSize="1rem" fontWeight={600}>
             Web Player
           </Text>
+          <Button
+            type="button"
+            buttonType="danger"
+            size="md"
+            transparent
+            onClick={() => setWebClientActive(false)}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+          </Button>
         </Row>
+
         <VideoWrapper ref={videoWrapperRef}>
           {players.map(({ id, skipCrossfade, longTransition }) => (
             <PlayerSlot
@@ -55,10 +59,6 @@ export const VideoJS: FC<VideoJSProps> = () => {
   );
 };
 
-/**
- * Renders the video player element that contains videoRef to create videojs instance
- * Using `memo` helps avoid unnecesary rerenders, still rendering when parent does it
- */
 const PlayerSlot = memo(
   ({
     id,
@@ -97,6 +97,8 @@ const PlayerSlot = memo(
               isActive ? "active" : "inactive"
             }`}
             data-player-id={id}
+            playsInline
+            webkit-playsinline="true"
             muted
           />
         </PlayerWrapper>
