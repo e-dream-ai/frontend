@@ -61,7 +61,7 @@ export const FeedPage: React.FC = () => {
    * Debounce search value after keyboard press
    * Default - 500
    */
-  const debouncedSearch = useDebounce(searchValue, 1000);
+  const debouncedSearch = useDebounce(searchValue, 500);
 
   const {
     data: feedData,
