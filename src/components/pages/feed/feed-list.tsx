@@ -11,6 +11,7 @@ type FeedListProps = {
   feed?: FeedItem[];
   title?: string;
   virtualPlaylists: VirtualPlaylist[];
+  showTitle?: boolean;
 };
 
 type ProcessedItem = {
@@ -24,6 +25,7 @@ export const FeedList: React.FC<FeedListProps> = ({
   feed = [],
   title,
   virtualPlaylists,
+  showTitle = true,
 }) => {
   const { t } = useTranslation();
   const listTitle = useMemo(() => title ?? t("page.feed.feed"), [t, title]);
@@ -114,9 +116,11 @@ export const FeedList: React.FC<FeedListProps> = ({
 
   return (
     <>
-      <Row separator pb="1rem" mb="1rem">
-        {listTitle}
-      </Row>
+      {showTitle && (
+        <Row separator pb="1rem" mb="1rem">
+          {listTitle}
+        </Row>
+      )}
       <ItemCardList grid columns={3}>
         {allItems.map((itemData) => (
           <ItemCard

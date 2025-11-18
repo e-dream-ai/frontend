@@ -11,15 +11,17 @@ export const RANKED_FEED_QUERY_KEY = "getRankedFeed";
 type QueryFunctionParams = {
   take: number;
   skip: number;
+  search?: string;
 };
 
-const getRankedFeed = ({ take, skip }: QueryFunctionParams) => {
+const getRankedFeed = ({ take, skip, search }: QueryFunctionParams) => {
   return async () =>
     axiosClient
       .get(`/v1/feed/ranked`, {
         params: {
           take,
           skip,
+          ...(search?.trim() && { search: search.trim() }),
         },
         headers: getRequestHeaders({
           contentType: ContentType.json,
@@ -28,15 +30,20 @@ const getRankedFeed = ({ take, skip }: QueryFunctionParams) => {
       .then((res) => res.data);
 };
 
-export const useRankedFeed = () => {
+type UseRankedFeedParams = {
+  search?: string;
+};
+
+export const useRankedFeed = ({ search }: UseRankedFeedParams = {}) => {
   const take = PAGINATION.TAKE;
   const { user } = useAuth();
   return useInfiniteQuery<
     ApiResponse<{ feed: FeedItem[]; count: number }>,
     Error
   >(
-    [RANKED_FEED_QUERY_KEY],
-    ({ pageParam = 0 }) => getRankedFeed({ take, skip: pageParam * take })(),
+    [RANKED_FEED_QUERY_KEY, search],
+    ({ pageParam = 0 }) =>
+      getRankedFeed({ take, skip: pageParam * take, search })(),
     {
       enabled: Boolean(user),
       getNextPageParam: (lastPage, allPages) => {

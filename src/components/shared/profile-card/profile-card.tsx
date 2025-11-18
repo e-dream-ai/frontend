@@ -9,7 +9,6 @@ import useAuth from "@/hooks/useAuth";
 import { useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import Linkify from "react-linkify";
 import { toast } from "react-toastify";
 import ProfileSchema, {
   ProfileFormRequest,
@@ -18,7 +17,6 @@ import ProfileSchema, {
 import { useTheme } from "styled-components";
 import { User } from "@/types/auth.types";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
-import Anchor from "../anchor/anchor";
 import { AvatarUploader } from "../avatar-uploader/avatar-uploader";
 import { Button } from "../button/button";
 import Input from "../input/input";
@@ -30,8 +28,10 @@ import { Avatar } from "@/components/shared/avatar/avatar";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAlignJustify,
+  faCalendar,
+  faEnvelope,
   faHardDrive,
-  faMailBulk,
+  faKey,
   faPencil,
   faSave,
   faShield,
@@ -49,6 +49,8 @@ import { useImage } from "@/hooks/useImage";
 import { NSFW, getNsfwOptions } from "@/constants/select.constants";
 import usePermission from "@/hooks/usePermission";
 import { formatDateToYYYYMMDD } from "@/utils/date.util";
+import { FORMAT } from "@/constants/moment.constants";
+import moment from "moment";
 import {
   ENABLE_MARKETING_EMAILS,
   filterMarketingEmailOption,
@@ -95,6 +97,12 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
     router.navigate(path);
   };
 
+  const nsfwOption = filterNsfwOption(user?.nsfw, t);
+  const marketingEmailsOption = filterMarketingEmailOption(
+    user?.enableMarketingEmails,
+    t,
+  );
+
   return (
     <Row flexWrap="wrap">
       <Column flex={["0 0 100%", "0 0 50%"]} alignItems="center">
@@ -110,71 +118,99 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
         </Button>
       </Column>
 
-      <Column flex={["0 0 100%", "0 0 50%"]}>
-        <Text mb={2} fontSize="1.2rem" color={theme.textPrimaryColor}>
-          {getUserName(user) ?? "-"}
-        </Text>
+      <Column flex={["0 0 100%", "0 0 50%"]} mt={["3rem", 0, 0]}>
+        <Input
+          disabled
+          placeholder={t("components.profile_card.name")}
+          type="text"
+          before={<FontAwesomeIcon icon={faUser} />}
+          value={getUserName(user) ?? "-"}
+          name="profile-name"
+        />
 
-        <Row my={1}>{t("components.profile_card.role")}</Row>
-        <Text mb={2} fontSize="1rem" color={theme.textSecondaryColor}>
-          {t(ROLES_NAMES[user?.role?.name ?? ""]) ?? "-"}
-        </Text>
+        <Select
+          isDisabled
+          placeholder={t("components.profile_card.role")}
+          before={<FontAwesomeIcon icon={faKey} />}
+          value={
+            user?.role
+              ? {
+                  label: t(ROLES_NAMES[user.role.name ?? ""]) ?? "-",
+                  value: user.role.id,
+                }
+              : undefined
+          }
+          name="profile-role"
+        />
 
-        <Row my={1}>{t("components.profile_card.description")}</Row>
-        <Row>
-          <Text
-            fontSize="1rem"
-            fontStyle="italic"
-            color={theme.textSecondaryColor}
-          >
-            <Linkify
-              componentDecorator={(decoratedHref, decoratedText, key) => (
-                <Anchor
-                  target="_blank"
-                  type="secondary"
-                  href={decoratedHref}
-                  key={key}
-                >
-                  {decoratedText}
-                </Anchor>
-              )}
-            >
-              {user?.description ?? t("components.profile_card.no_description")}
-            </Linkify>
-          </Text>
-        </Row>
+        <TextArea
+          linkify
+          disabled
+          placeholder={t("components.profile_card.description")}
+          before={<FontAwesomeIcon icon={faAlignJustify} />}
+          value={
+            user?.description ?? t("components.profile_card.no_description")
+          }
+          name="profile-description"
+        />
 
         <Restricted to={PROFILE_PERMISSIONS.CAN_VIEW_QUOTA}>
-          <Row my={1}>{t("components.profile_card.quota")}</Row>
-          <Text mb={2} fontSize="1rem" color={theme.textSecondaryColor}>
-            {user?.quota
-              ? `${toFixedNumber(bytesToGB(user.quota), 2)} ${t("units.gb")}`
-              : "-"}
-          </Text>
+          <Input
+            disabled
+            placeholder={t("components.profile_card.quota")}
+            type="text"
+            before={<FontAwesomeIcon icon={faHardDrive} />}
+            value={
+              user?.quota
+                ? `${toFixedNumber(bytesToGB(user.quota), 2)} ${t("units.gb")}`
+                : "-"
+            }
+            name="profile-quota"
+          />
         </Restricted>
 
         {allowedViewRestrictedInfo && (
           <>
-            <Row my={1}>{t("components.profile_card.email")}</Row>
-            <Row>
-              <Text fontSize="1rem" color={theme.textSecondaryColor}>
-                {getUserEmail(user) ?? "-"}
-              </Text>
-            </Row>
-            <Row my={1}>{t("components.profile_card.signup_code")}</Row>
-            <Row>
-              <Text fontSize="1rem" color={theme.textSecondaryColor}>
-                {user?.signupInvite?.code ?? "-"}
-              </Text>
-            </Row>
-            <Row my={1}>{t("components.profile_card.last_login")}</Row>
-            <Row>
-              <Text fontSize="1rem" color={theme.textSecondaryColor}>
-                {user?.last_login_at
-                  ? formatDateToYYYYMMDD(new Date(user?.last_login_at))
-                  : "-"}
-              </Text>
-            </Row>
+            <Input
+              disabled
+              placeholder={t("components.profile_card.email")}
+              type="text"
+              before={<span>@</span>}
+              value={getUserEmail(user) ?? "-"}
+              name="profile-email"
+            />
+
+            <Input
+              disabled
+              placeholder={t("components.profile_card.signup_code")}
+              type="text"
+              value={user?.signupInvite?.code ?? "-"}
+              name="profile-signup-code"
+            />
+
+            <Input
+              disabled
+              placeholder={t("components.profile_card.created_at")}
+              type="text"
+              before={<FontAwesomeIcon icon={faCalendar} />}
+              value={
+                user?.created_at ? moment(user.created_at).format(FORMAT) : "-"
+              }
+              name="profile-created-at"
+            />
+
+            <Input
+              disabled
+              placeholder={t("components.profile_card.last_login")}
+              type="text"
+              before={<FontAwesomeIcon icon={faCalendar} />}
+              value={
+                user?.last_login_at
+                  ? formatDateToYYYYMMDD(new Date(user.last_login_at))
+                  : "-"
+              }
+              name="profile-last-login"
+            />
 
             <Row my={3}>
               <Text
@@ -186,21 +222,21 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
               </Text>
             </Row>
 
-            <Row my={1}>{t("components.profile_card.nsfw")}</Row>
-            <Row>
-              <Text fontSize="1rem" mb={2} color={theme.textSecondaryColor}>
-                {user?.nsfw ? t("user.nsfw.nsfw") : t("user.nsfw.sfw")}
-              </Text>
-            </Row>
+            <Select
+              isDisabled
+              placeholder={t("components.profile_card.nsfw_tooltip")}
+              before={<FontAwesomeIcon icon={faShield} />}
+              value={nsfwOption}
+              name="profile-nsfw"
+            />
 
-            <Row my={1}>{t("components.profile_card.marketing_emails")}</Row>
-            <Row>
-              <Text fontSize="1rem" mb={2} color={theme.textSecondaryColor}>
-                {user?.enableMarketingEmails
-                  ? t("user.marketing_emails.active")
-                  : t("user.marketing_emails.inactive")}
-              </Text>
-            </Row>
+            <Select
+              isDisabled
+              placeholder={t("components.profile_card.marketing_emails")}
+              before={<FontAwesomeIcon icon={faEnvelope} />}
+              value={marketingEmailsOption}
+              name="profile-marketing-emails"
+            />
           </>
         )}
       </Column>
@@ -400,7 +436,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
                   {...field}
                   placeholder={t("components.profile_card.role")}
                   isLoading={isRolesLoading}
-                  before={<FontAwesomeIcon icon={faUser} />}
+                  before={<FontAwesomeIcon icon={faKey} />}
                   options={rolesOptions}
                   onInputChange={(newValue) => setRoleSearch(newValue)}
                 />
@@ -441,7 +477,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
             render={({ field }) => (
               <Select
                 {...field}
-                placeholder={t("components.profile_card.nsfw")}
+                placeholder={t("components.profile_card.nsfw_tooltip")}
                 before={<FontAwesomeIcon icon={faShield} />}
                 options={getNsfwOptions(t)}
               />
@@ -455,7 +491,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
               <Select
                 {...field}
                 placeholder={t("components.profile_card.marketing_emails")}
-                before={<FontAwesomeIcon icon={faMailBulk} />}
+                before={<FontAwesomeIcon icon={faEnvelope} />}
                 options={getEnableMarketingEmailsOptions(t)}
               />
             )}
