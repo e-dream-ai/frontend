@@ -31,7 +31,7 @@ import {
   faCalendar,
   faEnvelope,
   faHardDrive,
-  faMailBulk,
+  faKey,
   faPencil,
   faSave,
   faShield,
@@ -123,6 +123,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
           disabled
           placeholder={t("components.profile_card.name")}
           type="text"
+          before={<FontAwesomeIcon icon={faUser} />}
           value={getUserName(user) ?? "-"}
           name="profile-name"
         />
@@ -130,6 +131,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
         <Select
           isDisabled
           placeholder={t("components.profile_card.role")}
+          before={<FontAwesomeIcon icon={faKey} />}
           value={
             user?.role
               ? {
@@ -434,7 +436,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
                   {...field}
                   placeholder={t("components.profile_card.role")}
                   isLoading={isRolesLoading}
-                  before={<FontAwesomeIcon icon={faUser} />}
+                  before={<FontAwesomeIcon icon={faKey} />}
                   options={rolesOptions}
                   onInputChange={(newValue) => setRoleSearch(newValue)}
                 />
@@ -489,7 +491,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
               <Select
                 {...field}
                 placeholder={t("components.profile_card.marketing_emails")}
-                before={<FontAwesomeIcon icon={faMailBulk} />}
+                before={<FontAwesomeIcon icon={faEnvelope} />}
                 options={getEnableMarketingEmailsOptions(t)}
               />
             )}
