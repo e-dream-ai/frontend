@@ -44,7 +44,7 @@ const FooterIcons: React.FC = () => (
     </Anchor>
     <Anchor
       type="secondary"
-      href="https://discord.gg/FFDTWwBgBe"
+      href="https://discord.gg/x42WkXwwWG"
       target="_blank"
     >
       <span className="fa-stack fa-lg">
