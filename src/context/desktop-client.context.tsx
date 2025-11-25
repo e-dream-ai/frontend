@@ -1,7 +1,8 @@
-import { createContext, useEffect, useMemo, useState } from "react";
+import { createContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   GOOD_BYE_EVENT,
   PING_EVENT,
+  STATE_SYNC_EVENT,
 } from "@/constants/remote-control.constants";
 import useAuth from "@/hooks/useAuth";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
@@ -45,6 +46,9 @@ export const DesktopClientProvider = ({
   const [speedLevel, setSpeedLevel] = useState<number>(9);
   const [isCreditOverlayVisible, setIsCreditOverlayVisible] =
     useState<boolean>(false);
+  const lastServerTimeRef = useRef<number>(0);
+  const lastServerTimestampRef = useRef<number>(0);
+  const isPausedRef = useRef<boolean>(false);
 
   const toggleCreditOverlay = (): void => {
     setIsCreditOverlayVisible((prev) => !prev);
@@ -79,6 +83,45 @@ export const DesktopClientProvider = ({
    */
   useSocketEventListener(PING_EVENT, handlePingEvent);
   useSocketEventListener(GOOD_BYE_EVENT, handleGoodbyeEvent);
+
+  useSocketEventListener<{
+    dream_uuid?: string;
+    playlist?: string;
+    timecode?: string;
+    hud?: string;
+    paused?: string;
+    playback_speed?: string;
+    fps?: string;
+  }>(STATE_SYNC_EVENT, async (data) => {
+    if (!data) return;
+
+    setIsActive(true);
+    const now = Date.now();
+    setLastEventTime(now);
+
+    const nextTime = data.timecode ? Number(data.timecode) : undefined;
+    const nextFps = data.playback_speed
+      ? Number(data.playback_speed)
+      : data.fps
+        ? Number(data.fps)
+        : undefined;
+    const isPaused = data.paused === "true";
+
+    // Store server values for interpolation
+    if (nextTime !== undefined && Number.isFinite(nextTime)) {
+      lastServerTimeRef.current = Math.max(0, nextTime);
+      lastServerTimestampRef.current = now;
+      setCurrentTime(lastServerTimeRef.current);
+    }
+    if (nextFps !== undefined && Number.isFinite(nextFps)) {
+      setFps(Math.max(0, Math.round(nextFps)));
+    }
+    isPausedRef.current = isPaused;
+    if (isPaused) {
+      setSpeedLevel(0);
+      setFps(0);
+    }
+  });
 
   /**
    * Handle status updates from desktop client containing playback metrics
@@ -142,6 +185,21 @@ export const DesktopClientProvider = ({
       }
     },
   );
+
+  useEffect(() => {
+    if (!isActive || isPausedRef.current) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      const now = Date.now();
+      const timeSinceLastUpdate = (now - lastServerTimestampRef.current) / 1000;
+      const interpolatedTime = lastServerTimeRef.current + timeSinceLastUpdate;
+      setCurrentTime(Math.max(0, interpolatedTime));
+    }, 1000);
+
+    return () => clearInterval(intervalId);
+  }, [isActive]);
 
   /**
    * Setup timer from socket
