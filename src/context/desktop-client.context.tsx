@@ -26,8 +26,6 @@ const DesktopClientContext = createContext<
   DesktopClientContextType | undefined
 >(undefined);
 
-const BASE_PERCEPTUAL_FPS = 20;
-
 /**
  * Create provider component
  * @param inactivityTimeout ms timeout
@@ -213,10 +211,7 @@ export const DesktopClientProvider = ({
       if (timeSinceLastUpdate < 0) {
         return;
       }
-
-      const playbackRate = fps > 0 ? Math.max(0, fps / BASE_PERCEPTUAL_FPS) : 1;
-      const interpolatedTime =
-        lastServerTimeRef.current + timeSinceLastUpdate * playbackRate;
+      const interpolatedTime = lastServerTimeRef.current + timeSinceLastUpdate;
 
       setCurrentTime(Math.max(0, interpolatedTime));
       lastServerTimeRef.current = interpolatedTime;
@@ -224,7 +219,7 @@ export const DesktopClientProvider = ({
     }, 1000);
 
     return () => window.clearInterval(intervalId);
-  }, [isActive, isPaused, fps]);
+  }, [isActive, isPaused]);
 
   /**
    * Setup timer from socket
