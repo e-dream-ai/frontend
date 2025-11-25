@@ -26,6 +26,8 @@ const DesktopClientContext = createContext<
   DesktopClientContextType | undefined
 >(undefined);
 
+const BASE_PERCEPTUAL_FPS = 20;
+
 /**
  * Create provider component
  * @param inactivityTimeout ms timeout
@@ -46,6 +48,7 @@ export const DesktopClientProvider = ({
   const [speedLevel, setSpeedLevel] = useState<number>(9);
   const [isCreditOverlayVisible, setIsCreditOverlayVisible] =
     useState<boolean>(false);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
   const lastServerTimeRef = useRef<number>(0);
   const lastServerTimestampRef = useRef<number>(0);
   const isPausedRef = useRef<boolean>(false);
@@ -76,6 +79,8 @@ export const DesktopClientProvider = ({
     setFps(0);
     setSpeedLevel(9);
     setIsCreditOverlayVisible(false);
+    isPausedRef.current = false;
+    setIsPaused(false);
   };
 
   /**
@@ -117,6 +122,7 @@ export const DesktopClientProvider = ({
       setFps(Math.max(0, Math.round(nextFps)));
     }
     isPausedRef.current = isPaused;
+    setIsPaused(isPaused);
     if (isPaused) {
       setSpeedLevel(0);
       setFps(0);
@@ -153,6 +159,11 @@ export const DesktopClientProvider = ({
         if (payload?.paused === true) {
           setSpeedLevel(0);
           setFps(0);
+          isPausedRef.current = true;
+          setIsPaused(true);
+        } else if (payload?.paused === false) {
+          isPausedRef.current = false;
+          setIsPaused(false);
         }
       }
 
@@ -176,6 +187,11 @@ export const DesktopClientProvider = ({
         setSpeedLevel(newSpeed);
         if (newSpeed === 0) {
           setFps(0);
+          isPausedRef.current = true;
+          setIsPaused(true);
+        } else {
+          isPausedRef.current = false;
+          setIsPaused(false);
         }
       }
 
@@ -187,19 +203,28 @@ export const DesktopClientProvider = ({
   );
 
   useEffect(() => {
-    if (!isActive || isPausedRef.current) {
+    if (!isActive || isPaused || !lastServerTimestampRef.current) {
       return;
     }
 
-    const intervalId = setInterval(() => {
+    const intervalId = window.setInterval(() => {
       const now = Date.now();
       const timeSinceLastUpdate = (now - lastServerTimestampRef.current) / 1000;
-      const interpolatedTime = lastServerTimeRef.current + timeSinceLastUpdate;
+      if (timeSinceLastUpdate < 0) {
+        return;
+      }
+
+      const playbackRate = fps > 0 ? Math.max(0, fps / BASE_PERCEPTUAL_FPS) : 1;
+      const interpolatedTime =
+        lastServerTimeRef.current + timeSinceLastUpdate * playbackRate;
+
       setCurrentTime(Math.max(0, interpolatedTime));
+      lastServerTimeRef.current = interpolatedTime;
+      lastServerTimestampRef.current = now;
     }, 1000);
 
-    return () => clearInterval(intervalId);
-  }, [isActive]);
+    return () => window.clearInterval(intervalId);
+  }, [isActive, isPaused, fps]);
 
   /**
    * Setup timer from socket
