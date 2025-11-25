@@ -31,6 +31,15 @@ import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { DEVICES_ON_PX } from "@/constants/devices.constants";
 
+const formatTimecode = (s: number): string => {
+  if (!Number.isFinite(s) || s < 0) return "--:--";
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = Math.floor(s % 60);
+  const p = (n: number) => n.toString().padStart(2, "0");
+  return h ? `${h}:${p(m)}:${p(sec)}` : `${m}:${p(sec)}`;
+};
+
 export const PlayerTray: React.FC = () => {
   const { t } = useTranslation();
   const { currentDream: authCurrentDream, isLoadingCurrentDream: authLoading } =
@@ -45,12 +54,13 @@ export const PlayerTray: React.FC = () => {
   const {
     isActive: isDesktopActive,
     isCreditOverlayVisible: isDesktopCreditVisible,
+    currentTime,
+    fps,
   } = useDesktopClient();
   const { isReady: isVideoReady } = useVideoJs();
   const navigate = useNavigate();
   const { width } = useWindowSize();
   const isDesktop = (width ?? 0) >= DEVICES_ON_PX.TABLET;
-
   const [isHidden, setIsHidden] = useState<boolean>(false);
 
   const navigateToRemoteControl = (): void => {
@@ -115,12 +125,24 @@ export const PlayerTray: React.FC = () => {
                 onClick={navigateToRemoteControl}
               />
               <TrackInfo>
-                <TrackTitle onClick={navigateToRemoteControl}>
-                  {title}
-                </TrackTitle>
-                <TrackMeta onClick={navigateToRemoteControl}>
-                  {artist}
-                </TrackMeta>
+                <TrackInfoRow>
+                  <TrackInfoLeft>
+                    <TrackTitle onClick={navigateToRemoteControl}>
+                      {title}
+                    </TrackTitle>
+                    <TrackMeta onClick={navigateToRemoteControl}>
+                      {artist}
+                    </TrackMeta>
+                  </TrackInfoLeft>
+                  {isDesktopActive && (
+                    <TrackInfoRight>
+                      <TimecodeText>{formatTimecode(currentTime)}</TimecodeText>
+                      <FpsText>
+                        {fps > 0 ? `${Math.round(fps)} fps` : "--"}
+                      </FpsText>
+                    </TrackInfoRight>
+                  )}
+                </TrackInfoRow>
               </TrackInfo>
             </>
           )}
@@ -497,6 +519,46 @@ const TrackInfo = styled.div`
   display: flex;
   flex-direction: column;
   min-width: 0;
+  width: 100%;
+`;
+
+const TrackInfoRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 1rem;
+`;
+
+const TrackInfoLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+`;
+
+const TrackInfoRight = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.25rem;
+  flex-shrink: 0;
+`;
+
+const TimecodeText = styled(Text)`
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  opacity: 0.9;
+  white-space: nowrap;
+`;
+
+const FpsText = styled(Text)`
+  font-size: 0.875rem;
+  color: #fff;
+  opacity: 0.7;
+  white-space: nowrap;
 `;
 
 const TrackTitle = styled(Text)`
