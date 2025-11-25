@@ -122,7 +122,7 @@ export const DesktopClientProvider = ({
       setStateSyncReceived(now);
     }
     if (nextFps !== undefined && Number.isFinite(nextFps)) {
-      setFps(Math.max(0, Math.round(nextFps)));
+      setFps(Math.max(0, nextFps));
     }
     isPausedRef.current = isPaused;
     setIsPaused(isPaused);
@@ -158,7 +158,7 @@ export const DesktopClientProvider = ({
         if (Number.isFinite(nextTime)) setCurrentTime(Math.max(0, nextTime));
         if (Number.isFinite(nextDuration))
           setDuration(Math.max(0, nextDuration));
-        if (Number.isFinite(nextFps)) setFps(Math.max(0, Math.round(nextFps)));
+        if (Number.isFinite(nextFps)) setFps(Math.max(0, nextFps));
         if (payload?.paused === true) {
           setSpeedLevel(0);
           setFps(0);
