@@ -6,6 +6,7 @@ import {
 } from "@/constants/remote-control.constants";
 import useAuth from "@/hooks/useAuth";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
+import useSocket from "@/hooks/useSocket";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
 import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
 import { RemoteControlEventData } from "@/types/remote-control.types";
@@ -38,8 +39,10 @@ export const DesktopClientProvider = ({
   inactivityTimeout?: number;
 }) => {
   const { user } = useAuth();
+  const { socket, isConnected } = useSocket();
   const [lastEventTime, setLastEventTime] = useState<number | undefined>();
   const [isActive, setIsActive] = useState<boolean>(false);
+  const hasRequestedStateRef = useRef<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [fps, setFps] = useState<number>(0);
@@ -199,6 +202,28 @@ export const DesktopClientProvider = ({
       }
     },
   );
+
+  useEffect(() => {
+    if (!socket || hasRequestedStateRef.current) {
+      return;
+    }
+
+    const handleConnect = () => {
+      hasRequestedStateRef.current = true;
+    };
+
+    socket.on("connect", handleConnect);
+
+    if (isConnected) {
+      setTimeout(() => {
+        hasRequestedStateRef.current = true;
+      }, 200);
+    }
+
+    return () => {
+      socket.off("connect", handleConnect);
+    };
+  }, [socket, isConnected]);
 
   useEffect(() => {
     if (!isActive || isPaused || !lastServerTimestampRef.current) {
