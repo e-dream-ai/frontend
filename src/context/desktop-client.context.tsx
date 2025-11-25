@@ -50,6 +50,7 @@ export const DesktopClientProvider = ({
   const [isCreditOverlayVisible, setIsCreditOverlayVisible] =
     useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [stateSyncReceived, setStateSyncReceived] = useState<number>(0); // Trigger to restart interpolation
   const lastServerTimeRef = useRef<number>(0);
   const lastServerTimestampRef = useRef<number>(0);
   const isPausedRef = useRef<boolean>(false);
@@ -118,6 +119,7 @@ export const DesktopClientProvider = ({
       lastServerTimeRef.current = Math.max(0, nextTime);
       lastServerTimestampRef.current = now;
       setCurrentTime(lastServerTimeRef.current);
+      setStateSyncReceived(now);
     }
     if (nextFps !== undefined && Number.isFinite(nextFps)) {
       setFps(Math.max(0, Math.round(nextFps)));
@@ -226,6 +228,7 @@ export const DesktopClientProvider = ({
   }, [socket, isConnected]);
 
   useEffect(() => {
+    // Only start interpolation if we have valid server state
     if (!isActive || isPaused || !lastServerTimestampRef.current) {
       return;
     }
@@ -244,7 +247,7 @@ export const DesktopClientProvider = ({
     }, 1000);
 
     return () => window.clearInterval(intervalId);
-  }, [isActive, isPaused]);
+  }, [isActive, isPaused, stateSyncReceived]);
 
   /**
    * Setup timer from socket
