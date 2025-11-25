@@ -239,7 +239,10 @@ export const DesktopClientProvider = ({
       if (timeSinceLastUpdate < 0) {
         return;
       }
-      const interpolatedTime = lastServerTimeRef.current + timeSinceLastUpdate;
+      const normalPerceptualFps = 20;
+      const speedMultiplier = fps > 0 ? fps / normalPerceptualFps : 0;
+      const interpolatedTime =
+        lastServerTimeRef.current + timeSinceLastUpdate * speedMultiplier;
 
       setCurrentTime(Math.max(0, interpolatedTime));
       lastServerTimeRef.current = interpolatedTime;
@@ -247,7 +250,7 @@ export const DesktopClientProvider = ({
     }, 1000);
 
     return () => window.clearInterval(intervalId);
-  }, [isActive, isPaused, stateSyncReceived]);
+  }, [isActive, isPaused, stateSyncReceived, fps]);
 
   /**
    * Setup timer from socket
