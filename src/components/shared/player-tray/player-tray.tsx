@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { Row, Text } from "@/components/shared";
 import { useTranslation } from "react-i18next";
@@ -32,18 +32,23 @@ import { useWindowSize } from "@/hooks/useWindowSize";
 import { DEVICES_ON_PX } from "@/constants/devices.constants";
 
 const formatTimecode = (s: number): string => {
-  if (!Number.isFinite(s) || s < 0) return "--:--";
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = Math.floor(s % 60);
+  if (!Number.isFinite(s) || s < 0) return "--:--.--";
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
   const p = (n: number) => n.toString().padStart(2, "0");
-  return h ? `${h}:${p(m)}:${p(sec)}` : `${m}:${p(sec)}`;
+  const secInt = Math.floor(sec);
+  const centiseconds = Math.floor((sec % 1) * 100);
+  return `${p(m)}:${p(secInt)}.${p(centiseconds)}`;
 };
 
 export const PlayerTray: React.FC = () => {
   const { t } = useTranslation();
-  const { currentDream: authCurrentDream, isLoadingCurrentDream: authLoading } =
-    useAuth();
+  const {
+    user,
+    currentDream: authCurrentDream,
+    isLoadingCurrentDream: authLoading,
+    refreshCurrentDream,
+  } = useAuth();
   const currentDream =
     usePlaybackStore((s) => s.currentDream) ?? authCurrentDream;
   const isLoadingCurrentDream =
@@ -62,6 +67,13 @@ export const PlayerTray: React.FC = () => {
   const { width } = useWindowSize();
   const isDesktop = (width ?? 0) >= DEVICES_ON_PX.TABLET;
   const [isHidden, setIsHidden] = useState<boolean>(false);
+
+  // Trigger refresh if user exists but authCurrentDream is undefined and not loading
+  useEffect(() => {
+    if (user && !authCurrentDream && !authLoading && refreshCurrentDream) {
+      void refreshCurrentDream();
+    }
+  }, [user, authCurrentDream, authLoading, refreshCurrentDream]);
 
   const navigateToRemoteControl = (): void => {
     navigate(ROUTES.REMOTE_CONTROL);
@@ -138,7 +150,7 @@ export const PlayerTray: React.FC = () => {
                     <TrackInfoRight>
                       <TimecodeText>{formatTimecode(currentTime)}</TimecodeText>
                       <FpsText>
-                        {fps > 0 ? `${Math.round(fps)} fps` : "--"}
+                        {fps > 0 ? `${fps.toFixed(2)} fps` : "--"}
                       </FpsText>
                     </TrackInfoRight>
                   )}
@@ -414,21 +426,23 @@ const Content = styled.div`
   max-width: 1024px;
   width: 100%;
   margin: 0 auto;
-  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    flex-wrap: wrap;
+  }
 `;
 
 const LeftSection = styled.div`
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  min-width: 0;
-  max-width: 50%;
+  width: 60%;
 
-  @media (max-width: ${DEVICES.MOBILE_S}) {
-    max-width: 100%;
+  @media (max-width: ${DEVICES.TABLET}) {
+    width: 100%;
   }
 `;
 
