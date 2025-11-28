@@ -41,12 +41,17 @@ import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
   const { emit, connectedDevicesCount, hasWebPlayer } = useSocket();
-  const { isWebClientActive, isCreditOverlayVisible } = useWebClient();
+  const {
+    isWebClientActive,
+    isCreditOverlayVisible,
+    isRepeatMode: webRepeatMode,
+    isShuffleMode: webShuffleMode,
+  } = useWebClient();
   const {
     isActive: isDesktopActive,
     isCreditOverlayVisible: isDesktopCredit,
-    isRepeatMode,
-    isShuffleMode,
+    isRepeatMode: desktopRepeatMode,
+    isShuffleMode: desktopShuffleMode,
   } = useDesktopClient();
 
   const isAnyClientActive =
@@ -98,6 +103,17 @@ export const RemoteControl: React.FC = () => {
 
   const { width } = useWindowSize();
   const isDesktop = (width ?? 0) >= DEVICES_ON_PX.TABLET;
+
+  const repeatActive = isWebClientActive
+    ? webRepeatMode
+    : isDesktopActive
+      ? desktopRepeatMode
+      : webRepeatMode;
+  const shuffleActive = isWebClientActive
+    ? webShuffleMode
+    : isDesktopActive
+      ? desktopShuffleMode
+      : webShuffleMode;
 
   return (
     <RemoteControlContainer>
@@ -221,13 +237,13 @@ export const RemoteControl: React.FC = () => {
 
           <IconButton
             aria-label={t("components.remote_control.repeat")}
-            aria-pressed={isRepeatMode}
+            aria-pressed={repeatActive}
             onClick={sendMessage(REMOTE_CONTROLS.TOGGLE_REPEAT.event)}
             data-tooltip-id={isDesktop ? "remote-repeat" : undefined}
             disabled={!isAnyClientActive}
           >
             <RepeatIcon
-              variant={isRepeatMode ? "filled" : "outline"}
+              variant={repeatActive ? "filled" : "outline"}
               size={24}
             />
           </IconButton>
@@ -242,13 +258,13 @@ export const RemoteControl: React.FC = () => {
 
           <IconButton
             aria-label={t("components.remote_control.shuffle")}
-            aria-pressed={isShuffleMode}
+            aria-pressed={shuffleActive}
             onClick={sendMessage(REMOTE_CONTROLS.TOGGLE_SHUFFLE.event)}
             data-tooltip-id={isDesktop ? "remote-shuffle" : undefined}
             disabled={!isAnyClientActive}
           >
             <ShuffleIcon
-              variant={isShuffleMode ? "filled" : "outline"}
+              variant={shuffleActive ? "filled" : "outline"}
               size={24}
             />
           </IconButton>

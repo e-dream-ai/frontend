@@ -54,6 +54,8 @@ type WebClientContextType = {
   handlers: Record<RemoteEvent, () => void>;
   speedLevel: number;
   isCreditOverlayVisible: boolean;
+  isRepeatMode: boolean;
+  isShuffleMode: boolean;
   setWebClientActive: (isActive: boolean) => void;
   setWebPlayerAvailable: (isActive: boolean) => void;
   handleOnEnded: () => void;
@@ -148,6 +150,16 @@ export const WebClientProvider: React.FC<{
   const [brightness, setBrightness] = useState<number>(40);
   const [speedLevel, setSpeedLevel] = useState<number>(9);
   const lastNonZeroSpeedRef = useRef<number>(8);
+  type PlaybackMode = "normal" | "repeat" | "shuffle";
+  const [playbackMode, setPlaybackMode] = useState<PlaybackMode>("normal");
+  const isRepeatMode = playbackMode === "repeat";
+  const isShuffleMode = playbackMode === "shuffle";
+  const toggleRepeatMode = useCallback(() => {
+    setPlaybackMode((mode) => (mode === "repeat" ? "normal" : "repeat"));
+  }, []);
+  const toggleShuffleMode = useCallback(() => {
+    setPlaybackMode((mode) => (mode === "shuffle" ? "normal" : "shuffle"));
+  }, []);
 
   // API data hooks
   const { data: defaultPlaylistData } = useDefaultPlaylist();
@@ -294,6 +306,27 @@ export const WebClientProvider: React.FC<{
     preloadNavigationVideos(navigation);
   }, [defaultPlaylistDreams, preloadNavigationVideos, resetHistory]);
 
+  const getPlayableDreamPool = useCallback((): Dream[] => {
+    const playlistDreams = playingPlaylistRef.current
+      ? (playingPlaylistRef.current.items ?? [])
+          .map((playlistItem) => playlistItem.dreamItem)
+          .filter((dream): dream is Dream => Boolean(dream))
+      : defaultPlaylistDreams;
+
+    return playlistDreams.filter(
+      (dream) => !dislikedDreamsRef.current.includes(dream.uuid),
+    );
+  }, [defaultPlaylistDreams]);
+
+  const selectRandomDream = useCallback((): Dream | null => {
+    const playableDreams = getPlayableDreamPool();
+    if (!playableDreams.length) {
+      return null;
+    }
+    const randomIndex = Math.floor(Math.random() * playableDreams.length);
+    return playableDreams[randomIndex];
+  }, [getPlayableDreamPool]);
+
   // plays dream and updates state
   const playDream = useCallback(
     async (
@@ -361,42 +394,52 @@ export const WebClientProvider: React.FC<{
 
   const handlePlaylistControl = useCallback(
     async (direction: PlaylistDirection, longTransition: boolean = false) => {
-      const dream = getNextDream(direction);
-
-      if (!dream) return false;
       if (transitioningRef.current) return false;
+
+      const shouldRepeatCurrent =
+        playbackMode === "repeat" && direction === PlaylistDirection.NEXT;
+      const shouldShuffleNext =
+        playbackMode === "shuffle" && direction === PlaylistDirection.NEXT;
+
+      let dream: Dream | null = null;
+      if (shouldRepeatCurrent) {
+        dream = playingDreamRef.current ?? null;
+      } else if (shouldShuffleNext) {
+        dream = selectRandomDream();
+      } else {
+        dream = getNextDream(direction) ?? null;
+      }
+
+      if (!dream) {
+        return false;
+      }
 
       transitioningRef.current = true;
 
-      const isNextConcatenated = Boolean(
-        playlistNavigationRef.current?.isNextConcatenated,
-      );
+      const isNextConcatenated =
+        !shouldRepeatCurrent &&
+        !shouldShuffleNext &&
+        Boolean(playlistNavigationRef.current?.isNextConcatenated);
 
       const played = await playDream(dream, {
         skipCrossfade: isNextConcatenated,
         longTransition: longTransition,
       });
 
-      // +1 on history position if direction is next and there's one played dream at least
-      if (
-        direction === PlaylistDirection.NEXT &&
-        played &&
-        historyRef.current.length
-      ) {
-        playlistHistoryPositionRef.current += 1;
-      }
-      // -1 on history position if direction is previous, prevent negative numbers
-      else if (direction === PlaylistDirection.PREVIOUS && played) {
-        playlistHistoryPositionRef.current = Math.max(
-          playlistHistoryPositionRef.current - 1,
-          0,
+      if (played && !shouldRepeatCurrent) {
+        if (direction === PlaylistDirection.NEXT && historyRef.current.length) {
+          playlistHistoryPositionRef.current += 1;
+        } else if (direction === PlaylistDirection.PREVIOUS) {
+          playlistHistoryPositionRef.current = Math.max(
+            playlistHistoryPositionRef.current - 1,
+            0,
+          );
+        }
+
+        addDreamToHistory(
+          dream,
+          shouldShuffleNext ? false : isNextConcatenated,
         );
-      }
-
-      // add dream to played dreams
-      addDreamToHistory(dream, isNextConcatenated);
-
-      if (played) {
         updatePlaylistNavigation();
       }
 
@@ -404,7 +447,14 @@ export const WebClientProvider: React.FC<{
 
       return played;
     },
-    [playDream, getNextDream, updatePlaylistNavigation, addDreamToHistory],
+    [
+      playbackMode,
+      playDream,
+      getNextDream,
+      updatePlaylistNavigation,
+      addDreamToHistory,
+      selectRandomDream,
+    ],
   );
 
   const setSpeed = useCallback(
@@ -551,6 +601,12 @@ export const WebClientProvider: React.FC<{
       fullscreen: () => {
         toggleFullscreen();
       },
+      repeat: () => {
+        toggleRepeatMode();
+      },
+      shuffle: () => {
+        toggleShuffleMode();
+      },
       ...speedControls,
     }),
     [
@@ -562,6 +618,8 @@ export const WebClientProvider: React.FC<{
       setPlayerBrightness,
       toggleCreditOverlay,
       toggleFullscreen,
+      toggleRepeatMode,
+      toggleShuffleMode,
       handlePlaylistControl,
       setPlayerPlaybackRate,
       updatePlaylistNavigation,
@@ -837,6 +895,8 @@ export const WebClientProvider: React.FC<{
       handlers,
       speedLevel,
       isCreditOverlayVisible,
+      isRepeatMode,
+      isShuffleMode,
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,
@@ -848,6 +908,8 @@ export const WebClientProvider: React.FC<{
       handlers,
       speedLevel,
       isCreditOverlayVisible,
+      isRepeatMode,
+      isShuffleMode,
       setWebClientActive,
       setWebPlayerAvailable,
       handleOnEnded,

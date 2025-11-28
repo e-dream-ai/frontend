@@ -56,15 +56,20 @@ export const PlayerTray: React.FC = () => {
   const isLoadingCurrentDream =
     usePlaybackStore((s) => s.isLoadingCurrentDream) || authLoading;
   const { emit, connectedDevicesCount, hasWebPlayer } = useSocket();
-  const { isWebClientActive, handlers, isCreditOverlayVisible } =
-    useWebClient();
+  const {
+    isWebClientActive,
+    handlers,
+    isCreditOverlayVisible,
+    isRepeatMode: webRepeatMode,
+    isShuffleMode: webShuffleMode,
+  } = useWebClient();
   const {
     isActive: isDesktopActive,
     isCreditOverlayVisible: isDesktopCreditVisible,
     currentTime,
     fps,
-    isRepeatMode,
-    isShuffleMode,
+    isRepeatMode: desktopRepeatMode,
+    isShuffleMode: desktopShuffleMode,
   } = useDesktopClient();
   const { isReady: isVideoReady } = useVideoJs();
   const navigate = useNavigate();
@@ -100,6 +105,16 @@ export const PlayerTray: React.FC = () => {
   const shouldRender =
     !isVideoReady &&
     (isDesktopActive || ((connectedDevicesCount ?? 0) > 1 && !!hasWebPlayer));
+  const repeatActive = isWebClientActive
+    ? webRepeatMode
+    : isDesktopActive
+      ? desktopRepeatMode
+      : webRepeatMode;
+  const shuffleActive = isWebClientActive
+    ? webShuffleMode
+    : isDesktopActive
+      ? desktopShuffleMode
+      : webShuffleMode;
 
   if (!shouldRender) return null;
 
@@ -195,8 +210,8 @@ export const PlayerTray: React.FC = () => {
             }}
             idSuffix="mobile"
             enableTooltips={isDesktop}
-            isRepeatMode={isRepeatMode}
-            isShuffleMode={isShuffleMode}
+            isRepeatMode={repeatActive}
+            isShuffleMode={shuffleActive}
             onRepeat={() => sendMessage(REMOTE_CONTROLS.TOGGLE_REPEAT.event)}
             onShuffle={() => sendMessage(REMOTE_CONTROLS.TOGGLE_SHUFFLE.event)}
           />
