@@ -30,6 +30,8 @@ import {
   FaClosedCaptioning,
 } from "react-icons/fa";
 import { LuTurtle, LuRabbit } from "react-icons/lu";
+import RepeatIcon from "@/icons/repeat-icon";
+import ShuffleIcon from "@/icons/shuffle-icon";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { DEVICES_ON_PX } from "@/constants/devices.constants";
 import { ControlContainerDesktop } from "./control-container-desktop";
@@ -40,8 +42,12 @@ export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
   const { emit, connectedDevicesCount, hasWebPlayer } = useSocket();
   const { isWebClientActive, isCreditOverlayVisible } = useWebClient();
-  const { isActive: isDesktopActive, isCreditOverlayVisible: isDesktopCredit } =
-    useDesktopClient();
+  const {
+    isActive: isDesktopActive,
+    isCreditOverlayVisible: isDesktopCredit,
+    isRepeatMode,
+    isShuffleMode,
+  } = useDesktopClient();
 
   const isAnyClientActive =
     isDesktopActive ||
@@ -167,49 +173,94 @@ export const RemoteControl: React.FC = () => {
           )}
         </IconRow>
 
-        <IconButton
-          aria-label={
-            (
+        <IconGroup style={{ gap: "0px" }}>
+          <IconButton
+            style={{ marginBottom: "-2px" }}
+            aria-label={
+              (
+                isWebClientActive
+                  ? isCreditOverlayVisible
+                  : isDesktopActive
+                    ? isDesktopCredit
+                    : isCreditOverlayVisible
+              )
+                ? t("actions.captions_off")
+                : t("actions.captions_on")
+            }
+            aria-pressed={
               isWebClientActive
                 ? isCreditOverlayVisible
                 : isDesktopActive
                   ? isDesktopCredit
                   : isCreditOverlayVisible
-            )
-              ? t("actions.captions_off")
-              : t("actions.captions_on")
-          }
-          aria-pressed={
-            isWebClientActive
-              ? isCreditOverlayVisible
-              : isDesktopActive
-                ? isDesktopCredit
-                : isCreditOverlayVisible
-          }
-          onClick={handleToggleCaptions}
-          data-tooltip-id={isDesktop ? "remote-captions" : undefined}
-          disabled={!isAnyClientActive}
-        >
-          {(
-            isWebClientActive
-              ? isCreditOverlayVisible
-              : isDesktopActive
-                ? isDesktopCredit
-                : isCreditOverlayVisible
-          ) ? (
-            <FaClosedCaptioning size={24} />
-          ) : (
-            <FaRegClosedCaptioning size={24} />
+            }
+            onClick={handleToggleCaptions}
+            data-tooltip-id={isDesktop ? "remote-captions" : undefined}
+            disabled={!isAnyClientActive}
+          >
+            {(
+              isWebClientActive
+                ? isCreditOverlayVisible
+                : isDesktopActive
+                  ? isDesktopCredit
+                  : isCreditOverlayVisible
+            ) ? (
+              <FaClosedCaptioning size={24} />
+            ) : (
+              <FaRegClosedCaptioning size={24} />
+            )}
+          </IconButton>
+          {isDesktop && (
+            <Tooltip
+              id="remote-captions"
+              place="top"
+              delayShow={TOOLTIP_DELAY_MS}
+              content={t("components.remote_control.credit")}
+            />
           )}
-        </IconButton>
-        {isDesktop && (
-          <Tooltip
-            id="remote-captions"
-            place="top"
-            delayShow={TOOLTIP_DELAY_MS}
-            content={t("components.remote_control.credit")}
-          />
-        )}
+
+          <IconButton
+            aria-label={t("components.remote_control.repeat")}
+            aria-pressed={isRepeatMode}
+            onClick={sendMessage(REMOTE_CONTROLS.TOGGLE_REPEAT.event)}
+            data-tooltip-id={isDesktop ? "remote-repeat" : undefined}
+            disabled={!isAnyClientActive}
+          >
+            <RepeatIcon
+              variant={isRepeatMode ? "filled" : "outline"}
+              size={24}
+            />
+          </IconButton>
+          {isDesktop && (
+            <Tooltip
+              id="remote-repeat"
+              place="top"
+              delayShow={TOOLTIP_DELAY_MS}
+              content={t("components.remote_control.repeat")}
+            />
+          )}
+
+          <IconButton
+            aria-label={t("components.remote_control.shuffle")}
+            aria-pressed={isShuffleMode}
+            onClick={sendMessage(REMOTE_CONTROLS.TOGGLE_SHUFFLE.event)}
+            data-tooltip-id={isDesktop ? "remote-shuffle" : undefined}
+            disabled={!isAnyClientActive}
+          >
+            <ShuffleIcon
+              variant={isShuffleMode ? "filled" : "outline"}
+              size={24}
+            />
+          </IconButton>
+          {isDesktop && (
+            <Tooltip
+              id="remote-shuffle"
+              place="top"
+              delayShow={TOOLTIP_DELAY_MS}
+              content={t("components.remote_control.shuffle")}
+            />
+          )}
+        </IconGroup>
 
         <IconRow>
           <IconButton

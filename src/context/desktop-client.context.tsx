@@ -21,6 +21,8 @@ type DesktopClientContextType = {
   setSpeedLevel: (speed: number) => void;
   isCreditOverlayVisible: boolean;
   toggleCreditOverlay: () => void;
+  isRepeatMode: boolean;
+  isShuffleMode: boolean;
 };
 
 const DesktopClientContext = createContext<
@@ -49,6 +51,8 @@ export const DesktopClientProvider = ({
   const [speedLevel, setSpeedLevel] = useState<number>(9);
   const [isCreditOverlayVisible, setIsCreditOverlayVisible] =
     useState<boolean>(false);
+  const [isRepeatMode, setIsRepeatMode] = useState<boolean>(false);
+  const [isShuffleMode, setIsShuffleMode] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [stateSyncReceived, setStateSyncReceived] = useState<number>(0); // Trigger to restart interpolation
   const lastServerTimeRef = useRef<number>(0);
@@ -81,6 +85,8 @@ export const DesktopClientProvider = ({
     setFps(0);
     setSpeedLevel(9);
     setIsCreditOverlayVisible(false);
+    setIsRepeatMode(false);
+    setIsShuffleMode(false);
     isPausedRef.current = false;
     setIsPaused(false);
   };
@@ -198,9 +204,16 @@ export const DesktopClientProvider = ({
         }
       }
 
-      // Toggle credit overlay visibility when CREDIT event is received
       if (data.event === REMOTE_CONTROLS.CREDIT.event) {
         setIsCreditOverlayVisible((prev) => !prev);
+      }
+
+      if (data.event === REMOTE_CONTROLS.TOGGLE_REPEAT.event) {
+        setIsRepeatMode((prev) => !prev);
+      }
+
+      if (data.event === REMOTE_CONTROLS.TOGGLE_SHUFFLE.event) {
+        setIsShuffleMode((prev) => !prev);
       }
     },
   );
@@ -336,6 +349,8 @@ export const DesktopClientProvider = ({
           setSpeedLevel,
           isCreditOverlayVisible,
           toggleCreditOverlay,
+          isRepeatMode,
+          isShuffleMode,
         }),
         [
           isActive,
@@ -345,6 +360,8 @@ export const DesktopClientProvider = ({
           speedLevel,
           isCreditOverlayVisible,
           toggleCreditOverlay,
+          isRepeatMode,
+          isShuffleMode,
         ],
       )}
     >

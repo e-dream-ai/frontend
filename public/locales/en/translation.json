@@ -462,6 +462,8 @@
       "dislike_current_dream": "Dislike",
       "previous": "Previous",
       "next": "Next",
+      "repeat": "Repeat",
+      "shuffle": "Shuffle",
       "playback_slower": "Slower",
       "playback_faster": "Faster",
       "forward": "Forward",

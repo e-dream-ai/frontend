@@ -25,6 +25,8 @@ export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
   },
   GO_PREVIOUS_DREAM: { event: "previous", key: "←", triggerKey: "ArrowLeft" },
   GO_NEXT_DREAM: { event: "next", key: "→", triggerKey: "ArrowRight" },
+  TOGGLE_REPEAT: { event: "repeat", key: "R", triggerKey: "r" },
+  TOGGLE_SHUFFLE: { event: "shuffle", key: "H", triggerKey: "h" },
   PLAYBACK_SLOWER: { event: "playback_slower", key: "A", triggerKey: "a" },
   PLAYBACK_FASTER: { event: "playback_faster", key: "D", triggerKey: "d" },
   FORWARD: { event: "forward", key: "L", triggerKey: "l" },
@@ -65,6 +67,8 @@ export const REMOTE_CONTROLS_TRANSLATIONS = {
   [REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event]:
     "components.remote_control.previous",
   [REMOTE_CONTROLS.GO_NEXT_DREAM.event]: "components.remote_control.next",
+  [REMOTE_CONTROLS.TOGGLE_REPEAT.event]: "components.remote_control.repeat",
+  [REMOTE_CONTROLS.TOGGLE_SHUFFLE.event]: "components.remote_control.shuffle",
   [REMOTE_CONTROLS.PLAYBACK_SLOWER.event]:
     "components.remote_control.playback_slower",
   [REMOTE_CONTROLS.PLAYBACK_FASTER.event]:

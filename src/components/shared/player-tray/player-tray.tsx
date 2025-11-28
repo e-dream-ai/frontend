@@ -13,6 +13,8 @@ import {
 } from "react-icons/fa";
 import { LuTurtle, LuRabbit } from "react-icons/lu";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import RepeatIcon from "@/icons/repeat-icon";
+import ShuffleIcon from "@/icons/shuffle-icon";
 import useAuth from "@/hooks/useAuth";
 import { usePlaybackStore } from "@/stores/playback.store";
 import { DEVICES } from "@/constants/devices.constants";
@@ -61,6 +63,8 @@ export const PlayerTray: React.FC = () => {
     isCreditOverlayVisible: isDesktopCreditVisible,
     currentTime,
     fps,
+    isRepeatMode,
+    isShuffleMode,
   } = useDesktopClient();
   const { isReady: isVideoReady } = useVideoJs();
   const navigate = useNavigate();
@@ -191,6 +195,10 @@ export const PlayerTray: React.FC = () => {
             }}
             idSuffix="mobile"
             enableTooltips={isDesktop}
+            isRepeatMode={isRepeatMode}
+            isShuffleMode={isShuffleMode}
+            onRepeat={() => sendMessage(REMOTE_CONTROLS.TOGGLE_REPEAT.event)}
+            onShuffle={() => sendMessage(REMOTE_CONTROLS.TOGGLE_SHUFFLE.event)}
           />
 
           <RightSection>
@@ -315,6 +323,10 @@ interface SideControlsProps {
   onToggle: () => void;
   idSuffix?: string;
   enableTooltips?: boolean;
+  isRepeatMode: boolean;
+  isShuffleMode: boolean;
+  onRepeat: () => void;
+  onShuffle: () => void;
 }
 
 const SideControls: React.FC<SideControlsProps> = ({
@@ -322,12 +334,17 @@ const SideControls: React.FC<SideControlsProps> = ({
   onToggle,
   idSuffix,
   enableTooltips,
+  isRepeatMode,
+  isShuffleMode,
+  onRepeat,
+  onShuffle,
 }) => {
   const { t } = useTranslation();
   const tooltipId = `player-tray-credit-${idSuffix ?? "default"}`;
   return (
-    <ColumnControls>
+    <ColumnControls style={{ gap: "0px" }}>
       <IconButton
+        style={{ marginBottom: "-2px" }}
         aria-label={isOn ? t("actions.captions_off") : t("actions.captions_on")}
         aria-pressed={isOn}
         onClick={onToggle}
@@ -345,6 +362,48 @@ const SideControls: React.FC<SideControlsProps> = ({
           place="top"
           delayShow={TOOLTIP_DELAY_MS}
           content={t("components.remote_control.credit")}
+        />
+      )}
+
+      <IconButton
+        aria-label={t("components.remote_control.repeat")}
+        aria-pressed={isRepeatMode}
+        onClick={onRepeat}
+        data-tooltip-id={
+          enableTooltips
+            ? `player-tray-repeat-${idSuffix ?? "default"}`
+            : undefined
+        }
+      >
+        <RepeatIcon variant={isRepeatMode ? "filled" : "outline"} size={24} />
+      </IconButton>
+      {enableTooltips && (
+        <Tooltip
+          id={`player-tray-repeat-${idSuffix ?? "default"}`}
+          place="top"
+          delayShow={TOOLTIP_DELAY_MS}
+          content={t("components.remote_control.repeat")}
+        />
+      )}
+
+      <IconButton
+        aria-label={t("components.remote_control.shuffle")}
+        aria-pressed={isShuffleMode}
+        onClick={onShuffle}
+        data-tooltip-id={
+          enableTooltips
+            ? `player-tray-shuffle-${idSuffix ?? "default"}`
+            : undefined
+        }
+      >
+        <ShuffleIcon variant={isShuffleMode ? "filled" : "outline"} size={24} />
+      </IconButton>
+      {enableTooltips && (
+        <Tooltip
+          id={`player-tray-shuffle-${idSuffix ?? "default"}`}
+          place="top"
+          delayShow={TOOLTIP_DELAY_MS}
+          content={t("components.remote_control.shuffle")}
         />
       )}
     </ColumnControls>
