@@ -260,7 +260,7 @@ export const DesktopClientProvider = ({
       setCurrentTime(Math.max(0, interpolatedTime));
       lastServerTimeRef.current = interpolatedTime;
       lastServerTimestampRef.current = now;
-    }, 1000);
+    }, 100);
 
     return () => window.clearInterval(intervalId);
   }, [isActive, isPaused, stateSyncReceived, fps]);
