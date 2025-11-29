@@ -42,8 +42,18 @@ export const DesktopClientProvider = ({
 }) => {
   const { user } = useAuth();
   const { socket, isConnected } = useSocket();
-  const [lastEventTime, setLastEventTime] = useState<number | undefined>();
-  const [isActive, setIsActive] = useState<boolean>(false);
+  const initialLastPingTime = user?.last_client_ping_at
+    ? new Date(user.last_client_ping_at).getTime()
+    : undefined;
+  const [lastEventTime, setLastEventTime] = useState<number | undefined>(
+    () => initialLastPingTime,
+  );
+  const [isActive, setIsActive] = useState<boolean>(() => {
+    if (!initialLastPingTime) {
+      return false;
+    }
+    return Date.now() - initialLastPingTime < inactivityTimeout;
+  });
   const hasRequestedStateRef = useRef<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
