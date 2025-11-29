@@ -9,7 +9,7 @@ type RepeatIconProps = {
 const RepeatIcon: React.FC<RepeatIconProps> = ({
   variant = "outline",
   size = 24,
-  color = "#FCD9B7",
+  color = "currentColor",
 }) => {
   if (variant === "outline") {
     return (

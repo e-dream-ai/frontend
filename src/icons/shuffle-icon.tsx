@@ -9,7 +9,7 @@ type ShuffleIconProps = {
 const ShuffleIcon: React.FC<ShuffleIconProps> = ({
   variant = "outline",
   size = 24,
-  color = "#FCD9B7",
+  color = "currentColor",
 }) => {
   if (variant === "outline") {
     return (
