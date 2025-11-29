@@ -51,10 +51,10 @@ export const PlayerTray: React.FC = () => {
     isLoadingCurrentDream: authLoading,
     refreshCurrentDream,
   } = useAuth();
-  const currentDream =
-    usePlaybackStore((s) => s.currentDream) ?? authCurrentDream;
-  const isLoadingCurrentDream =
-    usePlaybackStore((s) => s.isLoadingCurrentDream) || authLoading;
+  const storeDream = usePlaybackStore((s) => s.currentDream);
+  const storeIsLoading = usePlaybackStore((s) => s.isLoadingCurrentDream);
+  const currentDream = storeDream ?? authCurrentDream;
+  const isLoadingCurrentDream = storeIsLoading || authLoading;
   const { emit, connectedDevicesCount, hasWebPlayer } = useSocket();
   const {
     isWebClientActive,
@@ -137,7 +137,7 @@ export const PlayerTray: React.FC = () => {
     >
       <Content>
         <LeftSection>
-          {isLoadingCurrentDream ? (
+          {isLoadingCurrentDream && !currentDream ? (
             <>
               <SkeletonArtwork aria-label={t("common.loading")} />
               <TrackInfo>
