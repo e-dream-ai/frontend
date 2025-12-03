@@ -357,9 +357,8 @@ const SideControls: React.FC<SideControlsProps> = ({
   const { t } = useTranslation();
   const tooltipId = `player-tray-credit-${idSuffix ?? "default"}`;
   return (
-    <ColumnControls style={{ gap: "0px" }}>
+    <ColumnControls style={{ flexDirection: "row", gap: "0.3em" }}>
       <IconButton
-        style={{ marginBottom: "-2px" }}
         aria-label={isOn ? t("actions.captions_off") : t("actions.captions_on")}
         aria-pressed={isOn}
         onClick={onToggle}

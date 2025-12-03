@@ -12,6 +12,19 @@ import {
   IconGroup,
   IconRow,
   RemoteControlRow,
+  LeftSection,
+  Artwork,
+  TrackInfo,
+  TrackInfoRow,
+  TrackInfoLeft,
+  TrackInfoRight,
+  TrackTitle,
+  TrackMeta,
+  TimecodeText,
+  FpsText,
+  SkeletonArtwork,
+  SkeletonTitle,
+  SkeletonMeta,
 } from "./remote-control.styled";
 import { onNewRemoteControlEvent } from "@/utils/socket.util";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
@@ -37,10 +50,32 @@ import { DEVICES_ON_PX } from "@/constants/devices.constants";
 import { ControlContainerDesktop } from "./control-container-desktop";
 import { ControlContainerMobile } from "./control-container-mobile";
 import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
+import useAuth from "@/hooks/useAuth";
+import { usePlaybackStore } from "@/stores/playback.store";
+
+const formatTimecode = (s: number): string => {
+  if (!Number.isFinite(s) || s < 0) return "--:--.--";
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  const p = (n: number) => n.toString().padStart(2, "0");
+  const secInt = Math.floor(sec);
+  const centiseconds = Math.floor((sec % 1) * 100);
+  return `${p(m)}:${p(secInt)}.${p(centiseconds)}`;
+};
 
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
   const { emit, connectedDevicesCount, hasWebPlayer } = useSocket();
+  const {
+    user,
+    currentDream: authCurrentDream,
+    isLoadingCurrentDream: authLoading,
+    refreshCurrentDream,
+  } = useAuth();
+  const storeDream = usePlaybackStore((s) => s.currentDream);
+  const storeIsLoading = usePlaybackStore((s) => s.isLoadingCurrentDream);
+  const currentDream = storeDream ?? authCurrentDream;
+  const isLoadingCurrentDream = storeIsLoading || authLoading;
   const {
     isWebClientActive,
     isCreditOverlayVisible,
@@ -50,6 +85,8 @@ export const RemoteControl: React.FC = () => {
   const {
     isActive: isDesktopActive,
     isCreditOverlayVisible: isDesktopCredit,
+    currentTime,
+    fps,
     isRepeatMode: desktopRepeatMode,
     isShuffleMode: desktopShuffleMode,
   } = useDesktopClient();
@@ -65,6 +102,16 @@ export const RemoteControl: React.FC = () => {
     NEW_REMOTE_CONTROL_EVENT,
     handleRemoteControlEvent,
   );
+
+  useEffect(() => {
+    if (user && !authCurrentDream && !authLoading && refreshCurrentDream) {
+      void refreshCurrentDream();
+    }
+  }, [user, authCurrentDream, authLoading, refreshCurrentDream]);
+
+  const title = currentDream?.name ?? t("components.current_dream.title");
+  const artist = currentDream?.user?.name ?? t("common.unknown_author");
+  const thumbnail = currentDream?.thumbnail;
 
   const sendMessage = (event: RemoteControlEvent) => () => {
     emit(NEW_REMOTE_CONTROL_EVENT, {
@@ -117,6 +164,44 @@ export const RemoteControl: React.FC = () => {
 
   return (
     <RemoteControlContainer>
+      <LeftSection>
+        {isLoadingCurrentDream && !currentDream ? (
+          <>
+            <SkeletonArtwork aria-label={t("common.loading")} />
+            <TrackInfo>
+              <SkeletonTitle />
+              <SkeletonMeta />
+            </TrackInfo>
+          </>
+        ) : (
+          <>
+            <Artwork
+              key={`${currentDream?.id ?? ""}-${
+                currentDream?.updated_at ?? ""
+              }`}
+              src={thumbnail}
+              alt={title}
+            />
+            <TrackInfo>
+              <TrackInfoRow>
+                <TrackInfoLeft>
+                  <TrackTitle>{title}</TrackTitle>
+                  <TrackMeta>{artist}</TrackMeta>
+                </TrackInfoLeft>
+                {isDesktopActive && (
+                  <TrackInfoRight>
+                    <TimecodeText>{formatTimecode(currentTime)}</TimecodeText>
+                    <FpsText>
+                      {fps > 0 ? `${fps.toFixed(2)} fps` : "--"}
+                    </FpsText>
+                  </TrackInfoRight>
+                )}
+              </TrackInfoRow>
+            </TrackInfo>
+          </>
+        )}
+      </LeftSection>
+
       <RemoteControlRow>
         <IconRow>
           <IconButton
@@ -189,9 +274,8 @@ export const RemoteControl: React.FC = () => {
           )}
         </IconRow>
 
-        <IconGroup style={{ gap: "0px" }}>
+        <IconGroup style={{ flexDirection: "row", gap: "0.3em" }}>
           <IconButton
-            style={{ marginBottom: "-2px" }}
             aria-label={
               (
                 isWebClientActive

@@ -33,7 +33,7 @@ const createMenuRoutes = (user?: User | null, isCreator?: boolean) => {
     {
       title: "header.feed",
       route: ROUTES.FEED,
-      display: ["block", "block", "none", "none"],
+      display: "none",
     },
     {
       title: "header.create",
