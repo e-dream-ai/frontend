@@ -14,30 +14,23 @@ import {
 } from "@/types/remote-control.types";
 import { getRemoteControlEvent } from "@/utils/remote-control.util";
 
-export const emitPlayDream = (
-  socket?: Socket | null,
-  dream?: Dream,
-  message?: string,
-) => {
+export const emitPlayDream = (socket?: Socket | null, dream?: Dream): void => {
   socket?.emit(NEW_REMOTE_CONTROL_EVENT, {
     event: REMOTE_CONTROLS.PLAY_DREAM.event,
     uuid: dream?.uuid,
     name: dream?.name,
   });
-  if (message) toast.success(message);
 };
 
 export const emitPlayPlaylist = (
   socket?: Socket | null,
   playlist?: Playlist,
-  message?: string,
-) => {
+): void => {
   socket?.emit(NEW_REMOTE_CONTROL_EVENT, {
     event: REMOTE_CONTROLS.PLAY_PLAYLIST.event,
     uuid: playlist?.uuid,
     name: playlist?.name,
   });
-  if (message) toast.success(message);
 };
 
 export const onNewRemoteControlEvent =

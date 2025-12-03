@@ -200,34 +200,18 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       event.stopPropagation();
 
       if (type === "dream") {
-        emitPlayDream(
-          socket,
-          item as Dream,
-          t("toasts.play_dream", { name: (item as Dream)?.name }),
-        );
+        emitPlayDream(socket, item as Dream);
       } else if (type == "playlist") {
-        emitPlayPlaylist(
-          socket,
-          item as Playlist,
-          t("toasts.play_playlist", { name: (item as Playlist)?.name }),
-        );
+        emitPlayPlaylist(socket, item as Playlist);
       } else if (type === "virtual-playlist") {
-        emitPlayPlaylist(
-          socket,
-          item as Playlist,
-          t("toasts.play_playlist", { name: (item as VirtualPlaylist)?.name }),
-        );
+        emitPlayPlaylist(socket, item as Playlist);
 
         /**
          * When item is a `virtual-playlist` should play first thumbnail dream
          */
         const firstDream = thumbnailDreams?.[0];
         if (firstDream) {
-          emitPlayDream(
-            socket,
-            firstDream,
-            t("toasts.play_dream", { name: firstDream.name }),
-          );
+          emitPlayDream(socket, firstDream);
         }
       }
     },
