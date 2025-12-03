@@ -55,10 +55,6 @@ export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
 };
 
 export const REMOTE_CONTROLS_TRANSLATIONS = {
-  [REMOTE_CONTROLS.PLAYING.event]: "components.remote_control.playing",
-  [REMOTE_CONTROLS.PLAY_DREAM.event]: "components.remote_control.play_dream",
-  [REMOTE_CONTROLS.PLAY_PLAYLIST.event]:
-    "components.remote_control.play_playlist",
   [REMOTE_CONTROLS.LIKE_DREAM.event]: "components.remote_control.like",
   [REMOTE_CONTROLS.DISLIKE_DREAM.event]: "components.remote_control.dislike",
   [REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event]: "components.remote_control.like",

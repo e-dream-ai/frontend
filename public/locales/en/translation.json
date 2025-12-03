@@ -453,9 +453,6 @@
     },
     "remote_control": {
       "event": "Event",
-      "playing": "Playing {{name}} dream.",
-      "play_dream": "Dream {{name}} played.",
-      "play_playlist": "Playlist {{name}} played.",
       "like": "Dream {{name}} liked.",
       "dislike": "Dream {{name}} disliked.",
       "like_current_dream": "Like",
@@ -617,9 +614,5 @@
     "user_group": "user",
     "admin_group": "admin",
     "creator_group": "creator"
-  },
-  "toasts": {
-    "play_dream": "Dream {{name}} played.",
-    "play_playlist": "Playlist {{name}} played."
   }
 }
