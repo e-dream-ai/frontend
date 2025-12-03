@@ -12,36 +12,38 @@ import {
 } from "styled-system";
 import { Link } from "react-router-dom";
 
-const StyledHeader = styled.header<FlexboxProps>`
+const StyledHeader = styled.header<FlexboxProps & { $isScrolled?: boolean }>`
   display: flex;
   flex-flow: row;
-  flex: auto;
   flex-wrap: wrap;
   align-items: center;
   width: inherit;
   max-width: 1024px;
-  padding: 1rem 0;
+  padding: ${(props) => (props.$isScrolled ? "0.5rem 0" : "1rem 0")};
+  transition: padding 0.2s ease;
 
   @media (max-width: ${DEVICES.LAPTOP}) {
-    padding: 1rem;
+    padding: ${(props) => (props.$isScrolled ? "0.5rem 1rem" : "1rem")};
   }
 
   @media (max-width: ${DEVICES.TABLET}) {
-    padding: 0.8rem 1rem;
+    padding: ${(props) => (props.$isScrolled ? "0.4rem 1rem" : "0.8rem 1rem")};
   }
   ${flexbox}
 `;
 
 export const HeaderContainer = styled.div`
   display: flex;
-  position: sticky;
   justify-content: center;
+  position: sticky;
   top: 0;
   left: 0;
+  right: 0;
   width: 100vw;
   background: ${(props) => props.theme.colorBackgroundTertiary};
   -webkit-backface-visibility: hidden;
-  z-index: 2;
+  z-index: 100;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 `;
 
 export const LogoAnchor = styled(Link)`
@@ -51,19 +53,20 @@ export const LogoAnchor = styled(Link)`
   text-decoration: none;
 `;
 
-export const HeaderTitle = styled.h1`
+export const HeaderTitle = styled.h1<{ $isScrolled?: boolean }>`
   font-family: "Comfortaa", sans-serif;
-  font-size: 2.2rem;
+  font-size: ${(props) => (props.$isScrolled ? "1.6rem" : "2.2rem")};
   color: ${(props) => props.theme.textAccentColor};
   margin: 0.4rem 1rem;
   white-space: nowrap;
+  transition: font-size 0.2s ease;
 
   @media (max-width: ${DEVICES.LAPTOP}) {
-    font-size: 2rem;
+    font-size: ${(props) => (props.$isScrolled ? "1.4rem" : "2rem")};
   }
 
   @media (max-width: ${DEVICES.MOBILE_S}) {
-    font-size: 1.4rem;
+    font-size: ${(props) => (props.$isScrolled ? "1.2rem" : "1.4rem")};
   }
 `;
 
@@ -90,18 +93,19 @@ export const LogoContainer = styled.div<OrderProps>`
   ${order}
 `;
 
-export const LogoIcon = styled.img`
+export const LogoIcon = styled.img<{ $isScrolled?: boolean }>`
   width: auto;
-  height: 6rem;
+  height: ${(props) => (props.$isScrolled ? "3rem" : "6rem")};
   max-width: 100%;
   cursor: pointer;
+  transition: height 0.2s ease;
 
   @media (max-width: ${DEVICES.LAPTOP}) {
-    height: 3rem;
+    height: ${(props) => (props.$isScrolled ? "2.5rem" : "3rem")};
   }
 
   @media (max-width: ${DEVICES.MOBILE_S}) {
-    height: 2rem;
+    height: ${(props) => (props.$isScrolled ? "2rem" : "2rem")};
   }
 `;
 
@@ -151,27 +155,33 @@ export const NavListItem = styled.li<DisplayProps>`
     color: ${(props) => props.theme.textAccentColor};
   }
 
-  // adding dot • menu separator
   &:not([display="none"])::after {
     content: "•";
     color: ${(props) => props.theme.textPrimaryColor};
     margin: 0 10px;
   }
 
-  // remove dot • menu separator from last child
+  &[data-hide-separator="true"]::after {
+    display: none;
+  }
+
+  @media (min-width: ${DEVICES.TABLET}) {
+    &[data-hide-separator="true"]::after {
+      display: inline;
+    }
+  }
+
   &:not([display="none"]):last-of-type::after,
   &:not([display="none"]):not(:has(~ li:not([display="none"])))::after {
     display: none;
   }
 
-  // remove dot • menu separator from last child on tablets or lower
   @media (max-width: calc(${DEVICES.MOBILE_L} - (0.0625em))) {
     &[display="inline-flex"]:not(:has(~ li[display="inline-flex"]))::after {
       display: none;
     }
   }
 
-  // remove dot • menu separator from last child on tablets or lower
   @media (max-width: calc(${DEVICES.TABLET} - (0.0625em))) {
     &[display="none,none,inline-flex,inline-flex"]:not(
         :has(~ li[display="none,none,inline-flex,inline-flex"])
@@ -207,11 +217,8 @@ export const HeaderUserName = styled.span`
 
 const AvatarStyle = css`
   display: flex;
-  /* Align dot to the bottom */
   align-items: flex-end;
-  /* Align dot to the left */
   justify-content: flex-start;
-
   width: 30px;
   height: 30px;
   border-radius: 100%;

@@ -16,6 +16,7 @@ type RouteLink = {
   route: string;
   showSlash?: boolean;
   onClick?: MouseEventHandler<HTMLAnchorElement>;
+  hideSeparator?: boolean;
 } & DisplayProps;
 
 export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
@@ -46,7 +47,8 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
     {
       component: t("header.feed"),
       route: ROUTES.FEED,
-      display: ["none", "none", "inline-flex", "inline-flex"],
+      hideSeparator: true,
+      display: "inline-flex",
     },
     {
       component: t("header.create"),
@@ -115,7 +117,11 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
         };
 
         return (
-          <NavListItem key={route.route} display={route.display}>
+          <NavListItem
+            key={route.route}
+            display={route.display}
+            data-hide-separator={route.hideSeparator ? "true" : "false"}
+          >
             <AnchorLink
               to={route.route}
               onClick={handleOnClick}

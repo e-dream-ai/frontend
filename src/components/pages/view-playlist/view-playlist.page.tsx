@@ -91,9 +91,12 @@ const JumpToEndButton = styled.button<{ disabled?: boolean }>`
   }
 `;
 
-const ScrollToTopButton = styled.button<{ visible?: boolean }>`
+const ScrollToTopButton = styled.button<{
+  visible?: boolean;
+  bottomOffset?: string;
+}>`
   position: fixed;
-  bottom: 3.5rem;
+  bottom: ${(props) => props.bottomOffset ?? "3.5rem"};
   right: 2rem;
   z-index: 1000;
   width: 3rem;
@@ -115,7 +118,8 @@ const ScrollToTopButton = styled.button<{ visible?: boolean }>`
     opacity 0.3s ease,
     visibility 0.3s ease,
     transform 0.3s ease,
-    filter 0.3s ease;
+    filter 0.3s ease,
+    bottom 0.3s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 
   &:hover {
@@ -173,6 +177,8 @@ export const ViewPlaylistPage = () => {
   const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
     useState<boolean>(false);
   const [showScrollToTop, setShowScrollToTop] = useState<boolean>(false);
+  const [playerTrayBottomOffset, setPlayerTrayBottomOffset] =
+    useState<string>("3.5rem");
 
   const handleRadioButtonGroupChange = (value?: string) => {
     setRadioGroupState(value as PlaylistTabs);
@@ -258,11 +264,14 @@ export const ViewPlaylistPage = () => {
         ? hasJumpedToEndItems
         : hasJumpedToEndKeyframes;
 
-    if (isJumpedToEnd) {
-      // If data is already loaded, scroll to the bottom
+    const hasMorePages =
+      radioGroupState === "items"
+        ? hasNextPlaylistItemsPage
+        : hasNextPlaylistKeyframesPage;
+
+    if (isJumpedToEnd || !hasMorePages) {
       handleScrollToEnd();
     } else {
-      // If data is not loaded, trigger the original jump to end logic
       if (radioGroupState === "items") {
         handleJumpToEndItems();
       } else {
@@ -376,6 +385,44 @@ export const ViewPlaylistPage = () => {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const checkPlayerTray = () => {
+      const trayElement = document.querySelector('[role="contentinfo"]');
+      if (trayElement) {
+        const rect = trayElement.getBoundingClientRect();
+        const isVisible =
+          rect.height > 0 &&
+          rect.bottom > 0 &&
+          window.innerHeight - rect.bottom < 200;
+
+        if (isVisible) {
+          const trayHeightPx = rect.height;
+          const spacingRem = 2.5;
+          const bottomOffsetPx = trayHeightPx + spacingRem * 16;
+          const bottomOffsetRem = bottomOffsetPx / 16;
+          setPlayerTrayBottomOffset(`${bottomOffsetRem}rem`);
+        } else {
+          setPlayerTrayBottomOffset("3.5rem");
+        }
+      } else {
+        setPlayerTrayBottomOffset("3.5rem");
+      }
+    };
+
+    checkPlayerTray();
+    const interval = setInterval(checkPlayerTray, 100);
+    const observer = new MutationObserver(checkPlayerTray);
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true,
+    });
+
+    return () => {
+      clearInterval(interval);
+      observer.disconnect();
+    };
   }, []);
 
   /**
@@ -773,9 +820,9 @@ export const ViewPlaylistPage = () => {
                       disabled={
                         isJumpingToEnd ||
                         (radioGroupState === "items"
-                          ? !hasNextPlaylistItemsPage && !hasJumpedToEndItems
+                          ? !hasNextPlaylistItemsPage && items.length === 0
                           : !hasNextPlaylistKeyframesPage &&
-                            !hasJumpedToEndKeyframes)
+                            playlistKeyframes.length === 0)
                       }
                     >
                       {isJumpingToEnd ? "Jumping..." : "Jump to End"}
@@ -1081,6 +1128,7 @@ export const ViewPlaylistPage = () => {
 
       <ScrollToTopButton
         visible={showScrollToTop}
+        bottomOffset={playerTrayBottomOffset}
         onClick={handleScrollToTop}
         aria-label="Scroll to top"
       >
