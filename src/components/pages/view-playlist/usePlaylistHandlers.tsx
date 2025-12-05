@@ -570,11 +570,7 @@ export const usePlaylistHandlers = ({
   };
 
   const handlePlayPlaylist = () => {
-    emitPlayPlaylist(
-      socket,
-      playlist,
-      t("toasts.play_playlist", { name: playlist?.name }),
-    );
+    emitPlayPlaylist(socket, playlist);
   };
 
   const handleNavigateAddToPlaylist = () => {

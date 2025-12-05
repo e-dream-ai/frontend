@@ -12,6 +12,19 @@ import {
   IconGroup,
   IconRow,
   RemoteControlRow,
+  LeftSection,
+  Artwork,
+  TrackInfo,
+  TrackInfoRow,
+  TrackInfoLeft,
+  TrackInfoRight,
+  TrackTitle,
+  TrackMeta,
+  TimecodeText,
+  FpsText,
+  SkeletonArtwork,
+  SkeletonTitle,
+  SkeletonMeta,
 } from "./remote-control.styled";
 import { onNewRemoteControlEvent } from "@/utils/socket.util";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
@@ -30,18 +43,53 @@ import {
   FaClosedCaptioning,
 } from "react-icons/fa";
 import { LuTurtle, LuRabbit } from "react-icons/lu";
+import RepeatIcon from "@/icons/repeat-icon";
+import ShuffleIcon from "@/icons/shuffle-icon";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { DEVICES_ON_PX } from "@/constants/devices.constants";
 import { ControlContainerDesktop } from "./control-container-desktop";
 import { ControlContainerMobile } from "./control-container-mobile";
 import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
+import useAuth from "@/hooks/useAuth";
+import { usePlaybackStore } from "@/stores/playback.store";
+
+const formatTimecode = (s: number): string => {
+  if (!Number.isFinite(s) || s < 0) return "--:--.--";
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  const p = (n: number) => n.toString().padStart(2, "0");
+  const secInt = Math.floor(sec);
+  const centiseconds = Math.floor((sec % 1) * 100);
+  return `${p(m)}:${p(secInt)}.${p(centiseconds)}`;
+};
 
 export const RemoteControl: React.FC = () => {
   const { t } = useTranslation();
   const { emit, connectedDevicesCount, hasWebPlayer } = useSocket();
-  const { isWebClientActive, isCreditOverlayVisible } = useWebClient();
-  const { isActive: isDesktopActive, isCreditOverlayVisible: isDesktopCredit } =
-    useDesktopClient();
+  const {
+    user,
+    currentDream: authCurrentDream,
+    isLoadingCurrentDream: authLoading,
+    refreshCurrentDream,
+  } = useAuth();
+  const storeDream = usePlaybackStore((s) => s.currentDream);
+  const storeIsLoading = usePlaybackStore((s) => s.isLoadingCurrentDream);
+  const currentDream = storeDream ?? authCurrentDream;
+  const isLoadingCurrentDream = storeIsLoading || authLoading;
+  const {
+    isWebClientActive,
+    isCreditOverlayVisible,
+    isRepeatMode: webRepeatMode,
+    isShuffleMode: webShuffleMode,
+  } = useWebClient();
+  const {
+    isActive: isDesktopActive,
+    isCreditOverlayVisible: isDesktopCredit,
+    currentTime,
+    fps,
+    isRepeatMode: desktopRepeatMode,
+    isShuffleMode: desktopShuffleMode,
+  } = useDesktopClient();
 
   const isAnyClientActive =
     isDesktopActive ||
@@ -54,6 +102,16 @@ export const RemoteControl: React.FC = () => {
     NEW_REMOTE_CONTROL_EVENT,
     handleRemoteControlEvent,
   );
+
+  useEffect(() => {
+    if (user && !authCurrentDream && !authLoading && refreshCurrentDream) {
+      void refreshCurrentDream();
+    }
+  }, [user, authCurrentDream, authLoading, refreshCurrentDream]);
+
+  const title = currentDream?.name ?? t("components.current_dream.title");
+  const artist = currentDream?.user?.name ?? t("common.unknown_author");
+  const thumbnail = currentDream?.thumbnail;
 
   const sendMessage = (event: RemoteControlEvent) => () => {
     emit(NEW_REMOTE_CONTROL_EVENT, {
@@ -93,8 +151,57 @@ export const RemoteControl: React.FC = () => {
   const { width } = useWindowSize();
   const isDesktop = (width ?? 0) >= DEVICES_ON_PX.TABLET;
 
+  const repeatActive = isWebClientActive
+    ? webRepeatMode
+    : isDesktopActive
+      ? desktopRepeatMode
+      : webRepeatMode;
+  const shuffleActive = isWebClientActive
+    ? webShuffleMode
+    : isDesktopActive
+      ? desktopShuffleMode
+      : webShuffleMode;
+
   return (
     <RemoteControlContainer>
+      <LeftSection>
+        {isLoadingCurrentDream && !currentDream ? (
+          <>
+            <SkeletonArtwork aria-label={t("common.loading")} />
+            <TrackInfo>
+              <SkeletonTitle />
+              <SkeletonMeta />
+            </TrackInfo>
+          </>
+        ) : (
+          <>
+            <Artwork
+              key={`${currentDream?.id ?? ""}-${
+                currentDream?.updated_at ?? ""
+              }`}
+              src={thumbnail}
+              alt={title}
+            />
+            <TrackInfo>
+              <TrackInfoRow>
+                <TrackInfoLeft>
+                  <TrackTitle>{title}</TrackTitle>
+                  <TrackMeta>{artist}</TrackMeta>
+                </TrackInfoLeft>
+                {isDesktopActive && (
+                  <TrackInfoRight>
+                    <TimecodeText>{formatTimecode(currentTime)}</TimecodeText>
+                    <FpsText>
+                      {fps > 0 ? `${fps.toFixed(2)} fps` : "--"}
+                    </FpsText>
+                  </TrackInfoRight>
+                )}
+              </TrackInfoRow>
+            </TrackInfo>
+          </>
+        )}
+      </LeftSection>
+
       <RemoteControlRow>
         <IconRow>
           <IconButton
@@ -167,49 +274,93 @@ export const RemoteControl: React.FC = () => {
           )}
         </IconRow>
 
-        <IconButton
-          aria-label={
-            (
+        <IconGroup style={{ flexDirection: "row", gap: "0.3em" }}>
+          <IconButton
+            aria-label={
+              (
+                isWebClientActive
+                  ? isCreditOverlayVisible
+                  : isDesktopActive
+                    ? isDesktopCredit
+                    : isCreditOverlayVisible
+              )
+                ? t("actions.captions_off")
+                : t("actions.captions_on")
+            }
+            aria-pressed={
               isWebClientActive
                 ? isCreditOverlayVisible
                 : isDesktopActive
                   ? isDesktopCredit
                   : isCreditOverlayVisible
-            )
-              ? t("actions.captions_off")
-              : t("actions.captions_on")
-          }
-          aria-pressed={
-            isWebClientActive
-              ? isCreditOverlayVisible
-              : isDesktopActive
-                ? isDesktopCredit
-                : isCreditOverlayVisible
-          }
-          onClick={handleToggleCaptions}
-          data-tooltip-id={isDesktop ? "remote-captions" : undefined}
-          disabled={!isAnyClientActive}
-        >
-          {(
-            isWebClientActive
-              ? isCreditOverlayVisible
-              : isDesktopActive
-                ? isDesktopCredit
-                : isCreditOverlayVisible
-          ) ? (
-            <FaClosedCaptioning size={24} />
-          ) : (
-            <FaRegClosedCaptioning size={24} />
+            }
+            onClick={handleToggleCaptions}
+            data-tooltip-id={isDesktop ? "remote-captions" : undefined}
+            disabled={!isAnyClientActive}
+          >
+            {(
+              isWebClientActive
+                ? isCreditOverlayVisible
+                : isDesktopActive
+                  ? isDesktopCredit
+                  : isCreditOverlayVisible
+            ) ? (
+              <FaClosedCaptioning size={24} />
+            ) : (
+              <FaRegClosedCaptioning size={24} />
+            )}
+          </IconButton>
+          {isDesktop && (
+            <Tooltip
+              id="remote-captions"
+              place="top"
+              delayShow={TOOLTIP_DELAY_MS}
+              content={t("components.remote_control.credit")}
+            />
           )}
-        </IconButton>
-        {isDesktop && (
-          <Tooltip
-            id="remote-captions"
-            place="top"
-            delayShow={TOOLTIP_DELAY_MS}
-            content={t("components.remote_control.credit")}
-          />
-        )}
+
+          <IconButton
+            aria-label={t("components.remote_control.repeat")}
+            aria-pressed={repeatActive}
+            onClick={sendMessage(REMOTE_CONTROLS.TOGGLE_REPEAT.event)}
+            data-tooltip-id={isDesktop ? "remote-repeat" : undefined}
+            disabled={!isAnyClientActive}
+          >
+            <RepeatIcon
+              variant={repeatActive ? "filled" : "outline"}
+              size={24}
+            />
+          </IconButton>
+          {isDesktop && (
+            <Tooltip
+              id="remote-repeat"
+              place="top"
+              delayShow={TOOLTIP_DELAY_MS}
+              content={t("components.remote_control.repeat")}
+            />
+          )}
+
+          <IconButton
+            aria-label={t("components.remote_control.shuffle")}
+            aria-pressed={shuffleActive}
+            onClick={sendMessage(REMOTE_CONTROLS.TOGGLE_SHUFFLE.event)}
+            data-tooltip-id={isDesktop ? "remote-shuffle" : undefined}
+            disabled={!isAnyClientActive}
+          >
+            <ShuffleIcon
+              variant={shuffleActive ? "filled" : "outline"}
+              size={24}
+            />
+          </IconButton>
+          {isDesktop && (
+            <Tooltip
+              id="remote-shuffle"
+              place="top"
+              delayShow={TOOLTIP_DELAY_MS}
+              content={t("components.remote_control.shuffle")}
+            />
+          )}
+        </IconGroup>
 
         <IconRow>
           <IconButton

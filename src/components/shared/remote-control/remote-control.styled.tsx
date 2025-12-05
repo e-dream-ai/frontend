@@ -1,5 +1,6 @@
 import { DEVICES } from "@/constants/devices.constants";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
+import { Text } from "@/components/shared";
 
 export const RemoteControlContainer = styled.div`
   display: flex;
@@ -118,4 +119,123 @@ export const TopControls = styled.div`
 export const ButtonGroup = styled.div`
   display: flex;
   gap: 0.3em;
+`;
+
+export const LeftSection = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  width: 100%;
+  max-width: 1024px;
+  justify-content: flex-start;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    width: 100%;
+  }
+`;
+
+const shimmer = keyframes`
+  0% { background-position: -200px 0; }
+  100% { background-position: 200px 0; }
+`;
+
+const SkeletonBase = styled.div`
+  background: ${(p) => p.theme.colorBackgroundQuaternary};
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0px,
+    rgba(255, 255, 255, 0.08) 40px,
+    rgba(255, 255, 255, 0) 80px
+  );
+  background-size: 200px 100%;
+  animation: ${shimmer} 1.2s ease-in-out infinite;
+  border-radius: 4px;
+`;
+
+export const SkeletonArtwork = styled(SkeletonBase)`
+  width: 96px;
+  height: 54px;
+  border-radius: 2px;
+`;
+
+export const SkeletonTitle = styled(SkeletonBase)`
+  width: 160px;
+  height: 20px;
+`;
+
+export const SkeletonMeta = styled(SkeletonBase)`
+  width: 120px;
+  height: 16px;
+  margin-top: 6px;
+`;
+
+export const Artwork = styled.img`
+  width: 96px;
+  height: 54px;
+  object-fit: cover;
+  border-radius: 2px;
+  background: ${(p) => p.theme.colorBackgroundQuaternary};
+`;
+
+export const TrackInfo = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  width: 100%;
+`;
+
+export const TrackInfoRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 1rem;
+`;
+
+export const TrackInfoLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+`;
+
+export const TrackInfoRight = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.25rem;
+  flex-shrink: 0;
+`;
+
+export const TimecodeText = styled(Text)`
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  opacity: 0.9;
+  white-space: nowrap;
+`;
+
+export const FpsText = styled(Text)`
+  font-size: 0.875rem;
+  color: #fff;
+  opacity: 0.7;
+  white-space: nowrap;
+`;
+
+export const TrackTitle = styled(Text)`
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #fff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  max-width: 100%;
+`;
+
+export const TrackMeta = styled(Text)`
+  font-size: 1rem;
+  color: #fff;
+  opacity: 0.8;
 `;

@@ -10,6 +10,8 @@ export type RemoteControlEvent =
   | "dislike_current_dream"
   | "previous"
   | "next"
+  | "repeat"
+  | "shuffle"
   | "forward"
   | "backward"
   | "pause"

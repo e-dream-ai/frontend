@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled, { keyframes } from "styled-components";
 import { Row, Text } from "@/components/shared";
 import { useTranslation } from "react-i18next";
@@ -13,6 +13,8 @@ import {
 } from "react-icons/fa";
 import { LuTurtle, LuRabbit } from "react-icons/lu";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
+import RepeatIcon from "@/icons/repeat-icon";
+import ShuffleIcon from "@/icons/shuffle-icon";
 import useAuth from "@/hooks/useAuth";
 import { usePlaybackStore } from "@/stores/playback.store";
 import { DEVICES } from "@/constants/devices.constants";
@@ -31,27 +33,56 @@ import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { DEVICES_ON_PX } from "@/constants/devices.constants";
 
+const formatTimecode = (s: number): string => {
+  if (!Number.isFinite(s) || s < 0) return "--:--.--";
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  const p = (n: number) => n.toString().padStart(2, "0");
+  const secInt = Math.floor(sec);
+  const centiseconds = Math.floor((sec % 1) * 100);
+  return `${p(m)}:${p(secInt)}.${p(centiseconds)}`;
+};
+
 export const PlayerTray: React.FC = () => {
   const { t } = useTranslation();
-  const { currentDream: authCurrentDream, isLoadingCurrentDream: authLoading } =
-    useAuth();
-  const currentDream =
-    usePlaybackStore((s) => s.currentDream) ?? authCurrentDream;
-  const isLoadingCurrentDream =
-    usePlaybackStore((s) => s.isLoadingCurrentDream) || authLoading;
+  const {
+    user,
+    currentDream: authCurrentDream,
+    isLoadingCurrentDream: authLoading,
+    refreshCurrentDream,
+  } = useAuth();
+  const storeDream = usePlaybackStore((s) => s.currentDream);
+  const storeIsLoading = usePlaybackStore((s) => s.isLoadingCurrentDream);
+  const currentDream = storeDream ?? authCurrentDream;
+  const isLoadingCurrentDream = storeIsLoading || authLoading;
   const { emit, connectedDevicesCount, hasWebPlayer } = useSocket();
-  const { isWebClientActive, handlers, isCreditOverlayVisible } =
-    useWebClient();
+  const {
+    isWebClientActive,
+    handlers,
+    isCreditOverlayVisible,
+    isRepeatMode: webRepeatMode,
+    isShuffleMode: webShuffleMode,
+  } = useWebClient();
   const {
     isActive: isDesktopActive,
     isCreditOverlayVisible: isDesktopCreditVisible,
+    currentTime,
+    fps,
+    isRepeatMode: desktopRepeatMode,
+    isShuffleMode: desktopShuffleMode,
   } = useDesktopClient();
   const { isReady: isVideoReady } = useVideoJs();
   const navigate = useNavigate();
   const { width } = useWindowSize();
   const isDesktop = (width ?? 0) >= DEVICES_ON_PX.TABLET;
-
   const [isHidden, setIsHidden] = useState<boolean>(false);
+
+  // Trigger refresh if user exists but authCurrentDream is undefined and not loading
+  useEffect(() => {
+    if (user && !authCurrentDream && !authLoading && refreshCurrentDream) {
+      void refreshCurrentDream();
+    }
+  }, [user, authCurrentDream, authLoading, refreshCurrentDream]);
 
   const navigateToRemoteControl = (): void => {
     navigate(ROUTES.REMOTE_CONTROL);
@@ -74,6 +105,16 @@ export const PlayerTray: React.FC = () => {
   const shouldRender =
     !isVideoReady &&
     (isDesktopActive || ((connectedDevicesCount ?? 0) > 1 && !!hasWebPlayer));
+  const repeatActive = isWebClientActive
+    ? webRepeatMode
+    : isDesktopActive
+      ? desktopRepeatMode
+      : webRepeatMode;
+  const shuffleActive = isWebClientActive
+    ? webShuffleMode
+    : isDesktopActive
+      ? desktopShuffleMode
+      : webShuffleMode;
 
   if (!shouldRender) return null;
 
@@ -96,7 +137,7 @@ export const PlayerTray: React.FC = () => {
     >
       <Content>
         <LeftSection>
-          {isLoadingCurrentDream ? (
+          {isLoadingCurrentDream && !currentDream ? (
             <>
               <SkeletonArtwork aria-label={t("common.loading")} />
               <TrackInfo>
@@ -115,12 +156,24 @@ export const PlayerTray: React.FC = () => {
                 onClick={navigateToRemoteControl}
               />
               <TrackInfo>
-                <TrackTitle onClick={navigateToRemoteControl}>
-                  {title}
-                </TrackTitle>
-                <TrackMeta onClick={navigateToRemoteControl}>
-                  {artist}
-                </TrackMeta>
+                <TrackInfoRow>
+                  <TrackInfoLeft>
+                    <TrackTitle onClick={navigateToRemoteControl}>
+                      {title}
+                    </TrackTitle>
+                    <TrackMeta onClick={navigateToRemoteControl}>
+                      {artist}
+                    </TrackMeta>
+                  </TrackInfoLeft>
+                  {isDesktopActive && (
+                    <TrackInfoRight>
+                      <TimecodeText>{formatTimecode(currentTime)}</TimecodeText>
+                      <FpsText>
+                        {fps > 0 ? `${fps.toFixed(2)} fps` : "--"}
+                      </FpsText>
+                    </TrackInfoRight>
+                  )}
+                </TrackInfoRow>
               </TrackInfo>
             </>
           )}
@@ -157,6 +210,10 @@ export const PlayerTray: React.FC = () => {
             }}
             idSuffix="mobile"
             enableTooltips={isDesktop}
+            isRepeatMode={repeatActive}
+            isShuffleMode={shuffleActive}
+            onRepeat={() => sendMessage(REMOTE_CONTROLS.TOGGLE_REPEAT.event)}
+            onShuffle={() => sendMessage(REMOTE_CONTROLS.TOGGLE_SHUFFLE.event)}
           />
 
           <RightSection>
@@ -281,6 +338,10 @@ interface SideControlsProps {
   onToggle: () => void;
   idSuffix?: string;
   enableTooltips?: boolean;
+  isRepeatMode: boolean;
+  isShuffleMode: boolean;
+  onRepeat: () => void;
+  onShuffle: () => void;
 }
 
 const SideControls: React.FC<SideControlsProps> = ({
@@ -288,11 +349,15 @@ const SideControls: React.FC<SideControlsProps> = ({
   onToggle,
   idSuffix,
   enableTooltips,
+  isRepeatMode,
+  isShuffleMode,
+  onRepeat,
+  onShuffle,
 }) => {
   const { t } = useTranslation();
   const tooltipId = `player-tray-credit-${idSuffix ?? "default"}`;
   return (
-    <ColumnControls>
+    <ColumnControls style={{ flexDirection: "row", gap: "0.3em" }}>
       <IconButton
         aria-label={isOn ? t("actions.captions_off") : t("actions.captions_on")}
         aria-pressed={isOn}
@@ -311,6 +376,48 @@ const SideControls: React.FC<SideControlsProps> = ({
           place="top"
           delayShow={TOOLTIP_DELAY_MS}
           content={t("components.remote_control.credit")}
+        />
+      )}
+
+      <IconButton
+        aria-label={t("components.remote_control.repeat")}
+        aria-pressed={isRepeatMode}
+        onClick={onRepeat}
+        data-tooltip-id={
+          enableTooltips
+            ? `player-tray-repeat-${idSuffix ?? "default"}`
+            : undefined
+        }
+      >
+        <RepeatIcon variant={isRepeatMode ? "filled" : "outline"} size={24} />
+      </IconButton>
+      {enableTooltips && (
+        <Tooltip
+          id={`player-tray-repeat-${idSuffix ?? "default"}`}
+          place="top"
+          delayShow={TOOLTIP_DELAY_MS}
+          content={t("components.remote_control.repeat")}
+        />
+      )}
+
+      <IconButton
+        aria-label={t("components.remote_control.shuffle")}
+        aria-pressed={isShuffleMode}
+        onClick={onShuffle}
+        data-tooltip-id={
+          enableTooltips
+            ? `player-tray-shuffle-${idSuffix ?? "default"}`
+            : undefined
+        }
+      >
+        <ShuffleIcon variant={isShuffleMode ? "filled" : "outline"} size={24} />
+      </IconButton>
+      {enableTooltips && (
+        <Tooltip
+          id={`player-tray-shuffle-${idSuffix ?? "default"}`}
+          place="top"
+          delayShow={TOOLTIP_DELAY_MS}
+          content={t("components.remote_control.shuffle")}
         />
       )}
     </ColumnControls>
@@ -392,21 +499,23 @@ const Content = styled.div`
   max-width: 1024px;
   width: 100%;
   margin: 0 auto;
-  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
   gap: 1rem;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    flex-wrap: wrap;
+  }
 `;
 
 const LeftSection = styled.div`
   display: flex;
   align-items: center;
   gap: 1.5rem;
-  min-width: 0;
-  max-width: 50%;
+  width: 60%;
 
-  @media (max-width: ${DEVICES.MOBILE_S}) {
-    max-width: 100%;
+  @media (max-width: ${DEVICES.TABLET}) {
+    width: 100%;
   }
 `;
 
@@ -497,6 +606,46 @@ const TrackInfo = styled.div`
   display: flex;
   flex-direction: column;
   min-width: 0;
+  width: 100%;
+`;
+
+const TrackInfoRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  width: 100%;
+  gap: 1rem;
+`;
+
+const TrackInfoLeft = styled.div`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  flex: 1;
+`;
+
+const TrackInfoRight = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 0.25rem;
+  flex-shrink: 0;
+`;
+
+const TimecodeText = styled(Text)`
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  opacity: 0.9;
+  white-space: nowrap;
+`;
+
+const FpsText = styled(Text)`
+  font-size: 0.875rem;
+  color: #fff;
+  opacity: 0.7;
+  white-space: nowrap;
 `;
 
 const TrackTitle = styled(Text)`

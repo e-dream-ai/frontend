@@ -1,10 +1,12 @@
-import { createContext, useEffect, useMemo, useState } from "react";
+import { createContext, useEffect, useMemo, useRef, useState } from "react";
 import {
   GOOD_BYE_EVENT,
   PING_EVENT,
+  STATE_SYNC_EVENT,
 } from "@/constants/remote-control.constants";
 import useAuth from "@/hooks/useAuth";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
+import useSocket from "@/hooks/useSocket";
 import { NEW_REMOTE_CONTROL_EVENT } from "@/constants/remote-control.constants";
 import { REMOTE_CONTROLS } from "@/constants/remote-control.constants";
 import { RemoteControlEventData } from "@/types/remote-control.types";
@@ -19,6 +21,8 @@ type DesktopClientContextType = {
   setSpeedLevel: (speed: number) => void;
   isCreditOverlayVisible: boolean;
   toggleCreditOverlay: () => void;
+  isRepeatMode: boolean;
+  isShuffleMode: boolean;
 };
 
 const DesktopClientContext = createContext<
@@ -37,14 +41,33 @@ export const DesktopClientProvider = ({
   inactivityTimeout?: number;
 }) => {
   const { user } = useAuth();
-  const [lastEventTime, setLastEventTime] = useState<number | undefined>();
-  const [isActive, setIsActive] = useState<boolean>(false);
+  const { socket, isConnected } = useSocket();
+  const initialLastPingTime = user?.last_client_ping_at
+    ? new Date(user.last_client_ping_at).getTime()
+    : undefined;
+  const [lastEventTime, setLastEventTime] = useState<number | undefined>(
+    () => initialLastPingTime,
+  );
+  const [isActive, setIsActive] = useState<boolean>(() => {
+    if (!initialLastPingTime) {
+      return false;
+    }
+    return Date.now() - initialLastPingTime < inactivityTimeout;
+  });
+  const hasRequestedStateRef = useRef<boolean>(false);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [duration, setDuration] = useState<number>(0);
   const [fps, setFps] = useState<number>(0);
   const [speedLevel, setSpeedLevel] = useState<number>(9);
   const [isCreditOverlayVisible, setIsCreditOverlayVisible] =
     useState<boolean>(false);
+  const [isRepeatMode, setIsRepeatMode] = useState<boolean>(false);
+  const [isShuffleMode, setIsShuffleMode] = useState<boolean>(false);
+  const [isPaused, setIsPaused] = useState<boolean>(false);
+  const [stateSyncReceived, setStateSyncReceived] = useState<number>(0); // Trigger to restart interpolation
+  const lastServerTimeRef = useRef<number>(0);
+  const lastServerTimestampRef = useRef<number>(0);
+  const isPausedRef = useRef<boolean>(false);
 
   const toggleCreditOverlay = (): void => {
     setIsCreditOverlayVisible((prev) => !prev);
@@ -72,6 +95,10 @@ export const DesktopClientProvider = ({
     setFps(0);
     setSpeedLevel(9);
     setIsCreditOverlayVisible(false);
+    setIsRepeatMode(false);
+    setIsShuffleMode(false);
+    isPausedRef.current = false;
+    setIsPaused(false);
   };
 
   /**
@@ -79,6 +106,47 @@ export const DesktopClientProvider = ({
    */
   useSocketEventListener(PING_EVENT, handlePingEvent);
   useSocketEventListener(GOOD_BYE_EVENT, handleGoodbyeEvent);
+
+  useSocketEventListener<{
+    dream_uuid?: string;
+    playlist?: string;
+    timecode?: string;
+    hud?: string;
+    paused?: string;
+    playback_speed?: string;
+    fps?: string;
+  }>(STATE_SYNC_EVENT, async (data) => {
+    if (!data) return;
+
+    setIsActive(true);
+    const now = Date.now();
+    setLastEventTime(now);
+
+    const nextTime = data.timecode ? Number(data.timecode) : undefined;
+    const nextFps = data.playback_speed
+      ? Number(data.playback_speed)
+      : data.fps
+        ? Number(data.fps)
+        : undefined;
+    const isPaused = data.paused === "true";
+
+    // Store server values for interpolation
+    if (nextTime !== undefined && Number.isFinite(nextTime)) {
+      lastServerTimeRef.current = Math.max(0, nextTime);
+      lastServerTimestampRef.current = now;
+      setCurrentTime(lastServerTimeRef.current);
+      setStateSyncReceived(now);
+    }
+    if (nextFps !== undefined && Number.isFinite(nextFps)) {
+      setFps(Math.max(0, nextFps));
+    }
+    isPausedRef.current = isPaused;
+    setIsPaused(isPaused);
+    if (isPaused) {
+      setSpeedLevel(0);
+      setFps(0);
+    }
+  });
 
   /**
    * Handle status updates from desktop client containing playback metrics
@@ -106,10 +174,15 @@ export const DesktopClientProvider = ({
         if (Number.isFinite(nextTime)) setCurrentTime(Math.max(0, nextTime));
         if (Number.isFinite(nextDuration))
           setDuration(Math.max(0, nextDuration));
-        if (Number.isFinite(nextFps)) setFps(Math.max(0, Math.round(nextFps)));
+        if (Number.isFinite(nextFps)) setFps(Math.max(0, nextFps));
         if (payload?.paused === true) {
           setSpeedLevel(0);
           setFps(0);
+          isPausedRef.current = true;
+          setIsPaused(true);
+        } else if (payload?.paused === false) {
+          isPausedRef.current = false;
+          setIsPaused(false);
         }
       }
 
@@ -133,15 +206,74 @@ export const DesktopClientProvider = ({
         setSpeedLevel(newSpeed);
         if (newSpeed === 0) {
           setFps(0);
+          isPausedRef.current = true;
+          setIsPaused(true);
+        } else {
+          isPausedRef.current = false;
+          setIsPaused(false);
         }
       }
 
-      // Toggle credit overlay visibility when CREDIT event is received
       if (data.event === REMOTE_CONTROLS.CREDIT.event) {
         setIsCreditOverlayVisible((prev) => !prev);
       }
+
+      if (data.event === REMOTE_CONTROLS.TOGGLE_REPEAT.event) {
+        setIsRepeatMode((prev) => !prev);
+      }
+
+      if (data.event === REMOTE_CONTROLS.TOGGLE_SHUFFLE.event) {
+        setIsShuffleMode((prev) => !prev);
+      }
     },
   );
+
+  useEffect(() => {
+    if (!socket || hasRequestedStateRef.current) {
+      return;
+    }
+
+    const handleConnect = () => {
+      hasRequestedStateRef.current = true;
+    };
+
+    socket.on("connect", handleConnect);
+
+    if (isConnected) {
+      setTimeout(() => {
+        hasRequestedStateRef.current = true;
+      }, 200);
+    }
+
+    return () => {
+      socket.off("connect", handleConnect);
+    };
+  }, [socket, isConnected]);
+
+  useEffect(() => {
+    // Only start interpolation if we have valid server state
+    if (!isActive || isPaused || !lastServerTimestampRef.current) {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      const now = Date.now();
+      const timeSinceLastUpdate = (now - lastServerTimestampRef.current) / 1000;
+      if (timeSinceLastUpdate < 0) {
+        return;
+      }
+      const normalPerceptualFps = 20;
+      const speedMultiplier = fps > 0 ? fps / normalPerceptualFps : 0;
+      const interpolatedTime =
+        lastServerTimeRef.current + timeSinceLastUpdate * speedMultiplier;
+
+      setCurrentTime(Math.max(0, interpolatedTime));
+      lastServerTimeRef.current = interpolatedTime;
+      lastServerTimestampRef.current = now;
+    }, 100);
+
+    return () => window.clearInterval(intervalId);
+  }, [isActive, isPaused, stateSyncReceived, fps]);
 
   /**
    * Setup timer from socket
@@ -227,6 +359,8 @@ export const DesktopClientProvider = ({
           setSpeedLevel,
           isCreditOverlayVisible,
           toggleCreditOverlay,
+          isRepeatMode,
+          isShuffleMode,
         }),
         [
           isActive,
@@ -236,6 +370,8 @@ export const DesktopClientProvider = ({
           speedLevel,
           isCreditOverlayVisible,
           toggleCreditOverlay,
+          isRepeatMode,
+          isShuffleMode,
         ],
       )}
     >

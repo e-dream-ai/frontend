@@ -27,6 +27,8 @@ export const useCurrentDream = () => {
     getCurrentDream,
     {
       enabled: Boolean(user),
+      refetchOnMount: true,
+      refetchOnWindowFocus: true,
     },
   );
 };

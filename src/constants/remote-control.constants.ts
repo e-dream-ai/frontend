@@ -5,6 +5,7 @@ export const PING_EVENT = "ping";
 export const PING_REDIS_EVENT = "ping_redis";
 export const GOOD_BYE_EVENT = "goodbye";
 export const WEB_CLIENT_STATUS_EVENT = "web_client_status";
+export const STATE_SYNC_EVENT = "state_sync";
 
 export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
   PLAYING: { event: "playing", key: "", triggerKey: "" },
@@ -24,6 +25,8 @@ export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
   },
   GO_PREVIOUS_DREAM: { event: "previous", key: "←", triggerKey: "ArrowLeft" },
   GO_NEXT_DREAM: { event: "next", key: "→", triggerKey: "ArrowRight" },
+  TOGGLE_REPEAT: { event: "repeat", key: "R", triggerKey: "r" },
+  TOGGLE_SHUFFLE: { event: "shuffle", key: "H", triggerKey: "h" },
   PLAYBACK_SLOWER: { event: "playback_slower", key: "A", triggerKey: "a" },
   PLAYBACK_FASTER: { event: "playback_faster", key: "D", triggerKey: "d" },
   FORWARD: { event: "forward", key: "L", triggerKey: "l" },
@@ -52,10 +55,6 @@ export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
 };
 
 export const REMOTE_CONTROLS_TRANSLATIONS = {
-  [REMOTE_CONTROLS.PLAYING.event]: "components.remote_control.playing",
-  [REMOTE_CONTROLS.PLAY_DREAM.event]: "components.remote_control.play_dream",
-  [REMOTE_CONTROLS.PLAY_PLAYLIST.event]:
-    "components.remote_control.play_playlist",
   [REMOTE_CONTROLS.LIKE_DREAM.event]: "components.remote_control.like",
   [REMOTE_CONTROLS.DISLIKE_DREAM.event]: "components.remote_control.dislike",
   [REMOTE_CONTROLS.LIKE_CURRENT_DREAM.event]: "components.remote_control.like",
@@ -64,6 +63,8 @@ export const REMOTE_CONTROLS_TRANSLATIONS = {
   [REMOTE_CONTROLS.GO_PREVIOUS_DREAM.event]:
     "components.remote_control.previous",
   [REMOTE_CONTROLS.GO_NEXT_DREAM.event]: "components.remote_control.next",
+  [REMOTE_CONTROLS.TOGGLE_REPEAT.event]: "components.remote_control.repeat",
+  [REMOTE_CONTROLS.TOGGLE_SHUFFLE.event]: "components.remote_control.shuffle",
   [REMOTE_CONTROLS.PLAYBACK_SLOWER.event]:
     "components.remote_control.playback_slower",
   [REMOTE_CONTROLS.PLAYBACK_FASTER.event]:
