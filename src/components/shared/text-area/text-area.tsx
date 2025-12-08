@@ -48,15 +48,40 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
   ) => {
     // create an internal reference for textarea
     const internalRef = useRef<HTMLTextAreaElement>(null);
+    // create a reference for disabled textarea div
+    const disabledRef = useRef<HTMLDivElement>(null);
 
     // expose internal reference through the forwarded ref
     useImperativeHandle(ref, () => internalRef.current!, [internalRef]);
 
-    // adjust height function
-    const adjustHeight = useCallback((textarea: HTMLTextAreaElement) => {
-      textarea.style.height = "auto";
-      textarea.style.height = `${textarea.scrollHeight}px`;
-    }, []);
+    const adjustHeight = useCallback(
+      (textarea: HTMLTextAreaElement) => {
+        textarea.style.height = "auto";
+        const scrollHeight = textarea.scrollHeight;
+        const isEmpty = !value || value.toString().trim() === "";
+        if (isEmpty) {
+          textarea.style.height = "2.5rem";
+        } else {
+          textarea.style.height = `${scrollHeight}px`;
+        }
+      },
+      [value],
+    );
+
+    // adjust height function for disabled div
+    const adjustDisabledHeight = useCallback(
+      (div: HTMLDivElement) => {
+        div.style.height = "auto";
+        const scrollHeight = div.scrollHeight;
+        const isEmpty = !value || value.toString().trim() === "";
+        if (isEmpty) {
+          div.style.height = "2.5rem";
+        } else {
+          div.style.height = `${scrollHeight}px`;
+        }
+      },
+      [value],
+    );
 
     // handle change fn, execute from props if exists
     const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -66,12 +91,16 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
 
     // should trigger recalculation when some deps change
     useEffect(() => {
-      if (internalRef.current) {
+      if (disabled && disabledRef.current) {
+        requestAnimationFrame(() => {
+          adjustDisabledHeight(disabledRef.current!);
+        });
+      } else if (internalRef.current) {
         requestAnimationFrame(() => {
           adjustHeight(internalRef.current!);
         });
       }
-    }, [value, internalRef, disabled, adjustHeight]);
+    }, [value, internalRef, disabled, adjustHeight, adjustDisabledHeight]);
 
     return (
       <TextAreaGroup data-tooltip-id={name}>
@@ -80,7 +109,7 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
           {before && <TextAreaBefore>{before}</TextAreaBefore>}
 
           {disabled ? (
-            <DisabledTextArea>
+            <DisabledTextArea ref={disabledRef}>
               {linkify ? (
                 <Linkify
                   componentDecorator={(decoratedHref, decoratedText, key) => (

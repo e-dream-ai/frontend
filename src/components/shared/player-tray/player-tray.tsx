@@ -636,8 +636,8 @@ const TrackInfoRight = styled.div`
 const TimecodeText = styled(Text)`
   font-size: 1rem;
   font-weight: 600;
-  color: #fff;
-  opacity: 0.9;
+  color: ${(p) => p.theme.textAccentColor};
+  opacity: 0.8;
   white-space: nowrap;
 `;
 
@@ -651,7 +651,8 @@ const FpsText = styled(Text)`
 const TrackTitle = styled(Text)`
   font-size: 1.2rem;
   font-weight: 700;
-  color: #fff;
+  color: ${(p) => p.theme.textAccentColor};
+  opacity: 0.8;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -660,7 +661,7 @@ const TrackTitle = styled(Text)`
   max-width: 100%;
 
   :hover {
-    opacity: 0.8;
+    opacity: 1;
   }
 `;
 

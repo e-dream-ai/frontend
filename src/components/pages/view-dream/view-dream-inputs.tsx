@@ -16,6 +16,7 @@ import {
 import { Video, VideoPlaceholder } from "./view-dream.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faAlignLeft,
   faBook,
   faCalendar,
   faClock,
@@ -57,6 +58,43 @@ import { KeyframeSelect } from "./keyframe-select";
 import { useTooltipPlaces } from "@/hooks/useFormTooltipPlaces";
 import { FormInput } from "@/components/shared/input/input";
 import { FormTextArea } from "@/components/shared/text-area/text-area";
+import {
+  TextAreaGroup,
+  TextAreaRow,
+  TextAreaBefore,
+} from "@/components/shared/text-area/text-area.styled";
+import { JsonEditor } from "json-edit-react";
+import styled from "styled-components";
+
+const JsonEditorWrapper = styled.div<{ disabled?: boolean }>`
+  width: 100%;
+  width: -moz-available;
+  width: -webkit-fill-available;
+  width: fill-available;
+  min-height: 2.5rem;
+  max-height: 8rem;
+  overflow-y: auto;
+  overflow-x: hidden;
+  resize: none;
+  background: ${(props) =>
+    props.disabled
+      ? props.theme.inputBackgroundColor
+      : props.theme.colorBackgroundSecondary};
+  border-radius: 0;
+  border: 0;
+  color: ${(props) => props.theme.inputTextColorPrimary};
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: ${(props) => (props.disabled ? "not-allowed" : "auto")};
+
+  & > div {
+    background: transparent !important;
+  }
+
+  & * {
+    color: ${(props) => props.theme.inputTextColorPrimary} !important;
+  }
+`;
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -207,8 +245,97 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             linkify
             disabled={!editMode}
             placeholder={t("page.view_dream.description")}
-            before={<FontAwesomeIcon icon={faComment} />}
+            before={<FontAwesomeIcon icon={faAlignLeft} />}
             {...register("description")}
+          />
+        </Column>
+      </Row>
+      <Row flex="auto" m={0}>
+        <Column flex="auto" m={0}>
+          <Controller
+            name="prompt"
+            control={control}
+            render={({ field }) => {
+              const isValidJsonObject = (
+                value: unknown,
+              ): value is Record<string, unknown> | null => {
+                return (
+                  value === null ||
+                  (typeof value === "object" && !Array.isArray(value))
+                );
+              };
+
+              const extractActualData = (
+                data: Record<string, unknown> | null,
+              ): Record<string, unknown> | null => {
+                if (data === null) return null;
+                if ("newData" in data)
+                  return data.newData as Record<string, unknown> | null;
+                if ("newValue" in data)
+                  return data.newValue as Record<string, unknown> | null;
+                return data;
+              };
+
+              const parseUpdatedData = (
+                updatedData: unknown,
+              ): Record<string, unknown> | null => {
+                if (updatedData === null || updatedData === undefined) {
+                  return null;
+                }
+
+                if (typeof updatedData === "string") {
+                  try {
+                    const parsed = JSON.parse(updatedData);
+                    if (!isValidJsonObject(parsed)) return null;
+                    return extractActualData(parsed);
+                  } catch {
+                    return null;
+                  }
+                }
+
+                if (isValidJsonObject(updatedData)) {
+                  return extractActualData(updatedData);
+                }
+
+                return null;
+              };
+
+              const handleUpdate = (updatedData: unknown) => {
+                if (!editMode) return;
+
+                try {
+                  const validData = parseUpdatedData(updatedData);
+                  if (validData !== null || updatedData === null) {
+                    field.onChange(validData);
+                  }
+                } catch (error) {
+                  console.error("Error updating prompt", error);
+                }
+              };
+
+              return (
+                <TextAreaGroup>
+                  <TextAreaRow>
+                    <TextAreaBefore>
+                      <FontAwesomeIcon icon={faComment} />
+                    </TextAreaBefore>
+                    <JsonEditorWrapper disabled={!editMode}>
+                      <JsonEditor
+                        data={field.value || {}}
+                        onUpdate={handleUpdate}
+                        restrictEdit={!editMode}
+                        restrictDelete={!editMode}
+                        restrictAdd={!editMode}
+                        restrictDrag={!editMode}
+                        restrictTypeSelection={!editMode}
+                        collapse={false}
+                        rootName={t("page.view_dream.prompt")}
+                      />
+                    </JsonEditorWrapper>
+                  </TextAreaRow>
+                </TextAreaGroup>
+              );
+            }}
           />
         </Column>
       </Row>
