@@ -51,10 +51,10 @@ export const Header: React.FC = () => {
         }}
       >
         <LogoProfileWrapper
-          order={[1, 1, 1, 1]}
+          order={[1, 1, 4, 4]}
           flexDirection="row"
           alignItems="center"
-          display={["flex", "flex", "none", "none"]}
+          display={["flex", "none", "none", "none"]}
         >
           <LogoContainer>
             <LogoAnchor to={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
@@ -84,7 +84,7 @@ export const Header: React.FC = () => {
           </ProfileContainer>
         </LogoProfileWrapper>
 
-        <LogoContainer order={1} display={["none", "none", "flex", "flex"]}>
+        <LogoContainer order={1} display={["none", "flex", "flex", "flex"]}>
           <LogoAnchor to={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
             <MotionLogoIcon
               src="/images/edream-logo-512x512.png"
@@ -102,7 +102,7 @@ export const Header: React.FC = () => {
         </LogoContainer>
 
         <NavContainer
-          order={[3, 3, 2, 2]}
+          order={[2, 2, 2, 2]}
           justifyContent="space-between"
           display={user ? "flex" : ["none", "flex", "flex", "flex"]}
         >
@@ -112,9 +112,9 @@ export const Header: React.FC = () => {
         </NavContainer>
 
         <ProfileContainer
-          order={[4, 4, 3, 3]}
+          order={[3, 3, 3, 3]}
           ml={user ? "0rem" : "1rem"}
-          display={["none", "none", "flex", "flex"]}
+          display={["none", "flex", "flex", "flex"]}
         >
           <HeaderProfile />
           <Row m={0} display={user ? "flex" : ["flex", "none", "none", "none"]}>
