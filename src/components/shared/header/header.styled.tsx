@@ -83,6 +83,12 @@ export const LogoProfileWrapper = styled.div<
     gap: 1rem;
   }
 
+  @media (max-width: ${DEVICES.TABLET}) {
+    width: 100%;
+    justify-content: space-between;
+    flex-wrap: nowrap;
+  }
+
   ${order}
   ${flexbox}
   ${display}

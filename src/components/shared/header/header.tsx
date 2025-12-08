@@ -42,7 +42,7 @@ export const Header: React.FC = () => {
     <HeaderContainer>
       <MotionStyledHeader
         flexDirection="row"
-        flexWrap={["wrap", "wrap", "nowrap", "nowrap"]}
+        flexWrap={["wrap", "nowrap", "nowrap", "nowrap"]}
         justifyContent="space-between"
         style={{
           paddingTop: headerPaddingTop as unknown as string,
