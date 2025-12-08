@@ -262,18 +262,26 @@ export const DesktopClientProvider = ({
       if (timeSinceLastUpdate < 0) {
         return;
       }
+
+      if (duration > 0 && lastServerTimeRef.current >= duration) {
+        return;
+      }
+
       const normalPerceptualFps = 20;
       const speedMultiplier = fps > 0 ? fps / normalPerceptualFps : 0;
       const interpolatedTime =
         lastServerTimeRef.current + timeSinceLastUpdate * speedMultiplier;
 
-      setCurrentTime(Math.max(0, interpolatedTime));
-      lastServerTimeRef.current = interpolatedTime;
-      lastServerTimestampRef.current = now;
+      let clampedTime = Math.max(0, interpolatedTime);
+      if (duration > 0) {
+        clampedTime = Math.min(clampedTime, duration);
+      }
+
+      setCurrentTime(clampedTime);
     }, 100);
 
     return () => window.clearInterval(intervalId);
-  }, [isActive, isPaused, stateSyncReceived, fps]);
+  }, [isActive, isPaused, stateSyncReceived, fps, duration]);
 
   /**
    * Setup timer from socket
