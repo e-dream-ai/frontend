@@ -211,8 +211,8 @@ export const TrackInfoRight = styled.div`
 export const TimecodeText = styled(Text)`
   font-size: 1rem;
   font-weight: 600;
-  color: #fff;
-  opacity: 0.9;
+  color: ${(p) => p.theme.textAccentColor};
+  opacity: 0.8;
   white-space: nowrap;
 `;
 
@@ -226,7 +226,8 @@ export const FpsText = styled(Text)`
 export const TrackTitle = styled(Text)`
   font-size: 1.2rem;
   font-weight: 700;
-  color: #fff;
+  color: ${(p) => p.theme.textAccentColor};
+  opacity: 0.8;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

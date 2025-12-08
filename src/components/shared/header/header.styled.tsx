@@ -70,11 +70,30 @@ export const HeaderTitle = styled.h1<{ $isScrolled?: boolean }>`
   }
 `;
 
-export const LogoContainer = styled.div<OrderProps>`
+export const LogoProfileWrapper = styled.div<
+  OrderProps & FlexboxProps & DisplayProps
+>`
+  display: flex;
+  flex-flow: row;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 0.5rem;
+
+  @media (min-width: ${DEVICES.TABLET}) {
+    gap: 1rem;
+  }
+
+  ${order}
+  ${flexbox}
+  ${display}
+`;
+
+export const LogoContainer = styled.div<OrderProps & DisplayProps>`
   display: inline-flex;
   flex-flow: row;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
 
   button {
     width: 60px;
@@ -91,21 +110,22 @@ export const LogoContainer = styled.div<OrderProps>`
   }
 
   ${order}
+  ${display}
 `;
 
 export const LogoIcon = styled.img<{ $isScrolled?: boolean }>`
   width: auto;
-  height: ${(props) => (props.$isScrolled ? "3rem" : "6rem")};
+  height: ${(props) => (props.$isScrolled ? "2.5rem" : "4rem")};
   max-width: 100%;
   cursor: pointer;
   transition: height 0.2s ease;
 
   @media (max-width: ${DEVICES.LAPTOP}) {
-    height: ${(props) => (props.$isScrolled ? "2.5rem" : "3rem")};
+    height: ${(props) => (props.$isScrolled ? "2rem" : "2.5rem")};
   }
 
   @media (max-width: ${DEVICES.MOBILE_S}) {
-    height: ${(props) => (props.$isScrolled ? "2rem" : "2rem")};
+    height: ${(props) => (props.$isScrolled ? "1.5rem" : "1.5rem")};
   }
 `;
 
@@ -124,10 +144,13 @@ export const NavContainer = styled.div<
   ${display}
 `;
 
-export const ProfileContainer = styled.div<OrderProps & SpaceProps>`
+export const ProfileContainer = styled.div<
+  OrderProps & SpaceProps & DisplayProps
+>`
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  flex-shrink: 0;
 
   button {
     width: 55px;
@@ -136,6 +159,7 @@ export const ProfileContainer = styled.div<OrderProps & SpaceProps>`
   }
   ${order}
   ${space}
+  ${display}
 `;
 
 export const StyledNavList = styled.ul`

@@ -4,6 +4,7 @@ import {
   HeaderContainer,
   LogoAnchor,
   LogoContainer,
+  LogoProfileWrapper,
   NavContainer,
   Nav,
   ProfileContainer,
@@ -28,9 +29,14 @@ export const Header: React.FC = () => {
   const { user } = useAuth();
   const { scrollY } = useScroll();
 
-  const logoHeight = useTransform(scrollY, [0, 150], ["6rem", "3rem"]);
+  const logoHeight = useTransform(scrollY, [0, 150], ["4rem", "2.5rem"]);
   const titleFontSize = useTransform(scrollY, [0, 150], ["2.2rem", "1.6rem"]);
-  const headerPadding = useTransform(scrollY, [0, 150], ["1rem 0", "0.5rem 0"]);
+  const headerPaddingTop = useTransform(scrollY, [0, 150], ["1rem", "0.5rem"]);
+  const headerPaddingBottom = useTransform(
+    scrollY,
+    [0, 150],
+    ["1rem", "0.5rem"],
+  );
 
   return (
     <HeaderContainer>
@@ -39,11 +45,46 @@ export const Header: React.FC = () => {
         flexWrap={["wrap", "wrap", "nowrap", "nowrap"]}
         justifyContent="space-between"
         style={{
-          padding: headerPadding as unknown as string,
+          paddingTop: headerPaddingTop as unknown as string,
+          paddingBottom: headerPaddingBottom as unknown as string,
           transition: "padding 0.2s ease",
         }}
       >
-        <LogoContainer order={1}>
+        <LogoProfileWrapper
+          order={[1, 1, 1, 1]}
+          flexDirection="row"
+          alignItems="center"
+          display={["flex", "flex", "none", "none"]}
+        >
+          <LogoContainer>
+            <LogoAnchor to={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
+              <MotionLogoIcon
+                src="/images/edream-logo-512x512.png"
+                alt={t("header.e_dream")}
+                style={{ height: logoHeight }}
+              />
+              <MotionHeaderTitle
+                style={{
+                  fontSize: titleFontSize,
+                }}
+              >
+                {t("header.e_dream")}
+              </MotionHeaderTitle>
+            </LogoAnchor>
+          </LogoContainer>
+
+          <ProfileContainer ml="0rem">
+            <HeaderProfile />
+            <Row
+              m={0}
+              display={user ? "flex" : ["flex", "none", "none", "none"]}
+            >
+              <KebabMenu />
+            </Row>
+          </ProfileContainer>
+        </LogoProfileWrapper>
+
+        <LogoContainer order={1} display={["none", "none", "flex", "flex"]}>
           <LogoAnchor to={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
             <MotionLogoIcon
               src="/images/edream-logo-512x512.png"
@@ -61,7 +102,7 @@ export const Header: React.FC = () => {
         </LogoContainer>
 
         <NavContainer
-          order={[3, 2, 2, 2]}
+          order={[3, 3, 2, 2]}
           justifyContent="space-between"
           display={user ? "flex" : ["none", "flex", "flex", "flex"]}
         >
@@ -71,8 +112,9 @@ export const Header: React.FC = () => {
         </NavContainer>
 
         <ProfileContainer
-          order={[2, 3, 3, 3]}
-          ml={user ? ["15vw", "0rem", "1rem", "1rem"] : "1rem"}
+          order={[4, 4, 3, 3]}
+          ml={user ? "0rem" : "1rem"}
+          display={["none", "none", "flex", "flex"]}
         >
           <HeaderProfile />
           <Row m={0} display={user ? "flex" : ["flex", "none", "none", "none"]}>
