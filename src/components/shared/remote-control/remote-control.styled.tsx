@@ -211,22 +211,20 @@ export const TrackInfoRight = styled.div`
 export const TimecodeText = styled(Text)`
   font-size: 1rem;
   font-weight: 600;
-  color: #fff;
-  opacity: 0.9;
+  color: ${(p) => p.theme.colorPrimary};
   white-space: nowrap;
 `;
 
 export const FpsText = styled(Text)`
   font-size: 0.875rem;
-  color: #fff;
-  opacity: 0.7;
+  color: ${(p) => p.theme.colorPrimary};
   white-space: nowrap;
 `;
 
 export const TrackTitle = styled(Text)`
   font-size: 1.2rem;
   font-weight: 700;
-  color: #fff;
+  color: ${(p) => p.theme.colorPrimary};
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -236,6 +234,5 @@ export const TrackTitle = styled(Text)`
 
 export const TrackMeta = styled(Text)`
   font-size: 1rem;
-  color: #fff;
-  opacity: 0.8;
+  color: ${(p) => p.theme.textPrimaryColor};
 `;
