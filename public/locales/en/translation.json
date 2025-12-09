@@ -163,6 +163,7 @@
       "downvotes": "Dislikes",
       "name": "Name",
       "description": "Description",
+      "prompt": "Prompt",
       "source_url": "Source URL",
       "ccby_license": "Creative Commons Attribution License",
       "activity_level": "Activity Level",

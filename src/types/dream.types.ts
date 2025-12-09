@@ -35,6 +35,7 @@ export type Dream = {
   nsfw?: boolean;
   hidden?: boolean;
   description?: string;
+  prompt?: string | Record<string, unknown> | null;
   sourceUrl?: string;
   ccbyLicense?: boolean;
   playlistItems?: PlaylistItem[];

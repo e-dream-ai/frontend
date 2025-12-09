@@ -89,79 +89,109 @@ export const formatDreamForm = ({
   dream?: Dream;
   isAdmin: boolean;
   t: TFunction;
-}) => ({
-  name: dream?.name ?? "",
-  description: dream?.description ?? "",
-  sourceUrl: dream?.sourceUrl ?? "",
-  activityLevel: dream?.activityLevel,
-  featureRank: dream?.featureRank,
-  processedVideoSize: dream?.processedVideoSize
-    ? Math.round(bytesToMegabytes(dream?.processedVideoSize)) + " MB"
-    : "-",
-  processedVideoFrames: dream?.processedVideoFrames
-    ? secondsToTimeFormat(
-        framesToSeconds(dream?.processedVideoFrames, dream?.activityLevel),
-      )
-    : "-",
-  processedVideoFPS: dream?.processedVideoFPS
-    ? `${dream?.processedVideoFPS} Original FPS`
-    : "-",
-  user: getUserName(dream?.user),
-  /**
-   * set displayedOwner
-   * for admins always show displayedOwner
-   * for normal users show displayedOwner, if doesn't exists, show user
-   */
-  displayedOwner: isAdmin
-    ? {
-        value: dream?.displayedOwner?.id,
-        label: getUserName(dream?.displayedOwner),
+}) => {
+  let parsedPrompt: Record<string, unknown> | null = null;
+  if (dream?.prompt !== null && dream?.prompt !== undefined) {
+    try {
+      if (typeof dream.prompt === "string") {
+        const parsed = JSON.parse(dream.prompt);
+        parsedPrompt =
+          typeof parsed === "object" && parsed !== null ? parsed : null;
+      } else if (typeof dream.prompt === "object") {
+        parsedPrompt = dream.prompt as Record<string, unknown>;
       }
-    : {
-        value: dream?.displayedOwner?.id ?? dream?.user?.id,
-        label: getUserName(dream?.displayedOwner ?? dream?.user),
-      },
-  nsfw: filterNsfwOption(dream?.nsfw, t),
-  hidden: filterHiddenOption(dream?.hidden, t),
-  ccbyLicense: filterCcaLicenceOption(dream?.ccbyLicense, t),
-  upvotes: dream?.upvotes,
-  downvotes: dream?.downvotes,
-  /**
-   * keyframes
-   */
-  startKeyframe: {
-    label: dream?.startKeyframe?.name ?? "-",
-    value: dream?.startKeyframe?.uuid,
-  },
-  endKeyframe: {
-    label: dream?.endKeyframe?.name ?? "-",
-    value: dream?.endKeyframe?.uuid,
-  },
-  created_at: moment(dream?.created_at).format(FORMAT),
-  processed_at: dream?.processed_at
-    ? moment(dream?.processed_at).format(FORMAT)
-    : "-",
-});
+    } catch {
+      parsedPrompt = null;
+    }
+  }
+
+  return {
+    name: dream?.name ?? "",
+    description: dream?.description ?? "",
+    prompt: parsedPrompt,
+    sourceUrl: dream?.sourceUrl ?? "",
+    activityLevel: dream?.activityLevel,
+    featureRank: dream?.featureRank,
+    processedVideoSize: dream?.processedVideoSize
+      ? Math.round(bytesToMegabytes(dream?.processedVideoSize)) + " MB"
+      : "-",
+    processedVideoFrames: dream?.processedVideoFrames
+      ? secondsToTimeFormat(
+          framesToSeconds(dream?.processedVideoFrames, dream?.activityLevel),
+        )
+      : "-",
+    processedVideoFPS: dream?.processedVideoFPS
+      ? `${dream?.processedVideoFPS} Original FPS`
+      : "-",
+    user: getUserName(dream?.user),
+    /**
+     * set displayedOwner
+     * for admins always show displayedOwner
+     * for normal users show displayedOwner, if doesn't exists, show user
+     */
+    displayedOwner: isAdmin
+      ? {
+          value: dream?.displayedOwner?.id,
+          label: getUserName(dream?.displayedOwner),
+        }
+      : {
+          value: dream?.displayedOwner?.id ?? dream?.user?.id,
+          label: getUserName(dream?.displayedOwner ?? dream?.user),
+        },
+    nsfw: filterNsfwOption(dream?.nsfw, t),
+    hidden: filterHiddenOption(dream?.hidden, t),
+    ccbyLicense: filterCcaLicenceOption(dream?.ccbyLicense, t),
+    upvotes: dream?.upvotes,
+    downvotes: dream?.downvotes,
+    /**
+     * keyframes
+     */
+    startKeyframe: {
+      label: dream?.startKeyframe?.name ?? "-",
+      value: dream?.startKeyframe?.uuid,
+    },
+    endKeyframe: {
+      label: dream?.endKeyframe?.name ?? "-",
+      value: dream?.endKeyframe?.uuid,
+    },
+    created_at: moment(dream?.created_at).format(FORMAT),
+    processed_at: dream?.processed_at
+      ? moment(dream?.processed_at).format(FORMAT)
+      : "-",
+  };
+};
 
 export const formatDreamRequest = (
   data: UpdateDreamFormValues,
   isAdmin: boolean = false,
-): UpdateDreamRequestValues => ({
-  name: data.name,
-  description: data.description,
-  sourceUrl: data.sourceUrl,
-  activityLevel: data.activityLevel,
-  featureRank: data.featureRank,
-  displayedOwner: data?.displayedOwner?.value,
-  nsfw: data?.nsfw.value === NSFW.TRUE,
-  ccbyLicense: data?.ccbyLicense.value === CCA_LICENSE.TRUE,
-  startKeyframe: data?.startKeyframe?.value,
-  endKeyframe: data?.endKeyframe?.value,
+): UpdateDreamRequestValues => {
+  let promptString: string | undefined;
+  if (data.prompt !== null && data.prompt !== undefined) {
+    try {
+      promptString = JSON.stringify(data.prompt);
+    } catch {
+      promptString = undefined;
+    }
+  }
 
-  // If user is admin, add allowed extra fields
-  ...(isAdmin
-    ? {
-        hidden: data?.hidden.value === HIDDEN.TRUE,
-      }
-    : {}),
-});
+  return {
+    name: data.name,
+    description: data.description,
+    prompt: promptString,
+    sourceUrl: data.sourceUrl,
+    activityLevel: data.activityLevel,
+    featureRank: data.featureRank,
+    displayedOwner: data?.displayedOwner?.value,
+    nsfw: data?.nsfw.value === NSFW.TRUE,
+    ccbyLicense: data?.ccbyLicense.value === CCA_LICENSE.TRUE,
+    startKeyframe: data?.startKeyframe?.value,
+    endKeyframe: data?.endKeyframe?.value,
+
+    // If user is admin, add allowed extra fields
+    ...(isAdmin
+      ? {
+          hidden: data?.hidden.value === HIDDEN.TRUE,
+        }
+      : {}),
+  };
+};
