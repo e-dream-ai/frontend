@@ -86,13 +86,54 @@ const JsonEditorWrapper = styled.div<{ disabled?: boolean }>`
   font-size: 1rem;
   font-family: inherit;
   cursor: ${(props) => (props.disabled ? "not-allowed" : "auto")};
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+
+  &:focus {
+    outline: none;
+  }
+
+  &:disabled {
+    background-color: ${(props) => props.theme.inputBackgroundColor};
+    cursor: not-allowed;
+  }
 
   & > div {
     background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
   }
 
   & * {
     color: ${(props) => props.theme.inputTextColorPrimary} !important;
+  }
+
+  & > div > * {
+    background: transparent !important;
+  }
+
+  & input,
+  & textarea,
+  & [contenteditable="true"],
+  & [contenteditable="true"] > * {
+    background: ${(props) =>
+      props.disabled
+        ? props.theme.inputBackgroundColor
+        : props.theme.colorBackgroundSecondary} !important;
+    color: ${(props) => props.theme.inputTextColorPrimary} !important;
+    border: 0 !important;
+    padding: 2px 4px !important;
+    border-radius: 0 !important;
+  }
+
+  & > div > * {
+    overflow: visible !important;
+  }
+
+  & > div[style*="background"] {
+    background: transparent !important;
   }
 `;
 
