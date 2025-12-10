@@ -41,9 +41,10 @@ import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import Restricted from "@/components/shared/restricted/restricted";
 import Select from "@/components/shared/select/select";
 import usePermission from "@/hooks/usePermission";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect } from "react";
 import { useUsers } from "@/api/user/query/useUsers";
 import useAuth from "@/hooks/useAuth";
+import { toast } from "react-toastify";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
 import {
@@ -63,10 +64,13 @@ import {
   TextAreaRow,
   TextAreaBefore,
 } from "@/components/shared/text-area/text-area.styled";
-import { JsonEditor } from "json-edit-react";
+import CodeMirror from "@uiw/react-codemirror";
+import { json } from "@codemirror/lang-json";
+import { linter, Diagnostic } from "@codemirror/lint";
+import { basicDark } from "@uiw/codemirror-theme-basic";
 import styled from "styled-components";
 
-const JsonEditorWrapper = styled.div<{ disabled?: boolean }>`
+const CodeMirrorWrapper = styled.div<{ disabled?: boolean }>`
   width: 100%;
   width: -moz-available;
   width: -webkit-fill-available;
@@ -75,173 +79,42 @@ const JsonEditorWrapper = styled.div<{ disabled?: boolean }>`
   max-height: 8rem;
   overflow-y: auto;
   overflow-x: hidden;
-  resize: none;
   background: ${(props) =>
     props.disabled
       ? props.theme.inputBackgroundColor
       : props.theme.colorBackgroundSecondary};
   border-radius: 0;
   border: 0;
-  color: ${(props) => props.theme.inputTextColorPrimary};
-  font-size: 1rem;
-  font-family: inherit;
-  cursor: ${(props) => (props.disabled ? "not-allowed" : "auto")};
   display: flex;
   flex-direction: column;
   align-self: stretch;
 
-  &:focus {
-    outline: none;
+  .cm-editor {
+    background: transparent !important;
+    color: ${(props) => props.theme.inputTextColorPrimary};
+    font-size: 1rem;
+    font-family: inherit;
+  }
+
+  .cm-scroller {
+    overflow-x: auto;
+  }
+
+  .cm-content {
+    color: ${(props) => props.theme.inputTextColorPrimary};
+  }
+
+  .cm-gutters {
+    background: transparent !important;
+    border: 0;
+  }
+
+  .cm-line {
+    color: ${(props) => props.theme.inputTextColorPrimary};
   }
 
   &:disabled {
-    background-color: ${(props) => props.theme.inputBackgroundColor};
     cursor: not-allowed;
-  }
-
-  & > div {
-    background: transparent !important;
-    padding: 0 !important;
-    margin: 0 !important;
-    width: 100% !important;
-  }
-
-  & * {
-    color: ${(props) => props.theme.inputTextColorPrimary} !important;
-  }
-
-  & > div > * {
-    background: transparent !important;
-  }
-
-  & input,
-  & textarea,
-  & [contenteditable="true"],
-  & [contenteditable="true"] > * {
-    background: ${(props) =>
-      props.disabled
-        ? props.theme.inputBackgroundColor
-        : props.theme.colorBackgroundSecondary} !important;
-    color: ${(props) => props.theme.inputTextColorPrimary} !important;
-    border: 0 !important;
-    padding: 2px 4px !important;
-    border-radius: 0 !important;
-  }
-
-  & select,
-  & select option {
-    background: ${(props) => props.theme.inputTextColorSecondary} !important;
-    background-color: ${(props) =>
-      props.theme.inputTextColorSecondary} !important;
-    color: ${(props) => props.theme.inputTextColorPrimary} !important;
-    border: 0 !important;
-    border-width: 0 !important;
-    border-style: none !important;
-    border-color: transparent !important;
-    border-radius: 12px !important;
-    padding: 0.375rem 0.75rem !important;
-    font-size: 1rem !important;
-    font-family: inherit !important;
-    appearance: none !important;
-    -webkit-appearance: none !important;
-    -moz-appearance: none !important;
-    box-shadow: none !important;
-    outline: 0 !important;
-  }
-
-  & select {
-    cursor: ${(props) =>
-      props.disabled ? "not-allowed" : "pointer"} !important;
-    min-height: 2.2rem !important;
-    width: 100% !important;
-  }
-
-  & select:focus,
-  & select:active,
-  & select:hover {
-    outline: none !important;
-    border: 0 !important;
-    box-shadow: none !important;
-  }
-
-  & div.jer-select,
-  & div[class*="select"],
-  & div:has(> select),
-  & span:has(> select),
-  & div.jer-select-inner,
-  & div[class*="jer-select"] {
-    background: transparent !important;
-    background-color: transparent !important;
-    border: 0 !important;
-    border-width: 0 !important;
-    border-style: none !important;
-    border-radius: 0 !important;
-    box-shadow: none !important;
-  }
-
-  // Target any dropdown/select-like divs that JsonEditor might create
-  & [role="combobox"],
-  & [role="listbox"],
-  & [role="option"],
-  & [role="menu"],
-  & [role="menu"] > *,
-  & [role="listbox"] > * {
-    background: ${(props) => props.theme.colorDarkPrimary} !important;
-    color: ${(props) => props.theme.inputTextColorPrimary} !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-  }
-
-  // Target any elements with white backgrounds (common JsonEditor issue)
-  & div[style*="background"][style*="white"],
-  & div[style*="background"][style*="#fff"],
-  & div[style*="background"][style*="#ffffff"],
-  & div[style*="background"][style*="rgb(255"],
-  & div[style*="background-color: white"],
-  & div[style*="background-color: #fff"],
-  & div[style*="background-color: #ffffff"],
-  & span[style*="background"][style*="white"],
-  & span[style*="background"][style*="#fff"],
-  & span[style*="background"][style*="#ffffff"] {
-    background: ${(props) => props.theme.inputBackgroundColor} !important;
-    background-color: ${(props) => props.theme.inputBackgroundColor} !important;
-    color: ${(props) => props.theme.inputTextColorPrimary} !important;
-    border: 0 !important;
-    border-width: 0 !important;
-  }
-
-  // Target all spans inside (JsonEditor uses spans for styling)
-  & span {
-    border: 0 !important;
-  }
-
-  // Target any button-like elements that might be dropdowns (be specific to avoid overriding all buttons)
-  & button[type="button"],
-  & button[aria-haspopup="listbox"],
-  & button[aria-expanded],
-  & button[aria-haspopup="true"],
-  & button[role="combobox"] {
-    background: ${(props) => props.theme.inputBackgroundColor} !important;
-    color: ${(props) => props.theme.inputTextColorPrimary} !important;
-    border: 0 !important;
-    border-radius: 0 !important;
-    padding: 0.375rem 0.75rem !important;
-    cursor: ${(props) =>
-      props.disabled ? "not-allowed" : "pointer"} !important;
-    font-size: 1rem !important;
-    font-family: inherit !important;
-  }
-
-  & button:focus {
-    outline: none !important;
-  }
-
-  & > div > * {
-    overflow: visible !important;
-  }
-
-  & > div[style*="background"] {
-    background: transparent !important;
   }
 `;
 
@@ -259,6 +132,8 @@ type ViewDreamInputsProps = {
   isThumbnailRemoved: boolean;
   handleThumbnailChange: HandleChangeFile;
   handleRemoveThumbnail: () => void;
+  onPromptValidationRequest?: (validate: () => boolean) => void;
+  onPromptResetRequest?: (reset: () => void) => void;
 };
 
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
@@ -270,6 +145,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   isThumbnailRemoved,
   handleThumbnailChange,
   handleRemoveThumbnail,
+  onPromptValidationRequest,
+  onPromptResetRequest,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -278,8 +155,10 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const [showMore, setShowMore] = useState<boolean>(false);
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
+  const promptStringRef = useRef<string>("");
 
-  const { control, register } = useFormContext<UpdateDreamFormValues>();
+  const { control, register, setError, clearErrors, getValues } =
+    useFormContext<UpdateDreamFormValues>();
 
   // always shows user for admins
   // for normal users look for 'displayed owner' or user instead
@@ -405,62 +284,101 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             name="prompt"
             control={control}
             render={({ field }) => {
-              const isValidJsonObject = (
-                value: unknown,
-              ): value is Record<string, unknown> | null => {
-                return (
-                  value === null ||
-                  (typeof value === "object" && !Array.isArray(value))
-                );
-              };
-
-              const extractActualData = (
-                data: Record<string, unknown> | null,
-              ): Record<string, unknown> | null => {
-                if (data === null) return null;
-                if ("newData" in data)
-                  return data.newData as Record<string, unknown> | null;
-                if ("newValue" in data)
-                  return data.newValue as Record<string, unknown> | null;
-                return data;
-              };
-
-              const parseUpdatedData = (
-                updatedData: unknown,
-              ): Record<string, unknown> | null => {
-                if (updatedData === null || updatedData === undefined) {
-                  return null;
+              useEffect(() => {
+                if (!editMode) {
+                  const newValue = field.value
+                    ? JSON.stringify(field.value, null, 2)
+                    : "{}";
+                  promptStringRef.current = newValue;
                 }
+              }, [field.value, editMode]);
 
-                if (typeof updatedData === "string") {
-                  try {
-                    const parsed = JSON.parse(updatedData);
-                    if (!isValidJsonObject(parsed)) return null;
-                    return extractActualData(parsed);
-                  } catch {
-                    return null;
-                  }
+              useEffect(() => {
+                if (onPromptValidationRequest) {
+                  onPromptValidationRequest(() => {
+                    try {
+                      JSON.parse(promptStringRef.current);
+                      clearErrors("prompt");
+                      return true;
+                    } catch (error) {
+                      if (
+                        promptStringRef.current.trim() !== "" &&
+                        promptStringRef.current !== "{}"
+                      ) {
+                        setError("prompt", {
+                          type: "manual",
+                          message: t("page.view_dream.invalid_prompt_json"),
+                        });
+                        toast.error(t("page.view_dream.invalid_prompt_json"));
+                        return false;
+                      }
+                      return true;
+                    }
+                  });
                 }
+              }, [onPromptValidationRequest, setError, clearErrors, t]);
 
-                if (isValidJsonObject(updatedData)) {
-                  return extractActualData(updatedData);
+              useEffect(() => {
+                if (onPromptResetRequest) {
+                  onPromptResetRequest(() => {
+                    const currentValue = getValues("prompt");
+                    const resetValue = currentValue
+                      ? JSON.stringify(currentValue, null, 2)
+                      : "{}";
+                    promptStringRef.current = resetValue;
+                    clearErrors("prompt");
+                  });
                 }
+              }, [onPromptResetRequest, getValues, clearErrors]);
 
-                return null;
-              };
-
-              const handleUpdate = (updatedData: unknown) => {
+              const handleChange = (value: string) => {
                 if (!editMode) return;
 
+                promptStringRef.current = value;
+
                 try {
-                  const validData = parseUpdatedData(updatedData);
-                  if (validData !== null || updatedData === null) {
-                    field.onChange(validData);
-                  }
+                  const parsedValue = JSON.parse(value);
+                  field.onChange(parsedValue);
+                  clearErrors("prompt");
                 } catch (error) {
-                  console.error("Error updating prompt", error);
+                  clearErrors("prompt");
                 }
               };
+
+              const jsonLinter = linter((view) => {
+                const diagnostics: Diagnostic[] = [];
+                const content = view.state.doc.toString();
+
+                if (!content.trim() || !editMode) {
+                  return diagnostics;
+                }
+
+                try {
+                  JSON.parse(content);
+                } catch (error) {
+                  const errorMessage =
+                    error instanceof Error ? error.message : "Invalid JSON";
+
+                  const match = errorMessage.match(/position (\d+)/);
+                  const position = match ? parseInt(match[1], 10) : 0;
+
+                  let from = Math.max(0, position);
+                  let to = Math.min(content.length, position + 1);
+
+                  if (from === to && from === 0) {
+                    to = Math.min(content.length, 50);
+                  }
+
+                  diagnostics.push({
+                    from,
+                    to,
+                    severity: "error",
+                    message: errorMessage,
+                  });
+                }
+
+                return diagnostics;
+              });
 
               return (
                 <TextAreaGroup>
@@ -468,19 +386,22 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                     <TextAreaBefore>
                       <FontAwesomeIcon icon={faComment} />
                     </TextAreaBefore>
-                    <JsonEditorWrapper disabled={!editMode}>
-                      <JsonEditor
-                        data={field.value || {}}
-                        onUpdate={handleUpdate}
-                        restrictEdit={!editMode}
-                        restrictDelete={!editMode}
-                        restrictAdd={!editMode}
-                        restrictDrag={!editMode}
-                        restrictTypeSelection={!editMode}
-                        collapse={false}
-                        rootName={t("page.view_dream.prompt")}
+                    <CodeMirrorWrapper disabled={!editMode}>
+                      <CodeMirror
+                        value={promptStringRef.current}
+                        onChange={handleChange}
+                        extensions={[json(), jsonLinter]}
+                        theme={basicDark}
+                        editable={editMode}
+                        readOnly={!editMode}
+                        basicSetup={{
+                          lineNumbers: true,
+                          foldGutter: true,
+                          highlightActiveLine: editMode,
+                          highlightActiveLineGutter: editMode,
+                        }}
                       />
-                    </JsonEditorWrapper>
+                    </CodeMirrorWrapper>
                   </TextAreaRow>
                 </TextAreaGroup>
               );

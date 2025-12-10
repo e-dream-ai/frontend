@@ -20,6 +20,7 @@ import React, {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 import { FormProvider, useForm } from "react-hook-form";
@@ -116,6 +117,8 @@ const ViewDreamPage: React.FC = () => {
   const [removingPlaylistItemId, setRemovingPlaylistItemId] = useState<
     number | null
   >(null);
+  const validatePromptRef = useRef<(() => boolean) | null>(null);
+  const resetPromptRef = useRef<(() => void) | null>(null);
 
   const upvoteMutation = useUpvoteDream(uuid);
   const downvoteMutation = useDownvoteDream(uuid);
@@ -335,6 +338,12 @@ const ViewDreamPage: React.FC = () => {
   );
 
   const onSubmit = (data: UpdateDreamFormValues) => {
+    if (validatePromptRef.current) {
+      const isValid = validatePromptRef.current();
+      if (!isValid) {
+        return;
+      }
+    }
     handleMutateVideoDream(data);
   };
 
@@ -346,6 +355,9 @@ const ViewDreamPage: React.FC = () => {
   const handleCancel = (event: React.MouseEvent) => {
     event.preventDefault();
     resetRemoteDreamForm();
+    if (resetPromptRef.current) {
+      resetPromptRef.current();
+    }
     setIsVideoRemoved(false);
     setIsThumbnailRemoved(false);
     setVideo(undefined);
@@ -836,6 +848,12 @@ const ViewDreamPage: React.FC = () => {
                 isThumbnailRemoved={isThumbnailRemoved}
                 handleThumbnailChange={handleThumbnailChange}
                 handleRemoveThumbnail={handleRemoveThumbnail}
+                onPromptValidationRequest={(validate) => {
+                  validatePromptRef.current = validate;
+                }}
+                onPromptResetRequest={(reset) => {
+                  resetPromptRef.current = reset;
+                }}
               />
 
               {!isDreamProcessing ? (

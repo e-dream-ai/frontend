@@ -207,6 +207,7 @@
       "error_processing_report": "Error processing report",
       "dream_deleted_successfully": "Dream deleted successfully.",
       "error_deleting_dream": "Error deleting dream.",
+      "invalid_prompt_json": "Invalid JSON format in prompt field. Please fix the JSON syntax before saving.",
       "client_not_connected_modal_title": "App Not Connected",
       "client_not_connected_modal_body": "To play dreams, you need to run the infinidream client application. Please download and install the client app, then try again.",
       "client_not_connected_modal_ok": "OK"
