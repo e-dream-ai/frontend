@@ -128,6 +128,114 @@ const JsonEditorWrapper = styled.div<{ disabled?: boolean }>`
     border-radius: 0 !important;
   }
 
+  & select,
+  & select option {
+    background: ${(props) => props.theme.inputTextColorSecondary} !important;
+    background-color: ${(props) =>
+      props.theme.inputTextColorSecondary} !important;
+    color: ${(props) => props.theme.inputTextColorPrimary} !important;
+    border: 0 !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    border-color: transparent !important;
+    border-radius: 12px !important;
+    padding: 0.375rem 0.75rem !important;
+    font-size: 1rem !important;
+    font-family: inherit !important;
+    appearance: none !important;
+    -webkit-appearance: none !important;
+    -moz-appearance: none !important;
+    box-shadow: none !important;
+    outline: 0 !important;
+  }
+
+  & select {
+    cursor: ${(props) =>
+      props.disabled ? "not-allowed" : "pointer"} !important;
+    min-height: 2.2rem !important;
+    width: 100% !important;
+  }
+
+  & select:focus,
+  & select:active,
+  & select:hover {
+    outline: none !important;
+    border: 0 !important;
+    box-shadow: none !important;
+  }
+
+  & div.jer-select,
+  & div[class*="select"],
+  & div:has(> select),
+  & span:has(> select),
+  & div.jer-select-inner,
+  & div[class*="jer-select"] {
+    background: transparent !important;
+    background-color: transparent !important;
+    border: 0 !important;
+    border-width: 0 !important;
+    border-style: none !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+
+  // Target any dropdown/select-like divs that JsonEditor might create
+  & [role="combobox"],
+  & [role="listbox"],
+  & [role="option"],
+  & [role="menu"],
+  & [role="menu"] > *,
+  & [role="listbox"] > * {
+    background: ${(props) => props.theme.colorDarkPrimary} !important;
+    color: ${(props) => props.theme.inputTextColorPrimary} !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  // Target any elements with white backgrounds (common JsonEditor issue)
+  & div[style*="background"][style*="white"],
+  & div[style*="background"][style*="#fff"],
+  & div[style*="background"][style*="#ffffff"],
+  & div[style*="background"][style*="rgb(255"],
+  & div[style*="background-color: white"],
+  & div[style*="background-color: #fff"],
+  & div[style*="background-color: #ffffff"],
+  & span[style*="background"][style*="white"],
+  & span[style*="background"][style*="#fff"],
+  & span[style*="background"][style*="#ffffff"] {
+    background: ${(props) => props.theme.inputBackgroundColor} !important;
+    background-color: ${(props) => props.theme.inputBackgroundColor} !important;
+    color: ${(props) => props.theme.inputTextColorPrimary} !important;
+    border: 0 !important;
+    border-width: 0 !important;
+  }
+
+  // Target all spans inside (JsonEditor uses spans for styling)
+  & span {
+    border: 0 !important;
+  }
+
+  // Target any button-like elements that might be dropdowns (be specific to avoid overriding all buttons)
+  & button[type="button"],
+  & button[aria-haspopup="listbox"],
+  & button[aria-expanded],
+  & button[aria-haspopup="true"],
+  & button[role="combobox"] {
+    background: ${(props) => props.theme.inputBackgroundColor} !important;
+    color: ${(props) => props.theme.inputTextColorPrimary} !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    padding: 0.375rem 0.75rem !important;
+    cursor: ${(props) =>
+      props.disabled ? "not-allowed" : "pointer"} !important;
+    font-size: 1rem !important;
+    font-family: inherit !important;
+  }
+
+  & button:focus {
+    outline: none !important;
+  }
+
   & > div > * {
     overflow: visible !important;
   }
