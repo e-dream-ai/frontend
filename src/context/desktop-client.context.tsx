@@ -273,19 +273,7 @@ export const DesktopClientProvider = ({
         return;
       }
 
-      const playingDream =
-        currentDream?.uuid === currentDreamUuid ? currentDream : null;
-      const baseFps =
-        playingDream?.processedVideoFPS ?? currentDream?.processedVideoFPS;
-
-      // Don't interpolate if we don't have baseFps - wait for dream data
-      if (!baseFps || baseFps <= 0) {
-        return;
-      }
-
-      const speedMultiplier = fps > 0 && baseFps > 0 ? fps / baseFps : 0;
-      const interpolatedTime =
-        lastServerTimeRef.current + timeSinceLastUpdate * speedMultiplier;
+      const interpolatedTime = lastServerTimeRef.current + timeSinceLastUpdate;
 
       let clampedTime = Math.max(0, interpolatedTime);
       if (duration > 0) {
