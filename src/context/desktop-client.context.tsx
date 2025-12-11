@@ -72,6 +72,14 @@ export const DesktopClientProvider = ({
   const playbackSpeedRef = useRef<number>(1.0); // Default to 1x speed
   const lastTimecodeForSpeedCalcRef = useRef<number | null>(null);
   const lastTimecodeTimestampRef = useRef<number | null>(null);
+  const currentDreamUuidRef = useRef<string | undefined>(undefined);
+
+  // Helper to reset speed tracking
+  const resetSpeedTracking = (): void => {
+    lastTimecodeForSpeedCalcRef.current = null;
+    lastTimecodeTimestampRef.current = null;
+    playbackSpeedRef.current = 1.0;
+  };
 
   const toggleCreditOverlay = (): void => {
     setIsCreditOverlayVisible((prev) => !prev);
@@ -103,6 +111,8 @@ export const DesktopClientProvider = ({
     setIsShuffleMode(false);
     isPausedRef.current = false;
     setIsPaused(false);
+    resetSpeedTracking();
+    currentDreamUuidRef.current = undefined;
   };
 
   /**
@@ -133,6 +143,16 @@ export const DesktopClientProvider = ({
         ? Number(data.fps)
         : undefined;
     const isPaused = data.paused === "true";
+    const dreamUuid =
+      data.dream_uuid && data.dream_uuid !== "none"
+        ? data.dream_uuid
+        : undefined;
+
+    // Reset speed tracking if dream changed
+    if (dreamUuid && dreamUuid !== currentDreamUuidRef.current) {
+      resetSpeedTracking();
+      currentDreamUuidRef.current = dreamUuid;
+    }
 
     // Store server values for interpolation
     if (nextTime !== undefined && Number.isFinite(nextTime)) {
@@ -147,7 +167,10 @@ export const DesktopClientProvider = ({
         const timecodeDelta = newTimecode - lastTimecodeForSpeedCalcRef.current;
         const realTimeDelta = (now - lastTimecodeTimestampRef.current) / 1000;
 
-        if (realTimeDelta > 0.1 && Math.abs(timecodeDelta) > 0.01) {
+        const maxExpectedDelta = realTimeDelta * 10;
+        if (Math.abs(timecodeDelta) > maxExpectedDelta || timecodeDelta < 0) {
+          resetSpeedTracking();
+        } else if (realTimeDelta > 0.1 && Math.abs(timecodeDelta) > 0.01) {
           const calculatedSpeed = timecodeDelta / realTimeDelta;
           playbackSpeedRef.current = Math.max(
             0.1,
@@ -173,10 +196,7 @@ export const DesktopClientProvider = ({
     if (isPaused) {
       setSpeedLevel(0);
       setFps(0);
-      // Reset speed calculation when paused
-      lastTimecodeForSpeedCalcRef.current = null;
-      lastTimecodeTimestampRef.current = null;
-      playbackSpeedRef.current = 1.0;
+      resetSpeedTracking();
     }
   });
 
