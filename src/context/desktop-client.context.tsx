@@ -65,9 +65,6 @@ export const DesktopClientProvider = ({
   const [isShuffleMode, setIsShuffleMode] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [stateSyncReceived, setStateSyncReceived] = useState<number>(0); // Trigger to restart interpolation
-  const [currentDreamUuid, setCurrentDreamUuid] = useState<string | undefined>(
-    undefined,
-  );
   const lastServerTimeRef = useRef<number>(0);
   const lastServerTimestampRef = useRef<number>(0);
   const isPausedRef = useRef<boolean>(false);
@@ -132,11 +129,6 @@ export const DesktopClientProvider = ({
         ? Number(data.fps)
         : undefined;
     const isPaused = data.paused === "true";
-
-    // Track dream UUID to ensure we use the correct dream's processedVideoFPS
-    if (data.dream_uuid && data.dream_uuid !== "none") {
-      setCurrentDreamUuid(data.dream_uuid);
-    }
 
     // Store server values for interpolation
     if (nextTime !== undefined && Number.isFinite(nextTime)) {
