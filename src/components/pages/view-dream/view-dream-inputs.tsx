@@ -41,7 +41,7 @@ import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import Restricted from "@/components/shared/restricted/restricted";
 import Select from "@/components/shared/select/select";
 import usePermission from "@/hooks/usePermission";
-import { useMemo, useState, useRef, useEffect } from "react";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { useUsers } from "@/api/user/query/useUsers";
 import useAuth from "@/hooks/useAuth";
 import { toast } from "react-toastify";
@@ -67,16 +67,18 @@ import {
 import CodeMirror from "@uiw/react-codemirror";
 import { json } from "@codemirror/lang-json";
 import { linter, Diagnostic } from "@codemirror/lint";
-import { basicDark } from "@uiw/codemirror-theme-basic";
 import styled from "styled-components";
+import { materialDark } from "@uiw/codemirror-theme-material";
+import { faUpDown } from "@fortawesome/free-solid-svg-icons";
 
-const CodeMirrorWrapper = styled.div<{ disabled?: boolean }>`
+const CodeMirrorWrapper = styled.div<{ disabled?: boolean; height?: number }>`
   width: 100%;
   width: -moz-available;
   width: -webkit-fill-available;
   width: fill-available;
   min-height: 2.5rem;
-  max-height: 8rem;
+  height: ${(props) => (props.height ? `${props.height}px` : "8rem")};
+  max-height: 800px;
   overflow-y: auto;
   overflow-x: hidden;
   background: ${(props) =>
@@ -88,10 +90,10 @@ const CodeMirrorWrapper = styled.div<{ disabled?: boolean }>`
   display: flex;
   flex-direction: column;
   align-self: stretch;
+  position: relative;
 
   .cm-editor {
     background: transparent !important;
-    color: ${(props) => props.theme.inputTextColorPrimary};
     font-size: 1rem;
     font-family: inherit;
   }
@@ -100,21 +102,38 @@ const CodeMirrorWrapper = styled.div<{ disabled?: boolean }>`
     overflow-x: auto;
   }
 
-  .cm-content {
-    color: ${(props) => props.theme.inputTextColorPrimary};
-  }
-
   .cm-gutters {
     background: transparent !important;
     border: 0;
   }
 
-  .cm-line {
-    color: ${(props) => props.theme.inputTextColorPrimary};
-  }
-
   &:disabled {
     cursor: not-allowed;
+  }
+`;
+
+const ResizeHandle = styled.div`
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${(props) => props.theme.textSecondaryColor};
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  z-index: 10;
+  background: ${(props) => props.theme.colorBackgroundSecondary};
+
+  &:hover {
+    opacity: 1;
+  }
+
+  svg {
+    font-size: 16px;
   }
 `;
 
@@ -156,6 +175,10 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
   const promptStringRef = useRef<string>("");
+  const [editorHeight, setEditorHeight] = useState<number>(128);
+  const isDraggingRef = useRef<boolean>(false);
+  const startYRef = useRef<number>(0);
+  const startHeightRef = useRef<number>(0);
 
   const { control, register, setError, clearErrors, getValues } =
     useFormContext<UpdateDreamFormValues>();
@@ -171,6 +194,36 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   });
 
   const switchShowMore = () => setShowMore((v) => !v);
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      isDraggingRef.current = true;
+      startYRef.current = e.clientY;
+      startHeightRef.current = editorHeight;
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        if (!isDraggingRef.current) return;
+
+        const deltaY = moveEvent.clientY - startYRef.current;
+        const newHeight = Math.max(
+          40,
+          Math.min(800, startHeightRef.current + deltaY),
+        );
+        setEditorHeight(newHeight);
+      };
+
+      const handleMouseUp = () => {
+        isDraggingRef.current = false;
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    },
+    [editorHeight],
+  );
 
   const usersOptions = (usersData?.data?.users ?? [])
     .filter((user) => user.name)
@@ -386,12 +439,15 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                     <TextAreaBefore>
                       <FontAwesomeIcon icon={faComment} />
                     </TextAreaBefore>
-                    <CodeMirrorWrapper disabled={!editMode}>
+                    <CodeMirrorWrapper
+                      disabled={!editMode}
+                      height={editorHeight}
+                    >
                       <CodeMirror
                         value={promptStringRef.current}
                         onChange={handleChange}
                         extensions={[json(), jsonLinter]}
-                        theme={basicDark}
+                        theme={materialDark}
                         editable={editMode}
                         readOnly={!editMode}
                         basicSetup={{
@@ -401,6 +457,9 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                           highlightActiveLineGutter: editMode,
                         }}
                       />
+                      <ResizeHandle onMouseDown={handleMouseDown}>
+                        <FontAwesomeIcon icon={faUpDown} />
+                      </ResizeHandle>
                     </CodeMirrorWrapper>
                   </TextAreaRow>
                 </TextAreaGroup>
