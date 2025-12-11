@@ -68,6 +68,10 @@ export const DesktopClientProvider = ({
   const lastServerTimeRef = useRef<number>(0);
   const lastServerTimestampRef = useRef<number>(0);
   const isPausedRef = useRef<boolean>(false);
+  // Track timecode progression to calculate actual playback speed
+  const playbackSpeedRef = useRef<number>(1.0); // Default to 1x speed
+  const lastTimecodeForSpeedCalcRef = useRef<number | null>(null);
+  const lastTimecodeTimestampRef = useRef<number | null>(null);
 
   const toggleCreditOverlay = (): void => {
     setIsCreditOverlayVisible((prev) => !prev);
@@ -132,7 +136,31 @@ export const DesktopClientProvider = ({
 
     // Store server values for interpolation
     if (nextTime !== undefined && Number.isFinite(nextTime)) {
-      lastServerTimeRef.current = Math.max(0, nextTime);
+      const newTimecode = Math.max(0, nextTime);
+
+      // Calculate actual playback speed from timecode progression
+      if (
+        lastTimecodeForSpeedCalcRef.current !== null &&
+        lastTimecodeTimestampRef.current !== null &&
+        !isPaused
+      ) {
+        const timecodeDelta = newTimecode - lastTimecodeForSpeedCalcRef.current;
+        const realTimeDelta = (now - lastTimecodeTimestampRef.current) / 1000;
+
+        if (realTimeDelta > 0.1 && Math.abs(timecodeDelta) > 0.01) {
+          const calculatedSpeed = timecodeDelta / realTimeDelta;
+          playbackSpeedRef.current = Math.max(
+            0.1,
+            Math.min(100, calculatedSpeed),
+          );
+        }
+      }
+
+      // Update tracking refs for next calculation
+      lastTimecodeForSpeedCalcRef.current = newTimecode;
+      lastTimecodeTimestampRef.current = now;
+
+      lastServerTimeRef.current = newTimecode;
       lastServerTimestampRef.current = now;
       setCurrentTime(lastServerTimeRef.current);
       setStateSyncReceived(now);
@@ -145,6 +173,10 @@ export const DesktopClientProvider = ({
     if (isPaused) {
       setSpeedLevel(0);
       setFps(0);
+      // Reset speed calculation when paused
+      lastTimecodeForSpeedCalcRef.current = null;
+      lastTimecodeTimestampRef.current = null;
+      playbackSpeedRef.current = 1.0;
     }
   });
 
@@ -265,7 +297,10 @@ export const DesktopClientProvider = ({
         return;
       }
 
-      const interpolatedTime = lastServerTimeRef.current + timeSinceLastUpdate;
+      // Use calculated playback speed from actual timecode progression
+      const interpolatedTime =
+        lastServerTimeRef.current +
+        timeSinceLastUpdate * playbackSpeedRef.current;
 
       let clampedTime = Math.max(0, interpolatedTime);
       if (duration > 0) {
