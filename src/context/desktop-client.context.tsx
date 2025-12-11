@@ -68,18 +68,6 @@ export const DesktopClientProvider = ({
   const lastServerTimeRef = useRef<number>(0);
   const lastServerTimestampRef = useRef<number>(0);
   const isPausedRef = useRef<boolean>(false);
-  // Track timecode progression to calculate actual playback speed
-  const playbackSpeedRef = useRef<number>(1.0); // Default to 1x speed
-  const lastTimecodeForSpeedCalcRef = useRef<number | null>(null);
-  const lastTimecodeTimestampRef = useRef<number | null>(null);
-  const currentDreamUuidRef = useRef<string | undefined>(undefined);
-
-  // Helper to reset speed tracking
-  const resetSpeedTracking = (): void => {
-    lastTimecodeForSpeedCalcRef.current = null;
-    lastTimecodeTimestampRef.current = null;
-    playbackSpeedRef.current = 1.0;
-  };
 
   const toggleCreditOverlay = (): void => {
     setIsCreditOverlayVisible((prev) => !prev);
@@ -111,8 +99,6 @@ export const DesktopClientProvider = ({
     setIsShuffleMode(false);
     isPausedRef.current = false;
     setIsPaused(false);
-    resetSpeedTracking();
-    currentDreamUuidRef.current = undefined;
   };
 
   /**
@@ -143,47 +129,10 @@ export const DesktopClientProvider = ({
         ? Number(data.fps)
         : undefined;
     const isPaused = data.paused === "true";
-    const dreamUuid =
-      data.dream_uuid && data.dream_uuid !== "none"
-        ? data.dream_uuid
-        : undefined;
-
-    // Reset speed tracking if dream changed
-    if (dreamUuid && dreamUuid !== currentDreamUuidRef.current) {
-      resetSpeedTracking();
-      currentDreamUuidRef.current = dreamUuid;
-    }
 
     // Store server values for interpolation
     if (nextTime !== undefined && Number.isFinite(nextTime)) {
-      const newTimecode = Math.max(0, nextTime);
-
-      // Calculate actual playback speed from timecode progression
-      if (
-        lastTimecodeForSpeedCalcRef.current !== null &&
-        lastTimecodeTimestampRef.current !== null &&
-        !isPaused
-      ) {
-        const timecodeDelta = newTimecode - lastTimecodeForSpeedCalcRef.current;
-        const realTimeDelta = (now - lastTimecodeTimestampRef.current) / 1000;
-
-        const maxExpectedDelta = realTimeDelta * 10;
-        if (Math.abs(timecodeDelta) > maxExpectedDelta || timecodeDelta < 0) {
-          resetSpeedTracking();
-        } else if (realTimeDelta > 0.1 && Math.abs(timecodeDelta) > 0.01) {
-          const calculatedSpeed = timecodeDelta / realTimeDelta;
-          playbackSpeedRef.current = Math.max(
-            0.1,
-            Math.min(100, calculatedSpeed),
-          );
-        }
-      }
-
-      // Update tracking refs for next calculation
-      lastTimecodeForSpeedCalcRef.current = newTimecode;
-      lastTimecodeTimestampRef.current = now;
-
-      lastServerTimeRef.current = newTimecode;
+      lastServerTimeRef.current = Math.max(0, nextTime);
       lastServerTimestampRef.current = now;
       setCurrentTime(lastServerTimeRef.current);
       setStateSyncReceived(now);
@@ -196,7 +145,6 @@ export const DesktopClientProvider = ({
     if (isPaused) {
       setSpeedLevel(0);
       setFps(0);
-      resetSpeedTracking();
     }
   });
 
@@ -317,10 +265,10 @@ export const DesktopClientProvider = ({
         return;
       }
 
-      // Use calculated playback speed from actual timecode progression
+      const baseFps = currentDream?.processedVideoFPS ?? 20;
+      const speedMultiplier = fps > 0 && baseFps > 0 ? fps / baseFps : 0;
       const interpolatedTime =
-        lastServerTimeRef.current +
-        timeSinceLastUpdate * playbackSpeedRef.current;
+        lastServerTimeRef.current + timeSinceLastUpdate * speedMultiplier;
 
       let clampedTime = Math.max(0, interpolatedTime);
       if (duration > 0) {
