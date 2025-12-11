@@ -70,15 +70,20 @@ import { linter, Diagnostic } from "@codemirror/lint";
 import styled from "styled-components";
 import { materialDark } from "@uiw/codemirror-theme-material";
 import { faUpDown } from "@fortawesome/free-solid-svg-icons";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 
-const CodeMirrorWrapper = styled.div<{ disabled?: boolean; height?: number }>`
+const CodeMirrorWrapper = styled.div<{
+  disabled?: boolean;
+  height?: number;
+  maxHeight?: number;
+}>`
   width: 100%;
   width: -moz-available;
   width: -webkit-fill-available;
   width: fill-available;
   min-height: 2.5rem;
-  height: ${(props) => (props.height ? `${props.height}px` : "8rem")};
-  max-height: 800px;
+  height: ${(props) => (props.height ? `${props.height}px` : "2.5rem")};
+  max-height: ${(props) => (props.maxHeight ? `${props.maxHeight}px` : "8rem")};
   overflow-y: auto;
   overflow-x: hidden;
   background: ${(props) =>
@@ -112,7 +117,7 @@ const CodeMirrorWrapper = styled.div<{ disabled?: boolean; height?: number }>`
   }
 `;
 
-const ResizeHandle = styled.div`
+const ResizeHandle = styled(motion.div)`
   position: absolute;
   bottom: 0;
   right: 0;
@@ -175,10 +180,21 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
   const promptStringRef = useRef<string>("");
-  const [editorHeight, setEditorHeight] = useState<number>(128);
+  const [editorHeight, setEditorHeight] = useState<number | undefined>(
+    undefined,
+  );
+  const [isManuallyResized, setIsManuallyResized] = useState<boolean>(false);
   const isDraggingRef = useRef<boolean>(false);
   const startYRef = useRef<number>(0);
-  const startHeightRef = useRef<number>(0);
+  const startHeightRef = useRef<number>(40);
+  const codeMirrorWrapperRef = useRef<HTMLDivElement>(null);
+  const scrollOffset = useMotionValue<number>(0);
+  const smoothScrollOffset = useSpring(scrollOffset, {
+    stiffness: 1100,
+    damping: 120,
+    mass: 0.2,
+  });
+  const handlePosition = useTransform(smoothScrollOffset, (value) => -value);
 
   const { control, register, setError, clearErrors, getValues } =
     useFormContext<UpdateDreamFormValues>();
@@ -198,9 +214,11 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
       e.preventDefault();
+      setIsManuallyResized(true);
       isDraggingRef.current = true;
       startYRef.current = e.clientY;
-      startHeightRef.current = editorHeight;
+      const currentHeight = editorHeight ?? 40;
+      startHeightRef.current = currentHeight;
 
       const handleMouseMove = (moveEvent: MouseEvent) => {
         if (!isDraggingRef.current) return;
@@ -337,6 +355,24 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             name="prompt"
             control={control}
             render={({ field }) => {
+              const calculateContentHeight = useCallback(
+                (content: string): number => {
+                  if (!content || content.trim() === "" || content === "{}") {
+                    return 40; // 2.5rem = 40px (min-height)
+                  }
+                  const lines = content.split("\n").length;
+                  const lineHeight = 24; // Approximate line height in pixels
+                  const padding = 12; // Top and bottom padding
+                  const calculatedHeight = Math.max(
+                    40,
+                    lines * lineHeight + padding,
+                  );
+                  const maxHeight = 128; // 8rem = 128px
+                  return Math.min(calculatedHeight, maxHeight);
+                },
+                [],
+              );
+
               useEffect(() => {
                 if (!editMode) {
                   const newValue = field.value
@@ -344,7 +380,20 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                     : "{}";
                   promptStringRef.current = newValue;
                 }
-              }, [field.value, editMode]);
+                if (isManuallyResized) return;
+                const content = field.value
+                  ? JSON.stringify(field.value, null, 2)
+                  : "{}";
+                const calculatedHeight = calculateContentHeight(content);
+                if (!isDraggingRef.current) {
+                  setEditorHeight(calculatedHeight);
+                }
+              }, [
+                field.value,
+                editMode,
+                calculateContentHeight,
+                isManuallyResized,
+              ]);
 
               useEffect(() => {
                 if (onPromptValidationRequest) {
@@ -389,6 +438,11 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
 
                 promptStringRef.current = value;
 
+                if (!isManuallyResized && !isDraggingRef.current) {
+                  const calculatedHeight = calculateContentHeight(value);
+                  setEditorHeight(calculatedHeight);
+                }
+
                 try {
                   const parsedValue = JSON.parse(value);
                   field.onChange(parsedValue);
@@ -397,6 +451,22 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                   clearErrors("prompt");
                 }
               };
+
+              const handleScroll = useCallback(() => {
+                if (codeMirrorWrapperRef.current) {
+                  scrollOffset.set(codeMirrorWrapperRef.current.scrollTop);
+                }
+              }, [scrollOffset]);
+
+              useEffect(() => {
+                const wrapper = codeMirrorWrapperRef.current;
+                if (wrapper) {
+                  wrapper.addEventListener("scroll", handleScroll);
+                  return () => {
+                    wrapper.removeEventListener("scroll", handleScroll);
+                  };
+                }
+              }, [handleScroll]);
 
               const jsonLinter = linter((view) => {
                 const diagnostics: Diagnostic[] = [];
@@ -440,8 +510,10 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                       <FontAwesomeIcon icon={faComment} />
                     </TextAreaBefore>
                     <CodeMirrorWrapper
+                      ref={codeMirrorWrapperRef}
                       disabled={!editMode}
                       height={editorHeight}
+                      maxHeight={isManuallyResized ? 800 : 128}
                     >
                       <CodeMirror
                         value={promptStringRef.current}
@@ -451,13 +523,17 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                         editable={editMode}
                         readOnly={!editMode}
                         basicSetup={{
-                          lineNumbers: true,
+                          lineNumbers: false,
                           foldGutter: true,
-                          highlightActiveLine: editMode,
-                          highlightActiveLineGutter: editMode,
+                          highlightActiveLine: false,
+                          highlightActiveLineGutter: false,
+                          highlightSelectionMatches: false,
                         }}
                       />
-                      <ResizeHandle onMouseDown={handleMouseDown}>
+                      <ResizeHandle
+                        style={{ bottom: handlePosition }}
+                        onMouseDown={handleMouseDown}
+                      >
                         <FontAwesomeIcon icon={faUpDown} />
                       </ResizeHandle>
                     </CodeMirrorWrapper>
