@@ -40,7 +40,7 @@ export const DesktopClientProvider = ({
   children: React.ReactNode;
   inactivityTimeout?: number;
 }) => {
-  const { user } = useAuth();
+  const { user, currentDream } = useAuth();
   const { socket, isConnected } = useSocket();
   const initialLastPingTime = user?.last_client_ping_at
     ? new Date(user.last_client_ping_at).getTime()
@@ -65,7 +65,6 @@ export const DesktopClientProvider = ({
   const [isShuffleMode, setIsShuffleMode] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [stateSyncReceived, setStateSyncReceived] = useState<number>(0); // Trigger to restart interpolation
-  const [baseFps, setBaseFps] = useState<number>(0); // Base FPS from client
   const lastServerTimeRef = useRef<number>(0);
   const lastServerTimestampRef = useRef<number>(0);
   const isPausedRef = useRef<boolean>(false);
@@ -94,7 +93,6 @@ export const DesktopClientProvider = ({
     setCurrentTime(0);
     setDuration(0);
     setFps(0);
-    setBaseFps(0);
     setSpeedLevel(9);
     setIsCreditOverlayVisible(false);
     setIsRepeatMode(false);
@@ -117,7 +115,6 @@ export const DesktopClientProvider = ({
     paused?: string;
     playback_speed?: string;
     fps?: string;
-    base_fps?: string;
   }>(STATE_SYNC_EVENT, async (data) => {
     if (!data) return;
 
@@ -131,7 +128,6 @@ export const DesktopClientProvider = ({
       : data.fps
         ? Number(data.fps)
         : undefined;
-    const nextBaseFps = data.base_fps ? Number(data.base_fps) : undefined;
     const isPaused = data.paused === "true";
 
     // Store server values for interpolation
@@ -143,9 +139,6 @@ export const DesktopClientProvider = ({
     }
     if (nextFps !== undefined && Number.isFinite(nextFps)) {
       setFps(Math.max(0, nextFps));
-    }
-    if (nextBaseFps !== undefined && Number.isFinite(nextBaseFps)) {
-      setBaseFps(Math.max(0, nextBaseFps));
     }
     isPausedRef.current = isPaused;
     setIsPaused(isPaused);
@@ -272,6 +265,7 @@ export const DesktopClientProvider = ({
         return;
       }
 
+      const baseFps = currentDream?.processedVideoFPS ?? 20;
       const speedMultiplier = fps > 0 && baseFps > 0 ? fps / baseFps : 0;
       const interpolatedTime =
         lastServerTimeRef.current + timeSinceLastUpdate * speedMultiplier;
@@ -285,7 +279,14 @@ export const DesktopClientProvider = ({
     }, 100);
 
     return () => window.clearInterval(intervalId);
-  }, [isActive, isPaused, stateSyncReceived, fps, duration, baseFps]);
+  }, [
+    isActive,
+    isPaused,
+    stateSyncReceived,
+    fps,
+    duration,
+    currentDream?.processedVideoFPS,
+  ]);
 
   /**
    * Setup timer from socket
