@@ -20,9 +20,9 @@ import StyledHeaderBase, {
   HeaderTitle as HeaderTitleBase,
 } from "./header.styled";
 
-const MotionStyledHeader = motion(StyledHeaderBase);
-const MotionLogoIcon = motion(LogoIconBase);
-const MotionHeaderTitle = motion(HeaderTitleBase);
+const MotionStyledHeader = motion.create(StyledHeaderBase);
+const MotionLogoIcon = motion.create(LogoIconBase);
+const MotionHeaderTitle = motion.create(HeaderTitleBase);
 
 export const Header: React.FC = () => {
   const { t } = useTranslation();
