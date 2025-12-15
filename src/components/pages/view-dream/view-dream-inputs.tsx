@@ -16,6 +16,7 @@ import {
 import { Video, VideoPlaceholder } from "./view-dream.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faAlignLeft,
   faBook,
   faCalendar,
   faClock,
@@ -40,9 +41,10 @@ import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import Restricted from "@/components/shared/restricted/restricted";
 import Select from "@/components/shared/select/select";
 import usePermission from "@/hooks/usePermission";
-import { useMemo, useState } from "react";
+import { useMemo, useState, useRef, useEffect, useCallback } from "react";
 import { useUsers } from "@/api/user/query/useUsers";
 import useAuth from "@/hooks/useAuth";
+import { toast } from "react-toastify";
 import { isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
 import {
@@ -57,6 +59,88 @@ import { KeyframeSelect } from "./keyframe-select";
 import { useTooltipPlaces } from "@/hooks/useFormTooltipPlaces";
 import { FormInput } from "@/components/shared/input/input";
 import { FormTextArea } from "@/components/shared/text-area/text-area";
+import {
+  TextAreaGroup,
+  TextAreaRow,
+  TextAreaBefore,
+} from "@/components/shared/text-area/text-area.styled";
+import CodeMirror from "@uiw/react-codemirror";
+import { json } from "@codemirror/lang-json";
+import { linter, Diagnostic } from "@codemirror/lint";
+import styled from "styled-components";
+import { materialDark } from "@uiw/codemirror-theme-material";
+import { faUpDown } from "@fortawesome/free-solid-svg-icons";
+import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+
+const CodeMirrorWrapper = styled.div<{
+  disabled?: boolean;
+  height?: number;
+  maxHeight?: number;
+}>`
+  width: 100%;
+  width: -moz-available;
+  width: -webkit-fill-available;
+  width: fill-available;
+  min-height: 2.5rem;
+  height: ${(props) => (props.height ? `${props.height}px` : "2.5rem")};
+  max-height: ${(props) => (props.maxHeight ? `${props.maxHeight}px` : "8rem")};
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: ${(props) =>
+    props.disabled
+      ? props.theme.inputBackgroundColor
+      : props.theme.colorBackgroundSecondary};
+  border-radius: 0;
+  border: 0;
+  display: flex;
+  flex-direction: column;
+  align-self: stretch;
+  position: relative;
+
+  .cm-editor {
+    background: transparent !important;
+    font-size: 1rem;
+    font-family: inherit;
+  }
+
+  .cm-scroller {
+    overflow-x: auto;
+  }
+
+  .cm-gutters {
+    background: transparent !important;
+    border: 0;
+  }
+
+  &:disabled {
+    cursor: not-allowed;
+  }
+`;
+
+const ResizeHandle = styled(motion.div)`
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 32px;
+  height: 32px;
+  cursor: ns-resize;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: ${(props) => props.theme.textSecondaryColor};
+  opacity: 0.6;
+  transition: opacity 0.2s;
+  z-index: 10;
+  background: ${(props) => props.theme.colorBackgroundSecondary};
+
+  &:hover {
+    opacity: 1;
+  }
+
+  svg {
+    font-size: 16px;
+  }
+`;
 
 type ViewDreamInputsProps = {
   dream?: Dream;
@@ -72,6 +156,8 @@ type ViewDreamInputsProps = {
   isThumbnailRemoved: boolean;
   handleThumbnailChange: HandleChangeFile;
   handleRemoveThumbnail: () => void;
+  onPromptValidationRequest?: (validate: () => boolean) => void;
+  onPromptResetRequest?: (reset: () => void) => void;
 };
 
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
@@ -83,6 +169,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   isThumbnailRemoved,
   handleThumbnailChange,
   handleRemoveThumbnail,
+  onPromptValidationRequest,
+  onPromptResetRequest,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -91,8 +179,25 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const [showMore, setShowMore] = useState<boolean>(false);
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
+  const promptStringRef = useRef<string>("");
+  const [editorHeight, setEditorHeight] = useState<number | undefined>(
+    undefined,
+  );
+  const [isManuallyResized, setIsManuallyResized] = useState<boolean>(false);
+  const isDraggingRef = useRef<boolean>(false);
+  const startYRef = useRef<number>(0);
+  const startHeightRef = useRef<number>(40);
+  const codeMirrorWrapperRef = useRef<HTMLDivElement>(null);
+  const scrollOffset = useMotionValue<number>(0);
+  const smoothScrollOffset = useSpring(scrollOffset, {
+    stiffness: 1100,
+    damping: 120,
+    mass: 0.2,
+  });
+  const handlePosition = useTransform(smoothScrollOffset, (value) => -value);
 
-  const { control, register } = useFormContext<UpdateDreamFormValues>();
+  const { control, register, setError, clearErrors, getValues } =
+    useFormContext<UpdateDreamFormValues>();
 
   // always shows user for admins
   // for normal users look for 'displayed owner' or user instead
@@ -105,6 +210,38 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   });
 
   const switchShowMore = () => setShowMore((v) => !v);
+
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>) => {
+      e.preventDefault();
+      setIsManuallyResized(true);
+      isDraggingRef.current = true;
+      startYRef.current = e.clientY;
+      const currentHeight = editorHeight ?? 40;
+      startHeightRef.current = currentHeight;
+
+      const handleMouseMove = (moveEvent: MouseEvent) => {
+        if (!isDraggingRef.current) return;
+
+        const deltaY = moveEvent.clientY - startYRef.current;
+        const newHeight = Math.max(
+          40,
+          Math.min(800, startHeightRef.current + deltaY),
+        );
+        setEditorHeight(newHeight);
+      };
+
+      const handleMouseUp = () => {
+        isDraggingRef.current = false;
+        document.removeEventListener("mousemove", handleMouseMove);
+        document.removeEventListener("mouseup", handleMouseUp);
+      };
+
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    },
+    [editorHeight],
+  );
 
   const usersOptions = (usersData?.data?.users ?? [])
     .filter((user) => user.name)
@@ -207,8 +344,203 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             linkify
             disabled={!editMode}
             placeholder={t("page.view_dream.description")}
-            before={<FontAwesomeIcon icon={faComment} />}
+            before={<FontAwesomeIcon icon={faAlignLeft} />}
             {...register("description")}
+          />
+        </Column>
+      </Row>
+      <Row flex="auto" m={0}>
+        <Column flex="auto" m={0}>
+          <Controller
+            name="prompt"
+            control={control}
+            render={({ field }) => {
+              const calculateContentHeight = useCallback(
+                (content: string): number => {
+                  if (!content || content.trim() === "" || content === "{}") {
+                    return 40; // 2.5rem = 40px (min-height)
+                  }
+                  const lines = content.split("\n").length;
+                  const lineHeight = 24; // Approximate line height in pixels
+                  const padding = 12; // Top and bottom padding
+                  const calculatedHeight = Math.max(
+                    40,
+                    lines * lineHeight + padding,
+                  );
+                  const maxHeight = 128; // 8rem = 128px
+                  return Math.min(calculatedHeight, maxHeight);
+                },
+                [],
+              );
+
+              useEffect(() => {
+                if (!editMode) {
+                  const newValue = field.value
+                    ? JSON.stringify(field.value, null, 2)
+                    : "{}";
+                  promptStringRef.current = newValue;
+                }
+                if (isManuallyResized) return;
+                const content = field.value
+                  ? JSON.stringify(field.value, null, 2)
+                  : "{}";
+                const calculatedHeight = calculateContentHeight(content);
+                if (!isDraggingRef.current) {
+                  setEditorHeight(calculatedHeight);
+                }
+              }, [
+                field.value,
+                editMode,
+                calculateContentHeight,
+                isManuallyResized,
+              ]);
+
+              useEffect(() => {
+                if (onPromptValidationRequest) {
+                  onPromptValidationRequest(() => {
+                    try {
+                      JSON.parse(promptStringRef.current);
+                      clearErrors("prompt");
+                      return true;
+                    } catch (error) {
+                      if (
+                        promptStringRef.current.trim() !== "" &&
+                        promptStringRef.current !== "{}"
+                      ) {
+                        setError("prompt", {
+                          type: "manual",
+                          message: t("page.view_dream.invalid_prompt_json"),
+                        });
+                        toast.error(t("page.view_dream.invalid_prompt_json"));
+                        return false;
+                      }
+                      return true;
+                    }
+                  });
+                }
+              }, [onPromptValidationRequest, setError, clearErrors, t]);
+
+              useEffect(() => {
+                if (onPromptResetRequest) {
+                  onPromptResetRequest(() => {
+                    const currentValue = getValues("prompt");
+                    const resetValue = currentValue
+                      ? JSON.stringify(currentValue, null, 2)
+                      : "{}";
+                    promptStringRef.current = resetValue;
+                    clearErrors("prompt");
+                  });
+                }
+              }, [onPromptResetRequest, getValues, clearErrors]);
+
+              const handleChange = (value: string) => {
+                if (!editMode) return;
+
+                promptStringRef.current = value;
+
+                if (!isManuallyResized && !isDraggingRef.current) {
+                  const calculatedHeight = calculateContentHeight(value);
+                  setEditorHeight(calculatedHeight);
+                }
+
+                try {
+                  const parsedValue = JSON.parse(value);
+                  field.onChange(parsedValue);
+                  clearErrors("prompt");
+                } catch (error) {
+                  clearErrors("prompt");
+                }
+              };
+
+              const handleScroll = useCallback(() => {
+                if (codeMirrorWrapperRef.current) {
+                  scrollOffset.set(codeMirrorWrapperRef.current.scrollTop);
+                }
+              }, [scrollOffset]);
+
+              useEffect(() => {
+                const wrapper = codeMirrorWrapperRef.current;
+                if (wrapper) {
+                  wrapper.addEventListener("scroll", handleScroll);
+                  return () => {
+                    wrapper.removeEventListener("scroll", handleScroll);
+                  };
+                }
+              }, [handleScroll]);
+
+              const jsonLinter = linter((view) => {
+                const diagnostics: Diagnostic[] = [];
+                const content = view.state.doc.toString();
+
+                if (!content.trim() || !editMode) {
+                  return diagnostics;
+                }
+
+                try {
+                  JSON.parse(content);
+                } catch (error) {
+                  const errorMessage =
+                    error instanceof Error ? error.message : "Invalid JSON";
+
+                  const match = errorMessage.match(/position (\d+)/);
+                  const position = match ? parseInt(match[1], 10) : 0;
+
+                  let from = Math.max(0, position);
+                  let to = Math.min(content.length, position + 1);
+
+                  if (from === to && from === 0) {
+                    to = Math.min(content.length, 50);
+                  }
+
+                  diagnostics.push({
+                    from,
+                    to,
+                    severity: "error",
+                    message: errorMessage,
+                  });
+                }
+
+                return diagnostics;
+              });
+
+              return (
+                <TextAreaGroup>
+                  <TextAreaRow>
+                    <TextAreaBefore>
+                      <FontAwesomeIcon icon={faComment} />
+                    </TextAreaBefore>
+                    <CodeMirrorWrapper
+                      ref={codeMirrorWrapperRef}
+                      disabled={!editMode}
+                      height={editorHeight}
+                      maxHeight={isManuallyResized ? 800 : 128}
+                    >
+                      <CodeMirror
+                        value={promptStringRef.current}
+                        onChange={handleChange}
+                        extensions={[json(), jsonLinter]}
+                        theme={materialDark}
+                        editable={editMode}
+                        readOnly={!editMode}
+                        basicSetup={{
+                          lineNumbers: false,
+                          foldGutter: true,
+                          highlightActiveLine: false,
+                          highlightActiveLineGutter: false,
+                          highlightSelectionMatches: false,
+                        }}
+                      />
+                      <ResizeHandle
+                        style={{ bottom: handlePosition }}
+                        onMouseDown={handleMouseDown}
+                      >
+                        <FontAwesomeIcon icon={faUpDown} />
+                      </ResizeHandle>
+                    </CodeMirrorWrapper>
+                  </TextAreaRow>
+                </TextAreaGroup>
+              );
+            }}
           />
         </Column>
       </Row>

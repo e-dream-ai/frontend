@@ -40,7 +40,7 @@ export const DesktopClientProvider = ({
   children: React.ReactNode;
   inactivityTimeout?: number;
 }) => {
-  const { user } = useAuth();
+  const { user, currentDream } = useAuth();
   const { socket, isConnected } = useSocket();
   const initialLastPingTime = user?.last_client_ping_at
     ? new Date(user.last_client_ping_at).getTime()
@@ -170,11 +170,9 @@ export const DesktopClientProvider = ({
         const payload = data as unknown as Record<string, any>;
         const nextTime = Number(payload.currentTime);
         const nextDuration = Number(payload.duration);
-        const nextFps = Number(payload.fps);
         if (Number.isFinite(nextTime)) setCurrentTime(Math.max(0, nextTime));
         if (Number.isFinite(nextDuration))
           setDuration(Math.max(0, nextDuration));
-        if (Number.isFinite(nextFps)) setFps(Math.max(0, nextFps));
         if (payload?.paused === true) {
           setSpeedLevel(0);
           setFps(0);
@@ -267,8 +265,8 @@ export const DesktopClientProvider = ({
         return;
       }
 
-      const normalPerceptualFps = 20;
-      const speedMultiplier = fps > 0 ? fps / normalPerceptualFps : 0;
+      const baseFps = currentDream?.processedVideoFPS ?? 20;
+      const speedMultiplier = fps > 0 && baseFps > 0 ? fps / baseFps : 0;
       const interpolatedTime =
         lastServerTimeRef.current + timeSinceLastUpdate * speedMultiplier;
 
@@ -281,7 +279,14 @@ export const DesktopClientProvider = ({
     }, 100);
 
     return () => window.clearInterval(intervalId);
-  }, [isActive, isPaused, stateSyncReceived, fps, duration]);
+  }, [
+    isActive,
+    isPaused,
+    stateSyncReceived,
+    fps,
+    duration,
+    currentDream?.processedVideoFPS,
+  ]);
 
   /**
    * Setup timer from socket

@@ -5,8 +5,9 @@ export const StyledTextArea = styled.textarea`
   width: -moz-available; /* WebKit-based browsers will ignore this. */
   width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
   width: fill-available;
-  min-height: 8rem;
-  overflow-y: hidden;
+  min-height: 2.5rem;
+  max-height: 8rem;
+  overflow-y: auto;
   resize: none;
   padding: 6px 12px;
   background: ${(props) => props.theme.colorBackgroundSecondary};
@@ -28,12 +29,13 @@ export const StyledTextArea = styled.textarea`
 `;
 
 export const DisabledTextArea = styled.div`
-  height: 100%;
   width: 100%;
   width: -moz-available; /* WebKit-based browsers will ignore this. */
   width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
   width: fill-available;
-  min-height: 8rem;
+  min-height: 2.5rem;
+  max-height: 8rem;
+  overflow-y: auto;
   padding: 0.375rem 0.75rem;
   border: 0;
   border-radius: 0;

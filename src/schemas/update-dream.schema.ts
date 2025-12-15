@@ -9,6 +9,7 @@ export type UpdateDreamFormValues = {
   processedVideoFPS?: string;
   user?: string;
   description?: string;
+  prompt?: Record<string, unknown> | null;
   sourceUrl?: string;
   displayedOwner: {
     label?: string;
@@ -43,6 +44,7 @@ export type UpdateDreamFormValues = {
 export type UpdateDreamRequestValues = {
   name: string;
   description?: string;
+  prompt?: string;
   sourceUrl?: string;
   activityLevel?: number;
   featureRank?: number;
@@ -58,6 +60,7 @@ export const UpdateDreamSchema = yup
   .object({
     name: yup.string().required(),
     description: yup.string(),
+    prompt: yup.mixed(),
     sourceUrl: yup
       .string()
       .url("Invalid URL format. URL must start with http:// or https://"),
