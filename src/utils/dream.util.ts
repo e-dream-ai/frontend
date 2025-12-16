@@ -123,6 +123,10 @@ export const formatDreamForm = ({
     processedVideoFPS: dream?.processedVideoFPS
       ? `${dream?.processedVideoFPS} Original FPS`
       : "-",
+    processedMediaResolution:
+      dream?.processedMediaWidth && dream?.processedMediaHeight
+        ? `${dream.processedMediaWidth}x${dream.processedMediaHeight}`
+        : "-",
     user: getUserName(dream?.user),
     /**
      * set displayedOwner

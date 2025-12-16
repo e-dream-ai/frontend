@@ -21,6 +21,7 @@ import {
   faCalendar,
   faClock,
   faComment,
+  faDesktop,
   faEye,
   faFile,
   faFileVideo,
@@ -670,6 +671,16 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               before={<FontAwesomeIcon icon={faPhotoVideo} />}
               tooltipPlace={tooltipPlaces.right}
               {...register("processedVideoFPS")}
+            />
+          </FormItem>
+          <FormItem>
+            <FormInput
+              disabled
+              placeholder={t("page.view_dream.resolution")}
+              type="text"
+              before={<FontAwesomeIcon icon={faDesktop} />}
+              tooltipPlace={tooltipPlaces.left}
+              {...register("processedMediaResolution")}
             />
           </FormItem>
           <Restricted

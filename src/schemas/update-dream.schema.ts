@@ -7,6 +7,7 @@ export type UpdateDreamFormValues = {
   processedVideoSize?: string;
   processedVideoFrames?: string;
   processedVideoFPS?: string;
+  processedMediaResolution?: string;
   user?: string;
   description?: string;
   prompt?: Record<string, unknown> | null;

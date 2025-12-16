@@ -31,6 +31,8 @@ export type Dream = {
   processedVideoSize?: number;
   processedVideoFrames?: number;
   processedVideoFPS?: number;
+  processedMediaWidth?: number;
+  processedMediaHeight?: number;
   status: DreamStatusType;
   nsfw?: boolean;
   hidden?: boolean;
