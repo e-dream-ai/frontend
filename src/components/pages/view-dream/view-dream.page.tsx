@@ -45,7 +45,7 @@ import {
   faThumbsUp,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
-import { DreamStatusType } from "@/types/dream.types";
+import { DreamStatusType, DreamMediaType } from "@/types/dream.types";
 import { Video } from "./view-dream.styled";
 import { isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
@@ -140,6 +140,10 @@ const ViewDreamPage: React.FC = () => {
   const { socket } = useSocket();
   const dream = useMemo(() => data?.data?.dream, [data]);
   const vote = useMemo(() => voteData?.data?.vote, [voteData]);
+  const isImageDream = useMemo(
+    () => dream?.mediaType === DreamMediaType.IMAGE,
+    [dream],
+  );
   const playlistItems = useMemo(() => dream?.playlistItems, [dream]);
   const reports = useMemo(() => dream?.reports ?? [], [dream]);
   const isDreamReported = useMemo(
@@ -212,6 +216,11 @@ const ViewDreamPage: React.FC = () => {
   const showSaveAndCancelButtons = editMode && !isDreamProcessing;
   // Handlers
   const handleMutateVideoDream = async (data: UpdateDreamFormValues) => {
+    if (isImageDream) {
+      handleMutateThumbnailDream(data);
+      return;
+    }
+
     if (isVideoRemoved || video?.file) {
       try {
         await uploadDreamVideoMutation.mutateAsync({
@@ -658,22 +667,26 @@ const ViewDreamPage: React.FC = () => {
               {!editMode && (
                 <Row margin={0} alignItems="center">
                   <PlaylistCheckboxMenu type="dream" targetItem={dream} />
-                  <Button
-                    type="button"
-                    buttonType="default"
-                    transparent
-                    style={{ width: "3rem" }}
-                    onClick={handlePlayDream}
-                    data-tooltip-id="dream-play"
-                  >
-                    <FontAwesomeIcon icon={faPlay} />
-                  </Button>
-                  <Tooltip
-                    id="dream-play"
-                    place="bottom"
-                    delayShow={TOOLTIP_DELAY_MS}
-                    content={t("page.view_dream.play_dream_tooltip")}
-                  />
+                  {!isImageDream && (
+                    <>
+                      <Button
+                        type="button"
+                        buttonType="default"
+                        transparent
+                        style={{ width: "3rem" }}
+                        onClick={handlePlayDream}
+                        data-tooltip-id="dream-play"
+                      >
+                        <FontAwesomeIcon icon={faPlay} />
+                      </Button>
+                      <Tooltip
+                        id="dream-play"
+                        place="bottom"
+                        delayShow={TOOLTIP_DELAY_MS}
+                        content={t("page.view_dream.play_dream_tooltip")}
+                      />
+                    </>
+                  )}
                   <Button
                     type="button"
                     buttonType="default"
@@ -858,45 +871,65 @@ const ViewDreamPage: React.FC = () => {
 
               {!isDreamProcessing ? (
                 <React.Fragment>
-                  <Row>
-                    <h3>{t("page.view_dream.filmstrip")}</h3>
-                  </Row>
-                  <Row flexWrap="wrap">
-                    <FilmstripGallery dream={dream} />
-                  </Row>
+                  {!isImageDream && (
+                    <>
+                      <Row>
+                        <h3>{t("page.view_dream.filmstrip")}</h3>
+                      </Row>
+                      <Row flexWrap="wrap">
+                        <FilmstripGallery dream={dream} />
+                      </Row>
 
-                  <Restricted
-                    to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
-                    isOwner={isOwner}
-                  >
-                    <Row justifyContent="space-between" alignItems="center">
-                      <h3>{t("page.view_dream.original_video")}</h3>
-                      {editMode && (
-                        <Button
-                          type="button"
-                          buttonType="danger"
-                          onClick={handleRemoveVideo}
+                      <Restricted
+                        to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
+                        isOwner={isOwner}
+                      >
+                        <Row justifyContent="space-between" alignItems="center">
+                          <h3>{t("page.view_dream.original_video")}</h3>
+                          {editMode && (
+                            <Button
+                              type="button"
+                              buttonType="danger"
+                              onClick={handleRemoveVideo}
+                            >
+                              <FontAwesomeIcon icon={faTrash} />
+                            </Button>
+                          )}
+                        </Row>
+                        <Row
+                          justifyContent={["center", "center", "flex-start"]}
                         >
-                          <FontAwesomeIcon icon={faTrash} />
-                        </Button>
-                      )}
-                    </Row>
-                    <Row justifyContent={["center", "center", "flex-start"]}>
-                      <DreamVideoInput
-                        dream={dream}
-                        editMode={editMode}
-                        video={video}
-                        isRemoved={isVideoRemoved}
-                        handleChange={handleVideoChange}
-                      />
-                    </Row>
-                  </Restricted>
-                  <Row>
-                    <h3>{t("page.view_dream.video")}</h3>
-                  </Row>
-                  <Row justifyContent={["center", "center", "flex-start"]}>
-                    <Video controls src={video?.url || dream?.video} />
-                  </Row>
+                          <DreamVideoInput
+                            dream={dream}
+                            editMode={editMode}
+                            video={video}
+                            isRemoved={isVideoRemoved}
+                            handleChange={handleVideoChange}
+                          />
+                        </Row>
+                      </Restricted>
+                      <Row>
+                        <h3>{t("page.view_dream.video")}</h3>
+                      </Row>
+                      <Row justifyContent={["center", "center", "flex-start"]}>
+                        <Video controls src={video?.url || dream?.video} />
+                      </Row>
+                    </>
+                  )}
+                  {isImageDream && (
+                    <>
+                      <Row>
+                        <h3>{t("page.view_dream.image")}</h3>
+                      </Row>
+                      <Row justifyContent={["center", "center", "flex-start"]}>
+                        <img
+                          src={dream?.video || dream?.thumbnail}
+                          alt={dream?.name}
+                          style={{ maxWidth: "100%", height: "auto" }}
+                        />
+                      </Row>
+                    </>
+                  )}
                   <Row>
                     <h3>{t("page.view_dream.playlists")}</h3>
                   </Row>

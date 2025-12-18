@@ -1,6 +1,6 @@
 import { ApiResponse } from "@/types/api.types";
 import { Dream } from "@/types/dream.types";
-import { bytesToMegabytes } from "./file.util";
+import { formatFileSize } from "./file.util";
 import { framesToSeconds, secondsToTimeFormat } from "./video.utils";
 import { getUserName } from "./user.util";
 import { FORMAT } from "@/constants/moment.constants";
@@ -113,7 +113,7 @@ export const formatDreamForm = ({
     activityLevel: dream?.activityLevel,
     featureRank: dream?.featureRank,
     processedVideoSize: dream?.processedVideoSize
-      ? Math.round(bytesToMegabytes(dream?.processedVideoSize)) + " MB"
+      ? formatFileSize(dream?.processedVideoSize)
       : "-",
     processedVideoFrames: dream?.processedVideoFrames
       ? secondsToTimeFormat(

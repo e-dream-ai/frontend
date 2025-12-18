@@ -21,6 +21,7 @@ type QueryFunctionParams = {
   userUUID?: string;
   type?: FeedItemFilterType;
   onlyHidden?: boolean;
+  mediaType?: "image" | "video";
 };
 
 type GroupedFeedResponse = {
@@ -36,6 +37,7 @@ const getGroupedFeed = ({
   search,
   type,
   onlyHidden,
+  mediaType,
 }: QueryFunctionParams) => {
   return async () =>
     axiosClient
@@ -47,6 +49,7 @@ const getGroupedFeed = ({
           search,
           type,
           onlyHidden,
+          mediaType,
         },
         headers: getRequestHeaders({
           contentType: ContentType.json,
@@ -60,6 +63,7 @@ type HookParams = {
   userUUID?: string;
   search?: string;
   type?: FeedItemFilterType;
+  mediaType?: "image" | "video";
 };
 
 export function isRequestFeedItemType(
@@ -68,7 +72,12 @@ export function isRequestFeedItemType(
   return value === "playlist" || value === "dream";
 }
 
-export const useGroupedFeed = ({ search, userUUID, type }: HookParams) => {
+export const useGroupedFeed = ({
+  search,
+  userUUID,
+  type,
+  mediaType,
+}: HookParams) => {
   const { user } = useAuth();
   // Increase take size for grouped feed to reduce API calls due to deduplication
   const take = PAGINATION.TAKE * 2;
@@ -84,7 +93,7 @@ export const useGroupedFeed = ({ search, userUUID, type }: HookParams) => {
     : undefined;
 
   const queryResult = useInfiniteQuery<ApiResponse<GroupedFeedResponse>, Error>(
-    [GROUPED_FEED_QUERY_KEY, search, type, userUUID],
+    [GROUPED_FEED_QUERY_KEY, search, type, userUUID, mediaType],
     ({ pageParam = 0 }) => {
       return getGroupedFeed({
         take,
@@ -94,6 +103,7 @@ export const useGroupedFeed = ({ search, userUUID, type }: HookParams) => {
         search: search?.trim() || undefined,
         type: feedItemType,
         onlyHidden,
+        mediaType,
       })();
     },
     {

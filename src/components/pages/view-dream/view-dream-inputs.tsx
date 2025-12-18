@@ -7,7 +7,7 @@ import {
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { UpdateDreamFormValues } from "@/schemas/update-dream.schema";
-import { Dream } from "@/types/dream.types";
+import { Dream, DreamMediaType } from "@/types/dream.types";
 import { HandleChangeFile, type MultiMediaState } from "@/types/media.types";
 import {
   handleFileUploaderSizeError,
@@ -264,6 +264,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
     fit: "cover",
   });
 
+  const isImageDream = dream?.mediaType === DreamMediaType.IMAGE;
+
   return (
     <>
       <Row flex="auto" flexDirection={["column", "row", "row", "row"]} m={0}>
@@ -309,13 +311,15 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             to={getUserProfileRoute(dream?.user)}
             {...register("user")}
           />
-          <FormInput
-            disabled
-            placeholder={t("page.view_dream.duration")}
-            type="text"
-            before={<FontAwesomeIcon icon={faClock} />}
-            {...register("processedVideoFrames")}
-          />
+          {!isImageDream && (
+            <FormInput
+              disabled
+              placeholder={t("page.view_dream.duration")}
+              type="text"
+              before={<FontAwesomeIcon icon={faClock} />}
+              {...register("processedVideoFrames")}
+            />
+          )}
           <FormInput
             disabled
             placeholder={t("page.view_dream.created")}
@@ -663,16 +667,18 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               {...register("processedVideoSize")}
             />
           </FormItem>
-          <FormItem>
-            <FormInput
-              disabled
-              placeholder={t("page.view_dream.original_fps")}
-              type="text"
-              before={<FontAwesomeIcon icon={faPhotoVideo} />}
-              tooltipPlace={tooltipPlaces.right}
-              {...register("processedVideoFPS")}
-            />
-          </FormItem>
+          {!isImageDream && (
+            <FormItem>
+              <FormInput
+                disabled
+                placeholder={t("page.view_dream.original_fps")}
+                type="text"
+                before={<FontAwesomeIcon icon={faPhotoVideo} />}
+                tooltipPlace={tooltipPlaces.right}
+                {...register("processedVideoFPS")}
+              />
+            </FormItem>
+          )}
           <FormItem>
             <FormInput
               disabled
@@ -723,24 +729,28 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               />
             </FormItem>
           </Restricted>
-          <FormItem>
-            <KeyframeSelect
-              name="startKeyframe"
-              control={control}
-              placeholder={t("page.view_dream.start_keyframe")}
-              editMode={editMode}
-              tooltipPlace={tooltipPlaces.left}
-            />
-          </FormItem>
-          <FormItem>
-            <KeyframeSelect
-              name="endKeyframe"
-              control={control}
-              placeholder={t("page.view_dream.end_keyframe")}
-              editMode={editMode}
-              tooltipPlace={tooltipPlaces.right}
-            />
-          </FormItem>
+          {!isImageDream && (
+            <>
+              <FormItem>
+                <KeyframeSelect
+                  name="startKeyframe"
+                  control={control}
+                  placeholder={t("page.view_dream.start_keyframe")}
+                  editMode={editMode}
+                  tooltipPlace={tooltipPlaces.left}
+                />
+              </FormItem>
+              <FormItem>
+                <KeyframeSelect
+                  name="endKeyframe"
+                  control={control}
+                  placeholder={t("page.view_dream.end_keyframe")}
+                  editMode={editMode}
+                  tooltipPlace={tooltipPlaces.right}
+                />
+              </FormItem>
+            </>
+          )}
         </FormContainer>
       )}
     </>

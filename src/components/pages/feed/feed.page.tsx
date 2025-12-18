@@ -36,6 +36,7 @@ const getUserFeedType: (type?: FeedItemType) => RoleType | undefined = (
   if (type === FEED_FILTERS.ALL) return undefined;
   if (type === FEED_FILTERS.DREAM) return undefined;
   if (type === FEED_FILTERS.PLAYLIST) return undefined;
+  if (type === FEED_FILTERS.STILLS) return undefined;
   if (type === FEED_FILTERS.USER) return ROLES.USER_GROUP;
   if (type === FEED_FILTERS.CREATOR) return ROLES.CREATOR_GROUP;
   if (type === FEED_FILTERS.ADMIN) return ROLES.ADMIN_GROUP;
@@ -63,6 +64,13 @@ export const FeedPage: React.FC = () => {
    */
   const debouncedSearch = useDebounce(searchValue, 500);
 
+  const mediaType = useMemo(() => {
+    if (radioGroupState === FEED_FILTERS.STILLS) {
+      return "image" as const;
+    }
+    return undefined;
+  }, [radioGroupState]);
+
   const {
     data: feedData,
     isLoading: isFeedLoading,
@@ -71,7 +79,11 @@ export const FeedPage: React.FC = () => {
     isFetchingNextPage,
   } = useGroupedFeed({
     search,
-    type: radioGroupState as FeedItemFilterType,
+    type:
+      radioGroupState === FEED_FILTERS.STILLS
+        ? "dream"
+        : (radioGroupState as FeedItemFilterType),
+    mediaType,
   });
 
   // Extract feed items and virtual playlists from the grouped feed response

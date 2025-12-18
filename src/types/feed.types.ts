@@ -15,6 +15,7 @@ export type FeedItemType =
   | "all"
   | "dream"
   | "playlist"
+  | "stills"
   | "user"
   | "creator"
   | "admin";
@@ -38,6 +39,7 @@ export type UserFeedType =
   | "all"
   | "playlist"
   | "dream"
+  | "stills"
   | "upvote"
   | "downvote"
   | "hidden";

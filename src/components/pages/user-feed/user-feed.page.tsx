@@ -25,6 +25,7 @@ const USER_DREAMS_COMPONENT = [
   USER_FEED_TYPES.ALL,
   USER_FEED_TYPES.DREAM,
   USER_FEED_TYPES.PLAYLIST,
+  USER_FEED_TYPES.STILLS,
   USER_FEED_TYPES.HIDDEN,
 ];
 
@@ -95,7 +96,14 @@ export const UserFeedPage: React.FC = () => {
             grid
             columns={3}
             userUUID={user?.uuid}
-            type={radioGroupState as FeedItemFilterType}
+            type={
+              radioGroupState === USER_FEED_TYPES.STILLS
+                ? "dream"
+                : (radioGroupState as FeedItemFilterType)
+            }
+            mediaType={
+              radioGroupState === USER_FEED_TYPES.STILLS ? "image" : undefined
+            }
           />
         ) : (
           <UserVotedDreams

@@ -19,6 +19,7 @@ type QueryFunctionParams = {
   userUUID?: string;
   type?: FeedItemFilterType;
   onlyHidden?: boolean;
+  mediaType?: "image" | "video";
 };
 
 const getFeed = ({
@@ -28,6 +29,7 @@ const getFeed = ({
   search,
   type,
   onlyHidden,
+  mediaType,
 }: QueryFunctionParams) => {
   return async () =>
     axiosClient
@@ -39,6 +41,7 @@ const getFeed = ({
           search,
           type,
           onlyHidden,
+          mediaType,
         },
         headers: getRequestHeaders({
           contentType: ContentType.json,
@@ -52,6 +55,7 @@ type HookParams = {
   userUUID?: string;
   search?: string;
   type?: FeedItemFilterType;
+  mediaType?: "image" | "video";
 };
 
 export function isRequestFeedItemType(
@@ -60,7 +64,7 @@ export function isRequestFeedItemType(
   return value === "playlist" || value === "dream";
 }
 
-export const useFeed = ({ search, userUUID, type }: HookParams) => {
+export const useFeed = ({ search, userUUID, type, mediaType }: HookParams) => {
   const { user } = useAuth();
   const take = PAGINATION.TAKE;
   // Don't send onlyHidden if is not needed
@@ -74,7 +78,7 @@ export const useFeed = ({ search, userUUID, type }: HookParams) => {
     ApiResponse<{ feed: FeedItem[]; count: number }>,
     Error
   >(
-    [FEED_QUERY_KEY, search, type, userUUID],
+    [FEED_QUERY_KEY, search, type, userUUID, mediaType],
     ({ pageParam = 0 }) =>
       getFeed({
         take,
@@ -84,6 +88,7 @@ export const useFeed = ({ search, userUUID, type }: HookParams) => {
         search: search?.trim() || undefined,
         type: feedItemType,
         onlyHidden,
+        mediaType,
       })(),
     {
       enabled: Boolean(user),
