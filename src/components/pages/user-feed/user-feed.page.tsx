@@ -102,7 +102,11 @@ export const UserFeedPage: React.FC = () => {
                 : (radioGroupState as FeedItemFilterType)
             }
             mediaType={
-              radioGroupState === USER_FEED_TYPES.STILLS ? "image" : undefined
+              radioGroupState === USER_FEED_TYPES.STILLS
+                ? "image"
+                : radioGroupState === USER_FEED_TYPES.DREAM
+                  ? "video"
+                  : undefined
             }
           />
         ) : (

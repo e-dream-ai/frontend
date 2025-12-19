@@ -2,7 +2,9 @@ import { Column, Row, FileUploader, Input, Button } from "@/components/shared";
 import { ThumbnailInput } from "@/components/shared/thumbnail-input/thumbnail-input";
 import {
   ALLOWED_VIDEO_TYPES,
+  ALLOWED_IMAGE_TYPES,
   MAX_FILE_SIZE_MB,
+  MAX_IMAGE_FILE_SIZE_MB,
 } from "@/constants/file.constants";
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -27,6 +29,7 @@ import {
   faFileVideo,
   faFilm,
   faFire,
+  faImage,
   faLink,
   faMicrochip,
   faPhotoVideo,
@@ -797,6 +800,56 @@ export const DreamVideoInput: React.FC<DreamVideoInputProps> = ({
           onTypeError={handleFileUploaderTypeError(t)}
           name="file"
           types={ALLOWED_VIDEO_TYPES}
+        />
+      )}
+    </>
+  );
+};
+
+type DreamImageInputProps = {
+  isLoading?: boolean;
+  dream?: Dream;
+  image: MultiMediaState;
+  editMode: boolean;
+  isRemoved: boolean;
+  handleChange: HandleChangeFile;
+};
+
+export const DreamImageInput: React.FC<DreamImageInputProps> = ({
+  isLoading,
+  dream,
+  image,
+  editMode,
+  isRemoved,
+  handleChange,
+}) => {
+  const { t } = useTranslation();
+  const hasImage = Boolean(dream?.original_video) || image;
+
+  if (!hasImage && (!editMode || isLoading)) {
+    return (
+      <VideoPlaceholder>
+        <FontAwesomeIcon icon={faImage} />
+      </VideoPlaceholder>
+    );
+  }
+
+  return (
+    <>
+      {hasImage && !isRemoved ? (
+        <img
+          src={image?.url || dream?.original_video}
+          alt={dream?.name || "Original image"}
+          style={{ maxWidth: "100%", height: "auto" }}
+        />
+      ) : (
+        <FileUploader
+          maxSize={MAX_IMAGE_FILE_SIZE_MB}
+          handleChange={handleChange}
+          onSizeError={handleFileUploaderSizeError(t)}
+          onTypeError={handleFileUploaderTypeError(t)}
+          name="file"
+          types={ALLOWED_IMAGE_TYPES}
         />
       )}
     </>

@@ -32,7 +32,11 @@ import UpdateDreamSchema, {
   UpdateDreamFormValues,
 } from "@/schemas/update-dream.schema";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
-import { DreamVideoInput, ViewDreamInputs } from "./view-dream-inputs";
+import {
+  DreamVideoInput,
+  DreamImageInput,
+  ViewDreamInputs,
+} from "./view-dream-inputs";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircle,
@@ -101,8 +105,11 @@ const ViewDreamPage: React.FC = () => {
 
   const [editMode, setEditMode] = useState<boolean>(false);
   const [video, setVideo] = useState<MultiMediaState>();
+  const [originalImage, setOriginalImage] = useState<MultiMediaState>();
   const [thumbnail, setTumbnail] = useState<MultiMediaState>();
   const [isVideoRemoved, setIsVideoRemoved] = useState<boolean>(false);
+  const [isOriginalImageRemoved, setIsOriginalImageRemoved] =
+    useState<boolean>(false);
   const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
 
   const [showConfirmProcessModal, setShowConfirmProcessModal] =
@@ -218,7 +225,19 @@ const ViewDreamPage: React.FC = () => {
   // Handlers
   const handleMutateVideoDream = async (data: UpdateDreamFormValues) => {
     if (isImageDream) {
-      handleMutateThumbnailDream(data);
+      if (isOriginalImageRemoved || originalImage?.file) {
+        try {
+          await uploadDreamVideoMutation.mutateAsync({
+            file: originalImage?.file,
+            dream,
+          });
+          handleMutateThumbnailDream(data);
+        } catch (error) {
+          toast.error(t("page.view_dream.error_updating_dream"));
+        }
+      } else {
+        handleMutateThumbnailDream(data);
+      }
       return;
     }
 
@@ -374,8 +393,10 @@ const ViewDreamPage: React.FC = () => {
       resetPromptRef.current();
     }
     setIsVideoRemoved(false);
+    setIsOriginalImageRemoved(false);
     setIsThumbnailRemoved(false);
     setVideo(undefined);
+    setOriginalImage(undefined);
     setTumbnail(undefined);
     setEditMode(false);
   };
@@ -410,6 +431,10 @@ const ViewDreamPage: React.FC = () => {
     setIsVideoRemoved(true);
   };
 
+  const handleRemoveOriginalImage = () => {
+    setIsOriginalImageRemoved(true);
+  };
+
   const handleRemoveThumbnail = () => {
     setIsThumbnailRemoved(true);
   };
@@ -421,6 +446,15 @@ const ViewDreamPage: React.FC = () => {
       setVideo({ file: files, url: URL.createObjectURL(files) });
     }
     setIsVideoRemoved(false);
+  };
+
+  const handleOriginalImageChange: HandleChangeFile = (files) => {
+    if (files instanceof FileList) {
+      return;
+    } else {
+      setOriginalImage({ file: files, url: URL.createObjectURL(files) });
+    }
+    setIsOriginalImageRemoved(false);
   };
 
   const handleThumbnailChange: HandleChangeFile = (files) => {
@@ -924,6 +958,34 @@ const ViewDreamPage: React.FC = () => {
                   )}
                   {isImageDream && (
                     <>
+                      <Restricted
+                        to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
+                        isOwner={isOwner}
+                      >
+                        <Row justifyContent="space-between" alignItems="center">
+                          <h3>{t("page.view_dream.original_image")}</h3>
+                          {editMode && (
+                            <Button
+                              type="button"
+                              buttonType="danger"
+                              onClick={handleRemoveOriginalImage}
+                            >
+                              <FontAwesomeIcon icon={faTrash} />
+                            </Button>
+                          )}
+                        </Row>
+                        <Row
+                          justifyContent={["center", "center", "flex-start"]}
+                        >
+                          <DreamImageInput
+                            dream={dream}
+                            editMode={editMode}
+                            image={originalImage}
+                            isRemoved={isOriginalImageRemoved}
+                            handleChange={handleOriginalImageChange}
+                          />
+                        </Row>
+                      </Restricted>
                       <Row>
                         <h3>{t("page.view_dream.image")}</h3>
                       </Row>
