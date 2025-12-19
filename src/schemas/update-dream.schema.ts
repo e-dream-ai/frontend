@@ -61,7 +61,7 @@ export const UpdateDreamSchema = yup
   .object({
     name: yup.string().required(),
     description: yup.string(),
-    prompt: yup.mixed(),
+    prompt: yup.mixed().nullable(),
     sourceUrl: yup
       .string()
       .url("Invalid URL format. URL must start with http:// or https://"),

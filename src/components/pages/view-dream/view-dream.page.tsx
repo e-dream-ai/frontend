@@ -196,6 +196,7 @@ const ViewDreamPage: React.FC = () => {
   const formMethods = useForm<UpdateDreamFormValues>({
     resolver: yupResolver(UpdateDreamSchema),
     defaultValues: { name: "" },
+    mode: "onChange",
   });
 
   const isDreamProcessing: boolean = useMemo(
@@ -354,6 +355,11 @@ const ViewDreamPage: React.FC = () => {
       }
     }
     handleMutateVideoDream(data);
+  };
+
+  const onError = (errors: unknown) => {
+    console.error("Form validation errors:", errors);
+    toast.error(t("page.view_dream.error_validating_form"));
   };
 
   const handleEdit = (event: React.MouseEvent) => {
@@ -797,7 +803,7 @@ const ViewDreamPage: React.FC = () => {
           </Row>
 
           <FormProvider {...formMethods}>
-            <form onSubmit={formMethods.handleSubmit(onSubmit)}>
+            <form onSubmit={formMethods.handleSubmit(onSubmit, onError)}>
               <Row justifyContent="space-between" justifyItems="flex-end">
                 <span />
                 <div>
