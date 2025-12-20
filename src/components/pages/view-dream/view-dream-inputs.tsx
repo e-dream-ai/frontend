@@ -357,7 +357,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           />
         </Column>
       </Row>
-      <Row flex="auto" m={0}>
+      <Row flex="auto" m={0} style={{ overflowY: "hidden" }}>
         <Column flex="auto" m={0}>
           <Controller
             name="prompt"
