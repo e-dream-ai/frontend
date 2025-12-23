@@ -17,6 +17,11 @@ export enum DreamFileType {
   FILMSTRIP = "filmstrip",
 }
 
+export enum DreamMediaType {
+  VIDEO = "video",
+  IMAGE = "image",
+}
+
 export type Dream = {
   id: number;
   uuid: string;
@@ -31,7 +36,10 @@ export type Dream = {
   processedVideoSize?: number;
   processedVideoFrames?: number;
   processedVideoFPS?: number;
+  processedMediaWidth?: number;
+  processedMediaHeight?: number;
   status: DreamStatusType;
+  mediaType?: DreamMediaType;
   nsfw?: boolean;
   hidden?: boolean;
   description?: string;

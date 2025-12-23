@@ -5,6 +5,7 @@ export const FEED_FILTERS: Record<Uppercase<FeedItemType>, FeedItemType> = {
   ALL: "all",
   DREAM: "dream",
   PLAYLIST: "playlist",
+  STILLS: "stills",
   USER: "user",
   CREATOR: "creator",
   ADMIN: "admin",
@@ -14,6 +15,7 @@ export const FEED_FILTERS_NAMES = {
   ALL: "page.feed.all",
   DREAM: "page.feed.dream",
   PLAYLIST: "page.feed.playlist",
+  STILLS: "page.feed.stills",
   USER: "page.feed.user",
   CREATOR: "page.feed.creator",
   ADMIN: "page.feed.admin",
@@ -23,6 +25,7 @@ export const USER_FEED_TYPES: Record<Uppercase<UserFeedType>, UserFeedType> = {
   ALL: "all",
   PLAYLIST: "playlist",
   DREAM: "dream",
+  STILLS: "stills",
   UPVOTE: "upvote",
   DOWNVOTE: "downvote",
   HIDDEN: "hidden",
@@ -32,6 +35,7 @@ export const USER_FEED_FILTERS_NAMES = {
   ALL: "page.feed.all",
   DREAM: "page.feed.dream",
   PLAYLIST: "page.feed.playlist",
+  STILLS: "page.feed.stills",
   UPVOTE: "page.feed.upvote",
   DOWNVOTE: "page.feed.downvote",
   HIDDEN: "page.feed.hidden",
@@ -47,6 +51,10 @@ export const getFeedFilterData: (
     {
       key: t(FEED_FILTERS_NAMES.PLAYLIST),
       value: FEED_FILTERS.PLAYLIST.toString(),
+    },
+    {
+      key: t(FEED_FILTERS_NAMES.STILLS),
+      value: FEED_FILTERS.STILLS.toString(),
     },
     {
       key: t(FEED_FILTERS_NAMES.CREATOR),
@@ -80,6 +88,10 @@ export const getUserFeedFilterData: (
     {
       key: t(USER_FEED_FILTERS_NAMES.PLAYLIST),
       value: USER_FEED_TYPES.PLAYLIST.toString(),
+    },
+    {
+      key: t(USER_FEED_FILTERS_NAMES.STILLS),
+      value: USER_FEED_TYPES.STILLS.toString(),
     },
     {
       key: t(USER_FEED_FILTERS_NAMES.UPVOTE),

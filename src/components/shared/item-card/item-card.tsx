@@ -11,7 +11,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { SetItemOrder } from "@/types/dnd.types";
-import { Dream } from "@/types/dream.types";
+import { Dream, DreamMediaType } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 import { Sizes } from "@/types/sizes.types";
 import { Button } from "../button/button";
@@ -32,6 +32,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEllipsis,
   faFilm,
+  faImage,
   faListUl,
   faPhotoFilm,
   faPlay,
@@ -578,6 +579,9 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                     <ItemTitleText ref={tooltipRef} className="itemCard__title">
                       {type === "playlist" || type === "virtual-playlist" ? (
                         <FontAwesomeIcon icon={faListUl} />
+                      ) : type === "dream" &&
+                        (item as Dream)?.mediaType === DreamMediaType.IMAGE ? (
+                        <FontAwesomeIcon icon={faImage} />
                       ) : (
                         <FontAwesomeIcon icon={faFilm} />
                       )}{" "}
