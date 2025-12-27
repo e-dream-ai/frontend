@@ -391,17 +391,31 @@ export const usePlaylistHandlers = ({
     };
 
   const handleOrderPlaylist = async (dropItem: SetItemOrder) => {
+    const cacheData = queryClient.getQueryData<{
+      pages: Array<{
+        data?: { items: PlaylistItem[]; totalCount: number };
+      }>;
+      pageParams: unknown[];
+    }>([PLAYLIST_ITEMS_QUERY_KEY, uuid]);
+
+    const currentItems =
+      cacheData?.pages
+        .flatMap((page) => page.data?.items ?? [])
+        .sort((a, b) => a.order - b.order) ?? items;
+
     /**
      * Validate new index value
      */
     if (dropItem.newIndex < 0) {
       dropItem.newIndex = 0;
-    } else if (dropItem.newIndex > items.length - 1) {
-      dropItem.newIndex = items.length - 1;
+    } else if (dropItem.newIndex > currentItems.length - 1) {
+      dropItem.newIndex = currentItems.length - 1;
     }
 
     const requestPlaylistItems: ItemOrder[] = getOrderedItemsPlaylistRequest({
-      items: items.map((i) => ({ id: i.id, order: i.order }) as ItemOrder),
+      items: currentItems.map(
+        (i) => ({ id: i.id, order: i.order }) as ItemOrder,
+      ),
       dropItem,
     });
 
