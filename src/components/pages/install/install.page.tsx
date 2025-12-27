@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "install";
 
-const APP_VERSION = "0.10.1";
+const APP_VERSION = "0.11.1";
 const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
 const APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.zip`;
 
@@ -56,20 +56,9 @@ const InstallSection = () => {
                 and close the settings.
               </Text>
             </Row>
-            <Row>
-              <Text>
-                To enable the screen saver, go into System Settings, select the
-                "Screen Saver" panel, and then in the "Other" section click on
-                "Show More" and then click on "infinidream".
-              </Text>
-            </Row>
           </Card>
         </Row>
         <Text>
-          <p>
-            The screensaver shares its settings and account with the app, and we
-            recommend using the app to configure it.
-          </p>
           <p>
             Each time you sign-in, a fresh code is required. Never reuse the
             codes e-mailed to you.
