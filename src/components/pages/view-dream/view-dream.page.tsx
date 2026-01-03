@@ -14,6 +14,7 @@ import { Spinner } from "@/components/shared/spinner/spinner";
 import Text from "@/components/shared/text/text";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
+import { ROLES } from "@/constants/role.constants";
 import useAuth from "@/hooks/useAuth";
 import React, {
   useCallback,
@@ -218,6 +219,18 @@ const ViewDreamPage: React.FC = () => {
   const isOwner: boolean = useMemo(
     () => (user?.id ? user?.id === dream?.user?.id : false),
     [dream, user],
+  );
+
+  const isCreator = useMemo(
+    () => user?.role?.name === ROLES.CREATOR_GROUP,
+    [user],
+  );
+
+  const hasPrompt = useMemo(() => Boolean(dream?.prompt), [dream]);
+
+  const showRerunButton = useMemo(
+    () => isUserAdmin || (isOwner && isCreator && hasPrompt),
+    [isUserAdmin, isOwner, isCreator, hasPrompt],
   );
 
   const showEditButton = !editMode && !isDreamProcessing;
@@ -843,7 +856,7 @@ const ViewDreamPage: React.FC = () => {
                 <div>
                   {showEditButton && (
                     <React.Fragment>
-                      <Restricted to={DREAM_PERMISSIONS.CAN_PROCESS_DREAM}>
+                      {showRerunButton && (
                         <Button
                           type="button"
                           mx="2"
@@ -853,7 +866,7 @@ const ViewDreamPage: React.FC = () => {
                         >
                           {t("page.view_dream.rerun")}{" "}
                         </Button>
-                      </Restricted>
+                      )}
                       <Restricted
                         to={DREAM_PERMISSIONS.CAN_EDIT_DREAM}
                         isOwner={isOwner}
