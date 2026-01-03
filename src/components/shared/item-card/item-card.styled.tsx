@@ -228,29 +228,37 @@ export const PlayButton = styled(Button)<{ playType: ItemType }>`
   }
 `;
 
-const ICStyledBorder = styled.div<{ position: HighlightPosition }>`
+const ICStyledBorder = styled.div<{
+  position: HighlightPosition;
+  isFirst?: boolean;
+}>`
   position: absolute;
   left: 0;
   right: 0;
   height: ${HighlightBorderHeightPx}px;
   background-color: ${(props) => props.theme.colorPrimary};
   pointer-events: none;
-  ${({ position }) =>
-    position === "top"
-      ? `top: -${HighlightBorderHeightPx}px;`
-      : `bottom: -${HighlightBorderHeightPx}px;`}
+  ${({ position, isFirst }) => {
+    if (position === "top") {
+      return isFirst ? "top: 0;" : `top: -${HighlightBorderHeightPx}px;`;
+    }
+
+    return `bottom: -${HighlightBorderHeightPx}px;`;
+  }}
 `;
 
 interface HighlightBorderProps {
   isHighlighted: boolean;
   position: HighlightPosition;
+  isFirst?: boolean;
 }
 
 export const HighlightBorder: React.FC<HighlightBorderProps> = ({
   isHighlighted,
   position,
+  isFirst,
 }) => {
   if (!isHighlighted) return null;
 
-  return <ICStyledBorder position={position} />;
+  return <ICStyledBorder position={position} isFirst={isFirst} />;
 };

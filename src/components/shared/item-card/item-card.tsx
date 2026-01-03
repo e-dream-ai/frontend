@@ -601,6 +601,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
             <HighlightBorder
               isHighlighted={!!highlightPosition}
               position={highlightPosition}
+              isFirst={order === 0}
             />
           )}
         </>
