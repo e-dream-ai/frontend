@@ -229,7 +229,7 @@ const ViewDreamPage: React.FC = () => {
   const hasPrompt = useMemo(() => Boolean(dream?.prompt), [dream]);
 
   const showRerunButton = useMemo(
-    () => isUserAdmin || (isOwner && isCreator && hasPrompt),
+    () => (isUserAdmin && hasPrompt) || (isOwner && isCreator && hasPrompt),
     [isUserAdmin, isOwner, isCreator, hasPrompt],
   );
 
