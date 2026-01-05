@@ -397,7 +397,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               const calculateContentHeight = useCallback(
                 (content: string): number => {
                   if (!content || content.trim() === "" || content === "{}") {
-                    return 40; // 2.5rem = 40px (min-height)
+                    return 40;
                   }
                   const lines = content.split("\n").length;
                   const lineHeight = 24; // Approximate line height in pixels

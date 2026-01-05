@@ -60,7 +60,7 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
         const scrollHeight = textarea.scrollHeight;
         const isEmpty = !value || value.toString().trim() === "";
         if (isEmpty) {
-          textarea.style.height = "2.5rem";
+          textarea.style.height = "2.375rem";
         } else {
           textarea.style.height = `${scrollHeight}px`;
         }
@@ -75,7 +75,7 @@ export const TextArea = React.forwardRef<HTMLTextAreaElement, TextAreaProps>(
         const scrollHeight = div.scrollHeight;
         const isEmpty = !value || value.toString().trim() === "";
         if (isEmpty) {
-          div.style.height = "2.5rem";
+          div.style.height = "2.375rem";
         } else {
           div.style.height = `${scrollHeight}px`;
         }
