@@ -93,6 +93,67 @@ type Params = { uuid: string };
 
 const SectionID = "dream";
 
+const FALLBACK_ERROR_MESSAGE = "An error occurred while processing this dream.";
+
+const formatDreamError = (error?: string | null): string => {
+  if (!error) {
+    return "";
+  }
+
+  const trimmedError = error.trim();
+  if (!trimmedError) {
+    return "";
+  }
+
+  try {
+    const parsed = JSON.parse(trimmedError);
+    if (typeof parsed === "object" && parsed !== null) {
+      const parts: string[] = [];
+
+      if (typeof parsed.error_message === "string") {
+        const message = parsed.error_message.trim();
+        if (message) {
+          parts.push(message);
+        }
+      }
+
+      if (typeof parsed.error === "string") {
+        const message = parsed.error.trim();
+        if (message && !parts.length) {
+          parts.push(message);
+        }
+      }
+
+      if (typeof parsed.message === "string") {
+        const message = parsed.message.trim();
+        if (message && !parts.length) {
+          parts.push(message);
+        }
+      }
+
+      if (typeof parsed.error_traceback === "string") {
+        const trace = parsed.error_traceback.trim();
+        if (trace) {
+          parts.push(trace);
+        }
+      } else if (typeof parsed.stack === "string") {
+        const stack = parsed.stack.trim();
+        if (stack) {
+          parts.push(stack);
+        }
+      }
+
+      if (parts.length) {
+        return parts.join("\n\n");
+      }
+
+      return JSON.stringify(parsed, null, 2);
+    }
+  } catch {}
+
+  return trimmedError;
+};
+
 const updateToast = (
   toastId: React.ReactText,
   type: "success" | "error",
@@ -164,6 +225,10 @@ const ViewDreamPage: React.FC = () => {
   const isDreamReported = useMemo(
     () => Boolean(dream?.reports?.length),
     [dream],
+  );
+  const formattedDreamError = useMemo(
+    () => formatDreamError(dream?.error),
+    [dream?.error],
   );
 
   useEffect(() => {
@@ -948,8 +1013,7 @@ const ViewDreamPage: React.FC = () => {
                               <FontAwesomeIcon icon={faExclamationCircle} />
                             </ErrorTextAreaBefore>
                             <ErrorTextArea>
-                              {dream?.error ||
-                                "An error occurred while processing this dream."}
+                              {formattedDreamError || FALLBACK_ERROR_MESSAGE}
                             </ErrorTextArea>
                           </ErrorTextAreaRow>
                         </ErrorTextAreaGroup>
