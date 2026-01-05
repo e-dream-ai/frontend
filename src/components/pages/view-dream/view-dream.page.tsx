@@ -41,6 +41,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircle,
+  faExclamationCircle,
   faFlag,
   faGears,
   faPencil,
@@ -51,7 +52,13 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { DreamStatusType, DreamMediaType } from "@/types/dream.types";
-import { Video } from "./view-dream.styled";
+import {
+  Video,
+  ErrorTextAreaGroup,
+  ErrorTextAreaRow,
+  ErrorTextAreaBefore,
+  ErrorTextArea,
+} from "./view-dream.styled";
 import { isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import useSocket from "@/hooks/useSocket";
@@ -211,6 +218,11 @@ const ViewDreamPage: React.FC = () => {
     () =>
       dream?.status === DreamStatusType.QUEUE ||
       dream?.status === DreamStatusType.PROCESSING,
+    [dream],
+  );
+
+  const isDreamFailed: boolean = useMemo(
+    () => dream?.status === DreamStatusType.FAILED,
     [dream],
   );
 
@@ -924,52 +936,78 @@ const ViewDreamPage: React.FC = () => {
 
               {!isDreamProcessing ? (
                 <React.Fragment>
-                  {!isImageDream && (
+                  {isDreamFailed ? (
                     <>
                       <Row>
-                        <h3>{t("page.view_dream.filmstrip")}</h3>
+                        <h3>Error</h3>
                       </Row>
-                      <Row flexWrap="wrap">
-                        <FilmstripGallery dream={dream} />
+                      <Row>
+                        <ErrorTextAreaGroup>
+                          <ErrorTextAreaRow>
+                            <ErrorTextAreaBefore>
+                              <FontAwesomeIcon icon={faExclamationCircle} />
+                            </ErrorTextAreaBefore>
+                            <ErrorTextArea>
+                              {dream?.error ||
+                                "An error occurred while processing this dream."}
+                            </ErrorTextArea>
+                          </ErrorTextAreaRow>
+                        </ErrorTextAreaGroup>
                       </Row>
+                    </>
+                  ) : (
+                    !isImageDream && (
+                      <>
+                        <Row>
+                          <h3>{t("page.view_dream.filmstrip")}</h3>
+                        </Row>
+                        <Row flexWrap="wrap">
+                          <FilmstripGallery dream={dream} />
+                        </Row>
 
-                      <Restricted
-                        to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
-                        isOwner={isOwner}
-                      >
-                        <Row justifyContent="space-between" alignItems="center">
-                          <h3>{t("page.view_dream.original_video")}</h3>
-                          {editMode && (
-                            <Button
-                              type="button"
-                              buttonType="danger"
-                              onClick={handleRemoveVideo}
-                            >
-                              <FontAwesomeIcon icon={faTrash} />
-                            </Button>
-                          )}
+                        <Restricted
+                          to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
+                          isOwner={isOwner}
+                        >
+                          <Row
+                            justifyContent="space-between"
+                            alignItems="center"
+                          >
+                            <h3>{t("page.view_dream.original_video")}</h3>
+                            {editMode && (
+                              <Button
+                                type="button"
+                                buttonType="danger"
+                                onClick={handleRemoveVideo}
+                              >
+                                <FontAwesomeIcon icon={faTrash} />
+                              </Button>
+                            )}
+                          </Row>
+                          <Row
+                            justifyContent={["center", "center", "flex-start"]}
+                          >
+                            <DreamVideoInput
+                              dream={dream}
+                              editMode={editMode}
+                              video={video}
+                              isRemoved={isVideoRemoved}
+                              handleChange={handleVideoChange}
+                            />
+                          </Row>
+                        </Restricted>
+                        <Row>
+                          <h3>{t("page.view_dream.video")}</h3>
                         </Row>
                         <Row
                           justifyContent={["center", "center", "flex-start"]}
                         >
-                          <DreamVideoInput
-                            dream={dream}
-                            editMode={editMode}
-                            video={video}
-                            isRemoved={isVideoRemoved}
-                            handleChange={handleVideoChange}
-                          />
+                          <Video controls src={video?.url || dream?.video} />
                         </Row>
-                      </Restricted>
-                      <Row>
-                        <h3>{t("page.view_dream.video")}</h3>
-                      </Row>
-                      <Row justifyContent={["center", "center", "flex-start"]}>
-                        <Video controls src={video?.url || dream?.video} />
-                      </Row>
-                    </>
+                      </>
+                    )
                   )}
-                  {isImageDream && (
+                  {!isDreamFailed && isImageDream && (
                     <>
                       <Restricted
                         to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}

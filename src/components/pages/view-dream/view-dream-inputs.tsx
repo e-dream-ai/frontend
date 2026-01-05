@@ -9,7 +9,7 @@ import {
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { UpdateDreamFormValues } from "@/schemas/update-dream.schema";
-import { Dream, DreamMediaType } from "@/types/dream.types";
+import { Dream, DreamMediaType, DreamStatusType } from "@/types/dream.types";
 import { HandleChangeFile, type MultiMediaState } from "@/types/media.types";
 import {
   handleFileUploaderSizeError,
@@ -24,6 +24,7 @@ import {
   faClock,
   faComment,
   faDesktop,
+  faExclamationCircle,
   faEye,
   faFile,
   faFileVideo,
@@ -75,6 +76,7 @@ import styled from "styled-components";
 import { materialDark } from "@uiw/codemirror-theme-material";
 import { faUpDown } from "@fortawesome/free-solid-svg-icons";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { PrimaryTheme } from "@/constants/colors.constants";
 
 const CodeMirrorWrapper = styled.div<{
   disabled?: boolean;
@@ -109,6 +111,11 @@ const CodeMirrorWrapper = styled.div<{
 
   .cm-scroller {
     overflow-x: auto;
+  }
+
+  .cm-content {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
   }
 
   .cm-gutters {
@@ -268,20 +275,41 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   });
 
   const isImageDream = dream?.mediaType === DreamMediaType.IMAGE;
+  const isDreamFailed = dream?.status === DreamStatusType.FAILED;
 
   return (
     <>
       <Row flex="auto" flexDirection={["column", "row", "row", "row"]} m={0}>
         <Column flex="1" mr={[0, 2, 2, 2]} mb={4}>
-          <ThumbnailInput
-            localMultimedia={thumbnailState}
-            thumbnail={thumbnailUrl}
-            editMode={editMode}
-            isProcessing={isProcessing}
-            isRemoved={isThumbnailRemoved}
-            handleChange={handleThumbnailChange}
-            handleRemove={handleRemoveThumbnail}
-          />
+          {isDreamFailed ? (
+            <div
+              style={{
+                width: "100%",
+                aspectRatio: "16/9",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                backgroundColor: PrimaryTheme.inputBackgroundColor,
+                borderRadius: "8px",
+                border: `2px dashed ${PrimaryTheme.colorDanger}`,
+              }}
+            >
+              <FontAwesomeIcon
+                icon={faExclamationCircle}
+                style={{ fontSize: "64px", color: PrimaryTheme.colorDanger }}
+              />
+            </div>
+          ) : (
+            <ThumbnailInput
+              localMultimedia={thumbnailState}
+              thumbnail={thumbnailUrl}
+              editMode={editMode}
+              isProcessing={isProcessing}
+              isRemoved={isThumbnailRemoved}
+              handleChange={handleThumbnailChange}
+              handleRemove={handleRemoveThumbnail}
+            />
+          )}
         </Column>
         <Column flex="1" ml={[0, 2, 2]}>
           {
