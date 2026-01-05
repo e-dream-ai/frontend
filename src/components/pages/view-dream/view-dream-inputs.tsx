@@ -106,7 +106,6 @@ const CodeMirrorWrapper = styled.div<{
   .cm-editor {
     background: transparent !important;
     font-size: 1rem;
-    font-family: inherit;
   }
 
   .cm-scroller {
@@ -121,6 +120,10 @@ const CodeMirrorWrapper = styled.div<{
   .cm-gutters {
     background: transparent !important;
     border: 0;
+  }
+
+  .cm-line {
+    font-family: "Roboto Mono", monospace;
   }
 
   &:disabled {

@@ -64,6 +64,7 @@ export const ErrorTextArea = styled.div`
   background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorPrimary};
   font-size: 1rem;
+  font-family: "Roboto Mono", monospace;
   cursor: not-allowed;
   white-space: pre-wrap;
   word-break: break-word;
