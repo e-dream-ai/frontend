@@ -77,6 +77,14 @@ import { materialDark } from "@uiw/codemirror-theme-material";
 import { faUpDown } from "@fortawesome/free-solid-svg-icons";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { PrimaryTheme } from "@/constants/colors.constants";
+import useSocketEventListener from "@/hooks/useSocketEventListener";
+import { JOB_PROGRESS_EVENT } from "@/constants/remote-control.constants";
+
+export interface JobProgressData {
+  jobId: string;
+  dream_uuid: string;
+  progress: number;
+}
 
 const CodeMirrorWrapper = styled.div<{
   disabled?: boolean;
@@ -210,6 +218,14 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   });
   const handlePosition = useTransform(smoothScrollOffset, (value) => -value);
 
+  const [progress, setProgress] = useState<number | undefined>(undefined);
+
+  useSocketEventListener<JobProgressData>(JOB_PROGRESS_EVENT, async (data) => {
+    if (data && data.dream_uuid === dream?.uuid) {
+      setProgress(data.progress);
+    }
+  });
+
   const { control, register, setError, clearErrors, getValues } =
     useFormContext<UpdateDreamFormValues>();
 
@@ -308,6 +324,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               thumbnail={thumbnailUrl}
               editMode={editMode}
               isProcessing={isProcessing}
+              progress={progress}
               isRemoved={isThumbnailRemoved}
               handleChange={handleThumbnailChange}
               handleRemove={handleRemoveThumbnail}

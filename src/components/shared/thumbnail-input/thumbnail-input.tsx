@@ -27,6 +27,7 @@ import { Spinner } from "../spinner/spinner";
 import { useTheme } from "styled-components";
 import Text from "../text/text";
 import { useImage } from "@/hooks/useImage";
+import ProgressBar from "../progress-bar/progress-bar";
 
 type ThumbnailInputProps = {
   isLoading?: boolean;
@@ -34,6 +35,7 @@ type ThumbnailInputProps = {
   localMultimedia: MultiMediaState;
   editMode: boolean;
   isProcessing?: boolean;
+  progress?: number;
   isRemoved: boolean;
   handleChange: HandleChangeFile;
   handleRemove?: () => void;
@@ -45,6 +47,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   localMultimedia,
   editMode,
   isProcessing,
+  progress,
   isRemoved,
   handleChange,
   handleRemove,
@@ -55,13 +58,29 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   const localUrl = useImage(localMultimedia?.url);
 
   if (isProcessing && !isLoading) {
+    const isRendering = progress !== undefined && progress < 100;
+    const statusText = isRendering
+      ? t("components.thumbnail_input.rendering")
+      : t("components.thumbnail_input.ingesting");
+
     return (
       <ThumbnailPlaceholder fontSize="1.2rem">
-        <Row>
-          <Column alignItems="center">
-            <Spinner />
-            <Text color={theme.textBodyColor} mt="1rem">
-              {t("components.thumbnail_input.processing")}
+        <Row width="100%" px="2rem" mb="0">
+          <Column alignItems="center" width="100%">
+            {isRendering ? (
+              <ProgressBar
+                completed={progress}
+                width="100%"
+                height="16px"
+                labelSize="12px"
+                borderRadius="8px"
+                margin="0 0 1rem 0"
+              />
+            ) : (
+              <Spinner />
+            )}
+            <Text color={theme.textBodyColor} mt={isRendering ? "0" : "1rem"}>
+              {statusText}
             </Text>
           </Column>
         </Row>

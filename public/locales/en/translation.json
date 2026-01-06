@@ -447,7 +447,9 @@
       "error_updating_profile": "Error updating profile."
     },
     "thumbnail_input": {
-      "processing": "Ingesting dream..."
+      "processing": "Ingesting dream...",
+      "rendering": "Rendering dream...",
+      "ingesting": "Ingesting dream..."
     },
     "tooltip": {
       "play_dream": "Dream {{name}} play.",
