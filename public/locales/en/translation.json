@@ -169,6 +169,7 @@
       "activity_level": "Activity Level",
       "feature_rank": "Feature Rank",
       "duration": "Duration",
+      "render_duration": "Render Duration",
       "size": "Size",
       "owner": "Owner",
       "displayed_owner": "Displayed Owner",

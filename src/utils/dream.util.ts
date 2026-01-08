@@ -120,6 +120,9 @@ export const formatDreamForm = ({
           framesToSeconds(dream?.processedVideoFrames, dream?.activityLevel),
         )
       : "-",
+    render_duration: dream?.render_duration
+      ? secondsToTimeFormat(Math.floor(dream.render_duration / 1000))
+      : "-",
     processedVideoFPS: dream?.processedVideoFPS
       ? `${dream?.processedVideoFPS} Original FPS`
       : "-",

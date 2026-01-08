@@ -37,6 +37,7 @@ import {
   faRankingStar,
   faSave,
   faShield,
+  faStopwatch,
   faThumbsDown,
   faThumbsUp,
   faUser,
@@ -729,6 +730,16 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               before={<FontAwesomeIcon icon={faFile} />}
               tooltipPlace={tooltipPlaces.left}
               {...register("processedVideoSize")}
+            />
+          </FormItem>
+          <FormItem>
+            <FormInput
+              disabled
+              placeholder={t("page.view_dream.render_duration")}
+              type="text"
+              before={<FontAwesomeIcon icon={faStopwatch} />}
+              tooltipPlace={tooltipPlaces.right}
+              {...register("render_duration")}
             />
           </FormItem>
           {!isImageDream && (
