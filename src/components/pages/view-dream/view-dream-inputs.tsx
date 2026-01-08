@@ -83,7 +83,8 @@ import { JOB_PROGRESS_EVENT } from "@/constants/remote-control.constants";
 export interface JobProgressData {
   jobId: string;
   dream_uuid: string;
-  progress: number;
+  status?: string;
+  progress?: number;
 }
 
 const CodeMirrorWrapper = styled.div<{
@@ -219,10 +220,12 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const handlePosition = useTransform(smoothScrollOffset, (value) => -value);
 
   const [progress, setProgress] = useState<number | undefined>(undefined);
+  const [jobStatus, setJobStatus] = useState<string | undefined>(undefined);
 
   useSocketEventListener<JobProgressData>(JOB_PROGRESS_EVENT, async (data) => {
     if (data && data.dream_uuid === dream?.uuid) {
       setProgress(data.progress);
+      setJobStatus(data.status);
     }
   });
 
@@ -325,6 +328,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               editMode={editMode}
               isProcessing={isProcessing}
               progress={progress}
+              jobStatus={jobStatus}
               isRemoved={isThumbnailRemoved}
               handleChange={handleThumbnailChange}
               handleRemove={handleRemoveThumbnail}

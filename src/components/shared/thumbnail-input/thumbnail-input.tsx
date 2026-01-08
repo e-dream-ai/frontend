@@ -36,6 +36,7 @@ type ThumbnailInputProps = {
   editMode: boolean;
   isProcessing?: boolean;
   progress?: number;
+  jobStatus?: string;
   isRemoved: boolean;
   handleChange: HandleChangeFile;
   handleRemove?: () => void;
@@ -48,6 +49,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   editMode,
   isProcessing,
   progress,
+  jobStatus,
   isRemoved,
   handleChange,
   handleRemove,
@@ -58,7 +60,10 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   const localUrl = useImage(localMultimedia?.url);
 
   if (isProcessing && !isLoading) {
-    const isRendering = progress !== undefined && progress < 100;
+    // Use status to determine what to show:
+    // - "queue" or "processing" = rendering (show progress if available)
+    // - "processed" = ingesting dream (show spinner)
+    const isRendering = jobStatus === "queue" || jobStatus === "processing";
     const statusText = isRendering
       ? t("components.thumbnail_input.rendering")
       : t("components.thumbnail_input.ingesting");
@@ -67,7 +72,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
       <ThumbnailPlaceholder fontSize="1.2rem">
         <Row width="100%" px="2rem" mb="0">
           <Column alignItems="center" width="100%">
-            {isRendering ? (
+            {isRendering && progress !== undefined ? (
               <ProgressBar
                 completed={progress}
                 width="100%"
@@ -79,7 +84,10 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
             ) : (
               <Spinner />
             )}
-            <Text color={theme.textBodyColor} mt={isRendering ? "0" : "1rem"}>
+            <Text
+              color={theme.textBodyColor}
+              mt={isRendering && progress !== undefined ? "0" : "1rem"}
+            >
               {statusText}
             </Text>
           </Column>
