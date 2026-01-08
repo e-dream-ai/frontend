@@ -49,6 +49,7 @@ import {
   faSave,
   faThumbsDown,
   faThumbsUp,
+  faTimes,
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { DreamStatusType, DreamMediaType } from "@/types/dream.types";
@@ -66,6 +67,7 @@ import { emitPlayDream } from "@/utils/socket.util";
 import { truncateString } from "@/utils/string.util";
 import { AnchorLink } from "@/components/shared";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
+import { useCancelDream } from "@/api/dream/mutation/useCancelDream";
 import { User } from "@/types/auth.types";
 import { useUpvoteDream } from "@/api/dream/mutation/useUpvoteDream";
 import { useDownvoteDream } from "@/api/dream/mutation/useDownvoteDream";
@@ -183,6 +185,8 @@ const ViewDreamPage: React.FC = () => {
 
   const [showConfirmProcessModal, setShowConfirmProcessModal] =
     useState<boolean>(false);
+  const [showConfirmCancelModal, setShowConfirmCancelModal] =
+    useState<boolean>(false);
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
     useState<boolean>(false);
   const [showReportModal, setShowReportModal] = useState<boolean>(false);
@@ -250,6 +254,7 @@ const ViewDreamPage: React.FC = () => {
   const { mutate: mutateDream, isLoading: isLoadingDreamMutation } =
     useUpdateDream(uuid);
   const processDreamMutation = useProcessDream(uuid);
+  const cancelDreamMutation = useCancelDream(uuid);
   const uploadDreamVideoMutation = useUploadDreamVideo({
     navigateToDream: false,
   });
@@ -305,12 +310,30 @@ const ViewDreamPage: React.FC = () => {
 
   const hasPrompt = useMemo(() => Boolean(dream?.prompt), [dream]);
 
+  const dreamAlgorithm = useMemo(() => {
+    if (!dream?.prompt) return null;
+    try {
+      const parsed =
+        typeof dream.prompt === "string"
+          ? JSON.parse(dream.prompt)
+          : dream.prompt;
+      return parsed?.infinidream_algorithm ?? null;
+    } catch {
+      return null;
+    }
+  }, [dream?.prompt]);
+
+  const isCancellableAlgorithm = useMemo(() => {
+    const cancellableAlgorithms = ["animatediff", "deforum", "uprez"];
+    return cancellableAlgorithms.includes(dreamAlgorithm);
+  }, [dreamAlgorithm]);
+
   const showRerunButton = useMemo(
     () => (isUserAdmin && hasPrompt) || (isOwner && isCreator && hasPrompt),
     [isUserAdmin, isOwner, isCreator, hasPrompt],
   );
 
-  const showEditButton = !editMode && !isDreamProcessing;
+  const showEditButton = !editMode;
   const showSaveAndCancelButtons = editMode && !isDreamProcessing;
   // Handlers
   const handleMutateVideoDream = async (data: UpdateDreamFormValues) => {
@@ -493,6 +516,8 @@ const ViewDreamPage: React.FC = () => {
 
   const onShowConfirmProcessModal = () => setShowConfirmProcessModal(true);
   const onHideConfirmProcessModal = () => setShowConfirmProcessModal(false);
+  const onShowConfirmCancelModal = () => setShowConfirmCancelModal(true);
+  const onHideConfirmCancelModal = () => setShowConfirmCancelModal(false);
   const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
   const onShowReportModal = () => setShowReportModal(true);
@@ -568,6 +593,44 @@ const ViewDreamPage: React.FC = () => {
       }
     } catch (_) {
       toast.error(`${t("page.view_dream.error_processing_dream")}`);
+    }
+  };
+
+  const onConfirmCancelDream = async () => {
+    try {
+      const response = await cancelDreamMutation.mutateAsync();
+      if (response?.success) {
+        toast.success(`${t("page.view_dream.dream_cancelled_successfully")}`);
+
+        queryClient.setQueryData<ApiResponse<{ dream: Dream }>>(
+          [DREAM_QUERY_KEY, uuid],
+          (oldData) => {
+            if (!oldData?.data?.dream) return oldData;
+            const dream = oldData.data.dream;
+            const newStatus = dream.video
+              ? DreamStatusType.PROCESSED
+              : DreamStatusType.NONE;
+
+            return {
+              ...oldData,
+              data: {
+                ...oldData.data,
+                dream: {
+                  ...dream,
+                  status: newStatus,
+                },
+              },
+            };
+          },
+        );
+
+        refetch();
+        onHideConfirmCancelModal();
+      } else {
+        toast.error(`${t("page.view_dream.error_cancelling_dream")}`);
+      }
+    } catch (_) {
+      toast.error(`${t("page.view_dream.error_cancelling_dream")}`);
     }
   };
 
@@ -721,6 +784,26 @@ const ViewDreamPage: React.FC = () => {
           </Text>
         }
       />
+
+      {/**
+       * Confirm cancel dream modal
+       */}
+      <ConfirmModal
+        isOpen={showConfirmCancelModal}
+        onCancel={onHideConfirmCancelModal}
+        onConfirm={onConfirmCancelDream}
+        isConfirming={cancelDreamMutation.isLoading}
+        title={t("page.view_dream.confirm_cancel_modal_title")}
+        text={
+          <Text>
+            {t("page.view_dream.confirm_cancel_modal_body")}{" "}
+            <em>
+              <strong>{truncateString(dream?.name, 30)}</strong>
+            </em>
+          </Text>
+        }
+      />
+
       {/**
        * Process report dream modal
        */}
@@ -933,29 +1016,45 @@ const ViewDreamPage: React.FC = () => {
                 <div>
                   {showEditButton && (
                     <React.Fragment>
-                      {showRerunButton && (
-                        <Button
-                          type="button"
-                          mx="2"
-                          after={<FontAwesomeIcon icon={faGears} />}
-                          isLoading={processDreamMutation.isLoading}
-                          onClick={onShowConfirmProcessModal}
+                      {showRerunButton &&
+                        (isDreamProcessing ? (
+                          isCancellableAlgorithm && (
+                            <Button
+                              type="button"
+                              mx="2"
+                              buttonType="danger"
+                              after={<FontAwesomeIcon icon={faTimes} />}
+                              isLoading={cancelDreamMutation.isLoading}
+                              onClick={onShowConfirmCancelModal}
+                            >
+                              {t("page.view_dream.cancel")}{" "}
+                            </Button>
+                          )
+                        ) : (
+                          <Button
+                            type="button"
+                            mx="2"
+                            after={<FontAwesomeIcon icon={faGears} />}
+                            isLoading={processDreamMutation.isLoading}
+                            onClick={onShowConfirmProcessModal}
+                          >
+                            {t("page.view_dream.rerun")}{" "}
+                          </Button>
+                        ))}
+                      {!isDreamProcessing && (
+                        <Restricted
+                          to={DREAM_PERMISSIONS.CAN_EDIT_DREAM}
+                          isOwner={isOwner}
                         >
-                          {t("page.view_dream.rerun")}{" "}
-                        </Button>
+                          <Button
+                            type="button"
+                            after={<FontAwesomeIcon icon={faPencil} />}
+                            onClick={handleEdit}
+                          >
+                            {t("page.view_dream.edit")}{" "}
+                          </Button>
+                        </Restricted>
                       )}
-                      <Restricted
-                        to={DREAM_PERMISSIONS.CAN_EDIT_DREAM}
-                        isOwner={isOwner}
-                      >
-                        <Button
-                          type="button"
-                          after={<FontAwesomeIcon icon={faPencil} />}
-                          onClick={handleEdit}
-                        >
-                          {t("page.view_dream.edit")}{" "}
-                        </Button>
-                      </Restricted>
                     </React.Fragment>
                   )}
                   {showSaveAndCancelButtons && (
