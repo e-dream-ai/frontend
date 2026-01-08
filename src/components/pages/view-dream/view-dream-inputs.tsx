@@ -222,10 +222,19 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const [progress, setProgress] = useState<number | undefined>(undefined);
   const [jobStatus, setJobStatus] = useState<string | undefined>(undefined);
 
+  useEffect(() => {
+    setProgress(undefined);
+    setJobStatus(undefined);
+  }, [dream?.uuid]);
+
   useSocketEventListener<JobProgressData>(JOB_PROGRESS_EVENT, async (data) => {
     if (data && data.dream_uuid === dream?.uuid) {
-      setProgress(data.progress);
-      setJobStatus(data.status);
+      if (typeof data.progress === "number") {
+        setProgress(data.progress);
+      }
+      if (typeof data.status === "string") {
+        setJobStatus(data.status);
+      }
     }
   });
 
@@ -327,8 +336,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               thumbnail={thumbnailUrl}
               editMode={editMode}
               isProcessing={isProcessing}
-              progress={progress}
               jobStatus={jobStatus}
+              progress={progress}
               isRemoved={isThumbnailRemoved}
               handleChange={handleThumbnailChange}
               handleRemove={handleRemoveThumbnail}

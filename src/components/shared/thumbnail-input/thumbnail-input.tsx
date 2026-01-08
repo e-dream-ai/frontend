@@ -35,8 +35,8 @@ type ThumbnailInputProps = {
   localMultimedia: MultiMediaState;
   editMode: boolean;
   isProcessing?: boolean;
-  progress?: number;
   jobStatus?: string;
+  progress?: number;
   isRemoved: boolean;
   handleChange: HandleChangeFile;
   handleRemove?: () => void;
@@ -48,8 +48,8 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   localMultimedia,
   editMode,
   isProcessing,
-  progress,
   jobStatus,
+  progress,
   isRemoved,
   handleChange,
   handleRemove,
@@ -60,10 +60,18 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   const localUrl = useImage(localMultimedia?.url);
 
   if (isProcessing && !isLoading) {
-    // Use status to determine what to show:
-    // - "queue" or "processing" = rendering (show progress if available)
-    // - "processed" = ingesting dream (show spinner)
-    const isRendering = jobStatus === "queue" || jobStatus === "processing";
+    const normalizedJobStatus = (jobStatus ?? "").toUpperCase();
+    const isIngestingByStatus = normalizedJobStatus === "COMPLETED";
+    const isRenderingByStatus =
+      normalizedJobStatus === "IN_QUEUE" ||
+      normalizedJobStatus === "IN_PROGRESS";
+
+    const isRendering = isRenderingByStatus
+      ? true
+      : isIngestingByStatus
+        ? false
+        : progress !== undefined && progress < 100;
+    const shouldShowProgressBar = isRendering && typeof progress === "number";
     const statusText = isRendering
       ? t("components.thumbnail_input.rendering")
       : t("components.thumbnail_input.ingesting");
@@ -72,7 +80,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
       <ThumbnailPlaceholder fontSize="1.2rem">
         <Row width="100%" px="2rem" mb="0">
           <Column alignItems="center" width="100%">
-            {isRendering && progress !== undefined ? (
+            {shouldShowProgressBar ? (
               <ProgressBar
                 completed={progress}
                 width="100%"
@@ -86,7 +94,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
             )}
             <Text
               color={theme.textBodyColor}
-              mt={isRendering && progress !== undefined ? "0" : "1rem"}
+              mt={shouldShowProgressBar ? "0" : "1rem"}
             >
               {statusText}
             </Text>
