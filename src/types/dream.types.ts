@@ -43,6 +43,7 @@ export type Dream = {
   nsfw?: boolean;
   hidden?: boolean;
   description?: string;
+  error?: string;
   prompt?: string | Record<string, unknown> | null;
   sourceUrl?: string;
   ccbyLicense?: boolean;

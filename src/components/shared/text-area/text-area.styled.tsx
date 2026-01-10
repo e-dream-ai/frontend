@@ -5,8 +5,8 @@ export const StyledTextArea = styled.textarea`
   width: -moz-available; /* WebKit-based browsers will ignore this. */
   width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
   width: fill-available;
-  min-height: 2.5rem;
   max-height: 8rem;
+  min-height: 2.375rem;
   overflow-y: auto;
   resize: none;
   padding: 6px 12px;
@@ -16,6 +16,8 @@ export const StyledTextArea = styled.textarea`
   color: ${(props) => props.theme.inputTextColorPrimary};
   font-size: 1rem;
   font-family: inherit;
+  vertical-align: middle;
+  line-height: 1.5;
 
   // remove focus outline
   &:focus {
@@ -33,19 +35,20 @@ export const DisabledTextArea = styled.div`
   width: -moz-available; /* WebKit-based browsers will ignore this. */
   width: -webkit-fill-available; /* Mozilla-based browsers will ignore this. */
   width: fill-available;
-  min-height: 2.5rem;
   max-height: 8rem;
+  min-height: 2.375rem;
   overflow-y: auto;
   padding: 0.375rem 0.75rem;
   border: 0;
   border-radius: 0;
-  align-items: center;
   background: ${(props) => props.theme.inputBackgroundColor};
   color: ${(props) => props.theme.inputTextColorPrimary};
   font-size: 1rem;
   cursor: not-allowed;
   white-space: pre-wrap;
   word-break: break-word;
+  line-height: 1.5;
+  display: block;
 
   &:disabled {
     cursor: not-allowed;

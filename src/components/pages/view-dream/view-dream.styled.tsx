@@ -26,3 +26,46 @@ export const VideoPlaceholder = styled.div`
     height: auto;
   }
 `;
+
+export const ErrorTextAreaGroup = styled.div`
+  display: flex;
+  flex-flow: column;
+  margin-bottom: 1rem;
+  border-collapse: separate;
+`;
+
+export const ErrorTextAreaRow = styled.div`
+  display: inline-flex;
+  border-collapse: separate;
+  align-items: center;
+`;
+
+export const ErrorTextAreaBefore = styled.span`
+  min-width: 40px;
+  padding: 6px 12px;
+  background: ${(props) => props.theme.inputBackgroundColor};
+  color: ${(props) => props.theme.inputTextColorSecondary};
+  text-align: center;
+  align-self: stretch;
+`;
+
+export const ErrorTextArea = styled.div`
+  width: 100%;
+  width: -moz-available;
+  width: -webkit-fill-available;
+  width: fill-available;
+  min-height: 2.5rem;
+  max-height: 8rem;
+  overflow-y: auto;
+  padding: 0.375rem 0.75rem;
+  border: 0;
+  border-radius: 0;
+  align-items: center;
+  background: ${(props) => props.theme.inputBackgroundColor};
+  color: ${(props) => props.theme.inputTextColorPrimary};
+  font-size: 1rem;
+  font-family: "Roboto Mono", monospace;
+  cursor: not-allowed;
+  white-space: pre-wrap;
+  word-break: break-word;
+`;

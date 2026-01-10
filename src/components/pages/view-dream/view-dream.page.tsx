@@ -14,6 +14,7 @@ import { Spinner } from "@/components/shared/spinner/spinner";
 import Text from "@/components/shared/text/text";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
+import { ROLES } from "@/constants/role.constants";
 import useAuth from "@/hooks/useAuth";
 import React, {
   useCallback,
@@ -40,6 +41,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircle,
+  faExclamationCircle,
   faFlag,
   faGears,
   faPencil,
@@ -50,7 +52,13 @@ import {
   faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { DreamStatusType, DreamMediaType } from "@/types/dream.types";
-import { Video } from "./view-dream.styled";
+import {
+  Video,
+  ErrorTextAreaGroup,
+  ErrorTextAreaRow,
+  ErrorTextAreaBefore,
+  ErrorTextArea,
+} from "./view-dream.styled";
 import { isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import useSocket from "@/hooks/useSocket";
@@ -84,6 +92,67 @@ import { ApiResponse } from "@/types/api.types";
 type Params = { uuid: string };
 
 const SectionID = "dream";
+
+const FALLBACK_ERROR_MESSAGE = "An error occurred while processing this dream.";
+
+const formatDreamError = (error?: string | null): string => {
+  if (!error) {
+    return "";
+  }
+
+  const trimmedError = error.trim();
+  if (!trimmedError) {
+    return "";
+  }
+
+  try {
+    const parsed = JSON.parse(trimmedError);
+    if (typeof parsed === "object" && parsed !== null) {
+      const parts: string[] = [];
+
+      if (typeof parsed.error_message === "string") {
+        const message = parsed.error_message.trim();
+        if (message) {
+          parts.push(message);
+        }
+      }
+
+      if (typeof parsed.error === "string") {
+        const message = parsed.error.trim();
+        if (message && !parts.length) {
+          parts.push(message);
+        }
+      }
+
+      if (typeof parsed.message === "string") {
+        const message = parsed.message.trim();
+        if (message && !parts.length) {
+          parts.push(message);
+        }
+      }
+
+      if (typeof parsed.error_traceback === "string") {
+        const trace = parsed.error_traceback.trim();
+        if (trace) {
+          parts.push(trace);
+        }
+      } else if (typeof parsed.stack === "string") {
+        const stack = parsed.stack.trim();
+        if (stack) {
+          parts.push(stack);
+        }
+      }
+
+      if (parts.length) {
+        return parts.join("\n\n");
+      }
+
+      return JSON.stringify(parsed, null, 2);
+    }
+  } catch {}
+
+  return trimmedError;
+};
 
 const updateToast = (
   toastId: React.ReactText,
@@ -157,6 +226,10 @@ const ViewDreamPage: React.FC = () => {
     () => Boolean(dream?.reports?.length),
     [dream],
   );
+  const formattedDreamError = useMemo(
+    () => formatDreamError(dream?.error),
+    [dream?.error],
+  );
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
@@ -213,11 +286,28 @@ const ViewDreamPage: React.FC = () => {
     [dream],
   );
 
+  const isDreamFailed: boolean = useMemo(
+    () => dream?.status === DreamStatusType.FAILED,
+    [dream],
+  );
+
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
 
   const isOwner: boolean = useMemo(
     () => (user?.id ? user?.id === dream?.user?.id : false),
     [dream, user],
+  );
+
+  const isCreator = useMemo(
+    () => user?.role?.name === ROLES.CREATOR_GROUP,
+    [user],
+  );
+
+  const hasPrompt = useMemo(() => Boolean(dream?.prompt), [dream]);
+
+  const showRerunButton = useMemo(
+    () => (isUserAdmin && hasPrompt) || (isOwner && isCreator && hasPrompt),
+    [isUserAdmin, isOwner, isCreator, hasPrompt],
   );
 
   const showEditButton = !editMode && !isDreamProcessing;
@@ -843,7 +933,7 @@ const ViewDreamPage: React.FC = () => {
                 <div>
                   {showEditButton && (
                     <React.Fragment>
-                      <Restricted to={DREAM_PERMISSIONS.CAN_PROCESS_DREAM}>
+                      {showRerunButton && (
                         <Button
                           type="button"
                           mx="2"
@@ -853,7 +943,7 @@ const ViewDreamPage: React.FC = () => {
                         >
                           {t("page.view_dream.rerun")}{" "}
                         </Button>
-                      </Restricted>
+                      )}
                       <Restricted
                         to={DREAM_PERMISSIONS.CAN_EDIT_DREAM}
                         isOwner={isOwner}
@@ -911,52 +1001,77 @@ const ViewDreamPage: React.FC = () => {
 
               {!isDreamProcessing ? (
                 <React.Fragment>
-                  {!isImageDream && (
+                  {isDreamFailed ? (
                     <>
                       <Row>
-                        <h3>{t("page.view_dream.filmstrip")}</h3>
+                        <h3>Error</h3>
                       </Row>
-                      <Row flexWrap="wrap">
-                        <FilmstripGallery dream={dream} />
+                      <Row>
+                        <ErrorTextAreaGroup>
+                          <ErrorTextAreaRow>
+                            <ErrorTextAreaBefore>
+                              <FontAwesomeIcon icon={faExclamationCircle} />
+                            </ErrorTextAreaBefore>
+                            <ErrorTextArea>
+                              {formattedDreamError || FALLBACK_ERROR_MESSAGE}
+                            </ErrorTextArea>
+                          </ErrorTextAreaRow>
+                        </ErrorTextAreaGroup>
                       </Row>
+                    </>
+                  ) : (
+                    !isImageDream && (
+                      <>
+                        <Row>
+                          <h3>{t("page.view_dream.filmstrip")}</h3>
+                        </Row>
+                        <Row flexWrap="wrap">
+                          <FilmstripGallery dream={dream} />
+                        </Row>
 
-                      <Restricted
-                        to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
-                        isOwner={isOwner}
-                      >
-                        <Row justifyContent="space-between" alignItems="center">
-                          <h3>{t("page.view_dream.original_video")}</h3>
-                          {editMode && (
-                            <Button
-                              type="button"
-                              buttonType="danger"
-                              onClick={handleRemoveVideo}
-                            >
-                              <FontAwesomeIcon icon={faTrash} />
-                            </Button>
-                          )}
+                        <Restricted
+                          to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}
+                          isOwner={isOwner}
+                        >
+                          <Row
+                            justifyContent="space-between"
+                            alignItems="center"
+                          >
+                            <h3>{t("page.view_dream.original_video")}</h3>
+                            {editMode && (
+                              <Button
+                                type="button"
+                                buttonType="danger"
+                                onClick={handleRemoveVideo}
+                              >
+                                <FontAwesomeIcon icon={faTrash} />
+                              </Button>
+                            )}
+                          </Row>
+                          <Row
+                            justifyContent={["center", "center", "flex-start"]}
+                          >
+                            <DreamVideoInput
+                              dream={dream}
+                              editMode={editMode}
+                              video={video}
+                              isRemoved={isVideoRemoved}
+                              handleChange={handleVideoChange}
+                            />
+                          </Row>
+                        </Restricted>
+                        <Row>
+                          <h3>{t("page.view_dream.video")}</h3>
                         </Row>
                         <Row
                           justifyContent={["center", "center", "flex-start"]}
                         >
-                          <DreamVideoInput
-                            dream={dream}
-                            editMode={editMode}
-                            video={video}
-                            isRemoved={isVideoRemoved}
-                            handleChange={handleVideoChange}
-                          />
+                          <Video controls src={video?.url || dream?.video} />
                         </Row>
-                      </Restricted>
-                      <Row>
-                        <h3>{t("page.view_dream.video")}</h3>
-                      </Row>
-                      <Row justifyContent={["center", "center", "flex-start"]}>
-                        <Video controls src={video?.url || dream?.video} />
-                      </Row>
-                    </>
+                      </>
+                    )
                   )}
-                  {isImageDream && (
+                  {!isDreamFailed && isImageDream && (
                     <>
                       <Restricted
                         to={DREAM_PERMISSIONS.CAN_VIEW_ORIGINAL_VIDEO_DREAM}

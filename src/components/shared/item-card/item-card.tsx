@@ -11,7 +11,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { SetItemOrder } from "@/types/dnd.types";
-import { Dream, DreamMediaType } from "@/types/dream.types";
+import { Dream, DreamMediaType, DreamStatusType } from "@/types/dream.types";
 import { Playlist } from "@/types/playlist.types";
 import { Sizes } from "@/types/sizes.types";
 import { Button } from "../button/button";
@@ -31,6 +31,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faEllipsis,
+  faExclamationCircle,
   faFilm,
   faImage,
   faListUl,
@@ -385,17 +386,48 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     return () => unregisterEvents();
   }, [registerEvents, unregisterEvents]);
 
+  const isDreamFailed = useMemo(
+    () =>
+      type === "dream" && (item as Dream)?.status === DreamStatusType.FAILED,
+    [type, item],
+  );
+
+  console.log("isDreamFailed", isDreamFailed);
+
   const Thumbnail = useMemo(
     () => () => {
       if (type === "virtual-playlist") {
         return (
           <ThumbnailGrid size={size}>
-            {thumbnailDreams.map((dream, index) => (
-              <ThumbnailGridItem key={index}>
-                <ItemCardImage size={size} src={dream.thumbnail} />
-              </ThumbnailGridItem>
-            ))}
+            {thumbnailDreams.map((dream, index) => {
+              const dreamFailed = dream?.status === DreamStatusType.FAILED;
+              return (
+                <ThumbnailGridItem key={index}>
+                  {dreamFailed ? (
+                    <ThumbnailPlaceholder size={size}>
+                      <FontAwesomeIcon
+                        icon={faExclamationCircle}
+                        style={{ fontSize: "48px", color: "#ff4444" }}
+                      />
+                    </ThumbnailPlaceholder>
+                  ) : (
+                    <ItemCardImage size={size} src={dream.thumbnail} />
+                  )}
+                </ThumbnailGridItem>
+              );
+            })}
           </ThumbnailGrid>
+        );
+      }
+
+      if (isDreamFailed) {
+        return (
+          <ThumbnailPlaceholder size={size}>
+            <FontAwesomeIcon
+              icon={faExclamationCircle}
+              style={{ fontSize: "64px", color: "#ff4444" }}
+            />
+          </ThumbnailPlaceholder>
         );
       }
 
@@ -409,7 +441,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
         </ThumbnailPlaceholder>
       );
     },
-    [type, thumbnail, thumbnailDreams, size, thumbnailUrl],
+    [type, thumbnail, thumbnailDreams, size, thumbnailUrl, isDreamFailed],
   );
 
   const ThumbnailAndPlayButton = useMemo(
@@ -601,6 +633,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
             <HighlightBorder
               isHighlighted={!!highlightPosition}
               position={highlightPosition}
+              isFirst={order === 0}
             />
           )}
         </>
