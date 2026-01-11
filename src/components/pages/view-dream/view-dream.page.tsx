@@ -262,7 +262,11 @@ const ViewDreamPage: React.FC = () => {
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
 
-    if (dream && dream.status !== DreamStatusType.PROCESSED) {
+    if (
+      dream &&
+      dream.status !== DreamStatusType.PROCESSED &&
+      dream.status !== DreamStatusType.FAILED
+    ) {
       intervalId = setInterval(() => {
         refetch();
       }, 5000);
