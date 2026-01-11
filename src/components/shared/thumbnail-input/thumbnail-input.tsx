@@ -59,7 +59,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   const hasThumbnail = Boolean(thumbnail) || localMultimedia;
   const localUrl = useImage(localMultimedia?.url);
 
-  if (isProcessing && !isLoading) {
+  if (isProcessing && !isLoading && !localMultimedia) {
     const normalizedJobStatus = (jobStatus ?? "").toUpperCase();
     const isIngestingByStatus = normalizedJobStatus === "COMPLETED";
     const isRenderingByStatus =
@@ -101,6 +101,59 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
           </Column>
         </Row>
       </ThumbnailPlaceholder>
+    );
+  }
+
+  if (isProcessing && !isLoading && localMultimedia) {
+    const normalizedJobStatus = (jobStatus ?? "").toUpperCase();
+    const isIngestingByStatus = normalizedJobStatus === "COMPLETED";
+    const isRenderingByStatus =
+      normalizedJobStatus === "IN_QUEUE" ||
+      normalizedJobStatus === "IN_PROGRESS";
+
+    const isRendering = isRenderingByStatus
+      ? true
+      : isIngestingByStatus
+        ? false
+        : progress !== undefined && progress < 100;
+    const shouldShowProgressBar = isRendering && typeof progress === "number";
+    const statusText = isRendering
+      ? t("components.thumbnail_input.rendering")
+      : t("components.thumbnail_input.ingesting");
+
+    return (
+      <ThumbnailContainer editMode={false}>
+        <ThumbnailOverlay
+          style={{
+            opacity: 1,
+            backgroundColor: "rgba(0,0,0,0.6)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <Row width="100%" px="2rem" mb="0">
+            <Column alignItems="center" width="100%">
+              {shouldShowProgressBar ? (
+                <ProgressBar
+                  completed={progress}
+                  width="100%"
+                  height="16px"
+                  labelSize="12px"
+                  borderRadius="8px"
+                  margin="0 0 1rem 0"
+                />
+              ) : (
+                <Spinner />
+              )}
+              <Text color="white" mt={shouldShowProgressBar ? "0" : "1rem"}>
+                {statusText}
+              </Text>
+            </Column>
+          </Row>
+        </ThumbnailOverlay>
+        <Thumbnail src={localUrl || thumbnail || "/images/blank.gif"} />
+      </ThumbnailContainer>
     );
   }
 

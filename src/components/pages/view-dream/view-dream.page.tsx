@@ -42,6 +42,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircle,
   faExclamationCircle,
+  faEye,
   faFlag,
   faGears,
   faPencil,
@@ -63,11 +64,14 @@ import {
 import { isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import useSocket from "@/hooks/useSocket";
+import useSocketEventListener from "@/hooks/useSocketEventListener";
+import { JOB_PROGRESS_EVENT } from "@/constants/remote-control.constants";
 import { emitPlayDream } from "@/utils/socket.util";
 import { truncateString } from "@/utils/string.util";
 import { AnchorLink } from "@/components/shared";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
 import { useCancelDream } from "@/api/dream/mutation/useCancelDream";
+import { useGetDreamPreview } from "@/api/dream/mutation/useGetDreamPreview";
 import { User } from "@/types/auth.types";
 import { useUpvoteDream } from "@/api/dream/mutation/useUpvoteDream";
 import { useDownvoteDream } from "@/api/dream/mutation/useDownvoteDream";
@@ -81,6 +85,7 @@ import { formatDreamForm, formatDreamRequest } from "@/utils/dream.util";
 import { ReportDreamModal } from "@/components/modals/report-dream.modal";
 import { useUpdateReport } from "@/api/report/mutation/useUpdateReport";
 import { Tooltip } from "react-tooltip";
+import { JobProgressData } from "./view-dream-inputs";
 import {
   TOAST_DEFAULT_CONFIG,
   TOOLTIP_DELAY_MS,
@@ -197,6 +202,8 @@ const ViewDreamPage: React.FC = () => {
   const [removingPlaylistItemId, setRemovingPlaylistItemId] = useState<
     number | null
   >(null);
+  const [progress, setProgress] = useState<number | undefined>(undefined);
+  const [jobStatus, setJobStatus] = useState<string | undefined>(undefined);
   const validatePromptRef = useRef<(() => boolean) | null>(null);
   const resetPromptRef = useRef<(() => void) | null>(null);
 
@@ -218,6 +225,23 @@ const ViewDreamPage: React.FC = () => {
   });
 
   const { socket } = useSocket();
+
+  useEffect(() => {
+    setProgress(undefined);
+    setJobStatus(undefined);
+  }, [uuid]);
+
+  useSocketEventListener<JobProgressData>(JOB_PROGRESS_EVENT, async (data) => {
+    if (data && data.dream_uuid === uuid) {
+      if (typeof data.progress === "number") {
+        setProgress(data.progress);
+      }
+      if (typeof data.status === "string") {
+        setJobStatus(data.status);
+      }
+    }
+  });
+
   const dream = useMemo(() => data?.data?.dream, [data]);
   const vote = useMemo(() => voteData?.data?.vote, [voteData]);
   const isImageDream = useMemo(
@@ -255,6 +279,7 @@ const ViewDreamPage: React.FC = () => {
     useUpdateDream(uuid);
   const processDreamMutation = useProcessDream(uuid);
   const cancelDreamMutation = useCancelDream(uuid);
+  const getDreamPreviewMutation = useGetDreamPreview(uuid);
   const uploadDreamVideoMutation = useUploadDreamVideo({
     navigateToDream: false,
   });
@@ -285,6 +310,14 @@ const ViewDreamPage: React.FC = () => {
   });
 
   const isDreamProcessing: boolean = useMemo(
+    () =>
+      (dream?.status === DreamStatusType.QUEUE ||
+        dream?.status === DreamStatusType.PROCESSING) &&
+      jobStatus?.toUpperCase() !== "COMPLETED",
+    [dream, jobStatus],
+  );
+
+  const isDreamProcessingRaw: boolean = useMemo(
     () =>
       dream?.status === DreamStatusType.QUEUE ||
       dream?.status === DreamStatusType.PROCESSING,
@@ -334,7 +367,7 @@ const ViewDreamPage: React.FC = () => {
   );
 
   const showEditButton = !editMode;
-  const showSaveAndCancelButtons = editMode && !isDreamProcessing;
+  const showSaveAndCancelButtons = editMode && !isDreamProcessingRaw;
   // Handlers
   const handleMutateVideoDream = async (data: UpdateDreamFormValues) => {
     if (isImageDream) {
@@ -514,6 +547,24 @@ const ViewDreamPage: React.FC = () => {
     setEditMode(false);
   };
 
+  const handleGetPreview = async (event: React.MouseEvent) => {
+    event.preventDefault();
+    try {
+      const response = await getDreamPreviewMutation.mutateAsync();
+      if (response?.success && response.data?.preview_frame) {
+        let previewUrl = response.data.preview_frame;
+        if (!previewUrl.startsWith("data:image")) {
+          previewUrl = `data:image/jpeg;base64,${previewUrl}`;
+        }
+        setTumbnail({ url: previewUrl });
+      } else {
+        toast.error(t("page.view_dream.error_fetching_preview"));
+      }
+    } catch (err) {
+      toast.error(t("page.view_dream.error_fetching_preview"));
+    }
+  };
+
   const onShowConfirmProcessModal = () => setShowConfirmProcessModal(true);
   const onHideConfirmProcessModal = () => setShowConfirmProcessModal(false);
   const onShowConfirmCancelModal = () => setShowConfirmCancelModal(true);
@@ -586,6 +637,7 @@ const ViewDreamPage: React.FC = () => {
       const response = await processDreamMutation.mutateAsync();
       if (response?.success) {
         toast.success(`${t("page.view_dream.dream_processing_successfully")}`);
+        setTumbnail(undefined);
         refetch();
         onHideConfirmProcessModal();
       } else {
@@ -601,6 +653,8 @@ const ViewDreamPage: React.FC = () => {
       const response = await cancelDreamMutation.mutateAsync();
       if (response?.success) {
         toast.success(`${t("page.view_dream.dream_cancelled_successfully")}`);
+
+        setTumbnail(undefined);
 
         queryClient.setQueryData<ApiResponse<{ dream: Dream }>>(
           [DREAM_QUERY_KEY, uuid],
@@ -1019,16 +1073,30 @@ const ViewDreamPage: React.FC = () => {
                       {showRerunButton &&
                         (isDreamProcessing ? (
                           isCancellableAlgorithm && (
-                            <Button
-                              type="button"
-                              mx="2"
-                              buttonType="danger"
-                              after={<FontAwesomeIcon icon={faTimes} />}
-                              isLoading={cancelDreamMutation.isLoading}
-                              onClick={onShowConfirmCancelModal}
-                            >
-                              {t("page.view_dream.cancel")}{" "}
-                            </Button>
+                            <React.Fragment>
+                              {dreamAlgorithm !== "animatediff" && (
+                                <Button
+                                  type="button"
+                                  mx="2"
+                                  buttonType="default"
+                                  after={<FontAwesomeIcon icon={faEye} />}
+                                  isLoading={getDreamPreviewMutation.isLoading}
+                                  onClick={handleGetPreview}
+                                >
+                                  {t("page.view_dream.preview")}{" "}
+                                </Button>
+                              )}
+                              <Button
+                                type="button"
+                                mx="2"
+                                buttonType="danger"
+                                after={<FontAwesomeIcon icon={faTimes} />}
+                                isLoading={cancelDreamMutation.isLoading}
+                                onClick={onShowConfirmCancelModal}
+                              >
+                                {t("page.view_dream.cancel")}{" "}
+                              </Button>
+                            </React.Fragment>
                           )
                         ) : (
                           <Button
@@ -1083,7 +1151,7 @@ const ViewDreamPage: React.FC = () => {
 
               <ViewDreamInputs
                 dream={dream}
-                isProcessing={isDreamProcessing}
+                isProcessing={isDreamProcessingRaw}
                 editMode={editMode}
                 // thumbnail props
                 thumbnailState={thumbnail}
@@ -1096,6 +1164,8 @@ const ViewDreamPage: React.FC = () => {
                 onPromptResetRequest={(reset) => {
                   resetPromptRef.current = reset;
                 }}
+                progress={progress}
+                jobStatus={jobStatus}
               />
 
               {!isDreamProcessing ? (

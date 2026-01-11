@@ -133,7 +133,7 @@ export const CreateKeyframe: React.FC = () => {
       if (image) {
         await updateImageKeyframeMutation.updateImageKeyframe(
           newKeyframe!.uuid,
-          image!.file,
+          image!.file as unknown as File,
         );
       }
 

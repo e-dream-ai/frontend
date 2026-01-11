@@ -78,8 +78,6 @@ import { materialDark } from "@uiw/codemirror-theme-material";
 import { faUpDown } from "@fortawesome/free-solid-svg-icons";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { PrimaryTheme } from "@/constants/colors.constants";
-import useSocketEventListener from "@/hooks/useSocketEventListener";
-import { JOB_PROGRESS_EVENT } from "@/constants/remote-control.constants";
 
 export interface JobProgressData {
   jobId: string;
@@ -182,6 +180,8 @@ type ViewDreamInputsProps = {
   handleRemoveThumbnail: () => void;
   onPromptValidationRequest?: (validate: () => boolean) => void;
   onPromptResetRequest?: (reset: () => void) => void;
+  progress?: number;
+  jobStatus?: string;
 };
 
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
@@ -195,6 +195,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   handleRemoveThumbnail,
   onPromptValidationRequest,
   onPromptResetRequest,
+  progress,
+  jobStatus,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -219,25 +221,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
     mass: 0.2,
   });
   const handlePosition = useTransform(smoothScrollOffset, (value) => -value);
-
-  const [progress, setProgress] = useState<number | undefined>(undefined);
-  const [jobStatus, setJobStatus] = useState<string | undefined>(undefined);
-
-  useEffect(() => {
-    setProgress(undefined);
-    setJobStatus(undefined);
-  }, [dream?.uuid]);
-
-  useSocketEventListener<JobProgressData>(JOB_PROGRESS_EVENT, async (data) => {
-    if (data && data.dream_uuid === dream?.uuid) {
-      if (typeof data.progress === "number") {
-        setProgress(data.progress);
-      }
-      if (typeof data.status === "string") {
-        setJobStatus(data.status);
-      }
-    }
-  });
 
   const { control, register, setError, clearErrors, getValues } =
     useFormContext<UpdateDreamFormValues>();
