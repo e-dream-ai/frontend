@@ -65,7 +65,11 @@ import { isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import useSocket from "@/hooks/useSocket";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
-import { JOB_PROGRESS_EVENT } from "@/constants/remote-control.constants";
+import {
+  JOB_PROGRESS_EVENT,
+  JOIN_DREAM_ROOM_EVENT,
+  LEAVE_DREAM_ROOM_EVENT,
+} from "@/constants/remote-control.constants";
 import { emitPlayDream } from "@/utils/socket.util";
 import { truncateString } from "@/utils/string.util";
 import { AnchorLink } from "@/components/shared";
@@ -229,7 +233,17 @@ const ViewDreamPage: React.FC = () => {
   useEffect(() => {
     setProgress(undefined);
     setJobStatus(undefined);
-  }, [uuid]);
+
+    if (socket && uuid) {
+      socket.emit(JOIN_DREAM_ROOM_EVENT, uuid);
+    }
+
+    return () => {
+      if (socket && uuid) {
+        socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
+      }
+    };
+  }, [uuid, socket]);
 
   useSocketEventListener<JobProgressData>(JOB_PROGRESS_EVENT, async (data) => {
     if (data && data.dream_uuid === uuid) {
@@ -562,10 +576,18 @@ const ViewDreamPage: React.FC = () => {
         }
         setTumbnail({ url: previewUrl });
       } else {
-        toast.error(t("page.view_dream.error_fetching_preview"));
+        if (jobStatus === "IN_QUEUE") {
+          toast.error(t("page.view_dream.rendering_hasnt_started_yet"));
+        } else {
+          toast.error(t("page.view_dream.error_fetching_preview"));
+        }
       }
     } catch (err) {
-      toast.error(t("page.view_dream.error_fetching_preview"));
+      if (jobStatus === "IN_QUEUE") {
+        toast.error(t("page.view_dream.rendering_hasnt_started_yet"));
+      } else {
+        toast.error(t("page.view_dream.error_fetching_preview"));
+      }
     }
   };
 

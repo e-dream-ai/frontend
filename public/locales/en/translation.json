@@ -213,6 +213,7 @@
       "dream_cancelled_successfully": "Dream cancelled successfully.",
       "error_cancelling_dream": "Error cancelling dream.",
       "error_fetching_preview": "Error fetching preview.",
+      "rendering_hasnt_started_yet": "Rendering hasn't started yet.",
       "report_processed_successfully": "Report processed successfully",
       "error_processing_report": "Error processing report",
       "dream_deleted_successfully": "Dream deleted successfully.",

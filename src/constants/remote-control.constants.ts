@@ -7,6 +7,8 @@ export const GOOD_BYE_EVENT = "goodbye";
 export const WEB_CLIENT_STATUS_EVENT = "web_client_status";
 export const STATE_SYNC_EVENT = "state_sync";
 export const JOB_PROGRESS_EVENT = "job:progress";
+export const JOIN_DREAM_ROOM_EVENT = "join_dream_room";
+export const LEAVE_DREAM_ROOM_EVENT = "leave_dream_room";
 
 export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
   PLAYING: { event: "playing", key: "", triggerKey: "" },
