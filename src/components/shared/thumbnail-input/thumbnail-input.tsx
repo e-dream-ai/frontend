@@ -28,7 +28,7 @@ import { useTheme } from "styled-components";
 import Text from "../text/text";
 import { useImage } from "@/hooks/useImage";
 import ProgressBar from "../progress-bar/progress-bar";
-import { secondsToTimeFormat } from "@/utils/video.utils";
+import { formatEta } from "@/utils/video.utils";
 
 type ThumbnailInputProps = {
   isLoading?: boolean;
@@ -38,7 +38,7 @@ type ThumbnailInputProps = {
   isProcessing?: boolean;
   jobStatus?: string;
   progress?: number;
-  render_time_ms?: number;
+  countdown_ms?: number;
   isRemoved: boolean;
   handleChange: HandleChangeFile;
   handleRemove?: () => void;
@@ -52,7 +52,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   isProcessing,
   jobStatus,
   progress,
-  render_time_ms,
+  countdown_ms,
   isRemoved,
   handleChange,
   handleRemove,
@@ -91,6 +91,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
                 labelSize="12px"
                 borderRadius="8px"
                 margin="0 0 1rem 0"
+                customLabel={`${progress.toFixed(1)}%`}
               />
             ) : (
               <Spinner />
@@ -99,9 +100,9 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
               color={theme.textBodyColor}
               mt={shouldShowProgressBar ? "0" : "1rem"}
             >
-              {statusText}{" "}
-              {isRendering && render_time_ms
-                ? `(${secondsToTimeFormat(Math.floor(render_time_ms / 1000))})`
+              {statusText}
+              {isRendering && countdown_ms
+                ? `, ETA ${formatEta(Math.floor(countdown_ms / 1000))}`
                 : ""}
             </Text>
           </Column>
@@ -132,13 +133,30 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
         <ThumbnailOverlay
           style={{
             opacity: 1,
-            backgroundColor: "rgba(0,0,0,0.6)",
+            backgroundColor: "transparent",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
           }}
         >
-          <Row width="100%" px="2rem" mb="0">
+          <Row
+            width="auto"
+            px="2rem"
+            py="1rem"
+            mb="0"
+            style={{
+              backgroundColor: "rgba(0, 0, 0, 0.4)",
+              borderRadius: "8px",
+              backdropFilter: "blur(4px)",
+              width: "100%",
+              height: "fit-content",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "1rem",
+              margin: "1rem",
+            }}
+          >
             <Column alignItems="center" width="100%">
               {shouldShowProgressBar ? (
                 <ProgressBar
@@ -153,11 +171,9 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
                 <Spinner />
               )}
               <Text color="white" mt={shouldShowProgressBar ? "0" : "1rem"}>
-                {statusText}{" "}
-                {isRendering && render_time_ms
-                  ? `(${secondsToTimeFormat(
-                      Math.floor(render_time_ms / 1000),
-                    )})`
+                {statusText}
+                {isRendering && countdown_ms
+                  ? `, ETA ${formatEta(Math.floor(countdown_ms / 1000))}`
                   : ""}
               </Text>
             </Column>

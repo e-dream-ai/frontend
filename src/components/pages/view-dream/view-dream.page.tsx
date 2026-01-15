@@ -208,9 +208,7 @@ const ViewDreamPage: React.FC = () => {
   >(null);
   const [progress, setProgress] = useState<number | undefined>(undefined);
   const [jobStatus, setJobStatus] = useState<string | undefined>(undefined);
-  const [renderTimeMs, setRenderTimeMs] = useState<number | undefined>(
-    undefined,
-  );
+  const [countdownMs, setCountdownMs] = useState<number | undefined>(undefined);
   const validatePromptRef = useRef<(() => boolean) | null>(null);
   const resetPromptRef = useRef<(() => void) | null>(null);
 
@@ -242,8 +240,8 @@ const ViewDreamPage: React.FC = () => {
         if (typeof data.status === "string") {
           setJobStatus(data.status);
         }
-        if (typeof data.render_time_ms === "number") {
-          setRenderTimeMs(data.render_time_ms);
+        if (typeof data.countdown_ms === "number") {
+          setCountdownMs(data.countdown_ms);
         }
       }
     },
@@ -258,7 +256,7 @@ const ViewDreamPage: React.FC = () => {
   useEffect(() => {
     setProgress(undefined);
     setJobStatus(undefined);
-    setRenderTimeMs(undefined);
+    setCountdownMs(undefined);
   }, [uuid]);
 
   useEffect(() => {
@@ -698,7 +696,7 @@ const ViewDreamPage: React.FC = () => {
         setTumbnail(undefined);
         setProgress(undefined);
         setJobStatus(undefined);
-        setRenderTimeMs(undefined);
+        setCountdownMs(undefined);
         refetch();
         onHideConfirmProcessModal();
       } else {
@@ -718,7 +716,7 @@ const ViewDreamPage: React.FC = () => {
         setTumbnail(undefined);
         setProgress(undefined);
         setJobStatus(undefined);
-        setRenderTimeMs(undefined);
+        setCountdownMs(undefined);
 
         queryClient.setQueryData<ApiResponse<{ dream: Dream }>>(
           [DREAM_QUERY_KEY, uuid],
@@ -1229,7 +1227,7 @@ const ViewDreamPage: React.FC = () => {
                 }}
                 progress={progress}
                 jobStatus={jobStatus}
-                render_time_ms={renderTimeMs}
+                countdown_ms={countdownMs}
               />
 
               {!isDreamProcessing ? (

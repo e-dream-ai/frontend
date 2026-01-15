@@ -456,7 +456,7 @@
     },
     "thumbnail_input": {
       "processing": "Ingesting dream...",
-      "rendering": "Rendering dream...",
+      "rendering": "Rendering",
       "ingesting": "Ingesting dream..."
     },
     "tooltip": {
