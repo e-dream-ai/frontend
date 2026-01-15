@@ -28,6 +28,7 @@ import { useTheme } from "styled-components";
 import Text from "../text/text";
 import { useImage } from "@/hooks/useImage";
 import ProgressBar from "../progress-bar/progress-bar";
+import { secondsToTimeFormat } from "@/utils/video.utils";
 
 type ThumbnailInputProps = {
   isLoading?: boolean;
@@ -37,6 +38,7 @@ type ThumbnailInputProps = {
   isProcessing?: boolean;
   jobStatus?: string;
   progress?: number;
+  render_time_ms?: number;
   isRemoved: boolean;
   handleChange: HandleChangeFile;
   handleRemove?: () => void;
@@ -50,6 +52,7 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   isProcessing,
   jobStatus,
   progress,
+  render_time_ms,
   isRemoved,
   handleChange,
   handleRemove,
@@ -96,7 +99,10 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
               color={theme.textBodyColor}
               mt={shouldShowProgressBar ? "0" : "1rem"}
             >
-              {statusText}
+              {statusText}{" "}
+              {isRendering && render_time_ms
+                ? `(${secondsToTimeFormat(Math.floor(render_time_ms / 1000))})`
+                : ""}
             </Text>
           </Column>
         </Row>
@@ -147,7 +153,12 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
                 <Spinner />
               )}
               <Text color="white" mt={shouldShowProgressBar ? "0" : "1rem"}>
-                {statusText}
+                {statusText}{" "}
+                {isRendering && render_time_ms
+                  ? `(${secondsToTimeFormat(
+                      Math.floor(render_time_ms / 1000),
+                    )})`
+                  : ""}
               </Text>
             </Column>
           </Row>

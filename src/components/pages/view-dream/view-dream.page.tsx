@@ -208,6 +208,9 @@ const ViewDreamPage: React.FC = () => {
   >(null);
   const [progress, setProgress] = useState<number | undefined>(undefined);
   const [jobStatus, setJobStatus] = useState<string | undefined>(undefined);
+  const [renderTimeMs, setRenderTimeMs] = useState<number | undefined>(
+    undefined,
+  );
   const validatePromptRef = useRef<(() => boolean) | null>(null);
   const resetPromptRef = useRef<(() => void) | null>(null);
 
@@ -230,31 +233,54 @@ const ViewDreamPage: React.FC = () => {
 
   const { socket } = useSocket();
 
+  const handleJobProgress = useCallback(
+    async (data?: JobProgressData) => {
+      if (data && data.dream_uuid === uuid) {
+        if (data.progress !== undefined) {
+          setProgress(Number(data.progress));
+        }
+        if (typeof data.status === "string") {
+          setJobStatus(data.status);
+        }
+        if (typeof data.render_time_ms === "number") {
+          setRenderTimeMs(data.render_time_ms);
+        }
+      }
+    },
+    [uuid],
+  );
+
+  useSocketEventListener<JobProgressData>(
+    JOB_PROGRESS_EVENT,
+    handleJobProgress,
+  );
+
   useEffect(() => {
     setProgress(undefined);
     setJobStatus(undefined);
+    setRenderTimeMs(undefined);
+  }, [uuid]);
 
-    if (socket && uuid) {
+  useEffect(() => {
+    if (!socket || !uuid) return;
+
+    const joinRoom = () => {
       socket.emit(JOIN_DREAM_ROOM_EVENT, uuid);
+    };
+
+    if (socket.connected) {
+      joinRoom();
     }
 
+    socket.on("connect", joinRoom);
+
     return () => {
+      socket.off("connect", joinRoom);
       if (socket && uuid) {
         socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
       }
     };
   }, [uuid, socket]);
-
-  useSocketEventListener<JobProgressData>(JOB_PROGRESS_EVENT, async (data) => {
-    if (data && data.dream_uuid === uuid) {
-      if (typeof data.progress === "number") {
-        setProgress(data.progress);
-      }
-      if (typeof data.status === "string") {
-        setJobStatus(data.status);
-      }
-    }
-  });
 
   const dream = useMemo(() => data?.data?.dream, [data]);
   const vote = useMemo(() => voteData?.data?.vote, [voteData]);
@@ -272,6 +298,12 @@ const ViewDreamPage: React.FC = () => {
     () => formatDreamError(dream?.error),
     [dream?.error],
   );
+
+  useEffect(() => {
+    if (dream?.status === DreamStatusType.PROCESSED && !editMode) {
+      setTumbnail(undefined);
+    }
+  }, [dream?.status, editMode]);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout | null = null;
@@ -576,14 +608,14 @@ const ViewDreamPage: React.FC = () => {
         }
         setTumbnail({ url: previewUrl });
       } else {
-        if (jobStatus === "IN_QUEUE") {
+        if (jobStatus === "IN_QUEUE" || isDreamProcessing) {
           toast.error(t("page.view_dream.rendering_hasnt_started_yet"));
         } else {
           toast.error(t("page.view_dream.error_fetching_preview"));
         }
       }
     } catch (err) {
-      if (jobStatus === "IN_QUEUE") {
+      if (jobStatus === "IN_QUEUE" || isDreamProcessing) {
         toast.error(t("page.view_dream.rendering_hasnt_started_yet"));
       } else {
         toast.error(t("page.view_dream.error_fetching_preview"));
@@ -664,6 +696,9 @@ const ViewDreamPage: React.FC = () => {
       if (response?.success) {
         toast.success(`${t("page.view_dream.dream_processing_successfully")}`);
         setTumbnail(undefined);
+        setProgress(undefined);
+        setJobStatus(undefined);
+        setRenderTimeMs(undefined);
         refetch();
         onHideConfirmProcessModal();
       } else {
@@ -681,6 +716,9 @@ const ViewDreamPage: React.FC = () => {
         toast.success(`${t("page.view_dream.dream_cancelled_successfully")}`);
 
         setTumbnail(undefined);
+        setProgress(undefined);
+        setJobStatus(undefined);
+        setRenderTimeMs(undefined);
 
         queryClient.setQueryData<ApiResponse<{ dream: Dream }>>(
           [DREAM_QUERY_KEY, uuid],
@@ -1104,7 +1142,6 @@ const ViewDreamPage: React.FC = () => {
                                 <Button
                                   type="button"
                                   mx="2"
-                                  buttonType="default"
                                   after={<FontAwesomeIcon icon={faEye} />}
                                   isLoading={getDreamPreviewMutation.isLoading}
                                   onClick={handleGetPreview}
@@ -1192,6 +1229,7 @@ const ViewDreamPage: React.FC = () => {
                 }}
                 progress={progress}
                 jobStatus={jobStatus}
+                render_time_ms={renderTimeMs}
               />
 
               {!isDreamProcessing ? (

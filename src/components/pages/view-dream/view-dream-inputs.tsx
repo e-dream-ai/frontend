@@ -84,6 +84,7 @@ export interface JobProgressData {
   dream_uuid: string;
   status?: string;
   progress?: number;
+  render_time_ms?: number;
 }
 
 const CodeMirrorWrapper = styled.div<{
@@ -182,6 +183,7 @@ type ViewDreamInputsProps = {
   onPromptResetRequest?: (reset: () => void) => void;
   progress?: number;
   jobStatus?: string;
+  render_time_ms?: number;
 };
 
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
@@ -197,6 +199,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   onPromptResetRequest,
   progress,
   jobStatus,
+  render_time_ms,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -322,6 +325,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               isProcessing={isProcessing}
               jobStatus={jobStatus}
               progress={progress}
+              render_time_ms={render_time_ms}
               isRemoved={isThumbnailRemoved}
               handleChange={handleThumbnailChange}
               handleRemove={handleRemoveThumbnail}
