@@ -606,14 +606,14 @@ const ViewDreamPage: React.FC = () => {
         }
         setTumbnail({ url: previewUrl });
       } else {
-        if (jobStatus === "IN_QUEUE" || isDreamProcessing) {
+        if (jobStatus === "IN_QUEUE") {
           toast.error(t("page.view_dream.rendering_hasnt_started_yet"));
         } else {
           toast.error(t("page.view_dream.error_fetching_preview"));
         }
       }
     } catch (err) {
-      if (jobStatus === "IN_QUEUE" || isDreamProcessing) {
+      if (jobStatus === "IN_QUEUE") {
         toast.error(t("page.view_dream.rendering_hasnt_started_yet"));
       } else {
         toast.error(t("page.view_dream.error_fetching_preview"));
