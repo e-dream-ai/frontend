@@ -37,6 +37,7 @@ import {
   faRankingStar,
   faSave,
   faShield,
+  faStopwatch,
   faThumbsDown,
   faThumbsUp,
   faUser,
@@ -77,6 +78,14 @@ import { materialDark } from "@uiw/codemirror-theme-material";
 import { faUpDown } from "@fortawesome/free-solid-svg-icons";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { PrimaryTheme } from "@/constants/colors.constants";
+
+export interface JobProgressData {
+  jobId: string;
+  dream_uuid: string;
+  status?: string;
+  progress?: number;
+  countdown_ms?: number;
+}
 
 const CodeMirrorWrapper = styled.div<{
   disabled?: boolean;
@@ -172,6 +181,9 @@ type ViewDreamInputsProps = {
   handleRemoveThumbnail: () => void;
   onPromptValidationRequest?: (validate: () => boolean) => void;
   onPromptResetRequest?: (reset: () => void) => void;
+  progress?: number;
+  jobStatus?: string;
+  countdown_ms?: number;
 };
 
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
@@ -185,6 +197,9 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   handleRemoveThumbnail,
   onPromptValidationRequest,
   onPromptResetRequest,
+  progress,
+  jobStatus,
+  countdown_ms,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -308,6 +323,9 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               thumbnail={thumbnailUrl}
               editMode={editMode}
               isProcessing={isProcessing}
+              jobStatus={jobStatus}
+              progress={progress}
+              countdown_ms={countdown_ms}
               isRemoved={isThumbnailRemoved}
               handleChange={handleThumbnailChange}
               handleRemove={handleRemoveThumbnail}
@@ -699,6 +717,16 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               before={<FontAwesomeIcon icon={faFile} />}
               tooltipPlace={tooltipPlaces.left}
               {...register("processedVideoSize")}
+            />
+          </FormItem>
+          <FormItem>
+            <FormInput
+              disabled
+              placeholder={t("page.view_dream.render_duration")}
+              type="text"
+              before={<FontAwesomeIcon icon={faStopwatch} />}
+              tooltipPlace={tooltipPlaces.right}
+              {...register("render_duration")}
             />
           </FormItem>
           {!isImageDream && (

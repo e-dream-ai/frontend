@@ -1,7 +1,7 @@
 import { ApiResponse } from "@/types/api.types";
 import { Dream } from "@/types/dream.types";
 import { formatFileSize } from "./file.util";
-import { framesToSeconds, secondsToTimeFormat } from "./video.utils";
+import { formatEta, framesToSeconds, secondsToTimeFormat } from "./video.utils";
 import { getUserName } from "./user.util";
 import { FORMAT } from "@/constants/moment.constants";
 import moment from "moment";
@@ -119,6 +119,9 @@ export const formatDreamForm = ({
       ? secondsToTimeFormat(
           framesToSeconds(dream?.processedVideoFrames, dream?.activityLevel),
         )
+      : "-",
+    render_duration: dream?.render_duration
+      ? formatEta(Math.floor(dream.render_duration / 1000))
       : "-",
     processedVideoFPS: dream?.processedVideoFPS
       ? `${dream?.processedVideoFPS} Original FPS`

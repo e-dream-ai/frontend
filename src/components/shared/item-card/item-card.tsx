@@ -392,8 +392,6 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     [type, item],
   );
 
-  console.log("isDreamFailed", isDreamFailed);
-
   const Thumbnail = useMemo(
     () => () => {
       if (type === "virtual-playlist") {
