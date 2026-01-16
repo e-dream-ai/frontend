@@ -64,44 +64,47 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
 
   if (isProcessing && !isLoading && !localMultimedia) {
     const normalizedJobStatus = (jobStatus ?? "").toUpperCase();
-    const isIngestingByStatus = normalizedJobStatus === "COMPLETED";
-    const isRenderingByStatus =
-      normalizedJobStatus === "IN_QUEUE" ||
-      normalizedJobStatus === "IN_PROGRESS";
 
-    const isRendering = isRenderingByStatus
-      ? true
-      : isIngestingByStatus
-        ? false
-        : progress !== undefined && progress < 100;
-    const shouldShowProgressBar = isRendering && typeof progress === "number";
-    const statusText = isRendering
-      ? t("components.thumbnail_input.rendering")
-      : t("components.thumbnail_input.ingesting");
+    const uiPhase =
+      normalizedJobStatus === "IN_PROGRESS"
+        ? "RENDERING"
+        : normalizedJobStatus === "IN_QUEUE"
+          ? "QUEUED"
+          : "INGESTING";
+
+    const statusText =
+      uiPhase === "QUEUED"
+        ? t("components.thumbnail_input.queued")
+        : uiPhase === "RENDERING"
+          ? t("components.thumbnail_input.rendering")
+          : t("components.thumbnail_input.ingesting");
 
     return (
       <ThumbnailPlaceholder fontSize="1.2rem">
         <Row width="100%" px="2rem" mb="0">
           <Column alignItems="center" width="100%">
-            {shouldShowProgressBar ? (
+            {uiPhase === "RENDERING" ? (
               <ProgressBar
-                completed={progress}
+                completed={progress ?? 0}
                 width="100%"
                 height="16px"
                 labelSize="12px"
                 borderRadius="8px"
                 margin="0 0 1rem 0"
-                customLabel={`${progress.toFixed(1)}%`}
+                isLabelVisible={false}
               />
             ) : (
               <Spinner />
             )}
             <Text
               color={theme.textBodyColor}
-              mt={shouldShowProgressBar ? "0" : "1rem"}
+              mt={uiPhase === "RENDERING" ? "0" : "1rem"}
             >
               {statusText}
-              {isRendering && countdown_ms
+              {uiPhase === "RENDERING" && typeof progress === "number"
+                ? ` ${progress.toFixed(1)}% done`
+                : ""}
+              {uiPhase === "RENDERING" && countdown_ms
                 ? `, ETA ${formatEta(Math.floor(countdown_ms / 1000))}`
                 : ""}
             </Text>
@@ -113,20 +116,23 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
 
   if (isProcessing && !isLoading && localMultimedia) {
     const normalizedJobStatus = (jobStatus ?? "").toUpperCase();
-    const isIngestingByStatus = normalizedJobStatus === "COMPLETED";
-    const isRenderingByStatus =
-      normalizedJobStatus === "IN_QUEUE" ||
-      normalizedJobStatus === "IN_PROGRESS";
 
-    const isRendering = isRenderingByStatus
-      ? true
-      : isIngestingByStatus
-        ? false
-        : progress !== undefined && progress < 100;
+    const uiPhase =
+      normalizedJobStatus === "IN_PROGRESS"
+        ? "RENDERING"
+        : normalizedJobStatus === "IN_QUEUE"
+          ? "QUEUED"
+          : "INGESTING";
+
+    const isRendering = uiPhase === "RENDERING";
     const shouldShowProgressBar = isRendering && typeof progress === "number";
-    const statusText = isRendering
-      ? t("components.thumbnail_input.rendering")
-      : t("components.thumbnail_input.ingesting");
+
+    const statusText =
+      uiPhase === "QUEUED"
+        ? t("components.thumbnail_input.queued")
+        : uiPhase === "RENDERING"
+          ? t("components.thumbnail_input.rendering")
+          : t("components.thumbnail_input.ingesting");
 
     return (
       <ThumbnailContainer editMode={false}>
@@ -166,13 +172,17 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
                   labelSize="12px"
                   borderRadius="8px"
                   margin="0 0 1rem 0"
+                  isLabelVisible={false}
                 />
               ) : (
                 <Spinner />
               )}
               <Text color="white" mt={shouldShowProgressBar ? "0" : "1rem"}>
                 {statusText}
-                {isRendering && countdown_ms
+                {uiPhase === "RENDERING" && typeof progress === "number"
+                  ? ` ${progress.toFixed(1)}% done`
+                  : ""}
+                {uiPhase === "RENDERING" && countdown_ms
                   ? `, ETA ${formatEta(Math.floor(countdown_ms / 1000))}`
                   : ""}
               </Text>

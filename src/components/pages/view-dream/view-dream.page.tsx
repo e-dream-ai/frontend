@@ -694,7 +694,7 @@ const ViewDreamPage: React.FC = () => {
       if (response?.success) {
         toast.success(`${t("page.view_dream.dream_processing_successfully")}`);
         setTumbnail(undefined);
-        setProgress(undefined);
+        setProgress(0);
         setJobStatus(undefined);
         setCountdownMs(undefined);
         refetch();

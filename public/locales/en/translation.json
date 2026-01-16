@@ -457,7 +457,8 @@
     "thumbnail_input": {
       "processing": "Ingesting dream...",
       "rendering": "Rendering",
-      "ingesting": "Ingesting dream..."
+      "ingesting": "Ingesting dream...",
+      "queued": "Queued..."
     },
     "tooltip": {
       "play_dream": "Dream {{name}} play.",
