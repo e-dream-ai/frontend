@@ -81,7 +81,7 @@ export const AboutPage: React.FC = () => {
               interaction, including speed control.
             </li>
             <li>
-              Install the screensaver so it runs automatically when you're not
+              It includes a screensaver that can run automatically when you're not
               using your computer.
             </li>
             <li>
