@@ -181,9 +181,7 @@ type ViewDreamInputsProps = {
   handleRemoveThumbnail: () => void;
   onPromptValidationRequest?: (validate: () => boolean) => void;
   onPromptResetRequest?: (reset: () => void) => void;
-  progress?: number;
   jobStatus?: string;
-  countdown_ms?: number;
 };
 
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
@@ -197,9 +195,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   handleRemoveThumbnail,
   onPromptValidationRequest,
   onPromptResetRequest,
-  progress,
   jobStatus,
-  countdown_ms,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -324,8 +320,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               editMode={editMode}
               isProcessing={isProcessing}
               jobStatus={jobStatus}
-              progress={progress}
-              countdown_ms={countdown_ms}
               isRemoved={isThumbnailRemoved}
               handleChange={handleThumbnailChange}
               handleRemove={handleRemoveThumbnail}

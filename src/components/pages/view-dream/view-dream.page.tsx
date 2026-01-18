@@ -11,7 +11,6 @@ import Restricted from "@/components/shared/restricted/restricted";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
 import { Spinner } from "@/components/shared/spinner/spinner";
-import Text from "@/components/shared/text/text";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import { ROLES } from "@/constants/role.constants";
@@ -99,6 +98,9 @@ import { PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
 import PermissionContext from "@/context/permission.context";
 import { Dream } from "@/types/dream.types";
 import { ApiResponse } from "@/types/api.types";
+import ProgressBar from "@/components/shared/progress-bar/progress-bar";
+import { formatEta } from "@/utils/video.utils";
+import Text from "@/components/shared/text/text";
 
 type Params = { uuid: string };
 
@@ -160,7 +162,7 @@ const formatDreamError = (error?: string | null): string => {
 
       return JSON.stringify(parsed, null, 2);
     }
-  } catch {}
+  } catch { }
 
   return trimmedError;
 };
@@ -460,8 +462,7 @@ const ViewDreamPage: React.FC = () => {
               handleMutateDream(data);
             } else {
               toast.error(
-                `${t("page.view_dream.error_updating_dream")} ${
-                  response.message
+                `${t("page.view_dream.error_updating_dream")} ${response.message
                 }`,
               );
             }
@@ -825,8 +826,7 @@ const ViewDreamPage: React.FC = () => {
       } else {
         failedReports.forEach((failedReport) => {
           toast.error(
-            `${t("page.view_dream.error_processing_report")} ${
-              failedReport.uuid
+            `${t("page.view_dream.error_processing_report")} ${failedReport.uuid
             }: ${failedReport.message}`,
           );
         });
@@ -1127,8 +1127,35 @@ const ViewDreamPage: React.FC = () => {
 
           <FormProvider {...formMethods}>
             <form onSubmit={formMethods.handleSubmit(onSubmit, onError)}>
-              <Row justifyContent="space-between" justifyItems="flex-end">
-                <span />
+              <Row justifyContent="space-between" alignItems="center">
+                {isDreamProcessing && (
+                  <Column mr={[0, 2, 2]} width="50%">
+                    {jobStatus?.toUpperCase() === "IN_PROGRESS" &&
+                      typeof progress === "number" && (
+                        <>
+                          <ProgressBar
+                            completed={progress}
+                            width="100%"
+                            height="16px"
+                            labelSize="12px"
+                            borderRadius="8px"
+                            margin="0 0 0.5rem 0"
+                            isLabelVisible={false}
+                          />
+                          <Text
+                            color="textSecondary"
+                            fontSize="0.875rem"
+                          >
+                            Rendering {progress.toFixed(1)}% done
+                            {countdownMs &&
+                              `, ETA ${formatEta(
+                                Math.floor(countdownMs / 1000),
+                              )}`}
+                          </Text>
+                        </>
+                      )}
+                  </Column>
+                )}
                 <div>
                   {showEditButton && (
                     <React.Fragment>
@@ -1225,9 +1252,7 @@ const ViewDreamPage: React.FC = () => {
                 onPromptResetRequest={(reset) => {
                   resetPromptRef.current = reset;
                 }}
-                progress={progress}
                 jobStatus={jobStatus}
-                countdown_ms={countdownMs}
               />
 
               {!isDreamProcessing ? (
@@ -1377,10 +1402,10 @@ const ViewDreamPage: React.FC = () => {
                               onDelete={
                                 canRemoveFromPlaylist
                                   ? (e: React.MouseEvent) =>
-                                      handleRemoveDreamFromPlaylist(
-                                        pi.id,
-                                        playlistUUID,
-                                      )(e)
+                                    handleRemoveDreamFromPlaylist(
+                                      pi.id,
+                                      playlistUUID,
+                                    )(e)
                                   : undefined
                               }
                               deleteDisabled={
