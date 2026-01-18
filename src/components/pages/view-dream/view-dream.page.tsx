@@ -1156,7 +1156,7 @@ const ViewDreamPage: React.FC = () => {
                       )}
                   </Column>
                 )}
-                <div>
+                <Row flex="1" justifyContent="flex-end">
                   {showEditButton && (
                     <React.Fragment>
                       {showRerunButton &&
@@ -1234,7 +1234,7 @@ const ViewDreamPage: React.FC = () => {
                       </Button>
                     </React.Fragment>
                   )}
-                </div>
+                </Row>
               </Row>
 
               <ViewDreamInputs
