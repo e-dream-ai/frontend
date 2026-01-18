@@ -162,7 +162,7 @@ const formatDreamError = (error?: string | null): string => {
 
       return JSON.stringify(parsed, null, 2);
     }
-  } catch { }
+  } catch {}
 
   return trimmedError;
 };
@@ -462,7 +462,8 @@ const ViewDreamPage: React.FC = () => {
               handleMutateDream(data);
             } else {
               toast.error(
-                `${t("page.view_dream.error_updating_dream")} ${response.message
+                `${t("page.view_dream.error_updating_dream")} ${
+                  response.message
                 }`,
               );
             }
@@ -826,7 +827,8 @@ const ViewDreamPage: React.FC = () => {
       } else {
         failedReports.forEach((failedReport) => {
           toast.error(
-            `${t("page.view_dream.error_processing_report")} ${failedReport.uuid
+            `${t("page.view_dream.error_processing_report")} ${
+              failedReport.uuid
             }: ${failedReport.message}`,
           );
         });
@@ -1142,10 +1144,7 @@ const ViewDreamPage: React.FC = () => {
                             margin="0 0 0.5rem 0"
                             isLabelVisible={false}
                           />
-                          <Text
-                            color="textSecondary"
-                            fontSize="0.875rem"
-                          >
+                          <Text color="textSecondary" fontSize="0.875rem">
                             Rendering {progress.toFixed(1)}% done
                             {countdownMs &&
                               `, ETA ${formatEta(
@@ -1402,10 +1401,10 @@ const ViewDreamPage: React.FC = () => {
                               onDelete={
                                 canRemoveFromPlaylist
                                   ? (e: React.MouseEvent) =>
-                                    handleRemoveDreamFromPlaylist(
-                                      pi.id,
-                                      playlistUUID,
-                                    )(e)
+                                      handleRemoveDreamFromPlaylist(
+                                        pi.id,
+                                        playlistUUID,
+                                      )(e)
                                   : undefined
                               }
                               deleteDisabled={
