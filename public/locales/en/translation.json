@@ -159,7 +159,6 @@
       "save": "Save",
       "saving": "Saving",
       "cancel": "Cancel",
-      "preview": "Preview",
       "upvotes": "Likes",
       "downvotes": "Dislikes",
       "name": "Name",
@@ -170,7 +169,6 @@
       "activity_level": "Activity Level",
       "feature_rank": "Feature Rank",
       "duration": "Duration",
-      "render_duration": "Render Duration",
       "size": "Size",
       "owner": "Owner",
       "displayed_owner": "Displayed Owner",
@@ -200,8 +198,6 @@
       "remove_dream_from_playlist_tooltip": "Remove dream from playlist",
       "confirm_process_modal_title": "Confirm process dream",
       "confirm_process_modal_body": "Are you sure to process this dream?",
-      "confirm_cancel_modal_title": "Confirm cancel dream",
-      "confirm_cancel_modal_body": "Are you sure to cancel this dream?",
       "confirm_delete_modal_title": "Confirm delete dream",
       "confirm_delete_modal_body": "Are you sure to delete this dream?",
       "confirm_process_dream_report_modal_title": "Confirm process dream report",
@@ -210,10 +206,6 @@
       "error_updating_dream": "Error updating dream.",
       "dream_processing_successfully": "Dream processing successfully.",
       "error_processing_dream": "Error processing dream.",
-      "dream_cancelled_successfully": "Dream cancelled successfully.",
-      "error_cancelling_dream": "Error cancelling dream.",
-      "error_fetching_preview": "Error fetching preview.",
-      "rendering_hasnt_started_yet": "Rendering hasn't started yet.",
       "report_processed_successfully": "Report processed successfully",
       "error_processing_report": "Error processing report",
       "dream_deleted_successfully": "Dream deleted successfully.",
@@ -455,10 +447,7 @@
       "error_updating_profile": "Error updating profile."
     },
     "thumbnail_input": {
-      "processing": "Ingesting dream...",
-      "rendering": "Rendering",
-      "ingesting": "Ingesting dream...",
-      "queued": "Queued..."
+      "processing": "Ingesting dream..."
     },
     "tooltip": {
       "play_dream": "Dream {{name}} play.",

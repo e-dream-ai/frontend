@@ -4,9 +4,7 @@ import {
 } from "@ramonak/react-progress-bar";
 import styled, { useTheme } from "styled-components";
 
-const StyledProgressBar = styled(RamonakProgressBar)`
-  width: 100%;
-`;
+const StyledProgressBar = styled(RamonakProgressBar)``;
 
 const ProgressBar: React.FC<ProgressBarProps> = (props) => {
   const theme = useTheme();

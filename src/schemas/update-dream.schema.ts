@@ -8,7 +8,6 @@ export type UpdateDreamFormValues = {
   processedVideoFrames?: string;
   processedVideoFPS?: string;
   processedMediaResolution?: string;
-  render_duration?: string;
   user?: string;
   description?: string;
   prompt?: Record<string, unknown> | null;
@@ -73,7 +72,6 @@ export const UpdateDreamSchema = yup
       .integer(),
     processedVideoSize: yup.string(),
     processedVideoFrames: yup.string(),
-    render_duration: yup.string(),
     user: yup.string(),
     displayedOwner: yup.object({
       label: yup.string(),

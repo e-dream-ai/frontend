@@ -2,7 +2,7 @@ export type FileTypes = File;
 
 export type MultiMediaState =
   | {
-      file?: FileTypes;
+      file: FileTypes;
       url: string;
     }
   | undefined;

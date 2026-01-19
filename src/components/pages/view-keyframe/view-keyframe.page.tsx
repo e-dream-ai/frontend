@@ -149,7 +149,7 @@ export const ViewKeyframePage = () => {
         // update image for keyframe
         await updateImageKeyframeMutation.updateImageKeyframe(
           uuid!,
-          image!.file as unknown as File,
+          image!.file,
         );
       }
 

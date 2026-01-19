@@ -16,21 +16,6 @@ export const secondsToTimeFormat = (seconds: number) => {
   return `${formattedHours}:${formattedMinutes}:${formattedSeconds}`;
 };
 
-export const formatEta = (seconds: number) => {
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const remainingSeconds = Math.floor(seconds % 60);
-
-  const formattedMinutes =
-    hours > 0 ? minutes.toString().padStart(2, "0") : minutes.toString();
-  const formattedSeconds = remainingSeconds.toString().padStart(2, "0");
-
-  if (hours > 0) {
-    return `${hours}:${formattedMinutes}:${formattedSeconds}`;
-  }
-  return `${formattedMinutes}:${formattedSeconds}`;
-};
-
 export const secondsToMinutes = (seconds: number) => {
   const minutes = Math.floor((seconds % 3600) / 60);
   const remainingSeconds = Math.floor(seconds % 60);
