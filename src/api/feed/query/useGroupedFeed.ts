@@ -178,11 +178,10 @@ export const useGroupedFeed = ({
     },
   );
 
+  const { data, hasNextPage, fetchNextPage, isFetchingNextPage } = queryResult;
+
   // Auto-fetch next page if current pages have no content after deduplication
   useEffect(() => {
-    const { data, hasNextPage, fetchNextPage, isFetchingNextPage } =
-      queryResult;
-
     if (!data || isFetchingNextPage || !hasNextPage) {
       return;
     }
@@ -202,18 +201,10 @@ export const useGroupedFeed = ({
     if (!lastPageHasContent) {
       fetchNextPage();
     }
-  }, [
-    queryResult.data,
-    queryResult.hasNextPage,
-    queryResult.isFetchingNextPage,
-    queryResult.fetchNextPage,
-  ]);
+  }, [data, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   // Background prefetching: Aggressively fetch next 2 pages when user gets close to the end
   useEffect(() => {
-    const { data, hasNextPage, isFetchingNextPage, fetchNextPage } =
-      queryResult;
-
     if (!data || isFetchingNextPage || !hasNextPage) return;
 
     // Calculate total content we have
@@ -234,12 +225,7 @@ export const useGroupedFeed = ({
 
       return () => clearTimeout(prefetchTimer);
     }
-  }, [
-    queryResult.data,
-    queryResult.hasNextPage,
-    queryResult.isFetchingNextPage,
-    queryResult.fetchNextPage,
-  ]);
+  }, [data, hasNextPage, isFetchingNextPage, fetchNextPage]);
 
   return queryResult;
 };

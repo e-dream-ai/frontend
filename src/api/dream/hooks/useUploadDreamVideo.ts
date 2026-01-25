@@ -272,7 +272,7 @@ const attemptUploadFilePart = async ({
       totalParts,
     });
     return etag;
-  } catch (error) {
+  } catch {
     return undefined;
   }
 };
@@ -308,7 +308,7 @@ const refreshPresignedUrl = async ({
       type: DreamFileType.DREAM,
     });
     return response?.data?.url;
-  } catch (error) {
+  } catch {
     return undefined;
   }
 };
@@ -456,7 +456,7 @@ const completeMultipartUpload = async ({
       // Navigate to the dream view page
       router.navigate(`${ROUTES.VIEW_DREAM}/${dream.uuid}`);
     }
-  } catch (error) {
+  } catch {
     // Handle potential errors from the mutation or other operations
     toast.error(t("page.create.error_completing_upload"));
   }
@@ -716,7 +716,7 @@ export const useUploadDreamVideo = ({
         localFailedParts = localFailedParts.filter(
           (part) => part.PartNumber !== failedPart.PartNumber,
         );
-      } catch (error) {
+      } catch {
         /* empty */
       }
     }
@@ -871,7 +871,7 @@ export const useUploadDreamVideo = ({
         uploadId: state.uploadId,
         uuid: state.dream?.uuid,
       });
-    } catch (error) {
+    } catch {
       /* empty */
     }
     resetStates(state.toastId);
