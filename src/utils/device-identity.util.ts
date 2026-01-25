@@ -60,7 +60,7 @@ export const getDeviceId = (): string => {
     localStorage.setItem(DEVICE_ID_KEY, newId);
 
     return newId;
-  } catch (error) {
+  } catch {
     // Fallback if localStorage is not available
     // Use fingerprint-based ID (less reliable but better than nothing)
     return `fp-${generateDeviceFingerprint()}`;
@@ -103,7 +103,7 @@ export const getDeviceName = (): string => {
     localStorage.setItem(DEVICE_NAME_KEY, deviceName);
 
     return deviceName;
-  } catch (error) {
+  } catch {
     return "Unknown Device";
   }
 };
