@@ -50,7 +50,7 @@ export const getSignupSchema = (isSignupCodeActive: boolean) =>
     // password: passwordSchemaProperty,
     // confirmPassword: confirmPasswordSchemaProperty,
     code: isSignupCodeActive
-      ? yup.string().required("Code is required.")
+      ? yup.string().trim().optional()
       : yup.string().optional(),
     terms: yup.boolean().oneOf([true], "You have to accept Terms of Service"),
   });

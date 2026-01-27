@@ -77,7 +77,7 @@
       "last_name": "Last name",
       "password": "Password",
       "confirm_password": "Confirm Password",
-      "code": "Invitation Code",
+      "code": "Invitation Code (optional)",
       "agree_to": "I agree to the",
       "terms_of_service": "Terms of Service",
       "next": "Next",
