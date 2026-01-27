@@ -80,14 +80,13 @@ export const SignupPage: React.FC = () => {
 
   const onSubmit = (data: SignupFormValues) => {
     const email = data.email;
-    const normalizedCode = data.code?.trim();
     mutateSignup(
       {
         email,
         firstname: data.firstName,
         lastname: data.lastName,
         // password: data.password,
-        code: normalizedCode || undefined,
+        code: data.code,
       },
       {
         onSuccess: (data) => {
