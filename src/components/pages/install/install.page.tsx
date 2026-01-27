@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "install";
 
-const APP_VERSION = "0.12.0";
+const APP_VERSION = "0.14.0";
 const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
 const APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.zip`;
 
