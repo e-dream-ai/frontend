@@ -7,12 +7,11 @@ import { Section } from "@/components/shared/section/section";
 import Text from "@/components/shared/text/text";
 import usePWAInstall from "@/hooks/usePWAInstall";
 import useUserAgent from "@/hooks/useUserAgent";
+import { APP_VERSION } from "@/version";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
 const SECTION_ID = "install";
-
-const APP_VERSION = "0.14.0";
 const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
 const APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.zip`;
 
