@@ -150,9 +150,9 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
           value={
             user?.role
               ? {
-                label: t(ROLES_NAMES[user.role.name ?? ""]) ?? "-",
-                value: user.role.id,
-              }
+                  label: t(ROLES_NAMES[user.role.name ?? ""]) ?? "-",
+                  value: user.role.id,
+                }
               : undefined
           }
           name="profile-role"
@@ -322,9 +322,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       description: user?.description ?? "",
       role: user?.role
         ? {
-          value: user.role?.id,
-          label: formatRoleName(user?.role?.name),
-        }
+            value: user.role?.id,
+            label: formatRoleName(user?.role?.name),
+          }
         : {},
       nsfw: filterNsfwOption(user?.nsfw, t),
       enableMarketingEmails: filterMarketingEmailOption(
@@ -353,7 +353,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
               handleMutateUpdateUser(formData);
             } else {
               toast.error(
-                `${t("components.profile_card.error_updating_profile")} ${response.message
+                `${t("components.profile_card.error_updating_profile")} ${
+                  response.message
                 }`,
               );
             }
@@ -398,7 +399,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           reset();
         } else {
           toast.error(
-            `${t("components.profile_card.error_updating_profile")} ${response.message
+            `${t("components.profile_card.error_updating_profile")} ${
+              response.message
             }`,
           );
         }
@@ -433,11 +435,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         </Button>
       </Row>
       <Row mb="2rem" flexWrap="wrap">
-        <Column
-          flex={["0 0 100%", "0 0 50%"]}
-          alignItems="center"
-          mb={4}
-        >
+        <Column flex={["0 0 100%", "0 0 50%"]} alignItems="center" mb={4}>
           <AvatarUploader
             handleChange={handleAvatarChange}
             src={avatar?.url ? avatar?.url : avatarUrl}
@@ -563,9 +561,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
             </Restricted>
           )}
           <Row flexWrap="wrap">
-            <Column
-              flex={["0 0 100%", "0 0 100%"]}
-            >
+            <Column flex={["0 0 100%", "0 0 100%"]}>
               {editMode ? (
                 <ProfileForm
                   user={user}
