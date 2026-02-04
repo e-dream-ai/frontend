@@ -1,9 +1,9 @@
 import styled from "styled-components";
 import Text from "../text/text";
 
-export const StyledFrameImage = styled.img`
-  min-width: 300px;
-  max-width: 300px;
+export const StyledFrameImage = styled.img<{ frameWidth?: number }>`
+  min-width: ${(props) => props.frameWidth ?? 300}px;
+  max-width: ${(props) => props.frameWidth ?? 300}px;
   height: auto;
   aspect-ratio: 16 / 9;
   object-fit: cover;

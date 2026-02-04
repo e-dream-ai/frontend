@@ -57,6 +57,7 @@ import { useTheme } from "styled-components";
 import styled from "styled-components";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { secondsToTimeFormat } from "@/utils/video.utils";
+import { FilmstripGallery } from "@/components/shared/filmstrip-gallery/filmstrip-gallery";
 
 const SectionID = "playlist";
 
@@ -85,9 +86,9 @@ const JumpToEndButton = styled.button<{ disabled?: boolean }>`
 
   :hover {
     background-color: ${(props) =>
-      props.disabled
-        ? props.theme.colorBackgroundQuaternary
-        : props.theme.colorBackgroundSecondary};
+    props.disabled
+      ? props.theme.colorBackgroundQuaternary
+      : props.theme.colorBackgroundSecondary};
   }
 `;
 
@@ -125,7 +126,7 @@ const ScrollToTopButton = styled.button<{
   &:hover {
     filter: brightness(140%);
     transform: ${(props) =>
-      props.visible ? "translateY(-2px)" : "translateY(10px)"};
+    props.visible ? "translateY(-2px)" : "translateY(10px)"};
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
   }
 
@@ -135,18 +136,41 @@ const ScrollToTopButton = styled.button<{
   }
 `;
 
+const FilmstripScrollContainer = styled.div`
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 0.5rem;
+`;
+
+const FilmstripRows = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  width: max-content;
+`;
+
+const FilmstripRow = styled.div`
+  display: inline-flex;
+  gap: 0.75rem;
+  align-items: center;
+  width: max-content;
+`;
+
 /**
  * Playlist tabs handling
  */
-type PlaylistTabs = "items" | "keyframes";
+type PlaylistTabs = "items" | "filmstrips" | "keyframes";
 
 const PLAYLIST_TABS: Record<Uppercase<PlaylistTabs>, PlaylistTabs> = {
   ITEMS: "items",
+  FILMSTRIPS: "filmstrips",
   KEYFRAMES: "keyframes",
 } as const;
 
 const FEED_FILTERS_NAMES: Record<Uppercase<PlaylistTabs>, string> = {
   ITEMS: "page.view_playlist.items",
+  FILMSTRIPS: "page.view_playlist.filmstrips",
   KEYFRAMES: "page.view_playlist.keyframes",
 };
 
@@ -155,6 +179,10 @@ const getPlaylistTabsFilterData: (
 ) => Array<{ key: string; value: string }> = (t) => {
   return [
     { key: t(FEED_FILTERS_NAMES.ITEMS), value: PLAYLIST_TABS.ITEMS.toString() },
+    {
+      key: t(FEED_FILTERS_NAMES.FILMSTRIPS),
+      value: PLAYLIST_TABS.FILMSTRIPS.toString(),
+    },
     {
       key: t(FEED_FILTERS_NAMES.KEYFRAMES),
       value: PLAYLIST_TABS.KEYFRAMES.toString(),
@@ -824,7 +852,7 @@ export const ViewPlaylistPage = () => {
                         (radioGroupState === "items"
                           ? !hasNextPlaylistItemsPage && items.length === 0
                           : !hasNextPlaylistKeyframesPage &&
-                            playlistKeyframes.length === 0)
+                          playlistKeyframes.length === 0)
                       }
                     >
                       {isJumpingToEnd ? "Jumping..." : "Jump to End"}
@@ -1100,6 +1128,48 @@ export const ViewPlaylistPage = () => {
                     )
                   ) : (
                     <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
+                  )}
+                </Row>
+              )}
+              {radioGroupState === "filmstrips" && (
+                <Row style={{ display: "block" }}>
+                  {items.some((item) => item.type === "dream") ? (
+                    <InfiniteScroll
+                      dataLength={items.length}
+                      next={fetchNextPlaylistItemsPage}
+                      hasMore={hasNextPlaylistItemsPage ?? false}
+                      loader={<Loader />}
+                      endMessage={
+                        !isPlaylistLoading && (
+                          <Row justifyContent="center" mt="2rem">
+                            <Text color={theme.textPrimaryColor}>
+                              {t("components.infinite_scroll.end_message")}
+                            </Text>
+                          </Row>
+                        )
+                      }
+                    >
+                      <FilmstripScrollContainer>
+                        <FilmstripRows>
+                          {items
+                            .filter(
+                              (item) => item.type === "dream" && item.dreamItem,
+                            )
+                            .map((item) => (
+                              <FilmstripRow key={item.id}>
+                                <FilmstripGallery
+                                  dream={item.dreamItem}
+                                  frameWidth={180}
+                                />
+                              </FilmstripRow>
+                            ))}
+                        </FilmstripRows>
+                      </FilmstripScrollContainer>
+                    </InfiniteScroll>
+                  ) : (
+                    <Text mb={4}>
+                      {t("page.view_playlist.empty_playlist")}
+                    </Text>
                   )}
                 </Row>
               )}
