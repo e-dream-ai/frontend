@@ -86,9 +86,9 @@ const JumpToEndButton = styled.button<{ disabled?: boolean }>`
 
   :hover {
     background-color: ${(props) =>
-    props.disabled
-      ? props.theme.colorBackgroundQuaternary
-      : props.theme.colorBackgroundSecondary};
+      props.disabled
+        ? props.theme.colorBackgroundQuaternary
+        : props.theme.colorBackgroundSecondary};
   }
 `;
 
@@ -126,7 +126,7 @@ const ScrollToTopButton = styled.button<{
   &:hover {
     filter: brightness(140%);
     transform: ${(props) =>
-    props.visible ? "translateY(-2px)" : "translateY(10px)"};
+      props.visible ? "translateY(-2px)" : "translateY(10px)"};
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
   }
 
@@ -852,7 +852,7 @@ export const ViewPlaylistPage = () => {
                         (radioGroupState === "items"
                           ? !hasNextPlaylistItemsPage && items.length === 0
                           : !hasNextPlaylistKeyframesPage &&
-                          playlistKeyframes.length === 0)
+                            playlistKeyframes.length === 0)
                       }
                     >
                       {isJumpingToEnd ? "Jumping..." : "Jump to End"}
@@ -1167,9 +1167,7 @@ export const ViewPlaylistPage = () => {
                       </FilmstripScrollContainer>
                     </InfiniteScroll>
                   ) : (
-                    <Text mb={4}>
-                      {t("page.view_playlist.empty_playlist")}
-                    </Text>
+                    <Text mb={4}>{t("page.view_playlist.empty_playlist")}</Text>
                   )}
                 </Row>
               )}
