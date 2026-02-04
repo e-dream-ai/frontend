@@ -68,7 +68,7 @@ const ApiKeyCard: React.FC<ApiKeyCardProps> = ({ user }) => {
 
   const apikey = data?.data?.apikey;
   return (
-    <Row mb="2rem" mr="1rem" justifyContent="center">
+    <Row mb="0" mr="1rem" justifyContent="center">
       <Column>
         <Row>
           <Text

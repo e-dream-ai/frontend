@@ -66,9 +66,13 @@ import { filterNsfwOption } from "@/utils/select.util";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
+  showApiKeyCard?: boolean;
 };
 
-const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
+const ProfileDetails: React.FC<ProfileDetailsProps> = ({
+  user,
+  showApiKeyCard,
+}) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const { user: authUser } = useAuth();
@@ -116,9 +120,20 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
         >
           {t("components.profile_card.view_dreams")}
         </Button>
+
+        {showApiKeyCard && (
+          <Row
+            mt={["3", "5"]}
+            width="100%"
+            justifyContent="center"
+            display={["none", "none", "flex"]}
+          >
+            <ApiKeyCard user={user} />
+          </Row>
+        )}
       </Column>
 
-      <Column flex={["0 0 100%", "0 0 50%"]} mt={["3rem", 0, 0]}>
+      <Column flex={["0 0 100%", "0 0 35%"]} mt={["3rem", 0, 0]}>
         <Input
           disabled
           placeholder={t("components.profile_card.name")}
@@ -135,9 +150,9 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
           value={
             user?.role
               ? {
-                  label: t(ROLES_NAMES[user.role.name ?? ""]) ?? "-",
-                  value: user.role.id,
-                }
+                label: t(ROLES_NAMES[user.role.name ?? ""]) ?? "-",
+                value: user.role.id,
+              }
               : undefined
           }
           name="profile-role"
@@ -240,6 +255,17 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({ user }) => {
           </>
         )}
       </Column>
+
+      {showApiKeyCard && (
+        <Row
+          mt="2"
+          width="100%"
+          justifyContent="center"
+          display={["flex", "none", "none"]}
+        >
+          <ApiKeyCard user={user} />
+        </Row>
+      )}
     </Row>
   );
 };
@@ -296,9 +322,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       description: user?.description ?? "",
       role: user?.role
         ? {
-            value: user.role?.id,
-            label: formatRoleName(user?.role?.name),
-          }
+          value: user.role?.id,
+          label: formatRoleName(user?.role?.name),
+        }
         : {},
       nsfw: filterNsfwOption(user?.nsfw, t),
       enableMarketingEmails: filterMarketingEmailOption(
@@ -327,8 +353,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
               handleMutateUpdateUser(formData);
             } else {
               toast.error(
-                `${t("components.profile_card.error_updating_profile")} ${
-                  response.message
+                `${t("components.profile_card.error_updating_profile")} ${response.message
                 }`,
               );
             }
@@ -373,8 +398,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           reset();
         } else {
           toast.error(
-            `${t("components.profile_card.error_updating_profile")} ${
-              response.message
+            `${t("components.profile_card.error_updating_profile")} ${response.message
             }`,
           );
         }
@@ -410,7 +434,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       </Row>
       <Row mb="2rem" flexWrap="wrap">
         <Column
-          flex={["0 0 100%", "0 0 33.333333%"]}
+          flex={["0 0 100%", "0 0 50%"]}
           alignItems="center"
           mb={4}
         >
@@ -419,7 +443,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
             src={avatar?.url ? avatar?.url : avatarUrl}
           />
         </Column>
-        <Column flex={["0 0 100%", "0 0 33.333333%"]}>
+        <Column flex={["0 0 100%", "0 0 50%"]}>
           <Input
             placeholder={t("components.profile_card.name")}
             type="text"
@@ -540,11 +564,7 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
           )}
           <Row flexWrap="wrap">
             <Column
-              flex={
-                editMode
-                  ? ["0 0 100%", "0 0 100%"]
-                  : ["0 0 100%", "0 0 66.666666%"]
-              }
+              flex={["0 0 100%", "0 0 100%"]}
             >
               {editMode ? (
                 <ProfileForm
@@ -552,14 +572,9 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                   onDisableEditMode={onDisableEditMode}
                 />
               ) : (
-                <ProfileDetails user={user} />
+                <ProfileDetails user={user} showApiKeyCard={showApiKeyCard} />
               )}
             </Column>
-            {!editMode && showApiKeyCard && (
-              <Column flex={["0 0 100%", "0 0 33.333333%"]}>
-                <ApiKeyCard user={user} />
-              </Column>
-            )}
           </Row>
         </Column>
       </Row>
