@@ -34,6 +34,7 @@ import {
 } from "@/types/remote-control.types";
 import { useWebClient } from "@/hooks/useWebClient";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
+import { usePlaybackMetrics } from "@/hooks/usePlaybackMetrics";
 import {
   FaThumbsUp,
   FaThumbsDown,
@@ -42,9 +43,10 @@ import {
   FaRegClosedCaptioning,
   FaClosedCaptioning,
 } from "react-icons/fa";
-import { LuTurtle, LuRabbit } from "react-icons/lu";
+import { LuTurtle, LuRabbit, LuSnail } from "react-icons/lu";
 import RepeatIcon from "@/icons/repeat-icon";
 import ShuffleIcon from "@/icons/shuffle-icon";
+import FlyingBird from "@/icons/flying-bird";
 import { useWindowSize } from "@/hooks/useWindowSize";
 import { DEVICES_ON_PX } from "@/constants/devices.constants";
 import { ControlContainerDesktop } from "./control-container-desktop";
@@ -90,6 +92,7 @@ export const RemoteControl: React.FC = () => {
     isRepeatMode: desktopRepeatMode,
     isShuffleMode: desktopShuffleMode,
   } = useDesktopClient();
+  const { fps: playbackFps } = usePlaybackMetrics();
 
   const isAnyClientActive =
     isDesktopActive ||
@@ -161,6 +164,8 @@ export const RemoteControl: React.FC = () => {
     : isDesktopActive
       ? desktopShuffleMode
       : webShuffleMode;
+  const isHighFps = playbackFps > 32;
+  const isLowFps = playbackFps > 0 && playbackFps < 1.5;
 
   return (
     <RemoteControlContainer>
@@ -369,7 +374,7 @@ export const RemoteControl: React.FC = () => {
             data-tooltip-id={isDesktop ? "remote-slower" : undefined}
             disabled={!isAnyClientActive}
           >
-            <LuTurtle size={30} />
+            {isLowFps ? <LuSnail size={30} /> : <LuTurtle size={30} />}
           </IconButton>
           {isDesktop && (
             <Tooltip
@@ -385,7 +390,11 @@ export const RemoteControl: React.FC = () => {
             data-tooltip-id={isDesktop ? "remote-faster" : undefined}
             disabled={!isAnyClientActive}
           >
-            <LuRabbit size={30} />
+            {isHighFps ? (
+              <FlyingBird width={30} height={30} />
+            ) : (
+              <LuRabbit size={30} />
+            )}
           </IconButton>
           {isDesktop && (
             <Tooltip
