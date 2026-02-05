@@ -11,10 +11,11 @@ import {
   FaRegClosedCaptioning,
   FaClosedCaptioning,
 } from "react-icons/fa";
-import { LuTurtle, LuRabbit } from "react-icons/lu";
+import { LuTurtle, LuRabbit, LuSnail } from "react-icons/lu";
 import { FaChevronDown, FaChevronUp } from "react-icons/fa";
 import RepeatIcon from "@/icons/repeat-icon";
 import ShuffleIcon from "@/icons/shuffle-icon";
+import FlyingBird from "@/icons/flying-bird";
 import useAuth from "@/hooks/useAuth";
 import { usePlaybackStore } from "@/stores/playback.store";
 import { DEVICES } from "@/constants/devices.constants";
@@ -22,6 +23,7 @@ import { useSocket } from "@/hooks/useSocket";
 import { useWebClient } from "@/hooks/useWebClient";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { useVideoJs } from "@/hooks/useVideoJS";
+import { usePlaybackMetrics } from "@/hooks/usePlaybackMetrics";
 import {
   NEW_REMOTE_CONTROL_EVENT,
   REMOTE_CONTROLS,
@@ -71,6 +73,7 @@ export const PlayerTray: React.FC = () => {
     isRepeatMode: desktopRepeatMode,
     isShuffleMode: desktopShuffleMode,
   } = useDesktopClient();
+  const { fps: playbackFps } = usePlaybackMetrics();
   const { isReady: isVideoReady } = useVideoJs();
   const navigate = useNavigate();
   const { width } = useWindowSize();
@@ -115,6 +118,22 @@ export const PlayerTray: React.FC = () => {
     : isDesktopActive
       ? desktopShuffleMode
       : webShuffleMode;
+  const isHighFps = playbackFps > 32;
+  const isLowFps = playbackFps > 0 && playbackFps < 1.5;
+  const slowerIcon = isHighFps ? (
+    <LuRabbit size={30} />
+  ) : isLowFps ? (
+    <LuSnail size={30} />
+  ) : (
+    <LuTurtle size={30} />
+  );
+  const fasterIcon = isHighFps ? (
+    <FlyingBird width={30} height={30} />
+  ) : isLowFps ? (
+    <LuTurtle size={30} />
+  ) : (
+    <LuRabbit size={30} />
+  );
 
   if (!shouldRender) return null;
 
@@ -226,6 +245,8 @@ export const PlayerTray: React.FC = () => {
                   sendMessage(REMOTE_CONTROLS.PLAYBACK_FASTER.event)
                 }
                 enableTooltips={isDesktop}
+                slowerIcon={slowerIcon}
+                fasterIcon={fasterIcon}
               />
             </ColumnControls>
           </RightSection>
@@ -428,12 +449,16 @@ interface SpeedControlProps {
   onSlower: () => void;
   onFaster: () => void;
   enableTooltips?: boolean;
+  slowerIcon: React.ReactNode;
+  fasterIcon: React.ReactNode;
 }
 
 const SpeedControl: React.FC<SpeedControlProps> = ({
   onSlower,
   onFaster,
   enableTooltips,
+  slowerIcon,
+  fasterIcon,
 }) => {
   const { t } = useTranslation();
   const handleSlower = () => {
@@ -449,7 +474,7 @@ const SpeedControl: React.FC<SpeedControlProps> = ({
         onClick={handleSlower}
         data-tooltip-id={enableTooltips ? "player-tray-slower" : undefined}
       >
-        <LuTurtle size={30} />
+        {slowerIcon}
       </IconButton>
       {enableTooltips && (
         <Tooltip
@@ -464,7 +489,7 @@ const SpeedControl: React.FC<SpeedControlProps> = ({
         onClick={handleFaster}
         data-tooltip-id={enableTooltips ? "player-tray-faster" : undefined}
       >
-        <LuRabbit size={30} />
+        {fasterIcon}
       </IconButton>
       {enableTooltips && (
         <Tooltip

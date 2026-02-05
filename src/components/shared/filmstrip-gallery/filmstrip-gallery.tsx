@@ -16,10 +16,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlay } from "@fortawesome/free-solid-svg-icons";
 import { useImage } from "@/hooks/useImage";
 
-const FrameImage: React.FC<{ frame: Frame; dream?: Dream }> = ({
-  frame,
-  dream,
-}) => {
+const FrameImage: React.FC<{
+  frame: Frame;
+  dream?: Dream;
+  frameWidth?: number;
+}> = ({ frame, dream, frameWidth }) => {
   const { socket } = useSocket();
   const frameUrl = useImage(frame.url);
 
@@ -34,7 +35,10 @@ const FrameImage: React.FC<{ frame: Frame; dream?: Dream }> = ({
 
   return (
     <ImageContainer onClick={handlePlayDreamAtFrameNumber}>
-      <StyledFrameImage src={frameUrl || "/images/blank.gif"} />
+      <StyledFrameImage
+        src={frameUrl || "/images/blank.gif"}
+        frameWidth={frameWidth}
+      />
       <OverlayText>
         {calculateTimeFromFrames({
           frameNumber: frame.frameNumber,
@@ -51,9 +55,13 @@ const FrameImage: React.FC<{ frame: Frame; dream?: Dream }> = ({
 
 type FilmstripProps = {
   dream?: Dream;
+  frameWidth?: number;
 };
 
-export const FilmstripGallery: React.FC<FilmstripProps> = ({ dream }) => {
+export const FilmstripGallery: React.FC<FilmstripProps> = ({
+  dream,
+  frameWidth,
+}) => {
   const { t } = useTranslation();
 
   if (!dream?.filmstrip?.length) {
@@ -63,7 +71,12 @@ export const FilmstripGallery: React.FC<FilmstripProps> = ({ dream }) => {
   return (
     <>
       {dream?.filmstrip.map((frame) => (
-        <FrameImage key={frame.frameNumber} frame={frame} dream={dream} />
+        <FrameImage
+          key={frame.frameNumber}
+          frame={frame}
+          dream={dream}
+          frameWidth={frameWidth}
+        />
       ))}
     </>
   );
