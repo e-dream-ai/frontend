@@ -120,6 +120,20 @@ export const PlayerTray: React.FC = () => {
       : webShuffleMode;
   const isHighFps = playbackFps > 32;
   const isLowFps = playbackFps > 0 && playbackFps < 1.5;
+  const slowerIcon = isHighFps ? (
+    <LuRabbit size={30} />
+  ) : isLowFps ? (
+    <LuSnail size={30} />
+  ) : (
+    <LuTurtle size={30} />
+  );
+  const fasterIcon = isHighFps ? (
+    <FlyingBird width={30} height={30} />
+  ) : isLowFps ? (
+    <LuTurtle size={30} />
+  ) : (
+    <LuRabbit size={30} />
+  );
 
   if (!shouldRender) return null;
 
@@ -231,8 +245,8 @@ export const PlayerTray: React.FC = () => {
                   sendMessage(REMOTE_CONTROLS.PLAYBACK_FASTER.event)
                 }
                 enableTooltips={isDesktop}
-                isHighFps={isHighFps}
-                isLowFps={isLowFps}
+                slowerIcon={slowerIcon}
+                fasterIcon={fasterIcon}
               />
             </ColumnControls>
           </RightSection>
@@ -435,16 +449,16 @@ interface SpeedControlProps {
   onSlower: () => void;
   onFaster: () => void;
   enableTooltips?: boolean;
-  isHighFps: boolean;
-  isLowFps: boolean;
+  slowerIcon: React.ReactNode;
+  fasterIcon: React.ReactNode;
 }
 
 const SpeedControl: React.FC<SpeedControlProps> = ({
   onSlower,
   onFaster,
   enableTooltips,
-  isHighFps,
-  isLowFps,
+  slowerIcon,
+  fasterIcon,
 }) => {
   const { t } = useTranslation();
   const handleSlower = () => {
@@ -460,7 +474,7 @@ const SpeedControl: React.FC<SpeedControlProps> = ({
         onClick={handleSlower}
         data-tooltip-id={enableTooltips ? "player-tray-slower" : undefined}
       >
-        {isLowFps ? <LuSnail size={30} /> : <LuTurtle size={30} />}
+        {slowerIcon}
       </IconButton>
       {enableTooltips && (
         <Tooltip
@@ -475,11 +489,7 @@ const SpeedControl: React.FC<SpeedControlProps> = ({
         onClick={handleFaster}
         data-tooltip-id={enableTooltips ? "player-tray-faster" : undefined}
       >
-        {isHighFps ? (
-          <FlyingBird width={30} height={30} />
-        ) : (
-          <LuRabbit size={30} />
-        )}
+        {fasterIcon}
       </IconButton>
       {enableTooltips && (
         <Tooltip

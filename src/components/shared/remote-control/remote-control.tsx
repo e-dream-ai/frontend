@@ -166,6 +166,20 @@ export const RemoteControl: React.FC = () => {
       : webShuffleMode;
   const isHighFps = playbackFps > 32;
   const isLowFps = playbackFps > 0 && playbackFps < 1.5;
+  const slowerIcon = isHighFps ? (
+    <LuRabbit size={30} />
+  ) : isLowFps ? (
+    <LuSnail size={30} />
+  ) : (
+    <LuTurtle size={30} />
+  );
+  const fasterIcon = isHighFps ? (
+    <FlyingBird width={30} height={30} />
+  ) : isLowFps ? (
+    <LuTurtle size={30} />
+  ) : (
+    <LuRabbit size={30} />
+  );
 
   return (
     <RemoteControlContainer>
@@ -374,7 +388,7 @@ export const RemoteControl: React.FC = () => {
             data-tooltip-id={isDesktop ? "remote-slower" : undefined}
             disabled={!isAnyClientActive}
           >
-            {isLowFps ? <LuSnail size={30} /> : <LuTurtle size={30} />}
+            {slowerIcon}
           </IconButton>
           {isDesktop && (
             <Tooltip
@@ -390,11 +404,7 @@ export const RemoteControl: React.FC = () => {
             data-tooltip-id={isDesktop ? "remote-faster" : undefined}
             disabled={!isAnyClientActive}
           >
-            {isHighFps ? (
-              <FlyingBird width={30} height={30} />
-            ) : (
-              <LuRabbit size={30} />
-            )}
+            {fasterIcon}
           </IconButton>
           {isDesktop && (
             <Tooltip
