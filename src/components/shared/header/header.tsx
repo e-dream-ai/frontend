@@ -42,7 +42,7 @@ export const Header: React.FC = () => {
     <HeaderContainer>
       <MotionStyledHeader
         flexDirection="row"
-        flexWrap={["wrap", "nowrap", "nowrap", "nowrap"]}
+        flexWrap={["wrap", "wrap", "nowrap", "nowrap"]}
         justifyContent="space-between"
         style={{
           paddingTop: headerPaddingTop as unknown as string,
@@ -104,7 +104,7 @@ export const Header: React.FC = () => {
         <NavContainer
           order={[2, 2, 2, 2]}
           justifyContent="space-between"
-          display={["none", "none", "flex", "flex"]}
+          display={["flex", "flex", "flex", "flex"]}
         >
           <Nav>
             <NavList />
