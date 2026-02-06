@@ -33,6 +33,7 @@ import PublicRoute from "@/routes/public-route";
 import PlaylistsFeedPage from "@/components/pages/playlist-feed/playlist-feed";
 import PlaygroundPage from "@/components/pages/playground/playground.page";
 import NotFoundPage from "@/components/pages/not-found/not-found.page";
+import UnsubscribePage from "@/components/pages/unsubscribe/unsubscribe.page";
 import { useEffect } from "react";
 import ReactGA from "react-ga4";
 import { PageContainer } from "@/components/shared/container/page-container";
@@ -340,6 +341,10 @@ export const router = createBrowserRouter([
             <SignupPage />
           </PublicRoute>
         ),
+      },
+      {
+        path: ROUTES.UNSUBSCRIBE,
+        element: <UnsubscribePage />,
       },
       {
         path: ROUTES.ABOUT,

@@ -22,6 +22,7 @@ export const ROUTES = {
   LEARN_MORE: "/learn-more",
   ABOUT: "/about",
   INSTALL: "/install",
+  UNSUBSCRIBE: "/unsubscribe",
   TERMS_OF_SERVICE: "/tos",
   PLAYGROUND: "/playground",
 };

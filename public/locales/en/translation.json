@@ -48,6 +48,16 @@
       "message": "Page not found",
       "go_home": "go home"
     },
+    "unsubscribe": {
+      "title": "Unsubscribe from marketing emails",
+      "missing_token_message": "This unsubscribe link is invalid or incomplete.",
+      "confirm_message": "Confirm if you want to stop receiving marketing emails.",
+      "confirm_button": "Unsubscribe",
+      "success_message": "You have been unsubscribed from marketing emails.",
+      "already_message": "You are already unsubscribed from marketing emails.",
+      "error_message": "Unable to process unsubscribe request.",
+      "go_home": "go home"
+    },
     "playground": {
       "title": "Playground",
       "client": "Client",
