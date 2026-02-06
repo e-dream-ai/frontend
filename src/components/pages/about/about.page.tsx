@@ -1,4 +1,4 @@
-import { AnchorLink, Button, Column, Row } from "@/components/shared";
+import { AnchorLink, Button, Row } from "@/components/shared";
 import { Card } from "@/components/shared/card/card";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
@@ -10,19 +10,21 @@ import styled from "styled-components";
 
 const SECTION_ID = "about";
 
-const ActionColumn = styled(Column)`
-  flex: 0 0 100%;
-
-  @media (min-width: 720px) {
-    flex: 0 0 33.333%;
-  }
-`;
-
 const ActionRow = styled(Row)`
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+
+  & > *:nth-child(3) {
+    grid-column: 1 / -1;
+  }
 
   @media (min-width: 720px) {
-    flex-wrap: nowrap;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    & > *:nth-child(3) {
+      grid-column: auto;
+    }
   }
 `;
 
@@ -48,48 +50,39 @@ export const AboutPage: React.FC = () => {
         <Row justifyContent="space-between" separator />
 
         <ActionRow>
-          <ActionColumn pr={[0, 1, 2]}>
-            <Card
-              style={{ display: "flex" }}
-              flex="auto"
-              mt={3}
-              px={[2, 3, 4]}
-              py={4}
-              justifyContent="center"
-            >
-              <Button buttonType="secondary" onClick={handleCreateAccount}>
-                Create Account
-              </Button>
-            </Card>
-          </ActionColumn>
-          <ActionColumn pr={[0, 1, 2]}>
-            <Card
-              style={{ display: "flex" }}
-              flex="auto"
-              mt={3}
-              px={[2, 3, 4]}
-              py={4}
-              justifyContent="center"
-            >
-              <Button buttonType="secondary" onClick={handleSignIn}>
-                {t("header.login")}
-              </Button>
-            </Card>
-          </ActionColumn>
-          <ActionColumn pr={[0, 1, 2]}>
-            <Card
-              style={{ display: "flex" }}
-              flex="auto"
-              mt={3}
-              px={[2, 3, 4]}
-              py={4}
-              justifyContent="center"
-            >
-              <Button buttonType="secondary" onClick={handleInstallApp}>
-                Install App
-              </Button>
-            </Card>
-          </ActionColumn>
+          <Card
+            style={{ display: "flex" }}
+            flex="auto"
+            px={[2, 3, 4]}
+            py={4}
+            justifyContent="center"
+          >
+            <Button buttonType="secondary" onClick={handleCreateAccount}>
+              Create Account
+            </Button>
+          </Card>
+          <Card
+            style={{ display: "flex" }}
+            flex="auto"
+            px={[2, 3, 4]}
+            py={4}
+            justifyContent="center"
+          >
+            <Button buttonType="secondary" onClick={handleSignIn}>
+              {t("header.login")}
+            </Button>
+          </Card>
+          <Card
+            style={{ display: "flex" }}
+            flex="auto"
+            px={[2, 3, 4]}
+            py={4}
+            justifyContent="center"
+          >
+            <Button buttonType="secondary" onClick={handleInstallApp}>
+              Install App
+            </Button>
+          </Card>
         </ActionRow>
 
         <Text>
