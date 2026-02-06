@@ -22,16 +22,21 @@ export const AnchorIcon = styled.span`
   }
 `;
 
-export const StyledHeaderProfile = styled.div<{ $isGuest?: boolean }>`
+export const StyledHeaderProfile = styled.div`
   font-family: "Comfortaa", sans-serif;
   text-transform: lowercase;
   display: flex;
   justify-content: flex-end;
   flex-direction: row;
   text-wrap: nowrap;
+`;
 
-  @media (max-width: 35em) {
-    display: ${(props) => (props.$isGuest ? "none" : "flex")};
+export const DesktopOnlyAuth = styled.div`
+  display: inline-flex;
+  align-items: center;
+
+  @media (max-width: ${DEVICES.MOBILE_S}) {
+    display: none;
   }
 `;
 

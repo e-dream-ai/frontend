@@ -85,16 +85,6 @@ const createMenuRoutes = (user?: User | null, isCreator?: boolean) => {
   // items to show to guests
   const GUEST_ROUTES = [
     {
-      title: "header.signup",
-      route: ROUTES.SIGNUP,
-      display: "block",
-    },
-    {
-      title: "header.login",
-      route: ROUTES.SIGNIN,
-      display: "block",
-    },
-    {
       title: "header.about",
       route: ROUTES.ABOUT,
       display: "block",

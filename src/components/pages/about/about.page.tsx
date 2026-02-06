@@ -3,11 +3,19 @@ import { Card } from "@/components/shared/card/card";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import Text from "@/components/shared/text/text";
+import { DEVICES } from "@/constants/devices.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import router from "@/routes/router";
 import { useTranslation } from "react-i18next";
+import styled from "styled-components";
 
 const SECTION_ID = "about";
+
+const MobileOnlyColumn = styled(Column)`
+  @media (min-width: calc(${DEVICES.MOBILE_S} + 0.0625em)) {
+    display: none;
+  }
+`;
 
 export const AboutPage: React.FC = () => {
   const { t } = useTranslation();
@@ -18,6 +26,10 @@ export const AboutPage: React.FC = () => {
 
   const handleInstallApp = () => {
     router.navigate(ROUTES.INSTALL);
+  };
+
+  const handleSignIn = () => {
+    router.navigate(ROUTES.SIGNIN);
   };
 
   return (
@@ -47,6 +59,26 @@ export const AboutPage: React.FC = () => {
               </Button>
             </Card>
           </Column>
+          <MobileOnlyColumn
+            flex={[
+              "0 0 100%", // full width on small screens
+              "0 0 50%", // half width on medium screens and up
+            ]}
+            pr={[0, 1, 2]}
+          >
+            <Card
+              style={{ display: "flex" }}
+              flex="auto"
+              mt={3}
+              px={[2, 3, 4]}
+              py={4}
+              justifyContent="center"
+            >
+              <Button buttonType="secondary" onClick={handleSignIn}>
+                {t("header.login")}
+              </Button>
+            </Card>
+          </MobileOnlyColumn>
           <Column
             flex={[
               "0 0 100%", // full width on small screens
