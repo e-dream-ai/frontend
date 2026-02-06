@@ -35,7 +35,7 @@ export const DesktopOnlyAuth = styled.div`
   display: inline-flex;
   align-items: center;
 
-  @media (max-width: ${DEVICES.MOBILE_S}) {
+  @media (max-width: ${DEVICES.TABLET}) {
     display: none;
   }
 `;

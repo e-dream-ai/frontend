@@ -11,9 +11,20 @@ import styled from "styled-components";
 
 const SECTION_ID = "about";
 
-const MobileOnlyColumn = styled(Column)`
-  @media (min-width: calc(${DEVICES.MOBILE_S} + 0.0625em)) {
-    display: none;
+const ActionColumn = styled(Column)`
+  flex: 0 0 100%;
+
+
+  @media (min-width: 720px) {
+    flex: 0 0 33.333%;
+  }
+`;
+
+const ActionRow = styled(Row)`
+  flex-wrap: wrap;
+
+  @media (min-width: 720px) {
+    flex-wrap: nowrap;
   }
 `;
 
@@ -38,14 +49,8 @@ export const AboutPage: React.FC = () => {
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
 
-        <Row flexWrap={["wrap", "nowrap", "nowrap"]}>
-          <Column
-            flex={[
-              "0 0 100%", // full width on small screens
-              "0 0 50%", // half width on medium screens and up
-            ]}
-            pr={[0, 1, 2]}
-          >
+        <ActionRow>
+          <ActionColumn pr={[0, 1, 2]}>
             <Card
               style={{ display: "flex" }}
               flex="auto"
@@ -58,14 +63,8 @@ export const AboutPage: React.FC = () => {
                 Create Account
               </Button>
             </Card>
-          </Column>
-          <MobileOnlyColumn
-            flex={[
-              "0 0 100%", // full width on small screens
-              "0 0 50%", // half width on medium screens and up
-            ]}
-            pr={[0, 1, 2]}
-          >
+          </ActionColumn>
+          <ActionColumn pr={[0, 1, 2]}>
             <Card
               style={{ display: "flex" }}
               flex="auto"
@@ -78,14 +77,8 @@ export const AboutPage: React.FC = () => {
                 {t("header.login")}
               </Button>
             </Card>
-          </MobileOnlyColumn>
-          <Column
-            flex={[
-              "0 0 100%", // full width on small screens
-              "0 0 50%", // half width on medium screens and up
-            ]}
-            pr={[0, 1, 2]}
-          >
+          </ActionColumn>
+          <ActionColumn pr={[0, 1, 2]}>
             <Card
               style={{ display: "flex" }}
               flex="auto"
@@ -98,8 +91,8 @@ export const AboutPage: React.FC = () => {
                 Install App
               </Button>
             </Card>
-          </Column>
-        </Row>
+          </ActionColumn>
+        </ActionRow>
 
         <Text>
           <p>
