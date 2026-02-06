@@ -13,7 +13,7 @@ export const PublicRoute: React.FC<{
     if (location.pathname === ROUTES.MAGIC && state?.isEmailVerification) {
       return <Navigate to={ROUTES.INSTALL} replace />;
     }
-    return <Navigate to={ROUTES.FEED} replace />;
+    return <Navigate to={ROUTES.PLAYLISTS} replace />;
   }
 
   if (isLoading) {

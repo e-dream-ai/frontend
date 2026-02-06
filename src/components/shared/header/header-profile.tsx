@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
 import {
   AnchorIcon,
+  DesktopOnlyAuth,
   Divider,
   StyledHeaderProfile,
 } from "./header-profile.styled";
@@ -83,19 +84,21 @@ export const HeaderProfile: React.FC = () => {
           </AnchorLink>
         ) : (
           <>
-            <AuthAnchor
-              key="signup"
-              text={t("header.signup")}
-              icon={<FontAwesomeIcon icon={faPencil} />}
-              href={ROUTES.SIGNUP}
-            />
-            <Divider>•</Divider>
-            <AuthAnchor
-              key="signin"
-              text={t("header.login")}
-              icon={<FontAwesomeIcon icon={faLock} />}
-              href={ROUTES.SIGNIN}
-            />
+            <DesktopOnlyAuth>
+              <AuthAnchor
+                key="signup"
+                text={t("header.signup")}
+                icon={<FontAwesomeIcon icon={faPencil} />}
+                href={ROUTES.SIGNUP}
+              />
+              <Divider>•</Divider>
+              <AuthAnchor
+                key="signin"
+                text={t("header.login")}
+                icon={<FontAwesomeIcon icon={faLock} />}
+                href={ROUTES.SIGNIN}
+              />
+            </DesktopOnlyAuth>
           </>
         )}
       </StyledHeaderProfile>

@@ -31,6 +31,15 @@ export const StyledHeaderProfile = styled.div`
   text-wrap: nowrap;
 `;
 
+export const DesktopOnlyAuth = styled.div`
+  display: inline-flex;
+  align-items: center;
+
+  @media (max-width: ${DEVICES.TABLET}) {
+    display: none;
+  }
+`;
+
 export const HelloMessageHeader = styled.span`
   margin-right: 0.2rem;
   color: ${(props) => props.theme.textPrimaryColor};

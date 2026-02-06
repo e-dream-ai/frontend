@@ -1,4 +1,4 @@
-import { AnchorLink, Button, Column, Row } from "@/components/shared";
+import { AnchorLink, Button, Row } from "@/components/shared";
 import { Card } from "@/components/shared/card/card";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
@@ -6,8 +6,27 @@ import Text from "@/components/shared/text/text";
 import { ROUTES } from "@/constants/routes.constants";
 import router from "@/routes/router";
 import { useTranslation } from "react-i18next";
+import styled from "styled-components";
 
 const SECTION_ID = "about";
+
+const ActionRow = styled(Row)`
+  display: grid;
+  grid-template-columns: minmax(0, 13fr) minmax(0, 7fr);
+  gap: 1rem;
+
+  & > *:nth-child(3) {
+    grid-column: 1 / -1;
+  }
+
+  @media (min-width: 720px) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+
+    & > *:nth-child(3) {
+      grid-column: auto;
+    }
+  }
+`;
 
 export const AboutPage: React.FC = () => {
   const { t } = useTranslation();
@@ -20,54 +39,51 @@ export const AboutPage: React.FC = () => {
     router.navigate(ROUTES.INSTALL);
   };
 
+  const handleSignIn = () => {
+    router.navigate(ROUTES.SIGNIN);
+  };
+
   return (
     <Container>
       <h2>{t("page.about.title")}</h2>
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
 
-        <Row flexWrap={["wrap", "nowrap", "nowrap"]}>
-          <Column
-            flex={[
-              "0 0 100%", // full width on small screens
-              "0 0 50%", // half width on medium screens and up
-            ]}
-            pr={[0, 1, 2]}
+        <ActionRow>
+          <Card
+            style={{ display: "flex" }}
+            flex="auto"
+            px={[2, 3, 4]}
+            py={4}
+            justifyContent="center"
           >
-            <Card
-              style={{ display: "flex" }}
-              flex="auto"
-              mt={3}
-              px={[2, 3, 4]}
-              py={4}
-              justifyContent="center"
-            >
-              <Button buttonType="secondary" onClick={handleCreateAccount}>
-                Create Account
-              </Button>
-            </Card>
-          </Column>
-          <Column
-            flex={[
-              "0 0 100%", // full width on small screens
-              "0 0 50%", // half width on medium screens and up
-            ]}
-            pr={[0, 1, 2]}
+            <Button buttonType="secondary" onClick={handleCreateAccount}>
+              Create Account
+            </Button>
+          </Card>
+          <Card
+            style={{ display: "flex" }}
+            flex="auto"
+            px={[2, 3, 4]}
+            py={4}
+            justifyContent="center"
           >
-            <Card
-              style={{ display: "flex" }}
-              flex="auto"
-              mt={3}
-              px={[2, 3, 4]}
-              py={4}
-              justifyContent="center"
-            >
-              <Button buttonType="secondary" onClick={handleInstallApp}>
-                Install App
-              </Button>
-            </Card>
-          </Column>
-        </Row>
+            <Button buttonType="secondary" onClick={handleSignIn}>
+              {t("header.login")}
+            </Button>
+          </Card>
+          <Card
+            style={{ display: "flex" }}
+            flex="auto"
+            px={[2, 3, 4]}
+            py={4}
+            justifyContent="center"
+          >
+            <Button buttonType="secondary" onClick={handleInstallApp}>
+              Install App
+            </Button>
+          </Card>
+        </ActionRow>
 
         <Text>
           <p>
