@@ -41,7 +41,9 @@ export const UnsubscribePage: React.FC = () => {
 
   const getErrorMessage = (error: unknown): string => {
     if (axios.isAxiosError(error)) {
-      const axiosError = error as AxiosError<ApiResponse<UnsubscribeMarketingResponse>>;
+      const axiosError = error as AxiosError<
+        ApiResponse<UnsubscribeMarketingResponse>
+      >;
       return (
         axiosError.response?.data?.message ||
         axiosError.message ||
@@ -69,7 +71,9 @@ export const UnsubscribePage: React.FC = () => {
 
       if (!response.success) {
         setState("error");
-        setErrorMessage(response.message ?? t("page.unsubscribe.error_message"));
+        setErrorMessage(
+          response.message ?? t("page.unsubscribe.error_message"),
+        );
         return;
       }
 
