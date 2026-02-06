@@ -3,7 +3,6 @@ import { Card } from "@/components/shared/card/card";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
 import Text from "@/components/shared/text/text";
-import { DEVICES } from "@/constants/devices.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import router from "@/routes/router";
 import { useTranslation } from "react-i18next";
