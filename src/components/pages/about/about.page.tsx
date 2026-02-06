@@ -14,7 +14,6 @@ const SECTION_ID = "about";
 const ActionColumn = styled(Column)`
   flex: 0 0 100%;
 
-
   @media (min-width: 720px) {
     flex: 0 0 33.333%;
   }
