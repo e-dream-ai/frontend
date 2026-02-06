@@ -159,8 +159,6 @@ export const ProfileContainer = styled.div<
   flex-shrink: 0;
 
   button {
-    width: 55px;
-    height: 55px;
     font-size: 2rem;
   }
   ${order}

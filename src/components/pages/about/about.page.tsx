@@ -12,7 +12,7 @@ const SECTION_ID = "about";
 
 const ActionRow = styled(Row)`
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 13fr) minmax(0, 7fr);
   gap: 1rem;
 
   & > *:nth-child(3) {
