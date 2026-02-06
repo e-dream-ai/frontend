@@ -107,7 +107,7 @@ export const StyledButton = styled.button<
     transparent?: boolean;
     textTransform?: TextTransform;
   } & SpaceProps &
-  TypographyProps
+    TypographyProps
 >`
   display: inline-flex;
   height: fit-content;
