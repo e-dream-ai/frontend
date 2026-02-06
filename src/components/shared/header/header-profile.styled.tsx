@@ -22,13 +22,17 @@ export const AnchorIcon = styled.span`
   }
 `;
 
-export const StyledHeaderProfile = styled.div`
+export const StyledHeaderProfile = styled.div<{ $isGuest?: boolean }>`
   font-family: "Comfortaa", sans-serif;
   text-transform: lowercase;
   display: flex;
   justify-content: flex-end;
   flex-direction: row;
   text-wrap: nowrap;
+
+  @media (max-width: 35em) {
+    display: ${(props) => (props.$isGuest ? "none" : "flex")};
+  }
 `;
 
 export const HelloMessageHeader = styled.span`

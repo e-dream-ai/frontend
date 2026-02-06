@@ -54,7 +54,7 @@ export const Header: React.FC = () => {
           order={[1, 1, 4, 4]}
           flexDirection="row"
           alignItems="center"
-          display={["flex", "none", "none", "none"]}
+          display={["flex", "flex", "none", "none"]}
         >
           <LogoContainer>
             <LogoAnchor to={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
@@ -77,14 +77,14 @@ export const Header: React.FC = () => {
             <HeaderProfile />
             <Row
               m={0}
-              display={user ? "flex" : ["flex", "none", "none", "none"]}
+              display={user ? "flex" : ["flex", "flex", "none", "none"]}
             >
               <KebabMenu />
             </Row>
           </ProfileContainer>
         </LogoProfileWrapper>
 
-        <LogoContainer order={1} display={["none", "flex", "flex", "flex"]}>
+        <LogoContainer order={1} display={["none", "none", "flex", "flex"]}>
           <LogoAnchor to={user ? ROUTES.REMOTE_CONTROL : ROUTES.ROOT}>
             <MotionLogoIcon
               src="/images/edream-logo-512x512.png"
@@ -104,7 +104,7 @@ export const Header: React.FC = () => {
         <NavContainer
           order={[2, 2, 2, 2]}
           justifyContent="space-between"
-          display={user ? "flex" : ["none", "flex", "flex", "flex"]}
+          display={["none", "none", "flex", "flex"]}
         >
           <Nav>
             <NavList />
@@ -114,10 +114,17 @@ export const Header: React.FC = () => {
         <ProfileContainer
           order={[3, 3, 3, 3]}
           ml={user ? "0rem" : "1rem"}
-          display={["none", "flex", "flex", "flex"]}
+          display={["none", "none", "flex", "flex"]}
         >
           <HeaderProfile />
-          <Row m={0} display={user ? "flex" : ["flex", "none", "none", "none"]}>
+          <Row
+            m={0}
+            display={
+              user
+                ? ["none", "none", "flex", "flex"]
+                : ["flex", "flex", "none", "none"]
+            }
+          >
             <KebabMenu />
           </Row>
         </ProfileContainer>

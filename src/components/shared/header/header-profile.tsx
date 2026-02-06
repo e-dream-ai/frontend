@@ -55,7 +55,7 @@ export const HeaderProfile: React.FC = () => {
 
   return (
     <Fragment>
-      <StyledHeaderProfile>
+      <StyledHeaderProfile $isGuest={!user}>
         {user ? (
           <AnchorLink to={ROUTES.MY_PROFILE}>
             <HeaderProfileWrapper>
