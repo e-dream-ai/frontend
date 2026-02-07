@@ -5,7 +5,7 @@ export const StyledContainer = styled.div`
   display: flex;
   flex: auto;
   justify-content: center;
-  width: 100vw;
+  width: 100%;
   padding: 1rem;
 
   @media (max-width: ${DEVICES.TABLET}) {
@@ -16,7 +16,7 @@ export const StyledContainer = styled.div`
 const StyledChildren = styled.div`
   display: flex;
   flex-flow: column;
-  width: inherit;
+  width: 100%;
   max-width: 1024px;
   background-color: ${(props) => props.theme.colorBackgroundTertiary};
 

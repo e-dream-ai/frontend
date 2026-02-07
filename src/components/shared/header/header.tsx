@@ -14,7 +14,9 @@ import { KebabMenu } from "./kebab-menu";
 import { ROUTES } from "@/constants/routes.constants";
 import { NavList } from "./menu-header";
 import useAuth from "@/hooks/useAuth";
+import { useWindowSize } from "@/hooks/useWindowSize";
 import Row from "../row/row";
+import { DEVICES_ON_PX } from "@/constants/devices.constants";
 import StyledHeaderBase, {
   LogoIcon as LogoIconBase,
   HeaderTitle as HeaderTitleBase,
@@ -23,14 +25,34 @@ import StyledHeaderBase, {
 const MotionStyledHeader = motion.create(StyledHeaderBase);
 const MotionLogoIcon = motion.create(LogoIconBase);
 const MotionHeaderTitle = motion.create(HeaderTitleBase);
+const EXPANDED_LOGO_HEIGHT = "4rem";
+const SCROLLED_LOGO_HEIGHT = "2.5rem";
+const EXPANDED_TITLE_FONT_SIZE = "2.2rem";
+const SCROLLED_TITLE_FONT_SIZE = "1.6rem";
 
 export const Header: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { width } = useWindowSize();
   const { scrollY } = useScroll();
+  const isMobileSOrBelow =
+    (width ?? Number.POSITIVE_INFINITY) <= DEVICES_ON_PX.MOBILE_S;
 
-  const logoHeight = useTransform(scrollY, [0, 150], ["4rem", "2.5rem"]);
-  const titleFontSize = useTransform(scrollY, [0, 150], ["2.2rem", "1.6rem"]);
+  const logoHeight = useTransform(
+    scrollY,
+    [0, 150],
+    isMobileSOrBelow
+      ? [SCROLLED_LOGO_HEIGHT, SCROLLED_LOGO_HEIGHT]
+      : [EXPANDED_LOGO_HEIGHT, SCROLLED_LOGO_HEIGHT],
+  );
+  const titleFontSize = useTransform(
+    scrollY,
+    [0, 150],
+    isMobileSOrBelow
+      ? [SCROLLED_TITLE_FONT_SIZE, SCROLLED_TITLE_FONT_SIZE]
+      : [EXPANDED_TITLE_FONT_SIZE, SCROLLED_TITLE_FONT_SIZE],
+  );
+
   const headerPaddingTop = useTransform(scrollY, [0, 150], ["1rem", "0.5rem"]);
   const headerPaddingBottom = useTransform(
     scrollY,
@@ -42,7 +64,7 @@ export const Header: React.FC = () => {
     <HeaderContainer>
       <MotionStyledHeader
         flexDirection="row"
-        flexWrap={["wrap", "nowrap", "nowrap", "nowrap"]}
+        flexWrap={["wrap", "wrap", "nowrap", "nowrap"]}
         justifyContent="space-between"
         style={{
           paddingTop: headerPaddingTop as unknown as string,
@@ -77,6 +99,7 @@ export const Header: React.FC = () => {
             <HeaderProfile />
             <Row
               m={0}
+              ml="0.6rem"
               display={user ? "flex" : ["flex", "flex", "none", "none"]}
             >
               <KebabMenu />
@@ -104,7 +127,7 @@ export const Header: React.FC = () => {
         <NavContainer
           order={[2, 2, 2, 2]}
           justifyContent="space-between"
-          display={["none", "none", "flex", "flex"]}
+          display={["flex", "flex", "flex", "flex"]}
         >
           <Nav>
             <NavList />
@@ -119,10 +142,11 @@ export const Header: React.FC = () => {
           <HeaderProfile />
           <Row
             m={0}
+            ml="0.4rem"
             display={
               user
                 ? ["none", "none", "flex", "flex"]
-                : ["flex", "flex", "none", "none"]
+                : ["flex", "flex", "flex", "none"]
             }
           >
             <KebabMenu />
