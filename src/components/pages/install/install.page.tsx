@@ -10,10 +10,21 @@ import useUserAgent from "@/hooks/useUserAgent";
 import { APP_VERSION } from "@/version";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import styled from "styled-components";
 
 const SECTION_ID = "install";
 const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
 const APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.zip`;
+
+const ResponsiveDownloadButton = styled(Button)`
+  max-width: 100%;
+  text-wrap: wrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.2;
+  height: 100%;
+`;
 
 const InstallSection = () => {
   const { t } = useTranslation();
@@ -44,9 +55,12 @@ const InstallSection = () => {
         <Row flexWrap={["wrap", "nowrap", "nowrap"]}>
           <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
             <Row justifyContent="center">
-              <Button buttonType="secondary" onClick={handleDownloadApp}>
+              <ResponsiveDownloadButton
+                buttonType="secondary"
+                onClick={handleDownloadApp}
+              >
                 Download app and screen saver
-              </Button>
+              </ResponsiveDownloadButton>
             </Row>
             <Row>
               <Text>
