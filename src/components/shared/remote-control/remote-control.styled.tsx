@@ -1,6 +1,7 @@
 import { DEVICES } from "@/constants/devices.constants";
 import styled, { keyframes } from "styled-components";
 import { Text } from "@/components/shared";
+import { Link } from "react-router-dom";
 
 export const RemoteControlContainer = styled.div`
   display: flex;
@@ -235,4 +236,17 @@ export const TrackTitle = styled(Text)`
 export const TrackMeta = styled(Text)`
   font-size: 1rem;
   color: ${(p) => p.theme.textPrimaryColor};
+`;
+
+export const DreamArtworkLink = styled(Link)`
+  display: inline-flex;
+  text-decoration: none;
+`;
+
+export const DreamInfoLink = styled(Link)`
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  text-decoration: none;
+  color: inherit;
 `;
