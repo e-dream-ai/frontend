@@ -4,7 +4,7 @@
   "type": "module",
   "private": true,
   "dependencies": {
-    "@bugsnag/browser-performance": "^2.2.0",
+    "@bugsnag/browser-performance": "^3.2.0",
     "@bugsnag/js": "^8.6.0",
     "@bugsnag/plugin-react": "^8.6.0",
     "@codemirror/lang-json": "^6.0.2",
