@@ -25,6 +25,8 @@ import {
   SkeletonArtwork,
   SkeletonTitle,
   SkeletonMeta,
+  DreamArtworkLink,
+  DreamInfoLink,
 } from "./remote-control.styled";
 import { onNewRemoteControlEvent } from "@/utils/socket.util";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
@@ -54,6 +56,7 @@ import { ControlContainerMobile } from "./control-container-mobile";
 import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 import useAuth from "@/hooks/useAuth";
 import { usePlaybackStore } from "@/stores/playback.store";
+import { ROUTES } from "@/constants/routes.constants";
 
 const formatTimecode = (s: number): string => {
   if (!Number.isFinite(s) || s < 0) return "--:--.--";
@@ -115,6 +118,9 @@ export const RemoteControl: React.FC = () => {
   const title = currentDream?.name ?? t("components.current_dream.title");
   const artist = currentDream?.user?.name ?? t("common.unknown_author");
   const thumbnail = currentDream?.thumbnail;
+  const currentDreamRoute = currentDream?.uuid
+    ? `${ROUTES.VIEW_DREAM}/${currentDream.uuid}`
+    : undefined;
 
   const sendMessage = (event: RemoteControlEvent) => () => {
     emit(NEW_REMOTE_CONTROL_EVENT, {
@@ -194,18 +200,39 @@ export const RemoteControl: React.FC = () => {
           </>
         ) : (
           <>
-            <Artwork
-              key={`${currentDream?.id ?? ""}-${
-                currentDream?.updated_at ?? ""
-              }`}
-              src={thumbnail}
-              alt={title}
-            />
+            {currentDreamRoute ? (
+              <DreamArtworkLink to={currentDreamRoute}>
+                <Artwork
+                  key={`${currentDream?.id ?? ""}-${
+                    currentDream?.updated_at ?? ""
+                  }`}
+                  src={thumbnail}
+                  alt={title}
+                />
+              </DreamArtworkLink>
+            ) : (
+              <Artwork
+                key={`${currentDream?.id ?? ""}-${
+                  currentDream?.updated_at ?? ""
+                }`}
+                src={thumbnail}
+                alt={title}
+              />
+            )}
             <TrackInfo>
               <TrackInfoRow>
                 <TrackInfoLeft>
-                  <TrackTitle>{title}</TrackTitle>
-                  <TrackMeta>{artist}</TrackMeta>
+                  {currentDreamRoute ? (
+                    <DreamInfoLink to={currentDreamRoute}>
+                      <TrackTitle>{title}</TrackTitle>
+                      <TrackMeta>{artist}</TrackMeta>
+                    </DreamInfoLink>
+                  ) : (
+                    <>
+                      <TrackTitle>{title}</TrackTitle>
+                      <TrackMeta>{artist}</TrackMeta>
+                    </>
+                  )}
                 </TrackInfoLeft>
                 {isDesktopActive && (
                   <TrackInfoRight>

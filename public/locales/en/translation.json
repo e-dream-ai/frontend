@@ -20,7 +20,8 @@
   },
   "footer": {
     "license": "License / Re-use policy",
-    "terms_of_service": "Terms of Service"
+    "terms_of_service": "Terms of Service",
+    "help": "Help"
   },
   "common": {
     "unknown_author": "Unknown author"

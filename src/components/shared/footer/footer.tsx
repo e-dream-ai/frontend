@@ -105,10 +105,15 @@ export const Footer: React.FC = () => {
   return (
     <StyledFooter id="footer">
       <FooterRow>
-        <FooterCol flow="column">
+        <FooterCol>
           <div>
             <AnchorLink type="secondary" to={ROUTES.TERMS_OF_SERVICE}>
               {t("footer.terms_of_service")}
+            </AnchorLink>
+          </div>
+          <div>
+            <AnchorLink type="secondary" to={ROUTES.HELP}>
+              {t("footer.help")}
             </AnchorLink>
           </div>
         </FooterCol>
