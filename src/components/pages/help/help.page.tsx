@@ -8,10 +8,13 @@ import router from "@/routes/router";
 import styled from "styled-components";
 
 const SECTION_ID = "help";
-const HELP_VIDEO_URL = "https://www.youtube.com/embed/yHrwo4asw4Y?si=SFBEZNR6_ECSxfgb";
+const HELP_VIDEO_URL =
+  "https://www.youtube.com/embed/yHrwo4asw4Y?si=SFBEZNR6_ECSxfgb";
 const DOCS_URLS = {
-  userManual: "https://docs.google.com/document/d/e/2PACX-1vRK77s1OWASmJ_r8ZZXkFzNxpSxoqcOVn2-0shwXZquzxsWfzO86oeH_9Q09IVmb5gaUnuHZQP0ZihG/pub",
-  creatorsGuide: "https://docs.google.com/document/u/1/d/e/2PACX-1vTQnJMCLOqenrCADZyrXxgBTahQ4sPyRRj7GrhMEu_DkmScRRGOjRJQmd2rkH1-_K0WRjfGYd04rhJB/pub",
+  userManual:
+    "https://docs.google.com/document/d/e/2PACX-1vRK77s1OWASmJ_r8ZZXkFzNxpSxoqcOVn2-0shwXZquzxsWfzO86oeH_9Q09IVmb5gaUnuHZQP0ZihG/pub",
+  creatorsGuide:
+    "https://docs.google.com/document/u/1/d/e/2PACX-1vTQnJMCLOqenrCADZyrXxgBTahQ4sPyRRj7GrhMEu_DkmScRRGOjRJQmd2rkH1-_K0WRjfGYd04rhJB/pub",
   pythonAPI: "https://github.com/e-dream-ai/python-api",
 } as const;
 
@@ -113,7 +116,9 @@ export const HelpPage: React.FC = () => {
           <HelpCard flex="auto">
             <CardTitle>Quick tips</CardTitle>
             <TipsList>
-              <li>Use AirPlay to connect your laptop to a TV without cables.</li>
+              <li>
+                Use AirPlay to connect your laptop to a TV without cables.
+              </li>
               <li>
                 In the settings of the app, increase the disk cache to get a
                 better experience.
@@ -121,15 +126,27 @@ export const HelpPage: React.FC = () => {
             </TipsList>
             <CardText>
               See the{" "}
-              <Anchor target="_blank" rel="noreferrer" href={DOCS_URLS.userManual}>
+              <Anchor
+                target="_blank"
+                rel="noreferrer"
+                href={DOCS_URLS.userManual}
+              >
                 Users&apos; Manual
               </Anchor>{" "}
               for explanation of the app and website, the{" "}
-              <Anchor target="_blank" rel="noreferrer" href={DOCS_URLS.creatorsGuide}>
+              <Anchor
+                target="_blank"
+                rel="noreferrer"
+                href={DOCS_URLS.creatorsGuide}
+              >
                 Creators&apos; Guide
               </Anchor>{" "}
               for how to make your own dreams, and the{" "}
-              <Anchor target="_blank" rel="noreferrer" href={DOCS_URLS.pythonAPI}>
+              <Anchor
+                target="_blank"
+                rel="noreferrer"
+                href={DOCS_URLS.pythonAPI}
+              >
                 Python API
               </Anchor>{" "}
               for how to connect your own code. Or watch the following
@@ -153,9 +170,9 @@ export const HelpPage: React.FC = () => {
           <HelpCard flex="auto">
             <CardTitle>Remote control</CardTitle>
             <CardText>
-              Use the A and D keys to adjust the speed of playback. Press F1
-              to see more keyboard controls. You can also interact with the
-              remote control installed on your phone, or from a web browser:
+              Use the A and D keys to adjust the speed of playback. Press F1 to
+              see more keyboard controls. You can also interact with the remote
+              control installed on your phone, or from a web browser:
               <RemoteImage
                 src="/images/rc.webp"
                 alt="Remote control screenshot"
@@ -179,8 +196,8 @@ export const HelpPage: React.FC = () => {
               <PlaylistIconBubble>
                 <PlaylistIcon />
               </PlaylistIconBubble>
-              Change your dreams by selecting a playlist from the browser.
-              Click the button on a thumbnail to start that playlist.
+              Change your dreams by selecting a playlist from the browser. Click
+              the button on a thumbnail to start that playlist.
             </CardText>
             <BottomButtonRow>
               <Button
