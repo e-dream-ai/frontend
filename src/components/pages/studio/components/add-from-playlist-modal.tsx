@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { axiosClient } from "@/client/axios.client";
 import useAuth from "@/hooks/useAuth";
 import { useStudioStore } from "@/stores/studio.store";
@@ -33,8 +33,10 @@ interface PlaylistItem {
 export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
   const { user } = useAuth();
   const addImage = useStudioStore((s) => s.addImage);
-  const existingUuids = useStudioStore(
-    (s) => new Set(s.images.map((img) => img.uuid)),
+  const studioImages = useStudioStore((s) => s.images);
+  const existingUuids = useMemo(
+    () => new Set(studioImages.map((img) => img.uuid)),
+    [studioImages],
   );
 
   const [playlists, setPlaylists] = useState<

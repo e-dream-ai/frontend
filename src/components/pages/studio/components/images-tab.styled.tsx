@@ -161,4 +161,9 @@ export const NavButton = styled.button`
   &:hover {
     filter: brightness(120%);
   }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+  }
 `;

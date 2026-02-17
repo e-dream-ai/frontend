@@ -63,6 +63,7 @@ export const useBatchSubmit = () => {
       }
 
       const combos = getSelectedCombinations();
+      let jobsAdded = 0;
 
       for (const { image, action } of combos) {
         const batchIdentifier = createComboKey(image.uuid, action.prompt);
@@ -97,6 +98,7 @@ export const useBatchSubmit = () => {
               | "failed",
             selectedForUprez: false,
           });
+          jobsAdded++;
 
           await axiosClient.put(`/v1/playlist/${playlistId}/add-item`, {
             type: "dream",
@@ -111,7 +113,9 @@ export const useBatchSubmit = () => {
         }
       }
 
-      setActiveTab("results");
+      if (jobsAdded > 0) {
+        setActiveTab("results");
+      }
     } finally {
       setIsSubmitting(false);
     }
