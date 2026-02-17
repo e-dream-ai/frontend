@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import { axiosClient } from "@/client/axios.client";
@@ -25,9 +25,14 @@ export const ResultsTab: React.FC = () => {
   const toggleJobUprez = useStudioStore((s) => s.toggleJobUprez);
   const addJob = useStudioStore((s) => s.addJob);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
+  const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const createDream = useCreateDreamFromPrompt();
 
+  const wanParams = useStudioStore((s) => s.wanParams);
+  const removeJob = useStudioStore((s) => s.removeJob);
+
   const [isUprezzing, setIsUprezzing] = useState(false);
+  const [isRetrying, setIsRetrying] = useState(false);
 
   const selectedImages = images.filter((img) => img.selected);
   const enabledActions = actions.filter((a) => a.enabled && a.prompt.trim());
@@ -39,6 +44,19 @@ export const ResultsTab: React.FC = () => {
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   const uprezCount = jobs.filter((j) => j.selectedForUprez).length;
+
+  const timeEstimate = useMemo(() => {
+    const done = jobs.filter((j) => j.startedAt && j.completedAt);
+    if (done.length === 0) return null;
+    const avgMs =
+      done.reduce((sum, j) => sum + (j.completedAt! - j.startedAt!), 0) /
+      done.length;
+    const remaining = totalCount - completedCount - failedCount;
+    if (remaining <= 0) return null;
+    const estimateMs = avgMs * remaining;
+    const minutes = Math.ceil(estimateMs / 60_000);
+    return minutes <= 1 ? "~1 min remaining" : `~${minutes} min remaining`;
+  }, [jobs, totalCount, completedCount, failedCount]);
 
   const getJob = useCallback(
     (imageUuid: string, actionId: string) =>
@@ -98,6 +116,75 @@ export const ResultsTab: React.FC = () => {
     }
   }, [jobs, createDream, addJob, outputPlaylistId]);
 
+  const handleRetryFailed = useCallback(async () => {
+    const failedJobs = jobs.filter((j) => j.status === "failed");
+    if (failedJobs.length === 0) return;
+
+    setIsRetrying(true);
+    try {
+      for (const job of failedJobs) {
+        const image = images.find((img) => img.uuid === job.imageId);
+        const action = actions.find((a) => a.id === job.actionId);
+        if (!image || !action) continue;
+
+        const hasLoras =
+          (action.highNoiseLoras && action.highNoiseLoras.length > 0) ||
+          (action.lowNoiseLoras && action.lowNoiseLoras.length > 0);
+
+        const algoParams = hasLoras
+          ? {
+              infinidream_algorithm: "wan-i2v-lora" as const,
+              prompt: action.prompt,
+              image: image.uuid,
+              duration: wanParams.duration,
+              seed: -1,
+              high_noise_loras: action.highNoiseLoras ?? [],
+              low_noise_loras: action.lowNoiseLoras ?? [],
+            }
+          : {
+              infinidream_algorithm: "wan-i2v" as const,
+              prompt: action.prompt,
+              image: image.uuid,
+              size: "1280*720",
+              duration: wanParams.duration,
+              num_inference_steps: wanParams.numInferenceSteps,
+              guidance: wanParams.guidance,
+            };
+
+        try {
+          const response = await createDream.mutateAsync({
+            name: `${image.name} - ${action.prompt.slice(0, 40)}`,
+            prompt: JSON.stringify(algoParams),
+            description: `Studio batch retry`,
+          });
+
+          const dream = response.data?.dream;
+          if (!dream) continue;
+
+          removeJob(job.dreamUuid);
+          addJob({
+            imageId: job.imageId,
+            actionId: job.actionId,
+            dreamUuid: dream.uuid,
+            status: dream.status as "queue",
+            selectedForUprez: false,
+          });
+
+          if (outputPlaylistId) {
+            await axiosClient.put(
+              `/v1/playlist/${outputPlaylistId}/add-item`,
+              { type: "dream", uuid: dream.uuid },
+            );
+          }
+        } catch (err) {
+          console.error("Failed to retry job:", err);
+        }
+      }
+    } finally {
+      setIsRetrying(false);
+    }
+  }, [jobs, images, actions, wanParams, createDream, removeJob, addJob, outputPlaylistId]);
+
   return (
     <>
       <ProgressBar>
@@ -105,7 +192,14 @@ export const ResultsTab: React.FC = () => {
           <span>
             {completedCount} of {totalCount} complete
           </span>
-          <span>{progressPercent}%</span>
+          <span>
+            {timeEstimate && (
+              <span style={{ marginRight: "1rem", color: "#888" }}>
+                {timeEstimate}
+              </span>
+            )}
+            {progressPercent}%
+          </span>
         </ProgressInfo>
         <ProgressTrack>
           <ProgressFill $percent={progressPercent} />
@@ -219,7 +313,12 @@ export const ResultsTab: React.FC = () => {
           {isUprezzing ? "Uprezzing..." : `Uprez Selected (${uprezCount})`}
         </ActionButton>
         {failedCount > 0 && (
-          <ActionButton>Retry Failed ({failedCount})</ActionButton>
+          <ActionButton
+            onClick={handleRetryFailed}
+            disabled={isRetrying}
+          >
+            {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
+          </ActionButton>
         )}
         {outputPlaylistId && (
           <ActionButton
@@ -230,6 +329,12 @@ export const ResultsTab: React.FC = () => {
             View Playlist
           </ActionButton>
         )}
+        <ActionButton
+          onClick={() => setActiveTab("generate")}
+          style={{ marginLeft: "auto" }}
+        >
+          &larr; Back to Generate
+        </ActionButton>
       </ActionBar>
     </>
   );

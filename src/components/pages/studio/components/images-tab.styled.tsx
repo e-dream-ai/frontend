@@ -136,6 +136,17 @@ export const ImageStatus = styled.div`
   text-align: center;
 `;
 
+export const SeedLabel = styled.div`
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  padding: 0.125rem 0.375rem;
+  background: rgba(0, 0, 0, 0.6);
+  color: #aaa;
+  font-size: 0.625rem;
+  border-top-right-radius: 4px;
+`;
+
 export const BottomRow = styled.div`
   display: flex;
   align-items: center;

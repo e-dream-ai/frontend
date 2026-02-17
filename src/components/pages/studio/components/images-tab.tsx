@@ -16,6 +16,7 @@ import {
   ImageThumbnail,
   StarBadge,
   ImageStatus,
+  SeedLabel,
   BottomRow,
   SelectionCount,
   NavButton,
@@ -37,17 +38,21 @@ export const ImagesTab: React.FC = () => {
   const createDream = useCreateDreamFromPrompt();
 
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [expandedImageUrl, setExpandedImageUrl] = useState<string | null>(null);
   const selectedCount = images.filter((img) => img.selected).length;
 
   const handleGenerate = useCallback(() => {
     if (!imagePrompt.trim()) return;
 
+    const baseSeed = Math.floor(Math.random() * 99_000) + 1;
+
     for (let i = 0; i < qwenParams.seedCount; i++) {
+      const seed = baseSeed + i;
       const algoParams = {
         infinidream_algorithm: "qwen-image",
         prompt: imagePrompt,
         size: qwenParams.size,
-        seed: -1,
+        seed,
       };
 
       createDream.mutate(
@@ -64,6 +69,7 @@ export const ImagesTab: React.FC = () => {
               uuid: dream.uuid,
               url: dream.thumbnail || "",
               name: dream.name,
+              seed,
               status: dream.status as StudioImage["status"],
               selected: false,
             });
@@ -131,7 +137,12 @@ export const ImagesTab: React.FC = () => {
             {images.map((img) => (
               <ImageCard key={img.uuid} $selected={img.selected}>
                 {img.status === "processed" && img.url ? (
-                  <ImageThumbnail src={img.url} alt={img.name} />
+                  <ImageThumbnail
+                    src={img.url}
+                    alt={img.name}
+                    onClick={() => setExpandedImageUrl(img.url)}
+                    style={{ cursor: "zoom-in" }}
+                  />
                 ) : (
                   <ImageStatus>
                     {img.status === "queue" && "Queued..."}
@@ -139,6 +150,9 @@ export const ImagesTab: React.FC = () => {
                       `${img.progress ?? 0}%`}
                     {img.status === "failed" && "Failed"}
                   </ImageStatus>
+                )}
+                {img.seed != null && (
+                  <SeedLabel>seed:{img.seed}</SeedLabel>
                 )}
                 <StarBadge
                   $active={img.selected}
@@ -174,6 +188,33 @@ export const ImagesTab: React.FC = () => {
 
       {showPlaylistModal && (
         <AddFromPlaylistModal onClose={() => setShowPlaylistModal(false)} />
+      )}
+
+      {expandedImageUrl && (
+        <div
+          onClick={() => setExpandedImageUrl(null)}
+          style={{
+            position: "fixed",
+            inset: 0,
+            background: "rgba(0,0,0,0.85)",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            zIndex: 1000,
+            cursor: "zoom-out",
+          }}
+        >
+          <img
+            src={expandedImageUrl}
+            alt="Expanded"
+            style={{
+              maxWidth: "90vw",
+              maxHeight: "90vh",
+              objectFit: "contain",
+              borderRadius: "8px",
+            }}
+          />
+        </div>
       )}
     </>
   );

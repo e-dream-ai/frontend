@@ -67,15 +67,29 @@ export const useBatchSubmit = () => {
 
       for (const { image, action } of combos) {
         const batchIdentifier = createComboKey(image.uuid, action.prompt);
-        const algoParams = {
-          infinidream_algorithm: "wan-i2v",
-          prompt: action.prompt,
-          image: image.uuid,
-          size: "1280*720",
-          duration: wanParams.duration,
-          num_inference_steps: wanParams.numInferenceSteps,
-          guidance: wanParams.guidance,
-        };
+        const hasLoras =
+          (action.highNoiseLoras && action.highNoiseLoras.length > 0) ||
+          (action.lowNoiseLoras && action.lowNoiseLoras.length > 0);
+
+        const algoParams = hasLoras
+          ? {
+              infinidream_algorithm: "wan-i2v-lora" as const,
+              prompt: action.prompt,
+              image: image.uuid,
+              duration: wanParams.duration,
+              seed: -1,
+              high_noise_loras: action.highNoiseLoras ?? [],
+              low_noise_loras: action.lowNoiseLoras ?? [],
+            }
+          : {
+              infinidream_algorithm: "wan-i2v" as const,
+              prompt: action.prompt,
+              image: image.uuid,
+              size: "1280*720",
+              duration: wanParams.duration,
+              num_inference_steps: wanParams.numInferenceSteps,
+              guidance: wanParams.guidance,
+            };
 
         try {
           const response = await createDream.mutateAsync({

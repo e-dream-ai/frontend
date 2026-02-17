@@ -11,10 +11,17 @@ export interface StudioImage {
   previewFrame?: string;
 }
 
+export interface LoRAConfig {
+  path: string;
+  scale: number;
+}
+
 export interface StudioAction {
   id: string;
   prompt: string;
   enabled: boolean;
+  highNoiseLoras?: LoRAConfig[];
+  lowNoiseLoras?: LoRAConfig[];
 }
 
 export interface StudioJob {
@@ -25,6 +32,8 @@ export interface StudioJob {
   progress?: number;
   previewFrame?: string;
   selectedForUprez: boolean;
+  startedAt?: number;
+  completedAt?: number;
 }
 
 export interface WanI2VParams {

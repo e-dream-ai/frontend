@@ -6,16 +6,87 @@ export interface PresetPack {
   actions: Omit<StudioAction, "id">[];
 }
 
+const OSTRIS_BASE = "https://huggingface.co/ostris/wan22_i2v_14b";
+
+const loraUrl = (repo: string, file: string) =>
+  `${OSTRIS_BASE}_${repo}/resolve/main/${file}`;
+
 export const ACTION_PRESETS: PresetPack[] = [
   {
     name: "Camera Basics",
     actions: [
-      { prompt: "slow zoom in, camera gently pushing forward", enabled: true },
-      { prompt: "slow zoom out, camera pulling back to reveal", enabled: true },
-      { prompt: "pan left to right, smooth motion", enabled: true },
-      { prompt: "pan right to left, smooth motion", enabled: true },
-      { prompt: "pan upward, revealing sky", enabled: true },
-      { prompt: "pan downward, descending", enabled: true },
+      {
+        prompt: "slow zoom in, camera gently pushing forward",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: loraUrl("zoom_in_lora", "wan22_14b_i2v_zoom_in.safetensors"),
+            scale: 1,
+          },
+        ],
+      },
+      {
+        prompt: "slow zoom out, camera pulling back to reveal",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: loraUrl(
+              "zoom_out_lora",
+              "wan22_14b_i2v_zoom_out.safetensors",
+            ),
+            scale: 1,
+          },
+        ],
+      },
+      {
+        prompt: "pan left to right, smooth motion",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: loraUrl(
+              "pan_right_lora",
+              "wan22_14b_i2v_pan_right.safetensors",
+            ),
+            scale: 1,
+          },
+        ],
+      },
+      {
+        prompt: "pan right to left, smooth motion",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: loraUrl(
+              "pan_left_lora",
+              "wan22_14b_i2v_pan_left.safetensors",
+            ),
+            scale: 1,
+          },
+        ],
+      },
+      {
+        prompt: "pan upward, revealing sky",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: loraUrl("tilt_up_lora", "wan22_14b_i2v_tilt_up.safetensors"),
+            scale: 1,
+          },
+        ],
+      },
+      {
+        prompt: "pan downward, descending",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: loraUrl(
+              "tilt_down_lora",
+              "wan22_14b_i2v_tilt_down.safetensors",
+            ),
+            scale: 1,
+          },
+        ],
+      },
       { prompt: "push in, dramatic approach", enabled: true },
       { prompt: "pull out, widening perspective", enabled: true },
     ],
@@ -27,6 +98,24 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "orbit around subject, 180 degrees, smooth motion",
         enabled: true,
+        highNoiseLoras: [
+          {
+            path: loraUrl(
+              "orbit_shot_lora",
+              "wan22_14b_i2v_orbit_high_noise.safetensors",
+            ),
+            scale: 1,
+          },
+        ],
+        lowNoiseLoras: [
+          {
+            path: loraUrl(
+              "orbit_shot_lora",
+              "wan22_14b_i2v_orbit_low_noise.safetensors",
+            ),
+            scale: 1,
+          },
+        ],
       },
       { prompt: "crane up, rising above the scene", enabled: true },
       {
