@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import type { StudioImage } from "@/types/studio.types";
@@ -20,6 +20,7 @@ import {
   SelectionCount,
   NavButton,
 } from "./images-tab.styled";
+import { AddFromPlaylistModal } from "./add-from-playlist-modal";
 
 const SEED_OPTIONS = [1, 4, 8, 12, 16, 24];
 const SIZE_OPTIONS = ["1280*720", "1024*1024", "720*1280", "512*512"];
@@ -35,6 +36,7 @@ export const ImagesTab: React.FC = () => {
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const createDream = useCreateDreamFromPrompt();
 
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const selectedCount = images.filter((img) => img.selected).length;
 
   const handleGenerate = useCallback(() => {
@@ -153,11 +155,26 @@ export const ImagesTab: React.FC = () => {
         )}
         <BottomRow>
           <SelectionCount>{selectedCount} selected for animation</SelectionCount>
-          <NavButton onClick={() => setActiveTab("actions")}>
-            Continue to Actions &rarr;
-          </NavButton>
+          <div style={{ display: "flex", gap: "0.5rem" }}>
+            <NavButton
+              onClick={() => setShowPlaylistModal(true)}
+              style={{
+                background: "transparent",
+                border: "1px solid #555",
+              }}
+            >
+              + Add from Playlist
+            </NavButton>
+            <NavButton onClick={() => setActiveTab("actions")}>
+              Continue to Actions &rarr;
+            </NavButton>
+          </div>
         </BottomRow>
       </GenerateSection>
+
+      {showPlaylistModal && (
+        <AddFromPlaylistModal onClose={() => setShowPlaylistModal(false)} />
+      )}
     </>
   );
 };

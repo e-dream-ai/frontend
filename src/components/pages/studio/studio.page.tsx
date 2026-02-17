@@ -3,6 +3,8 @@ import { useStudioStore } from "@/stores/studio.store";
 import { StudioTabs } from "./components/studio-tabs";
 import { ImagesTab } from "./components/images-tab";
 import { ActionsTab } from "./components/actions-tab";
+import { GenerateTab } from "./components/generate-tab";
+import { ResultsTab } from "./components/results-tab";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
 import {
   StudioContainer,
@@ -22,8 +24,8 @@ export const StudioPage: React.FC = () => {
       <StudioTabs />
       {activeTab === "images" && <ImagesTab />}
       {activeTab === "actions" && <ActionsTab />}
-      {activeTab === "generate" && <div>Generate tab (coming soon)</div>}
-      {activeTab === "results" && <div>Results tab (coming soon)</div>}
+      {activeTab === "generate" && <GenerateTab />}
+      {activeTab === "results" && <ResultsTab />}
     </StudioContainer>
   );
 };
