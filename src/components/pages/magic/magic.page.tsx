@@ -82,7 +82,11 @@ export const MagicPage: React.FC = () => {
               })}.`,
             );
             reset();
-            router.navigate(ROUTES.INSTALL);
+            if (isEmailVerification) {
+              router.navigate(ROUTES.HELP);
+            } else {
+              router.navigate(ROUTES.PLAYLISTS);
+            }
           } else {
             if (isCodeExpiredMessage(data.message)) {
               handleExpiredCode();
