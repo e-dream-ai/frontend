@@ -511,6 +511,7 @@
       "set_speed_9": "Speed",
       "pause": "Pause",
       "capture": "Capture",
+      "flag": "Flag",
       "report": "Report",
       "reset_playlist": "Reset Playlist"
     },
