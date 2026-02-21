@@ -125,6 +125,8 @@ export const RemoteControl: React.FC = () => {
   const sendMessage = (event: RemoteControlEvent) => () => {
     emit(NEW_REMOTE_CONTROL_EVENT, {
       event,
+      uuid:
+        event === REMOTE_CONTROLS.REPORT.event ? currentDream?.uuid : undefined,
       isWebClientEvent: isWebClientActive,
     });
   };
@@ -148,6 +150,10 @@ export const RemoteControl: React.FC = () => {
         event.preventDefault();
         emit(NEW_REMOTE_CONTROL_EVENT, {
           event: eventName,
+          uuid:
+            eventName === REMOTE_CONTROLS.REPORT.event
+              ? currentDream?.uuid
+              : undefined,
           isWebClientEvent: isWebClientActive,
         });
       }
@@ -155,7 +161,7 @@ export const RemoteControl: React.FC = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isWebClientActive, emit, isAnyClientActive]);
+  }, [isWebClientActive, emit, isAnyClientActive, currentDream?.uuid]);
 
   const { width } = useWindowSize();
   const isDesktop = (width ?? 0) >= DEVICES_ON_PX.TABLET;

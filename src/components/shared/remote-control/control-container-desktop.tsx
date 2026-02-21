@@ -111,6 +111,18 @@ export const ControlContainerDesktop: React.FC<
               " " +
               t(`components.remote_control.${REMOTE_CONTROLS.WEB.event}`)}
           </Button>
+          <Button
+            buttonType="tertiary"
+            size="sm"
+            fontSize="0.8rem"
+            textTransform="none"
+            onClick={onSend(REMOTE_CONTROLS.REPORT.event)}
+            disabled={disabled}
+          >
+            {REMOTE_CONTROLS.REPORT.key +
+              " " +
+              t(`components.remote_control.${REMOTE_CONTROLS.REPORT.event}`)}
+          </Button>
         </ButtonGroup>
 
         <ButtonGroup>

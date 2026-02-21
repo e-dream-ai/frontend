@@ -56,20 +56,6 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
       // using display props from styled-system to setup mobile, tablet, laptop, desktop breakpoints
       display: ["none", "none", "none", "inline-flex"],
     },
-    ...(isCreator
-      ? [
-          {
-            component: "Studio",
-            route: ROUTES.STUDIO,
-            display: [
-              "none",
-              "none",
-              "none",
-              "inline-flex",
-            ] as DisplayProps["display"],
-          },
-        ]
-      : []),
     {
       component: t("header.my_dreams"),
       route: `/${joinPaths([

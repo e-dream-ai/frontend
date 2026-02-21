@@ -52,7 +52,7 @@ export const REMOTE_CONTROLS: { [key: string]: RemoteControlAction } = {
   PAUSE_1: { event: "pause", key: "0", triggerKey: "0" },
   PAUSE_2: { event: "pause", key: "K", triggerKey: "k" },
   CAPTURE: { event: "capture", key: "T", triggerKey: "" },
-  REPORT: { event: "report", key: "R, !", triggerKey: "" },
+  REPORT: { event: "report", key: "B", triggerKey: "b" },
   RESET_PLAYLIST: { event: "reset_playlist", key: "", triggerKey: "" },
   FULLSCREEN: { event: "fullscreen", key: "", triggerKey: "f" },
 };
