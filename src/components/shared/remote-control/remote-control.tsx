@@ -142,7 +142,7 @@ export const RemoteControl: React.FC = () => {
 
   const emitRemoteControlEvent = useCallback(
     (event: RemoteControlEvent) => {
-      if (event === REMOTE_CONTROLS.REPORT.event && isWebClientActive) {
+      if (event === REMOTE_CONTROLS.REPORT.event) {
         if (!currentDream?.uuid) {
           toast.error(t("components.current_dream.no_current_dream"));
           return;
