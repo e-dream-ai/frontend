@@ -151,33 +151,48 @@ export const HelpPage: React.FC = () => {
             <CardTitle>Remote control</CardTitle>
             <CardText>
               When you are connected, the remote control appears in a tray at
-              the bottom of the screen. The first row has thumbnail, title,
-              artist, timecode, and speed in FPS.
+              the bottom of the screen. The current dream's thumbnail, title,
+              artist, timecode, and speed in FPS of playback are all shown.
               <RemoteImage
                 src="/images/thumb-title-artist.webp"
                 alt="Thumbnail, title, artist, and timecode"
                 loading="lazy"
               />
             </CardText>
+          </HelpCard>
+
+          <HelpCard flex="auto">
+            <CardTitle>Remote control</CardTitle>
             <CardText>
-              The second row has the four directions: previous, next, like, and
-              dislike. And in the middle are toggles, CC for showing the
-              credits, repeat mode, and shuffle mode. On the right are turtle
-              for slower and rabbit for faster.
+              The second row has buttons in the four directions: previous, next,
+              like, and dislike. Anything you dislike will never be shone again.
+              And likes help learning to generate better dreams. And in the
+              middle are toggles: CC for showing the credits, repeat mode, and
+              shuffle mode. On the right are turtle for slower and rabbit for
+              faster.
               <RemoteImage
                 src="/images/rc.webp"
                 alt="Remote control screenshot"
                 loading="lazy"
               />
             </CardText>
-            <ButtonRow>
+          </HelpCard>
+
+          <HelpCard flex="auto">
+            <CardTitle>Remote control</CardTitle>
+            <CardText>
+              The main remote page has same the controls as the tray, and also
+              an array of buttons with more controls. And it shows the current
+              playlist as well.
+            </CardText>
+            <BottomButtonRow>
               <Button
                 buttonType="secondary"
                 onClick={() => router.navigate(ROUTES.REMOTE_CONTROL)}
               >
                 Open Remote
               </Button>
-            </ButtonRow>
+            </BottomButtonRow>
           </HelpCard>
 
           {/* Playlist browser card */}
@@ -259,7 +274,7 @@ export const HelpPage: React.FC = () => {
               <li>
                 Like and dislike liberally to personalize your experience.
               </li>
-              <li>Use the B key to report a problem with any dream.</li>
+              <li>Use the B key to flag or report a problem with any dream.</li>
             </TipsList>
           </HelpCard>
 
@@ -288,7 +303,7 @@ export const HelpPage: React.FC = () => {
                 >
                   Creators Program
                 </Anchor>{" "}
-                to get access to uploads and GPU generation.
+                to get access to uploading and GPU generation.
               </li>
               <li>
                 Return to the{" "}
