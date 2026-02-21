@@ -105,9 +105,7 @@ export const ControlContainerMobile: React.FC<ControlContainerMobileProps> = ({
         onClick={onSend(REMOTE_CONTROLS.REPORT.event)}
         disabled={disabled}
       >
-        {REMOTE_CONTROLS.REPORT.key +
-          " " +
-          t(`components.remote_control.${REMOTE_CONTROLS.REPORT.event}`)}
+        {REMOTE_CONTROLS.REPORT.key + " " + t("components.remote_control.flag")}
       </Button>
 
       <Button

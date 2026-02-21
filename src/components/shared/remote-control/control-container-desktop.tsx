@@ -121,7 +121,7 @@ export const ControlContainerDesktop: React.FC<
           >
             {REMOTE_CONTROLS.REPORT.key +
               " " +
-              t(`components.remote_control.${REMOTE_CONTROLS.REPORT.event}`)}
+              t("components.remote_control.flag")}
           </Button>
         </ButtonGroup>
 

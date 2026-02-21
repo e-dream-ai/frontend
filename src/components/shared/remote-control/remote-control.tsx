@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import {
   REMOTE_CONTROLS,
   NEW_REMOTE_CONTROL_EVENT,
@@ -57,6 +57,8 @@ import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
 import useAuth from "@/hooks/useAuth";
 import { usePlaybackStore } from "@/stores/playback.store";
 import { ROUTES } from "@/constants/routes.constants";
+import { ReportDreamModal } from "@/components/modals/report-dream.modal";
+import { toast } from "react-toastify";
 
 const formatTimecode = (s: number): string => {
   if (!Number.isFinite(s) || s < 0) return "--:--.--";
@@ -66,6 +68,19 @@ const formatTimecode = (s: number): string => {
   const secInt = Math.floor(sec);
   const centiseconds = Math.floor((sec % 1) * 100);
   return `${p(m)}:${p(secInt)}.${p(centiseconds)}`;
+};
+
+const isTypingTarget = (target: EventTarget | null): boolean => {
+  const el = target as HTMLElement | null;
+  if (!el) return false;
+
+  if (el.isContentEditable) return true;
+
+  const tag = el.tagName?.toLowerCase();
+  if (tag === "input" || tag === "textarea" || tag === "select") return true;
+
+  const role = el.getAttribute("role");
+  return role === "textbox";
 };
 
 export const RemoteControl: React.FC = () => {
@@ -96,6 +111,7 @@ export const RemoteControl: React.FC = () => {
     isShuffleMode: desktopShuffleMode,
   } = useDesktopClient();
   const { fps: playbackFps } = usePlaybackMetrics();
+  const [showReportModal, setShowReportModal] = useState(false);
 
   const isAnyClientActive =
     isDesktopActive ||
@@ -122,13 +138,33 @@ export const RemoteControl: React.FC = () => {
     ? `${ROUTES.VIEW_DREAM}/${currentDream.uuid}`
     : undefined;
 
+  const onHideReportModal = () => setShowReportModal(false);
+
+  const emitRemoteControlEvent = useCallback(
+    (event: RemoteControlEvent) => {
+      if (event === REMOTE_CONTROLS.REPORT.event && isWebClientActive) {
+        if (!currentDream?.uuid) {
+          toast.error(t("components.current_dream.no_current_dream"));
+          return;
+        }
+        setShowReportModal(true);
+        return;
+      }
+
+      emit(NEW_REMOTE_CONTROL_EVENT, {
+        event,
+        uuid:
+          event === REMOTE_CONTROLS.REPORT.event
+            ? currentDream?.uuid
+            : undefined,
+        isWebClientEvent: isWebClientActive,
+      });
+    },
+    [currentDream?.uuid, emit, isWebClientActive, t],
+  );
+
   const sendMessage = (event: RemoteControlEvent) => () => {
-    emit(NEW_REMOTE_CONTROL_EVENT, {
-      event,
-      uuid:
-        event === REMOTE_CONTROLS.REPORT.event ? currentDream?.uuid : undefined,
-      isWebClientEvent: isWebClientActive,
-    });
+    emitRemoteControlEvent(event);
   };
 
   const handleToggleCaptions = () => {
@@ -144,24 +180,24 @@ export const RemoteControl: React.FC = () => {
     });
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        isTypingTarget(event.target) ||
+        isTypingTarget(document.activeElement)
+      ) {
+        return;
+      }
+
       const key = event.key;
       const eventName = keyToEventMap.get(key);
       if (eventName && isAnyClientActive) {
         event.preventDefault();
-        emit(NEW_REMOTE_CONTROL_EVENT, {
-          event: eventName,
-          uuid:
-            eventName === REMOTE_CONTROLS.REPORT.event
-              ? currentDream?.uuid
-              : undefined,
-          isWebClientEvent: isWebClientActive,
-        });
+        emitRemoteControlEvent(eventName);
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isWebClientActive, emit, isAnyClientActive, currentDream?.uuid]);
+  }, [emitRemoteControlEvent, isAnyClientActive]);
 
   const { width } = useWindowSize();
   const isDesktop = (width ?? 0) >= DEVICES_ON_PX.TABLET;
@@ -459,6 +495,14 @@ export const RemoteControl: React.FC = () => {
         <ControlContainerMobile
           onSend={sendMessage}
           disabled={!isAnyClientActive}
+        />
+      )}
+
+      {currentDream && (
+        <ReportDreamModal
+          isOpen={showReportModal}
+          onCancel={onHideReportModal}
+          dream={currentDream}
         />
       )}
     </RemoteControlContainer>
