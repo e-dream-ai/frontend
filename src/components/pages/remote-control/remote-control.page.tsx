@@ -8,6 +8,7 @@ import { VideoJS } from "@/components/shared/video-js/video-js";
 import { useWebClient } from "@/hooks/useWebClient";
 import { Button } from "@/components/shared";
 import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 
 const SECTION_ID = "remote-control";
 
@@ -15,6 +16,13 @@ const RemoteControlPage: React.FC = () => {
   const { t } = useTranslation();
   const { isWebClientActive, startWebPlayer, setWebClientActive } =
     useWebClient();
+  const [searchParams] = useSearchParams();
+
+  useEffect(() => {
+    if (searchParams.get("autoplay") === "1" && !isWebClientActive) {
+      startWebPlayer();
+    }
+  }, [searchParams, isWebClientActive, startWebPlayer]);
 
   useEffect(() => {
     return () => {
