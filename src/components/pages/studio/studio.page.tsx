@@ -21,7 +21,12 @@ export const StudioPage: React.FC = () => {
   useStudioJobProgress();
 
   const handleNewSession = () => {
-    if (!window.confirm("Start a new session? This will clear all current images, actions, and results.")) return;
+    if (
+      !window.confirm(
+        "Start a new session? This will clear all current images, actions, and results.",
+      )
+    )
+      return;
     resetSession();
   };
 

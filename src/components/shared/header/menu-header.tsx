@@ -61,7 +61,12 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
           {
             component: "Studio",
             route: ROUTES.STUDIO,
-            display: ["none", "none", "none", "inline-flex"] as DisplayProps["display"],
+            display: [
+              "none",
+              "none",
+              "none",
+              "inline-flex",
+            ] as DisplayProps["display"],
           },
         ]
       : []),

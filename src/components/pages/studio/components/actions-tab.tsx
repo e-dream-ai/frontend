@@ -105,8 +105,9 @@ export const ActionsTab: React.FC = () => {
       </GenerateSection>
 
       <SummaryBox>
-        <SummaryHighlight>{selectedImageCount}</SummaryHighlight> images selected
-        &times; <SummaryHighlight>{enabledActionCount}</SummaryHighlight> actions
+        <SummaryHighlight>{selectedImageCount}</SummaryHighlight> images
+        selected &times;{" "}
+        <SummaryHighlight>{enabledActionCount}</SummaryHighlight> actions
         enabled = <SummaryHighlight>{totalVideos}</SummaryHighlight> videos
       </SummaryBox>
 

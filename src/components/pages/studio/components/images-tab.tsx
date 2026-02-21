@@ -146,14 +146,11 @@ export const ImagesTab: React.FC = () => {
                 ) : (
                   <ImageStatus>
                     {img.status === "queue" && "Queued..."}
-                    {img.status === "processing" &&
-                      `${img.progress ?? 0}%`}
+                    {img.status === "processing" && `${img.progress ?? 0}%`}
                     {img.status === "failed" && "Failed"}
                   </ImageStatus>
                 )}
-                {img.seed != null && (
-                  <SeedLabel>seed:{img.seed}</SeedLabel>
-                )}
+                {img.seed != null && <SeedLabel>seed:{img.seed}</SeedLabel>}
                 <StarBadge
                   $active={img.selected}
                   onClick={(e) => {
@@ -168,7 +165,9 @@ export const ImagesTab: React.FC = () => {
           </ImageGrid>
         )}
         <BottomRow>
-          <SelectionCount>{selectedCount} selected for animation</SelectionCount>
+          <SelectionCount>
+            {selectedCount} selected for animation
+          </SelectionCount>
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <NavButton
               onClick={() => setShowPlaylistModal(true)}

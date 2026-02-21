@@ -99,13 +99,10 @@ export const ResultsTab: React.FC = () => {
           });
 
           if (outputPlaylistId) {
-            await axiosClient.put(
-              `/v1/playlist/${outputPlaylistId}/add-item`,
-              {
-                type: "dream",
-                uuid: dream.uuid,
-              },
-            );
+            await axiosClient.put(`/v1/playlist/${outputPlaylistId}/add-item`, {
+              type: "dream",
+              uuid: dream.uuid,
+            });
           }
         } catch (err) {
           console.error("Failed to create uprez job:", err);
@@ -171,10 +168,10 @@ export const ResultsTab: React.FC = () => {
           });
 
           if (outputPlaylistId) {
-            await axiosClient.put(
-              `/v1/playlist/${outputPlaylistId}/add-item`,
-              { type: "dream", uuid: dream.uuid },
-            );
+            await axiosClient.put(`/v1/playlist/${outputPlaylistId}/add-item`, {
+              type: "dream",
+              uuid: dream.uuid,
+            });
           }
         } catch (err) {
           console.error("Failed to retry job:", err);
@@ -183,7 +180,16 @@ export const ResultsTab: React.FC = () => {
     } finally {
       setIsRetrying(false);
     }
-  }, [jobs, images, actions, wanParams, createDream, removeJob, addJob, outputPlaylistId]);
+  }, [
+    jobs,
+    images,
+    actions,
+    wanParams,
+    createDream,
+    removeJob,
+    addJob,
+    outputPlaylistId,
+  ]);
 
   return (
     <>
@@ -234,9 +240,7 @@ export const ResultsTab: React.FC = () => {
 
                       if (!job) {
                         return (
-                          <ResultCell
-                            key={`${image.uuid}:${action.id}`}
-                          >
+                          <ResultCell key={`${image.uuid}:${action.id}`}>
                             <ResultCellStatus $color="#555">
                               --
                             </ResultCellStatus>
@@ -250,10 +254,7 @@ export const ResultsTab: React.FC = () => {
                           $status={job.status}
                           onClick={() => {
                             if (job.status === "processed") {
-                              window.open(
-                                `/dream/${job.dreamUuid}`,
-                                "_blank",
-                              );
+                              window.open(`/dream/${job.dreamUuid}`, "_blank");
                             }
                           }}
                         >
@@ -313,10 +314,7 @@ export const ResultsTab: React.FC = () => {
           {isUprezzing ? "Uprezzing..." : `Uprez Selected (${uprezCount})`}
         </ActionButton>
         {failedCount > 0 && (
-          <ActionButton
-            onClick={handleRetryFailed}
-            disabled={isRetrying}
-          >
+          <ActionButton onClick={handleRetryFailed} disabled={isRetrying}>
             {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
           </ActionButton>
         )}

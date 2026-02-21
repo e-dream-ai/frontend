@@ -22,7 +22,8 @@ export const PromptTextarea = styled.textarea`
   padding: 0.75rem;
   border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
   border-radius: 6px;
-  background: ${(props) => props.theme.colorBackgroundSecondary || "transparent"};
+  background: ${(props) =>
+    props.theme.colorBackgroundSecondary || "transparent"};
   color: ${(props) => props.theme.textPrimaryColor};
   font-family: inherit;
   font-size: 0.875rem;
@@ -57,7 +58,8 @@ export const StyledSelect = styled.select`
   padding: 0.5rem 0.75rem;
   border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
   border-radius: 6px;
-  background: ${(props) => props.theme.colorBackgroundSecondary || "transparent"};
+  background: ${(props) =>
+    props.theme.colorBackgroundSecondary || "transparent"};
   color: ${(props) => props.theme.textPrimaryColor};
   font-size: 0.8125rem;
   cursor: pointer;
