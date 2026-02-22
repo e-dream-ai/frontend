@@ -140,6 +140,10 @@ export const HelpPage: React.FC = () => {
               on your screen. The install page has everything you need to get
               set up.
             </CardText>
+            <CardText>
+              After installing, sign-in with your email address. A one-time code
+              will be sent to you. Enter it to get started.
+            </CardText>
             <BottomButtonRow>
               <Button
                 buttonType="secondary"
@@ -211,6 +215,11 @@ export const HelpPage: React.FC = () => {
               The main remote page has same the controls as the tray, and also
               an array of buttons with more controls. And it shows the current
               playlist as well.
+              <RemoteImage
+                src="/images/more-keys.webp"
+                alt="Keyboard shortcuts reference"
+                loading="lazy"
+              />
             </CardText>
             <BottomButtonRow>
               <Button
