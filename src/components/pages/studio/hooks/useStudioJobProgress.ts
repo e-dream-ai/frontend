@@ -34,6 +34,9 @@ export const useStudioJobProgress = () => {
     activeTabRef.current = activeTab;
   }, [activeTab]);
 
+  // Track which UUIDs have already triggered the badge increment
+  const completedFlaggedUuids = useRef(new Set<string>());
+
   // Stable refs for store actions (never change)
   const updateImageRef = useRef(updateImage);
   const updateJobRef = useRef(updateJob);
@@ -95,8 +98,10 @@ export const useStudioJobProgress = () => {
         if (
           wasNotCompleted &&
           isNowCompleted &&
+          !completedFlaggedUuids.current.has(dream_uuid) &&
           activeTabRef.current !== "results"
         ) {
+          completedFlaggedUuids.current.add(dream_uuid);
           incrementNewCompletedRef.current();
         }
       }
@@ -167,8 +172,10 @@ export const useStudioJobProgress = () => {
           if (
             wasNotCompleted &&
             isNowCompleted &&
+            !completedFlaggedUuids.current.has(job.dreamUuid) &&
             activeTabRef.current !== "results"
           ) {
+            completedFlaggedUuids.current.add(job.dreamUuid);
             incrementNewCompletedRef.current();
           }
         } catch {
