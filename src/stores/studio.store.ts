@@ -194,7 +194,7 @@ export const useStudioStore = create<StudioState>()(
         actions: state.actions,
         wanParams: state.wanParams,
         outputPlaylistId: state.outputPlaylistId,
-        excludedCombos: [...state.excludedCombos],
+        excludedCombos: [...(state.excludedCombos as Set<string>)],
         jobs: state.jobs.map((j) => ({ ...j, previewFrame: undefined })),
         // Intentionally excluded: newCompletedCount, isGenerating
       }),
@@ -216,7 +216,7 @@ export const useStudioStore = create<StudioState>()(
               excludedCombos: Array.isArray(value.state.excludedCombos)
                 ? value.state.excludedCombos
                 : value.state.excludedCombos
-                  ? [...value.state.excludedCombos]
+                  ? [...(value.state.excludedCombos as Set<string>)]
                   : [],
             },
           };
@@ -224,13 +224,13 @@ export const useStudioStore = create<StudioState>()(
         },
         removeItem: (name) => localStorage.removeItem(name),
       },
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      migrate: (persisted: Record<string, unknown>, version: number) => {
+      migrate: (persisted: unknown, version: number) => {
+        const state = persisted as Record<string, unknown>;
         if (version < 2) {
           // Add jobType to any persisted jobs missing it
-          if (persisted.jobs) {
+          if (state.jobs) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            persisted.jobs = (persisted.jobs as Array<any>).map((j) => ({
+            state.jobs = (state.jobs as Array<any>).map((j) => ({
               ...j,
               jobType:
                 j.jobType ??
@@ -238,7 +238,7 @@ export const useStudioStore = create<StudioState>()(
             }));
           }
         }
-        return persisted;
+        return state as Record<string, unknown>;
       },
     },
   ),
