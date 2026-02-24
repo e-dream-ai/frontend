@@ -23,6 +23,9 @@ type StudioState = {
   toggleImageSelected: (uuid: string) => void;
   removeImage: (uuid: string) => void;
 
+  isGenerating: boolean;
+  setIsGenerating: (v: boolean) => void;
+
   actions: StudioAction[];
   addAction: (action: StudioAction) => void;
   updateAction: (id: string, updates: Partial<StudioAction>) => void;
@@ -89,6 +92,9 @@ export const useStudioStore = create<StudioState>()(
         })),
       removeImage: (uuid: string) =>
         set((s) => ({ images: s.images.filter((img) => img.uuid !== uuid) })),
+
+      isGenerating: false,
+      setIsGenerating: (v: boolean) => set({ isGenerating: v }),
 
       actions: [] as StudioAction[],
       addAction: (action: StudioAction) =>
@@ -171,11 +177,12 @@ export const useStudioStore = create<StudioState>()(
           excludedCombos: new Set<string>(),
           jobs: [],
           newCompletedCount: 0,
+          isGenerating: false,
         }),
     }),
     {
       name: "studio-session",
-      version: 1,
+      version: 2,
       partialize: (state) => ({
         activeTab: state.activeTab,
         imagePrompt: state.imagePrompt,
@@ -187,9 +194,9 @@ export const useStudioStore = create<StudioState>()(
         actions: state.actions,
         wanParams: state.wanParams,
         outputPlaylistId: state.outputPlaylistId,
-        excludedCombos: state.excludedCombos,
+        excludedCombos: [...state.excludedCombos],
         jobs: state.jobs.map((j) => ({ ...j, previewFrame: undefined })),
-        newCompletedCount: state.newCompletedCount,
+        // Intentionally excluded: newCompletedCount, isGenerating
       }),
       storage: {
         getItem: (name) => {
@@ -206,14 +213,32 @@ export const useStudioStore = create<StudioState>()(
             ...value,
             state: {
               ...value.state,
-              excludedCombos: value.state.excludedCombos
-                ? [...value.state.excludedCombos]
-                : [],
+              excludedCombos: Array.isArray(value.state.excludedCombos)
+                ? value.state.excludedCombos
+                : value.state.excludedCombos
+                  ? [...value.state.excludedCombos]
+                  : [],
             },
           };
           localStorage.setItem(name, JSON.stringify(serializable));
         },
         removeItem: (name) => localStorage.removeItem(name),
+      },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      migrate: (persisted: Record<string, unknown>, version: number) => {
+        if (version < 2) {
+          // Add jobType to any persisted jobs missing it
+          if (persisted.jobs) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            persisted.jobs = (persisted.jobs as Array<any>).map((j) => ({
+              ...j,
+              jobType:
+                j.jobType ??
+                (j.actionId?.startsWith("uprez-") ? "uprez" : "wan-i2v"),
+            }));
+          }
+        }
+        return persisted;
       },
     },
   ),
