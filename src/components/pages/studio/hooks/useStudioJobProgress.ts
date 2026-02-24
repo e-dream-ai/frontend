@@ -7,6 +7,7 @@ import {
   JOIN_DREAM_ROOM_EVENT,
   LEAVE_DREAM_ROOM_EVENT,
 } from "@/constants/remote-control.constants";
+import { mapSocketStatus } from "./mapSocketStatus";
 
 const POLL_INTERVAL_MS = 10_000;
 
@@ -19,7 +20,7 @@ export const useStudioJobProgress = () => {
   const activeTab = useStudioStore((s) => s.activeTab);
   const incrementNewCompleted = useStudioStore((s) => s.incrementNewCompleted);
 
-  // Refs for live data accessed inside socket/poll handlers (avoids effect churn)
+  // Refs for live data accessed inside socket/poll handlers
   const imagesRef = useRef(images);
   const jobsRef = useRef(jobs);
   const activeTabRef = useRef(activeTab);
@@ -33,6 +34,20 @@ export const useStudioJobProgress = () => {
     activeTabRef.current = activeTab;
   }, [activeTab]);
 
+  // Stable refs for store actions (never change)
+  const updateImageRef = useRef(updateImage);
+  const updateJobRef = useRef(updateJob);
+  const incrementNewCompletedRef = useRef(incrementNewCompleted);
+  useEffect(() => {
+    updateImageRef.current = updateImage;
+  }, [updateImage]);
+  useEffect(() => {
+    updateJobRef.current = updateJob;
+  }, [updateJob]);
+  useEffect(() => {
+    incrementNewCompletedRef.current = incrementNewCompleted;
+  }, [incrementNewCompleted]);
+
   // Stable set of pending UUIDs that need socket rooms
   const pendingUuids = useMemo(() => {
     const imageUuids = images
@@ -44,7 +59,56 @@ export const useStudioJobProgress = () => {
     return [...imageUuids, ...jobUuids];
   }, [images, jobs]);
 
-  // Subscribe to Socket.IO rooms and handle progress events
+  // --- Effect 1: Register JOB_PROGRESS_EVENT listener ONCE per socket ---
+  useEffect(() => {
+    if (!socket) return;
+
+    const handleProgress = (data: {
+      dream_uuid: string;
+      status?: string;
+      progress?: number;
+      preview_frame?: string;
+    }) => {
+      const { dream_uuid, progress, preview_frame } = data;
+      const mappedStatus = mapSocketStatus(data.status);
+
+      const image = imagesRef.current.find((img) => img.uuid === dream_uuid);
+      if (image) {
+        updateImageRef.current(dream_uuid, {
+          progress,
+          previewFrame: preview_frame,
+          ...(mappedStatus ? { status: mappedStatus } : {}),
+        });
+      }
+
+      const job = jobsRef.current.find((j) => j.dreamUuid === dream_uuid);
+      if (job) {
+        const wasNotCompleted = job.status !== "processed";
+        const isNowCompleted = mappedStatus === "processed";
+
+        updateJobRef.current(dream_uuid, {
+          progress,
+          previewFrame: preview_frame,
+          ...(mappedStatus ? { status: mappedStatus } : {}),
+        });
+
+        if (
+          wasNotCompleted &&
+          isNowCompleted &&
+          activeTabRef.current !== "results"
+        ) {
+          incrementNewCompletedRef.current();
+        }
+      }
+    };
+
+    socket.on(JOB_PROGRESS_EVENT, handleProgress);
+    return () => {
+      socket.off(JOB_PROGRESS_EVENT, handleProgress);
+    };
+  }, [socket]);
+
+  // --- Effect 2: Join/leave socket rooms for pending UUIDs ---
   useEffect(() => {
     if (!socket || pendingUuids.length === 0) return;
 
@@ -54,62 +118,18 @@ export const useStudioJobProgress = () => {
       });
     };
 
-    // Join immediately if connected, and re-join on reconnect
-    if (socket.connected) {
-      joinRooms();
-    }
+    if (socket.connected) joinRooms();
     socket.on("connect", joinRooms);
-
-    const handleProgress = (data: {
-      dream_uuid: string;
-      status?: string;
-      progress?: number;
-      preview_frame?: string;
-    }) => {
-      const { dream_uuid, progress, preview_frame } = data;
-
-      const image = imagesRef.current.find((img) => img.uuid === dream_uuid);
-      if (image) {
-        updateImage(dream_uuid, {
-          progress,
-          previewFrame: preview_frame,
-          status: data.status === "COMPLETED" ? "processed" : image.status,
-        });
-      }
-
-      const job = jobsRef.current.find((j) => j.dreamUuid === dream_uuid);
-      if (job) {
-        const wasNotCompleted = job.status !== "processed";
-        const isNowCompleted = data.status === "COMPLETED";
-
-        updateJob(dream_uuid, {
-          progress,
-          previewFrame: preview_frame,
-          status: isNowCompleted ? "processed" : job.status,
-        });
-
-        if (
-          wasNotCompleted &&
-          isNowCompleted &&
-          activeTabRef.current !== "results"
-        ) {
-          incrementNewCompleted();
-        }
-      }
-    };
-
-    socket.on(JOB_PROGRESS_EVENT, handleProgress);
 
     return () => {
       socket.off("connect", joinRooms);
-      socket.off(JOB_PROGRESS_EVENT, handleProgress);
       pendingUuids.forEach((uuid) => {
         socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
       });
     };
-  }, [socket, pendingUuids, updateImage, updateJob, incrementNewCompleted]);
+  }, [socket, pendingUuids]);
 
-  // Polling fallback with stable interval (ref-based callback)
+  // --- Effect 3: Polling fallback ---
   const pollPendingRef = useRef<() => Promise<void>>();
   useEffect(() => {
     pollPendingRef.current = async () => {
@@ -124,7 +144,7 @@ export const useStudioJobProgress = () => {
         try {
           const { data } = await axiosClient.get(`/v1/dream/${img.uuid}`);
           const dream = data.data.dream;
-          updateImage(img.uuid, {
+          updateImageRef.current(img.uuid, {
             status: dream.status,
             url: dream.thumbnail || dream.video || img.url,
           });
@@ -140,7 +160,7 @@ export const useStudioJobProgress = () => {
           const wasNotCompleted = job.status !== "processed";
           const isNowCompleted = dream.status === "processed";
 
-          updateJob(job.dreamUuid, {
+          updateJobRef.current(job.dreamUuid, {
             status: dream.status,
           });
 
@@ -149,24 +169,22 @@ export const useStudioJobProgress = () => {
             isNowCompleted &&
             activeTabRef.current !== "results"
           ) {
-            incrementNewCompleted();
+            incrementNewCompletedRef.current();
           }
         } catch {
           // Silently skip failed polls
         }
       }
     };
-  }, [updateImage, updateJob, incrementNewCompleted]);
+  }, []);
 
   const hasPending = pendingUuids.length > 0;
 
   useEffect(() => {
     if (!hasPending) return;
-
     const interval = setInterval(() => {
       pollPendingRef.current?.();
     }, POLL_INTERVAL_MS);
-
     return () => clearInterval(interval);
   }, [hasPending]);
 };
