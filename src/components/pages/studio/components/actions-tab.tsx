@@ -33,7 +33,9 @@ export const ActionsTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
 
-  const selectedImageCount = images.filter((img) => img.selected).length;
+  const selectedImageCount = images.filter(
+    (img) => img.selected && img.status === "processed",
+  ).length;
   const enabledActionCount = actions.filter((a) => a.enabled).length;
   const totalVideos = selectedImageCount * enabledActionCount;
 
