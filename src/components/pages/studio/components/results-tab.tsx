@@ -25,6 +25,7 @@ export const ResultsTab: React.FC = () => {
   const actions = useStudioStore((s) => s.actions);
   const jobs = useStudioStore((s) => s.jobs);
   const toggleJobUprez = useStudioStore((s) => s.toggleJobUprez);
+  const clearSelectedForUprez = useStudioStore((s) => s.clearSelectedForUprez);
   const addJob = useStudioStore((s) => s.addJob);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
@@ -79,7 +80,9 @@ export const ResultsTab: React.FC = () => {
   const progressPercent =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  const uprezCount = jobs.filter((j) => j.selectedForUprez).length;
+  const uprezCount = jobs.filter(
+    (j) => j.selectedForUprez && j.status === "processed" && j.jobType !== "uprez",
+  ).length;
 
   const timeEstimate = useMemo(() => {
     const done = wanJobs.filter((j) => j.startedAt && j.completedAt);
@@ -151,10 +154,11 @@ export const ResultsTab: React.FC = () => {
           console.error("Failed to create uprez job:", err);
         }
       }
+      clearSelectedForUprez();
     } finally {
       setIsUprezzing(false);
     }
-  }, [jobs, createDream, addJob, outputPlaylistId]);
+  }, [jobs, createDream, addJob, outputPlaylistId, clearSelectedForUprez]);
 
   const handleRetryFailed = useCallback(async () => {
     // Only retry wan-i2v jobs (uprez retries not yet supported)

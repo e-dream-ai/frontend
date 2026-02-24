@@ -46,6 +46,7 @@ type StudioState = {
   updateJob: (dreamUuid: string, updates: Partial<StudioJob>) => void;
   removeJob: (dreamUuid: string) => void;
   toggleJobUprez: (dreamUuid: string) => void;
+  clearSelectedForUprez: () => void;
 
   newCompletedCount: number;
   incrementNewCompleted: () => void;
@@ -157,6 +158,14 @@ export const useStudioStore = create<StudioState>()(
           jobs: s.jobs.map((j) =>
             j.dreamUuid === dreamUuid
               ? { ...j, selectedForUprez: !j.selectedForUprez }
+              : j,
+          ),
+        })),
+      clearSelectedForUprez: () =>
+        set((s) => ({
+          jobs: s.jobs.map((j) =>
+            j.selectedForUprez && j.status === "processed"
+              ? { ...j, selectedForUprez: false }
               : j,
           ),
         })),

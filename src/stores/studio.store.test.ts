@@ -130,6 +130,35 @@ describe("studio.store", () => {
     });
   });
 
+  describe("clearSelectedForUprez", () => {
+    it("clears selectedForUprez on all non-uprez processed jobs", () => {
+      useStudioStore.getState().addJob({
+        imageId: "img1",
+        actionId: "act1",
+        dreamUuid: "dream1",
+        jobType: "wan-i2v",
+        status: "processed",
+        selectedForUprez: true,
+      });
+      useStudioStore.getState().addJob({
+        imageId: "img1",
+        actionId: "act2",
+        dreamUuid: "dream2",
+        jobType: "wan-i2v",
+        status: "processing",
+        selectedForUprez: true,
+      });
+
+      useStudioStore.getState().clearSelectedForUprez();
+
+      const jobs = useStudioStore.getState().jobs;
+      // Processed job should be cleared
+      expect(jobs[0].selectedForUprez).toBe(false);
+      // Non-processed job should be unchanged
+      expect(jobs[1].selectedForUprez).toBe(true);
+    });
+  });
+
   describe("partialize", () => {
     it("excludes previewFrame from persisted images", () => {
       useStudioStore.getState().addImage({
