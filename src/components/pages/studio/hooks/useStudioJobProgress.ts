@@ -113,26 +113,60 @@ export const useStudioJobProgress = () => {
     };
   }, [socket]);
 
-  // --- Effect 2: Join/leave socket rooms for pending UUIDs ---
+  // --- Effect 2: Join/leave socket rooms for pending UUIDs (diff-based) ---
+  const joinedRoomsRef = useRef(new Set<string>());
+  const socketRef = useRef(socket);
   useEffect(() => {
-    if (!socket || pendingUuids.length === 0) return;
+    socketRef.current = socket;
+  }, [socket]);
 
-    const joinRooms = () => {
-      pendingUuids.forEach((uuid) => {
+  useEffect(() => {
+    if (!socket) return;
+
+    const currentSet = new Set(pendingUuids);
+
+    // Join rooms we haven't joined yet
+    const toJoin = pendingUuids.filter(
+      (uuid) => !joinedRoomsRef.current.has(uuid),
+    );
+    toJoin.forEach((uuid) => {
+      socket.emit(JOIN_DREAM_ROOM_EVENT, uuid);
+      joinedRoomsRef.current.add(uuid);
+    });
+
+    // Leave rooms no longer needed
+    for (const uuid of joinedRoomsRef.current) {
+      if (!currentSet.has(uuid)) {
+        socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
+        joinedRoomsRef.current.delete(uuid);
+      }
+    }
+
+    // On reconnect, rejoin all current rooms
+    const handleReconnect = () => {
+      joinedRoomsRef.current.forEach((uuid) => {
         socket.emit(JOIN_DREAM_ROOM_EVENT, uuid);
       });
     };
-
-    if (socket.connected) joinRooms();
-    socket.on("connect", joinRooms);
+    socket.on("connect", handleReconnect);
 
     return () => {
-      socket.off("connect", joinRooms);
-      pendingUuids.forEach((uuid) => {
-        socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
-      });
+      socket.off("connect", handleReconnect);
     };
   }, [socket, pendingUuids]);
+
+  // --- Cleanup: leave all rooms on unmount ---
+  useEffect(() => {
+    const rooms = joinedRoomsRef.current;
+    return () => {
+      const s = socketRef.current;
+      if (!s) return;
+      rooms.forEach((uuid) => {
+        s.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
+      });
+      rooms.clear();
+    };
+  }, []);
 
   // --- Effect 3: Polling fallback ---
   const pollPendingRef = useRef<() => Promise<void>>();
