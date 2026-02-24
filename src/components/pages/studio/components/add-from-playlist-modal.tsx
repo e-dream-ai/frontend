@@ -50,7 +50,7 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
   useEffect(() => {
     if (!user?.uuid) return;
     axiosClient
-      .get(`/v1/playlist?userUUID=${user.uuid}&take=50&skip=0`)
+      .get(`/v1/playlist?userUUID=${user.uuid}&take=200&skip=0`)
       .then(({ data }) => setPlaylists(data.data.playlists))
       .catch(() => {});
   }, [user?.uuid]);
@@ -66,7 +66,10 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
       .then(({ data }) => {
         setItems(
           data.data.items.filter(
-            (item: PlaylistItem) => item.dreamItem?.thumbnail,
+            (item: PlaylistItem) =>
+              item.dreamItem?.thumbnail &&
+              (!item.dreamItem.mediaType ||
+                item.dreamItem.mediaType === "image"),
           ),
         );
       })
