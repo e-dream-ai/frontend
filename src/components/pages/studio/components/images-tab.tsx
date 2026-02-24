@@ -46,44 +46,47 @@ export const ImagesTab: React.FC = () => {
     if (!imagePrompt.trim()) return;
     setIsGenerating(true);
 
-    const baseSeed = Math.floor(Math.random() * 99_000) + 1;
+    try {
+      const baseSeed = Math.floor(Math.random() * 99_000) + 1;
 
-    const promises = Array.from({ length: qwenParams.seedCount }, (_, i) => {
-      const seed = baseSeed + i;
-      const algoParams = {
-        infinidream_algorithm: "qwen-image",
-        prompt: imagePrompt,
-        size: qwenParams.size,
-        seed,
-      };
+      const promises = Array.from({ length: qwenParams.seedCount }, (_, i) => {
+        const seed = baseSeed + i;
+        const algoParams = {
+          infinidream_algorithm: "qwen-image",
+          prompt: imagePrompt,
+          size: qwenParams.size,
+          seed,
+        };
 
-      return axiosClient
-        .post("/v1/dream", {
-          name: `Qwen Image ${images.length + i + 1}`,
-          prompt: JSON.stringify(algoParams),
-          description: "Studio generated image",
-        })
-        .then(({ data }) => {
-          const dream = data.data?.dream;
-          if (!dream) return;
-          addImage({
-            uuid: dream.uuid,
-            url: dream.thumbnail || "",
-            name: dream.name,
-            seed,
-            size: qwenParams.size,
-            status: (dream.status as StudioImage["status"]) || "queue",
-            selected: false,
+        return axiosClient
+          .post("/v1/dream", {
+            name: `Qwen Image ${images.length + i + 1}`,
+            prompt: JSON.stringify(algoParams),
+            description: "Studio generated image",
+          })
+          .then(({ data }) => {
+            const dream = data.data?.dream;
+            if (!dream) return;
+            addImage({
+              uuid: dream.uuid,
+              url: dream.thumbnail || "",
+              name: dream.name,
+              seed,
+              size: qwenParams.size,
+              status: (dream.status as StudioImage["status"]) || "queue",
+              selected: false,
+            });
+          })
+          .catch((err) => {
+            console.error("Failed to create image:", err);
           });
-        })
-        .catch((err) => {
-          console.error("Failed to create image:", err);
-        });
-    });
+      });
 
-    await Promise.all(promises);
-    setIsGenerating(false);
-  }, [imagePrompt, qwenParams, images.length, addImage]);
+      await Promise.all(promises);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [imagePrompt, qwenParams, images.length, addImage, setIsGenerating]);
 
   return (
     <>
