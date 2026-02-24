@@ -57,6 +57,7 @@ export const GenerateTab: React.FC = () => {
     [getSelectedCombinations],
   );
   const totalPossible = selectedImages.length * enabledActions.length;
+  const wanJobCount = jobs.filter((j) => j.jobType !== "uprez").length;
 
   useEffect(() => {
     if (!user?.uuid) return;
@@ -168,7 +169,7 @@ export const GenerateTab: React.FC = () => {
           }}
         >
           {newCombos.length} of {totalPossible} combinations selected
-          {jobs.length > 0 && ` (${jobs.length} already submitted)`}
+          {wanJobCount > 0 && ` (${wanJobCount} already submitted)`}
         </p>
       </GenerateSection>
 
