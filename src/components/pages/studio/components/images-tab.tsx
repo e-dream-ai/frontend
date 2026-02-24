@@ -36,7 +36,8 @@ export const ImagesTab: React.FC = () => {
   const toggleImageSelected = useStudioStore((s) => s.toggleImageSelected);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
 
-  const [isGenerating, setIsGenerating] = useState(false);
+  const isGenerating = useStudioStore((s) => s.isGenerating);
+  const setIsGenerating = useStudioStore((s) => s.setIsGenerating);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [expandedImageUrl, setExpandedImageUrl] = useState<string | null>(null);
   const selectedCount = images.filter((img) => img.selected).length;
@@ -70,6 +71,7 @@ export const ImagesTab: React.FC = () => {
             url: dream.thumbnail || "",
             name: dream.name,
             seed,
+            size: qwenParams.size,
             status: (dream.status as StudioImage["status"]) || "queue",
             selected: false,
           });
