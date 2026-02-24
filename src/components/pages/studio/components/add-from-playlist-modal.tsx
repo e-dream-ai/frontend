@@ -145,9 +145,7 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
                   <ImageSelectCard
                     key={dream.uuid}
                     $selected={isSelected}
-                    onClick={() =>
-                      !alreadyAdded && toggleSelected(dream.uuid)
-                    }
+                    onClick={() => !alreadyAdded && toggleSelected(dream.uuid)}
                     style={{ opacity: alreadyAdded ? 0.4 : 1 }}
                   >
                     <ImageThumbnail src={dream.thumbnail} alt={dream.name} />

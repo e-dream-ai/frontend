@@ -73,9 +73,7 @@ export const ResultsTab: React.FC = () => {
     () => jobs.filter((j) => j.jobType !== "uprez"),
     [jobs],
   );
-  const completedCount = wanJobs.filter(
-    (j) => j.status === "processed",
-  ).length;
+  const completedCount = wanJobs.filter((j) => j.status === "processed").length;
   const totalCount = wanJobs.length;
   const failedCount = wanJobs.filter((j) => j.status === "failed").length;
   const progressPercent =
@@ -110,9 +108,7 @@ export const ResultsTab: React.FC = () => {
   const handleUprezSelected = useCallback(async () => {
     const toUprez = jobs.filter(
       (j) =>
-        j.selectedForUprez &&
-        j.status === "processed" &&
-        j.jobType !== "uprez",
+        j.selectedForUprez && j.status === "processed" && j.jobType !== "uprez",
     );
     if (toUprez.length === 0) return;
 
@@ -141,16 +137,15 @@ export const ResultsTab: React.FC = () => {
             actionId: `uprez-${job.actionId}`,
             dreamUuid: dream.uuid,
             jobType: "uprez",
-            status:
-              (dream.status as StudioJob["status"]) || "queue",
+            status: (dream.status as StudioJob["status"]) || "queue",
             selectedForUprez: false,
           });
 
           if (outputPlaylistId) {
-            await axiosClient.put(
-              `/v1/playlist/${outputPlaylistId}/add-item`,
-              { type: "dream", uuid: dream.uuid },
-            );
+            await axiosClient.put(`/v1/playlist/${outputPlaylistId}/add-item`, {
+              type: "dream",
+              uuid: dream.uuid,
+            });
           }
         } catch (err) {
           console.error("Failed to create uprez job:", err);
@@ -219,16 +214,15 @@ export const ResultsTab: React.FC = () => {
             actionId: job.actionId,
             dreamUuid: dream.uuid,
             jobType: "wan-i2v",
-            status:
-              (dream.status as StudioJob["status"]) || "queue",
+            status: (dream.status as StudioJob["status"]) || "queue",
             selectedForUprez: false,
           });
 
           if (outputPlaylistId) {
-            await axiosClient.put(
-              `/v1/playlist/${outputPlaylistId}/add-item`,
-              { type: "dream", uuid: dream.uuid },
-            );
+            await axiosClient.put(`/v1/playlist/${outputPlaylistId}/add-item`, {
+              type: "dream",
+              uuid: dream.uuid,
+            });
           }
         } catch (err) {
           console.error("Failed to retry job:", err);
@@ -301,9 +295,7 @@ export const ResultsTab: React.FC = () => {
 
                         if (!job) {
                           return (
-                            <ResultCell
-                              key={`${image.uuid}:${action.id}`}
-                            >
+                            <ResultCell key={`${image.uuid}:${action.id}`}>
                               <ResultCellStatus $color="#555">
                                 --
                               </ResultCellStatus>
@@ -381,10 +373,7 @@ export const ResultsTab: React.FC = () => {
           {isUprezzing ? "Uprezzing..." : `Uprez Selected (${uprezCount})`}
         </ActionButton>
         {failedCount > 0 && (
-          <ActionButton
-            onClick={handleRetryFailed}
-            disabled={isRetrying}
-          >
+          <ActionButton onClick={handleRetryFailed} disabled={isRetrying}>
             {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
           </ActionButton>
         )}
