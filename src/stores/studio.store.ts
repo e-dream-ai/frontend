@@ -65,10 +65,11 @@ export const useStudioStore = create<StudioState>()(
   persist(
     (set) => ({
       activeTab: "images" as StudioTab,
-      setActiveTab: (tab: StudioTab) => {
-        if (tab === "results") set({ newCompletedCount: 0 });
-        set({ activeTab: tab });
-      },
+      setActiveTab: (tab: StudioTab) =>
+        set({
+          activeTab: tab,
+          ...(tab === "results" ? { newCompletedCount: 0 } : {}),
+        }),
 
       imagePrompt: "",
       setImagePrompt: (prompt: string) => set({ imagePrompt: prompt }),

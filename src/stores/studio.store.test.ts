@@ -64,6 +64,27 @@ describe("studio.store", () => {
       useStudioStore.getState().setActiveTab("results");
       expect(useStudioStore.getState().newCompletedCount).toBe(0);
     });
+
+    it("atomically sets activeTab and clears newCompletedCount", () => {
+      useStudioStore.getState().incrementNewCompleted();
+      useStudioStore.getState().incrementNewCompleted();
+
+      // Subscribe and capture intermediate states
+      const snapshots: Array<{ activeTab: string; count: number }> = [];
+      const unsub = useStudioStore.subscribe((state) => {
+        snapshots.push({
+          activeTab: state.activeTab,
+          count: state.newCompletedCount,
+        });
+      });
+
+      useStudioStore.getState().setActiveTab("results");
+      unsub();
+
+      // Should be exactly ONE state update, not two
+      expect(snapshots).toHaveLength(1);
+      expect(snapshots[0]).toEqual({ activeTab: "results", count: 0 });
+    });
   });
 
   describe("updateJob timestamps", () => {
