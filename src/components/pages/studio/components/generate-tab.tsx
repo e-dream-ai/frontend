@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import { useBatchSubmit } from "../hooks/useBatchSubmit";
 import { axiosClient } from "@/client/axios.client";
@@ -52,13 +52,16 @@ export const GenerateTab: React.FC = () => {
   );
   const enabledActions = actions.filter((a) => a.enabled && a.prompt.trim());
 
-  const newCombos = getSelectedCombinations();
+  const newCombos = useMemo(
+    () => getSelectedCombinations(),
+    [getSelectedCombinations],
+  );
   const totalPossible = selectedImages.length * enabledActions.length;
 
   useEffect(() => {
     if (!user?.uuid) return;
     axiosClient
-      .get(`/v1/playlist?userUUID=${user.uuid}&take=50&skip=0`)
+      .get(`/v1/playlist?userUUID=${user.uuid}&take=200&skip=0`)
       .then(({ data }) => {
         setPlaylists(
           data.data.playlists.map((p: { uuid: string; name: string }) => ({
