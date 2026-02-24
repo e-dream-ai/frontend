@@ -77,6 +77,8 @@ export const useBatchSubmit = () => {
               prompt: action.prompt,
               image: image.uuid,
               duration: wanParams.duration,
+              num_inference_steps: wanParams.numInferenceSteps,
+              guidance: wanParams.guidance,
               seed: -1,
               high_noise_loras: action.highNoiseLoras ?? [],
               low_noise_loras: action.lowNoiseLoras ?? [],
@@ -85,7 +87,7 @@ export const useBatchSubmit = () => {
               infinidream_algorithm: "wan-i2v" as const,
               prompt: action.prompt,
               image: image.uuid,
-              size: "1280*720",
+              size: image.size || "1280*720",
               duration: wanParams.duration,
               num_inference_steps: wanParams.numInferenceSteps,
               guidance: wanParams.guidance,
@@ -105,11 +107,13 @@ export const useBatchSubmit = () => {
             imageId: image.uuid,
             actionId: action.id,
             dreamUuid: dream.uuid,
-            status: dream.status as
-              | "queue"
-              | "processing"
-              | "processed"
-              | "failed",
+            jobType: "wan-i2v",
+            status:
+              (dream.status as
+                | "queue"
+                | "processing"
+                | "processed"
+                | "failed") || "queue",
             selectedForUprez: false,
           });
           jobsAdded++;
