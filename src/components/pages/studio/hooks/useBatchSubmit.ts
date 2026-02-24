@@ -58,7 +58,11 @@ export const useBatchSubmit = () => {
           .slice(0, 16)
           .replace("T", " ")}`;
         const { data } = await axiosClient.post("/v1/playlist", { name });
-        playlistId = data.data.playlist.uuid;
+        playlistId = data.data?.playlist?.uuid;
+        if (!playlistId) {
+          console.error("Playlist creation returned no UUID");
+          return;
+        }
         setOutputPlaylistId(playlistId);
       }
 
