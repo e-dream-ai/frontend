@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { useStudioStore } from "@/stores/studio.store";
-import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
+import { axiosClient } from "@/client/axios.client";
 import type { StudioImage } from "@/types/studio.types";
 import {
   GenerateSection,
@@ -35,18 +35,19 @@ export const ImagesTab: React.FC = () => {
   const addImage = useStudioStore((s) => s.addImage);
   const toggleImageSelected = useStudioStore((s) => s.toggleImageSelected);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
-  const createDream = useCreateDreamFromPrompt();
 
+  const [isGenerating, setIsGenerating] = useState(false);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [expandedImageUrl, setExpandedImageUrl] = useState<string | null>(null);
   const selectedCount = images.filter((img) => img.selected).length;
 
-  const handleGenerate = useCallback(() => {
+  const handleGenerate = useCallback(async () => {
     if (!imagePrompt.trim()) return;
+    setIsGenerating(true);
 
     const baseSeed = Math.floor(Math.random() * 99_000) + 1;
 
-    for (let i = 0; i < qwenParams.seedCount; i++) {
+    const promises = Array.from({ length: qwenParams.seedCount }, (_, i) => {
       const seed = baseSeed + i;
       const algoParams = {
         infinidream_algorithm: "qwen-image",
@@ -55,29 +56,32 @@ export const ImagesTab: React.FC = () => {
         seed,
       };
 
-      createDream.mutate(
-        {
+      return axiosClient
+        .post("/v1/dream", {
           name: `Qwen Image ${images.length + i + 1}`,
           prompt: JSON.stringify(algoParams),
           description: "Studio generated image",
-        },
-        {
-          onSuccess: (response) => {
-            const dream = response.data?.dream;
-            if (!dream) return;
-            addImage({
-              uuid: dream.uuid,
-              url: dream.thumbnail || "",
-              name: dream.name,
-              seed,
-              status: dream.status as StudioImage["status"],
-              selected: false,
-            });
-          },
-        },
-      );
-    }
-  }, [imagePrompt, qwenParams, images.length, createDream, addImage]);
+        })
+        .then(({ data }) => {
+          const dream = data.data?.dream;
+          if (!dream) return;
+          addImage({
+            uuid: dream.uuid,
+            url: dream.thumbnail || "",
+            name: dream.name,
+            seed,
+            status: (dream.status as StudioImage["status"]) || "queue",
+            selected: false,
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to create image:", err);
+        });
+    });
+
+    await Promise.all(promises);
+    setIsGenerating(false);
+  }, [imagePrompt, qwenParams, images.length, addImage]);
 
   return (
     <>
@@ -119,9 +123,9 @@ export const ImagesTab: React.FC = () => {
           </FormField>
           <GenerateButton
             onClick={handleGenerate}
-            disabled={!imagePrompt.trim() || createDream.isLoading}
+            disabled={!imagePrompt.trim() || isGenerating}
           >
-            {createDream.isLoading ? "Generating..." : "Generate Images"}
+            {isGenerating ? "Generating..." : "Generate Images"}
           </GenerateButton>
         </FormRow>
       </GenerateSection>
