@@ -82,6 +82,23 @@ export const useStudioJobProgress = () => {
           previewFrame: preview_frame,
           ...(mappedStatus ? { status: mappedStatus } : {}),
         });
+
+        // Fetch final thumbnail URL when image completes
+        if (mappedStatus === "processed") {
+          axiosClient
+            .get(`/v1/dream/${dream_uuid}`)
+            .then(({ data: respData }) => {
+              const dream = respData.data?.dream;
+              if (dream?.thumbnail) {
+                updateImageRef.current(dream_uuid, {
+                  url: dream.thumbnail,
+                });
+              }
+            })
+            .catch(() => {
+              // Polling fallback will handle this
+            });
+        }
       }
 
       const job = jobsRef.current.find((j) => j.dreamUuid === dream_uuid);
