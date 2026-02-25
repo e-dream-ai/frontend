@@ -37,6 +37,8 @@ type StudioState = {
   setWanParams: (params: Partial<WanI2VParams>) => void;
   outputPlaylistId: string | null;
   setOutputPlaylistId: (id: string | null) => void;
+  uprezPlaylistId: string | null;
+  setUprezPlaylistId: (id: string | null) => void;
 
   excludedCombos: Set<string>;
   toggleComboExcluded: (key: string) => void;
@@ -123,6 +125,8 @@ export const useStudioStore = create<StudioState>()(
         set((s) => ({ wanParams: { ...s.wanParams, ...params } })),
       outputPlaylistId: null,
       setOutputPlaylistId: (id: string | null) => set({ outputPlaylistId: id }),
+      uprezPlaylistId: null,
+      setUprezPlaylistId: (id: string | null) => set({ uprezPlaylistId: id }),
 
       excludedCombos: new Set<string>(),
       toggleComboExcluded: (key: string) =>
@@ -184,6 +188,7 @@ export const useStudioStore = create<StudioState>()(
           actions: [],
           wanParams: DEFAULT_WAN_PARAMS,
           outputPlaylistId: null,
+          uprezPlaylistId: null,
           excludedCombos: new Set<string>(),
           jobs: [],
           newCompletedCount: 0,
@@ -204,6 +209,7 @@ export const useStudioStore = create<StudioState>()(
         actions: state.actions,
         wanParams: state.wanParams,
         outputPlaylistId: state.outputPlaylistId,
+        uprezPlaylistId: state.uprezPlaylistId,
         excludedCombos: [...(state.excludedCombos as Set<string>)],
         jobs: state.jobs.map((j) => ({ ...j, previewFrame: undefined })),
         // Intentionally excluded: newCompletedCount, isGenerating

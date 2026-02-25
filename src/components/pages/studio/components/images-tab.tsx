@@ -74,7 +74,7 @@ export const ImagesTab: React.FC = () => {
               seed,
               size: qwenParams.size,
               status: (dream.status as StudioImage["status"]) || "queue",
-              selected: false,
+              selected: true,
             });
           })
           .catch((err) => {
