@@ -62,7 +62,7 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
     }
     setLoading(true);
     axiosClient
-      .get(`/v1/playlist/${selectedPlaylistId}/items?take=500&skip=0`)
+      .get(`/v1/playlist/${selectedPlaylistId}/items?take=100&skip=0`)
       .then(({ data }) => {
         setItems(
           data.data.items.filter(

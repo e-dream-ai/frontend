@@ -25,11 +25,8 @@ export const ResultsTab: React.FC = () => {
   const actions = useStudioStore((s) => s.actions);
   const jobs = useStudioStore((s) => s.jobs);
   const toggleJobUprez = useStudioStore((s) => s.toggleJobUprez);
-  const clearSelectedForUprez = useStudioStore((s) => s.clearSelectedForUprez);
   const addJob = useStudioStore((s) => s.addJob);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
-  const uprezPlaylistId = useStudioStore((s) => s.uprezPlaylistId);
-  const setUprezPlaylistId = useStudioStore((s) => s.setUprezPlaylistId);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const createDream = useCreateDreamFromPrompt();
 
@@ -82,9 +79,7 @@ export const ResultsTab: React.FC = () => {
   const progressPercent =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  const uprezCount = jobs.filter(
-    (j) => j.selectedForUprez && j.status === "processed" && j.jobType !== "uprez",
-  ).length;
+  const uprezCount = jobs.filter((j) => j.selectedForUprez).length;
 
   const timeEstimate = useMemo(() => {
     const done = wanJobs.filter((j) => j.startedAt && j.completedAt);
@@ -119,26 +114,6 @@ export const ResultsTab: React.FC = () => {
 
     setIsUprezzing(true);
     try {
-      // Create or reuse a separate playlist for uprez results
-      let playlistId = uprezPlaylistId;
-      if (!playlistId) {
-        let baseName = "Studio";
-        if (outputPlaylistId) {
-          try {
-            const { data: plData } = await axiosClient.get(`/v1/playlist/${outputPlaylistId}`);
-            baseName = plData.data?.playlist?.name || baseName;
-          } catch {}
-        }
-        const name = `${baseName} - Uprez`;
-        const { data } = await axiosClient.post("/v1/playlist", { name });
-        playlistId = data.data?.playlist?.uuid;
-        if (!playlistId) {
-          console.error("Uprez playlist creation returned no UUID");
-          return;
-        }
-        setUprezPlaylistId(playlistId);
-      }
-
       for (const job of toUprez) {
         const algoParams = {
           infinidream_algorithm: "uprez",
@@ -166,19 +141,20 @@ export const ResultsTab: React.FC = () => {
             selectedForUprez: false,
           });
 
-          await axiosClient.put(
-            `/v1/playlist/${playlistId}/add-item`,
-            { type: "dream", uuid: dream.uuid },
-          );
+          if (outputPlaylistId) {
+            await axiosClient.put(`/v1/playlist/${outputPlaylistId}/add-item`, {
+              type: "dream",
+              uuid: dream.uuid,
+            });
+          }
         } catch (err) {
           console.error("Failed to create uprez job:", err);
         }
       }
-      clearSelectedForUprez();
     } finally {
       setIsUprezzing(false);
     }
-  }, [jobs, createDream, addJob, uprezPlaylistId, setUprezPlaylistId, clearSelectedForUprez]);
+  }, [jobs, createDream, addJob, outputPlaylistId]);
 
   const handleRetryFailed = useCallback(async () => {
     // Only retry wan-i2v jobs (uprez retries not yet supported)
@@ -401,22 +377,13 @@ export const ResultsTab: React.FC = () => {
             {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
           </ActionButton>
         )}
-        {uprezPlaylistId && (
-          <ActionButton
-            onClick={() =>
-              window.open(`/playlist/${uprezPlaylistId}`, "_blank")
-            }
-          >
-            View Uprez Playlist
-          </ActionButton>
-        )}
         {outputPlaylistId && (
           <ActionButton
             onClick={() =>
               window.open(`/playlist/${outputPlaylistId}`, "_blank")
             }
           >
-            View Work Playlist
+            View Playlist
           </ActionButton>
         )}
         <ActionButton

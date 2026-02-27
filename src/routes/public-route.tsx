@@ -11,7 +11,7 @@ export const PublicRoute: React.FC<{
 
   if (user && !isLoading) {
     if (location.pathname === ROUTES.MAGIC && state?.isEmailVerification) {
-      return <Navigate to={ROUTES.INSTALL} replace />;
+      return <Navigate to={ROUTES.HELP} replace />;
     }
     return <Navigate to={ROUTES.PLAYLISTS} replace />;
   }

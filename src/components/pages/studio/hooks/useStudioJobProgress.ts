@@ -34,9 +34,6 @@ export const useStudioJobProgress = () => {
     activeTabRef.current = activeTab;
   }, [activeTab]);
 
-  // Track which UUIDs have already triggered the badge increment
-  const completedFlaggedUuids = useRef(new Set<string>());
-
   // Stable refs for store actions (never change)
   const updateImageRef = useRef(updateImage);
   const updateJobRef = useRef(updateJob);
@@ -82,23 +79,6 @@ export const useStudioJobProgress = () => {
           previewFrame: preview_frame,
           ...(mappedStatus ? { status: mappedStatus } : {}),
         });
-
-        // Fetch final thumbnail URL when image completes
-        if (mappedStatus === "processed") {
-          axiosClient
-            .get(`/v1/dream/${dream_uuid}`)
-            .then(({ data: respData }) => {
-              const dream = respData.data?.dream;
-              if (dream?.thumbnail) {
-                updateImageRef.current(dream_uuid, {
-                  url: dream.thumbnail,
-                });
-              }
-            })
-            .catch(() => {
-              // Polling fallback will handle this
-            });
-        }
       }
 
       const job = jobsRef.current.find((j) => j.dreamUuid === dream_uuid);
@@ -115,10 +95,8 @@ export const useStudioJobProgress = () => {
         if (
           wasNotCompleted &&
           isNowCompleted &&
-          !completedFlaggedUuids.current.has(dream_uuid) &&
           activeTabRef.current !== "results"
         ) {
-          completedFlaggedUuids.current.add(dream_uuid);
           incrementNewCompletedRef.current();
         }
       }
@@ -130,60 +108,26 @@ export const useStudioJobProgress = () => {
     };
   }, [socket]);
 
-  // --- Effect 2: Join/leave socket rooms for pending UUIDs (diff-based) ---
-  const joinedRoomsRef = useRef(new Set<string>());
-  const socketRef = useRef(socket);
+  // --- Effect 2: Join/leave socket rooms for pending UUIDs ---
   useEffect(() => {
-    socketRef.current = socket;
-  }, [socket]);
+    if (!socket || pendingUuids.length === 0) return;
 
-  useEffect(() => {
-    if (!socket) return;
-
-    const currentSet = new Set(pendingUuids);
-
-    // Join rooms we haven't joined yet
-    const toJoin = pendingUuids.filter(
-      (uuid) => !joinedRoomsRef.current.has(uuid),
-    );
-    toJoin.forEach((uuid) => {
-      socket.emit(JOIN_DREAM_ROOM_EVENT, uuid);
-      joinedRoomsRef.current.add(uuid);
-    });
-
-    // Leave rooms no longer needed
-    for (const uuid of joinedRoomsRef.current) {
-      if (!currentSet.has(uuid)) {
-        socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
-        joinedRoomsRef.current.delete(uuid);
-      }
-    }
-
-    // On reconnect, rejoin all current rooms
-    const handleReconnect = () => {
-      joinedRoomsRef.current.forEach((uuid) => {
+    const joinRooms = () => {
+      pendingUuids.forEach((uuid) => {
         socket.emit(JOIN_DREAM_ROOM_EVENT, uuid);
       });
     };
-    socket.on("connect", handleReconnect);
+
+    if (socket.connected) joinRooms();
+    socket.on("connect", joinRooms);
 
     return () => {
-      socket.off("connect", handleReconnect);
+      socket.off("connect", joinRooms);
+      pendingUuids.forEach((uuid) => {
+        socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
+      });
     };
   }, [socket, pendingUuids]);
-
-  // --- Cleanup: leave all rooms on unmount ---
-  useEffect(() => {
-    const rooms = joinedRoomsRef.current;
-    return () => {
-      const s = socketRef.current;
-      if (!s) return;
-      rooms.forEach((uuid) => {
-        s.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
-      });
-      rooms.clear();
-    };
-  }, []);
 
   // --- Effect 3: Polling fallback ---
   const pollPendingRef = useRef<() => Promise<void>>();
@@ -223,10 +167,8 @@ export const useStudioJobProgress = () => {
           if (
             wasNotCompleted &&
             isNowCompleted &&
-            !completedFlaggedUuids.current.has(job.dreamUuid) &&
             activeTabRef.current !== "results"
           ) {
-            completedFlaggedUuids.current.add(job.dreamUuid);
             incrementNewCompletedRef.current();
           }
         } catch {

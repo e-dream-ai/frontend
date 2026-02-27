@@ -55,6 +55,35 @@ Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
 The page will reload if you make edits.\
 You will also see any lint errors in the console.
 
+## Run full stack locally
+
+Make sure you already have the env files ready.
+
+1. Start `presign-service` first:
+
+```bash
+cd presign-service
+go run main.go
+```
+
+2. Start `backend` in a new terminal:
+
+```bash
+cd backend
+pnpm i
+pnpm dev
+```
+
+3. Start `frontend` in a new terminal:
+
+```bash
+cd frontend
+pnpm i
+pnpm dev
+```
+
+After all three are running, the app should be ready.
+
 ## Build
 
 Run build command

@@ -64,27 +64,6 @@ describe("studio.store", () => {
       useStudioStore.getState().setActiveTab("results");
       expect(useStudioStore.getState().newCompletedCount).toBe(0);
     });
-
-    it("atomically sets activeTab and clears newCompletedCount", () => {
-      useStudioStore.getState().incrementNewCompleted();
-      useStudioStore.getState().incrementNewCompleted();
-
-      // Subscribe and capture intermediate states
-      const snapshots: Array<{ activeTab: string; count: number }> = [];
-      const unsub = useStudioStore.subscribe((state) => {
-        snapshots.push({
-          activeTab: state.activeTab,
-          count: state.newCompletedCount,
-        });
-      });
-
-      useStudioStore.getState().setActiveTab("results");
-      unsub();
-
-      // Should be exactly ONE state update, not two
-      expect(snapshots).toHaveLength(1);
-      expect(snapshots[0]).toEqual({ activeTab: "results", count: 0 });
-    });
   });
 
   describe("updateJob timestamps", () => {
@@ -127,35 +106,6 @@ describe("studio.store", () => {
 
       useStudioStore.getState().toggleComboExcluded("key1");
       expect(useStudioStore.getState().excludedCombos.has("key1")).toBe(false);
-    });
-  });
-
-  describe("clearSelectedForUprez", () => {
-    it("clears selectedForUprez on all non-uprez processed jobs", () => {
-      useStudioStore.getState().addJob({
-        imageId: "img1",
-        actionId: "act1",
-        dreamUuid: "dream1",
-        jobType: "wan-i2v",
-        status: "processed",
-        selectedForUprez: true,
-      });
-      useStudioStore.getState().addJob({
-        imageId: "img1",
-        actionId: "act2",
-        dreamUuid: "dream2",
-        jobType: "wan-i2v",
-        status: "processing",
-        selectedForUprez: true,
-      });
-
-      useStudioStore.getState().clearSelectedForUprez();
-
-      const jobs = useStudioStore.getState().jobs;
-      // Processed job should be cleared
-      expect(jobs[0].selectedForUprez).toBe(false);
-      // Non-processed job should be unchanged
-      expect(jobs[1].selectedForUprez).toBe(true);
     });
   });
 
