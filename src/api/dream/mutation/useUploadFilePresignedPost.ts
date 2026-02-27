@@ -3,7 +3,6 @@ import { PresignedPostRequest } from "@/types/dream.types";
 import { FILE_FORM } from "@/constants/file.constants";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
-import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import axios from "axios";
 
 export const UPLOAD_FILE_PRESIGNED_POST_MUTATION_KEY =
@@ -37,9 +36,6 @@ const uploadFilePresignedPost = ({
     formData.append(FILE_FORM.FILE, values?.file ?? "");
     return axios
       .post(values?.params?.url ?? "", formData, {
-        headers: getRequestHeaders({
-          contentType: ContentType.multipart,
-        }),
         onUploadProgress: (ev) => {
           const progress = ev.loaded / (ev?.total ?? 0);
           onChangeUploadProgress?.(Math.round(progress * 100));
