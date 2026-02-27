@@ -1,8 +1,12 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import { useBatchSubmit } from "../hooks/useBatchSubmit";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import { axiosClient } from "@/client/axios.client";
+import {
+  clampDurationToAllowed,
+  getAllowedDurationsForActions,
+} from "../constants/duration-options";
 import {
   GenerateSection,
   SectionTitle,
@@ -27,7 +31,6 @@ import {
   ComboCountText,
 } from "./generate-tab.styled";
 
-const DURATION_OPTIONS = [3, 5, 7, 10];
 const STEPS_OPTIONS = [20, 25, 30, 40];
 const GUIDANCE_OPTIONS = [3.0, 4.0, 5.0, 6.0, 7.0];
 
@@ -59,6 +62,21 @@ export const GenerateTab: React.FC = () => {
     () => getSelectedCombinations(),
     [getSelectedCombinations],
   );
+  const durationOptions = useMemo(
+    () => getAllowedDurationsForActions(newCombos.map(({ action }) => action)),
+    [newCombos],
+  );
+
+  useEffect(() => {
+    const nextDuration = clampDurationToAllowed(
+      wanParams.duration,
+      durationOptions,
+    );
+    if (nextDuration !== wanParams.duration) {
+      setWanParams({ duration: nextDuration });
+    }
+  }, [durationOptions, wanParams.duration, setWanParams]);
+
   const totalPossible = selectedImages.length * enabledActions.length;
 
   const handleCreatePlaylist = async () => {
@@ -152,7 +170,7 @@ export const GenerateTab: React.FC = () => {
                 setWanParams({ duration: Number(e.target.value) })
               }
             >
-              {DURATION_OPTIONS.map((d) => (
+              {durationOptions.map((d) => (
                 <option key={d} value={d}>
                   {d} seconds
                 </option>

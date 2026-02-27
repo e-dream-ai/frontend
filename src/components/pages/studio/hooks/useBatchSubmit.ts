@@ -3,6 +3,11 @@ import { useStudioStore } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import { axiosClient } from "@/client/axios.client";
 import { createComboKey } from "@/types/studio.types";
+import {
+  clampDurationToAllowed,
+  getAllowedDurationsForActions,
+  hasActionLoras,
+} from "../constants/duration-options";
 
 const BATCH_SIZE = 5;
 
@@ -64,6 +69,13 @@ export const useBatchSubmit = () => {
       }
 
       const combos = getSelectedCombinations();
+      const allowedDurations = getAllowedDurationsForActions(
+        combos.map(({ action }) => action),
+      );
+      const duration = clampDurationToAllowed(
+        wanParams.duration,
+        allowedDurations,
+      );
       let jobsAdded = 0;
 
       for (let i = 0; i < combos.length; i += BATCH_SIZE) {
@@ -72,16 +84,14 @@ export const useBatchSubmit = () => {
         const results = await Promise.allSettled(
           batch.map(async ({ image, action }) => {
             const batchIdentifier = createComboKey(image.uuid, action.prompt);
-            const hasLoras =
-              (action.highNoiseLoras && action.highNoiseLoras.length > 0) ||
-              (action.lowNoiseLoras && action.lowNoiseLoras.length > 0);
+            const hasLoras = hasActionLoras(action);
 
             const algoParams = hasLoras
               ? {
                   infinidream_algorithm: "wan-i2v-lora" as const,
                   prompt: action.prompt,
                   image: image.uuid,
-                  duration: wanParams.duration,
+                  duration,
                   num_inference_steps: wanParams.numInferenceSteps,
                   guidance: wanParams.guidance,
                   seed: -1,
@@ -93,7 +103,7 @@ export const useBatchSubmit = () => {
                   prompt: action.prompt,
                   image: image.uuid,
                   size: image.size || "1280*720",
-                  duration: wanParams.duration,
+                  duration,
                   num_inference_steps: wanParams.numInferenceSteps,
                   guidance: wanParams.guidance,
                 };

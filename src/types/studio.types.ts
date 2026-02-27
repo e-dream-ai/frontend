@@ -35,6 +35,7 @@ export interface StudioJob {
   status: "queue" | "processing" | "processed" | "failed";
   progress?: number;
   previewFrame?: string;
+  thumbnailUrl?: string;
   selectedForUprez: boolean;
   uprezed?: boolean;
   startedAt?: number;

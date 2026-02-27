@@ -5,6 +5,11 @@ import { axiosClient } from "@/client/axios.client";
 import { createComboKey } from "@/types/studio.types";
 import type { StudioJob } from "@/types/studio.types";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
+import {
+  clampDurationToAllowed,
+  getAllowedDurationsForActions,
+  hasActionLoras,
+} from "../constants/duration-options";
 import { GenerateSection, SectionTitle } from "./images-tab.styled";
 import { GridTable, GridHeader, GridRowHeader } from "./generate-tab.styled";
 import {
@@ -236,6 +241,15 @@ export const ResultsTab: React.FC = () => {
     );
     if (failedJobs.length === 0) return;
 
+    const failedActionIds = new Set(failedJobs.map((j) => j.actionId));
+    const allowedDurations = getAllowedDurationsForActions(
+      actions.filter((action) => failedActionIds.has(action.id)),
+    );
+    const duration = clampDurationToAllowed(
+      wanParams.duration,
+      allowedDurations,
+    );
+
     setIsRetrying(true);
     try {
       for (let i = 0; i < failedJobs.length; i += BATCH_SIZE) {
@@ -247,9 +261,7 @@ export const ResultsTab: React.FC = () => {
             const action = actions.find((a) => a.id === job.actionId);
             if (!image || !action) return;
 
-            const hasLoras =
-              (action.highNoiseLoras && action.highNoiseLoras.length > 0) ||
-              (action.lowNoiseLoras && action.lowNoiseLoras.length > 0);
+            const hasLoras = hasActionLoras(action);
 
             const batchIdentifier = createComboKey(image.uuid, action.prompt);
 
@@ -258,7 +270,7 @@ export const ResultsTab: React.FC = () => {
                   infinidream_algorithm: "wan-i2v-lora" as const,
                   prompt: action.prompt,
                   image: image.uuid,
-                  duration: wanParams.duration,
+                  duration,
                   num_inference_steps: wanParams.numInferenceSteps,
                   guidance: wanParams.guidance,
                   seed: -1,
@@ -270,7 +282,7 @@ export const ResultsTab: React.FC = () => {
                   prompt: action.prompt,
                   image: image.uuid,
                   size: image.size || "1280*720",
-                  duration: wanParams.duration,
+                  duration,
                   num_inference_steps: wanParams.numInferenceSteps,
                   guidance: wanParams.guidance,
                 };
@@ -400,6 +412,11 @@ export const ResultsTab: React.FC = () => {
                               {job.previewFrame ? (
                                 <ResultThumbImg
                                   src={`data:image/jpeg;base64,${job.previewFrame}`}
+                                  alt="preview"
+                                />
+                              ) : job.thumbnailUrl ? (
+                                <ResultThumbImg
+                                  src={job.thumbnailUrl}
                                   alt="preview"
                                 />
                               ) : null}
