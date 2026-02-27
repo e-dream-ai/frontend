@@ -21,6 +21,8 @@ type StudioState = {
   addImage: (image: StudioImage) => void;
   updateImage: (uuid: string, updates: Partial<StudioImage>) => void;
   toggleImageSelected: (uuid: string) => void;
+  selectAllImages: () => void;
+  deselectAllImages: () => void;
   removeImage: (uuid: string) => void;
 
   isGenerating: boolean;
@@ -37,6 +39,8 @@ type StudioState = {
   setWanParams: (params: Partial<WanI2VParams>) => void;
   outputPlaylistId: string | null;
   setOutputPlaylistId: (id: string | null) => void;
+  uprezPlaylistId: string | null;
+  setUprezPlaylistId: (id: string | null) => void;
 
   excludedCombos: Set<string>;
   toggleComboExcluded: (key: string) => void;
@@ -46,6 +50,8 @@ type StudioState = {
   updateJob: (dreamUuid: string, updates: Partial<StudioJob>) => void;
   removeJob: (dreamUuid: string) => void;
   toggleJobUprez: (dreamUuid: string) => void;
+  selectAllJobsForUprez: () => void;
+  deselectAllJobsForUprez: () => void;
 
   newCompletedCount: number;
   incrementNewCompleted: () => void;
@@ -90,6 +96,16 @@ export const useStudioStore = create<StudioState>()(
             img.uuid === uuid ? { ...img, selected: !img.selected } : img,
           ),
         })),
+      selectAllImages: () =>
+        set((s) => ({
+          images: s.images.map((img) =>
+            img.status === "processed" ? { ...img, selected: true } : img,
+          ),
+        })),
+      deselectAllImages: () =>
+        set((s) => ({
+          images: s.images.map((img) => ({ ...img, selected: false })),
+        })),
       removeImage: (uuid: string) =>
         set((s) => ({ images: s.images.filter((img) => img.uuid !== uuid) })),
 
@@ -121,6 +137,8 @@ export const useStudioStore = create<StudioState>()(
         set((s) => ({ wanParams: { ...s.wanParams, ...params } })),
       outputPlaylistId: null,
       setOutputPlaylistId: (id: string | null) => set({ outputPlaylistId: id }),
+      uprezPlaylistId: null,
+      setUprezPlaylistId: (id: string | null) => set({ uprezPlaylistId: id }),
 
       excludedCombos: new Set<string>(),
       toggleComboExcluded: (key: string) =>
@@ -159,6 +177,18 @@ export const useStudioStore = create<StudioState>()(
               : j,
           ),
         })),
+      selectAllJobsForUprez: () =>
+        set((s) => ({
+          jobs: s.jobs.map((j) =>
+            j.status === "processed" && j.jobType !== "uprez" && !j.uprezed
+              ? { ...j, selectedForUprez: true }
+              : j,
+          ),
+        })),
+      deselectAllJobsForUprez: () =>
+        set((s) => ({
+          jobs: s.jobs.map((j) => ({ ...j, selectedForUprez: false })),
+        })),
 
       newCompletedCount: 0,
       incrementNewCompleted: () =>
@@ -174,6 +204,7 @@ export const useStudioStore = create<StudioState>()(
           actions: [],
           wanParams: DEFAULT_WAN_PARAMS,
           outputPlaylistId: null,
+          uprezPlaylistId: null,
           excludedCombos: new Set<string>(),
           jobs: [],
           newCompletedCount: 0,
@@ -194,6 +225,7 @@ export const useStudioStore = create<StudioState>()(
         actions: state.actions,
         wanParams: state.wanParams,
         outputPlaylistId: state.outputPlaylistId,
+        uprezPlaylistId: state.uprezPlaylistId,
         excludedCombos: [...(state.excludedCombos as Set<string>)],
         jobs: state.jobs.map((j) => ({ ...j, previewFrame: undefined })),
         // Intentionally excluded: newCompletedCount, isGenerating

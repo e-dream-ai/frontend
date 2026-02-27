@@ -92,6 +92,15 @@ export const ActionBar = styled.div`
   flex-wrap: wrap;
 `;
 
+export const ScrollableGrid = styled.div`
+  overflow-x: auto;
+`;
+
+export const TimeEstimate = styled.span`
+  margin-right: 1rem;
+  color: #888;
+`;
+
 export const ActionButton = styled.button<{
   $variant?: "primary" | "secondary";
 }>`

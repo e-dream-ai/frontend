@@ -10,6 +10,7 @@ import {
   StudioContainer,
   StudioHeader,
   StudioTitle,
+  NewSessionButton,
 } from "./studio.page.styled";
 
 export const StudioPage: React.FC = () => {
@@ -35,20 +36,9 @@ export const StudioPage: React.FC = () => {
       <StudioHeader>
         <StudioTitle>Studio</StudioTitle>
         {hasContent && (
-          <button
-            onClick={handleNewSession}
-            style={{
-              background: "transparent",
-              border: "1px solid #555",
-              color: "#aaa",
-              padding: "0.375rem 0.75rem",
-              borderRadius: "6px",
-              fontSize: "0.8125rem",
-              cursor: "pointer",
-            }}
-          >
+          <NewSessionButton onClick={handleNewSession}>
             New Session
-          </button>
+          </NewSessionButton>
         )}
       </StudioHeader>
       <StudioTabs />

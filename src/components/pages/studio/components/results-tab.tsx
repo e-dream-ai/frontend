@@ -4,6 +4,7 @@ import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFro
 import { axiosClient } from "@/client/axios.client";
 import { createComboKey } from "@/types/studio.types";
 import type { StudioJob } from "@/types/studio.types";
+import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import { GenerateSection, SectionTitle } from "./images-tab.styled";
 import { GridTable, GridHeader, GridRowHeader } from "./generate-tab.styled";
 import {
@@ -18,17 +19,29 @@ import {
   UprezStarBadge,
   ActionBar,
   ActionButton,
+  ScrollableGrid,
+  TimeEstimate,
 } from "./results-tab.styled";
+
+const BATCH_SIZE = 5;
 
 export const ResultsTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const actions = useStudioStore((s) => s.actions);
   const jobs = useStudioStore((s) => s.jobs);
   const toggleJobUprez = useStudioStore((s) => s.toggleJobUprez);
+  const selectAllJobsForUprez = useStudioStore((s) => s.selectAllJobsForUprez);
+  const deselectAllJobsForUprez = useStudioStore(
+    (s) => s.deselectAllJobsForUprez,
+  );
   const addJob = useStudioStore((s) => s.addJob);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
+  const uprezPlaylistId = useStudioStore((s) => s.uprezPlaylistId);
+  const setUprezPlaylistId = useStudioStore((s) => s.setUprezPlaylistId);
+  const updateJob = useStudioStore((s) => s.updateJob);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const createDream = useCreateDreamFromPrompt();
+  const { addPlaylistToCache } = useUserPlaylists();
 
   const wanParams = useStudioStore((s) => s.wanParams);
   const removeJob = useStudioStore((s) => s.removeJob);
@@ -73,13 +86,33 @@ export const ResultsTab: React.FC = () => {
     () => jobs.filter((j) => j.jobType !== "uprez"),
     [jobs],
   );
-  const completedCount = wanJobs.filter((j) => j.status === "processed").length;
+
+  const { completedCount, failedCount } = useMemo(() => {
+    let completed = 0;
+    let failed = 0;
+    for (const j of wanJobs) {
+      if (j.status === "processed") completed++;
+      else if (j.status === "failed") failed++;
+    }
+    return { completedCount: completed, failedCount: failed };
+  }, [wanJobs]);
+
   const totalCount = wanJobs.length;
-  const failedCount = wanJobs.filter((j) => j.status === "failed").length;
   const progressPercent =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  const uprezCount = jobs.filter((j) => j.selectedForUprez).length;
+  const uprezCount = useMemo(
+    () => jobs.filter((j) => j.selectedForUprez && !j.uprezed).length,
+    [jobs],
+  );
+
+  const uprezableWanJobs = useMemo(
+    () => wanJobs.filter((j) => j.status === "processed" && !j.uprezed),
+    [wanJobs],
+  );
+  const allUprezableSelectedForUprez =
+    uprezableWanJobs.length > 0 &&
+    uprezableWanJobs.every((j) => j.selectedForUprez);
 
   const timeEstimate = useMemo(() => {
     const done = wanJobs.filter((j) => j.startedAt && j.completedAt);
@@ -94,67 +127,107 @@ export const ResultsTab: React.FC = () => {
     return minutes <= 1 ? "~1 min remaining" : `~${minutes} min remaining`;
   }, [wanJobs, totalCount, completedCount, failedCount]);
 
-  const getJob = useCallback(
-    (imageUuid: string, actionId: string) =>
-      jobs.find(
-        (j) =>
-          j.imageId === imageUuid &&
-          j.actionId === actionId &&
-          j.jobType !== "uprez",
-      ),
-    [jobs],
-  );
+  const jobMap = useMemo(() => {
+    const map = new Map<string, StudioJob>();
+    for (const j of jobs) {
+      if (j.jobType !== "uprez") {
+        map.set(`${j.imageId}:${j.actionId}`, j);
+      }
+    }
+    return map;
+  }, [jobs]);
 
   const handleUprezSelected = useCallback(async () => {
     const toUprez = jobs.filter(
       (j) =>
-        j.selectedForUprez && j.status === "processed" && j.jobType !== "uprez",
+        j.selectedForUprez &&
+        j.status === "processed" &&
+        j.jobType !== "uprez" &&
+        !j.uprezed,
     );
     if (toUprez.length === 0) return;
 
     setIsUprezzing(true);
     try {
-      for (const job of toUprez) {
-        const algoParams = {
-          infinidream_algorithm: "uprez",
-          video_uuid: job.dreamUuid,
-          upscale_factor: 2,
-          interpolation_factor: 2,
-        };
+      // Create a dedicated uprez playlist if we don't have one yet
+      let playlistId = uprezPlaylistId;
+      if (!playlistId) {
+        const now = new Date();
+        const name = `Studio Uprez ${now
+          .toISOString()
+          .slice(0, 16)
+          .replace("T", " ")}`;
+        const { data } = await axiosClient.post("/v1/playlist", { name });
+        const playlist = data.data.playlist;
+        playlistId = playlist.uuid;
+        setUprezPlaylistId(playlistId);
+        addPlaylistToCache({ uuid: playlist.uuid, name: playlist.name });
+      }
 
-        try {
-          const response = await createDream.mutateAsync({
-            name: `Uprez - ${job.dreamUuid.slice(0, 8)}`,
-            prompt: JSON.stringify(algoParams),
-            description: `Uprez of ${job.dreamUuid}`,
-          });
+      for (let i = 0; i < toUprez.length; i += BATCH_SIZE) {
+        const batch = toUprez.slice(i, i + BATCH_SIZE);
 
-          const dream = response.data?.dream;
-          if (!dream) continue;
+        const results = await Promise.allSettled(
+          batch.map(async (job) => {
+            const algoParams = {
+              infinidream_algorithm: "uprez",
+              video_uuid: job.dreamUuid,
+              upscale_factor: 2,
+              interpolation_factor: 2,
+            };
 
-          addJob({
-            imageId: job.imageId,
-            actionId: `uprez-${job.actionId}`,
-            dreamUuid: dream.uuid,
-            jobType: "uprez",
-            status: (dream.status as StudioJob["status"]) || "queue",
-            selectedForUprez: false,
-          });
-
-          if (outputPlaylistId) {
-            await axiosClient.put(`/v1/playlist/${outputPlaylistId}/add-item`, {
-              type: "dream",
-              uuid: dream.uuid,
+            const response = await createDream.mutateAsync({
+              name: `Uprez - ${job.dreamUuid.slice(0, 8)}`,
+              prompt: JSON.stringify(algoParams),
+              description: `Uprez of ${job.dreamUuid}`,
             });
+
+            const dream = response.data?.dream;
+            if (!dream) return;
+
+            addJob({
+              imageId: job.imageId,
+              actionId: `uprez-${job.actionId}`,
+              dreamUuid: dream.uuid,
+              jobType: "uprez",
+              status: (dream.status as StudioJob["status"]) || "queue",
+              selectedForUprez: false,
+            });
+
+            // Add to the dedicated uprez playlist
+            if (playlistId) {
+              await axiosClient.put(`/v1/playlist/${playlistId}/add-item`, {
+                type: "dream",
+                uuid: dream.uuid,
+              });
+            }
+
+            // Mark source job as uprezed and deselect it
+            updateJob(job.dreamUuid, {
+              selectedForUprez: false,
+              uprezed: true,
+            });
+          }),
+        );
+
+        for (const result of results) {
+          if (result.status === "rejected") {
+            console.error("Failed to create uprez job:", result.reason);
           }
-        } catch (err) {
-          console.error("Failed to create uprez job:", err);
         }
       }
     } finally {
       setIsUprezzing(false);
     }
-  }, [jobs, createDream, addJob, outputPlaylistId]);
+  }, [
+    jobs,
+    createDream,
+    addJob,
+    updateJob,
+    uprezPlaylistId,
+    setUprezPlaylistId,
+    addPlaylistToCache,
+  ]);
 
   const handleRetryFailed = useCallback(async () => {
     // Only retry wan-i2v jobs (uprez retries not yet supported)
@@ -165,67 +238,78 @@ export const ResultsTab: React.FC = () => {
 
     setIsRetrying(true);
     try {
-      for (const job of failedJobs) {
-        const image = images.find((img) => img.uuid === job.imageId);
-        const action = actions.find((a) => a.id === job.actionId);
-        if (!image || !action) continue;
+      for (let i = 0; i < failedJobs.length; i += BATCH_SIZE) {
+        const batch = failedJobs.slice(i, i + BATCH_SIZE);
 
-        const hasLoras =
-          (action.highNoiseLoras && action.highNoiseLoras.length > 0) ||
-          (action.lowNoiseLoras && action.lowNoiseLoras.length > 0);
+        const results = await Promise.allSettled(
+          batch.map(async (job) => {
+            const image = images.find((img) => img.uuid === job.imageId);
+            const action = actions.find((a) => a.id === job.actionId);
+            if (!image || !action) return;
 
-        const batchIdentifier = createComboKey(image.uuid, action.prompt);
+            const hasLoras =
+              (action.highNoiseLoras && action.highNoiseLoras.length > 0) ||
+              (action.lowNoiseLoras && action.lowNoiseLoras.length > 0);
 
-        const algoParams = hasLoras
-          ? {
-              infinidream_algorithm: "wan-i2v-lora" as const,
-              prompt: action.prompt,
-              image: image.uuid,
-              duration: wanParams.duration,
-              num_inference_steps: wanParams.numInferenceSteps,
-              guidance: wanParams.guidance,
-              seed: -1,
-              high_noise_loras: action.highNoiseLoras ?? [],
-              low_noise_loras: action.lowNoiseLoras ?? [],
-            }
-          : {
-              infinidream_algorithm: "wan-i2v" as const,
-              prompt: action.prompt,
-              image: image.uuid,
-              size: image.size || "1280*720",
-              duration: wanParams.duration,
-              num_inference_steps: wanParams.numInferenceSteps,
-              guidance: wanParams.guidance,
-            };
+            const batchIdentifier = createComboKey(image.uuid, action.prompt);
 
-        try {
-          const response = await createDream.mutateAsync({
-            name: `${image.name} - ${action.prompt.slice(0, 40)}`,
-            prompt: JSON.stringify(algoParams),
-            description: `Studio batch retry. BATCH_IDENTIFIER:${batchIdentifier}`,
-          });
+            const algoParams = hasLoras
+              ? {
+                  infinidream_algorithm: "wan-i2v-lora" as const,
+                  prompt: action.prompt,
+                  image: image.uuid,
+                  duration: wanParams.duration,
+                  num_inference_steps: wanParams.numInferenceSteps,
+                  guidance: wanParams.guidance,
+                  seed: -1,
+                  high_noise_loras: action.highNoiseLoras ?? [],
+                  low_noise_loras: action.lowNoiseLoras ?? [],
+                }
+              : {
+                  infinidream_algorithm: "wan-i2v" as const,
+                  prompt: action.prompt,
+                  image: image.uuid,
+                  size: image.size || "1280*720",
+                  duration: wanParams.duration,
+                  num_inference_steps: wanParams.numInferenceSteps,
+                  guidance: wanParams.guidance,
+                };
 
-          const dream = response.data?.dream;
-          if (!dream) continue;
-
-          removeJob(job.dreamUuid);
-          addJob({
-            imageId: job.imageId,
-            actionId: job.actionId,
-            dreamUuid: dream.uuid,
-            jobType: "wan-i2v",
-            status: (dream.status as StudioJob["status"]) || "queue",
-            selectedForUprez: false,
-          });
-
-          if (outputPlaylistId) {
-            await axiosClient.put(`/v1/playlist/${outputPlaylistId}/add-item`, {
-              type: "dream",
-              uuid: dream.uuid,
+            const response = await createDream.mutateAsync({
+              name: `${image.name} - ${action.prompt.slice(0, 40)}`,
+              prompt: JSON.stringify(algoParams),
+              description: `Studio batch retry. BATCH_IDENTIFIER:${batchIdentifier}`,
             });
+
+            const dream = response.data?.dream;
+            if (!dream) return;
+
+            removeJob(job.dreamUuid);
+            addJob({
+              imageId: job.imageId,
+              actionId: job.actionId,
+              dreamUuid: dream.uuid,
+              jobType: "wan-i2v",
+              status: (dream.status as StudioJob["status"]) || "queue",
+              selectedForUprez: false,
+            });
+
+            if (outputPlaylistId) {
+              await axiosClient.put(
+                `/v1/playlist/${outputPlaylistId}/add-item`,
+                {
+                  type: "dream",
+                  uuid: dream.uuid,
+                },
+              );
+            }
+          }),
+        );
+
+        for (const result of results) {
+          if (result.status === "rejected") {
+            console.error("Failed to retry job:", result.reason);
           }
-        } catch (err) {
-          console.error("Failed to retry job:", err);
         }
       }
     } finally {
@@ -250,11 +334,7 @@ export const ResultsTab: React.FC = () => {
             {completedCount} of {totalCount} complete
           </span>
           <span>
-            {timeEstimate && (
-              <span style={{ marginRight: "1rem", color: "#888" }}>
-                {timeEstimate}
-              </span>
-            )}
+            {timeEstimate && <TimeEstimate>{timeEstimate}</TimeEstimate>}
             {progressPercent}%
           </span>
         </ProgressInfo>
@@ -270,7 +350,7 @@ export const ResultsTab: React.FC = () => {
             No jobs submitted yet. Go to the Generate tab to start a batch.
           </p>
         ) : (
-          <div style={{ overflowX: "auto" }}>
+          <ScrollableGrid>
             <GridTable>
               <thead>
                 <tr>
@@ -291,7 +371,7 @@ export const ResultsTab: React.FC = () => {
                       <GridRowHeader>{image.name}</GridRowHeader>
                       {gridActions.map((action) => {
                         if (!action) return null;
-                        const job = getJob(image.uuid, action.id);
+                        const job = jobMap.get(`${image.uuid}:${action.id}`);
 
                         if (!job) {
                           return (
@@ -326,13 +406,29 @@ export const ResultsTab: React.FC = () => {
 
                               {job.status === "processed" && (
                                 <UprezStarBadge
-                                  $active={job.selectedForUprez}
+                                  $active={
+                                    job.selectedForUprez || !!job.uprezed
+                                  }
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    toggleJobUprez(job.dreamUuid);
+                                    if (!job.uprezed) {
+                                      toggleJobUprez(job.dreamUuid);
+                                    }
                                   }}
+                                  style={
+                                    job.uprezed
+                                      ? { opacity: 0.5, cursor: "default" }
+                                      : undefined
+                                  }
+                                  title={
+                                    job.uprezed ? "Already uprezed" : undefined
+                                  }
                                 >
-                                  {job.selectedForUprez ? "\u2605" : "\u2606"}
+                                  {job.uprezed
+                                    ? "\u2713"
+                                    : job.selectedForUprez
+                                      ? "\u2605"
+                                      : "\u2606"}
                                 </UprezStarBadge>
                               )}
                             </ResultThumb>
@@ -360,11 +456,24 @@ export const ResultsTab: React.FC = () => {
                 )}
               </tbody>
             </GridTable>
-          </div>
+          </ScrollableGrid>
         )}
       </GenerateSection>
 
       <ActionBar>
+        {uprezableWanJobs.length > 0 && (
+          <ActionButton
+            onClick={
+              allUprezableSelectedForUprez
+                ? deselectAllJobsForUprez
+                : selectAllJobsForUprez
+            }
+          >
+            {allUprezableSelectedForUprez
+              ? "Deselect All for Uprez"
+              : "Select All for Uprez"}
+          </ActionButton>
+        )}
         <ActionButton
           $variant="primary"
           disabled={uprezCount === 0 || isUprezzing}
@@ -384,6 +493,15 @@ export const ResultsTab: React.FC = () => {
             }
           >
             View Playlist
+          </ActionButton>
+        )}
+        {uprezPlaylistId && (
+          <ActionButton
+            onClick={() =>
+              window.open(`/playlist/${uprezPlaylistId}`, "_blank")
+            }
+          >
+            View Uprez Playlist
           </ActionButton>
         )}
         <ActionButton

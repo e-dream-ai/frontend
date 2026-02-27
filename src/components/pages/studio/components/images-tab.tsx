@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import { axiosClient } from "@/client/axios.client";
 import type { StudioImage } from "@/types/studio.types";
@@ -20,6 +20,11 @@ import {
   BottomRow,
   SelectionCount,
   NavButton,
+  SecondaryNavButton,
+  EmptyStateText,
+  ButtonRow,
+  LightboxOverlay,
+  LightboxImage,
 } from "./images-tab.styled";
 import { AddFromPlaylistModal } from "./add-from-playlist-modal";
 
@@ -34,13 +39,24 @@ export const ImagesTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const addImage = useStudioStore((s) => s.addImage);
   const toggleImageSelected = useStudioStore((s) => s.toggleImageSelected);
+  const selectAllImages = useStudioStore((s) => s.selectAllImages);
+  const deselectAllImages = useStudioStore((s) => s.deselectAllImages);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
 
   const isGenerating = useStudioStore((s) => s.isGenerating);
   const setIsGenerating = useStudioStore((s) => s.setIsGenerating);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [expandedImageUrl, setExpandedImageUrl] = useState<string | null>(null);
-  const selectedCount = images.filter((img) => img.selected).length;
+  const processedImages = useMemo(
+    () => images.filter((img) => img.status === "processed"),
+    [images],
+  );
+  const selectedCount = useMemo(
+    () => images.filter((img) => img.selected).length,
+    [images],
+  );
+  const allProcessedSelected =
+    processedImages.length > 0 && processedImages.every((img) => img.selected);
 
   const handleGenerate = useCallback(async () => {
     if (!imagePrompt.trim()) return;
@@ -135,9 +151,9 @@ export const ImagesTab: React.FC = () => {
       <GenerateSection>
         <SectionTitle>Image Library</SectionTitle>
         {images.length === 0 ? (
-          <p style={{ color: "#888", fontSize: "0.875rem" }}>
+          <EmptyStateText>
             No images yet. Generate some above or add from a playlist.
-          </p>
+          </EmptyStateText>
         ) : (
           <ImageGrid>
             {images.map((img) => (
@@ -171,23 +187,28 @@ export const ImagesTab: React.FC = () => {
           </ImageGrid>
         )}
         <BottomRow>
-          <SelectionCount>
-            {selectedCount} selected for animation
-          </SelectionCount>
-          <div style={{ display: "flex", gap: "0.5rem" }}>
-            <NavButton
-              onClick={() => setShowPlaylistModal(true)}
-              style={{
-                background: "transparent",
-                border: "1px solid #555",
-              }}
-            >
+          <ButtonRow>
+            <SelectionCount>
+              {selectedCount} selected for animation
+            </SelectionCount>
+            {processedImages.length > 0 && (
+              <SecondaryNavButton
+                onClick={
+                  allProcessedSelected ? deselectAllImages : selectAllImages
+                }
+              >
+                {allProcessedSelected ? "Deselect All" : "Select All"}
+              </SecondaryNavButton>
+            )}
+          </ButtonRow>
+          <ButtonRow>
+            <SecondaryNavButton onClick={() => setShowPlaylistModal(true)}>
               + Add from Playlist
-            </NavButton>
+            </SecondaryNavButton>
             <NavButton onClick={() => setActiveTab("actions")}>
               Continue to Actions &rarr;
             </NavButton>
-          </div>
+          </ButtonRow>
         </BottomRow>
       </GenerateSection>
 
@@ -196,30 +217,9 @@ export const ImagesTab: React.FC = () => {
       )}
 
       {expandedImageUrl && (
-        <div
-          onClick={() => setExpandedImageUrl(null)}
-          style={{
-            position: "fixed",
-            inset: 0,
-            background: "rgba(0,0,0,0.85)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            zIndex: 1000,
-            cursor: "zoom-out",
-          }}
-        >
-          <img
-            src={expandedImageUrl}
-            alt="Expanded"
-            style={{
-              maxWidth: "90vw",
-              maxHeight: "90vh",
-              objectFit: "contain",
-              borderRadius: "8px",
-            }}
-          />
-        </div>
+        <LightboxOverlay onClick={() => setExpandedImageUrl(null)}>
+          <LightboxImage src={expandedImageUrl} alt="Expanded" />
+        </LightboxOverlay>
       )}
     </>
   );

@@ -66,3 +66,20 @@ export const PlaylistRow = styled.div`
   gap: 0.75rem;
   margin-top: 1rem;
 `;
+
+export const DescriptionText = styled.p`
+  font-size: 0.8125rem;
+  color: #888;
+  margin-bottom: 1rem;
+`;
+
+export const SubmittedLabel = styled.span`
+  font-size: 0.6875rem;
+  color: #6c6;
+`;
+
+export const ComboCountText = styled.p`
+  font-size: 0.8125rem;
+  color: #888;
+  text-align: center;
+`;

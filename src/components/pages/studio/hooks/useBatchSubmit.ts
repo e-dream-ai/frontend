@@ -4,6 +4,8 @@ import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFro
 import { axiosClient } from "@/client/axios.client";
 import { createComboKey } from "@/types/studio.types";
 
+const BATCH_SIZE = 5;
+
 export const useBatchSubmit = () => {
   const images = useStudioStore((s) => s.images);
   const actions = useStudioStore((s) => s.actions);
@@ -24,6 +26,10 @@ export const useBatchSubmit = () => {
     );
     const enabledActions = actions.filter((a) => a.enabled && a.prompt.trim());
 
+    const existingJobKeys = new Set(
+      jobs.map((j) => `${j.imageId}:${j.actionId}`),
+    );
+
     const combos: Array<{
       image: (typeof selectedImages)[0];
       action: (typeof enabledActions)[0];
@@ -32,13 +38,8 @@ export const useBatchSubmit = () => {
     for (const image of selectedImages) {
       for (const action of enabledActions) {
         const comboKey = `${image.uuid}:${action.id}`;
-        if (!excludedCombos.has(comboKey)) {
-          const existingJob = jobs.find(
-            (j) => j.imageId === image.uuid && j.actionId === action.id,
-          );
-          if (!existingJob) {
-            combos.push({ image, action });
-          }
+        if (!excludedCombos.has(comboKey) && !existingJobKeys.has(comboKey)) {
+          combos.push({ image, action });
         }
       }
     }
@@ -65,69 +66,73 @@ export const useBatchSubmit = () => {
       const combos = getSelectedCombinations();
       let jobsAdded = 0;
 
-      for (const { image, action } of combos) {
-        const batchIdentifier = createComboKey(image.uuid, action.prompt);
-        const hasLoras =
-          (action.highNoiseLoras && action.highNoiseLoras.length > 0) ||
-          (action.lowNoiseLoras && action.lowNoiseLoras.length > 0);
+      for (let i = 0; i < combos.length; i += BATCH_SIZE) {
+        const batch = combos.slice(i, i + BATCH_SIZE);
 
-        const algoParams = hasLoras
-          ? {
-              infinidream_algorithm: "wan-i2v-lora" as const,
-              prompt: action.prompt,
-              image: image.uuid,
-              duration: wanParams.duration,
-              num_inference_steps: wanParams.numInferenceSteps,
-              guidance: wanParams.guidance,
-              seed: -1,
-              high_noise_loras: action.highNoiseLoras ?? [],
-              low_noise_loras: action.lowNoiseLoras ?? [],
-            }
-          : {
-              infinidream_algorithm: "wan-i2v" as const,
-              prompt: action.prompt,
-              image: image.uuid,
-              size: image.size || "1280*720",
-              duration: wanParams.duration,
-              num_inference_steps: wanParams.numInferenceSteps,
-              guidance: wanParams.guidance,
-            };
+        const results = await Promise.allSettled(
+          batch.map(async ({ image, action }) => {
+            const batchIdentifier = createComboKey(image.uuid, action.prompt);
+            const hasLoras =
+              (action.highNoiseLoras && action.highNoiseLoras.length > 0) ||
+              (action.lowNoiseLoras && action.lowNoiseLoras.length > 0);
 
-        try {
-          const response = await createDream.mutateAsync({
-            name: `${image.name} - ${action.prompt.slice(0, 40)}`,
-            prompt: JSON.stringify(algoParams),
-            description: `Studio batch. BATCH_IDENTIFIER:${batchIdentifier}`,
-          });
+            const algoParams = hasLoras
+              ? {
+                  infinidream_algorithm: "wan-i2v-lora" as const,
+                  prompt: action.prompt,
+                  image: image.uuid,
+                  duration: wanParams.duration,
+                  num_inference_steps: wanParams.numInferenceSteps,
+                  guidance: wanParams.guidance,
+                  seed: -1,
+                  high_noise_loras: action.highNoiseLoras ?? [],
+                  low_noise_loras: action.lowNoiseLoras ?? [],
+                }
+              : {
+                  infinidream_algorithm: "wan-i2v" as const,
+                  prompt: action.prompt,
+                  image: image.uuid,
+                  size: image.size || "1280*720",
+                  duration: wanParams.duration,
+                  num_inference_steps: wanParams.numInferenceSteps,
+                  guidance: wanParams.guidance,
+                };
 
-          const dream = response.data?.dream;
-          if (!dream) continue;
+            const response = await createDream.mutateAsync({
+              name: `${image.name} - ${action.prompt.slice(0, 40)}`,
+              prompt: JSON.stringify(algoParams),
+              description: `Studio batch. BATCH_IDENTIFIER:${batchIdentifier}`,
+            });
 
-          addJob({
-            imageId: image.uuid,
-            actionId: action.id,
-            dreamUuid: dream.uuid,
-            jobType: "wan-i2v",
-            status:
-              (dream.status as
-                | "queue"
-                | "processing"
-                | "processed"
-                | "failed") || "queue",
-            selectedForUprez: false,
-          });
-          jobsAdded++;
+            const dream = response.data?.dream;
+            if (!dream) return;
 
-          await axiosClient.put(`/v1/playlist/${playlistId}/add-item`, {
-            type: "dream",
-            uuid: dream.uuid,
-          });
-        } catch (err) {
-          console.error(
-            "Failed to create dream for combo:",
-            batchIdentifier,
-            err,
-          );
+            addJob({
+              imageId: image.uuid,
+              actionId: action.id,
+              dreamUuid: dream.uuid,
+              jobType: "wan-i2v",
+              status:
+                (dream.status as
+                  | "queue"
+                  | "processing"
+                  | "processed"
+                  | "failed") || "queue",
+              selectedForUprez: false,
+            });
+            jobsAdded++;
+
+            await axiosClient.put(`/v1/playlist/${playlistId}/add-item`, {
+              type: "dream",
+              uuid: dream.uuid,
+            });
+          }),
+        );
+
+        for (const result of results) {
+          if (result.status === "rejected") {
+            console.error("Failed to create dream for combo:", result.reason);
+          }
         }
       }
 

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useStudioStore } from "@/stores/studio.store";
 import {
@@ -33,10 +33,15 @@ export const ActionsTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
 
-  const selectedImageCount = images.filter(
-    (img) => img.selected && img.status === "processed",
-  ).length;
-  const enabledActionCount = actions.filter((a) => a.enabled).length;
+  const selectedImageCount = useMemo(
+    () =>
+      images.filter((img) => img.selected && img.status === "processed").length,
+    [images],
+  );
+  const enabledActionCount = useMemo(
+    () => actions.filter((a) => a.enabled).length,
+    [actions],
+  );
   const totalVideos = selectedImageCount * enabledActionCount;
 
   const handleAddAction = () => {

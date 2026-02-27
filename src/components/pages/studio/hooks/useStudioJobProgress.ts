@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import useSocket from "@/hooks/useSocket";
 import { axiosClient } from "@/client/axios.client";
 import { useStudioStore } from "@/stores/studio.store";
@@ -14,39 +14,7 @@ const POLL_INTERVAL_MS = 10_000;
 export const useStudioJobProgress = () => {
   const { socket } = useSocket();
   const images = useStudioStore((s) => s.images);
-  const updateImage = useStudioStore((s) => s.updateImage);
   const jobs = useStudioStore((s) => s.jobs);
-  const updateJob = useStudioStore((s) => s.updateJob);
-  const activeTab = useStudioStore((s) => s.activeTab);
-  const incrementNewCompleted = useStudioStore((s) => s.incrementNewCompleted);
-
-  // Refs for live data accessed inside socket/poll handlers
-  const imagesRef = useRef(images);
-  const jobsRef = useRef(jobs);
-  const activeTabRef = useRef(activeTab);
-  useEffect(() => {
-    imagesRef.current = images;
-  }, [images]);
-  useEffect(() => {
-    jobsRef.current = jobs;
-  }, [jobs]);
-  useEffect(() => {
-    activeTabRef.current = activeTab;
-  }, [activeTab]);
-
-  // Stable refs for store actions (never change)
-  const updateImageRef = useRef(updateImage);
-  const updateJobRef = useRef(updateJob);
-  const incrementNewCompletedRef = useRef(incrementNewCompleted);
-  useEffect(() => {
-    updateImageRef.current = updateImage;
-  }, [updateImage]);
-  useEffect(() => {
-    updateJobRef.current = updateJob;
-  }, [updateJob]);
-  useEffect(() => {
-    incrementNewCompletedRef.current = incrementNewCompleted;
-  }, [incrementNewCompleted]);
 
   // Stable set of pending UUIDs that need socket rooms
   const pendingUuids = useMemo(() => {
@@ -72,21 +40,23 @@ export const useStudioJobProgress = () => {
       const { dream_uuid, progress, preview_frame } = data;
       const mappedStatus = mapSocketStatus(data.status);
 
-      const image = imagesRef.current.find((img) => img.uuid === dream_uuid);
+      const state = useStudioStore.getState();
+
+      const image = state.images.find((img) => img.uuid === dream_uuid);
       if (image) {
-        updateImageRef.current(dream_uuid, {
+        state.updateImage(dream_uuid, {
           progress,
           previewFrame: preview_frame,
           ...(mappedStatus ? { status: mappedStatus } : {}),
         });
       }
 
-      const job = jobsRef.current.find((j) => j.dreamUuid === dream_uuid);
+      const job = state.jobs.find((j) => j.dreamUuid === dream_uuid);
       if (job) {
         const wasNotCompleted = job.status !== "processed";
         const isNowCompleted = mappedStatus === "processed";
 
-        updateJobRef.current(dream_uuid, {
+        state.updateJob(dream_uuid, {
           progress,
           previewFrame: preview_frame,
           ...(mappedStatus ? { status: mappedStatus } : {}),
@@ -95,9 +65,9 @@ export const useStudioJobProgress = () => {
         if (
           wasNotCompleted &&
           isNowCompleted &&
-          activeTabRef.current !== "results"
+          state.activeTab !== "results"
         ) {
-          incrementNewCompletedRef.current();
+          state.incrementNewCompleted();
         }
       }
     };
@@ -130,13 +100,18 @@ export const useStudioJobProgress = () => {
   }, [socket, pendingUuids]);
 
   // --- Effect 3: Polling fallback ---
-  const pollPendingRef = useRef<() => Promise<void>>();
+  const hasPending = pendingUuids.length > 0;
+
   useEffect(() => {
-    pollPendingRef.current = async () => {
-      const pendingImages = imagesRef.current.filter(
+    if (!hasPending) return;
+
+    const pollPending = async () => {
+      const state = useStudioStore.getState();
+
+      const pendingImages = state.images.filter(
         (img) => img.status === "queue" || img.status === "processing",
       );
-      const pendingJobs = jobsRef.current.filter(
+      const pendingJobs = state.jobs.filter(
         (j) => j.status === "queue" || j.status === "processing",
       );
 
@@ -144,7 +119,7 @@ export const useStudioJobProgress = () => {
         try {
           const { data } = await axiosClient.get(`/v1/dream/${img.uuid}`);
           const dream = data.data.dream;
-          updateImageRef.current(img.uuid, {
+          state.updateImage(img.uuid, {
             status: dream.status,
             url: dream.thumbnail || dream.video || img.url,
           });
@@ -160,31 +135,24 @@ export const useStudioJobProgress = () => {
           const wasNotCompleted = job.status !== "processed";
           const isNowCompleted = dream.status === "processed";
 
-          updateJobRef.current(job.dreamUuid, {
+          state.updateJob(job.dreamUuid, {
             status: dream.status,
           });
 
           if (
             wasNotCompleted &&
             isNowCompleted &&
-            activeTabRef.current !== "results"
+            state.activeTab !== "results"
           ) {
-            incrementNewCompletedRef.current();
+            state.incrementNewCompleted();
           }
         } catch {
           // Silently skip failed polls
         }
       }
     };
-  }, []);
 
-  const hasPending = pendingUuids.length > 0;
-
-  useEffect(() => {
-    if (!hasPending) return;
-    const interval = setInterval(() => {
-      pollPendingRef.current?.();
-    }, POLL_INTERVAL_MS);
+    const interval = setInterval(pollPending, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [hasPending]);
 };

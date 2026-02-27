@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import { useBatchSubmit } from "../hooks/useBatchSubmit";
+import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import { axiosClient } from "@/client/axios.client";
-import useAuth from "@/hooks/useAuth";
 import {
   GenerateSection,
   SectionTitle,
@@ -22,6 +22,9 @@ import {
   CellCheckbox,
   SettingsGrid,
   PlaylistRow,
+  DescriptionText,
+  SubmittedLabel,
+  ComboCountText,
 } from "./generate-tab.styled";
 
 const DURATION_OPTIONS = [3, 5, 7, 10];
@@ -39,39 +42,24 @@ export const GenerateTab: React.FC = () => {
   const setOutputPlaylistId = useStudioStore((s) => s.setOutputPlaylistId);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const jobs = useStudioStore((s) => s.jobs);
-  const { user } = useAuth();
 
   const { submit, isSubmitting, getSelectedCombinations } = useBatchSubmit();
+  const { playlists, addPlaylistToCache } = useUserPlaylists();
 
-  const [playlists, setPlaylists] = useState<
-    Array<{ uuid: string; name: string }>
-  >([]);
-
-  const selectedImages = images.filter(
-    (img) => img.selected && img.status === "processed",
+  const selectedImages = useMemo(
+    () => images.filter((img) => img.selected && img.status === "processed"),
+    [images],
   );
-  const enabledActions = actions.filter((a) => a.enabled && a.prompt.trim());
+  const enabledActions = useMemo(
+    () => actions.filter((a) => a.enabled && a.prompt.trim()),
+    [actions],
+  );
 
   const newCombos = useMemo(
     () => getSelectedCombinations(),
     [getSelectedCombinations],
   );
   const totalPossible = selectedImages.length * enabledActions.length;
-
-  useEffect(() => {
-    if (!user?.uuid) return;
-    axiosClient
-      .get(`/v1/playlist?userUUID=${user.uuid}&take=200&skip=0`)
-      .then(({ data }) => {
-        setPlaylists(
-          data.data.playlists.map((p: { uuid: string; name: string }) => ({
-            uuid: p.uuid,
-            name: p.name,
-          })),
-        );
-      })
-      .catch(() => {});
-  }, [user?.uuid]);
 
   const handleCreatePlaylist = async () => {
     const now = new Date();
@@ -80,10 +68,7 @@ export const GenerateTab: React.FC = () => {
       const { data } = await axiosClient.post("/v1/playlist", { name });
       const playlist = data.data.playlist;
       setOutputPlaylistId(playlist.uuid);
-      setPlaylists((prev) => [
-        { uuid: playlist.uuid, name: playlist.name },
-        ...prev,
-      ]);
+      addPlaylistToCache({ uuid: playlist.uuid, name: playlist.name });
     } catch (err) {
       console.error("Failed to create playlist:", err);
     }
@@ -93,16 +78,10 @@ export const GenerateTab: React.FC = () => {
     <>
       <GenerateSection>
         <SectionTitle>Combination Preview</SectionTitle>
-        <p
-          style={{
-            fontSize: "0.8125rem",
-            color: "#888",
-            marginBottom: "1rem",
-          }}
-        >
+        <DescriptionText>
           Review all image &times; action combinations before generating.
           Uncheck any you want to skip.
-        </p>
+        </DescriptionText>
 
         <CombinationGrid>
           <GridTable>
@@ -139,11 +118,7 @@ export const GenerateTab: React.FC = () => {
                         {image.url && <CellThumb src={image.url} alt="" />}
                         <br />
                         {existingJob ? (
-                          <span
-                            style={{ fontSize: "0.6875rem", color: "#6c6" }}
-                          >
-                            submitted
-                          </span>
+                          <SubmittedLabel>submitted</SubmittedLabel>
                         ) : (
                           <CellCheckbox
                             checked={!excluded}
@@ -160,16 +135,10 @@ export const GenerateTab: React.FC = () => {
           </GridTable>
         </CombinationGrid>
 
-        <p
-          style={{
-            fontSize: "0.8125rem",
-            color: "#888",
-            textAlign: "center",
-          }}
-        >
+        <ComboCountText>
           {newCombos.length} of {totalPossible} combinations selected
           {jobs.length > 0 && ` (${jobs.length} already submitted)`}
-        </p>
+        </ComboCountText>
       </GenerateSection>
 
       <GenerateSection>

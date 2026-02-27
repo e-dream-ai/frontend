@@ -19,3 +19,13 @@ export const StudioTitle = styled.h1`
   font-weight: 600;
   color: ${(props) => props.theme.textPrimaryColor};
 `;
+
+export const NewSessionButton = styled.button`
+  background: transparent;
+  border: 1px solid #555;
+  color: #aaa;
+  padding: 0.375rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.8125rem;
+  cursor: pointer;
+`;

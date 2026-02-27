@@ -1,9 +1,13 @@
 import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { axiosClient } from "@/client/axios.client";
-import useAuth from "@/hooks/useAuth";
 import { useStudioStore } from "@/stores/studio.store";
 import type { StudioImage } from "@/types/studio.types";
-import { StyledSelect, NavButton } from "./images-tab.styled";
+import { useUserPlaylists } from "../hooks/useUserPlaylists";
+import {
+  StyledSelect,
+  NavButton,
+  SecondaryNavButton,
+} from "./images-tab.styled";
 import { ImageThumbnail } from "./images-tab.styled";
 import {
   ModalOverlay,
@@ -31,7 +35,6 @@ interface PlaylistItem {
 }
 
 export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
-  const { user } = useAuth();
   const addImage = useStudioStore((s) => s.addImage);
   const studioImages = useStudioStore((s) => s.images);
   const existingUuids = useMemo(
@@ -39,43 +42,61 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
     [studioImages],
   );
 
-  const [playlists, setPlaylists] = useState<
-    Array<{ uuid: string; name: string }>
-  >([]);
+  const { playlists } = useUserPlaylists();
+
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
   const [items, setItems] = useState<PlaylistItem[]>([]);
   const [selectedUuids, setSelectedUuids] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    if (!user?.uuid) return;
-    axiosClient
-      .get(`/v1/playlist?userUUID=${user.uuid}&take=200&skip=0`)
-      .then(({ data }) => setPlaylists(data.data.playlists))
-      .catch(() => {});
-  }, [user?.uuid]);
-
-  useEffect(() => {
     if (!selectedPlaylistId) {
       setItems([]);
       return;
     }
+    let ignore = false;
     setLoading(true);
     axiosClient
       .get(`/v1/playlist/${selectedPlaylistId}/items?take=100&skip=0`)
       .then(({ data }) => {
-        setItems(
-          data.data.items.filter(
-            (item: PlaylistItem) =>
-              item.dreamItem?.thumbnail &&
-              (!item.dreamItem.mediaType ||
-                item.dreamItem.mediaType === "image"),
-          ),
-        );
+        if (!ignore) {
+          setItems(
+            data.data.items.filter(
+              (item: PlaylistItem) =>
+                item.dreamItem?.thumbnail &&
+                (!item.dreamItem.mediaType ||
+                  item.dreamItem.mediaType === "image"),
+            ),
+          );
+        }
       })
       .catch(() => {})
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
   }, [selectedPlaylistId]);
+
+  const selectableUuids = useMemo(
+    () =>
+      items
+        .map((item) => item.dreamItem?.uuid)
+        .filter((uuid): uuid is string => !!uuid && !existingUuids.has(uuid)),
+    [items, existingUuids],
+  );
+  const allSelectableSelected =
+    selectableUuids.length > 0 &&
+    selectableUuids.every((uuid) => selectedUuids.has(uuid));
+
+  const toggleSelectAll = useCallback(() => {
+    if (allSelectableSelected) {
+      setSelectedUuids(new Set());
+    } else {
+      setSelectedUuids(new Set(selectableUuids));
+    }
+  }, [allSelectableSelected, selectableUuids]);
 
   const toggleSelected = useCallback((uuid: string) => {
     setSelectedUuids((prev) => {
@@ -157,19 +178,20 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
         </ModalBody>
 
         <ModalFooter>
-          <span style={{ fontSize: "0.8125rem", color: "#888" }}>
-            {selectedUuids.size} images selected
-          </span>
+          <div
+            style={{ display: "flex", alignItems: "center", gap: "0.75rem" }}
+          >
+            <span style={{ fontSize: "0.8125rem", color: "#888" }}>
+              {selectedUuids.size} images selected
+            </span>
+            {selectableUuids.length > 0 && (
+              <SecondaryNavButton onClick={toggleSelectAll}>
+                {allSelectableSelected ? "Deselect All" : "Select All"}
+              </SecondaryNavButton>
+            )}
+          </div>
           <div style={{ display: "flex", gap: "0.5rem" }}>
-            <NavButton
-              onClick={onClose}
-              style={{
-                background: "transparent",
-                border: "1px solid #555",
-              }}
-            >
-              Cancel
-            </NavButton>
+            <SecondaryNavButton onClick={onClose}>Cancel</SecondaryNavButton>
             <NavButton onClick={handleAdd} disabled={selectedUuids.size === 0}>
               Add Selected
             </NavButton>
