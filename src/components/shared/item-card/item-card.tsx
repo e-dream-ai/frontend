@@ -204,6 +204,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   const [highlightPosition, setHighlightPosition] =
     useState<HighlightPosition>();
   const [isTouchReorderActive, setIsTouchReorderActive] = useState(false);
+  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
 
   const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
     useState<boolean>(false);
@@ -576,6 +577,24 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     clearTouchDraggingState();
   }, [clearTouchDraggingState]);
 
+  const handleContextMenu = useCallback(
+    (event: Event) => {
+      if (
+        !isCoarsePointer ||
+        !draggable ||
+        dndMode !== DND_MODES.LOCAL ||
+        !onOrder
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      suppressNextClickRef.current = true;
+    },
+    [dndMode, draggable, isCoarsePointer, onOrder],
+  );
+
   const registerEvents = useCallback(() => {
     cardRef.current?.addEventListener("dragstart", handleDragStart);
     cardRef.current?.addEventListener("dragenter", handleDragEnter);
@@ -589,6 +608,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     });
     cardRef.current?.addEventListener("touchend", handleTouchEnd);
     cardRef.current?.addEventListener("touchcancel", handleTouchCancel);
+    cardRef.current?.addEventListener("contextmenu", handleContextMenu);
   }, [
     cardRef,
     handleDragStart,
@@ -601,6 +621,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     handleTouchMove,
     handleTouchEnd,
     handleTouchCancel,
+    handleContextMenu,
   ]);
 
   const unregisterEvents = useCallback(() => {
@@ -614,6 +635,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     cardRef.current?.removeEventListener("touchmove", handleTouchMove);
     cardRef.current?.removeEventListener("touchend", handleTouchEnd);
     cardRef.current?.removeEventListener("touchcancel", handleTouchCancel);
+    cardRef.current?.removeEventListener("contextmenu", handleContextMenu);
   }, [
     cardRef,
     handleDragStart,
@@ -626,6 +648,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     handleTouchMove,
     handleTouchEnd,
     handleTouchCancel,
+    handleContextMenu,
   ]);
 
   useEffect(() => {
@@ -644,6 +667,25 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     },
     [clearTouchDraggingState],
   );
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(pointer: coarse)");
+    const updateMatch = () => setIsCoarsePointer(mediaQuery.matches);
+
+    updateMatch();
+
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", updateMatch);
+      return () => mediaQuery.removeEventListener("change", updateMatch);
+    }
+
+    mediaQuery.addListener(updateMatch);
+    return () => mediaQuery.removeListener(updateMatch);
+  }, []);
 
   const isDreamFailed = useMemo(
     () =>
@@ -827,7 +869,11 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
         data-touch-dragging={isTouchReorderActive}
         ref={cardRef}
         size={size}
-        draggable={draggable && !isTouchReorderActive}
+        draggable={
+          draggable &&
+          !isTouchReorderActive &&
+          !(isCoarsePointer && dndMode === DND_MODES.LOCAL)
+        }
       >
         <>
           <ItemCardAnchor to={navigateRoute ?? ""} onClick={handleCardClick}>

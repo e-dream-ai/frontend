@@ -41,6 +41,7 @@ export const ItemCardImage: React.FC<
         <img
           src={src}
           alt={alt}
+          draggable={false}
           onLoad={handleLoad}
           onError={handleError}
           style={{ display: "none" }}
@@ -63,6 +64,7 @@ export const ItemCardImage: React.FC<
       src={src}
       size={size}
       alt={alt}
+      draggable={false}
       onLoad={handleLoad}
       onError={handleError}
       {...props}

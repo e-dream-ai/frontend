@@ -101,6 +101,12 @@ export const StyledItemCard = styled.li<{
     background-color: ${(props) => props.theme.colorBackgroundSecondary};
   }
 
+  &[data-dnd-mode="local"] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
   :hover {
     background-color: ${(props) => props.theme.colorBackgroundSecondary};
   }
@@ -177,6 +183,9 @@ export const StyledItemCardImage = styled.img<{ size: Sizes }>`
   cursor: pointer;
   max-width: 100%;
   height: auto;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   ${(props) => ImageSizes[props.size]}
 
   @media (max-width: ${DEVICES.MOBILE_S}) {
