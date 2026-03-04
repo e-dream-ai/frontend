@@ -17,7 +17,6 @@ import { FeedItemFilterType, UserFeedType } from "@/types/feed.types";
 import UserVotedDreams from "@/components/shared/user-dreams/user-voted-dreams";
 import { VoteType } from "@/types/vote.types";
 import { useUserFeedFilter } from "./useUserFeedFilter";
-import useAuth from "@/hooks/useAuth";
 
 const SECTION_ID = "user-feed";
 
@@ -30,15 +29,13 @@ const USER_DREAMS_COMPONENT = [
 ];
 
 export const UserFeedPage: React.FC = () => {
-  const { user: authUser } = useAuth();
   const { t } = useTranslation();
   const { uuid: userUUID } = useParams<{ uuid: string }>();
   const [radioGroupState, setRadioGroupState] = useState<UserFeedType>(
     USER_FEED_TYPES.ALL,
   );
 
-  const isOwner = userUUID === authUser?.uuid;
-  const radioGroupData = useUserFeedFilter(isOwner);
+  const radioGroupData = useUserFeedFilter();
 
   const {
     data,

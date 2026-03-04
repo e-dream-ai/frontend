@@ -72,11 +72,12 @@ export const usePlaylistState = () => {
 
   const playlist = useMemo(() => {
     const pl = data?.data?.playlist;
-    if (pl) {
-      pl.playlistItems = playlistReferencesData?.data?.references;
-    }
+    if (!pl) return pl;
 
-    return pl;
+    return {
+      ...pl,
+      playlistItems: playlistReferencesData?.data?.references ?? [],
+    };
   }, [data, playlistReferencesData]);
 
   const isPlaylistLoading = useMemo(

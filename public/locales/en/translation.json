@@ -251,6 +251,7 @@
       "thumbnail": "Thumbnail",
       "nsfw": "Content Rating",
       "visibility": "Visibility",
+      "playlists": "Playlists",
       "items": "Dreams",
       "keyframes": "Keyframes",
       "empty_playlist": "No items to show",
@@ -276,9 +277,18 @@
       "deleting_playlist_item": "Deleting playlist item",
       "playlist_item_deleted_successfully": "Playlist item deleted successfully.",
       "error_deleting_playlist_item": "Error deleting playlist item.",
+      "removing_playlist_from_playlist": "Removing playlist from playlist...",
+      "playlist_removed_from_playlist": "Playlist removed from playlist.",
+      "error_removing_playlist_from_playlist": "Error removing playlist from playlist.",
+      "remove_playlist_from_playlist_tooltip": "Remove playlist from playlist",
       "ordering_playlist_items": "Ordering playlist items",
       "playlist_items_ordered_successfully": "Playlist items ordered successfully.",
-      "error_ordering_playlist_items": "Error ordering playlist items."
+      "error_ordering_playlist_items": "Error ordering playlist items.",
+      "touch_hold_to_reorder": "Tip: touch and hold a card to drag it on mobile. Move buttons are available on every row.",
+      "move_item_to_first": "Move to first",
+      "move_item_up": "Move up",
+      "move_item_down": "Move down",
+      "move_item_to_last": "Move to last"
     },
     "view_keyframe": {
       "title": "View Keyframe",

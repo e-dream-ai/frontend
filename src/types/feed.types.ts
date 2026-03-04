@@ -6,6 +6,7 @@ export enum FeedItemFilter {
   ALL = "all",
   PLAYLIST = "playlist",
   DREAM = "dream",
+  HIDDEN = "hidden",
   USER = "user",
   CREATOR = "creator",
   ADMIN = "admin",
@@ -16,6 +17,7 @@ export type FeedItemType =
   | "dream"
   | "playlist"
   | "stills"
+  | "hidden"
   | "user"
   | "creator"
   | "admin";

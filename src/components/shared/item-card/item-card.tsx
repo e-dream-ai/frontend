@@ -21,6 +21,9 @@ import {
   ItemCardAnchor,
   ItemTitleText,
   PlayButton,
+  ReorderActionButton,
+  ReorderActions,
+  ReorderActionsWrap,
   StyledItemCard,
   StyledItemCardSkeleton,
   ThumbnailGrid,
@@ -30,6 +33,10 @@ import {
 } from "./item-card.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faAnglesDown,
+  faAnglesUp,
+  faChevronDown,
+  faChevronUp,
   faEllipsis,
   faExclamationCircle,
   faFilm,
@@ -93,12 +100,24 @@ type ItemCardProps = {
   onOrder?: (dropItem: SetItemOrder) => void;
   onDelete?: (event: React.MouseEvent) => void;
   deleteTooltipId?: string;
+  showReorderControls?: boolean;
+  disableMoveToTop?: boolean;
+  disableMoveUp?: boolean;
+  disableMoveDown?: boolean;
+  disableMoveToBottom?: boolean;
+  onMoveToTop?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  onMoveToBottom?: () => void;
 };
 
 const DND_MODES: { [key: string]: DNDMode } = {
   LOCAL: "local",
   CROSS_WINDOW: "cross-window",
 } as const;
+
+const TOUCH_HOLD_DELAY_MS = 260;
+const TOUCH_MOVE_CANCEL_PX = 10;
 
 const ROUTE_MAP = {
   dream: ROUTES.VIEW_DREAM,
@@ -140,9 +159,23 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   onOrder,
   onDelete,
   deleteTooltipId,
+  showReorderControls = false,
+  disableMoveToTop = false,
+  disableMoveUp = false,
+  disableMoveDown = false,
+  disableMoveToBottom = false,
+  onMoveToTop,
+  onMoveUp,
+  onMoveDown,
+  onMoveToBottom,
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
+  const touchHoldTimeoutRef = useRef<number | null>(null);
+  const touchStartPositionRef = useRef<{ x: number; y: number } | null>(null);
+  const touchDraggingRef = useRef(false);
+  const touchDragSourceOrderRef = useRef(order);
+  const suppressNextClickRef = useRef(false);
   const { uuid, name, user, displayedOwner } = item ?? {};
   const thumbnail = useMemo(() => getThumbnail(type, item), [type, item]);
   const thumbnailDreams = useMemo(
@@ -161,7 +194,8 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   const theme = useTheme();
   const { socket } = useSocket();
   const { isActive: isClientActive } = useDesktopClient();
-  const { isDragging, setDragging } = useItemCardListState();
+  const { isDragging, setDragging, dragPreview, setDragPreview } =
+    useItemCardListState();
   const navigate = useNavigate();
 
   /**
@@ -169,6 +203,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
    */
   const [highlightPosition, setHighlightPosition] =
     useState<HighlightPosition>();
+  const [isTouchReorderActive, setIsTouchReorderActive] = useState(false);
 
   const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
     useState<boolean>(false);
@@ -195,6 +230,58 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   };
 
   const navigateRoute = generateNavigationRoute();
+
+  const clearTouchHoldTimeout = useCallback(() => {
+    if (touchHoldTimeoutRef.current) {
+      window.clearTimeout(touchHoldTimeoutRef.current);
+      touchHoldTimeoutRef.current = null;
+    }
+  }, []);
+
+  const getTouchPreviewByCoordinates = useCallback(
+    (clientX: number, clientY: number) => {
+      const hoverElement = document
+        .elementFromPoint(clientX, clientY)
+        ?.closest(
+          `[data-dnd-mode=\"${DND_MODES.LOCAL}\"][data-item-id][data-order]`,
+        ) as HTMLElement | null;
+
+      if (!hoverElement) {
+        return undefined;
+      }
+
+      const hoveredItemId = Number(hoverElement.dataset.itemId);
+      const hoveredOrder = Number(hoverElement.dataset.order);
+      if (
+        Number.isNaN(hoveredItemId) ||
+        Number.isNaN(hoveredOrder) ||
+        hoveredOrder < 0
+      ) {
+        return undefined;
+      }
+
+      const rect = hoverElement.getBoundingClientRect();
+      const relativeY = clientY - rect.top;
+      const position: HighlightPosition =
+        relativeY < rect.height / 2 ? "top" : "bottom";
+
+      return {
+        itemId: hoveredItemId,
+        order: hoveredOrder,
+        position,
+      };
+    },
+    [],
+  );
+
+  const clearTouchDraggingState = useCallback(() => {
+    touchStartPositionRef.current = null;
+    touchDraggingRef.current = false;
+    setIsTouchReorderActive(false);
+    setDragPreview(undefined);
+    setDragging(false);
+    clearTouchHoldTimeout();
+  }, [clearTouchHoldTimeout, setDragPreview, setDragging]);
 
   const handlePlay: MouseEventHandler<HTMLButtonElement> = useCallback(
     (event) => {
@@ -274,10 +361,11 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       event.preventDefault();
       event.stopPropagation();
 
+      setDragPreview(undefined);
       setDragging(false);
       return false;
     },
-    [setDragging],
+    [setDragPreview, setDragging],
   );
 
   const handleDrop = useCallback(
@@ -288,6 +376,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
        * reset highlight position
        */
       setHighlightPosition(undefined);
+      setDragPreview(undefined);
       const dt = event.dataTransfer;
       const action = dt?.getData(DND_METADATA.ACTION);
       const dropOrder = Number(dt?.getData(DND_METADATA.ORDER)) ?? 0;
@@ -322,7 +411,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
 
       return false;
     },
-    [order, dndMode, onOrder, highlightPosition, itemId],
+    [order, dndMode, onOrder, highlightPosition, itemId, setDragPreview],
   );
 
   const handleDragOver = useCallback((event: MouseEvent) => {
@@ -346,6 +435,147 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     setHighlightPosition(newHighlightPosition);
   }, []);
 
+  const handleTouchStart = useCallback(
+    (event: TouchEvent) => {
+      if (
+        !draggable ||
+        dndMode !== DND_MODES.LOCAL ||
+        !onOrder ||
+        event.touches.length !== 1
+      ) {
+        return;
+      }
+
+      const isTouchPointer = window.matchMedia("(pointer: coarse)").matches;
+      if (!isTouchPointer) {
+        return;
+      }
+
+      const touch = event.touches[0];
+      touchStartPositionRef.current = {
+        x: touch.clientX,
+        y: touch.clientY,
+      };
+      touchDragSourceOrderRef.current = order;
+
+      clearTouchHoldTimeout();
+      touchHoldTimeoutRef.current = window.setTimeout(() => {
+        touchDraggingRef.current = true;
+        setIsTouchReorderActive(true);
+        setDragging(true);
+        suppressNextClickRef.current = true;
+      }, TOUCH_HOLD_DELAY_MS);
+    },
+    [clearTouchHoldTimeout, dndMode, draggable, onOrder, order, setDragging],
+  );
+
+  const handleTouchMove = useCallback(
+    (event: TouchEvent) => {
+      if (!draggable || dndMode !== DND_MODES.LOCAL || !onOrder) {
+        return;
+      }
+
+      const touch = event.touches[0];
+      if (!touch) {
+        return;
+      }
+
+      if (!touchDraggingRef.current) {
+        const start = touchStartPositionRef.current;
+        if (!start) {
+          return;
+        }
+        const deltaX = touch.clientX - start.x;
+        const deltaY = touch.clientY - start.y;
+        const distance = Math.hypot(deltaX, deltaY);
+        if (distance > TOUCH_MOVE_CANCEL_PX) {
+          clearTouchHoldTimeout();
+        }
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const preview = getTouchPreviewByCoordinates(
+        touch.clientX,
+        touch.clientY,
+      );
+      setDragPreview(preview);
+    },
+    [
+      clearTouchHoldTimeout,
+      dndMode,
+      draggable,
+      getTouchPreviewByCoordinates,
+      onOrder,
+      setDragPreview,
+    ],
+  );
+
+  const completeTouchReorder = useCallback(
+    (event: TouchEvent) => {
+      if (!touchDraggingRef.current || dndMode !== DND_MODES.LOCAL) {
+        clearTouchHoldTimeout();
+        touchStartPositionRef.current = null;
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const changedTouch = event.changedTouches[0];
+      const latestPreview = changedTouch
+        ? getTouchPreviewByCoordinates(
+            changedTouch.clientX,
+            changedTouch.clientY,
+          )
+        : undefined;
+      const finalPreview = latestPreview ?? dragPreview;
+
+      if (finalPreview && finalPreview.itemId !== itemId) {
+        const newIndexValue =
+          (finalPreview.position === "top"
+            ? finalPreview.order
+            : finalPreview.order + 1) -
+          (touchDragSourceOrderRef.current > finalPreview.order ? 0 : 1);
+
+        if (newIndexValue !== touchDragSourceOrderRef.current) {
+          onOrder?.({
+            id: itemId,
+            currentIndex: touchDragSourceOrderRef.current,
+            newIndex: newIndexValue,
+          });
+        }
+      }
+
+      window.setTimeout(() => {
+        suppressNextClickRef.current = false;
+      }, 350);
+
+      clearTouchDraggingState();
+    },
+    [
+      clearTouchDraggingState,
+      clearTouchHoldTimeout,
+      dndMode,
+      dragPreview,
+      getTouchPreviewByCoordinates,
+      itemId,
+      onOrder,
+    ],
+  );
+
+  const handleTouchEnd = useCallback(
+    (event: TouchEvent) => completeTouchReorder(event),
+    [completeTouchReorder],
+  );
+
+  const handleTouchCancel = useCallback(() => {
+    suppressNextClickRef.current = false;
+    clearTouchDraggingState();
+  }, [clearTouchDraggingState]);
+
   const registerEvents = useCallback(() => {
     cardRef.current?.addEventListener("dragstart", handleDragStart);
     cardRef.current?.addEventListener("dragenter", handleDragEnter);
@@ -353,6 +583,12 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     cardRef.current?.addEventListener("dragend", handleDragEnd);
     cardRef.current?.addEventListener("drop", handleDrop);
     cardRef.current?.addEventListener("dragover", handleDragOver);
+    cardRef.current?.addEventListener("touchstart", handleTouchStart);
+    cardRef.current?.addEventListener("touchmove", handleTouchMove, {
+      passive: false,
+    });
+    cardRef.current?.addEventListener("touchend", handleTouchEnd);
+    cardRef.current?.addEventListener("touchcancel", handleTouchCancel);
   }, [
     cardRef,
     handleDragStart,
@@ -361,6 +597,10 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     handleDragEnd,
     handleDrop,
     handleDragOver,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    handleTouchCancel,
   ]);
 
   const unregisterEvents = useCallback(() => {
@@ -370,6 +610,10 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     cardRef.current?.removeEventListener("dragend", handleDragEnd);
     cardRef.current?.removeEventListener("drop", handleDrop);
     cardRef.current?.removeEventListener("dragover", handleDragOver);
+    cardRef.current?.removeEventListener("touchstart", handleTouchStart);
+    cardRef.current?.removeEventListener("touchmove", handleTouchMove);
+    cardRef.current?.removeEventListener("touchend", handleTouchEnd);
+    cardRef.current?.removeEventListener("touchcancel", handleTouchCancel);
   }, [
     cardRef,
     handleDragStart,
@@ -378,6 +622,10 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     handleDragEnd,
     handleDrop,
     handleDragOver,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd,
+    handleTouchCancel,
   ]);
 
   useEffect(() => {
@@ -385,6 +633,17 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
 
     return () => unregisterEvents();
   }, [registerEvents, unregisterEvents]);
+
+  useEffect(() => {
+    touchDragSourceOrderRef.current = order;
+  }, [order]);
+
+  useEffect(
+    () => () => {
+      clearTouchDraggingState();
+    },
+    [clearTouchDraggingState],
+  );
 
   const isDreamFailed = useMemo(
     () =>
@@ -507,6 +766,31 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   const onHideClientNotConnectedModal = () =>
     setShowClientNotConnectedModal(false);
 
+  const handleReorderAction =
+    (action?: () => void) => (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      action?.();
+    };
+
+  const handleCardClick: MouseEventHandler<HTMLAnchorElement> = useCallback(
+    (event) => {
+      if (suppressNextClickRef.current) {
+        event.preventDefault();
+        event.stopPropagation();
+        suppressNextClickRef.current = false;
+        return;
+      }
+
+      onClick?.(event);
+    },
+    [onClick],
+  );
+
+  const touchHighlightPosition =
+    dragPreview?.itemId === itemId ? dragPreview.position : undefined;
+  const activeHighlightPosition = touchHighlightPosition ?? highlightPosition;
+
   return (
     <>
       <ConfirmModal
@@ -537,18 +821,23 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       />
       <StyledItemCard
         data-element-uuid={uuid}
+        data-item-id={itemId}
+        data-order={order}
+        data-dnd-mode={dndMode}
+        data-touch-dragging={isTouchReorderActive}
         ref={cardRef}
         size={size}
-        draggable={draggable}
+        draggable={draggable && !isTouchReorderActive}
       >
         <>
-          <ItemCardAnchor to={navigateRoute ?? ""} onClick={onClick}>
+          <ItemCardAnchor to={navigateRoute ?? ""} onClick={handleCardClick}>
             <Row
               flex="auto"
               margin="0"
               padding="3"
               justifyContent="space-between"
               flexDirection={["column", "row", "row", "row"]}
+              style={{ position: "relative" }}
             >
               {(onDelete || showOrderNumber) && (
                 <Row
@@ -625,12 +914,54 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                   </Column>
                 </Row>
               </Column>
+              {showReorderControls && (
+                <ReorderActionsWrap>
+                  <ReorderActions>
+                    <ReorderActionButton
+                      type="button"
+                      onClick={handleReorderAction(onMoveToTop)}
+                      disabled={disableMoveToTop}
+                      aria-label={t("page.view_playlist.move_item_to_first")}
+                      title={t("page.view_playlist.move_item_to_first")}
+                    >
+                      <FontAwesomeIcon icon={faAnglesUp} />
+                    </ReorderActionButton>
+                    <ReorderActionButton
+                      type="button"
+                      onClick={handleReorderAction(onMoveUp)}
+                      disabled={disableMoveUp}
+                      aria-label={t("page.view_playlist.move_item_up")}
+                      title={t("page.view_playlist.move_item_up")}
+                    >
+                      <FontAwesomeIcon icon={faChevronUp} />
+                    </ReorderActionButton>
+                    <ReorderActionButton
+                      type="button"
+                      onClick={handleReorderAction(onMoveDown)}
+                      disabled={disableMoveDown}
+                      aria-label={t("page.view_playlist.move_item_down")}
+                      title={t("page.view_playlist.move_item_down")}
+                    >
+                      <FontAwesomeIcon icon={faChevronDown} />
+                    </ReorderActionButton>
+                    <ReorderActionButton
+                      type="button"
+                      onClick={handleReorderAction(onMoveToBottom)}
+                      disabled={disableMoveToBottom}
+                      aria-label={t("page.view_playlist.move_item_to_last")}
+                      title={t("page.view_playlist.move_item_to_last")}
+                    >
+                      <FontAwesomeIcon icon={faAnglesDown} />
+                    </ReorderActionButton>
+                  </ReorderActions>
+                </ReorderActionsWrap>
+              )}
             </Row>
           </ItemCardAnchor>
           {droppable && (
             <HighlightBorder
-              isHighlighted={!!highlightPosition}
-              position={highlightPosition}
+              isHighlighted={!!activeHighlightPosition}
+              position={activeHighlightPosition}
               isFirst={order === 0}
             />
           )}
