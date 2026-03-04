@@ -116,9 +116,6 @@ const DND_MODES: { [key: string]: DNDMode } = {
   CROSS_WINDOW: "cross-window",
 } as const;
 
-const TOUCH_HOLD_DELAY_MS = 260;
-const TOUCH_MOVE_CANCEL_PX = 10;
-
 const ROUTE_MAP = {
   dream: ROUTES.VIEW_DREAM,
   playlist: ROUTES.VIEW_PLAYLIST,
@@ -171,11 +168,6 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
-  const touchHoldTimeoutRef = useRef<number | null>(null);
-  const touchStartPositionRef = useRef<{ x: number; y: number } | null>(null);
-  const touchDraggingRef = useRef(false);
-  const touchDragSourceOrderRef = useRef(order);
-  const suppressNextClickRef = useRef(false);
   const { uuid, name, user, displayedOwner } = item ?? {};
   const thumbnail = useMemo(() => getThumbnail(type, item), [type, item]);
   const thumbnailDreams = useMemo(
@@ -194,8 +186,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   const theme = useTheme();
   const { socket } = useSocket();
   const { isActive: isClientActive } = useDesktopClient();
-  const { isDragging, setDragging, dragPreview, setDragPreview } =
-    useItemCardListState();
+  const { isDragging, setDragging, setDragPreview } = useItemCardListState();
   const navigate = useNavigate();
 
   /**
@@ -203,8 +194,6 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
    */
   const [highlightPosition, setHighlightPosition] =
     useState<HighlightPosition>();
-  const [isTouchReorderActive, setIsTouchReorderActive] = useState(false);
-  const [isCoarsePointer, setIsCoarsePointer] = useState(false);
 
   const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
     useState<boolean>(false);
@@ -231,58 +220,6 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   };
 
   const navigateRoute = generateNavigationRoute();
-
-  const clearTouchHoldTimeout = useCallback(() => {
-    if (touchHoldTimeoutRef.current) {
-      window.clearTimeout(touchHoldTimeoutRef.current);
-      touchHoldTimeoutRef.current = null;
-    }
-  }, []);
-
-  const getTouchPreviewByCoordinates = useCallback(
-    (clientX: number, clientY: number) => {
-      const hoverElement = document
-        .elementFromPoint(clientX, clientY)
-        ?.closest(
-          `[data-dnd-mode=\"${DND_MODES.LOCAL}\"][data-item-id][data-order]`,
-        ) as HTMLElement | null;
-
-      if (!hoverElement) {
-        return undefined;
-      }
-
-      const hoveredItemId = Number(hoverElement.dataset.itemId);
-      const hoveredOrder = Number(hoverElement.dataset.order);
-      if (
-        Number.isNaN(hoveredItemId) ||
-        Number.isNaN(hoveredOrder) ||
-        hoveredOrder < 0
-      ) {
-        return undefined;
-      }
-
-      const rect = hoverElement.getBoundingClientRect();
-      const relativeY = clientY - rect.top;
-      const position: HighlightPosition =
-        relativeY < rect.height / 2 ? "top" : "bottom";
-
-      return {
-        itemId: hoveredItemId,
-        order: hoveredOrder,
-        position,
-      };
-    },
-    [],
-  );
-
-  const clearTouchDraggingState = useCallback(() => {
-    touchStartPositionRef.current = null;
-    touchDraggingRef.current = false;
-    setIsTouchReorderActive(false);
-    setDragPreview(undefined);
-    setDragging(false);
-    clearTouchHoldTimeout();
-  }, [clearTouchHoldTimeout, setDragPreview, setDragging]);
 
   const handlePlay: MouseEventHandler<HTMLButtonElement> = useCallback(
     (event) => {
@@ -436,165 +373,6 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     setHighlightPosition(newHighlightPosition);
   }, []);
 
-  const handleTouchStart = useCallback(
-    (event: TouchEvent) => {
-      if (
-        !draggable ||
-        dndMode !== DND_MODES.LOCAL ||
-        !onOrder ||
-        event.touches.length !== 1
-      ) {
-        return;
-      }
-
-      const isTouchPointer = window.matchMedia("(pointer: coarse)").matches;
-      if (!isTouchPointer) {
-        return;
-      }
-
-      const touch = event.touches[0];
-      touchStartPositionRef.current = {
-        x: touch.clientX,
-        y: touch.clientY,
-      };
-      touchDragSourceOrderRef.current = order;
-
-      clearTouchHoldTimeout();
-      touchHoldTimeoutRef.current = window.setTimeout(() => {
-        touchDraggingRef.current = true;
-        setIsTouchReorderActive(true);
-        setDragging(true);
-        suppressNextClickRef.current = true;
-      }, TOUCH_HOLD_DELAY_MS);
-    },
-    [clearTouchHoldTimeout, dndMode, draggable, onOrder, order, setDragging],
-  );
-
-  const handleTouchMove = useCallback(
-    (event: TouchEvent) => {
-      if (!draggable || dndMode !== DND_MODES.LOCAL || !onOrder) {
-        return;
-      }
-
-      const touch = event.touches[0];
-      if (!touch) {
-        return;
-      }
-
-      if (!touchDraggingRef.current) {
-        const start = touchStartPositionRef.current;
-        if (!start) {
-          return;
-        }
-        const deltaX = touch.clientX - start.x;
-        const deltaY = touch.clientY - start.y;
-        const distance = Math.hypot(deltaX, deltaY);
-        if (distance > TOUCH_MOVE_CANCEL_PX) {
-          clearTouchHoldTimeout();
-        }
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const preview = getTouchPreviewByCoordinates(
-        touch.clientX,
-        touch.clientY,
-      );
-      setDragPreview(preview);
-    },
-    [
-      clearTouchHoldTimeout,
-      dndMode,
-      draggable,
-      getTouchPreviewByCoordinates,
-      onOrder,
-      setDragPreview,
-    ],
-  );
-
-  const completeTouchReorder = useCallback(
-    (event: TouchEvent) => {
-      if (!touchDraggingRef.current || dndMode !== DND_MODES.LOCAL) {
-        clearTouchHoldTimeout();
-        touchStartPositionRef.current = null;
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-
-      const changedTouch = event.changedTouches[0];
-      const latestPreview = changedTouch
-        ? getTouchPreviewByCoordinates(
-            changedTouch.clientX,
-            changedTouch.clientY,
-          )
-        : undefined;
-      const finalPreview = latestPreview ?? dragPreview;
-
-      if (finalPreview && finalPreview.itemId !== itemId) {
-        const newIndexValue =
-          (finalPreview.position === "top"
-            ? finalPreview.order
-            : finalPreview.order + 1) -
-          (touchDragSourceOrderRef.current > finalPreview.order ? 0 : 1);
-
-        if (newIndexValue !== touchDragSourceOrderRef.current) {
-          onOrder?.({
-            id: itemId,
-            currentIndex: touchDragSourceOrderRef.current,
-            newIndex: newIndexValue,
-          });
-        }
-      }
-
-      window.setTimeout(() => {
-        suppressNextClickRef.current = false;
-      }, 350);
-
-      clearTouchDraggingState();
-    },
-    [
-      clearTouchDraggingState,
-      clearTouchHoldTimeout,
-      dndMode,
-      dragPreview,
-      getTouchPreviewByCoordinates,
-      itemId,
-      onOrder,
-    ],
-  );
-
-  const handleTouchEnd = useCallback(
-    (event: TouchEvent) => completeTouchReorder(event),
-    [completeTouchReorder],
-  );
-
-  const handleTouchCancel = useCallback(() => {
-    suppressNextClickRef.current = false;
-    clearTouchDraggingState();
-  }, [clearTouchDraggingState]);
-
-  const handleContextMenu = useCallback(
-    (event: Event) => {
-      if (
-        !isCoarsePointer ||
-        !draggable ||
-        dndMode !== DND_MODES.LOCAL ||
-        !onOrder
-      ) {
-        return;
-      }
-
-      event.preventDefault();
-      event.stopPropagation();
-      suppressNextClickRef.current = true;
-    },
-    [dndMode, draggable, isCoarsePointer, onOrder],
-  );
-
   const registerEvents = useCallback(() => {
     cardRef.current?.addEventListener("dragstart", handleDragStart);
     cardRef.current?.addEventListener("dragenter", handleDragEnter);
@@ -602,13 +380,6 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     cardRef.current?.addEventListener("dragend", handleDragEnd);
     cardRef.current?.addEventListener("drop", handleDrop);
     cardRef.current?.addEventListener("dragover", handleDragOver);
-    cardRef.current?.addEventListener("touchstart", handleTouchStart);
-    cardRef.current?.addEventListener("touchmove", handleTouchMove, {
-      passive: false,
-    });
-    cardRef.current?.addEventListener("touchend", handleTouchEnd);
-    cardRef.current?.addEventListener("touchcancel", handleTouchCancel);
-    cardRef.current?.addEventListener("contextmenu", handleContextMenu);
   }, [
     cardRef,
     handleDragStart,
@@ -617,11 +388,6 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     handleDragEnd,
     handleDrop,
     handleDragOver,
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    handleTouchCancel,
-    handleContextMenu,
   ]);
 
   const unregisterEvents = useCallback(() => {
@@ -631,11 +397,6 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     cardRef.current?.removeEventListener("dragend", handleDragEnd);
     cardRef.current?.removeEventListener("drop", handleDrop);
     cardRef.current?.removeEventListener("dragover", handleDragOver);
-    cardRef.current?.removeEventListener("touchstart", handleTouchStart);
-    cardRef.current?.removeEventListener("touchmove", handleTouchMove);
-    cardRef.current?.removeEventListener("touchend", handleTouchEnd);
-    cardRef.current?.removeEventListener("touchcancel", handleTouchCancel);
-    cardRef.current?.removeEventListener("contextmenu", handleContextMenu);
   }, [
     cardRef,
     handleDragStart,
@@ -644,11 +405,6 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     handleDragEnd,
     handleDrop,
     handleDragOver,
-    handleTouchStart,
-    handleTouchMove,
-    handleTouchEnd,
-    handleTouchCancel,
-    handleContextMenu,
   ]);
 
   useEffect(() => {
@@ -656,36 +412,6 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
 
     return () => unregisterEvents();
   }, [registerEvents, unregisterEvents]);
-
-  useEffect(() => {
-    touchDragSourceOrderRef.current = order;
-  }, [order]);
-
-  useEffect(
-    () => () => {
-      clearTouchDraggingState();
-    },
-    [clearTouchDraggingState],
-  );
-
-  useEffect(() => {
-    if (typeof window === "undefined" || !window.matchMedia) {
-      return;
-    }
-
-    const mediaQuery = window.matchMedia("(pointer: coarse)");
-    const updateMatch = () => setIsCoarsePointer(mediaQuery.matches);
-
-    updateMatch();
-
-    if (mediaQuery.addEventListener) {
-      mediaQuery.addEventListener("change", updateMatch);
-      return () => mediaQuery.removeEventListener("change", updateMatch);
-    }
-
-    mediaQuery.addListener(updateMatch);
-    return () => mediaQuery.removeListener(updateMatch);
-  }, []);
 
   const isDreamFailed = useMemo(
     () =>
@@ -817,21 +543,10 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
 
   const handleCardClick: MouseEventHandler<HTMLAnchorElement> = useCallback(
     (event) => {
-      if (suppressNextClickRef.current) {
-        event.preventDefault();
-        event.stopPropagation();
-        suppressNextClickRef.current = false;
-        return;
-      }
-
       onClick?.(event);
     },
     [onClick],
   );
-
-  const touchHighlightPosition =
-    dragPreview?.itemId === itemId ? dragPreview.position : undefined;
-  const activeHighlightPosition = touchHighlightPosition ?? highlightPosition;
 
   return (
     <>
@@ -866,14 +581,9 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
         data-item-id={itemId}
         data-order={order}
         data-dnd-mode={dndMode}
-        data-touch-dragging={isTouchReorderActive}
         ref={cardRef}
         size={size}
-        draggable={
-          draggable &&
-          !isTouchReorderActive &&
-          !(isCoarsePointer && dndMode === DND_MODES.LOCAL)
-        }
+        draggable={draggable}
       >
         <>
           <ItemCardAnchor to={navigateRoute ?? ""} onClick={handleCardClick}>
@@ -1006,8 +716,8 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
           </ItemCardAnchor>
           {droppable && (
             <HighlightBorder
-              isHighlighted={!!activeHighlightPosition}
-              position={activeHighlightPosition}
+              isHighlighted={!!highlightPosition}
+              position={highlightPosition}
               isFirst={order === 0}
             />
           )}
