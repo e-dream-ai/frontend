@@ -1,10 +1,8 @@
 /// <reference types="vite/client" />
 
-declare module "drag-drop-touch" {
+declare module "@dragdroptouch/drag-drop-touch" {
   interface DragDropTouchOptions {
     allowDragScroll?: boolean;
-    dragScrollPercentage?: number;
-    dragScrollSpeed?: number;
     dragImageOpacity?: number;
     dragThresholdPixels?: number;
     isPressHoldMode?: boolean;
@@ -12,11 +10,11 @@ declare module "drag-drop-touch" {
     pressHoldMargin?: number;
     pressHoldThresholdPixels?: number;
     contextMenuDelayMS?: number;
-    forceListen?: boolean;
   }
 
-  export class DragDropTouch {
-    static instance: DragDropTouch | null;
-    configure(options: DragDropTouchOptions): void;
-  }
+  export function enableDragDropTouch(
+    dragRoot?: HTMLElement,
+    dropRoot?: HTMLElement,
+    options?: DragDropTouchOptions,
+  ): void;
 }
