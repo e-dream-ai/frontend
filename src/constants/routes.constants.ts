@@ -25,7 +25,6 @@ export const ROUTES = {
   UNSUBSCRIBE: "/unsubscribe",
   TERMS_OF_SERVICE: "/tos",
   PLAYGROUND: "/playground",
-  STUDIO: "/studio",
 };
 
 export const CREATE_ROUTES = {
