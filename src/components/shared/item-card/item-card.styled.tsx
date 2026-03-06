@@ -108,7 +108,6 @@ export const StyledItemCard = styled.li<{
   }
 
   &[draggable="true"] {
-    touch-action: none;
     -webkit-touch-callout: none;
   }
 

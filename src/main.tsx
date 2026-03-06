@@ -1,4 +1,4 @@
-import "drag-drop-touch";
+import { DragDropTouch } from "drag-drop-touch";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import "./i18n";
@@ -12,6 +12,13 @@ import OfflineHandler from "./components/shared/offline-handler/offline-handler"
 import { getReleaseStage } from "@/utils/bugsnag.util";
 import ThemeProvider from "@/providers/theme.provider";
 import { IS_DEV } from "./constants/env.constantes";
+
+DragDropTouch.instance?.configure({
+  isPressHoldMode: true,
+  pressHoldDelayMS: 300,
+  dragScrollPercentage: 15,
+  dragScrollSpeed: 15,
+});
 
 const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
