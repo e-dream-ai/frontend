@@ -373,6 +373,13 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     setHighlightPosition(newHighlightPosition);
   }, []);
 
+  const preventContextMenu = useCallback(
+    (e: Event) => {
+      if (draggable) e.preventDefault();
+    },
+    [draggable],
+  );
+
   const registerEvents = useCallback(() => {
     cardRef.current?.addEventListener("dragstart", handleDragStart);
     cardRef.current?.addEventListener("dragenter", handleDragEnter);
@@ -380,6 +387,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     cardRef.current?.addEventListener("dragend", handleDragEnd);
     cardRef.current?.addEventListener("drop", handleDrop);
     cardRef.current?.addEventListener("dragover", handleDragOver);
+    cardRef.current?.addEventListener("contextmenu", preventContextMenu);
   }, [
     cardRef,
     handleDragStart,
@@ -388,6 +396,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     handleDragEnd,
     handleDrop,
     handleDragOver,
+    preventContextMenu,
   ]);
 
   const unregisterEvents = useCallback(() => {
@@ -397,6 +406,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     cardRef.current?.removeEventListener("dragend", handleDragEnd);
     cardRef.current?.removeEventListener("drop", handleDrop);
     cardRef.current?.removeEventListener("dragover", handleDragOver);
+    cardRef.current?.removeEventListener("contextmenu", preventContextMenu);
   }, [
     cardRef,
     handleDragStart,
@@ -405,6 +415,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     handleDragEnd,
     handleDrop,
     handleDragOver,
+    preventContextMenu,
   ]);
 
   useEffect(() => {
