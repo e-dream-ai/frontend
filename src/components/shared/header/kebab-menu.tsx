@@ -41,6 +41,15 @@ const createMenuRoutes = (user?: User | null, isCreator?: boolean) => {
       // using display props from styled-system to setup mobile, tablet, laptop, desktop breakpoints
       display: ["block", "block", "block", "none"],
     },
+    ...(isCreator
+      ? [
+          {
+            title: "Studio",
+            route: ROUTES.STUDIO,
+            display: "block",
+          },
+        ]
+      : []),
     {
       title: "header.my_dreams",
       route: `/${joinPaths([
