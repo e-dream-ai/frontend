@@ -107,6 +107,11 @@ export const StyledItemCard = styled.li<{
     user-select: none;
   }
 
+  &[draggable="true"] {
+    touch-action: none;
+    -webkit-touch-callout: none;
+  }
+
   :hover {
     background-color: ${(props) => props.theme.colorBackgroundSecondary};
   }
