@@ -38,13 +38,21 @@ export const createAddFileHandler = ({
 }: {
   setFiles: React.Dispatch<React.SetStateAction<FileState[]>>;
 }) => {
-  const handleAddFiles = (files: FileList | File) => {
-    if (files instanceof FileList) {
-      const filesArray = Array.from(files);
-      setFiles((v) => [...v, ...filesArray.map((f) => generateFileState(f))]);
-    } else {
-      setFiles((v) => [...v, generateFileState(files)]);
+  const handleAddFiles = (files: FileList | File | File[]) => {
+    const normalizedFiles = Array.isArray(files)
+      ? files
+      : files instanceof FileList
+        ? Array.from(files)
+        : [files];
+
+    if (normalizedFiles.length === 0) {
+      return;
     }
+
+    setFiles((v) => [
+      ...v,
+      ...normalizedFiles.map((f) => generateFileState(f)),
+    ]);
   };
   return handleAddFiles;
 };

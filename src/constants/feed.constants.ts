@@ -6,6 +6,7 @@ export const FEED_FILTERS: Record<Uppercase<FeedItemType>, FeedItemType> = {
   DREAM: "dream",
   PLAYLIST: "playlist",
   STILLS: "stills",
+  HIDDEN: "hidden",
   USER: "user",
   CREATOR: "creator",
   ADMIN: "admin",
@@ -16,6 +17,7 @@ export const FEED_FILTERS_NAMES = {
   DREAM: "page.feed.dream",
   PLAYLIST: "page.feed.playlist",
   STILLS: "page.feed.stills",
+  HIDDEN: "page.feed.hidden",
   USER: "page.feed.user",
   CREATOR: "page.feed.creator",
   ADMIN: "page.feed.admin",
@@ -64,6 +66,10 @@ export const getFeedFilterData: (
   const adminArray = [
     { key: t(FEED_FILTERS_NAMES.USER), value: FEED_FILTERS.USER.toString() },
     { key: t(FEED_FILTERS_NAMES.ADMIN), value: FEED_FILTERS.ADMIN.toString() },
+    {
+      key: t(FEED_FILTERS_NAMES.HIDDEN),
+      value: FEED_FILTERS.HIDDEN.toString(),
+    },
   ];
 
   if (isAdmin) {

@@ -3,7 +3,7 @@ import { Button, ItemCardList, Row } from "@/components/shared";
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
-import { useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useContext, useEffect, useState } from "react";
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useLocation } from "react-router-dom";
@@ -38,6 +38,9 @@ import { Select } from "@/components/shared/select/select";
 import { getHiddenOptions, getNsfwOptions } from "@/constants/select.constants";
 import { usePlaylistState } from "./usePlaylistState";
 import { usePlaylistHandlers } from "./usePlaylistHandlers";
+import { useDeletePlaylistItem } from "@/api/playlist/mutation/useDeletePlaylistItem";
+import { PLAYLIST_REFERENCES_QUERY_KEY } from "@/api/playlist/query/usePlaylistReferences";
+import queryClient from "@/api/query-client";
 import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
 import { NotFound } from "@/components/shared/not-found/not-found";
@@ -58,6 +61,9 @@ import styled from "styled-components";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { secondsToTimeFormat } from "@/utils/video.utils";
 import { FilmstripGallery } from "@/components/shared/filmstrip-gallery/filmstrip-gallery";
+import PermissionContext from "@/context/permission.context";
+import { ApiResponse } from "@/types/api.types";
+import { PlaylistItem } from "@/types/playlist.types";
 
 const SectionID = "playlist";
 
@@ -207,6 +213,9 @@ export const ViewPlaylistPage = () => {
   const [showScrollToTop, setShowScrollToTop] = useState<boolean>(false);
   const [playerTrayBottomOffset, setPlayerTrayBottomOffset] =
     useState<string>("3.5rem");
+  const [removingPlaylistItemId, setRemovingPlaylistItemId] = useState<
+    number | null
+  >(null);
 
   const handleRadioButtonGroupChange = (value?: string) => {
     setRadioGroupState(value as PlaylistTabs);
@@ -258,6 +267,9 @@ export const ViewPlaylistPage = () => {
     hasJumpedToEndKeyframes,
     setHasJumpedToEndKeyframes,
   } = usePlaylistState();
+  const playlistReferences = playlist?.playlistItems ?? [];
+  const { isAllowedTo } = useContext(PermissionContext);
+  const { mutate: mutateDeletePlaylistReferenceItem } = useDeletePlaylistItem();
 
   const formMethods = useForm<UpdatePlaylistFormValues>({
     resolver: yupResolver(UpdatePlaylistSchema),
@@ -268,6 +280,18 @@ export const ViewPlaylistPage = () => {
   const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
   const onHideClientNotConnectedModal = () =>
     setShowClientNotConnectedModal(false);
+
+  const updateToast = (
+    toastId: string | number,
+    type: "success" | "error",
+    message: string,
+  ) => {
+    toast.update(toastId, {
+      render: message,
+      type,
+      isLoading: false,
+    });
+  };
 
   const handleScrollToTop = () => {
     window.scrollTo({
@@ -360,6 +384,76 @@ export const ViewPlaylistPage = () => {
     setTumbnail(undefined);
   };
 
+  const handleRemovePlaylistFromPlaylist = useCallback(
+    (playlistItemId: number, playlistUUID?: string) =>
+      (event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!playlistUUID || removingPlaylistItemId === playlistItemId) return;
+
+        const toastId = toast.loading(
+          t("page.view_playlist.removing_playlist_from_playlist"),
+        );
+        setRemovingPlaylistItemId(playlistItemId);
+
+        mutateDeletePlaylistReferenceItem(
+          { playlistUUID, itemId: playlistItemId },
+          {
+            onSuccess: (response) => {
+              if (!response.success) {
+                updateToast(
+                  toastId,
+                  "error",
+                  response.message ??
+                    t(
+                      "page.view_playlist.error_removing_playlist_from_playlist",
+                    ),
+                );
+                return;
+              }
+
+              queryClient.setQueryData<
+                ApiResponse<{ references: PlaylistItem[]; count: number }>
+              >([PLAYLIST_REFERENCES_QUERY_KEY, uuid], (oldData) => {
+                if (!oldData?.data) return oldData;
+
+                const references =
+                  oldData.data.references?.filter(
+                    (item) => item.id !== playlistItemId,
+                  ) ?? [];
+
+                return {
+                  ...oldData,
+                  data: {
+                    ...oldData.data,
+                    references,
+                    count: references.length,
+                  },
+                };
+              });
+
+              updateToast(
+                toastId,
+                "success",
+                t("page.view_playlist.playlist_removed_from_playlist"),
+              );
+            },
+            onError: () =>
+              updateToast(
+                toastId,
+                "error",
+                t("page.view_playlist.error_removing_playlist_from_playlist"),
+              ),
+            onSettled: () =>
+              setRemovingPlaylistItemId((currentId) =>
+                currentId === playlistItemId ? null : currentId,
+              ),
+          },
+        );
+      },
+    [mutateDeletePlaylistReferenceItem, removingPlaylistItemId, t, uuid],
+  );
+
   const handleRemoveThumbnail = () => {
     setIsThumbnailRemoved(true);
   };
@@ -387,6 +481,78 @@ export const ViewPlaylistPage = () => {
       toast.error(t("page.view_playlist.error_updating_playlist"));
     }
   };
+
+  const renderPlaylistItemCard = useCallback(
+    (playlistItem: PlaylistItem, index: number) => {
+      const currentIndex = playlistItem.order;
+      const isFirstItem = index === 0;
+      const isLastItem = index === items.length - 1;
+
+      return (
+        <ItemCard
+          key={playlistItem.id}
+          draggable
+          itemId={playlistItem.id}
+          dndMode="local"
+          size="sm"
+          type={playlistItem.type}
+          item={
+            playlistItem.type === "dream"
+              ? playlistItem.dreamItem
+              : playlistItem.playlistItem
+          }
+          order={playlistItem.order}
+          deleteDisabled={!allowedEditPlaylist}
+          showPlayButton
+          showOrderNumber
+          indexNumber={index + 1}
+          inline
+          droppable
+          onDelete={handleDeletePlaylistItem(playlistItem.id)}
+          onOrder={handleOrderPlaylist}
+          showReorderControls={allowedEditPlaylist}
+          disableMoveToTop={!allowedEditPlaylist || isFirstItem}
+          disableMoveUp={!allowedEditPlaylist || isFirstItem}
+          disableMoveDown={!allowedEditPlaylist || isLastItem}
+          disableMoveToBottom={!allowedEditPlaylist || isLastItem}
+          onMoveToTop={() =>
+            handleOrderPlaylist({
+              id: playlistItem.id,
+              currentIndex,
+              newIndex: 0,
+            })
+          }
+          onMoveUp={() =>
+            handleOrderPlaylist({
+              id: playlistItem.id,
+              currentIndex,
+              newIndex: currentIndex - 1,
+            })
+          }
+          onMoveDown={() =>
+            handleOrderPlaylist({
+              id: playlistItem.id,
+              currentIndex,
+              newIndex: currentIndex + 1,
+            })
+          }
+          onMoveToBottom={() =>
+            handleOrderPlaylist({
+              id: playlistItem.id,
+              currentIndex,
+              newIndex: items.length - 1,
+            })
+          }
+        />
+      );
+    },
+    [
+      allowedEditPlaylist,
+      handleDeletePlaylistItem,
+      handleOrderPlaylist,
+      items.length,
+    ],
+  );
 
   const resetRemotePlaylistForm = useCallback(() => {
     formMethods.reset(
@@ -961,30 +1127,7 @@ export const ViewPlaylistPage = () => {
                           ) : (
                             <>
                               <ItemCardList>
-                                {items.map((i, index) => (
-                                  <ItemCard
-                                    key={i.id}
-                                    draggable
-                                    itemId={i.id}
-                                    dndMode="local"
-                                    size="sm"
-                                    type={i.type}
-                                    item={
-                                      i.type === "dream"
-                                        ? i.dreamItem
-                                        : i.playlistItem
-                                    }
-                                    order={i.order}
-                                    deleteDisabled={!allowedEditPlaylist}
-                                    showPlayButton
-                                    showOrderNumber
-                                    indexNumber={index + 1}
-                                    inline
-                                    droppable
-                                    onDelete={handleDeletePlaylistItem(i.id)}
-                                    onOrder={handleOrderPlaylist}
-                                  />
-                                ))}
+                                {items.map(renderPlaylistItemCard)}
                               </ItemCardList>
                               <Row justifyContent="center" mt="2rem">
                                 <Text color={theme.textPrimaryColor}>
@@ -1012,30 +1155,7 @@ export const ViewPlaylistPage = () => {
                           }
                         >
                           <ItemCardList>
-                            {items.map((i, index) => (
-                              <ItemCard
-                                key={i.id}
-                                draggable
-                                itemId={i.id}
-                                dndMode="local"
-                                size="sm"
-                                type={i.type}
-                                item={
-                                  i.type === "dream"
-                                    ? i.dreamItem
-                                    : i.playlistItem
-                                }
-                                order={i.order}
-                                deleteDisabled={!allowedEditPlaylist}
-                                showPlayButton
-                                showOrderNumber
-                                indexNumber={index + 1}
-                                inline
-                                droppable
-                                onDelete={handleDeletePlaylistItem(i.id)}
-                                onOrder={handleOrderPlaylist}
-                              />
-                            ))}
+                            {items.map(renderPlaylistItemCard)}
                           </ItemCardList>
                         </InfiniteScroll>
                       )
@@ -1171,6 +1291,64 @@ export const ViewPlaylistPage = () => {
                   )}
                 </Row>
               )}
+              <Row>
+                <h3>{t("page.view_playlist.playlists")}</h3>
+              </Row>
+              <Row flex="auto">
+                <ItemCardList>
+                  {playlistReferences.map((pi) => {
+                    const playlistUUID = pi.playlist?.uuid;
+                    const playlistOwnerId = pi.playlist?.user?.id;
+                    const isPlaylistOwner = Boolean(
+                      playlistOwnerId && user?.id === playlistOwnerId,
+                    );
+                    const canRemoveFromPlaylist =
+                      Boolean(playlistUUID) &&
+                      isAllowedTo({
+                        permission: PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST,
+                        isOwner: isPlaylistOwner,
+                      });
+                    const tooltipId = canRemoveFromPlaylist
+                      ? `remove-playlist-from-playlist-${pi.id}`
+                      : undefined;
+
+                    return (
+                      <Fragment key={pi.id}>
+                        <ItemCard
+                          type="playlist"
+                          item={pi.playlist}
+                          inline
+                          size="sm"
+                          onDelete={
+                            canRemoveFromPlaylist
+                              ? (e: React.MouseEvent) =>
+                                  handleRemovePlaylistFromPlaylist(
+                                    pi.id,
+                                    playlistUUID,
+                                  )(e)
+                              : undefined
+                          }
+                          deleteDisabled={
+                            !canRemoveFromPlaylist ||
+                            removingPlaylistItemId === pi.id
+                          }
+                          deleteTooltipId={tooltipId}
+                        />
+                        {tooltipId && (
+                          <Tooltip
+                            id={tooltipId}
+                            place="top"
+                            delayShow={TOOLTIP_DELAY_MS}
+                            content={t(
+                              "page.view_playlist.remove_playlist_from_playlist_tooltip",
+                            )}
+                          />
+                        )}
+                      </Fragment>
+                    );
+                  })}
+                </ItemCardList>
+              </Row>
 
               {/* Removing add item playlist dropzone, probably next to be deprecated  */}
               {/* <Restricted

@@ -21,6 +21,9 @@ import {
   ItemCardAnchor,
   ItemTitleText,
   PlayButton,
+  ReorderActionButton,
+  ReorderActions,
+  ReorderActionsWrap,
   StyledItemCard,
   StyledItemCardSkeleton,
   ThumbnailGrid,
@@ -30,6 +33,10 @@ import {
 } from "./item-card.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
+  faAnglesDown,
+  faAnglesUp,
+  faChevronDown,
+  faChevronUp,
   faEllipsis,
   faExclamationCircle,
   faFilm,
@@ -93,6 +100,15 @@ type ItemCardProps = {
   onOrder?: (dropItem: SetItemOrder) => void;
   onDelete?: (event: React.MouseEvent) => void;
   deleteTooltipId?: string;
+  showReorderControls?: boolean;
+  disableMoveToTop?: boolean;
+  disableMoveUp?: boolean;
+  disableMoveDown?: boolean;
+  disableMoveToBottom?: boolean;
+  onMoveToTop?: () => void;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  onMoveToBottom?: () => void;
 };
 
 const DND_MODES: { [key: string]: DNDMode } = {
@@ -140,6 +156,15 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   onOrder,
   onDelete,
   deleteTooltipId,
+  showReorderControls = false,
+  disableMoveToTop = false,
+  disableMoveUp = false,
+  disableMoveDown = false,
+  disableMoveToBottom = false,
+  onMoveToTop,
+  onMoveUp,
+  onMoveDown,
+  onMoveToBottom,
 }) => {
   const cardRef = useRef<HTMLLIElement>(null);
   const tooltipRef = useRef<HTMLAnchorElement>(null);
@@ -161,7 +186,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   const theme = useTheme();
   const { socket } = useSocket();
   const { isActive: isClientActive } = useDesktopClient();
-  const { isDragging, setDragging } = useItemCardListState();
+  const { isDragging, setDragging, setDragPreview } = useItemCardListState();
   const navigate = useNavigate();
 
   /**
@@ -274,10 +299,11 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       event.preventDefault();
       event.stopPropagation();
 
+      setDragPreview(undefined);
       setDragging(false);
       return false;
     },
-    [setDragging],
+    [setDragPreview, setDragging],
   );
 
   const handleDrop = useCallback(
@@ -288,6 +314,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
        * reset highlight position
        */
       setHighlightPosition(undefined);
+      setDragPreview(undefined);
       const dt = event.dataTransfer;
       const action = dt?.getData(DND_METADATA.ACTION);
       const dropOrder = Number(dt?.getData(DND_METADATA.ORDER)) ?? 0;
@@ -322,7 +349,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
 
       return false;
     },
-    [order, dndMode, onOrder, highlightPosition, itemId],
+    [order, dndMode, onOrder, highlightPosition, itemId, setDragPreview],
   );
 
   const handleDragOver = useCallback((event: MouseEvent) => {
@@ -346,6 +373,13 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     setHighlightPosition(newHighlightPosition);
   }, []);
 
+  const preventContextMenu = useCallback(
+    (e: Event) => {
+      if (draggable) e.preventDefault();
+    },
+    [draggable],
+  );
+
   const registerEvents = useCallback(() => {
     cardRef.current?.addEventListener("dragstart", handleDragStart);
     cardRef.current?.addEventListener("dragenter", handleDragEnter);
@@ -353,6 +387,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     cardRef.current?.addEventListener("dragend", handleDragEnd);
     cardRef.current?.addEventListener("drop", handleDrop);
     cardRef.current?.addEventListener("dragover", handleDragOver);
+    cardRef.current?.addEventListener("contextmenu", preventContextMenu);
   }, [
     cardRef,
     handleDragStart,
@@ -361,6 +396,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     handleDragEnd,
     handleDrop,
     handleDragOver,
+    preventContextMenu,
   ]);
 
   const unregisterEvents = useCallback(() => {
@@ -370,6 +406,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     cardRef.current?.removeEventListener("dragend", handleDragEnd);
     cardRef.current?.removeEventListener("drop", handleDrop);
     cardRef.current?.removeEventListener("dragover", handleDragOver);
+    cardRef.current?.removeEventListener("contextmenu", preventContextMenu);
   }, [
     cardRef,
     handleDragStart,
@@ -378,6 +415,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     handleDragEnd,
     handleDrop,
     handleDragOver,
+    preventContextMenu,
   ]);
 
   useEffect(() => {
@@ -507,6 +545,20 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   const onHideClientNotConnectedModal = () =>
     setShowClientNotConnectedModal(false);
 
+  const handleReorderAction =
+    (action?: () => void) => (event: React.MouseEvent<HTMLButtonElement>) => {
+      event.preventDefault();
+      event.stopPropagation();
+      action?.();
+    };
+
+  const handleCardClick: MouseEventHandler<HTMLAnchorElement> = useCallback(
+    (event) => {
+      onClick?.(event);
+    },
+    [onClick],
+  );
+
   return (
     <>
       <ConfirmModal
@@ -537,18 +589,22 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       />
       <StyledItemCard
         data-element-uuid={uuid}
+        data-item-id={itemId}
+        data-order={order}
+        data-dnd-mode={dndMode}
         ref={cardRef}
         size={size}
         draggable={draggable}
       >
         <>
-          <ItemCardAnchor to={navigateRoute ?? ""} onClick={onClick}>
+          <ItemCardAnchor to={navigateRoute ?? ""} onClick={handleCardClick}>
             <Row
               flex="auto"
               margin="0"
               padding="3"
               justifyContent="space-between"
               flexDirection={["column", "row", "row", "row"]}
+              style={{ position: "relative" }}
             >
               {(onDelete || showOrderNumber) && (
                 <Row
@@ -625,6 +681,48 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                   </Column>
                 </Row>
               </Column>
+              {showReorderControls && (
+                <ReorderActionsWrap>
+                  <ReorderActions>
+                    <ReorderActionButton
+                      type="button"
+                      onClick={handleReorderAction(onMoveToTop)}
+                      disabled={disableMoveToTop}
+                      aria-label={t("page.view_playlist.move_item_to_first")}
+                      title={t("page.view_playlist.move_item_to_first")}
+                    >
+                      <FontAwesomeIcon icon={faAnglesUp} />
+                    </ReorderActionButton>
+                    <ReorderActionButton
+                      type="button"
+                      onClick={handleReorderAction(onMoveUp)}
+                      disabled={disableMoveUp}
+                      aria-label={t("page.view_playlist.move_item_up")}
+                      title={t("page.view_playlist.move_item_up")}
+                    >
+                      <FontAwesomeIcon icon={faChevronUp} />
+                    </ReorderActionButton>
+                    <ReorderActionButton
+                      type="button"
+                      onClick={handleReorderAction(onMoveDown)}
+                      disabled={disableMoveDown}
+                      aria-label={t("page.view_playlist.move_item_down")}
+                      title={t("page.view_playlist.move_item_down")}
+                    >
+                      <FontAwesomeIcon icon={faChevronDown} />
+                    </ReorderActionButton>
+                    <ReorderActionButton
+                      type="button"
+                      onClick={handleReorderAction(onMoveToBottom)}
+                      disabled={disableMoveToBottom}
+                      aria-label={t("page.view_playlist.move_item_to_last")}
+                      title={t("page.view_playlist.move_item_to_last")}
+                    >
+                      <FontAwesomeIcon icon={faAnglesDown} />
+                    </ReorderActionButton>
+                  </ReorderActions>
+                </ReorderActionsWrap>
+              )}
             </Row>
           </ItemCardAnchor>
           {droppable && (

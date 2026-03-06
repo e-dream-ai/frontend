@@ -96,6 +96,21 @@ export const StyledItemCard = styled.li<{
     background-color linear 0.4s,
     border-color linear 0.4s;
 
+  &[data-touch-dragging="true"] {
+    box-shadow: 0 0 0 2px ${(props) => props.theme.colorPrimary};
+    background-color: ${(props) => props.theme.colorBackgroundSecondary};
+  }
+
+  &[data-dnd-mode="local"] {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  &[draggable="true"] {
+    -webkit-touch-callout: none;
+  }
+
   :hover {
     background-color: ${(props) => props.theme.colorBackgroundSecondary};
   }
@@ -172,6 +187,9 @@ export const StyledItemCardImage = styled.img<{ size: Sizes }>`
   cursor: pointer;
   max-width: 100%;
   height: auto;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-touch-callout: none;
   ${(props) => ImageSizes[props.size]}
 
   @media (max-width: ${DEVICES.MOBILE_S}) {
@@ -225,6 +243,70 @@ export const PlayButton = styled(Button)<{ playType: ItemType }>`
   color: rgb(252, 217, 183);
   &:hover {
     color: rgb(0, 208, 219);
+  }
+`;
+
+export const ReorderActions = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  align-items: center;
+`;
+
+export const ReorderActionsWrap = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  margin-left: 0.75rem;
+
+  @media (max-width: ${DEVICES.MOBILE_S}) {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    z-index: 2;
+    margin-left: 0;
+    justify-content: flex-end;
+    width: auto;
+    ${ReorderActions} {
+      flex-direction: row;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+    }
+  }
+`;
+
+export const ReorderActionButton = styled.button`
+  width: 1.8rem;
+  height: 1.8rem;
+  border-radius: 0.35rem;
+  border: 1px solid ${(props) => props.theme.colorBackgroundSecondary};
+  background-color: ${(props) => props.theme.colorBackgroundQuaternary};
+  color: ${(props) => props.theme.textBodyColor};
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease,
+    transform 0.2s ease,
+    opacity 0.2s ease;
+
+  &:hover:not(:disabled) {
+    color: ${(props) => props.theme.colorPrimary};
+    border-color: ${(props) => props.theme.colorPrimary};
+    background-color: ${(props) => props.theme.colorBackgroundSecondary};
+    transform: translateY(-1px);
+  }
+
+  &:active:not(:disabled) {
+    transform: translateY(0);
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 `;
 
