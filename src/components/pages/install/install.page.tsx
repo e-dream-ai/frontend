@@ -65,8 +65,8 @@ const InstallSection = () => {
             <Row>
               <Text>
                 Unzip, and drag it to your Applications folder. Run it, sign-in
-                by entering your e-mail, then enter the code e-mailed to you,
-                and close the settings.
+                by entering your email, then enter the code emailed to you, and
+                close the settings.
               </Text>
             </Row>
           </Card>
@@ -74,7 +74,7 @@ const InstallSection = () => {
         <Text>
           <p>
             Each time you sign-in, a fresh code is required. Never reuse the
-            codes e-mailed to you.
+            codes emailed to you.
           </p>
         </Text>
         <Text>

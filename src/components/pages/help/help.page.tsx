@@ -103,6 +103,16 @@ const PlayIcon = styled(Play)`
   height: auto;
 `;
 
+const ElectricSheepLogo = styled(PlaylistIconBubble)`
+  overflow: hidden;
+`;
+
+const ElectricSheepLogoImg = styled.img`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 const ButtonRow = styled.div`
   clear: both;
   margin-top: 1.25rem;
@@ -124,7 +134,28 @@ export const HelpPage: React.FC = () => {
 
         <HelpGrid>
           <HelpCard flex="auto">
-            <CardTitle>Connection</CardTitle>
+            <CardTitle>Install</CardTitle>
+            <CardText>
+              Download and install the Infinidream native app to start dreaming
+              on your screen. The install page has everything you need to get
+              set up.
+            </CardText>
+            <CardText>
+              After installing, sign-in with your email address. A one-time code
+              will be sent to you. Enter it to get started.
+            </CardText>
+            <BottomButtonRow>
+              <Button
+                buttonType="secondary"
+                onClick={() => router.navigate(ROUTES.INSTALL)}
+              >
+                Go to Install
+              </Button>
+            </BottomButtonRow>
+          </HelpCard>
+
+          <HelpCard flex="auto">
+            <CardTitle>Connect</CardTitle>
             <CardText>
               The Infinidream app connects to your account through the cloud,
               and is best controlled from a web browser or your phone.
@@ -184,6 +215,11 @@ export const HelpPage: React.FC = () => {
               The main remote page has same the controls as the tray, and also
               an array of buttons with more controls. And it shows the current
               playlist as well.
+              <RemoteImage
+                src="/images/more-keys.webp"
+                alt="Keyboard shortcuts reference"
+                loading="lazy"
+              />
             </CardText>
             <BottomButtonRow>
               <Button
@@ -280,7 +316,7 @@ export const HelpPage: React.FC = () => {
 
           {/* Links card */}
           <HelpCard flex="auto">
-            <CardTitle>Links to Go Deeper</CardTitle>
+            <CardTitle>Go Deeper</CardTitle>
             <TipsList>
               <li>
                 See the{" "}
@@ -342,6 +378,68 @@ export const HelpPage: React.FC = () => {
                 }
               >
                 Start web player
+              </Button>
+            </BottomButtonRow>
+          </HelpCard>
+
+          {/* Creating playlists card */}
+          <HelpCard flex="auto">
+            <CardTitle>Creating playlists</CardTitle>
+            <CardText>
+              Create your own playlist by clicking the button below. Give it a
+              name and it will appear in your collection.
+            </CardText>
+            <CardText>
+              Then browse dreams and playlists and use the "+" button in the
+              top-right of any dream or playlist page to add it to your
+              playlist. You can add individual dreams or entire playlists to
+              build your own custom mix.
+            </CardText>
+            <BottomButtonRow>
+              <Button
+                buttonType="secondary"
+                onClick={() =>
+                  window.open(
+                    "https://alpha.infinidream.ai/create/playlist",
+                    "_blank",
+                  )
+                }
+              >
+                Create a playlist
+              </Button>
+            </BottomButtonRow>
+          </HelpCard>
+
+          {/* Electric Sheep card */}
+          <HelpCard flex="auto">
+            <CardTitle>Electric Sheep</CardTitle>
+            <CardText>
+              <ElectricSheepLogo>
+                <ElectricSheepLogoImg
+                  src="/images/electric-sheep-logo.png"
+                  alt="Electric Sheep logo"
+                  loading="lazy"
+                />
+              </ElectricSheepLogo>
+              Electric Sheep are an ancestor of the Infinidream platform. These
+              classic crowdsource fractal flame animations live on inside of
+              Infinidream for everyone to enjoy. The Electric Sheep continue to
+              evolve, now in 1080p and higher quality than ever.
+            </CardText>
+            <CardText>
+              There are multiple playlists with different styles of Sheep:
+              Wanderlust, Meditations, Singularities, and more.
+            </CardText>
+            <BottomButtonRow>
+              <Button
+                buttonType="secondary"
+                onClick={() =>
+                  router.navigate(
+                    `${ROUTES.VIEW_PLAYLIST}/13489b20-cc0b-4923-8ea8-3f64015fe389`,
+                  )
+                }
+              >
+                Electric sheep playlist
               </Button>
             </BottomButtonRow>
           </HelpCard>
