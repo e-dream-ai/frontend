@@ -45,6 +45,15 @@ export const KeyframeSelect = ({
       render={({ field }) => (
         <Select
           {...field}
+          onChange={(option: unknown) => {
+            const opt = option as { label: string; value: string } | null;
+            if (!opt) {
+              field.onChange({ label: undefined, value: undefined });
+            } else {
+              field.onChange(opt);
+            }
+          }}
+          isClearable={editMode && !!selectedKeyframeOption?.value}
           placeholder={placeholder}
           isDisabled={!editMode}
           isLoading={isKeyframesLoading}
@@ -52,7 +61,7 @@ export const KeyframeSelect = ({
           options={keyframesOptions}
           onInputChange={(newValue) => setKeyframeSearch(newValue)}
           tooltipPlace={tooltipPlace}
-          to={getKeyframeRoute(selectedKeyframeOption.value)}
+          to={getKeyframeRoute(selectedKeyframeOption?.value)}
         />
       )}
     />
