@@ -51,8 +51,8 @@ export type UpdateDreamRequestValues = {
   activityLevel?: number;
   featureRank?: number;
   displayedOwner?: number;
-  startKeyframe?: string;
-  endKeyframe?: string;
+  startKeyframe?: string | null;
+  endKeyframe?: string | null;
   nsfw?: boolean;
   hidden?: boolean;
   ccbyLicense?: boolean;

@@ -191,8 +191,8 @@ export const formatDreamRequest = (
     displayedOwner: data?.displayedOwner?.value,
     nsfw: data?.nsfw.value === NSFW.TRUE,
     ccbyLicense: data?.ccbyLicense.value === CCA_LICENSE.TRUE,
-    startKeyframe: data?.startKeyframe?.value,
-    endKeyframe: data?.endKeyframe?.value,
+    startKeyframe: data?.startKeyframe?.value ?? null,
+    endKeyframe: data?.endKeyframe?.value ?? null,
 
     // If user is admin, add allowed extra fields
     ...(isAdmin
