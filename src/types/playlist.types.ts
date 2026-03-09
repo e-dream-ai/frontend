@@ -48,6 +48,7 @@ export type Playlist = {
   playlistItems?: PlaylistItem[];
   itemCount?: number;
   featureRank?: number;
+  loops?: number;
   nsfw?: boolean;
   hidden?: boolean;
   totalDurationSeconds?: number;

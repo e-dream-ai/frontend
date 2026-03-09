@@ -4,6 +4,7 @@ export type UpdatePlaylistFormValues = {
   name: string;
   description?: string;
   featureRank?: number;
+  loops?: number;
   user?: string;
   displayedOwner: {
     label?: string;
@@ -38,6 +39,7 @@ export type UpdatePlaylistRequestValues = {
     name: string;
     description?: string;
     featureRank?: number;
+    loops?: number;
     displayedOwner?: number;
     nsfw?: boolean;
     hidden?: boolean;
@@ -52,6 +54,7 @@ export const UpdatePlaylistSchema = yup
       .number()
       .typeError("Activity level must be a integer")
       .integer(),
+    loops: yup.number().typeError("Loops must be an integer").integer().min(0),
     user: yup.string(),
     displayedOwner: yup.object({
       label: yup.string(),

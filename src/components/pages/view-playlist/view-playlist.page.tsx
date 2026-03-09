@@ -29,6 +29,7 @@ import {
   faFileVideo,
   faPlus,
   faRankingStar,
+  faRepeat,
   faSave,
   faShield,
   faTrash,
@@ -977,6 +978,18 @@ export const ViewPlaylistPage = () => {
                           {...formMethods.register("featureRank")}
                         />
                       </Restricted>
+                    </Column>
+                    <Column
+                      flex={["1 1 33.33%", "1 1 33.33%", "1 1 33.33%"]}
+                      px={[1, 1, 1]}
+                    >
+                      <FormInput
+                        disabled={!editMode}
+                        placeholder={t("page.view_playlist.loops")}
+                        type="number"
+                        before={<FontAwesomeIcon icon={faRepeat} />}
+                        {...formMethods.register("loops")}
+                      />
                     </Column>
                     <Column
                       flex={["1 1 33.33%", "1 1 33.33%", "1 1 33.33%"]}

@@ -148,6 +148,7 @@ export const formatPlaylistForm = ({
         label: getUserName(playlist?.displayedOwner ?? playlist?.user),
       },
   featureRank: playlist?.featureRank,
+  loops: playlist?.loops ?? 0,
   nsfw: filterNsfwOption(playlist?.nsfw, t),
   hidden: filterHiddenOption(playlist?.hidden, t),
   created_at: moment(playlist?.created_at).format(FORMAT),
@@ -163,6 +164,7 @@ export const formatPlaylistRequest = (
     name: data.name,
     description: data.description,
     featureRank: data?.featureRank,
+    loops: data?.loops,
     displayedOwner: data?.displayedOwner?.value,
     nsfw: data?.nsfw.value === NSFW.TRUE,
     // If user is admin, add allowed extra fields
