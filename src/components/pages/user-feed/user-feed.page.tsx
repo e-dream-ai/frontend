@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@/api/user/query/useUser";
-import { Column, Row } from "@/components/shared";
+import { Row } from "@/components/shared";
 import { Avatar } from "@/components/shared/avatar/avatar";
 import Container from "@/components/shared/container/container";
 import { NotFound } from "@/components/shared/not-found/not-found";
 import RadioButtonGroup from "@/components/shared/radio-button-group/radio-button-group";
+import SearchBar from "@/components/shared/search-bar/search-bar";
 import { Section } from "@/components/shared/section/section";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import UserDreams from "@/components/shared/user-dreams/user-dreams";
 import { USER_FEED_TYPES } from "@/constants/feed.constants";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useImage } from "@/hooks/useImage";
 import { getUserNameOrEmail } from "@/utils/user.util";
 import { useTranslation } from "react-i18next";
@@ -34,6 +36,13 @@ export const UserFeedPage: React.FC = () => {
   const [radioGroupState, setRadioGroupState] = useState<UserFeedType>(
     USER_FEED_TYPES.ALL,
   );
+  const [searchValue, setSearchValue] = useState<string | undefined>();
+  const [search, setSearch] = useState<string | undefined>();
+  const debouncedSearch = useDebounce(searchValue, 500);
+
+  useEffect(() => {
+    setSearch(debouncedSearch);
+  }, [debouncedSearch]);
 
   const radioGroupData = useUserFeedFilter();
 
@@ -53,6 +62,20 @@ export const UserFeedPage: React.FC = () => {
     setRadioGroupState(value as UserFeedType);
   };
 
+  const handleOnChange = (value?: string) => {
+    if (!value && value !== "") return;
+    setSearchValue(value);
+  };
+
+  const handleOnSearch = (value?: string) => {
+    if (!value && value !== "") return;
+    setSearch(value);
+  };
+
+  const handleOnClearSearch = () => {
+    setSearchValue("");
+  };
+
   if (isUserLoading) {
     return (
       <Container>
@@ -69,15 +92,26 @@ export const UserFeedPage: React.FC = () => {
 
   return (
     <Container>
-      <Row m="0">
-        <Column mr="3">
+      <Row
+        m="0"
+        justifyContent="space-between"
+        alignItems="center"
+        style={{ gap: "12px" }}
+      >
+        <Row m="0" alignItems="center" style={{ gap: "12px" }}>
           <Avatar size="sm" url={avatarUrl} />
-        </Column>
-        <h2>
-          {getUserNameOrEmail(user)}
-          {"'s "}
-          {t("page.user_feed.title")}
-        </h2>
+          <h2 style={{ margin: 0 }}>
+            {getUserNameOrEmail(user)}
+            {"'s "}
+            {t("page.user_feed.title")}
+          </h2>
+        </Row>
+        <SearchBar
+          showClearButton={Boolean(searchValue)}
+          onChange={handleOnChange}
+          onSearch={handleOnSearch}
+          onClear={handleOnClearSearch}
+        />
       </Row>
       <Section id={SECTION_ID}>
         <Row m="0">
@@ -93,6 +127,7 @@ export const UserFeedPage: React.FC = () => {
             grid
             columns={3}
             userUUID={user?.uuid}
+            search={search}
             type={
               radioGroupState === USER_FEED_TYPES.STILLS
                 ? "dream"
@@ -111,6 +146,7 @@ export const UserFeedPage: React.FC = () => {
             grid
             columns={3}
             userUUID={user?.uuid}
+            search={search}
             type={radioGroupState as VoteType}
           />
         )}

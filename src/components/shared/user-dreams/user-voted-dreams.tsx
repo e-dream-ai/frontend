@@ -13,6 +13,7 @@ type UserVotedDreamsProps = {
   grid?: boolean;
   columns?: number;
   type?: VoteType;
+  search?: string;
 };
 
 const UserVotedDreams: React.FC<UserVotedDreamsProps> = ({
@@ -20,6 +21,7 @@ const UserVotedDreams: React.FC<UserVotedDreamsProps> = ({
   grid,
   columns = 2,
   type,
+  search,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -28,6 +30,7 @@ const UserVotedDreams: React.FC<UserVotedDreamsProps> = ({
     useInfiniteUserVotedDreams({
       userUUID,
       type,
+      search,
     });
 
   const dreams = useMemo(
