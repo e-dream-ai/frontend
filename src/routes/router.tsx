@@ -32,7 +32,6 @@ import { SignupPage } from "@/components/pages/signup/signup.page";
 import PublicRoute from "@/routes/public-route";
 import PlaylistsFeedPage from "@/components/pages/playlist-feed/playlist-feed";
 import PlaygroundPage from "@/components/pages/playground/playground.page";
-import { StudioPage } from "@/components/pages/studio/studio.page";
 import NotFoundPage from "@/components/pages/not-found/not-found.page";
 import UnsubscribePage from "@/components/pages/unsubscribe/unsubscribe.page";
 import { useEffect } from "react";
@@ -110,16 +109,6 @@ export const router = createBrowserRouter([
         element: (
           <ProtectedRoute allowedRoles={[ROLES.ADMIN_GROUP]}>
             <PlaygroundPage />
-          </ProtectedRoute>
-        ),
-      },
-      {
-        path: ROUTES.STUDIO,
-        element: (
-          <ProtectedRoute
-            allowedRoles={[ROLES.CREATOR_GROUP, ROLES.ADMIN_GROUP]}
-          >
-            <StudioPage />
           </ProtectedRoute>
         ),
       },
