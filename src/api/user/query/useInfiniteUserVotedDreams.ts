@@ -15,6 +15,7 @@ type QueryFunctionParams = {
   skip: number;
   userUUID?: string;
   type?: VoteType;
+  search?: string;
 };
 
 const getInfiniteUserVotedDreams = ({
@@ -22,6 +23,7 @@ const getInfiniteUserVotedDreams = ({
   skip,
   userUUID,
   type,
+  search,
 }: QueryFunctionParams) => {
   return async () =>
     axiosClient
@@ -30,6 +32,7 @@ const getInfiniteUserVotedDreams = ({
           take,
           skip,
           type,
+          search: search || undefined,
         },
         headers: getRequestHeaders({
           contentType: ContentType.json,
@@ -41,9 +44,14 @@ const getInfiniteUserVotedDreams = ({
 type HookParams = {
   userUUID?: string;
   type?: VoteType;
+  search?: string;
 };
 
-export const useInfiniteUserVotedDreams = ({ userUUID, type }: HookParams) => {
+export const useInfiniteUserVotedDreams = ({
+  userUUID,
+  type,
+  search,
+}: HookParams) => {
   const { user } = useAuth();
   const take = PAGINATION.TAKE;
 
@@ -51,7 +59,7 @@ export const useInfiniteUserVotedDreams = ({ userUUID, type }: HookParams) => {
     ApiResponse<{ dreams: Dream[]; count: number }>,
     Error
   >(
-    [USER_INFINITE_VOTED_DREAMS_QUERY_KEY, type, userUUID],
+    [USER_INFINITE_VOTED_DREAMS_QUERY_KEY, type, userUUID, search],
 
     ({ pageParam = 0 }) =>
       getInfiniteUserVotedDreams({
@@ -59,6 +67,7 @@ export const useInfiniteUserVotedDreams = ({ userUUID, type }: HookParams) => {
         skip: pageParam * take,
         userUUID,
         type,
+        search,
       })(),
     {
       enabled: Boolean(user),

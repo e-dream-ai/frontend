@@ -17,6 +17,7 @@ type UserDreamsProps = {
   columns?: number;
   type?: FeedItemFilterType;
   mediaType?: "image" | "video";
+  search?: string;
 };
 
 const UserDreams: React.FC<UserDreamsProps> = ({
@@ -25,6 +26,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({
   columns = 2,
   type,
   mediaType,
+  search,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -39,6 +41,7 @@ const UserDreams: React.FC<UserDreamsProps> = ({
     userUUID,
     type,
     mediaType,
+    search,
   });
 
   const feed = useMemo(
