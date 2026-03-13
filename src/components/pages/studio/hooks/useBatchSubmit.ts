@@ -9,7 +9,8 @@ import {
   hasActionLoras,
 } from "../constants/duration-options";
 
-const BATCH_SIZE = 5;
+// Serialized to avoid concurrent auth refresh races (see fix/session-refresh-race on backend)
+const BATCH_SIZE = 1;
 
 export const useBatchSubmit = () => {
   const images = useStudioStore((s) => s.images);
