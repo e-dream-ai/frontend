@@ -28,6 +28,8 @@ type ResponseGeneratorProps = {
   logout: () => Promise<void>;
 };
 
+let isLoggingOut = false;
+
 const generateResponseInterceptor = async ({
   logout,
 }: ResponseGeneratorProps) => {
@@ -38,14 +40,17 @@ const generateResponseInterceptor = async ({
     (response) => response,
     async (error) => {
       if (error?.response?.status === 401) {
-        // Handle unauthorized error
-        queryClient.clear();
-        await logout();
-        router.navigate(ROUTES.SIGNIN);
+        if (!isLoggingOut) {
+          isLoggingOut = true;
+          queryClient.clear();
+          await logout();
+          router.navigate(ROUTES.SIGNIN);
+          isLoggingOut = false;
+        }
         return Promise.reject(error);
       }
 
-      return error.response;
+      return Promise.reject(error);
     },
   );
 };
