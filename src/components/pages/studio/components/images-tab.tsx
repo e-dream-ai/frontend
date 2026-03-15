@@ -26,6 +26,7 @@ import {
   LightboxOverlay,
   LightboxImage,
 } from "./images-tab.styled";
+import { PresignedImage, getPresignedUrl } from "@/components/shared/presigned-image";
 import { AddFromPlaylistModal } from "./add-from-playlist-modal";
 
 const SEED_OPTIONS = [1, 4, 8, 12, 16, 24];
@@ -46,7 +47,7 @@ export const ImagesTab: React.FC = () => {
   const isGenerating = useStudioStore((s) => s.isGenerating);
   const setIsGenerating = useStudioStore((s) => s.setIsGenerating);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
-  const [expandedImageUrl, setExpandedImageUrl] = useState<string | null>(null);
+  const [expandedImageUuid, setExpandedImageUuid] = useState<string | null>(null);
   const processedImages = useMemo(
     () => images.filter((img) => img.status === "processed"),
     [images],
@@ -158,11 +159,12 @@ export const ImagesTab: React.FC = () => {
           <ImageGrid>
             {images.map((img) => (
               <ImageCard key={img.uuid} $selected={img.selected}>
-                {img.status === "processed" && img.url ? (
+                {img.status === "processed" ? (
                   <ImageThumbnail
-                    src={img.url}
+                    as={PresignedImage}
+                    dreamUuid={img.uuid}
                     alt={img.name}
-                    onClick={() => setExpandedImageUrl(img.url)}
+                    onClick={() => setExpandedImageUuid(img.uuid)}
                     style={{ cursor: "zoom-in" }}
                   />
                 ) : (
@@ -216,9 +218,9 @@ export const ImagesTab: React.FC = () => {
         <AddFromPlaylistModal onClose={() => setShowPlaylistModal(false)} />
       )}
 
-      {expandedImageUrl && (
-        <LightboxOverlay onClick={() => setExpandedImageUrl(null)}>
-          <LightboxImage src={expandedImageUrl} alt="Expanded" />
+      {expandedImageUuid && (
+        <LightboxOverlay onClick={() => setExpandedImageUuid(null)}>
+          <LightboxImage src={getPresignedUrl(expandedImageUuid)} alt="Expanded" />
         </LightboxOverlay>
       )}
     </>
