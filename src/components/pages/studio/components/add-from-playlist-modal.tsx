@@ -8,6 +8,7 @@ import {
   NavButton,
   SecondaryNavButton,
 } from "./images-tab.styled";
+import { PresignedImage } from "@/components/shared/presigned-image";
 import { ImageThumbnail } from "./images-tab.styled";
 import {
   ModalOverlay,
@@ -169,7 +170,11 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
                     onClick={() => !alreadyAdded && toggleSelected(dream.uuid)}
                     style={{ opacity: alreadyAdded ? 0.4 : 1 }}
                   >
-                    <ImageThumbnail src={dream.thumbnail} alt={dream.name} />
+                    <ImageThumbnail
+                      as={PresignedImage}
+                      dreamUuid={dream.uuid}
+                      alt={dream.name}
+                    />
                   </ImageSelectCard>
                 );
               })}

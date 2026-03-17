@@ -7,6 +7,7 @@ import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
 } from "../constants/duration-options";
+import { PresignedImage } from "@/components/shared/presigned-image";
 import {
   GenerateSection,
   SectionTitle,
@@ -133,7 +134,13 @@ export const GenerateTab: React.FC = () => {
                           !existingJob && toggleComboExcluded(comboKey)
                         }
                       >
-                        {image.url && <CellThumb src={image.url} alt="" />}
+                        {image.status === "processed" && (
+                          <CellThumb
+                            as={PresignedImage}
+                            dreamUuid={image.uuid}
+                            alt=""
+                          />
+                        )}
                         <br />
                         {existingJob ? (
                           <SubmittedLabel>submitted</SubmittedLabel>

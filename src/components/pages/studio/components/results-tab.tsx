@@ -10,6 +10,7 @@ import {
   getAllowedDurationsForActions,
   hasActionLoras,
 } from "../constants/duration-options";
+import { PresignedImage } from "@/components/shared/presigned-image";
 import { GenerateSection, SectionTitle } from "./images-tab.styled";
 import { GridTable, GridHeader, GridRowHeader } from "./generate-tab.styled";
 import {
@@ -414,10 +415,11 @@ export const ResultsTab: React.FC = () => {
                                   src={`data:image/jpeg;base64,${job.previewFrame}`}
                                   alt="preview"
                                 />
-                              ) : job.thumbnailUrl ? (
+                              ) : job.status === "processed" ? (
                                 <ResultThumbImg
-                                  src={job.thumbnailUrl}
-                                  alt="preview"
+                                  as={PresignedImage}
+                                  dreamUuid={job.dreamUuid}
+                                  alt="thumbnail"
                                 />
                               ) : null}
 

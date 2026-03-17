@@ -36,10 +36,8 @@ export const useStudioJobProgress = () => {
       status?: string;
       progress?: number;
       preview_frame?: string;
-      thumbnail?: string;
-      video?: string;
     }) => {
-      const { dream_uuid, progress, preview_frame, thumbnail, video } = data;
+      const { dream_uuid, progress, preview_frame } = data;
       const mappedStatus = mapSocketStatus(data.status);
 
       const state = useStudioStore.getState();
@@ -61,7 +59,6 @@ export const useStudioJobProgress = () => {
         state.updateJob(dream_uuid, {
           progress,
           previewFrame: preview_frame,
-          ...(thumbnail || video ? { thumbnailUrl: thumbnail || video } : {}),
           ...(mappedStatus ? { status: mappedStatus } : {}),
         });
 
@@ -102,28 +99,6 @@ export const useStudioJobProgress = () => {
     };
   }, [socket, pendingUuids]);
 
-  useEffect(() => {
-    const state = useStudioStore.getState();
-    const missingThumbnailJobs = state.jobs.filter(
-      (j) => j.status === "processed" && !j.previewFrame && !j.thumbnailUrl,
-    );
-    if (missingThumbnailJobs.length === 0) return;
-
-    missingThumbnailJobs.forEach(async (job) => {
-      try {
-        const { data } = await axiosClient.get(`/v1/dream/${job.dreamUuid}`);
-        const dream = data.data.dream;
-        if (dream.thumbnail || dream.video) {
-          state.updateJob(job.dreamUuid, {
-            thumbnailUrl: dream.thumbnail || dream.video,
-          });
-        }
-      } catch {
-        // Silently skip
-      }
-    });
-  }, [jobs]);
-
   const hasPending = pendingUuids.length > 0;
 
   useEffect(() => {
@@ -145,7 +120,6 @@ export const useStudioJobProgress = () => {
           const dream = data.data.dream;
           state.updateImage(img.uuid, {
             status: dream.status,
-            url: dream.thumbnail || dream.video || img.url,
           });
         } catch {
           // Silently skip failed polls
@@ -161,9 +135,6 @@ export const useStudioJobProgress = () => {
 
           state.updateJob(job.dreamUuid, {
             status: dream.status,
-            ...(dream.thumbnail || dream.video
-              ? { thumbnailUrl: dream.thumbnail || dream.video }
-              : {}),
           });
 
           if (
