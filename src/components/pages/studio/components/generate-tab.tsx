@@ -135,7 +135,11 @@ export const GenerateTab: React.FC = () => {
                         }
                       >
                         {image.status === "processed" && (
-                          <CellThumb as={PresignedImage} dreamUuid={image.uuid} alt="" />
+                          <CellThumb
+                            as={PresignedImage}
+                            dreamUuid={image.uuid}
+                            alt=""
+                          />
                         )}
                         <br />
                         {existingJob ? (
