@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { PresignedImage } from "@/components/shared/presigned-image";
 
 export const GenerateSection = styled.div`
   border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
@@ -208,7 +209,7 @@ export const LightboxOverlay = styled.div`
   cursor: zoom-out;
 `;
 
-export const LightboxImage = styled.img`
+export const LightboxImage = styled(PresignedImage)`
   max-width: 90vw;
   max-height: 90vh;
   object-fit: contain;

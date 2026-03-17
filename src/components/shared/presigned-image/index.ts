@@ -1,1 +1,1 @@
-export { PresignedImage, getPresignedUrl } from "./presigned-image";
+export { PresignedImage } from "./presigned-image";

@@ -26,10 +26,7 @@ import {
   LightboxOverlay,
   LightboxImage,
 } from "./images-tab.styled";
-import {
-  PresignedImage,
-  getPresignedUrl,
-} from "@/components/shared/presigned-image";
+import { PresignedImage } from "@/components/shared/presigned-image";
 import { AddFromPlaylistModal } from "./add-from-playlist-modal";
 
 const SEED_OPTIONS = [1, 4, 8, 12, 16, 24];
@@ -225,10 +222,7 @@ export const ImagesTab: React.FC = () => {
 
       {expandedImageUuid && (
         <LightboxOverlay onClick={() => setExpandedImageUuid(null)}>
-          <LightboxImage
-            src={getPresignedUrl(expandedImageUuid)}
-            alt="Expanded"
-          />
+          <LightboxImage dreamUuid={expandedImageUuid} alt="Expanded" />
         </LightboxOverlay>
       )}
     </>
