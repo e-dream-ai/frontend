@@ -73,7 +73,7 @@ export const FileUploader: React.FC<Props> = (props) => {
   useEffect(() => {
     const input = containerRef.current?.querySelector('input[type="file"]');
     if (!input || !acceptMime) return;
-    input.setAttribute("accept", `${acceptMime}*`);
+    input.setAttribute("accept", `${acceptMime}*,application/octet-stream`);
   }, [acceptMime]);
 
   const handleFileChange: HandleChangeFile = (files) => {
