@@ -164,7 +164,7 @@ export const CreatePlaylist: React.FC = () => {
           sourceUrl: data.sourceUrl,
         });
       }
-    } catch (error) {
+    } catch {
       setIsUploadingFiles(false);
       toast.error(t("page.create.error_creating_playlist"));
     }
@@ -206,6 +206,7 @@ export const CreatePlaylist: React.FC = () => {
             onTypeError={handleFileUploaderTypeError(t)}
             name="file"
             types={ALLOWED_VIDEO_TYPES}
+            acceptMime="video/"
           />
 
           {Boolean(totalVideos) && isUploadingFiles && (
