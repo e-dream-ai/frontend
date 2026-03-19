@@ -73,7 +73,7 @@ export const FileUploader: React.FC<Props> = (props) => {
   useEffect(() => {
     const input = containerRef.current?.querySelector('input[type="file"]');
     if (!input || !acceptMime) return;
-    input.setAttribute("accept", `${acceptMime}*`);
+    input.setAttribute("accept", `${acceptMime}*,application/octet-stream`);
   }, [acceptMime]);
 
   const handleFileChange: HandleChangeFile = (files) => {
@@ -91,7 +91,9 @@ export const FileUploader: React.FC<Props> = (props) => {
         (VIDEO_MIME_TYPES.includes(file.type) ||
           file.type.startsWith(acceptMime));
 
-      if (!extValid && !mimeValid) {
+      const definitelyWrongType = file.type !== "" && !mimeValid;
+
+      if (!extValid && definitelyWrongType) {
         onTypeError?.("File type is not supported");
         return;
       }
