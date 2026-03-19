@@ -109,7 +109,7 @@ export const UpdatePlaylist: React.FC = () => {
           sourceUrl: formData?.sourceUrl,
         });
       }
-    } catch (error) {
+    } catch {
       setIsUploadingFiles(false);
       toast.error(t("components.update_playlist.error_updating_playlist"));
     }
@@ -158,6 +158,7 @@ export const UpdatePlaylist: React.FC = () => {
             onTypeError={handleFileUploaderTypeError(t)}
             name="file"
             types={ALLOWED_VIDEO_TYPES}
+            acceptMime="video/"
           />
 
           <UploadVideosProgress
