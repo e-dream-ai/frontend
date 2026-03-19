@@ -1,6 +1,7 @@
 import { FileUploader as DragDropFileUploader } from "react-drag-drop-files";
 import { useTranslation } from "react-i18next";
 import styled, { useTheme } from "styled-components";
+import { toast } from "react-toastify";
 import { HandleChangeFile } from "@/types/media.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
@@ -80,6 +81,10 @@ export const FileUploader: React.FC<Props> = (props) => {
     const file = files instanceof FileList ? files[0] : files;
     if (!file) return;
 
+    toast.info(
+      `[DEBUG] name="${file.name}" type="${file.type}" size=${file.size}`,
+    );
+
     if (types && types.length > 0) {
       const ext = file.name.includes(".")
         ? file.name.split(".").pop()?.toLowerCase() ?? ""
@@ -94,6 +99,9 @@ export const FileUploader: React.FC<Props> = (props) => {
       const definitelyWrongType = file.type !== "" && !mimeValid;
 
       if (!extValid && definitelyWrongType) {
+        toast.error(
+          `[DEBUG] REJECTED: extValid=${extValid} mimeValid=${mimeValid} type="${file.type}"`,
+        );
         onTypeError?.("File type is not supported");
         return;
       }
