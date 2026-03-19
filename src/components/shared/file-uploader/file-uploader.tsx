@@ -91,7 +91,9 @@ export const FileUploader: React.FC<Props> = (props) => {
         (VIDEO_MIME_TYPES.includes(file.type) ||
           file.type.startsWith(acceptMime));
 
-      if (!extValid && !mimeValid) {
+      const definitelyWrongType = file.type !== "" && !mimeValid;
+
+      if (!extValid && definitelyWrongType) {
         onTypeError?.("File type is not supported");
         return;
       }
