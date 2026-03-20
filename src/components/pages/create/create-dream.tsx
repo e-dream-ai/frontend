@@ -80,9 +80,11 @@ export const CreateDream: React.FC = () => {
   } = useUploadDreamVideo();
 
   const handleChange: HandleChangeFile = (files) => {
-    const file = files instanceof FileList ? files[0] : files;
-    if (!file) return;
-    setVideo(generateFileState(file));
+    if (files instanceof FileList) {
+      return;
+    } else {
+      setVideo(generateFileState(files));
+    }
   };
 
   const onSubmit = async (data: CreateDreamFormValues) => {
@@ -133,7 +135,6 @@ export const CreateDream: React.FC = () => {
               onTypeError={handleFileUploaderTypeError(t)}
               name="file"
               types={ALLOWED_VIDEO_TYPES}
-              acceptMime="video/"
             />
           </>
         )}

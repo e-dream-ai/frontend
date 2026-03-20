@@ -1,12 +1,10 @@
 import { FileUploader as DragDropFileUploader } from "react-drag-drop-files";
 import { useTranslation } from "react-i18next";
 import styled, { useTheme } from "styled-components";
-import { toast } from "react-toastify";
 import { HandleChangeFile } from "@/types/media.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import { truncateArray } from "@/utils/array.util";
-import { useEffect, useRef } from "react";
 
 const StyledFileUploaderDropzone = styled.p`
   display: inline-flex;
@@ -47,88 +45,27 @@ type Props = {
   handleChange?: HandleChangeFile;
   onDraggingStateChange?: (dragging: boolean) => void;
   dropMessageStyle?: React.CSSProperties | undefined;
-  acceptMime?: string;
 };
-
-const VIDEO_MIME_TYPES = [
-  "video/mp4",
-  "video/webm",
-  "video/quicktime",
-  "video/x-msvideo",
-  "video/x-matroska",
-  "video/mpeg",
-  "video/ogg",
-  "video/3gpp",
-  "video/3gpp2",
-  "video/x-flv",
-  "video/x-ms-wmv",
-];
 
 export const FileUploader: React.FC<Props> = (props) => {
   const { t } = useTranslation();
   const theme = useTheme();
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const { handleChange, onTypeError, types, acceptMime, ...rest } = props;
-
-  useEffect(() => {
-    const input = containerRef.current?.querySelector('input[type="file"]');
-    if (!input || !acceptMime) return;
-    input.setAttribute("accept", `${acceptMime}*,application/octet-stream`);
-  }, [acceptMime]);
-
-  const handleFileChange: HandleChangeFile = (files) => {
-    const file = files instanceof FileList ? files[0] : files;
-    if (!file) return;
-
-    toast.info(
-      `[DEBUG] name="${file.name}" type="${file.type}" size=${file.size}`,
-    );
-
-    if (types && types.length > 0) {
-      const ext = file.name.includes(".")
-        ? file.name.split(".").pop()?.toLowerCase() ?? ""
-        : "";
-      const extValid =
-        ext !== "" && types.map((t) => t.toLowerCase()).includes(ext);
-      const mimeValid =
-        acceptMime !== undefined &&
-        (VIDEO_MIME_TYPES.includes(file.type) ||
-          file.type.startsWith(acceptMime));
-
-      const definitelyWrongType = file.type !== "" && !mimeValid;
-
-      if (!extValid && definitelyWrongType) {
-        toast.error(
-          `[DEBUG] REJECTED: extValid=${extValid} mimeValid=${mimeValid} type="${file.type}"`,
-        );
-        onTypeError?.("File type is not supported");
-        return;
-      }
-    }
-
-    handleChange?.(file);
-  };
 
   return (
-    <div ref={containerRef}>
-      <DragDropFileUploader
-        {...rest}
-        handleChange={handleFileChange}
-        onTypeError={onTypeError}
-        dropMessageStyle={{
-          backgroundColor: theme?.inputBackgroundColor,
-          opacity: 1,
-        }}
-      >
-        <StyledFileUploaderDropzone>
-          <span>
-            <FontAwesomeIcon icon={faPlusCircle} aria-hidden="true" />{" "}
-            {t("components.file_uploader.dropzone_placeholder")}
-          </span>
-          <span>{truncateArray(props.types, 3)?.join(", ")}...</span>
-        </StyledFileUploaderDropzone>
-      </DragDropFileUploader>
-    </div>
+    <DragDropFileUploader
+      {...props}
+      dropMessageStyle={{
+        backgroundColor: theme?.inputBackgroundColor,
+        opacity: 1,
+      }}
+    >
+      <StyledFileUploaderDropzone>
+        <span>
+          <FontAwesomeIcon icon={faPlusCircle} aria-hidden="true" />{" "}
+          {t("components.file_uploader.dropzone_placeholder")}
+        </span>
+        <span>{truncateArray(props.types, 3)?.join(", ")}...</span>
+      </StyledFileUploaderDropzone>
+    </DragDropFileUploader>
   );
 };

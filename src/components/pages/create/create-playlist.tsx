@@ -206,7 +206,6 @@ export const CreatePlaylist: React.FC = () => {
             onTypeError={handleFileUploaderTypeError(t)}
             name="file"
             types={ALLOWED_VIDEO_TYPES}
-            acceptMime="video/"
           />
 
           {Boolean(totalVideos) && isUploadingFiles && (
