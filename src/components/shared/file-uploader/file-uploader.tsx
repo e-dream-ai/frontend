@@ -5,20 +5,34 @@ import { HandleChangeFile } from "@/types/media.types";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import { truncateArray } from "@/utils/array.util";
+import { fileTypeFromBlob } from "file-type";
 
 function getExtension(file: File): string {
   const dot = file.name.lastIndexOf(".");
   return dot !== -1 ? file.name.slice(dot + 1).toLowerCase() : "";
 }
 
-function isFileTypeAllowed(file: File, types: string[]): boolean {
+async function isFileTypeAllowed(
+  file: File,
+  types: string[],
+): Promise<boolean> {
   const typesLower = types.map((t) => t.toLowerCase());
   const ext = getExtension(file);
+
   if (ext) {
     return typesLower.includes(ext);
   }
-  const mime = file.type.toLowerCase();
-  return mime !== "" && typesLower.some((t) => mime.includes(t));
+
+  try {
+    const result = await fileTypeFromBlob(file);
+    if (result) {
+      return typesLower.includes(result.ext);
+    }
+  } catch {
+    // ignore sniff errors
+  }
+
+  return false;
 }
 
 const StyledFileUploaderDropzone = styled.p`
@@ -67,11 +81,11 @@ export const FileUploader: React.FC<Props> = (props) => {
   const theme = useTheme();
 
   const wrappedHandleChange: HandleChangeFile | undefined = props.handleChange
-    ? (fileOrFiles) => {
+    ? async (fileOrFiles) => {
         const file =
           fileOrFiles instanceof FileList ? fileOrFiles[0] : fileOrFiles;
         if (!file) return;
-        if (!props.types || isFileTypeAllowed(file, props.types)) {
+        if (!props.types || (await isFileTypeAllowed(file, props.types))) {
           props.handleChange!(fileOrFiles);
         } else {
           props.onTypeError?.("File type is not supported");
