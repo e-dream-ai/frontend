@@ -6,6 +6,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import { truncateArray } from "@/utils/array.util";
 import { fileTypeFromBlob } from "file-type";
+import { toast } from "react-toastify";
 
 function getExtension(file: File): string {
   const dot = file.name.lastIndexOf(".");
@@ -23,13 +24,23 @@ async function isFileTypeAllowed(
     return typesLower.includes(ext);
   }
 
+  toast.info(`name: ${file.name} | mime: "${file.type || "empty"}"`, {
+    autoClose: false,
+  });
+
   try {
     const result = await fileTypeFromBlob(file);
+    toast.info(
+      result
+        ? `magic bytes: ext=${result.ext} mime=${result.mime}`
+        : "magic bytes: undetected",
+      { autoClose: false },
+    );
     if (result) {
       return typesLower.includes(result.ext);
     }
-  } catch {
-    // ignore sniff errors
+  } catch (e) {
+    toast.error(`magic bytes error: ${e}`);
   }
 
   return false;
