@@ -6,6 +6,21 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import { truncateArray } from "@/utils/array.util";
 
+function getExtension(file: File): string {
+  const dot = file.name.lastIndexOf(".");
+  return dot !== -1 ? file.name.slice(dot + 1).toLowerCase() : "";
+}
+
+function isFileTypeAllowed(file: File, types: string[]): boolean {
+  const typesLower = types.map((t) => t.toLowerCase());
+  const ext = getExtension(file);
+  if (ext) {
+    return typesLower.includes(ext);
+  }
+  const mime = file.type.toLowerCase();
+  return mime !== "" && typesLower.some((t) => mime.includes(t));
+}
+
 const StyledFileUploaderDropzone = styled.p`
   display: inline-flex;
   width: 100%;
@@ -51,9 +66,24 @@ export const FileUploader: React.FC<Props> = (props) => {
   const { t } = useTranslation();
   const theme = useTheme();
 
+  const wrappedHandleChange: HandleChangeFile | undefined = props.handleChange
+    ? (fileOrFiles) => {
+        const file =
+          fileOrFiles instanceof FileList ? fileOrFiles[0] : fileOrFiles;
+        if (!file) return;
+        if (!props.types || isFileTypeAllowed(file, props.types)) {
+          props.handleChange!(fileOrFiles);
+        } else {
+          props.onTypeError?.("File type is not supported");
+        }
+      }
+    : undefined;
+
   return (
     <DragDropFileUploader
       {...props}
+      types={undefined}
+      handleChange={wrappedHandleChange}
       dropMessageStyle={{
         backgroundColor: theme?.inputBackgroundColor,
         opacity: 1,
