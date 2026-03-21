@@ -96,6 +96,12 @@ export const FileUploader: React.FC<Props> = (props) => {
         const file =
           fileOrFiles instanceof FileList ? fileOrFiles[0] : fileOrFiles;
         if (!file) return;
+        toast.info(
+          `file: name="${file.name}" type="${file.type || "empty"}" size=${
+            file.size
+          }`,
+          { autoClose: false },
+        );
         if (!props.types || (await isFileTypeAllowed(file, props.types))) {
           props.handleChange!(fileOrFiles);
         } else {
