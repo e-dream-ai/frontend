@@ -442,6 +442,7 @@
     },
     "file_uploader": {
       "dropzone_placeholder": "Upload or drop here.",
+      "drop_here": "Drop file here",
       "size_error": "File size exceeds limit",
       "type_error": "File type is not allowed",
       "file_already_exists": "Dream already exists."
