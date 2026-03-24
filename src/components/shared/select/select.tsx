@@ -164,7 +164,7 @@ export const Select = React.forwardRef<
               onMenuClose={handleMenuClose}
             />
           )}
-          {after && <InputAfter />}
+          {after && <InputAfter>{after}</InputAfter>}
         </InputRow>
         {error && <InputError>{error}</InputError>}
       </InputGroup>

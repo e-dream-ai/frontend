@@ -1,8 +1,14 @@
 import styled, { css } from "styled-components";
-import { Sizes } from "@/types/sizes.types";
 import { SpaceProps, space } from "styled-system";
 
-const AvatarSizes = {
+export type AvatarSize = "xs" | "sm" | "md" | "lg";
+
+const AvatarSizes: Record<AvatarSize, ReturnType<typeof css>> = {
+  xs: css`
+    width: 26px;
+    height: 26px;
+    font-size: 0.8rem;
+  `,
   sm: css`
     width: 42px;
     height: 42px;
@@ -20,7 +26,7 @@ const AvatarSizes = {
   `,
 };
 
-export const StyledAvatar = styled.div<{ url?: string; size: Sizes }>`
+export const StyledAvatar = styled.div<{ url?: string; size: AvatarSize }>`
   ${(props) => AvatarSizes[props.size]}
   ${space}
   border-radius: 100%;
@@ -31,7 +37,7 @@ export const StyledAvatar = styled.div<{ url?: string; size: Sizes }>`
 `;
 
 export const AvatarPlaceholder = styled.div<
-  { url?: string; size: Sizes } & SpaceProps
+  { url?: string; size: AvatarSize } & SpaceProps
 >`
   ${(props) => AvatarSizes[props.size]}
   ${space}

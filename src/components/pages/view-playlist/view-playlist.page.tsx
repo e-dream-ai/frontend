@@ -59,6 +59,8 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { Loader } from "@/components/shared/loader/loader";
 import { useTheme } from "styled-components";
 import styled from "styled-components";
+import { Avatar } from "@/components/shared/avatar/avatar";
+import { useImage } from "@/hooks/useImage";
 import { faChevronUp } from "@fortawesome/free-solid-svg-icons";
 import { secondsToTimeFormat } from "@/utils/video.utils";
 import { FilmstripGallery } from "@/components/shared/filmstrip-gallery/filmstrip-gallery";
@@ -272,6 +274,15 @@ export const ViewPlaylistPage = () => {
   const { isAllowedTo } = useContext(PermissionContext);
   const { mutate: mutateDeletePlaylistReferenceItem } = useDeletePlaylistItem();
 
+  const ownerAvatarUrl = useImage(playlist?.user?.avatar, {
+    width: 142,
+    fit: "cover",
+  });
+  const displayedOwnerAvatarUrl = useImage(
+    playlist?.displayedOwner?.avatar ?? playlist?.user?.avatar,
+    { width: 142, fit: "cover" },
+  );
+
   const formMethods = useForm<UpdatePlaylistFormValues>({
     resolver: yupResolver(UpdatePlaylistSchema),
     defaultValues: { name: "", description: "" },
@@ -477,7 +488,7 @@ export const ViewPlaylistPage = () => {
         await handleUploadVideos();
       }
       await handleMutateThumbnailPlaylist(data);
-    } catch (error) {
+    } catch {
       setIsUploadingFiles(false);
       toast.error(t("page.view_playlist.error_updating_playlist"));
     }
@@ -857,6 +868,7 @@ export const ViewPlaylistPage = () => {
                       placeholder={t("page.view_playlist.owner")}
                       type="text"
                       before={<FontAwesomeIcon icon={faSave} />}
+                      after={<Avatar size="xs" url={ownerAvatarUrl} />}
                       to={`${ROUTES.PROFILE}/${playlist?.user.uuid}`}
                       {...formMethods.register("user")}
                     />
@@ -950,6 +962,9 @@ export const ViewPlaylistPage = () => {
                             isDisabled={!editMode || !allowedEditOwner}
                             isLoading={isUsersLoading}
                             before={<FontAwesomeIcon icon={faUser} />}
+                            after={
+                              <Avatar size="xs" url={displayedOwnerAvatarUrl} />
+                            }
                             to={getDisplayedOwnerProfileRoute(
                               isUserAdmin,
                               playlist?.user,

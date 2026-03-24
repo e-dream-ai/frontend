@@ -510,7 +510,7 @@ const TrayContainer = styled.div`
   width: 100%;
   z-index: 1000;
   background-color: #000;
-  border-top: 3px solid ${(p) => p.theme.colorBackgroundSecondary};
+  border-top: 5px solid ${(p) => p.theme.colorBackgroundSecondary};
   padding: 1rem 2.5rem;
 
   @media (max-width: ${DEVICES.MOBILE_S}) {

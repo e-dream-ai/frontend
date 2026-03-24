@@ -81,6 +81,7 @@ export const InputAfter = styled.div`
   min-height: 2.375rem;
   height: auto;
   min-width: 40px;
+  padding: 0.25rem 0.5rem;
   align-items: center;
   justify-content: center;
   background: ${(props) => props.theme.inputBackgroundColor};

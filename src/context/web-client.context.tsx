@@ -42,6 +42,7 @@ import { useLocation } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import useSocketEventListener from "@/hooks/useSocketEventListener";
 import { fetchDream } from "@/api/dream/query/useDream";
+import { fetchAllPlaylistItems } from "@/api/playlist/query/usePlaylistItems";
 import { joinPaths } from "@/utils/router.util";
 import { setCurrentUserDreamOptimistically } from "@/api/dream/utils/dream-utils";
 import { useUserDislikes } from "@/api/user/query/useUserDislikes";
@@ -144,7 +145,7 @@ export const WebClientProvider: React.FC<{
 
   // player states
   const [, setPaused] = useState<boolean>(false);
-  const [playbackRate, setPlaybackRate] = useState<number>(() =>
+  const [, setPlaybackRate] = useState<number>(() =>
     calculatePlaybackRateFromSpeed(8, 1),
   );
   const [brightness, setBrightness] = useState<number>(40);
@@ -478,12 +479,16 @@ export const WebClientProvider: React.FC<{
     [setPlayerPlaybackRate, playerInstance],
   );
 
-  const speedControls = Object.fromEntries(
-    Array.from({ length: 9 }, (_, i) => [
-      `set_speed_${i + 1}`,
-      () => setSpeed((i + 1) as SpeedLevels),
-    ]),
-  ) as SpeedControls;
+  const speedControls = useMemo(
+    () =>
+      Object.fromEntries(
+        Array.from({ length: 9 }, (_, i) => [
+          `set_speed_${i + 1}`,
+          () => setSpeed((i + 1) as SpeedLevels),
+        ]),
+      ) as SpeedControls,
+    [setSpeed],
+  );
 
   const handlers: Record<
     RemoteEvent,
@@ -611,17 +616,16 @@ export const WebClientProvider: React.FC<{
     }),
     [
       playerInstance,
-      playbackRate,
       brightness,
       speedControls,
       speedLevel,
+      setSpeed,
       setPlayerBrightness,
       toggleCreditOverlay,
       toggleFullscreen,
       toggleRepeatMode,
       toggleShuffleMode,
       handlePlaylistControl,
-      setPlayerPlaybackRate,
       updatePlaylistNavigation,
     ],
   );
@@ -655,7 +659,7 @@ export const WebClientProvider: React.FC<{
     };
 
     void attemptStart();
-  }, [isReady, playDreamWithHistory]);
+  }, [playDreamWithHistory]);
 
   useEffect(() => {
     emit(WEB_CLIENT_STATUS_EVENT, { active: isWebClientActive });
@@ -728,13 +732,16 @@ export const WebClientProvider: React.FC<{
        */
       if (event === REMOTE_CONTROLS.PLAY_PLAYLIST.event) {
         const playlist = await refreshCurrentPlaylist();
-        const newDream = playlist?.items?.find((i) => Boolean(i.dreamItem))
-          ?.dreamItem;
 
-        // if there's a dream play it and reset history
-        if (newDream) {
-          resetHistory();
-          playDreamWithHistory(newDream);
+        if (playlist?.uuid) {
+          const items = await fetchAllPlaylistItems(playlist.uuid);
+          playingPlaylistRef.current = { ...playlist, items };
+          const newDream = items.find((i) => Boolean(i.dreamItem))?.dreamItem;
+
+          if (newDream) {
+            resetHistory();
+            playDreamWithHistory(newDream);
+          }
         }
       }
 
@@ -865,14 +872,21 @@ export const WebClientProvider: React.FC<{
     playDreamWithHistory,
   ]);
 
-  // Update playing playlist ref
+  // Update playing playlist ref and lazily fetch its items for navigation
   useEffect(() => {
     // If same playlist, skip
     if (playingPlaylistRef.current?.uuid === currentPlaylist?.uuid) {
       return;
     }
-    // Update playingPlaylistRef playlist
     playingPlaylistRef.current = currentPlaylist;
+
+    if (currentPlaylist?.uuid) {
+      fetchAllPlaylistItems(currentPlaylist.uuid).then((items) => {
+        if (playingPlaylistRef.current?.uuid === currentPlaylist.uuid) {
+          playingPlaylistRef.current = { ...currentPlaylist, items };
+        }
+      });
+    }
   }, [currentPlaylist]);
 
   // Update disliked dreams ref
