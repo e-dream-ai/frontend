@@ -23,7 +23,7 @@ export const PresignedImage = React.forwardRef<
   const { data: presignedUrl } = useQuery(
     ["dream-thumbnail", dreamUuid, mediaType],
     () => fetchThumbnailUrl(dreamUuid, mediaType),
-    { staleTime: 10 * 60 * 1000 },
+    { staleTime: Infinity },
   );
 
   const imageUrl = useImage(presignedUrl, resizeOptions);
