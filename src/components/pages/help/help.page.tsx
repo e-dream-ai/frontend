@@ -126,9 +126,9 @@ export const HelpPage: React.FC = () => {
           <HelpCard flex="auto">
             <CardTitle>Install the App</CardTitle>
             <CardText>
-              The next thing to do is install the native Infinidream app and
-              screensaver. Then continue with this page to learn how it all
-              works.
+              After creating an account, the next thing to do is install the
+              native Infinidream app and screensaver. Then continue with this
+              page to learn how it all works.
             </CardText>
             <BottomButtonRow>
               <Button
