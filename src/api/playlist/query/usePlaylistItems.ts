@@ -33,6 +33,16 @@ type HookParams = {
   uuid?: string;
 };
 
+export const fetchAllPlaylistItems = async (
+  uuid: string,
+): Promise<PlaylistItem[]> => {
+  const res = await axiosClient.get<ApiResponse<{ items: PlaylistItem[] }>>(
+    `/v1/playlist/${uuid}/playback-items`,
+    { headers: getRequestHeaders({ contentType: ContentType.json }) },
+  );
+  return res.data?.data?.items ?? [];
+};
+
 export const usePlaylistItems = ({ uuid }: HookParams) => {
   const { user } = useAuth();
   const take = PAGINATION.TAKE;

@@ -124,6 +124,25 @@ export const HelpPage: React.FC = () => {
 
         <HelpGrid>
           <HelpCard flex="auto">
+            <CardTitle>Install the App</CardTitle>
+            <CardText>
+              After creating an account, the next thing to do is install the
+              native Infinidream app and screensaver. Then continue with this
+              page to learn how it all works.
+            </CardText>
+            <BottomButtonRow>
+              <Button
+                buttonType="secondary"
+                onClick={() =>
+                  window.open(ROUTES.INSTALL, "_blank", "noopener,noreferrer")
+                }
+              >
+                Install
+              </Button>
+            </BottomButtonRow>
+          </HelpCard>
+
+          <HelpCard flex="auto">
             <CardTitle>Connection</CardTitle>
             <CardText>
               The Infinidream app connects to your account through the cloud,

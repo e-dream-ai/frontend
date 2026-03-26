@@ -6,7 +6,14 @@ import {
   MAX_FILE_SIZE_MB,
   MAX_IMAGE_FILE_SIZE_MB,
 } from "@/constants/file.constants";
-import { Controller, useFormContext } from "react-hook-form";
+import {
+  Controller,
+  type ControllerRenderProps,
+  type UseFormClearErrors,
+  type UseFormGetValues,
+  type UseFormSetError,
+  useFormContext,
+} from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { UpdateDreamFormValues } from "@/schemas/update-dream.schema";
 import { Dream, DreamMediaType, DreamStatusType } from "@/types/dream.types";
@@ -59,6 +66,7 @@ import {
   getNsfwOptions,
 } from "@/constants/select.constants";
 import { useImage } from "@/hooks/useImage";
+import { Avatar } from "@/components/shared/avatar/avatar";
 import { FormContainer, FormItem } from "@/components/shared/form/form";
 import { getUserProfileRoute } from "@/utils/router.util";
 import { KeyframeSelect } from "./keyframe-select";
@@ -184,27 +192,43 @@ type ViewDreamInputsProps = {
   jobStatus?: string;
 };
 
-export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
-  dream,
-  isProcessing,
+type DreamPromptEditorProps = {
+  field: ControllerRenderProps<UpdateDreamFormValues, "prompt">;
+  editMode: boolean;
+  onPromptValidationRequest?: (validate: () => boolean) => void;
+  onPromptResetRequest?: (reset: () => void) => void;
+  clearErrors: UseFormClearErrors<UpdateDreamFormValues>;
+  setError: UseFormSetError<UpdateDreamFormValues>;
+  getValues: UseFormGetValues<UpdateDreamFormValues>;
+};
+
+const calculatePromptContentHeight = (content: string): number => {
+  if (!content || content.trim() === "" || content === "{}") {
+    return 40;
+  }
+
+  const lines = content.split("\n").length;
+  const lineHeight = 24;
+  const padding = 12;
+  const calculatedHeight = Math.max(40, lines * lineHeight + padding);
+  const maxHeight = 128;
+
+  return Math.min(calculatedHeight, maxHeight);
+};
+
+const DreamPromptEditor: React.FC<DreamPromptEditorProps> = ({
+  field,
   editMode,
-  // thumbnail
-  thumbnailState,
-  isThumbnailRemoved,
-  handleThumbnailChange,
-  handleRemoveThumbnail,
   onPromptValidationRequest,
   onPromptResetRequest,
-  jobStatus,
+  clearErrors,
+  setError,
+  getValues,
 }) => {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const tooltipPlaces = useTooltipPlaces();
-  const [userSearch, setUserSearch] = useState<string>("");
-  const [showMore, setShowMore] = useState<boolean>(false);
-  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
-  const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
-  const promptStringRef = useRef<string>("");
+  const promptStringRef = useRef<string>(
+    field.value ? JSON.stringify(field.value, null, 2) : "{}",
+  );
   const [editorHeight, setEditorHeight] = useState<number | undefined>(
     undefined,
   );
@@ -221,20 +245,64 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   });
   const handlePosition = useTransform(smoothScrollOffset, (value) => -value);
 
-  const { control, register, setError, clearErrors, getValues } =
-    useFormContext<UpdateDreamFormValues>();
+  useEffect(() => {
+    if (!editMode) {
+      promptStringRef.current = field.value
+        ? JSON.stringify(field.value, null, 2)
+        : "{}";
+    }
 
-  // always shows user for admins
-  // for normal users look for 'displayed owner' or user instead
-  const dreamOwnerToShow = isUserAdmin
-    ? dream?.user?.name
-    : dream?.displayedOwner?.name ?? dream?.user?.name;
+    if (isManuallyResized) {
+      return;
+    }
 
-  const { data: usersData, isLoading: isUsersLoading } = useUsers({
-    search: userSearch,
-  });
+    const content = field.value ? JSON.stringify(field.value, null, 2) : "{}";
+    if (!isDraggingRef.current) {
+      setEditorHeight(calculatePromptContentHeight(content));
+    }
+  }, [editMode, field.value, isManuallyResized]);
 
-  const switchShowMore = () => setShowMore((v) => !v);
+  useEffect(() => {
+    if (!onPromptValidationRequest) {
+      return;
+    }
+
+    onPromptValidationRequest(() => {
+      try {
+        JSON.parse(promptStringRef.current);
+        clearErrors("prompt");
+        return true;
+      } catch {
+        if (
+          promptStringRef.current.trim() !== "" &&
+          promptStringRef.current !== "{}"
+        ) {
+          setError("prompt", {
+            type: "manual",
+            message: t("page.view_dream.invalid_prompt_json"),
+          });
+          toast.error(t("page.view_dream.invalid_prompt_json"));
+          return false;
+        }
+
+        return true;
+      }
+    });
+  }, [clearErrors, onPromptValidationRequest, setError, t]);
+
+  useEffect(() => {
+    if (!onPromptResetRequest) {
+      return;
+    }
+
+    onPromptResetRequest(() => {
+      const currentValue = getValues("prompt");
+      promptStringRef.current = currentValue
+        ? JSON.stringify(currentValue, null, 2)
+        : "{}";
+      clearErrors("prompt");
+    });
+  }, [clearErrors, getValues, onPromptResetRequest]);
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLDivElement>) => {
@@ -242,11 +310,12 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
       setIsManuallyResized(true);
       isDraggingRef.current = true;
       startYRef.current = e.clientY;
-      const currentHeight = editorHeight ?? 40;
-      startHeightRef.current = currentHeight;
+      startHeightRef.current = editorHeight ?? 40;
 
       const handleMouseMove = (moveEvent: MouseEvent) => {
-        if (!isDraggingRef.current) return;
+        if (!isDraggingRef.current) {
+          return;
+        }
 
         const deltaY = moveEvent.clientY - startYRef.current;
         const newHeight = Math.max(
@@ -268,6 +337,167 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
     [editorHeight],
   );
 
+  const handleChange = useCallback(
+    (value: string) => {
+      if (!editMode) {
+        return;
+      }
+
+      promptStringRef.current = value;
+
+      if (!isManuallyResized && !isDraggingRef.current) {
+        setEditorHeight(calculatePromptContentHeight(value));
+      }
+
+      try {
+        field.onChange(JSON.parse(value));
+        clearErrors("prompt");
+      } catch {
+        clearErrors("prompt");
+      }
+    },
+    [clearErrors, editMode, field, isManuallyResized],
+  );
+
+  const handleScroll = useCallback(() => {
+    scrollOffset.set(codeMirrorWrapperRef.current?.scrollTop ?? 0);
+  }, [scrollOffset]);
+
+  useEffect(() => {
+    const wrapper = codeMirrorWrapperRef.current;
+    if (!wrapper) {
+      return;
+    }
+
+    wrapper.addEventListener("scroll", handleScroll);
+    return () => {
+      wrapper.removeEventListener("scroll", handleScroll);
+    };
+  }, [handleScroll]);
+
+  const jsonLinter = useMemo(
+    () =>
+      linter((view) => {
+        const diagnostics: Diagnostic[] = [];
+        const content = view.state.doc.toString();
+
+        if (!content.trim() || !editMode) {
+          return diagnostics;
+        }
+
+        try {
+          JSON.parse(content);
+        } catch (error) {
+          const errorMessage =
+            error instanceof Error ? error.message : "Invalid JSON";
+
+          const match = errorMessage.match(/position (\d+)/);
+          const position = match ? parseInt(match[1], 10) : 0;
+
+          const from = Math.max(0, position);
+          let to = Math.min(content.length, position + 1);
+
+          if (from === to && from === 0) {
+            to = Math.min(content.length, 50);
+          }
+
+          diagnostics.push({
+            from,
+            to,
+            severity: "error",
+            message: errorMessage,
+          });
+        }
+
+        return diagnostics;
+      }),
+    [editMode],
+  );
+
+  return (
+    <TextAreaGroup>
+      <TextAreaRow>
+        <TextAreaBefore>
+          <FontAwesomeIcon icon={faComment} />
+        </TextAreaBefore>
+        <CodeMirrorWrapper
+          ref={codeMirrorWrapperRef}
+          disabled={!editMode}
+          height={editorHeight}
+          maxHeight={isManuallyResized ? 800 : 128}
+        >
+          <CodeMirror
+            value={promptStringRef.current}
+            onChange={handleChange}
+            extensions={[json(), jsonLinter]}
+            theme={materialDark}
+            editable={editMode}
+            readOnly={!editMode}
+            basicSetup={{
+              lineNumbers: false,
+              foldGutter: true,
+              highlightActiveLine: false,
+              highlightActiveLineGutter: false,
+              highlightSelectionMatches: false,
+            }}
+          />
+          <ResizeHandle
+            style={{ bottom: handlePosition }}
+            onMouseDown={handleMouseDown}
+          >
+            <FontAwesomeIcon icon={faUpDown} />
+          </ResizeHandle>
+        </CodeMirrorWrapper>
+      </TextAreaRow>
+    </TextAreaGroup>
+  );
+};
+
+export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
+  dream,
+  isProcessing,
+  editMode,
+  // thumbnail
+  thumbnailState,
+  isThumbnailRemoved,
+  handleThumbnailChange,
+  handleRemoveThumbnail,
+  onPromptValidationRequest,
+  onPromptResetRequest,
+  jobStatus,
+}) => {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const tooltipPlaces = useTooltipPlaces();
+  const [userSearch, setUserSearch] = useState<string>("");
+  const [showMore, setShowMore] = useState<boolean>(false);
+  const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
+  const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
+
+  const { control, register, setError, clearErrors, getValues } =
+    useFormContext<UpdateDreamFormValues>();
+
+  // always shows user for admins
+  // for normal users look for 'displayed owner' or user instead
+  const dreamOwnerToShow = isUserAdmin
+    ? dream?.user?.name
+    : dream?.displayedOwner?.name ?? dream?.user?.name;
+
+  const ownerAvatarRaw = isUserAdmin
+    ? dream?.user?.avatar
+    : dream?.displayedOwner?.avatar ?? dream?.user?.avatar;
+  const ownerAvatarUrl = useImage(ownerAvatarRaw, { width: 142, fit: "cover" });
+
+  const displayedOwnerAvatarUrl = useImage(
+    dream?.displayedOwner?.avatar ?? dream?.user?.avatar,
+    { width: 142, fit: "cover" },
+  );
+
+  const { data: usersData, isLoading: isUsersLoading } = useUsers({
+    search: userSearch,
+  });
+
+  const switchShowMore = () => setShowMore((v) => !v);
   const usersOptions = (usersData?.data?.users ?? [])
     .filter((user) => user.name)
     .map((user) => ({
@@ -353,6 +583,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             placeholder={t("page.view_dream.owner")}
             type="text"
             before={<FontAwesomeIcon icon={faSave} />}
+            after={<Avatar size="xs" url={ownerAvatarUrl} />}
             value={dreamOwnerToShow}
             to={getUserProfileRoute(dream?.user)}
             {...register("user")}
@@ -405,193 +636,17 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           <Controller
             name="prompt"
             control={control}
-            render={({ field }) => {
-              const calculateContentHeight = useCallback(
-                (content: string): number => {
-                  if (!content || content.trim() === "" || content === "{}") {
-                    return 40;
-                  }
-                  const lines = content.split("\n").length;
-                  const lineHeight = 24; // Approximate line height in pixels
-                  const padding = 12; // Top and bottom padding
-                  const calculatedHeight = Math.max(
-                    40,
-                    lines * lineHeight + padding,
-                  );
-                  const maxHeight = 128; // 8rem = 128px
-                  return Math.min(calculatedHeight, maxHeight);
-                },
-                [],
-              );
-
-              useEffect(() => {
-                if (!editMode) {
-                  const newValue = field.value
-                    ? JSON.stringify(field.value, null, 2)
-                    : "{}";
-                  promptStringRef.current = newValue;
-                }
-                if (isManuallyResized) return;
-                const content = field.value
-                  ? JSON.stringify(field.value, null, 2)
-                  : "{}";
-                const calculatedHeight = calculateContentHeight(content);
-                if (!isDraggingRef.current) {
-                  setEditorHeight(calculatedHeight);
-                }
-              }, [
-                field.value,
-                editMode,
-                calculateContentHeight,
-                isManuallyResized,
-              ]);
-
-              useEffect(() => {
-                if (onPromptValidationRequest) {
-                  onPromptValidationRequest(() => {
-                    try {
-                      JSON.parse(promptStringRef.current);
-                      clearErrors("prompt");
-                      return true;
-                    } catch (error) {
-                      if (
-                        promptStringRef.current.trim() !== "" &&
-                        promptStringRef.current !== "{}"
-                      ) {
-                        setError("prompt", {
-                          type: "manual",
-                          message: t("page.view_dream.invalid_prompt_json"),
-                        });
-                        toast.error(t("page.view_dream.invalid_prompt_json"));
-                        return false;
-                      }
-                      return true;
-                    }
-                  });
-                }
-              }, [onPromptValidationRequest, setError, clearErrors, t]);
-
-              useEffect(() => {
-                if (onPromptResetRequest) {
-                  onPromptResetRequest(() => {
-                    const currentValue = getValues("prompt");
-                    const resetValue = currentValue
-                      ? JSON.stringify(currentValue, null, 2)
-                      : "{}";
-                    promptStringRef.current = resetValue;
-                    clearErrors("prompt");
-                  });
-                }
-              }, [onPromptResetRequest, getValues, clearErrors]);
-
-              const handleChange = (value: string) => {
-                if (!editMode) return;
-
-                promptStringRef.current = value;
-
-                if (!isManuallyResized && !isDraggingRef.current) {
-                  const calculatedHeight = calculateContentHeight(value);
-                  setEditorHeight(calculatedHeight);
-                }
-
-                try {
-                  const parsedValue = JSON.parse(value);
-                  field.onChange(parsedValue);
-                  clearErrors("prompt");
-                } catch (error) {
-                  clearErrors("prompt");
-                }
-              };
-
-              const handleScroll = useCallback(() => {
-                if (codeMirrorWrapperRef.current) {
-                  scrollOffset.set(codeMirrorWrapperRef.current.scrollTop);
-                }
-              }, [scrollOffset]);
-
-              useEffect(() => {
-                const wrapper = codeMirrorWrapperRef.current;
-                if (wrapper) {
-                  wrapper.addEventListener("scroll", handleScroll);
-                  return () => {
-                    wrapper.removeEventListener("scroll", handleScroll);
-                  };
-                }
-              }, [handleScroll]);
-
-              const jsonLinter = linter((view) => {
-                const diagnostics: Diagnostic[] = [];
-                const content = view.state.doc.toString();
-
-                if (!content.trim() || !editMode) {
-                  return diagnostics;
-                }
-
-                try {
-                  JSON.parse(content);
-                } catch (error) {
-                  const errorMessage =
-                    error instanceof Error ? error.message : "Invalid JSON";
-
-                  const match = errorMessage.match(/position (\d+)/);
-                  const position = match ? parseInt(match[1], 10) : 0;
-
-                  let from = Math.max(0, position);
-                  let to = Math.min(content.length, position + 1);
-
-                  if (from === to && from === 0) {
-                    to = Math.min(content.length, 50);
-                  }
-
-                  diagnostics.push({
-                    from,
-                    to,
-                    severity: "error",
-                    message: errorMessage,
-                  });
-                }
-
-                return diagnostics;
-              });
-
-              return (
-                <TextAreaGroup>
-                  <TextAreaRow>
-                    <TextAreaBefore>
-                      <FontAwesomeIcon icon={faComment} />
-                    </TextAreaBefore>
-                    <CodeMirrorWrapper
-                      ref={codeMirrorWrapperRef}
-                      disabled={!editMode}
-                      height={editorHeight}
-                      maxHeight={isManuallyResized ? 800 : 128}
-                    >
-                      <CodeMirror
-                        value={promptStringRef.current}
-                        onChange={handleChange}
-                        extensions={[json(), jsonLinter]}
-                        theme={materialDark}
-                        editable={editMode}
-                        readOnly={!editMode}
-                        basicSetup={{
-                          lineNumbers: false,
-                          foldGutter: true,
-                          highlightActiveLine: false,
-                          highlightActiveLineGutter: false,
-                          highlightSelectionMatches: false,
-                        }}
-                      />
-                      <ResizeHandle
-                        style={{ bottom: handlePosition }}
-                        onMouseDown={handleMouseDown}
-                      >
-                        <FontAwesomeIcon icon={faUpDown} />
-                      </ResizeHandle>
-                    </CodeMirrorWrapper>
-                  </TextAreaRow>
-                </TextAreaGroup>
-              );
-            }}
+            render={({ field }) => (
+              <DreamPromptEditor
+                field={field}
+                editMode={editMode}
+                onPromptValidationRequest={onPromptValidationRequest}
+                onPromptResetRequest={onPromptResetRequest}
+                clearErrors={clearErrors}
+                setError={setError}
+                getValues={getValues}
+              />
+            )}
           />
         </Column>
       </Row>
@@ -760,6 +815,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                     isDisabled={!editMode || !allowedEditOwner}
                     isLoading={isUsersLoading}
                     before={<FontAwesomeIcon icon={faUser} />}
+                    after={<Avatar size="xs" url={displayedOwnerAvatarUrl} />}
                     to={
                       dream?.displayedOwner?.uuid
                         ? `${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`
