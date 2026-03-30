@@ -1,7 +1,8 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import { axiosClient } from "@/client/axios.client";
-import type { StudioImage } from "@/types/studio.types";
+import type { StudioImage, ImageModel } from "@/types/studio.types";
+import { SIZE_OPTIONS, IMAGE_COUNT_OPTIONS } from "../constants/size-options";
 import {
   GenerateSection,
   SectionTitle,
@@ -29,14 +30,16 @@ import {
 import { PresignedImage } from "@/components/shared/presigned-image";
 import { AddFromPlaylistModal } from "./add-from-playlist-modal";
 
-const SEED_OPTIONS = [1, 4, 8, 12, 16, 24];
-const SIZE_OPTIONS = ["1280*720", "1024*1024", "720*1280", "512*512"];
+const MODEL_LABELS: Record<ImageModel, string> = {
+  "zit-image": "Z Image Turbo",
+  "qwen-image": "Qwen Image",
+};
 
 export const ImagesTab: React.FC = () => {
   const imagePrompt = useStudioStore((s) => s.imagePrompt);
   const setImagePrompt = useStudioStore((s) => s.setImagePrompt);
-  const qwenParams = useStudioStore((s) => s.qwenParams);
-  const setQwenParams = useStudioStore((s) => s.setQwenParams);
+  const imageGenParams = useStudioStore((s) => s.imageGenParams);
+  const setImageGenParams = useStudioStore((s) => s.setImageGenParams);
   const images = useStudioStore((s) => s.images);
   const addImage = useStudioStore((s) => s.addImage);
   const toggleImageSelected = useStudioStore((s) => s.toggleImageSelected);
@@ -50,6 +53,9 @@ export const ImagesTab: React.FC = () => {
   const [expandedImageUuid, setExpandedImageUuid] = useState<string | null>(
     null,
   );
+
+  const sizeOptions = SIZE_OPTIONS[imageGenParams.model];
+
   const processedImages = useMemo(
     () => images.filter((img) => img.status === "processed"),
     [images],
@@ -67,42 +73,47 @@ export const ImagesTab: React.FC = () => {
 
     const baseSeed = Math.floor(Math.random() * 99_000) + 1;
 
-    const promises = Array.from({ length: qwenParams.seedCount }, (_, i) => {
-      const seed = baseSeed + i;
-      const algoParams = {
-        infinidream_algorithm: "qwen-image",
-        prompt: imagePrompt,
-        size: qwenParams.size,
-        seed,
-      };
+    const promises = Array.from(
+      { length: imageGenParams.seedCount },
+      (_, i) => {
+        const seed = baseSeed + i;
+        const algoParams = {
+          infinidream_algorithm: imageGenParams.model,
+          prompt: imagePrompt,
+          size: imageGenParams.size,
+          seed,
+        };
 
-      return axiosClient
-        .post("/v1/dream", {
-          name: `Qwen Image ${images.length + i + 1}`,
-          prompt: JSON.stringify(algoParams),
-          description: "Studio generated image",
-        })
-        .then(({ data }) => {
-          const dream = data.data?.dream;
-          if (!dream) return;
-          addImage({
-            uuid: dream.uuid,
-            url: dream.thumbnail || "",
-            name: dream.name,
-            seed,
-            size: qwenParams.size,
-            status: (dream.status as StudioImage["status"]) || "queue",
-            selected: false,
+        return axiosClient
+          .post("/v1/dream", {
+            name: `${MODEL_LABELS[imageGenParams.model]} ${
+              images.length + i + 1
+            }`,
+            prompt: JSON.stringify(algoParams),
+            description: "Studio generated image",
+          })
+          .then(({ data }) => {
+            const dream = data.data?.dream;
+            if (!dream) return;
+            addImage({
+              uuid: dream.uuid,
+              url: dream.thumbnail || "",
+              name: dream.name,
+              seed,
+              size: imageGenParams.size,
+              status: (dream.status as StudioImage["status"]) || "queue",
+              selected: false,
+            });
+          })
+          .catch((err) => {
+            console.error("Failed to create image:", err);
           });
-        })
-        .catch((err) => {
-          console.error("Failed to create image:", err);
-        });
-    });
+      },
+    );
 
     await Promise.all(promises);
     setIsGenerating(false);
-  }, [imagePrompt, qwenParams, images.length, addImage]);
+  }, [imagePrompt, imageGenParams, images.length, addImage]);
 
   return (
     <>
@@ -115,14 +126,29 @@ export const ImagesTab: React.FC = () => {
         />
         <FormRow>
           <FormField>
-            <FieldLabel>Seeds:</FieldLabel>
+            <FieldLabel>Model:</FieldLabel>
             <StyledSelect
-              value={qwenParams.seedCount}
+              value={imageGenParams.model}
               onChange={(e) =>
-                setQwenParams({ seedCount: Number(e.target.value) })
+                setImageGenParams({ model: e.target.value as ImageModel })
               }
             >
-              {SEED_OPTIONS.map((n) => (
+              {(Object.keys(MODEL_LABELS) as ImageModel[]).map((m) => (
+                <option key={m} value={m}>
+                  {MODEL_LABELS[m]}
+                </option>
+              ))}
+            </StyledSelect>
+          </FormField>
+          <FormField>
+            <FieldLabel>Images:</FieldLabel>
+            <StyledSelect
+              value={imageGenParams.seedCount}
+              onChange={(e) =>
+                setImageGenParams({ seedCount: Number(e.target.value) })
+              }
+            >
+              {IMAGE_COUNT_OPTIONS.map((n) => (
                 <option key={n} value={n}>
                   {n}
                 </option>
@@ -132,10 +158,10 @@ export const ImagesTab: React.FC = () => {
           <FormField>
             <FieldLabel>Size:</FieldLabel>
             <StyledSelect
-              value={qwenParams.size}
-              onChange={(e) => setQwenParams({ size: e.target.value })}
+              value={imageGenParams.size}
+              onChange={(e) => setImageGenParams({ size: e.target.value })}
             >
-              {SIZE_OPTIONS.map((s) => (
+              {sizeOptions.map((s) => (
                 <option key={s} value={s}>
                   {s.replace("*", "x")}
                 </option>
