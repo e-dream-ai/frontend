@@ -59,12 +59,9 @@ You will also see any lint errors in the console.
 
 Make sure you already have the env files ready.
 
-1. Start `presign-service` first:
+1. ~~Start `presign-service` first~~ (**deprecated** — no longer required):
 
-```bash
-cd presign-service
-go run main.go
-```
+   > **Note:** `presign-service` is deprecated and no longer needed to run the full stack locally.
 
 2. Start `backend` in a new terminal:
 

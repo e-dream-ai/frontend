@@ -11,7 +11,14 @@ export function generateCloudflareImageURL(
   if (!imageUrl) return undefined;
   if (!resizeOptions) return imageUrl;
 
-  const url = new URL(imageUrl);
+  let url: URL;
+
+  try {
+    url = new URL(imageUrl);
+  } catch {
+    return imageUrl;
+  }
+
   if (resizeOptions.width)
     url.searchParams.set("w", resizeOptions.width.toString());
   if (resizeOptions.height)

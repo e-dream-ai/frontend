@@ -80,12 +80,13 @@ export const RootElement = () => {
 };
 
 const RootElementWithProviders = withProviders(...Providers)(RootElement);
+const NotFoundPageWithProviders = withProviders(...Providers)(NotFoundPage);
 
 export const router = createBrowserRouter([
   {
     path: ROUTES.ROOT,
     element: <RootElementWithProviders />,
-    errorElement: <NotFoundPage />,
+    errorElement: <NotFoundPageWithProviders />,
     children: [
       {
         path: ROUTES.ROOT,

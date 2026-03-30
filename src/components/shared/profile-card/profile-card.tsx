@@ -280,7 +280,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   onDisableEditMode,
 }) => {
   const { t } = useTranslation();
-  const { user: authUser } = useAuth();
+  const { user: authUser, authenticateUser } = useAuth();
   const theme = useTheme();
   const isUserAdmin = useMemo(() => isAdmin(authUser as User), [authUser]);
   const [roleSearch, setRoleSearch] = useState<string>("");
@@ -388,9 +388,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
     }
 
     mutateUpdateUser(data, {
-      onSuccess: (response) => {
+      onSuccess: async (response) => {
         if (response.success) {
-          queryClient.setQueryData([USER_QUERY_KEY, user?.uuid], response);
+          await queryClient.refetchQueries([USER_QUERY_KEY, user?.uuid]);
+
+          if (authUser?.id === user?.id) {
+            await authenticateUser();
+          }
+
           toast.success(
             `${t("components.profile_card.profile_successfully_updated")}`,
           );
