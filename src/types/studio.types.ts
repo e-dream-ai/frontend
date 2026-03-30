@@ -48,7 +48,10 @@ export interface WanI2VParams {
   guidance: number;
 }
 
-export interface QwenParams {
+export type ImageModel = "qwen-image" | "zit-image";
+
+export interface ImageGenParams {
+  model: ImageModel;
   seedCount: number;
   size: string;
 }
