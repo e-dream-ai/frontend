@@ -5,7 +5,7 @@ import type {
   StudioImage,
   StudioAction,
   StudioJob,
-  QwenParams,
+  ImageGenParams,
   WanI2VParams,
 } from "@/types/studio.types";
 
@@ -15,8 +15,8 @@ type StudioState = {
 
   imagePrompt: string;
   setImagePrompt: (prompt: string) => void;
-  qwenParams: QwenParams;
-  setQwenParams: (params: Partial<QwenParams>) => void;
+  imageGenParams: ImageGenParams;
+  setImageGenParams: (params: Partial<ImageGenParams>) => void;
   images: StudioImage[];
   addImage: (image: StudioImage) => void;
   updateImage: (uuid: string, updates: Partial<StudioImage>) => void;
@@ -60,7 +60,11 @@ type StudioState = {
   resetSession: () => void;
 };
 
-const DEFAULT_QWEN_PARAMS: QwenParams = { seedCount: 8, size: "1280*720" };
+const DEFAULT_IMAGE_GEN_PARAMS: ImageGenParams = {
+  model: "qwen-image",
+  seedCount: 8,
+  size: "1280*720",
+};
 const DEFAULT_WAN_PARAMS: WanI2VParams = {
   duration: 5,
   numInferenceSteps: 30,
@@ -78,9 +82,9 @@ export const useStudioStore = create<StudioState>()(
 
       imagePrompt: "",
       setImagePrompt: (prompt: string) => set({ imagePrompt: prompt }),
-      qwenParams: DEFAULT_QWEN_PARAMS,
-      setQwenParams: (params: Partial<QwenParams>) =>
-        set((s) => ({ qwenParams: { ...s.qwenParams, ...params } })),
+      imageGenParams: DEFAULT_IMAGE_GEN_PARAMS,
+      setImageGenParams: (params: Partial<ImageGenParams>) =>
+        set((s) => ({ imageGenParams: { ...s.imageGenParams, ...params } })),
       images: [] as StudioImage[],
       addImage: (image: StudioImage) =>
         set((s) => ({ images: [...s.images, image] })),
@@ -199,7 +203,7 @@ export const useStudioStore = create<StudioState>()(
         set({
           activeTab: "images" as StudioTab,
           imagePrompt: "",
-          qwenParams: DEFAULT_QWEN_PARAMS,
+          imageGenParams: DEFAULT_IMAGE_GEN_PARAMS,
           images: [],
           actions: [],
           wanParams: DEFAULT_WAN_PARAMS,
@@ -213,11 +217,11 @@ export const useStudioStore = create<StudioState>()(
     }),
     {
       name: "studio-session",
-      version: 2,
+      version: 3,
       partialize: (state) => ({
         activeTab: state.activeTab,
         imagePrompt: state.imagePrompt,
-        qwenParams: state.qwenParams,
+        imageGenParams: state.imageGenParams,
         images: state.images.map((img) => ({
           ...img,
           previewFrame: undefined,
@@ -268,6 +272,14 @@ export const useStudioStore = create<StudioState>()(
                 j.jobType ??
                 (j.actionId?.startsWith("uprez-") ? "uprez" : "wan-i2v"),
             }));
+          }
+        }
+        if (version < 3) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const qp = state.qwenParams as any;
+          if (qp) {
+            state.imageGenParams = { model: "qwen-image", ...qp };
+            delete state.qwenParams;
           }
         }
         return state as Record<string, unknown>;

@@ -109,6 +109,23 @@ describe("studio.store", () => {
     });
   });
 
+  describe("migration v2 → v3", () => {
+    it("renames qwenParams to imageGenParams with default model", () => {
+      const v2State = {
+        qwenParams: { seedCount: 8, size: "1280*720" },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate?.(v2State, 2) as Record<string, unknown>;
+      expect(migrated.imageGenParams).toEqual({
+        model: "qwen-image",
+        seedCount: 8,
+        size: "1280*720",
+      });
+      expect(migrated.qwenParams).toBeUndefined();
+    });
+  });
+
   describe("partialize", () => {
     it("excludes previewFrame from persisted images", () => {
       useStudioStore.getState().addImage({
