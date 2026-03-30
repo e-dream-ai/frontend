@@ -338,6 +338,20 @@ export const HelpPage: React.FC = () => {
             </TipsList>
           </HelpCard>
 
+          {/* Updates card */}
+          <HelpCard flex="auto">
+            <CardTitle>Updates</CardTitle>
+            <CardText>
+              The Infinidream app automatically updates itself each time you run
+              it. However, the screensaver cannot update on its own. When a
+              newer version has been released, the screensaver shows the word{" "}
+              <strong style={{ color: "#f0c000" }}>Update</strong> in yellow
+              text in the lower-right corner of the screen. When you see this,
+              just run the app once to get the latest version, and the
+              screensaver will be updated too.
+            </CardText>
+          </HelpCard>
+
           {/* Web client card */}
           <HelpCard flex="auto">
             <CardTitle>Web player</CardTitle>
