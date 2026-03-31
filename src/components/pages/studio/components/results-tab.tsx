@@ -3,7 +3,7 @@ import { useStudioStore } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import { axiosClient } from "@/client/axios.client";
 import { createComboKey } from "@/types/studio.types";
-import type { StudioJob } from "@/types/studio.types";
+import type { StudioJob, UprezModel } from "@/types/studio.types";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import {
   clampDurationToAllowed,
@@ -11,7 +11,11 @@ import {
   hasActionLoras,
 } from "../constants/duration-options";
 import { PresignedImage } from "@/components/shared/presigned-image";
-import { GenerateSection, SectionTitle } from "./images-tab.styled";
+import {
+  GenerateSection,
+  SectionTitle,
+  StyledSelect,
+} from "./images-tab.styled";
 import { GridTable, GridHeader, GridRowHeader } from "./generate-tab.styled";
 import {
   ProgressBar,
@@ -30,6 +34,11 @@ import {
 } from "./results-tab.styled";
 
 const BATCH_SIZE = 5;
+
+const UPREZ_MODEL_LABELS: Record<UprezModel, string> = {
+  uprez: "Current Uprez",
+  "nvidia-uprez": "Nvidia Super Resolution",
+};
 
 export const ResultsTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
@@ -50,6 +59,8 @@ export const ResultsTab: React.FC = () => {
   const { addPlaylistToCache } = useUserPlaylists();
 
   const videoGenParams = useStudioStore((s) => s.videoGenParams);
+  const uprezModel = useStudioStore((s) => s.uprezModel);
+  const setUprezModel = useStudioStore((s) => s.setUprezModel);
   const removeJob = useStudioStore((s) => s.removeJob);
 
   const [isUprezzing, setIsUprezzing] = useState(false);
@@ -59,7 +70,7 @@ export const ResultsTab: React.FC = () => {
   const gridImageIds = useMemo(() => {
     const ids = new Set<string>();
     jobs
-      .filter((j) => j.jobType !== "uprez")
+      .filter((j) => j.jobType !== "uprez" && j.jobType !== "nvidia-uprez")
       .forEach((j) => ids.add(j.imageId));
     return [...ids];
   }, [jobs]);
@@ -67,7 +78,7 @@ export const ResultsTab: React.FC = () => {
   const gridActionIds = useMemo(() => {
     const ids = new Set<string>();
     jobs
-      .filter((j) => j.jobType !== "uprez")
+      .filter((j) => j.jobType !== "uprez" && j.jobType !== "nvidia-uprez")
       .forEach((j) => ids.add(j.actionId));
     return [...ids];
   }, [jobs]);
@@ -89,7 +100,8 @@ export const ResultsTab: React.FC = () => {
   );
 
   const wanJobs = useMemo(
-    () => jobs.filter((j) => j.jobType !== "uprez"),
+    () =>
+      jobs.filter((j) => j.jobType !== "uprez" && j.jobType !== "nvidia-uprez"),
     [jobs],
   );
 
@@ -136,7 +148,7 @@ export const ResultsTab: React.FC = () => {
   const jobMap = useMemo(() => {
     const map = new Map<string, StudioJob>();
     for (const j of jobs) {
-      if (j.jobType !== "uprez") {
+      if (j.jobType !== "uprez" && j.jobType !== "nvidia-uprez") {
         map.set(`${j.imageId}:${j.actionId}`, j);
       }
     }
@@ -149,6 +161,7 @@ export const ResultsTab: React.FC = () => {
         j.selectedForUprez &&
         j.status === "processed" &&
         j.jobType !== "uprez" &&
+        j.jobType !== "nvidia-uprez" &&
         !j.uprezed,
     );
     if (toUprez.length === 0) return;
@@ -175,12 +188,20 @@ export const ResultsTab: React.FC = () => {
 
         const results = await Promise.allSettled(
           batch.map(async (job) => {
-            const algoParams = {
-              infinidream_algorithm: "uprez",
-              video_uuid: job.dreamUuid,
-              upscale_factor: 2,
-              interpolation_factor: 2,
-            };
+            const algoParams =
+              uprezModel === "nvidia-uprez"
+                ? {
+                    infinidream_algorithm: "nvidia-uprez" as const,
+                    video_uuid: job.dreamUuid,
+                    upscale_factor: 2,
+                    quality: "HIGH" as const,
+                  }
+                : {
+                    infinidream_algorithm: "uprez" as const,
+                    video_uuid: job.dreamUuid,
+                    upscale_factor: 2,
+                    interpolation_factor: 2,
+                  };
 
             const response = await createDream.mutateAsync({
               name: `Uprez - ${job.dreamUuid.slice(0, 8)}`,
@@ -195,7 +216,7 @@ export const ResultsTab: React.FC = () => {
               imageId: job.imageId,
               actionId: `uprez-${job.actionId}`,
               dreamUuid: dream.uuid,
-              jobType: "uprez",
+              jobType: uprezModel,
               status: (dream.status as StudioJob["status"]) || "queue",
               selectedForUprez: false,
             });
@@ -230,6 +251,7 @@ export const ResultsTab: React.FC = () => {
     createDream,
     addJob,
     updateJob,
+    uprezModel,
     uprezPlaylistId,
     setUprezPlaylistId,
     addPlaylistToCache,
@@ -508,6 +530,17 @@ export const ResultsTab: React.FC = () => {
               : "Select All for Uprez"}
           </ActionButton>
         )}
+        <StyledSelect
+          value={uprezModel}
+          onChange={(e) => setUprezModel(e.target.value as UprezModel)}
+          style={{ width: "auto", minWidth: 180 }}
+        >
+          {(Object.keys(UPREZ_MODEL_LABELS) as UprezModel[]).map((m) => (
+            <option key={m} value={m}>
+              {UPREZ_MODEL_LABELS[m]}
+            </option>
+          ))}
+        </StyledSelect>
         <ActionButton
           $variant="primary"
           disabled={uprezCount === 0 || isUprezzing}

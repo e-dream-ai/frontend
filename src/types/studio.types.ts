@@ -27,6 +27,8 @@ export interface StudioAction {
 
 export type VideoModel = "wan-i2v" | "ltx-i2v";
 
+export type UprezModel = "uprez" | "nvidia-uprez";
+
 export type StudioJobType = "wan-i2v" | "ltx-i2v" | "uprez" | "nvidia-uprez";
 
 export interface StudioJob {
