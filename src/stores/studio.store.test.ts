@@ -126,6 +126,24 @@ describe("studio.store", () => {
     });
   });
 
+  describe("migration v3 → v4", () => {
+    it("renames wanParams to videoGenParams with default model", () => {
+      const v3State = {
+        wanParams: { duration: 5, numInferenceSteps: 30, guidance: 5.0 },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v3State, 3) as Record<string, unknown>;
+      expect(migrated.videoGenParams).toEqual({
+        model: "wan-i2v",
+        duration: 5,
+        numInferenceSteps: 30,
+        guidance: 5.0,
+      });
+      expect(migrated.wanParams).toBeUndefined();
+    });
+  });
+
   describe("partialize", () => {
     it("excludes previewFrame from persisted images", () => {
       useStudioStore.getState().addImage({

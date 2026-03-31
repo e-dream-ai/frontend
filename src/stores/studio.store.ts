@@ -6,7 +6,7 @@ import type {
   StudioAction,
   StudioJob,
   ImageGenParams,
-  WanI2VParams,
+  VideoGenParams,
 } from "@/types/studio.types";
 
 type StudioState = {
@@ -35,8 +35,8 @@ type StudioState = {
   toggleActionEnabled: (id: string) => void;
   loadPresetPack: (actions: StudioAction[]) => void;
 
-  wanParams: WanI2VParams;
-  setWanParams: (params: Partial<WanI2VParams>) => void;
+  videoGenParams: VideoGenParams;
+  setVideoGenParams: (params: Partial<VideoGenParams>) => void;
   outputPlaylistId: string | null;
   setOutputPlaylistId: (id: string | null) => void;
   uprezPlaylistId: string | null;
@@ -65,7 +65,8 @@ const DEFAULT_IMAGE_GEN_PARAMS: ImageGenParams = {
   seedCount: 8,
   size: "1280*720",
 };
-const DEFAULT_WAN_PARAMS: WanI2VParams = {
+const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
+  model: "wan-i2v",
   duration: 5,
   numInferenceSteps: 30,
   guidance: 5.0,
@@ -136,9 +137,9 @@ export const useStudioStore = create<StudioState>()(
       loadPresetPack: (newActions: StudioAction[]) =>
         set((s) => ({ actions: [...s.actions, ...newActions] })),
 
-      wanParams: DEFAULT_WAN_PARAMS,
-      setWanParams: (params: Partial<WanI2VParams>) =>
-        set((s) => ({ wanParams: { ...s.wanParams, ...params } })),
+      videoGenParams: DEFAULT_VIDEO_GEN_PARAMS,
+      setVideoGenParams: (params: Partial<VideoGenParams>) =>
+        set((s) => ({ videoGenParams: { ...s.videoGenParams, ...params } })),
       outputPlaylistId: null,
       setOutputPlaylistId: (id: string | null) => set({ outputPlaylistId: id }),
       uprezPlaylistId: null,
@@ -206,7 +207,7 @@ export const useStudioStore = create<StudioState>()(
           imageGenParams: DEFAULT_IMAGE_GEN_PARAMS,
           images: [],
           actions: [],
-          wanParams: DEFAULT_WAN_PARAMS,
+          videoGenParams: DEFAULT_VIDEO_GEN_PARAMS,
           outputPlaylistId: null,
           uprezPlaylistId: null,
           excludedCombos: new Set<string>(),
@@ -217,7 +218,7 @@ export const useStudioStore = create<StudioState>()(
     }),
     {
       name: "studio-session",
-      version: 3,
+      version: 4,
       partialize: (state) => ({
         activeTab: state.activeTab,
         imagePrompt: state.imagePrompt,
@@ -227,7 +228,7 @@ export const useStudioStore = create<StudioState>()(
           previewFrame: undefined,
         })),
         actions: state.actions,
-        wanParams: state.wanParams,
+        videoGenParams: state.videoGenParams,
         outputPlaylistId: state.outputPlaylistId,
         uprezPlaylistId: state.uprezPlaylistId,
         excludedCombos: [...(state.excludedCombos as Set<string>)],
@@ -280,6 +281,14 @@ export const useStudioStore = create<StudioState>()(
           if (qp) {
             state.imageGenParams = { model: "qwen-image", ...qp };
             delete state.qwenParams;
+          }
+        }
+        if (version < 4) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const wp = state.wanParams as any;
+          if (wp) {
+            state.videoGenParams = { model: "wan-i2v", ...wp };
+            delete state.wanParams;
           }
         }
         return state as Record<string, unknown>;
