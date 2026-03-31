@@ -22,7 +22,7 @@
     "@uiw/codemirror-theme-basic": "^4.25.3",
     "@uiw/codemirror-theme-material": "^4.25.3",
     "@uiw/react-codemirror": "^4.25.3",
-    "axios": "^1.13.2",
+    "axios": "^1.13.5",
     "file-type": "^21.3.3",
     "framer-motion": "^12.23.25",
     "i18next": "^23.7.11",
@@ -33,7 +33,6 @@
     "react": "^18.2.0",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^18.2.0",
-    "react-drag-drop-files": "^2.4.0",
     "react-dropzone": "^15.0.0",
     "react-ga4": "^2.1.0",
     "react-gtm-module": "^2.0.11",
@@ -120,6 +119,21 @@
     "vite-plugin-pwa": "^0.20.5",
     "vite-tsconfig-paths": "^4.3.2",
     "vitest": "^4.0.18"
+  },
+  "pnpm": {
+    "overrides": {
+      "rollup": ">=4.59.0",
+      "flatted": ">=3.4.2",
+      "socket.io-parser": ">=4.2.6",
+      "minimatch": ">=9.0.7",
+      "serialize-javascript": ">=7.0.5",
+      "picomatch": ">=4.0.4",
+      "lodash": ">=4.17.23",
+      "brace-expansion": ">=2.0.3",
+      "@babel/runtime": ">=7.26.10",
+      "yaml": ">=2.8.3",
+      "min-document": ">=2.19.1"
+    }
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": "eslint --cache --fix",
