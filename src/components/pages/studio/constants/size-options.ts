@@ -15,7 +15,7 @@ const ZIT_SIZES = [
 
 export const SIZE_OPTIONS: Record<ImageModel, readonly string[]> = {
   "qwen-image": QWEN_SIZES,
-  "zit-image": ZIT_SIZES,
+  "z-image-turbo": ZIT_SIZES,
 };
 
 export const IMAGE_COUNT_OPTIONS = [1, 4, 8, 12, 16, 24] as const;

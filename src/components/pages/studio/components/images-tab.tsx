@@ -31,7 +31,7 @@ import { PresignedImage } from "@/components/shared/presigned-image";
 import { AddFromPlaylistModal } from "./add-from-playlist-modal";
 
 const MODEL_LABELS: Record<ImageModel, string> = {
-  "zit-image": "Z Image Turbo",
+  "z-image-turbo": "Z Image Turbo",
   "qwen-image": "Qwen Image",
 };
 
