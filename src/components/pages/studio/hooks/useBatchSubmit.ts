@@ -15,7 +15,7 @@ const BATCH_SIZE = 1;
 export const useBatchSubmit = () => {
   const images = useStudioStore((s) => s.images);
   const actions = useStudioStore((s) => s.actions);
-  const wanParams = useStudioStore((s) => s.wanParams);
+  const videoGenParams = useStudioStore((s) => s.videoGenParams);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
   const setOutputPlaylistId = useStudioStore((s) => s.setOutputPlaylistId);
@@ -72,9 +72,10 @@ export const useBatchSubmit = () => {
       const combos = getSelectedCombinations();
       const allowedDurations = getAllowedDurationsForActions(
         combos.map(({ action }) => action),
+        videoGenParams.model,
       );
       const duration = clampDurationToAllowed(
-        wanParams.duration,
+        videoGenParams.duration,
         allowedDurations,
       );
       let jobsAdded = 0;
@@ -87,27 +88,39 @@ export const useBatchSubmit = () => {
             const batchIdentifier = createComboKey(image.uuid, action.prompt);
             const hasLoras = hasActionLoras(action);
 
-            const algoParams = hasLoras
-              ? {
-                  infinidream_algorithm: "wan-i2v-lora" as const,
-                  prompt: action.prompt,
-                  image: image.uuid,
-                  duration,
-                  num_inference_steps: wanParams.numInferenceSteps,
-                  guidance: wanParams.guidance,
-                  seed: -1,
-                  high_noise_loras: action.highNoiseLoras ?? [],
-                  low_noise_loras: action.lowNoiseLoras ?? [],
-                }
-              : {
-                  infinidream_algorithm: "wan-i2v" as const,
-                  prompt: action.prompt,
-                  image: image.uuid,
-                  size: image.size || "1280*720",
-                  duration,
-                  num_inference_steps: wanParams.numInferenceSteps,
-                  guidance: wanParams.guidance,
-                };
+            let algoParams: Record<string, unknown>;
+            if (videoGenParams.model === "ltx-i2v") {
+              algoParams = {
+                infinidream_algorithm: "ltx-i2v" as const,
+                prompt: action.prompt,
+                image: image.uuid,
+                duration,
+                num_inference_steps: videoGenParams.numInferenceSteps,
+                guidance: videoGenParams.guidance,
+              };
+            } else if (hasLoras) {
+              algoParams = {
+                infinidream_algorithm: "wan-i2v-lora" as const,
+                prompt: action.prompt,
+                image: image.uuid,
+                duration,
+                num_inference_steps: videoGenParams.numInferenceSteps,
+                guidance: videoGenParams.guidance,
+                seed: -1,
+                high_noise_loras: action.highNoiseLoras ?? [],
+                low_noise_loras: action.lowNoiseLoras ?? [],
+              };
+            } else {
+              algoParams = {
+                infinidream_algorithm: "wan-i2v" as const,
+                prompt: action.prompt,
+                image: image.uuid,
+                size: image.size || "1280*720",
+                duration,
+                num_inference_steps: videoGenParams.numInferenceSteps,
+                guidance: videoGenParams.guidance,
+              };
+            }
 
             const response = await createDream.mutateAsync({
               name: `${image.name} - ${action.prompt.slice(0, 40)}`,
@@ -122,7 +135,7 @@ export const useBatchSubmit = () => {
               imageId: image.uuid,
               actionId: action.id,
               dreamUuid: dream.uuid,
-              jobType: "wan-i2v",
+              jobType: videoGenParams.model,
               status:
                 (dream.status as
                   | "queue"
@@ -157,7 +170,7 @@ export const useBatchSubmit = () => {
     outputPlaylistId,
     setOutputPlaylistId,
     getSelectedCombinations,
-    wanParams,
+    videoGenParams,
     createDream,
     addJob,
     setActiveTab,

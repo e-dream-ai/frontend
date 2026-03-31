@@ -38,8 +38,8 @@ const GUIDANCE_OPTIONS = [3.0, 4.0, 5.0, 6.0, 7.0];
 export const GenerateTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const actions = useStudioStore((s) => s.actions);
-  const wanParams = useStudioStore((s) => s.wanParams);
-  const setWanParams = useStudioStore((s) => s.setWanParams);
+  const videoGenParams = useStudioStore((s) => s.videoGenParams);
+  const setVideoGenParams = useStudioStore((s) => s.setVideoGenParams);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
   const toggleComboExcluded = useStudioStore((s) => s.toggleComboExcluded);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
@@ -64,19 +64,23 @@ export const GenerateTab: React.FC = () => {
     [getSelectedCombinations],
   );
   const durationOptions = useMemo(
-    () => getAllowedDurationsForActions(newCombos.map(({ action }) => action)),
-    [newCombos],
+    () =>
+      getAllowedDurationsForActions(
+        newCombos.map(({ action }) => action),
+        videoGenParams.model,
+      ),
+    [newCombos, videoGenParams.model],
   );
 
   useEffect(() => {
     const nextDuration = clampDurationToAllowed(
-      wanParams.duration,
+      videoGenParams.duration,
       durationOptions,
     );
-    if (nextDuration !== wanParams.duration) {
-      setWanParams({ duration: nextDuration });
+    if (nextDuration !== videoGenParams.duration) {
+      setVideoGenParams({ duration: nextDuration });
     }
-  }, [durationOptions, wanParams.duration, setWanParams]);
+  }, [durationOptions, videoGenParams.duration, setVideoGenParams]);
 
   const totalPossible = selectedImages.length * enabledActions.length;
 
@@ -172,9 +176,9 @@ export const GenerateTab: React.FC = () => {
           <FormField>
             <FieldLabel>Duration:</FieldLabel>
             <StyledSelect
-              value={wanParams.duration}
+              value={videoGenParams.duration}
               onChange={(e) =>
-                setWanParams({ duration: Number(e.target.value) })
+                setVideoGenParams({ duration: Number(e.target.value) })
               }
             >
               {durationOptions.map((d) => (
@@ -187,9 +191,9 @@ export const GenerateTab: React.FC = () => {
           <FormField>
             <FieldLabel>Steps:</FieldLabel>
             <StyledSelect
-              value={wanParams.numInferenceSteps}
+              value={videoGenParams.numInferenceSteps}
               onChange={(e) =>
-                setWanParams({ numInferenceSteps: Number(e.target.value) })
+                setVideoGenParams({ numInferenceSteps: Number(e.target.value) })
               }
             >
               {STEPS_OPTIONS.map((s) => (
@@ -202,9 +206,9 @@ export const GenerateTab: React.FC = () => {
           <FormField>
             <FieldLabel>Guidance:</FieldLabel>
             <StyledSelect
-              value={wanParams.guidance}
+              value={videoGenParams.guidance}
               onChange={(e) =>
-                setWanParams({ guidance: Number(e.target.value) })
+                setVideoGenParams({ guidance: Number(e.target.value) })
               }
             >
               {GUIDANCE_OPTIONS.map((g) => (

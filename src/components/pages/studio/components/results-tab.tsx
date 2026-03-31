@@ -49,7 +49,7 @@ export const ResultsTab: React.FC = () => {
   const createDream = useCreateDreamFromPrompt();
   const { addPlaylistToCache } = useUserPlaylists();
 
-  const wanParams = useStudioStore((s) => s.wanParams);
+  const videoGenParams = useStudioStore((s) => s.videoGenParams);
   const removeJob = useStudioStore((s) => s.removeJob);
 
   const [isUprezzing, setIsUprezzing] = useState(false);
@@ -236,18 +236,22 @@ export const ResultsTab: React.FC = () => {
   ]);
 
   const handleRetryFailed = useCallback(async () => {
-    // Only retry wan-i2v jobs (uprez retries not yet supported)
+    // Only retry video generation jobs (uprez retries not yet supported)
     const failedJobs = jobs.filter(
-      (j) => j.status === "failed" && j.jobType !== "uprez",
+      (j) =>
+        j.status === "failed" &&
+        j.jobType !== "uprez" &&
+        j.jobType !== "nvidia-uprez",
     );
     if (failedJobs.length === 0) return;
 
     const failedActionIds = new Set(failedJobs.map((j) => j.actionId));
     const allowedDurations = getAllowedDurationsForActions(
       actions.filter((action) => failedActionIds.has(action.id)),
+      videoGenParams.model,
     );
     const duration = clampDurationToAllowed(
-      wanParams.duration,
+      videoGenParams.duration,
       allowedDurations,
     );
 
@@ -263,30 +267,41 @@ export const ResultsTab: React.FC = () => {
             if (!image || !action) return;
 
             const hasLoras = hasActionLoras(action);
-
             const batchIdentifier = createComboKey(image.uuid, action.prompt);
 
-            const algoParams = hasLoras
-              ? {
-                  infinidream_algorithm: "wan-i2v-lora" as const,
-                  prompt: action.prompt,
-                  image: image.uuid,
-                  duration,
-                  num_inference_steps: wanParams.numInferenceSteps,
-                  guidance: wanParams.guidance,
-                  seed: -1,
-                  high_noise_loras: action.highNoiseLoras ?? [],
-                  low_noise_loras: action.lowNoiseLoras ?? [],
-                }
-              : {
-                  infinidream_algorithm: "wan-i2v" as const,
-                  prompt: action.prompt,
-                  image: image.uuid,
-                  size: image.size || "1280*720",
-                  duration,
-                  num_inference_steps: wanParams.numInferenceSteps,
-                  guidance: wanParams.guidance,
-                };
+            let algoParams: Record<string, unknown>;
+            if (videoGenParams.model === "ltx-i2v") {
+              algoParams = {
+                infinidream_algorithm: "ltx-i2v" as const,
+                prompt: action.prompt,
+                image: image.uuid,
+                duration,
+                num_inference_steps: videoGenParams.numInferenceSteps,
+                guidance: videoGenParams.guidance,
+              };
+            } else if (hasLoras) {
+              algoParams = {
+                infinidream_algorithm: "wan-i2v-lora" as const,
+                prompt: action.prompt,
+                image: image.uuid,
+                duration,
+                num_inference_steps: videoGenParams.numInferenceSteps,
+                guidance: videoGenParams.guidance,
+                seed: -1,
+                high_noise_loras: action.highNoiseLoras ?? [],
+                low_noise_loras: action.lowNoiseLoras ?? [],
+              };
+            } else {
+              algoParams = {
+                infinidream_algorithm: "wan-i2v" as const,
+                prompt: action.prompt,
+                image: image.uuid,
+                size: image.size || "1280*720",
+                duration,
+                num_inference_steps: videoGenParams.numInferenceSteps,
+                guidance: videoGenParams.guidance,
+              };
+            }
 
             const response = await createDream.mutateAsync({
               name: `${image.name} - ${action.prompt.slice(0, 40)}`,
@@ -302,7 +317,7 @@ export const ResultsTab: React.FC = () => {
               imageId: job.imageId,
               actionId: job.actionId,
               dreamUuid: dream.uuid,
-              jobType: "wan-i2v",
+              jobType: videoGenParams.model,
               status: (dream.status as StudioJob["status"]) || "queue",
               selectedForUprez: false,
             });
@@ -332,7 +347,7 @@ export const ResultsTab: React.FC = () => {
     jobs,
     images,
     actions,
-    wanParams,
+    videoGenParams,
     createDream,
     removeJob,
     addJob,
