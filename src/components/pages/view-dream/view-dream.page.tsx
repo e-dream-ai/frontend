@@ -162,7 +162,9 @@ const formatDreamError = (error?: string | null): string => {
 
       return JSON.stringify(parsed, null, 2);
     }
-  } catch {}
+  } catch {
+    // noop
+  }
 
   return trimmedError;
 };
@@ -392,6 +394,10 @@ const ViewDreamPage: React.FC = () => {
   );
 
   const hasPrompt = useMemo(() => Boolean(dream?.prompt), [dream]);
+  const hasOriginalVideo = useMemo(
+    () => Boolean(dream?.original_video),
+    [dream],
+  );
 
   const dreamAlgorithm = useMemo(() => {
     if (!dream?.prompt) return null;
@@ -412,8 +418,10 @@ const ViewDreamPage: React.FC = () => {
   }, [dreamAlgorithm]);
 
   const showRerunButton = useMemo(
-    () => (isUserAdmin && hasPrompt) || (isOwner && isCreator && hasPrompt),
-    [isUserAdmin, isOwner, isCreator, hasPrompt],
+    () =>
+      (isUserAdmin && (hasPrompt || hasOriginalVideo)) ||
+      (isOwner && isCreator && (hasPrompt || hasOriginalVideo)),
+    [isUserAdmin, isOwner, isCreator, hasPrompt, hasOriginalVideo],
   );
 
   const showEditButton = !editMode;
@@ -428,7 +436,7 @@ const ViewDreamPage: React.FC = () => {
             dream,
           });
           handleMutateThumbnailDream(data);
-        } catch (error) {
+        } catch {
           toast.error(t("page.view_dream.error_updating_dream"));
         }
       } else {
@@ -444,7 +452,7 @@ const ViewDreamPage: React.FC = () => {
           dream,
         });
         handleMutateThumbnailDream(data);
-      } catch (error) {
+      } catch {
         toast.error(t("page.view_dream.error_updating_dream"));
       }
     } else {
@@ -614,7 +622,7 @@ const ViewDreamPage: React.FC = () => {
           toast.error(t("page.view_dream.error_fetching_preview"));
         }
       }
-    } catch (err) {
+    } catch {
       if (jobStatus === "IN_QUEUE") {
         toast.error(t("page.view_dream.rendering_hasnt_started_yet"));
       } else {
@@ -704,7 +712,7 @@ const ViewDreamPage: React.FC = () => {
       } else {
         toast.error(`${t("page.view_dream.error_processing_dream")}`);
       }
-    } catch (_) {
+    } catch {
       toast.error(`${t("page.view_dream.error_processing_dream")}`);
     }
   };
@@ -747,7 +755,7 @@ const ViewDreamPage: React.FC = () => {
       } else {
         toast.error(`${t("page.view_dream.error_cancelling_dream")}`);
       }
-    } catch (_) {
+    } catch {
       toast.error(`${t("page.view_dream.error_cancelling_dream")}`);
     }
   };
@@ -808,7 +816,7 @@ const ViewDreamPage: React.FC = () => {
               success: data.success,
               message: data.message,
             };
-          } catch (error) {
+          } catch {
             return {
               uuid: report.uuid,
               success: false,
@@ -835,7 +843,7 @@ const ViewDreamPage: React.FC = () => {
       }
 
       return results;
-    } catch (error) {
+    } catch {
       toast.error(t("page.view_dream.error_processing_reports"));
     }
   };
