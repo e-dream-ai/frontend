@@ -17,7 +17,7 @@ export const ACTION_PRESETS: PresetPack[] = [
     actions: [
       {
         prompt: "slow zoom in, camera gently pushing forward",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl("zoom_in_lora", "wan22_14b_i2v_zoom_in.safetensors"),
@@ -27,7 +27,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "slow zoom out, camera pulling back to reveal",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -40,7 +40,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan left to right, smooth motion",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -53,7 +53,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan right to left, smooth motion",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -66,7 +66,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan upward, revealing sky",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl("tilt_up_lora", "wan22_14b_i2v_tilt_up.safetensors"),
@@ -76,7 +76,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan downward, descending",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -97,7 +97,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       { prompt: "dolly forward, smooth cinematic approach", enabled: true },
       {
         prompt: "orbit around subject, 180 degrees, smooth motion",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -120,7 +120,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       { prompt: "crane up, rising above the scene", enabled: true },
       {
         prompt: "tracking shot, following motion left to right",
-        enabled: true,
+        enabled: false,
       },
       { prompt: "rack focus, shifting depth of field", enabled: true },
     ],

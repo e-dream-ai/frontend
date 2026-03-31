@@ -202,7 +202,7 @@ export const ImagesTab: React.FC = () => {
                     {img.status === "failed" && "Failed"}
                   </ImageStatus>
                 )}
-                {img.seed != null && <SeedLabel>seed:{img.seed}</SeedLabel>}
+                {img.seed != null && <SeedLabel>#{img.seed}</SeedLabel>}
                 <StarBadge
                   $active={img.selected}
                   onClick={(e) => {
