@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export interface PresetPack {
   name: string;
+  model: "wan-i2v" | "ltx-i2v" | "all";
   actions: Omit<StudioAction, "id">[];
 }
 
@@ -14,6 +15,7 @@ const loraUrl = (repo: string, file: string) =>
 export const ACTION_PRESETS: PresetPack[] = [
   {
     name: "Camera Basics",
+    model: "wan-i2v",
     actions: [
       {
         prompt: "slow zoom in, camera gently pushing forward",
@@ -93,6 +95,7 @@ export const ACTION_PRESETS: PresetPack[] = [
   },
   {
     name: "Cinematic",
+    model: "wan-i2v",
     actions: [
       { prompt: "dolly forward, smooth cinematic approach", enabled: true },
       {
@@ -127,6 +130,7 @@ export const ACTION_PRESETS: PresetPack[] = [
   },
   {
     name: "Organic",
+    model: "all",
     actions: [
       { prompt: "gentle breathing motion, subtle life", enabled: true },
       { prompt: "subtle sway, natural wind movement", enabled: true },
@@ -136,6 +140,7 @@ export const ACTION_PRESETS: PresetPack[] = [
   },
   {
     name: "Abstract",
+    model: "all",
     actions: [
       { prompt: "morph and flow, organic transformation", enabled: true },
       { prompt: "color shift, gradual hue rotation", enabled: true },
