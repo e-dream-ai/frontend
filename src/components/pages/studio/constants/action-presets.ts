@@ -129,6 +129,62 @@ export const ACTION_PRESETS: PresetPack[] = [
     ],
   },
   {
+    name: "LTX Camera",
+    model: "ltx-i2v",
+    actions: [
+      {
+        prompt: "static camera, subtle ambient movement",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-static.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+      {
+        prompt: "slow dolly in, camera pushing forward into the scene",
+        enabled: false,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-dolly-in.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+      {
+        prompt: "slow dolly out, camera pulling back to reveal",
+        enabled: false,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-dolly-out.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+      {
+        prompt: "jib up, camera rising above the scene",
+        enabled: false,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-jib-up.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+      {
+        prompt: "jib down, camera descending into the scene",
+        enabled: false,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-jib-down.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+    ],
+  },
+  {
     name: "Organic",
     model: "all",
     actions: [
