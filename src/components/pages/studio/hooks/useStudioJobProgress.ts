@@ -1,4 +1,5 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
+import { useShallow } from "zustand/react/shallow";
 import useSocket from "@/hooks/useSocket";
 import { axiosClient } from "@/client/axios.client";
 import { useStudioStore } from "@/stores/studio.store";
@@ -13,19 +14,19 @@ const POLL_INTERVAL_MS = 10_000;
 
 export const useStudioJobProgress = () => {
   const { socket } = useSocket();
-  const images = useStudioStore((s) => s.images);
-  const jobs = useStudioStore((s) => s.jobs);
 
-  // Stable set of pending UUIDs that need socket rooms
-  const pendingUuids = useMemo(() => {
-    const imageUuids = images
-      .filter((img) => img.status === "queue" || img.status === "processing")
-      .map((img) => img.uuid);
-    const jobUuids = jobs
-      .filter((j) => j.status === "queue" || j.status === "processing")
-      .map((j) => j.dreamUuid);
-    return [...imageUuids, ...jobUuids];
-  }, [images, jobs]);
+  // Stable reference — only changes when the UUID set actually changes, not on every progress update
+  const pendingUuids = useStudioStore(
+    useShallow((s) => {
+      const imageUuids = s.images
+        .filter((img) => img.status === "queue" || img.status === "processing")
+        .map((img) => img.uuid);
+      const jobUuids = s.jobs
+        .filter((j) => j.status === "queue" || j.status === "processing")
+        .map((j) => j.dreamUuid);
+      return [...imageUuids, ...jobUuids];
+    }),
+  );
 
   // --- Effect 1: Register JOB_PROGRESS_EVENT listener ONCE per socket ---
   useEffect(() => {

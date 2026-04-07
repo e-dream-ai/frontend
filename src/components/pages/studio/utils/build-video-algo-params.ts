@@ -28,7 +28,7 @@ export const buildVideoAlgoParams = ({
     const params: Record<string, unknown> = {
       infinidream_algorithm: "ltx-i2v",
       prompt: action.prompt,
-      image: imageUuid,
+      source_dream_uuid: imageUuid,
       duration,
     };
     if (hasLoras && action.highNoiseLoras?.length) {

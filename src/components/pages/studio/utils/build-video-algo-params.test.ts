@@ -76,7 +76,7 @@ describe("buildVideoAlgoParams", () => {
     expect(result).toEqual({
       infinidream_algorithm: "ltx-i2v",
       prompt: "slow zoom in",
-      image: "img-uuid",
+      source_dream_uuid: "img-uuid",
       duration: 10,
     });
     expect(result).not.toHaveProperty("num_inference_steps");
@@ -106,7 +106,7 @@ describe("buildVideoAlgoParams", () => {
     expect(result).toEqual({
       infinidream_algorithm: "ltx-i2v",
       prompt: "slow zoom in",
-      image: "img-uuid",
+      source_dream_uuid: "img-uuid",
       duration: 10,
       high_noise_loras: [
         {

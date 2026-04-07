@@ -39,6 +39,8 @@ const MODEL_LABELS: Record<ImageModel, string> = {
   "qwen-image": "Qwen Image",
 };
 
+const IMAGE_MODELS: ImageModel[] = ["z-image-turbo", "qwen-image"];
+
 export const ImagesTab: React.FC = () => {
   const imagePrompt = useStudioStore((s) => s.imagePrompt);
   const setImagePrompt = useStudioStore((s) => s.setImagePrompt);
@@ -76,6 +78,7 @@ export const ImagesTab: React.FC = () => {
     setIsGenerating(true);
 
     const baseSeed = Math.floor(Math.random() * 99_000) + 1;
+    const currentImageCount = useStudioStore.getState().images.length;
 
     const promises = Array.from(
       { length: imageGenParams.seedCount },
@@ -91,7 +94,7 @@ export const ImagesTab: React.FC = () => {
         return axiosClient
           .post("/v1/dream", {
             name: `${MODEL_LABELS[imageGenParams.model]} ${
-              images.length + i + 1
+              currentImageCount + i + 1
             }`,
             prompt: JSON.stringify(algoParams),
             description: "Studio generated image",
@@ -117,7 +120,7 @@ export const ImagesTab: React.FC = () => {
 
     await Promise.all(promises);
     setIsGenerating(false);
-  }, [imagePrompt, imageGenParams, images.length, addImage, setIsGenerating]);
+  }, [imagePrompt, imageGenParams, addImage, setIsGenerating]);
 
   return (
     <>
@@ -141,7 +144,7 @@ export const ImagesTab: React.FC = () => {
                 });
               }}
             >
-              {(Object.keys(MODEL_LABELS) as ImageModel[]).map((m) => (
+              {IMAGE_MODELS.map((m) => (
                 <option key={m} value={m}>
                   {MODEL_LABELS[m]}
                 </option>

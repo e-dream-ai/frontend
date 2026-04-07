@@ -11,11 +11,7 @@ import {
 } from "../constants/duration-options";
 import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 import { PresignedImage } from "@/components/shared/presigned-image";
-import {
-  GenerateSection,
-  SectionTitle,
-  StyledSelect,
-} from "./images-tab.styled";
+import { GenerateSection, SectionTitle } from "./images-tab.styled";
 import { GridTable, GridHeader, GridRowHeader } from "./generate-tab.styled";
 import {
   ProgressBar,
@@ -31,6 +27,7 @@ import {
   ActionButton,
   ScrollableGrid,
   TimeEstimate,
+  UprezSelect,
 } from "./results-tab.styled";
 
 const BATCH_SIZE = 5;
@@ -39,6 +36,8 @@ const UPREZ_MODEL_LABELS: Record<UprezModel, string> = {
   uprez: "Current Uprez",
   "nvidia-uprez": "Nvidia Super Resolution",
 };
+
+const UPREZ_MODELS: UprezModel[] = ["uprez", "nvidia-uprez"];
 
 export const ResultsTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
@@ -511,17 +510,16 @@ export const ResultsTab: React.FC = () => {
               : "Select All for Uprez"}
           </ActionButton>
         )}
-        <StyledSelect
+        <UprezSelect
           value={uprezModel}
           onChange={(e) => setUprezModel(e.target.value as UprezModel)}
-          style={{ width: "auto", minWidth: 180 }}
         >
-          {(Object.keys(UPREZ_MODEL_LABELS) as UprezModel[]).map((m) => (
+          {UPREZ_MODELS.map((m) => (
             <option key={m} value={m}>
               {UPREZ_MODEL_LABELS[m]}
             </option>
           ))}
-        </StyledSelect>
+        </UprezSelect>
         <ActionButton
           $variant="primary"
           disabled={uprezCount === 0 || isUprezzing}

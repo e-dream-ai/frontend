@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/client/axios.client";
 import useAuth from "@/hooks/useAuth";
@@ -31,12 +32,15 @@ export const useUserPlaylists = () => {
     { enabled: Boolean(user?.uuid) },
   );
 
-  const addPlaylistToCache = (playlist: PlaylistSummary) => {
-    queryClient.setQueryData<PlaylistSummary[]>(
-      [USER_PLAYLISTS_KEY, user?.uuid],
-      (old) => (old ? [playlist, ...old] : [playlist]),
-    );
-  };
+  const addPlaylistToCache = useCallback(
+    (playlist: PlaylistSummary) => {
+      queryClient.setQueryData<PlaylistSummary[]>(
+        [USER_PLAYLISTS_KEY, user?.uuid],
+        (old) => (old ? [playlist, ...old] : [playlist]),
+      );
+    },
+    [queryClient, user?.uuid],
+  );
 
   return { ...query, playlists: query.data ?? [], addPlaylistToCache };
 };

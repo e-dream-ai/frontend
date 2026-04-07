@@ -1,11 +1,20 @@
-import React from "react";
+import React, { lazy, Suspense } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import { StudioTabs } from "./components/studio-tabs";
-import { ImagesTab } from "./components/images-tab";
-import { ActionsTab } from "./components/actions-tab";
-import { GenerateTab } from "./components/generate-tab";
-import { ResultsTab } from "./components/results-tab";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
+
+const ImagesTab = lazy(() =>
+  import("./components/images-tab").then((m) => ({ default: m.ImagesTab })),
+);
+const ActionsTab = lazy(() =>
+  import("./components/actions-tab").then((m) => ({ default: m.ActionsTab })),
+);
+const GenerateTab = lazy(() =>
+  import("./components/generate-tab").then((m) => ({ default: m.GenerateTab })),
+);
+const ResultsTab = lazy(() =>
+  import("./components/results-tab").then((m) => ({ default: m.ResultsTab })),
+);
 import {
   StudioContainer,
   StudioHeader,
@@ -42,10 +51,12 @@ export const StudioPage: React.FC = () => {
         )}
       </StudioHeader>
       <StudioTabs />
-      {activeTab === "images" && <ImagesTab />}
-      {activeTab === "actions" && <ActionsTab />}
-      {activeTab === "generate" && <GenerateTab />}
-      {activeTab === "results" && <ResultsTab />}
+      <Suspense fallback={null}>
+        {activeTab === "images" && <ImagesTab />}
+        {activeTab === "actions" && <ActionsTab />}
+        {activeTab === "generate" && <GenerateTab />}
+        {activeTab === "results" && <ResultsTab />}
+      </Suspense>
     </StudioContainer>
   );
 };

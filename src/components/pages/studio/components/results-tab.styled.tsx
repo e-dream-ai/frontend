@@ -101,6 +101,19 @@ export const TimeEstimate = styled.span`
   color: #888;
 `;
 
+export const UprezSelect = styled.select`
+  padding: 0.5rem 0.75rem;
+  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
+  border-radius: 6px;
+  background: ${(props) =>
+    props.theme.colorBackgroundSecondary || "transparent"};
+  color: ${(props) => props.theme.textPrimaryColor};
+  font-size: 0.8125rem;
+  cursor: pointer;
+  width: auto;
+  min-width: 180px;
+`;
+
 export const ActionButton = styled.button<{
   $variant?: "primary" | "secondary";
 }>`

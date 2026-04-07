@@ -40,6 +40,8 @@ const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
   "wan-i2v": "Wan I2V",
 };
 
+const VIDEO_MODELS: VideoModel[] = ["ltx-i2v", "wan-i2v"];
+
 const STEPS_OPTIONS = [20, 25, 30, 40];
 const GUIDANCE_OPTIONS = [3.0, 4.0, 5.0, 6.0, 7.0];
 
@@ -203,7 +205,7 @@ export const GenerateTab: React.FC = () => {
                 setVideoGenParams({ model: e.target.value as VideoModel })
               }
             >
-              {(Object.keys(VIDEO_MODEL_LABELS) as VideoModel[]).map((m) => (
+              {VIDEO_MODELS.map((m) => (
                 <option key={m} value={m}>
                   {VIDEO_MODEL_LABELS[m]}
                 </option>
