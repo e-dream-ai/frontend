@@ -32,6 +32,15 @@ export const ActionsTab: React.FC = () => {
   const loadPresetPack = useStudioStore((s) => s.loadPresetPack);
   const images = useStudioStore((s) => s.images);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
+  const videoGenParams = useStudioStore((s) => s.videoGenParams);
+
+  const filteredPresets = useMemo(
+    () =>
+      ACTION_PRESETS.filter(
+        (p) => p.model === videoGenParams.model || p.model === "all",
+      ),
+    [videoGenParams.model],
+  );
 
   const selectedImageCount = useMemo(
     () =>
@@ -102,7 +111,7 @@ export const ActionsTab: React.FC = () => {
             <option value="" disabled>
               Load Preset Pack...
             </option>
-            {ACTION_PRESETS.map((preset) => (
+            {filteredPresets.map((preset) => (
               <option key={preset.name} value={preset.name}>
                 {preset.name}
               </option>

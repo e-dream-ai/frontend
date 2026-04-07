@@ -5,8 +5,9 @@ import type {
   StudioImage,
   StudioAction,
   StudioJob,
-  QwenParams,
-  WanI2VParams,
+  ImageGenParams,
+  VideoGenParams,
+  UprezModel,
 } from "@/types/studio.types";
 
 type StudioState = {
@@ -15,8 +16,8 @@ type StudioState = {
 
   imagePrompt: string;
   setImagePrompt: (prompt: string) => void;
-  qwenParams: QwenParams;
-  setQwenParams: (params: Partial<QwenParams>) => void;
+  imageGenParams: ImageGenParams;
+  setImageGenParams: (params: Partial<ImageGenParams>) => void;
   images: StudioImage[];
   addImage: (image: StudioImage) => void;
   updateImage: (uuid: string, updates: Partial<StudioImage>) => void;
@@ -35,10 +36,12 @@ type StudioState = {
   toggleActionEnabled: (id: string) => void;
   loadPresetPack: (actions: StudioAction[]) => void;
 
-  wanParams: WanI2VParams;
-  setWanParams: (params: Partial<WanI2VParams>) => void;
+  videoGenParams: VideoGenParams;
+  setVideoGenParams: (params: Partial<VideoGenParams>) => void;
   outputPlaylistId: string | null;
   setOutputPlaylistId: (id: string | null) => void;
+  uprezModel: UprezModel;
+  setUprezModel: (model: UprezModel) => void;
   uprezPlaylistId: string | null;
   setUprezPlaylistId: (id: string | null) => void;
 
@@ -60,8 +63,13 @@ type StudioState = {
   resetSession: () => void;
 };
 
-const DEFAULT_QWEN_PARAMS: QwenParams = { seedCount: 8, size: "1280*720" };
-const DEFAULT_WAN_PARAMS: WanI2VParams = {
+const DEFAULT_IMAGE_GEN_PARAMS: ImageGenParams = {
+  model: "qwen-image",
+  seedCount: 8,
+  size: "1280*720",
+};
+const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
+  model: "wan-i2v",
   duration: 5,
   numInferenceSteps: 30,
   guidance: 5.0,
@@ -78,9 +86,9 @@ export const useStudioStore = create<StudioState>()(
 
       imagePrompt: "",
       setImagePrompt: (prompt: string) => set({ imagePrompt: prompt }),
-      qwenParams: DEFAULT_QWEN_PARAMS,
-      setQwenParams: (params: Partial<QwenParams>) =>
-        set((s) => ({ qwenParams: { ...s.qwenParams, ...params } })),
+      imageGenParams: DEFAULT_IMAGE_GEN_PARAMS,
+      setImageGenParams: (params: Partial<ImageGenParams>) =>
+        set((s) => ({ imageGenParams: { ...s.imageGenParams, ...params } })),
       images: [] as StudioImage[],
       addImage: (image: StudioImage) =>
         set((s) => ({ images: [...s.images, image] })),
@@ -132,11 +140,13 @@ export const useStudioStore = create<StudioState>()(
       loadPresetPack: (newActions: StudioAction[]) =>
         set((s) => ({ actions: [...s.actions, ...newActions] })),
 
-      wanParams: DEFAULT_WAN_PARAMS,
-      setWanParams: (params: Partial<WanI2VParams>) =>
-        set((s) => ({ wanParams: { ...s.wanParams, ...params } })),
+      videoGenParams: DEFAULT_VIDEO_GEN_PARAMS,
+      setVideoGenParams: (params: Partial<VideoGenParams>) =>
+        set((s) => ({ videoGenParams: { ...s.videoGenParams, ...params } })),
       outputPlaylistId: null,
       setOutputPlaylistId: (id: string | null) => set({ outputPlaylistId: id }),
+      uprezModel: "uprez" as UprezModel,
+      setUprezModel: (model: UprezModel) => set({ uprezModel: model }),
       uprezPlaylistId: null,
       setUprezPlaylistId: (id: string | null) => set({ uprezPlaylistId: id }),
 
@@ -180,7 +190,10 @@ export const useStudioStore = create<StudioState>()(
       selectAllJobsForUprez: () =>
         set((s) => ({
           jobs: s.jobs.map((j) =>
-            j.status === "processed" && j.jobType !== "uprez" && !j.uprezed
+            j.status === "processed" &&
+            j.jobType !== "uprez" &&
+            j.jobType !== "nvidia-uprez" &&
+            !j.uprezed
               ? { ...j, selectedForUprez: true }
               : j,
           ),
@@ -199,10 +212,11 @@ export const useStudioStore = create<StudioState>()(
         set({
           activeTab: "images" as StudioTab,
           imagePrompt: "",
-          qwenParams: DEFAULT_QWEN_PARAMS,
+          imageGenParams: DEFAULT_IMAGE_GEN_PARAMS,
           images: [],
           actions: [],
-          wanParams: DEFAULT_WAN_PARAMS,
+          videoGenParams: DEFAULT_VIDEO_GEN_PARAMS,
+          uprezModel: "uprez" as UprezModel,
           outputPlaylistId: null,
           uprezPlaylistId: null,
           excludedCombos: new Set<string>(),
@@ -213,17 +227,18 @@ export const useStudioStore = create<StudioState>()(
     }),
     {
       name: "studio-session",
-      version: 2,
+      version: 4,
       partialize: (state) => ({
         activeTab: state.activeTab,
         imagePrompt: state.imagePrompt,
-        qwenParams: state.qwenParams,
+        imageGenParams: state.imageGenParams,
         images: state.images.map((img) => ({
           ...img,
           previewFrame: undefined,
         })),
         actions: state.actions,
-        wanParams: state.wanParams,
+        videoGenParams: state.videoGenParams,
+        uprezModel: state.uprezModel,
         outputPlaylistId: state.outputPlaylistId,
         uprezPlaylistId: state.uprezPlaylistId,
         excludedCombos: [...(state.excludedCombos as Set<string>)],
@@ -268,6 +283,26 @@ export const useStudioStore = create<StudioState>()(
                 j.jobType ??
                 (j.actionId?.startsWith("uprez-") ? "uprez" : "wan-i2v"),
             }));
+          }
+        }
+        if (version < 3) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const qp = state.qwenParams as any;
+          if (qp) {
+            state.imageGenParams = { ...DEFAULT_IMAGE_GEN_PARAMS, ...qp };
+            delete state.qwenParams;
+          } else {
+            state.imageGenParams = { ...DEFAULT_IMAGE_GEN_PARAMS };
+          }
+        }
+        if (version < 4) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const wp = state.wanParams as any;
+          if (wp) {
+            state.videoGenParams = { ...DEFAULT_VIDEO_GEN_PARAMS, ...wp };
+            delete state.wanParams;
+          } else {
+            state.videoGenParams = { ...DEFAULT_VIDEO_GEN_PARAMS };
           }
         }
         return state as Record<string, unknown>;

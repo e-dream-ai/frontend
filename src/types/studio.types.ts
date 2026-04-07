@@ -25,7 +25,11 @@ export interface StudioAction {
   lowNoiseLoras?: LoRAConfig[];
 }
 
-export type StudioJobType = "wan-i2v" | "uprez";
+export type VideoModel = "wan-i2v" | "ltx-i2v";
+
+export type UprezModel = "uprez" | "nvidia-uprez";
+
+export type StudioJobType = "wan-i2v" | "ltx-i2v" | "uprez" | "nvidia-uprez";
 
 export interface StudioJob {
   imageId: string;
@@ -42,13 +46,17 @@ export interface StudioJob {
   completedAt?: number;
 }
 
-export interface WanI2VParams {
+export interface VideoGenParams {
+  model: VideoModel;
   duration: number;
   numInferenceSteps: number;
   guidance: number;
 }
 
-export interface QwenParams {
+export type ImageModel = "qwen-image" | "z-image-turbo";
+
+export interface ImageGenParams {
+  model: ImageModel;
   seedCount: number;
   size: string;
 }

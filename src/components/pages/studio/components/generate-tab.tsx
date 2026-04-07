@@ -3,9 +3,11 @@ import { useStudioStore } from "@/stores/studio.store";
 import { useBatchSubmit } from "../hooks/useBatchSubmit";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import { axiosClient } from "@/client/axios.client";
+import type { VideoModel } from "@/types/studio.types";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
+  hasActionLoras,
 } from "../constants/duration-options";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import {
@@ -30,7 +32,15 @@ import {
   DescriptionText,
   SubmittedLabel,
   ComboCountText,
+  HintText,
 } from "./generate-tab.styled";
+
+const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
+  "ltx-i2v": "LTX 2.3",
+  "wan-i2v": "Wan I2V",
+};
+
+const VIDEO_MODELS: VideoModel[] = ["ltx-i2v", "wan-i2v"];
 
 const STEPS_OPTIONS = [20, 25, 30, 40];
 const GUIDANCE_OPTIONS = [3.0, 4.0, 5.0, 6.0, 7.0];
@@ -38,8 +48,8 @@ const GUIDANCE_OPTIONS = [3.0, 4.0, 5.0, 6.0, 7.0];
 export const GenerateTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const actions = useStudioStore((s) => s.actions);
-  const wanParams = useStudioStore((s) => s.wanParams);
-  const setWanParams = useStudioStore((s) => s.setWanParams);
+  const videoGenParams = useStudioStore((s) => s.videoGenParams);
+  const setVideoGenParams = useStudioStore((s) => s.setVideoGenParams);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
   const toggleComboExcluded = useStudioStore((s) => s.toggleComboExcluded);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
@@ -64,19 +74,31 @@ export const GenerateTab: React.FC = () => {
     [getSelectedCombinations],
   );
   const durationOptions = useMemo(
-    () => getAllowedDurationsForActions(newCombos.map(({ action }) => action)),
-    [newCombos],
+    () =>
+      getAllowedDurationsForActions(
+        newCombos.map(({ action }) => action),
+        videoGenParams.model,
+      ),
+    [newCombos, videoGenParams.model],
   );
+
+  const showLtxHint = useMemo(() => {
+    if (videoGenParams.model !== "ltx-i2v") return false;
+    return (
+      enabledActions.length > 0 &&
+      enabledActions.some((a) => !hasActionLoras(a))
+    );
+  }, [videoGenParams.model, enabledActions]);
 
   useEffect(() => {
     const nextDuration = clampDurationToAllowed(
-      wanParams.duration,
+      videoGenParams.duration,
       durationOptions,
     );
-    if (nextDuration !== wanParams.duration) {
-      setWanParams({ duration: nextDuration });
+    if (nextDuration !== videoGenParams.duration) {
+      setVideoGenParams({ duration: nextDuration });
     }
-  }, [durationOptions, wanParams.duration, setWanParams]);
+  }, [durationOptions, videoGenParams.duration, setVideoGenParams]);
 
   const totalPossible = selectedImages.length * enabledActions.length;
 
@@ -168,13 +190,34 @@ export const GenerateTab: React.FC = () => {
 
       <GenerateSection>
         <SectionTitle>Output Settings</SectionTitle>
+        {showLtxHint && (
+          <HintText>
+            LTX works best with motion presets. Add a camera LoRA for better
+            results.
+          </HintText>
+        )}
         <SettingsGrid>
+          <FormField>
+            <FieldLabel>Model:</FieldLabel>
+            <StyledSelect
+              value={videoGenParams.model}
+              onChange={(e) =>
+                setVideoGenParams({ model: e.target.value as VideoModel })
+              }
+            >
+              {VIDEO_MODELS.map((m) => (
+                <option key={m} value={m}>
+                  {VIDEO_MODEL_LABELS[m]}
+                </option>
+              ))}
+            </StyledSelect>
+          </FormField>
           <FormField>
             <FieldLabel>Duration:</FieldLabel>
             <StyledSelect
-              value={wanParams.duration}
+              value={videoGenParams.duration}
               onChange={(e) =>
-                setWanParams({ duration: Number(e.target.value) })
+                setVideoGenParams({ duration: Number(e.target.value) })
               }
             >
               {durationOptions.map((d) => (
@@ -187,9 +230,9 @@ export const GenerateTab: React.FC = () => {
           <FormField>
             <FieldLabel>Steps:</FieldLabel>
             <StyledSelect
-              value={wanParams.numInferenceSteps}
+              value={videoGenParams.numInferenceSteps}
               onChange={(e) =>
-                setWanParams({ numInferenceSteps: Number(e.target.value) })
+                setVideoGenParams({ numInferenceSteps: Number(e.target.value) })
               }
             >
               {STEPS_OPTIONS.map((s) => (
@@ -202,9 +245,9 @@ export const GenerateTab: React.FC = () => {
           <FormField>
             <FieldLabel>Guidance:</FieldLabel>
             <StyledSelect
-              value={wanParams.guidance}
+              value={videoGenParams.guidance}
               onChange={(e) =>
-                setWanParams({ guidance: Number(e.target.value) })
+                setVideoGenParams({ guidance: Number(e.target.value) })
               }
             >
               {GUIDANCE_OPTIONS.map((g) => (

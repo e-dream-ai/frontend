@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 
 export interface PresetPack {
   name: string;
+  model: "wan-i2v" | "ltx-i2v" | "all";
   actions: Omit<StudioAction, "id">[];
 }
 
@@ -14,10 +15,11 @@ const loraUrl = (repo: string, file: string) =>
 export const ACTION_PRESETS: PresetPack[] = [
   {
     name: "Camera Basics",
+    model: "wan-i2v",
     actions: [
       {
         prompt: "slow zoom in, camera gently pushing forward",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl("zoom_in_lora", "wan22_14b_i2v_zoom_in.safetensors"),
@@ -27,7 +29,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "slow zoom out, camera pulling back to reveal",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -40,7 +42,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan left to right, smooth motion",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -53,7 +55,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan right to left, smooth motion",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -66,7 +68,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan upward, revealing sky",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl("tilt_up_lora", "wan22_14b_i2v_tilt_up.safetensors"),
@@ -76,7 +78,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan downward, descending",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -93,11 +95,12 @@ export const ACTION_PRESETS: PresetPack[] = [
   },
   {
     name: "Cinematic",
+    model: "wan-i2v",
     actions: [
       { prompt: "dolly forward, smooth cinematic approach", enabled: true },
       {
         prompt: "orbit around subject, 180 degrees, smooth motion",
-        enabled: true,
+        enabled: false,
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -120,13 +123,70 @@ export const ACTION_PRESETS: PresetPack[] = [
       { prompt: "crane up, rising above the scene", enabled: true },
       {
         prompt: "tracking shot, following motion left to right",
-        enabled: true,
+        enabled: false,
       },
       { prompt: "rack focus, shifting depth of field", enabled: true },
     ],
   },
   {
+    name: "LTX Camera",
+    model: "ltx-i2v",
+    actions: [
+      {
+        prompt: "static camera, subtle ambient movement",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-static.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+      {
+        prompt: "slow dolly in, camera pushing forward into the scene",
+        enabled: false,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-dolly-in.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+      {
+        prompt: "slow dolly out, camera pulling back to reveal",
+        enabled: false,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-dolly-out.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+      {
+        prompt: "jib up, camera rising above the scene",
+        enabled: false,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-jib-up.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+      {
+        prompt: "jib down, camera descending into the scene",
+        enabled: false,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-jib-down.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+    ],
+  },
+  {
     name: "Organic",
+    model: "all",
     actions: [
       { prompt: "gentle breathing motion, subtle life", enabled: true },
       { prompt: "subtle sway, natural wind movement", enabled: true },
@@ -136,6 +196,7 @@ export const ACTION_PRESETS: PresetPack[] = [
   },
   {
     name: "Abstract",
+    model: "all",
     actions: [
       { prompt: "morph and flow, organic transformation", enabled: true },
       { prompt: "color shift, gradual hue rotation", enabled: true },
