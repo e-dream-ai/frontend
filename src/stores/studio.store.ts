@@ -190,7 +190,10 @@ export const useStudioStore = create<StudioState>()(
       selectAllJobsForUprez: () =>
         set((s) => ({
           jobs: s.jobs.map((j) =>
-            j.status === "processed" && j.jobType !== "uprez" && !j.uprezed
+            j.status === "processed" &&
+            j.jobType !== "uprez" &&
+            j.jobType !== "nvidia-uprez" &&
+            !j.uprezed
               ? { ...j, selectedForUprez: true }
               : j,
           ),
@@ -286,16 +289,20 @@ export const useStudioStore = create<StudioState>()(
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const qp = state.qwenParams as any;
           if (qp) {
-            state.imageGenParams = { model: "qwen-image", ...qp };
+            state.imageGenParams = { ...DEFAULT_IMAGE_GEN_PARAMS, ...qp };
             delete state.qwenParams;
+          } else {
+            state.imageGenParams = { ...DEFAULT_IMAGE_GEN_PARAMS };
           }
         }
         if (version < 4) {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const wp = state.wanParams as any;
           if (wp) {
-            state.videoGenParams = { model: "wan-i2v", ...wp };
+            state.videoGenParams = { ...DEFAULT_VIDEO_GEN_PARAMS, ...wp };
             delete state.wanParams;
+          } else {
+            state.videoGenParams = { ...DEFAULT_VIDEO_GEN_PARAMS };
           }
         }
         return state as Record<string, unknown>;

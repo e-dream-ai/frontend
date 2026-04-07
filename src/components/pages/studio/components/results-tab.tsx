@@ -8,8 +8,8 @@ import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
-  hasActionLoras,
 } from "../constants/duration-options";
+import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import {
   GenerateSection,
@@ -191,13 +191,13 @@ export const ResultsTab: React.FC = () => {
             const algoParams =
               uprezModel === "nvidia-uprez"
                 ? {
-                    infinidream_algorithm: "nvidia-uprez" as const,
+                    infinidream_algorithm: "nvidia-uprez",
                     video_uuid: job.dreamUuid,
                     upscale_factor: 2,
-                    quality: "HIGH" as const,
+                    quality: "HIGH",
                   }
                 : {
-                    infinidream_algorithm: "uprez" as const,
+                    infinidream_algorithm: "uprez",
                     video_uuid: job.dreamUuid,
                     upscale_factor: 2,
                     interpolation_factor: 2,
@@ -288,42 +288,23 @@ export const ResultsTab: React.FC = () => {
             const action = actions.find((a) => a.id === job.actionId);
             if (!image || !action) return;
 
-            const hasLoras = hasActionLoras(action);
+            // Use the original job's model for retry, not the current selection
+            const retryModel =
+              job.jobType === "wan-i2v" || job.jobType === "ltx-i2v"
+                ? job.jobType
+                : videoGenParams.model;
+
             const batchIdentifier = createComboKey(image.uuid, action.prompt);
 
-            let algoParams: Record<string, unknown>;
-            if (videoGenParams.model === "ltx-i2v") {
-              algoParams = {
-                infinidream_algorithm: "ltx-i2v" as const,
-                prompt: action.prompt,
-                image: image.uuid,
-                duration,
-                num_inference_steps: videoGenParams.numInferenceSteps,
-                guidance: videoGenParams.guidance,
-              };
-            } else if (hasLoras) {
-              algoParams = {
-                infinidream_algorithm: "wan-i2v-lora" as const,
-                prompt: action.prompt,
-                image: image.uuid,
-                duration,
-                num_inference_steps: videoGenParams.numInferenceSteps,
-                guidance: videoGenParams.guidance,
-                seed: -1,
-                high_noise_loras: action.highNoiseLoras ?? [],
-                low_noise_loras: action.lowNoiseLoras ?? [],
-              };
-            } else {
-              algoParams = {
-                infinidream_algorithm: "wan-i2v" as const,
-                prompt: action.prompt,
-                image: image.uuid,
-                size: image.size || "1280*720",
-                duration,
-                num_inference_steps: videoGenParams.numInferenceSteps,
-                guidance: videoGenParams.guidance,
-              };
-            }
+            const algoParams = buildVideoAlgoParams({
+              model: retryModel,
+              action,
+              imageUuid: image.uuid,
+              imageSize: image.size,
+              duration,
+              numInferenceSteps: videoGenParams.numInferenceSteps,
+              guidance: videoGenParams.guidance,
+            });
 
             const response = await createDream.mutateAsync({
               name: `${image.name} - ${action.prompt.slice(0, 40)}`,
@@ -339,7 +320,7 @@ export const ResultsTab: React.FC = () => {
               imageId: job.imageId,
               actionId: job.actionId,
               dreamUuid: dream.uuid,
-              jobType: videoGenParams.model,
+              jobType: retryModel,
               status: (dream.status as StudioJob["status"]) || "queue",
               selectedForUprez: false,
             });

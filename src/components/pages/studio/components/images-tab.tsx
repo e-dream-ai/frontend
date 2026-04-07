@@ -2,7 +2,11 @@ import React, { useCallback, useMemo, useState } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import { axiosClient } from "@/client/axios.client";
 import type { StudioImage, ImageModel } from "@/types/studio.types";
-import { SIZE_OPTIONS, IMAGE_COUNT_OPTIONS } from "../constants/size-options";
+import {
+  SIZE_OPTIONS,
+  IMAGE_COUNT_OPTIONS,
+  clampSizeToModel,
+} from "../constants/size-options";
 import {
   GenerateSection,
   SectionTitle,
@@ -113,7 +117,7 @@ export const ImagesTab: React.FC = () => {
 
     await Promise.all(promises);
     setIsGenerating(false);
-  }, [imagePrompt, imageGenParams, images.length, addImage]);
+  }, [imagePrompt, imageGenParams, images.length, addImage, setIsGenerating]);
 
   return (
     <>
@@ -129,9 +133,13 @@ export const ImagesTab: React.FC = () => {
             <FieldLabel>Model:</FieldLabel>
             <StyledSelect
               value={imageGenParams.model}
-              onChange={(e) =>
-                setImageGenParams({ model: e.target.value as ImageModel })
-              }
+              onChange={(e) => {
+                const newModel = e.target.value as ImageModel;
+                setImageGenParams({
+                  model: newModel,
+                  size: clampSizeToModel(imageGenParams.size, newModel),
+                });
+              }}
             >
               {(Object.keys(MODEL_LABELS) as ImageModel[]).map((m) => (
                 <option key={m} value={m}>

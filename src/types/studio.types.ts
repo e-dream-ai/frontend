@@ -46,12 +46,6 @@ export interface StudioJob {
   completedAt?: number;
 }
 
-export interface WanI2VParams {
-  duration: number;
-  numInferenceSteps: number;
-  guidance: number;
-}
-
 export interface VideoGenParams {
   model: VideoModel;
   duration: number;

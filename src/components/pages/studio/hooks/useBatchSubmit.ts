@@ -6,8 +6,8 @@ import { createComboKey } from "@/types/studio.types";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
-  hasActionLoras,
 } from "../constants/duration-options";
+import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 
 // Serialized to avoid concurrent auth refresh races (see fix/session-refresh-race on backend)
 const BATCH_SIZE = 1;
@@ -86,41 +86,16 @@ export const useBatchSubmit = () => {
         const results = await Promise.allSettled(
           batch.map(async ({ image, action }) => {
             const batchIdentifier = createComboKey(image.uuid, action.prompt);
-            const hasLoras = hasActionLoras(action);
 
-            let algoParams: Record<string, unknown>;
-            if (videoGenParams.model === "ltx-i2v") {
-              algoParams = {
-                infinidream_algorithm: "ltx-i2v" as const,
-                prompt: action.prompt,
-                image: image.uuid,
-                duration,
-                num_inference_steps: videoGenParams.numInferenceSteps,
-                guidance: videoGenParams.guidance,
-              };
-            } else if (hasLoras) {
-              algoParams = {
-                infinidream_algorithm: "wan-i2v-lora" as const,
-                prompt: action.prompt,
-                image: image.uuid,
-                duration,
-                num_inference_steps: videoGenParams.numInferenceSteps,
-                guidance: videoGenParams.guidance,
-                seed: -1,
-                high_noise_loras: action.highNoiseLoras ?? [],
-                low_noise_loras: action.lowNoiseLoras ?? [],
-              };
-            } else {
-              algoParams = {
-                infinidream_algorithm: "wan-i2v" as const,
-                prompt: action.prompt,
-                image: image.uuid,
-                size: image.size || "1280*720",
-                duration,
-                num_inference_steps: videoGenParams.numInferenceSteps,
-                guidance: videoGenParams.guidance,
-              };
-            }
+            const algoParams = buildVideoAlgoParams({
+              model: videoGenParams.model,
+              action,
+              imageUuid: image.uuid,
+              imageSize: image.size,
+              duration,
+              numInferenceSteps: videoGenParams.numInferenceSteps,
+              guidance: videoGenParams.guidance,
+            });
 
             const response = await createDream.mutateAsync({
               name: `${image.name} - ${action.prompt.slice(0, 40)}`,

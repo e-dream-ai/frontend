@@ -82,9 +82,11 @@ export const GenerateTab: React.FC = () => {
 
   const showLtxHint = useMemo(() => {
     if (videoGenParams.model !== "ltx-i2v") return false;
-    const enabled = actions.filter((a) => a.enabled && a.prompt.trim());
-    return enabled.length > 0 && enabled.every((a) => !hasActionLoras(a));
-  }, [videoGenParams.model, actions]);
+    return (
+      enabledActions.length > 0 &&
+      enabledActions.some((a) => !hasActionLoras(a))
+    );
+  }, [videoGenParams.model, enabledActions]);
 
   useEffect(() => {
     const nextDuration = clampDurationToAllowed(

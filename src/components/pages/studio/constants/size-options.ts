@@ -19,3 +19,11 @@ export const SIZE_OPTIONS: Record<ImageModel, readonly string[]> = {
 };
 
 export const IMAGE_COUNT_OPTIONS = [1, 4, 8, 12, 16, 24] as const;
+
+export const clampSizeToModel = (
+  currentSize: string,
+  model: ImageModel,
+): string => {
+  const sizes = SIZE_OPTIONS[model];
+  return sizes.includes(currentSize) ? currentSize : sizes[0];
+};
