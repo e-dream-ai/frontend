@@ -118,7 +118,7 @@ describe("studio.store", () => {
       const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
       const migrated = migrate?.(v2State, 2) as Record<string, unknown>;
       expect(migrated.imageGenParams).toEqual({
-        model: "qwen-image",
+        model: "z-image-turbo",
         seedCount: 8,
         size: "1280*720",
       });
@@ -135,7 +135,7 @@ describe("studio.store", () => {
       const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
       const migrated = migrate(v3State, 3) as Record<string, unknown>;
       expect(migrated.videoGenParams).toEqual({
-        model: "wan-i2v",
+        model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
         guidance: 5.0,
@@ -230,7 +230,7 @@ describe("studio.store", () => {
       const migrated = migrate?.(v2State, 2) as Record<string, unknown>;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const params = migrated.imageGenParams as any;
-      expect(params.model).toBe("qwen-image");
+      expect(params.model).toBe("z-image-turbo");
       expect(params.seedCount).toBe(4);
       expect(params.size).toBe("1280*720"); // from defaults
     });
@@ -242,7 +242,7 @@ describe("studio.store", () => {
       const migrated = migrate?.(v2State, 2) as Record<string, unknown>;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const params = migrated.imageGenParams as any;
-      expect(params.model).toBe("qwen-image");
+      expect(params.model).toBe("z-image-turbo");
       expect(params.seedCount).toBe(8);
       expect(params.size).toBe("1280*720");
     });
@@ -258,7 +258,7 @@ describe("studio.store", () => {
       const migrated = migrate(v3State, 3) as Record<string, unknown>;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const params = migrated.videoGenParams as any;
-      expect(params.model).toBe("wan-i2v");
+      expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(8);
       expect(params.numInferenceSteps).toBe(30); // from defaults
       expect(params.guidance).toBe(5.0); // from defaults
@@ -271,10 +271,65 @@ describe("studio.store", () => {
       const migrated = migrate(v3State, 3) as Record<string, unknown>;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const params = migrated.videoGenParams as any;
-      expect(params.model).toBe("wan-i2v");
+      expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(5);
       expect(params.numInferenceSteps).toBe(30);
       expect(params.guidance).toBe(5.0);
+    });
+  });
+
+  describe("migration v4 → v5", () => {
+    it("moves untouched legacy defaults to z-image-turbo and ltx-i2v", () => {
+      const v4State = {
+        imageGenParams: {
+          model: "qwen-image",
+          seedCount: 8,
+          size: "1280*720",
+        },
+        videoGenParams: {
+          model: "wan-i2v",
+          duration: 5,
+          numInferenceSteps: 30,
+          guidance: 5.0,
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v4State, 4) as Record<string, unknown>;
+
+      expect(migrated.imageGenParams).toEqual({
+        model: "z-image-turbo",
+        seedCount: 8,
+        size: "1280*720",
+      });
+      expect(migrated.videoGenParams).toEqual({
+        model: "ltx-i2v",
+        duration: 5,
+        numInferenceSteps: 30,
+        guidance: 5.0,
+      });
+    });
+
+    it("preserves non-default legacy selections", () => {
+      const v4State = {
+        imageGenParams: {
+          model: "qwen-image",
+          seedCount: 4,
+          size: "1280*720",
+        },
+        videoGenParams: {
+          model: "wan-i2v",
+          duration: 10,
+          numInferenceSteps: 30,
+          guidance: 5.0,
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v4State, 4) as Record<string, unknown>;
+
+      expect(migrated.imageGenParams).toEqual(v4State.imageGenParams);
+      expect(migrated.videoGenParams).toEqual(v4State.videoGenParams);
     });
   });
 

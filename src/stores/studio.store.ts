@@ -64,12 +64,12 @@ type StudioState = {
 };
 
 const DEFAULT_IMAGE_GEN_PARAMS: ImageGenParams = {
-  model: "qwen-image",
+  model: "z-image-turbo",
   seedCount: 8,
   size: "1280*720",
 };
 const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
-  model: "wan-i2v",
+  model: "ltx-i2v",
   duration: 5,
   numInferenceSteps: 30,
   guidance: 5.0,
@@ -227,7 +227,7 @@ export const useStudioStore = create<StudioState>()(
     }),
     {
       name: "studio-session",
-      version: 4,
+      version: 5,
       partialize: (state) => ({
         activeTab: state.activeTab,
         imagePrompt: state.imagePrompt,
@@ -302,6 +302,30 @@ export const useStudioStore = create<StudioState>()(
             state.videoGenParams = { ...DEFAULT_VIDEO_GEN_PARAMS, ...wp };
             delete state.wanParams;
           } else {
+            state.videoGenParams = { ...DEFAULT_VIDEO_GEN_PARAMS };
+          }
+        }
+        if (version < 5) {
+          // Migrate untouched legacy defaults to the new studio defaults.
+          // Preserve any explicit user choices that differ from the old defaults.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const imageGenParams = state.imageGenParams as any;
+          if (
+            imageGenParams?.model === "qwen-image" &&
+            imageGenParams?.seedCount === 8 &&
+            imageGenParams?.size === "1280*720"
+          ) {
+            state.imageGenParams = { ...DEFAULT_IMAGE_GEN_PARAMS };
+          }
+
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const videoGenParams = state.videoGenParams as any;
+          if (
+            videoGenParams?.model === "wan-i2v" &&
+            videoGenParams?.duration === 5 &&
+            videoGenParams?.numInferenceSteps === 30 &&
+            videoGenParams?.guidance === 5.0
+          ) {
             state.videoGenParams = { ...DEFAULT_VIDEO_GEN_PARAMS };
           }
         }

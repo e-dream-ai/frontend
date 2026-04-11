@@ -145,7 +145,9 @@ export const GenerateTab: React.FC = () => {
                     const excluded = excludedCombos.has(comboKey);
                     const existingJob = jobs.find(
                       (j) =>
-                        j.imageId === image.uuid && j.actionId === action.id,
+                        j.imageId === image.uuid &&
+                        j.actionId === action.id &&
+                        j.jobType === videoGenParams.model,
                     );
 
                     return (

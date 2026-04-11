@@ -33,7 +33,9 @@ export const useBatchSubmit = () => {
     const enabledActions = actions.filter((a) => a.enabled && a.prompt.trim());
 
     const existingJobKeys = new Set(
-      jobs.map((j) => `${j.imageId}:${j.actionId}`),
+      jobs
+        .filter((j) => j.jobType === videoGenParams.model)
+        .map((j) => `${j.imageId}:${j.actionId}`),
     );
 
     const combos: Array<{
@@ -51,7 +53,7 @@ export const useBatchSubmit = () => {
     }
 
     return combos;
-  }, [images, actions, excludedCombos, jobs]);
+  }, [images, actions, excludedCombos, jobs, videoGenParams.model]);
 
   const submit = useCallback(async () => {
     setIsSubmitting(true);
@@ -105,6 +107,19 @@ export const useBatchSubmit = () => {
 
             const dream = response.data?.dream;
             if (!dream) return;
+
+            const existingJob = useStudioStore
+              .getState()
+              .jobs.find(
+                (j) =>
+                  j.imageId === image.uuid &&
+                  j.actionId === action.id &&
+                  j.jobType !== "uprez" &&
+                  j.jobType !== "nvidia-uprez",
+              );
+            if (existingJob) {
+              useStudioStore.getState().removeJob(existingJob.dreamUuid);
+            }
 
             addJob({
               imageId: image.uuid,
