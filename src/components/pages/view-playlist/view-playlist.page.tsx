@@ -1076,6 +1076,7 @@ export const ViewPlaylistPage = () => {
                     return (
                       <PlaylistTab
                         key={tab}
+                        type="button"
                         $active={radioGroupState === tab}
                         onClick={() => handleRadioButtonGroupChange(tab)}
                       >
@@ -1102,6 +1103,7 @@ export const ViewPlaylistPage = () => {
                 {(radioGroupState === "items" ||
                   radioGroupState === "keyframes") && (
                   <JumpToEndButton
+                    type="button"
                     onClick={handleJumpToEndClick}
                     disabled={
                       isJumpingToEnd ||
