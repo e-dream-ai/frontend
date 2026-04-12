@@ -6,8 +6,8 @@ import { createComboKey } from "@/types/studio.types";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
-  hasActionLoras,
 } from "../constants/duration-options";
+import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 
 // Serialized to avoid concurrent auth refresh races (see fix/session-refresh-race on backend)
 const BATCH_SIZE = 1;
@@ -15,7 +15,7 @@ const BATCH_SIZE = 1;
 export const useBatchSubmit = () => {
   const images = useStudioStore((s) => s.images);
   const actions = useStudioStore((s) => s.actions);
-  const wanParams = useStudioStore((s) => s.wanParams);
+  const videoGenParams = useStudioStore((s) => s.videoGenParams);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
   const setOutputPlaylistId = useStudioStore((s) => s.setOutputPlaylistId);
@@ -33,7 +33,9 @@ export const useBatchSubmit = () => {
     const enabledActions = actions.filter((a) => a.enabled && a.prompt.trim());
 
     const existingJobKeys = new Set(
-      jobs.map((j) => `${j.imageId}:${j.actionId}`),
+      jobs
+        .filter((j) => j.jobType === videoGenParams.model)
+        .map((j) => `${j.imageId}:${j.actionId}`),
     );
 
     const combos: Array<{
@@ -51,7 +53,7 @@ export const useBatchSubmit = () => {
     }
 
     return combos;
-  }, [images, actions, excludedCombos, jobs]);
+  }, [images, actions, excludedCombos, jobs, videoGenParams.model]);
 
   const submit = useCallback(async () => {
     setIsSubmitting(true);
@@ -72,9 +74,10 @@ export const useBatchSubmit = () => {
       const combos = getSelectedCombinations();
       const allowedDurations = getAllowedDurationsForActions(
         combos.map(({ action }) => action),
+        videoGenParams.model,
       );
       const duration = clampDurationToAllowed(
-        wanParams.duration,
+        videoGenParams.duration,
         allowedDurations,
       );
       let jobsAdded = 0;
@@ -85,29 +88,16 @@ export const useBatchSubmit = () => {
         const results = await Promise.allSettled(
           batch.map(async ({ image, action }) => {
             const batchIdentifier = createComboKey(image.uuid, action.prompt);
-            const hasLoras = hasActionLoras(action);
 
-            const algoParams = hasLoras
-              ? {
-                  infinidream_algorithm: "wan-i2v-lora" as const,
-                  prompt: action.prompt,
-                  image: image.uuid,
-                  duration,
-                  num_inference_steps: wanParams.numInferenceSteps,
-                  guidance: wanParams.guidance,
-                  seed: -1,
-                  high_noise_loras: action.highNoiseLoras ?? [],
-                  low_noise_loras: action.lowNoiseLoras ?? [],
-                }
-              : {
-                  infinidream_algorithm: "wan-i2v" as const,
-                  prompt: action.prompt,
-                  image: image.uuid,
-                  size: image.size || "1280*720",
-                  duration,
-                  num_inference_steps: wanParams.numInferenceSteps,
-                  guidance: wanParams.guidance,
-                };
+            const algoParams = buildVideoAlgoParams({
+              model: videoGenParams.model,
+              action,
+              imageUuid: image.uuid,
+              imageSize: image.size,
+              duration,
+              numInferenceSteps: videoGenParams.numInferenceSteps,
+              guidance: videoGenParams.guidance,
+            });
 
             const response = await createDream.mutateAsync({
               name: `${image.name} - ${action.prompt.slice(0, 40)}`,
@@ -118,11 +108,24 @@ export const useBatchSubmit = () => {
             const dream = response.data?.dream;
             if (!dream) return;
 
+            const existingJob = useStudioStore
+              .getState()
+              .jobs.find(
+                (j) =>
+                  j.imageId === image.uuid &&
+                  j.actionId === action.id &&
+                  j.jobType !== "uprez" &&
+                  j.jobType !== "nvidia-uprez",
+              );
+            if (existingJob) {
+              useStudioStore.getState().removeJob(existingJob.dreamUuid);
+            }
+
             addJob({
               imageId: image.uuid,
               actionId: action.id,
               dreamUuid: dream.uuid,
-              jobType: "wan-i2v",
+              jobType: videoGenParams.model,
               status:
                 (dream.status as
                   | "queue"
@@ -157,7 +160,7 @@ export const useBatchSubmit = () => {
     outputPlaylistId,
     setOutputPlaylistId,
     getSelectedCombinations,
-    wanParams,
+    videoGenParams,
     createDream,
     addJob,
     setActiveTab,

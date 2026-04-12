@@ -46,8 +46,6 @@ import { toast } from "react-toastify";
 import { Tooltip } from "react-tooltip";
 import { NotFound } from "@/components/shared/not-found/not-found";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
-import RadioButtonGroup from "@/components/shared/radio-button-group/radio-button-group";
-import { TFunction } from "i18next";
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 import Input, { FormInput } from "@/components/shared/input/input";
 import { FormTextArea } from "@/components/shared/text-area/text-area";
@@ -73,31 +71,23 @@ const SectionID = "playlist";
 const JumpToEndButton = styled.button<{ disabled?: boolean }>`
   display: inline-flex;
   width: fit-content;
-  padding: 0.4rem 0.8rem;
-  margin-left: 0.2rem;
-  margin-bottom: 0.6rem;
-  border-radius: 15px;
-  border: none;
-  font-size: inherit;
+  white-space: nowrap;
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  font-size: 0.875rem;
   font-family: inherit;
-  color: ${(props) =>
-    props.disabled ? props.theme.textBodyColor : props.theme.textBodyColor};
-  background-color: ${(props) =>
-    props.disabled
-      ? props.theme.colorBackgroundQuaternary
-      : props.theme.colorBackgroundQuaternary};
+  color: ${(props) => props.theme.textPrimaryColor};
+  background-color: transparent;
   cursor: ${(props) => (props.disabled ? "not-allowed" : "pointer")};
-  opacity: ${(props) => (props.disabled ? 0.5 : 1)};
+  opacity: ${(props) => (props.disabled ? 0.4 : 1)};
   transition:
-    color linear 0.4s,
-    background-color linear 0.4s,
-    border-color linear 0.4s;
+    color 0.2s ease,
+    border-color 0.2s ease;
 
-  :hover {
-    background-color: ${(props) =>
-      props.disabled
-        ? props.theme.colorBackgroundQuaternary
-        : props.theme.colorBackgroundSecondary};
+  &:hover:not([disabled]) {
+    border-color: ${(props) => props.theme.colorPrimary};
+    color: ${(props) => props.theme.colorPrimary};
   }
 `;
 
@@ -169,35 +159,71 @@ const FilmstripRow = styled.div`
 /**
  * Playlist tabs handling
  */
-type PlaylistTabs = "items" | "filmstrips" | "keyframes";
+type PlaylistTabs = "items" | "filmstrips" | "keyframes" | "appears_in";
 
 const PLAYLIST_TABS: Record<Uppercase<PlaylistTabs>, PlaylistTabs> = {
   ITEMS: "items",
   FILMSTRIPS: "filmstrips",
   KEYFRAMES: "keyframes",
+  APPEARS_IN: "appears_in",
 } as const;
 
-const FEED_FILTERS_NAMES: Record<Uppercase<PlaylistTabs>, string> = {
+const PLAYLIST_TAB_LABELS: Record<Uppercase<PlaylistTabs>, string> = {
   ITEMS: "page.view_playlist.items",
   FILMSTRIPS: "page.view_playlist.filmstrips",
   KEYFRAMES: "page.view_playlist.keyframes",
+  APPEARS_IN: "page.view_playlist.playlists",
 };
 
-const getPlaylistTabsFilterData: (
-  t: TFunction,
-) => Array<{ key: string; value: string }> = (t) => {
-  return [
-    { key: t(FEED_FILTERS_NAMES.ITEMS), value: PLAYLIST_TABS.ITEMS.toString() },
-    {
-      key: t(FEED_FILTERS_NAMES.FILMSTRIPS),
-      value: PLAYLIST_TABS.FILMSTRIPS.toString(),
-    },
-    {
-      key: t(FEED_FILTERS_NAMES.KEYFRAMES),
-      value: PLAYLIST_TABS.KEYFRAMES.toString(),
-    },
-  ];
-};
+const PlaylistTabBar = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin: 0.5rem 0 0;
+  flex-wrap: nowrap;
+  overflow-x: auto;
+`;
+
+const PlaylistTab = styled.button<{ $active?: boolean }>`
+  padding: 0.35rem 0.7rem 0.5rem;
+  background: none;
+  border: none;
+  border-bottom: 2px solid
+    ${(p) => (p.$active ? p.theme.colorPrimary : "transparent")};
+  color: ${(p) =>
+    p.$active ? p.theme.colorPrimary : "rgba(255,255,255,0.45)"};
+  font-size: 0.9rem;
+  font-family: inherit;
+  font-weight: ${(p) => (p.$active ? "600" : "400")};
+  cursor: pointer;
+  letter-spacing: 0.02em;
+  margin-bottom: -1px;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+  white-space: nowrap;
+
+  @media (min-width: 640px) {
+    padding: 0.55rem 1.25rem 0.7rem;
+    font-size: 1rem;
+  }
+
+  &:hover {
+    color: rgba(255, 255, 255, 0.85);
+  }
+`;
+
+const TabBadge = styled.span`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  opacity: 0.6;
+  vertical-align: middle;
+`;
 
 /**
  * View playlist page
@@ -1030,29 +1056,66 @@ export const ViewPlaylistPage = () => {
                   </Row>
                 </Column>
               </Row>
-              <Row justifyContent="space-between" alignItems="center">
-                <Column>
-                  <Row alignItems="center">
-                    <RadioButtonGroup
-                      name="search-filter"
-                      value={radioGroupState as string}
-                      data={getPlaylistTabsFilterData(t)}
-                      onChange={handleRadioButtonGroupChange}
-                    />
-                    <JumpToEndButton
-                      onClick={handleJumpToEndClick}
-                      disabled={
-                        isJumpingToEnd ||
-                        (radioGroupState === "items"
-                          ? !hasNextPlaylistItemsPage && items.length === 0
-                          : !hasNextPlaylistKeyframesPage &&
-                            playlistKeyframes.length === 0)
-                      }
-                    >
-                      {isJumpingToEnd ? "Jumping..." : "Jump to End"}
-                    </JumpToEndButton>
-                  </Row>
-                </Column>
+              {/* Row 1: tabs centered */}
+              <Row mb={0}>
+                <PlaylistTabBar>
+                  {(
+                    [
+                      PLAYLIST_TABS.ITEMS,
+                      PLAYLIST_TABS.FILMSTRIPS,
+                      PLAYLIST_TABS.KEYFRAMES,
+                      PLAYLIST_TABS.APPEARS_IN,
+                    ] as PlaylistTabs[]
+                  ).map((tab) => {
+                    const countMap: Partial<Record<PlaylistTabs, number>> = {
+                      items: playlistItemsTotalCount,
+                      keyframes: playlistKeyframesTotalCount,
+                      appears_in: playlistReferences.length,
+                    };
+                    const count = countMap[tab];
+                    return (
+                      <PlaylistTab
+                        key={tab}
+                        type="button"
+                        $active={radioGroupState === tab}
+                        onClick={() => handleRadioButtonGroupChange(tab)}
+                      >
+                        {t(
+                          PLAYLIST_TAB_LABELS[
+                            tab.toUpperCase() as Uppercase<PlaylistTabs>
+                          ],
+                        )}
+                        {count !== undefined && count > 0 && (
+                          <TabBadge>{count}</TabBadge>
+                        )}
+                      </PlaylistTab>
+                    );
+                  })}
+                </PlaylistTabBar>
+              </Row>
+              {/* Row 2: controls space-between */}
+              <Row
+                justifyContent="space-between"
+                alignItems="center"
+                mt="0.4rem"
+                mb={3}
+              >
+                {(radioGroupState === "items" ||
+                  radioGroupState === "keyframes") && (
+                  <JumpToEndButton
+                    type="button"
+                    onClick={handleJumpToEndClick}
+                    disabled={
+                      isJumpingToEnd ||
+                      (radioGroupState === "items"
+                        ? !hasNextPlaylistItemsPage && items.length === 0
+                        : !hasNextPlaylistKeyframesPage &&
+                          playlistKeyframes.length === 0)
+                    }
+                  >
+                    {isJumpingToEnd ? "Jumping..." : "Jump to End"}
+                  </JumpToEndButton>
+                )}
                 <Restricted
                   to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
                   isOwner={user?.id === playlist?.user?.id}
@@ -1063,7 +1126,6 @@ export const ViewPlaylistPage = () => {
                         <Row mb={2} justifyContent="flex-end">
                           <Text>{t("page.view_playlist.sort_by")}</Text>
                         </Row>
-
                         <Row mb={0}>
                           <Column mr="2">
                             <Button
@@ -1108,31 +1170,28 @@ export const ViewPlaylistPage = () => {
                         </Row>
                       </>
                     )}
-
                     {radioGroupState === "keyframes" && (
-                      <>
-                        <Row mb={0}>
-                          <Column mr="2">
-                            <Button
-                              type="button"
-                              buttonType="default"
-                              transparent
-                              ml="1rem"
-                              onClick={handleNavigateAddKeyframeToPlaylist}
-                              data-tooltip-id="add-keyframes"
-                            >
-                              <Tooltip
-                                id="add-keyframes"
-                                place="right-end"
-                                content={t(
-                                  "page.view_playlist.add_keyframes_to_playlist",
-                                )}
-                              />
-                              <FontAwesomeIcon icon={faPlus} />
-                            </Button>
-                          </Column>
-                        </Row>
-                      </>
+                      <Row mb={0}>
+                        <Column mr="2">
+                          <Button
+                            type="button"
+                            buttonType="default"
+                            transparent
+                            ml="1rem"
+                            onClick={handleNavigateAddKeyframeToPlaylist}
+                            data-tooltip-id="add-keyframes"
+                          >
+                            <Tooltip
+                              id="add-keyframes"
+                              place="right-end"
+                              content={t(
+                                "page.view_playlist.add_keyframes_to_playlist",
+                              )}
+                            />
+                            <FontAwesomeIcon icon={faPlus} />
+                          </Button>
+                        </Column>
+                      </Row>
                     )}
                   </Column>
                 </Restricted>
@@ -1319,64 +1378,70 @@ export const ViewPlaylistPage = () => {
                   )}
                 </Row>
               )}
-              <Row>
-                <h3>{t("page.view_playlist.playlists")}</h3>
-              </Row>
-              <Row flex="auto">
-                <ItemCardList>
-                  {playlistReferences.map((pi) => {
-                    const playlistUUID = pi.playlist?.uuid;
-                    const playlistOwnerId = pi.playlist?.user?.id;
-                    const isPlaylistOwner = Boolean(
-                      playlistOwnerId && user?.id === playlistOwnerId,
-                    );
-                    const canRemoveFromPlaylist =
-                      Boolean(playlistUUID) &&
-                      isAllowedTo({
-                        permission: PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST,
-                        isOwner: isPlaylistOwner,
-                      });
-                    const tooltipId = canRemoveFromPlaylist
-                      ? `remove-playlist-from-playlist-${pi.id}`
-                      : undefined;
+              {radioGroupState === "appears_in" && (
+                <Row flex="auto">
+                  <ItemCardList>
+                    {playlistReferences.length === 0 ? (
+                      <Text mb={4}>
+                        {t("page.view_playlist.empty_playlist")}
+                      </Text>
+                    ) : (
+                      playlistReferences.map((pi) => {
+                        const playlistUUID = pi.playlist?.uuid;
+                        const playlistOwnerId = pi.playlist?.user?.id;
+                        const isPlaylistOwner = Boolean(
+                          playlistOwnerId && user?.id === playlistOwnerId,
+                        );
+                        const canRemoveFromPlaylist =
+                          Boolean(playlistUUID) &&
+                          isAllowedTo({
+                            permission:
+                              PLAYLIST_PERMISSIONS.CAN_DELETE_PLAYLIST,
+                            isOwner: isPlaylistOwner,
+                          });
+                        const tooltipId = canRemoveFromPlaylist
+                          ? `remove-playlist-from-playlist-${pi.id}`
+                          : undefined;
 
-                    return (
-                      <Fragment key={pi.id}>
-                        <ItemCard
-                          type="playlist"
-                          item={pi.playlist}
-                          inline
-                          size="sm"
-                          onDelete={
-                            canRemoveFromPlaylist
-                              ? (e: React.MouseEvent) =>
-                                  handleRemovePlaylistFromPlaylist(
-                                    pi.id,
-                                    playlistUUID,
-                                  )(e)
-                              : undefined
-                          }
-                          deleteDisabled={
-                            !canRemoveFromPlaylist ||
-                            removingPlaylistItemId === pi.id
-                          }
-                          deleteTooltipId={tooltipId}
-                        />
-                        {tooltipId && (
-                          <Tooltip
-                            id={tooltipId}
-                            place="top"
-                            delayShow={TOOLTIP_DELAY_MS}
-                            content={t(
-                              "page.view_playlist.remove_playlist_from_playlist_tooltip",
+                        return (
+                          <Fragment key={pi.id}>
+                            <ItemCard
+                              type="playlist"
+                              item={pi.playlist}
+                              inline
+                              size="sm"
+                              onDelete={
+                                canRemoveFromPlaylist
+                                  ? (e: React.MouseEvent) =>
+                                      handleRemovePlaylistFromPlaylist(
+                                        pi.id,
+                                        playlistUUID,
+                                      )(e)
+                                  : undefined
+                              }
+                              deleteDisabled={
+                                !canRemoveFromPlaylist ||
+                                removingPlaylistItemId === pi.id
+                              }
+                              deleteTooltipId={tooltipId}
+                            />
+                            {tooltipId && (
+                              <Tooltip
+                                id={tooltipId}
+                                place="top"
+                                delayShow={TOOLTIP_DELAY_MS}
+                                content={t(
+                                  "page.view_playlist.remove_playlist_from_playlist_tooltip",
+                                )}
+                              />
                             )}
-                          />
-                        )}
-                      </Fragment>
-                    );
-                  })}
-                </ItemCardList>
-              </Row>
+                          </Fragment>
+                        );
+                      })
+                    )}
+                  </ItemCardList>
+                </Row>
+              )}
 
               {/* Removing add item playlist dropzone, probably next to be deprecated  */}
               {/* <Restricted

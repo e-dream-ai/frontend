@@ -3,13 +3,13 @@ import { useStudioStore } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import { axiosClient } from "@/client/axios.client";
 import { createComboKey } from "@/types/studio.types";
-import type { StudioJob } from "@/types/studio.types";
+import type { StudioJob, UprezModel } from "@/types/studio.types";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
-  hasActionLoras,
 } from "../constants/duration-options";
+import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import { GenerateSection, SectionTitle } from "./images-tab.styled";
 import { GridTable, GridHeader, GridRowHeader } from "./generate-tab.styled";
@@ -27,9 +27,17 @@ import {
   ActionButton,
   ScrollableGrid,
   TimeEstimate,
+  UprezSelect,
 } from "./results-tab.styled";
 
 const BATCH_SIZE = 5;
+
+const UPREZ_MODEL_LABELS: Record<UprezModel, string> = {
+  uprez: "Current Uprez",
+  "nvidia-uprez": "Nvidia Super Resolution",
+};
+
+const UPREZ_MODELS: UprezModel[] = ["uprez", "nvidia-uprez"];
 
 export const ResultsTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
@@ -49,7 +57,9 @@ export const ResultsTab: React.FC = () => {
   const createDream = useCreateDreamFromPrompt();
   const { addPlaylistToCache } = useUserPlaylists();
 
-  const wanParams = useStudioStore((s) => s.wanParams);
+  const videoGenParams = useStudioStore((s) => s.videoGenParams);
+  const uprezModel = useStudioStore((s) => s.uprezModel);
+  const setUprezModel = useStudioStore((s) => s.setUprezModel);
   const removeJob = useStudioStore((s) => s.removeJob);
 
   const [isUprezzing, setIsUprezzing] = useState(false);
@@ -59,7 +69,7 @@ export const ResultsTab: React.FC = () => {
   const gridImageIds = useMemo(() => {
     const ids = new Set<string>();
     jobs
-      .filter((j) => j.jobType !== "uprez")
+      .filter((j) => j.jobType !== "uprez" && j.jobType !== "nvidia-uprez")
       .forEach((j) => ids.add(j.imageId));
     return [...ids];
   }, [jobs]);
@@ -67,7 +77,7 @@ export const ResultsTab: React.FC = () => {
   const gridActionIds = useMemo(() => {
     const ids = new Set<string>();
     jobs
-      .filter((j) => j.jobType !== "uprez")
+      .filter((j) => j.jobType !== "uprez" && j.jobType !== "nvidia-uprez")
       .forEach((j) => ids.add(j.actionId));
     return [...ids];
   }, [jobs]);
@@ -89,7 +99,8 @@ export const ResultsTab: React.FC = () => {
   );
 
   const wanJobs = useMemo(
-    () => jobs.filter((j) => j.jobType !== "uprez"),
+    () =>
+      jobs.filter((j) => j.jobType !== "uprez" && j.jobType !== "nvidia-uprez"),
     [jobs],
   );
 
@@ -136,7 +147,7 @@ export const ResultsTab: React.FC = () => {
   const jobMap = useMemo(() => {
     const map = new Map<string, StudioJob>();
     for (const j of jobs) {
-      if (j.jobType !== "uprez") {
+      if (j.jobType !== "uprez" && j.jobType !== "nvidia-uprez") {
         map.set(`${j.imageId}:${j.actionId}`, j);
       }
     }
@@ -149,6 +160,7 @@ export const ResultsTab: React.FC = () => {
         j.selectedForUprez &&
         j.status === "processed" &&
         j.jobType !== "uprez" &&
+        j.jobType !== "nvidia-uprez" &&
         !j.uprezed,
     );
     if (toUprez.length === 0) return;
@@ -175,12 +187,20 @@ export const ResultsTab: React.FC = () => {
 
         const results = await Promise.allSettled(
           batch.map(async (job) => {
-            const algoParams = {
-              infinidream_algorithm: "uprez",
-              video_uuid: job.dreamUuid,
-              upscale_factor: 2,
-              interpolation_factor: 2,
-            };
+            const algoParams =
+              uprezModel === "nvidia-uprez"
+                ? {
+                    infinidream_algorithm: "nvidia-uprez",
+                    video_uuid: job.dreamUuid,
+                    upscale_factor: 2,
+                    quality: "HIGH",
+                  }
+                : {
+                    infinidream_algorithm: "uprez",
+                    video_uuid: job.dreamUuid,
+                    upscale_factor: 2,
+                    interpolation_factor: 2,
+                  };
 
             const response = await createDream.mutateAsync({
               name: `Uprez - ${job.dreamUuid.slice(0, 8)}`,
@@ -195,7 +215,7 @@ export const ResultsTab: React.FC = () => {
               imageId: job.imageId,
               actionId: `uprez-${job.actionId}`,
               dreamUuid: dream.uuid,
-              jobType: "uprez",
+              jobType: uprezModel,
               status: (dream.status as StudioJob["status"]) || "queue",
               selectedForUprez: false,
             });
@@ -230,24 +250,29 @@ export const ResultsTab: React.FC = () => {
     createDream,
     addJob,
     updateJob,
+    uprezModel,
     uprezPlaylistId,
     setUprezPlaylistId,
     addPlaylistToCache,
   ]);
 
   const handleRetryFailed = useCallback(async () => {
-    // Only retry wan-i2v jobs (uprez retries not yet supported)
+    // Only retry video generation jobs (uprez retries not yet supported)
     const failedJobs = jobs.filter(
-      (j) => j.status === "failed" && j.jobType !== "uprez",
+      (j) =>
+        j.status === "failed" &&
+        j.jobType !== "uprez" &&
+        j.jobType !== "nvidia-uprez",
     );
     if (failedJobs.length === 0) return;
 
     const failedActionIds = new Set(failedJobs.map((j) => j.actionId));
     const allowedDurations = getAllowedDurationsForActions(
       actions.filter((action) => failedActionIds.has(action.id)),
+      videoGenParams.model,
     );
     const duration = clampDurationToAllowed(
-      wanParams.duration,
+      videoGenParams.duration,
       allowedDurations,
     );
 
@@ -262,31 +287,23 @@ export const ResultsTab: React.FC = () => {
             const action = actions.find((a) => a.id === job.actionId);
             if (!image || !action) return;
 
-            const hasLoras = hasActionLoras(action);
+            // Use the original job's model for retry, not the current selection
+            const retryModel =
+              job.jobType === "wan-i2v" || job.jobType === "ltx-i2v"
+                ? job.jobType
+                : videoGenParams.model;
 
             const batchIdentifier = createComboKey(image.uuid, action.prompt);
 
-            const algoParams = hasLoras
-              ? {
-                  infinidream_algorithm: "wan-i2v-lora" as const,
-                  prompt: action.prompt,
-                  image: image.uuid,
-                  duration,
-                  num_inference_steps: wanParams.numInferenceSteps,
-                  guidance: wanParams.guidance,
-                  seed: -1,
-                  high_noise_loras: action.highNoiseLoras ?? [],
-                  low_noise_loras: action.lowNoiseLoras ?? [],
-                }
-              : {
-                  infinidream_algorithm: "wan-i2v" as const,
-                  prompt: action.prompt,
-                  image: image.uuid,
-                  size: image.size || "1280*720",
-                  duration,
-                  num_inference_steps: wanParams.numInferenceSteps,
-                  guidance: wanParams.guidance,
-                };
+            const algoParams = buildVideoAlgoParams({
+              model: retryModel,
+              action,
+              imageUuid: image.uuid,
+              imageSize: image.size,
+              duration,
+              numInferenceSteps: videoGenParams.numInferenceSteps,
+              guidance: videoGenParams.guidance,
+            });
 
             const response = await createDream.mutateAsync({
               name: `${image.name} - ${action.prompt.slice(0, 40)}`,
@@ -302,7 +319,7 @@ export const ResultsTab: React.FC = () => {
               imageId: job.imageId,
               actionId: job.actionId,
               dreamUuid: dream.uuid,
-              jobType: "wan-i2v",
+              jobType: retryModel,
               status: (dream.status as StudioJob["status"]) || "queue",
               selectedForUprez: false,
             });
@@ -332,7 +349,7 @@ export const ResultsTab: React.FC = () => {
     jobs,
     images,
     actions,
-    wanParams,
+    videoGenParams,
     createDream,
     removeJob,
     addJob,
@@ -493,6 +510,16 @@ export const ResultsTab: React.FC = () => {
               : "Select All for Uprez"}
           </ActionButton>
         )}
+        <UprezSelect
+          value={uprezModel}
+          onChange={(e) => setUprezModel(e.target.value as UprezModel)}
+        >
+          {UPREZ_MODELS.map((m) => (
+            <option key={m} value={m}>
+              {UPREZ_MODEL_LABELS[m]}
+            </option>
+          ))}
+        </UprezSelect>
         <ActionButton
           $variant="primary"
           disabled={uprezCount === 0 || isUprezzing}
