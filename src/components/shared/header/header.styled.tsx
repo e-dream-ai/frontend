@@ -185,6 +185,7 @@ export const StyledNavLink = styled(NavLink)`
 
   &:hover {
     color: ${(props) => props.theme.colorSecondary};
+    border-bottom-color: ${(props) => props.theme.colorSecondary};
   }
 
   &.active {
