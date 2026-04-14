@@ -1,8 +1,7 @@
 import { FULL_CREATE_ROUTES, ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import { useTranslation } from "react-i18next";
-import { StyledNavList, NavListItem } from "./header.styled";
-import { AnchorLink } from "../anchor/anchor";
+import { StyledNavList, NavListItem, StyledNavLink } from "./header.styled";
 import { MouseEventHandler } from "react";
 import { joinPaths } from "@/utils/router.util";
 import { DisplayProps } from "styled-system";
@@ -122,13 +121,9 @@ export const NavList: React.FC<{ onClickMenuItem?: () => void }> = ({
             display={route.display}
             data-hide-separator={route.hideSeparator ? "true" : "false"}
           >
-            <AnchorLink
-              to={route.route}
-              onClick={handleOnClick}
-              style={{ textDecoration: "none" }}
-            >
+            <StyledNavLink to={route.route} onClick={handleOnClick}>
               {route.component}
-            </AnchorLink>
+            </StyledNavLink>
           </NavListItem>
         );
       })}
