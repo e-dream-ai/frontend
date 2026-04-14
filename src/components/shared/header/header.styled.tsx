@@ -191,6 +191,10 @@ export const StyledNavLink = styled(NavLink)`
   &.active {
     border-bottom-color: ${(props) => props.theme.textAccentColor};
   }
+
+  &.active:hover {
+    border-bottom-color: ${(props) => props.theme.colorSecondary};
+  }
 `;
 
 export const NavListItem = styled.li<DisplayProps>`
