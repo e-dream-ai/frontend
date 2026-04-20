@@ -56,7 +56,6 @@ import {
   faThumbsUp,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { ROUTES } from "@/constants/routes.constants";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import Restricted from "@/components/shared/restricted/restricted";
 import Select from "@/components/shared/select/select";
@@ -75,7 +74,10 @@ import {
 import { useImage } from "@/hooks/useImage";
 import { Avatar } from "@/components/shared/avatar/avatar";
 import { FormContainer, FormItem } from "@/components/shared/form/form";
-import { getUserProfileRoute } from "@/utils/router.util";
+import {
+  getUserProfileRoute,
+  getDisplayedOwnerProfileRoute,
+} from "@/utils/router.util";
 import { KeyframeSelect } from "./keyframe-select";
 import { useTooltipPlaces } from "@/hooks/useFormTooltipPlaces";
 import { FormInput } from "@/components/shared/input/input";
@@ -833,23 +835,24 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                     isDisabled={!editMode || !allowedEditOwner}
                     isLoading={isUsersLoading}
                     before={<FontAwesomeIcon icon={faUser} />}
-                    after={
-                      dream?.displayedOwner?.uuid ? (
-                        <AnchorLink
-                          type="secondary"
-                          to={`${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`}
-                        >
+                    after={(() => {
+                      const route = getDisplayedOwnerProfileRoute(
+                        isUserAdmin,
+                        dream?.user,
+                        dream?.displayedOwner,
+                      );
+                      if (!route) return undefined;
+                      return (
+                        <AnchorLink type="secondary" to={route}>
                           <Avatar size="xs" url={displayedOwnerAvatarUrl} />
                         </AnchorLink>
-                      ) : (
-                        <Avatar size="xs" url={displayedOwnerAvatarUrl} />
-                      )
-                    }
-                    to={
-                      dream?.displayedOwner?.uuid
-                        ? `${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`
-                        : undefined
-                    }
+                      );
+                    })()}
+                    to={getDisplayedOwnerProfileRoute(
+                      isUserAdmin,
+                      dream?.user,
+                      dream?.displayedOwner,
+                    )}
                     options={usersOptions}
                     onInputChange={(newValue) => setUserSearch(newValue)}
                     tooltipPlace={tooltipPlaces.left}

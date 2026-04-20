@@ -1005,18 +1005,14 @@ export const ViewPlaylistPage = () => {
                                 playlist?.user,
                                 playlist?.displayedOwner,
                               );
-                              return route ? (
+                              if (!route) return undefined;
+                              return (
                                 <AnchorLink type="secondary" to={route}>
                                   <Avatar
                                     size="xs"
                                     url={displayedOwnerAvatarUrl}
                                   />
                                 </AnchorLink>
-                              ) : (
-                                <Avatar
-                                  size="xs"
-                                  url={displayedOwnerAvatarUrl}
-                                />
                               );
                             })()}
                             to={getDisplayedOwnerProfileRoute(
