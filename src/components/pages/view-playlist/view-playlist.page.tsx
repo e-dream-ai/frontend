@@ -894,7 +894,18 @@ export const ViewPlaylistPage = () => {
                       placeholder={t("page.view_playlist.owner")}
                       type="text"
                       before={<FontAwesomeIcon icon={faSave} />}
-                      after={<Avatar size="xs" url={ownerAvatarUrl} />}
+                      after={
+                        playlist?.user?.uuid ? (
+                          <AnchorLink
+                            type="secondary"
+                            to={`${ROUTES.PROFILE}/${playlist.user.uuid}`}
+                          >
+                            <Avatar size="xs" url={ownerAvatarUrl} />
+                          </AnchorLink>
+                        ) : (
+                          <Avatar size="xs" url={ownerAvatarUrl} />
+                        )
+                      }
                       to={`${ROUTES.PROFILE}/${playlist?.user.uuid}`}
                       {...formMethods.register("user")}
                     />
@@ -988,9 +999,26 @@ export const ViewPlaylistPage = () => {
                             isDisabled={!editMode || !allowedEditOwner}
                             isLoading={isUsersLoading}
                             before={<FontAwesomeIcon icon={faUser} />}
-                            after={
-                              <Avatar size="xs" url={displayedOwnerAvatarUrl} />
-                            }
+                            after={(() => {
+                              const route = getDisplayedOwnerProfileRoute(
+                                isUserAdmin,
+                                playlist?.user,
+                                playlist?.displayedOwner,
+                              );
+                              return route ? (
+                                <AnchorLink type="secondary" to={route}>
+                                  <Avatar
+                                    size="xs"
+                                    url={displayedOwnerAvatarUrl}
+                                  />
+                                </AnchorLink>
+                              ) : (
+                                <Avatar
+                                  size="xs"
+                                  url={displayedOwnerAvatarUrl}
+                                />
+                              );
+                            })()}
                             to={getDisplayedOwnerProfileRoute(
                               isUserAdmin,
                               playlist?.user,

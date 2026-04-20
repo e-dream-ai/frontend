@@ -1,4 +1,11 @@
-import { Column, Row, FileUploader, Input, Button } from "@/components/shared";
+import {
+  Column,
+  Row,
+  FileUploader,
+  Input,
+  Button,
+  AnchorLink,
+} from "@/components/shared";
 import { ThumbnailInput } from "@/components/shared/thumbnail-input/thumbnail-input";
 import {
   ALLOWED_VIDEO_TYPES,
@@ -583,7 +590,18 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             placeholder={t("page.view_dream.owner")}
             type="text"
             before={<FontAwesomeIcon icon={faSave} />}
-            after={<Avatar size="xs" url={ownerAvatarUrl} />}
+            after={
+              getUserProfileRoute(dream?.user) ? (
+                <AnchorLink
+                  type="secondary"
+                  to={getUserProfileRoute(dream?.user)!}
+                >
+                  <Avatar size="xs" url={ownerAvatarUrl} />
+                </AnchorLink>
+              ) : (
+                <Avatar size="xs" url={ownerAvatarUrl} />
+              )
+            }
             value={dreamOwnerToShow}
             to={getUserProfileRoute(dream?.user)}
             {...register("user")}
@@ -815,7 +833,18 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                     isDisabled={!editMode || !allowedEditOwner}
                     isLoading={isUsersLoading}
                     before={<FontAwesomeIcon icon={faUser} />}
-                    after={<Avatar size="xs" url={displayedOwnerAvatarUrl} />}
+                    after={
+                      dream?.displayedOwner?.uuid ? (
+                        <AnchorLink
+                          type="secondary"
+                          to={`${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`}
+                        >
+                          <Avatar size="xs" url={displayedOwnerAvatarUrl} />
+                        </AnchorLink>
+                      ) : (
+                        <Avatar size="xs" url={displayedOwnerAvatarUrl} />
+                      )
+                    }
                     to={
                       dream?.displayedOwner?.uuid
                         ? `${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`
