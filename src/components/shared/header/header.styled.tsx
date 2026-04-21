@@ -10,7 +10,7 @@ import {
   SpaceProps,
   space,
 } from "styled-system";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 const StyledHeader = styled.header<FlexboxProps & { $isScrolled?: boolean }>`
   display: flex;
@@ -174,14 +174,33 @@ export const StyledNavList = styled.ul`
   padding: 0;
 `;
 
+export const StyledNavLink = styled(NavLink)`
+  color: ${(props) => props.theme.textAccentColor};
+  text-decoration: none;
+  padding-bottom: 0.2rem;
+  border-bottom: 2px solid transparent;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease;
+
+  &:hover {
+    color: ${(props) => props.theme.colorSecondary};
+    border-bottom-color: ${(props) => props.theme.colorSecondary};
+  }
+
+  &.active {
+    border-bottom-color: ${(props) => props.theme.textAccentColor};
+  }
+
+  &.active:hover {
+    border-bottom-color: ${(props) => props.theme.colorSecondary};
+  }
+`;
+
 export const NavListItem = styled.li<DisplayProps>`
   font-size: 1.2rem;
   font-family: "Comfortaa", sans-serif;
   text-transform: lowercase;
-
-  a {
-    color: ${(props) => props.theme.textAccentColor};
-  }
 
   &:not([display="none"])::after {
     content: "•";

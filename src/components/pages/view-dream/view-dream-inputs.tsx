@@ -1,4 +1,11 @@
-import { Column, Row, FileUploader, Input, Button } from "@/components/shared";
+import {
+  Column,
+  Row,
+  FileUploader,
+  Input,
+  Button,
+  AnchorLink,
+} from "@/components/shared";
 import { ThumbnailInput } from "@/components/shared/thumbnail-input/thumbnail-input";
 import {
   ALLOWED_VIDEO_TYPES,
@@ -49,7 +56,6 @@ import {
   faThumbsUp,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
-import { ROUTES } from "@/constants/routes.constants";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import Restricted from "@/components/shared/restricted/restricted";
 import Select from "@/components/shared/select/select";
@@ -68,7 +74,10 @@ import {
 import { useImage } from "@/hooks/useImage";
 import { Avatar } from "@/components/shared/avatar/avatar";
 import { FormContainer, FormItem } from "@/components/shared/form/form";
-import { getUserProfileRoute } from "@/utils/router.util";
+import {
+  getUserProfileRoute,
+  getDisplayedOwnerProfileRoute,
+} from "@/utils/router.util";
 import { KeyframeSelect } from "./keyframe-select";
 import { useTooltipPlaces } from "@/hooks/useFormTooltipPlaces";
 import { FormInput } from "@/components/shared/input/input";
@@ -583,7 +592,18 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             placeholder={t("page.view_dream.owner")}
             type="text"
             before={<FontAwesomeIcon icon={faSave} />}
-            after={<Avatar size="xs" url={ownerAvatarUrl} />}
+            after={
+              getUserProfileRoute(dream?.user) ? (
+                <AnchorLink
+                  type="secondary"
+                  to={getUserProfileRoute(dream?.user)!}
+                >
+                  <Avatar size="xs" url={ownerAvatarUrl} />
+                </AnchorLink>
+              ) : (
+                <Avatar size="xs" url={ownerAvatarUrl} />
+              )
+            }
             value={dreamOwnerToShow}
             to={getUserProfileRoute(dream?.user)}
             {...register("user")}
@@ -815,12 +835,24 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
                     isDisabled={!editMode || !allowedEditOwner}
                     isLoading={isUsersLoading}
                     before={<FontAwesomeIcon icon={faUser} />}
-                    after={<Avatar size="xs" url={displayedOwnerAvatarUrl} />}
-                    to={
-                      dream?.displayedOwner?.uuid
-                        ? `${ROUTES.PROFILE}/${dream?.displayedOwner?.uuid}`
-                        : undefined
-                    }
+                    after={(() => {
+                      const route = getDisplayedOwnerProfileRoute(
+                        isUserAdmin,
+                        dream?.user,
+                        dream?.displayedOwner,
+                      );
+                      if (!route) return undefined;
+                      return (
+                        <AnchorLink type="secondary" to={route}>
+                          <Avatar size="xs" url={displayedOwnerAvatarUrl} />
+                        </AnchorLink>
+                      );
+                    })()}
+                    to={getDisplayedOwnerProfileRoute(
+                      isUserAdmin,
+                      dream?.user,
+                      dream?.displayedOwner,
+                    )}
                     options={usersOptions}
                     onInputChange={(newValue) => setUserSearch(newValue)}
                     tooltipPlace={tooltipPlaces.left}
