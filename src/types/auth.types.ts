@@ -24,6 +24,7 @@ export type User = {
   currentPlaylist?: Playlist;
   nsfw?: boolean;
   enableMarketingEmails?: boolean;
+  enableCreatingProprietaryDreams?: boolean;
   signupInvite?: Invite;
   quota?: number;
   created_at?: string;
