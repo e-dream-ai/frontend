@@ -35,6 +35,7 @@ import {
   faPencil,
   faSave,
   faShield,
+  faUnlock,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import {
@@ -52,8 +53,11 @@ import { formatDateToYYYYMMDD } from "@/utils/date.util";
 import { FORMAT } from "@/constants/moment.constants";
 import moment from "moment";
 import {
+  ENABLE_CREATING_PROPRIETARY_DREAMS,
   ENABLE_MARKETING_EMAILS,
+  filterEnableCreatingProprietaryDreamsOption,
   filterMarketingEmailOption,
+  getEnableCreatingProprietaryDreamsOptions,
   getEnableMarketingEmailsOptions,
 } from "@/constants/user.constants";
 import { bytesToGB, GBToBytes } from "@/utils/file.util";
@@ -104,6 +108,10 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
   const nsfwOption = filterNsfwOption(user?.nsfw, t);
   const marketingEmailsOption = filterMarketingEmailOption(
     user?.enableMarketingEmails,
+    t,
+  );
+  const proprietaryDreamsOption = filterEnableCreatingProprietaryDreamsOption(
+    user?.enableCreatingProprietaryDreams,
     t,
   );
 
@@ -252,6 +260,16 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
               value={marketingEmailsOption}
               name="profile-marketing-emails"
             />
+
+            <Select
+              isDisabled
+              placeholder={t(
+                "components.profile_card.enable_creating_proprietary_dreams",
+              )}
+              before={<FontAwesomeIcon icon={faUnlock} />}
+              value={proprietaryDreamsOption}
+              name="profile-proprietary-dreams"
+            />
           </>
         )}
       </Column>
@@ -331,6 +349,11 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         user?.enableMarketingEmails,
         t,
       ),
+      enableCreatingProprietaryDreams:
+        filterEnableCreatingProprietaryDreamsOption(
+          user?.enableCreatingProprietaryDreams,
+          t,
+        ),
       quota: user?.quota ? toFixedNumber(bytesToGB(user.quota), 2) : 0,
     },
   });
@@ -377,6 +400,9 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       nsfw: formData?.nsfw.value === NSFW.TRUE,
       enableMarketingEmails:
         formData?.enableMarketingEmails.value === ENABLE_MARKETING_EMAILS.TRUE,
+      enableCreatingProprietaryDreams:
+        formData?.enableCreatingProprietaryDreams.value ===
+        ENABLE_CREATING_PROPRIETARY_DREAMS.TRUE,
       quota:
         formData?.quota !== undefined
           ? Math.round(GBToBytes(formData.quota))
@@ -385,6 +411,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
 
     if (!isUserAdmin) {
       delete data.quota;
+      delete data.enableCreatingProprietaryDreams;
     }
 
     mutateUpdateUser(data, {
@@ -523,6 +550,23 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
               />
             )}
           />
+
+          {isUserAdmin && (
+            <Controller
+              name="enableCreatingProprietaryDreams"
+              control={control}
+              render={({ field }) => (
+                <Select
+                  {...field}
+                  placeholder={t(
+                    "components.profile_card.enable_creating_proprietary_dreams",
+                  )}
+                  before={<FontAwesomeIcon icon={faUnlock} />}
+                  options={getEnableCreatingProprietaryDreamsOptions(t)}
+                />
+              )}
+            />
+          )}
         </Column>
       </Row>
     </form>

@@ -57,6 +57,9 @@ export const CreateDream: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
+  const canCreateProprietaryDreams = Boolean(
+    user?.enableCreatingProprietaryDreams,
+  );
   const videoRef = useRef(null);
   const theme = useTheme();
   const [video, setVideo] = useState<FileState>();
@@ -67,6 +70,9 @@ export const CreateDream: React.FC = () => {
     formState: { errors },
   } = useForm<CreateDreamFormValues>({
     resolver: yupResolver(CreateDreamSchema),
+    defaultValues: {
+      ccbyLicense: !canCreateProprietaryDreams,
+    },
   });
 
   const {
@@ -89,8 +95,12 @@ export const CreateDream: React.FC = () => {
 
   const onSubmit = async (data: CreateDreamFormValues) => {
     try {
+      const formData: CreateDreamFormValues = {
+        ...data,
+        ccbyLicense: canCreateProprietaryDreams ? data.ccbyLicense : true,
+      };
       await mutateAsync(
-        generateDreamVideoFormRequest(data, video?.fileBlob, isUserAdmin),
+        generateDreamVideoFormRequest(formData, video?.fileBlob, isUserAdmin),
       );
     } catch {
       toast.error(t("page.create.error_uploading_dream"));
@@ -166,6 +176,7 @@ export const CreateDream: React.FC = () => {
             <div data-tooltip-id="ccby-license">
               <Checkbox
                 {...register("ccbyLicense")}
+                disabled={!canCreateProprietaryDreams}
                 error={errors.ccbyLicense?.message}
               >
                 <Tooltip

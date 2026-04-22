@@ -482,6 +482,8 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   const [showMore, setShowMore] = useState<boolean>(false);
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
   const isOwner = useMemo(() => user?.id === dream?.user?.id, [user, dream]);
+  const canEditCcbyLicense =
+    isUserAdmin || Boolean(user?.enableCreatingProprietaryDreams);
 
   const { control, register, setError, clearErrors, getValues } =
     useFormContext<UpdateDreamFormValues>();
@@ -679,7 +681,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             render={({ field }) => (
               <Select
                 {...field}
-                isDisabled={!editMode}
+                isDisabled={!editMode || !canEditCcbyLicense}
                 placeholder={t("page.view_dream.ccby_license")}
                 before={<FontAwesomeIcon icon={faBook} />}
                 options={getCcaLicenceOptions(t)}

@@ -462,6 +462,7 @@
       "nsfw": "content rating",
       "nsfw_tooltip": "NSFW means show me dreams with NSFW content rating",
       "marketing_emails": "marketing emails",
+      "enable_creating_proprietary_dreams": "allow proprietary dreams",
       "description": "description",
       "no_description": "no description",
       "quota": "quota",
@@ -632,6 +633,10 @@
       "sfw": "SFW"
     },
     "marketing_emails": {
+      "active": "active",
+      "inactive": "inactive"
+    },
+    "enable_creating_proprietary_dreams": {
       "active": "active",
       "inactive": "inactive"
     }

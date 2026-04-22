@@ -26,3 +26,30 @@ export const filterMarketingEmailOption = (
     value: ENABLE_MARKETING_EMAILS.FALSE,
     label: t("user.marketing_emails.inactive"),
   };
+
+export const ENABLE_CREATING_PROPRIETARY_DREAMS = {
+  TRUE: "true",
+  FALSE: "false",
+};
+
+export const getEnableCreatingProprietaryDreamsOptions = (t: TFunction) => [
+  {
+    value: ENABLE_CREATING_PROPRIETARY_DREAMS.TRUE,
+    label: t("user.enable_creating_proprietary_dreams.active"),
+  },
+  {
+    value: ENABLE_CREATING_PROPRIETARY_DREAMS.FALSE,
+    label: t("user.enable_creating_proprietary_dreams.inactive"),
+  },
+];
+
+export const filterEnableCreatingProprietaryDreamsOption = (
+  value: boolean = false,
+  t: TFunction,
+) =>
+  getEnableCreatingProprietaryDreamsOptions(t).find(
+    (option) => option.value === Boolean(value).toString(),
+  ) ?? {
+    value: ENABLE_CREATING_PROPRIETARY_DREAMS.FALSE,
+    label: t("user.enable_creating_proprietary_dreams.inactive"),
+  };

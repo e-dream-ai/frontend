@@ -6,6 +6,7 @@ export type ProfileFormRequest = {
   role?: number;
   nsfw?: boolean;
   enableMarketingEmails?: boolean;
+  enableCreatingProprietaryDreams?: boolean;
   quota?: number;
 };
 
@@ -21,6 +22,10 @@ export type ProfileFormValues = {
     value?: string;
   };
   enableMarketingEmails: {
+    label?: string;
+    value?: string;
+  };
+  enableCreatingProprietaryDreams: {
     label?: string;
     value?: string;
   };
@@ -40,6 +45,10 @@ export const ProfileSchema = yup
       value: yup.string(),
     }),
     enableMarketingEmails: yup.object({
+      label: yup.string(),
+      value: yup.string(),
+    }),
+    enableCreatingProprietaryDreams: yup.object({
       label: yup.string(),
       value: yup.string(),
     }),
