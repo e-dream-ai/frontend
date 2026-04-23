@@ -150,7 +150,22 @@ export const CreatePage: React.FC = () => {
             <Routes>
               <Route
                 path={CREATE_ROUTES.ADD_KEYFRAME_TO_PLAYLIST}
-                element={<CreateKeyframe />}
+                element={
+                  <>
+                    <Restricted to={DREAM_PERMISSIONS.CAN_CREATE_DREAM}>
+                      <CreateKeyframe />
+                    </Restricted>
+                    <Restricted to={DREAM_PERMISSIONS.CAN_VIEW_BECOME_CREATOR}>
+                      <Text>
+                        {t("page.create.become_creator")}{" "}
+                        <Anchor href="https://forms.gle/JsZb4TRdw3jq65Bc8">
+                          Creators Program
+                        </Anchor>
+                        .
+                      </Text>
+                    </Restricted>
+                  </>
+                }
               />
             </Routes>
           </TabPanel>
