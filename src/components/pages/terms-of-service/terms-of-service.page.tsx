@@ -265,7 +265,7 @@ export const TermsOfServicePage: React.FC = () => {
                 </li>
               </ol>
             </li>
-            <li>
+            <li id={CCBY_ID} style={{ scrollMarginTop: "5rem" }}>
               <b>To summarize:</b>
               <CcbyTable />
             </li>

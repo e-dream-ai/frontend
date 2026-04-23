@@ -41,6 +41,7 @@ import { PageContainer } from "@/components/shared/container/page-container";
 import RemoteControlPage from "@/components/pages/remote-control/remote-control.page";
 import Providers, { withProviders } from "@/providers/providers";
 import { PlayerTray } from "@/components/shared/player-tray/player-tray";
+import ScrollToHashElement from "@/components/shared/scroll-to-hash/scroll-to-hash";
 import useAuth from "@/hooks/useAuth";
 import { useDesktopClient } from "@/hooks/useDesktopClient";
 import { useVideoJs } from "@/hooks/useVideoJS";
@@ -71,6 +72,7 @@ export const RootElement = () => {
 
   return (
     <PageContainer>
+      <ScrollToHashElement />
       <Header />
       <Outlet />
       <Footer />
