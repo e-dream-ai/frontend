@@ -208,7 +208,7 @@ export const TermsOfServicePage: React.FC = () => {
                 </li>
               </ol>
             </li>
-            <li>
+            <li id={CCBY_ID}>
               <b>Granting Additional Rights with a CC BY License</b>
               <ol type="a">
                 <li>
@@ -225,6 +225,14 @@ export const TermsOfServicePage: React.FC = () => {
                   your Content, for both commercial and non-commercial purposes,
                   as long as proper attribution is given to you. We summarize
                   those requirements below.
+                </li>
+                <li>
+                  The ability to uncheck the CC BY option is available by
+                  invitation through our{" "}
+                  <Anchor href="https://forms.gle/JsZb4TRdw3jq65Bc8">
+                    Creators Program
+                  </Anchor>
+                  .
                 </li>
                 <li>
                   <b>AI Training and Remixing.</b> By selecting CC BY, you also
