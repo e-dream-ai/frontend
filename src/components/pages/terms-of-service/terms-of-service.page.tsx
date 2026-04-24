@@ -194,7 +194,7 @@ export const TermsOfServicePage: React.FC = () => {
                   uploaded content. The company may hide or delete content at
                   its sole discretion.
                 </li>
-                <li>
+                <li id={CCBY_ID}>
                   Uploaded content must respect the Content Policy, above.
                 </li>
                 <li>
@@ -208,7 +208,7 @@ export const TermsOfServicePage: React.FC = () => {
                 </li>
               </ol>
             </li>
-            <li id={CCBY_ID}>
+            <li>
               <b>Granting Additional Rights with a CC BY License</b>
               <ol type="a">
                 <li>
