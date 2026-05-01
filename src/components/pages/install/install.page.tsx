@@ -15,6 +15,8 @@ import styled from "styled-components";
 const SECTION_ID = "install";
 const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
 const APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.zip`;
+const WINDOWS_PRERELEASE_VERSION = "0.14.12";
+const WINDOWS_PRERELEASE_URL = `https://github.com/e-dream-ai/client/releases/tag/${WINDOWS_PRERELEASE_VERSION}`;
 
 const ResponsiveDownloadButton = styled(Button)`
   max-width: 100%;
@@ -34,6 +36,10 @@ const InstallSection = () => {
     window.open(APP_URL, "_blank");
   };
 
+  const handleDownloadWindows = () => {
+    window.open(WINDOWS_PRERELEASE_URL, "_blank");
+  };
+
   return (
     <>
       <h2>{t("page.install.title")}</h2>
@@ -42,12 +48,13 @@ const InstallSection = () => {
         <Text>
           <p>
             <em>Requirements:</em> macOS version 12.4+, x86 or Apple Silicon.
+            Windows is available as a prerelease.
           </p>
           {!isMacOS && (
             <p>
               <b>
-                Warning: currently infinidream is for macOS only, but this
-                computer appears to be something else.
+                Note: this computer doesn't appear to be a Mac. If you're on
+                Windows, try the prerelease below.
               </b>
             </p>
           )}
@@ -67,6 +74,24 @@ const InstallSection = () => {
                 Unzip, and drag it to your Applications folder. Run it, sign-in
                 by entering your email, then enter the code emailed to you, and
                 close the settings.
+              </Text>
+            </Row>
+          </Card>
+        </Row>
+        <Row flexWrap={["wrap", "nowrap", "nowrap"]}>
+          <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+            <Row justifyContent="center">
+              <ResponsiveDownloadButton
+                buttonType="secondary"
+                onClick={handleDownloadWindows}
+              >
+                Download Windows prerelease
+              </ResponsiveDownloadButton>
+            </Row>
+            <Row>
+              <Text>
+                A prerelease for Windows is available. Run the installer and
+                follow the prompts to sign-in and get started.
               </Text>
             </Row>
           </Card>
