@@ -344,10 +344,10 @@ export const HelpPage: React.FC = () => {
             <CardText>
               The Infinidream app automatically updates itself each time you run
               it. However, the screensaver cannot update on its own. When a
-              newer version has been released, the screensaver shows the word{" "}
-              <strong style={{ color: "#f0c000" }}>Update</strong> in yellow
-              text in the lower-right corner of the screen. When you see this,
-              just run the app once to get the latest version, and the
+              newer version has been released, the screensaver shows{" "}
+              <strong style={{ color: "#f0c000" }}>"&bull;Update"</strong> in
+              yellow text in the lower-right corner of the screen. When you see
+              this, just run the app once to get the latest version, and the
               screensaver will be updated too.
             </CardText>
           </HelpCard>
@@ -356,8 +356,7 @@ export const HelpPage: React.FC = () => {
           <HelpCard flex="auto">
             <CardTitle>Web player</CardTitle>
             <CardText>
-              The native Infinidream app currently runs on macOS only. However,
-              we have a prototype web client that runs in any modern web
+              There's a prototype web client that runs in any modern web
               browser. Just click the button below to try it out, no
               installation required.
             </CardText>
