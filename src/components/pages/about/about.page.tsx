@@ -92,8 +92,8 @@ export const AboutPage: React.FC = () => {
           </p>
           <ul>
             <li>
-              Install infinidream on your Mac to get the best experience. The
-              infinidream app provides unsurpassed support for ambient
+              Install infinidream on your Mac or PC to get the best experience.
+              The infinidream app provides unsurpassed support for ambient
               interaction, including speed control.
             </li>
             <li>
