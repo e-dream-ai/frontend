@@ -57,6 +57,7 @@
       "success_message": "You have been unsubscribed from marketing emails.",
       "already_message": "You are already unsubscribed from marketing emails.",
       "error_message": "Unable to process unsubscribe request.",
+      "wrong_account_message": "This unsubscribe link belongs to a different account.",
       "go_home": "go home"
     },
     "playground": {

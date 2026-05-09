@@ -6,6 +6,7 @@ import { Section } from "@/components/shared/section/section";
 import { Anchor, Button, Row, Text } from "@/components/shared";
 import { ROUTES } from "@/constants/routes.constants";
 import { ApiResponse } from "@/types/api.types";
+import useAuth from "@/hooks/useAuth";
 import axios, { AxiosError } from "axios";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -16,9 +17,20 @@ const SECTION_ID = "unsubscribe";
 type UnsubscribeState =
   | "missing_token"
   | "confirm"
+  | "wrong_account"
   | "unsubscribed"
   | "already_unsubscribed"
   | "error";
+
+const decodeTokenEmail = (token: string): string | null => {
+  try {
+    const base64 = token.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload = JSON.parse(atob(base64));
+    return typeof payload.email === "string" ? payload.email : null;
+  } catch {
+    return null;
+  }
+};
 
 export const UnsubscribePage: React.FC = () => {
   const { t } = useTranslation();
@@ -30,12 +42,30 @@ export const UnsubscribePage: React.FC = () => {
   );
   const [errorMessage, setErrorMessage] = useState("");
 
+  const { user, isLoading: isAuthLoading } = useAuth();
   const { mutateAsync, isLoading } = useUnsubscribeMarketing();
 
   useEffect(() => {
-    setState(token ? "confirm" : "missing_token");
+    if (isAuthLoading) return;
+
+    if (!token) {
+      setState("missing_token");
+      setErrorMessage("");
+      return;
+    }
+
+    if (user) {
+      const tokenEmail = decodeTokenEmail(token);
+      if (tokenEmail && tokenEmail !== user.email) {
+        setState("wrong_account");
+        setErrorMessage("");
+        return;
+      }
+    }
+
+    setState("confirm");
     setErrorMessage("");
-  }, [token]);
+  }, [token, user, isAuthLoading]);
 
   const handleGoHome = () => navigate(ROUTES.ROOT);
 
@@ -96,6 +126,10 @@ export const UnsubscribePage: React.FC = () => {
 
         {state === "missing_token" && (
           <Text>{t("page.unsubscribe.missing_token_message")}</Text>
+        )}
+
+        {state === "wrong_account" && (
+          <Text>{t("page.unsubscribe.wrong_account_message")}</Text>
         )}
 
         {state === "confirm" && (
