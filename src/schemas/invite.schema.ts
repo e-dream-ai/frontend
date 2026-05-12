@@ -1,4 +1,5 @@
 import * as yup from "yup";
+import { emailSchema } from "./email.schema";
 
 export type InviteByEmailFormValues = {
   email: string;
@@ -12,7 +13,7 @@ export type InviteByEmailFormValues = {
 export const InviteByEmailSchema = yup
   .object()
   .shape({
-    email: yup.string().email().required("Email is required."),
+    email: emailSchema,
     // codeLength: yup
     //   .number()
     //   .nullable()
