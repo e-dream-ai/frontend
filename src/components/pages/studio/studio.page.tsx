@@ -1,7 +1,16 @@
 import React, { lazy, Suspense } from "react";
 import { useStudioStore } from "@/stores/studio.store";
+import { useStudioModeStore } from "@/stores/studio-mode.store";
 import { StudioTabs } from "./components/studio-tabs";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
+import {
+  StudioContainer,
+  StudioHeader,
+  StudioTitle,
+  NewSessionButton,
+  ModeToggle,
+  ModeButton,
+} from "./studio.page.styled";
 
 const ImagesTab = lazy(() =>
   import("./components/images-tab").then((m) => ({ default: m.ImagesTab })),
@@ -15,14 +24,14 @@ const GenerateTab = lazy(() =>
 const ResultsTab = lazy(() =>
   import("./components/results-tab").then((m) => ({ default: m.ResultsTab })),
 );
-import {
-  StudioContainer,
-  StudioHeader,
-  StudioTitle,
-  NewSessionButton,
-} from "./studio.page.styled";
+const FlowBuilder = lazy(() =>
+  import("./components/flow-builder").then((m) => ({ default: m.FlowBuilder })),
+);
 
 export const StudioPage: React.FC = () => {
+  const mode = useStudioModeStore((s) => s.mode);
+  const setMode = useStudioModeStore((s) => s.setMode);
+
   const activeTab = useStudioStore((s) => s.activeTab);
   const resetSession = useStudioStore((s) => s.resetSession);
   const hasContent = useStudioStore(
@@ -44,18 +53,35 @@ export const StudioPage: React.FC = () => {
     <StudioContainer>
       <StudioHeader>
         <StudioTitle>Studio</StudioTitle>
-        {hasContent && (
+        <ModeToggle>
+          <ModeButton $active={mode === "flow"} onClick={() => setMode("flow")}>
+            Flow
+          </ModeButton>
+          <ModeButton
+            $active={mode === "batch"}
+            onClick={() => setMode("batch")}
+          >
+            Batch (Advanced)
+          </ModeButton>
+        </ModeToggle>
+        {mode === "batch" && hasContent && (
           <NewSessionButton onClick={handleNewSession}>
             New Session
           </NewSessionButton>
         )}
       </StudioHeader>
-      <StudioTabs />
+
       <Suspense fallback={null}>
-        {activeTab === "images" && <ImagesTab />}
-        {activeTab === "actions" && <ActionsTab />}
-        {activeTab === "generate" && <GenerateTab />}
-        {activeTab === "results" && <ResultsTab />}
+        {mode === "flow" && <FlowBuilder />}
+        {mode === "batch" && (
+          <>
+            <StudioTabs />
+            {activeTab === "images" && <ImagesTab />}
+            {activeTab === "actions" && <ActionsTab />}
+            {activeTab === "generate" && <GenerateTab />}
+            {activeTab === "results" && <ResultsTab />}
+          </>
+        )}
       </Suspense>
     </StudioContainer>
   );

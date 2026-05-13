@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { FLOW } from "@/constants/flow-theme.constants";
 
 export const StudioContainer = styled.div`
   max-width: 1200px;
@@ -28,4 +29,28 @@ export const NewSessionButton = styled.button`
   border-radius: 6px;
   font-size: 0.8125rem;
   cursor: pointer;
+`;
+
+export const ModeToggle = styled.div`
+  display: flex;
+  background: ${FLOW.bg};
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+`;
+
+export const ModeButton = styled.button<{ $active: boolean }>`
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-family: ${FLOW.fontFamily};
+  color: ${(props) => (props.$active ? FLOW.text : FLOW.textMuted)};
+  background: ${(props) => (props.$active ? FLOW.bgElevated : "transparent")};
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    color: ${FLOW.text};
+  }
 `;
