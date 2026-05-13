@@ -1,4 +1,5 @@
 import * as yup from "yup";
+import { emailSchema } from "./email.schema";
 
 export type CreatePasswordResetFormValues = {
   email: string;
@@ -6,6 +7,6 @@ export type CreatePasswordResetFormValues = {
 
 export const CreatePasswordResetSchema = yup
   .object({
-    email: yup.string().email().required(),
+    email: emailSchema,
   })
   .required();
