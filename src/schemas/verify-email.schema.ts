@@ -1,4 +1,5 @@
 import * as yup from "yup";
+import { emailSchema } from "./email.schema";
 
 export type VerifyEmailRequestValues = {
   username: string;
@@ -12,7 +13,7 @@ export type VerifyEmailFormValues = {
 
 export const VerifyEmailSchema = yup
   .object({
-    email: yup.string().email().required(),
+    email: emailSchema,
     code: yup.string().length(6).required(),
   })
   .required();

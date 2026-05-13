@@ -1,4 +1,5 @@
 import * as yup from "yup";
+import { emailSchema } from "./email.schema";
 
 export type LoginFormValues = {
   email: string;
@@ -7,7 +8,7 @@ export type LoginFormValues = {
 
 export const LoginSchema = yup
   .object({
-    email: yup.string().email().required("Email is required."),
+    email: emailSchema,
     password: yup.string().required("Password is required."),
   })
   .required();
@@ -18,7 +19,7 @@ export type MagicLoginFormValues = {
 
 export const MagicLoginSchema = yup
   .object({
-    email: yup.string().email().required("Email is required."),
+    email: emailSchema,
   })
   .required();
 
