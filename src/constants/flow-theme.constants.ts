@@ -35,4 +35,24 @@ export const FLOW = {
 
   // Typography
   fontFamily: "'DM Sans', sans-serif",
+  fontFamilySerif: "'Instrument Serif', serif", // Headers — the "old school Apple" look
+
+  // Animations
+  fadeSlideUp: "fadeSlideUp 0.4s ease",
+  fadeIn: "fadeIn 0.6s ease both",
 } as const;
+
+/**
+ * Keyframe animations for flow builder components.
+ * Import and inject via createGlobalStyle or use in styled-components.
+ */
+export const FLOW_KEYFRAMES = `
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+`;
