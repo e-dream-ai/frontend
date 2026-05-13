@@ -1,4 +1,4 @@
-import React, { useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef } from "react";
 import { v4 as uuidv4 } from "uuid";
 import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
@@ -6,16 +6,31 @@ import { axiosClient } from "@/client/axios.client";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { FLOW } from "@/constants/flow-theme.constants";
 import { KeyframeStrip } from "./keyframe-strip";
+import { AddKeyframesFromPlaylistModal } from "./add-keyframes-from-playlist-modal";
+import { useFileDropUpload } from "../hooks/useFileDropUpload";
 
-const FlowContainer = styled.div`
+const FlowContainer = styled.div<{ $dragOver?: boolean }>`
   background: ${FLOW.bgCard};
   border: 1px solid ${FLOW.border};
   border-radius: 16px;
   overflow: hidden;
+  position: relative;
+  min-height: 200px;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+
+  ${(props) =>
+    props.$dragOver &&
+    `
+    border-color: ${FLOW.accent};
+    background-color: ${FLOW.accentDim};
+  `}
 `;
 
 export const FlowBuilder: React.FC = () => {
   const addKeyframe = useFlowStore((s) => s.addKeyframe);
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddGenerate = useCallback(() => {
@@ -98,12 +113,16 @@ export const FlowBuilder: React.FC = () => {
   );
 
   const handleAddFromPlaylist = useCallback(() => {
-    // TODO: Task 7 adds the playlist modal
-    alert("Import from playlist coming soon");
+    setShowPlaylistModal(true);
   }, []);
 
+  const { isDragOver, dropHandlers } = useFileDropUpload({
+    accept: ["image/jpeg", "image/png", "image/webp"],
+    onFiles: uploadFiles,
+  });
+
   return (
-    <FlowContainer>
+    <FlowContainer $dragOver={isDragOver} {...dropHandlers}>
       <KeyframeStrip
         onAddGenerate={handleAddGenerate}
         onAddUpload={handleAddUpload}
@@ -118,6 +137,12 @@ export const FlowBuilder: React.FC = () => {
         style={{ display: "none" }}
         onChange={handleFileSelected}
       />
+
+      {showPlaylistModal && (
+        <AddKeyframesFromPlaylistModal
+          onClose={() => setShowPlaylistModal(false)}
+        />
+      )}
     </FlowContainer>
   );
 };
