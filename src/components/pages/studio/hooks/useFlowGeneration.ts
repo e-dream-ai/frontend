@@ -71,7 +71,7 @@ export function useFlowGeneration() {
       const algoParams = buildVideoAlgoParams({
         model: settings.model,
         action: settings.action,
-        imageUuid: fromKf.keyframeUuid,
+        imageUuid: fromKf.imageUrl,
         imageSize: undefined,
         duration: settings.duration,
         numInferenceSteps: settings.numInferenceSteps,
