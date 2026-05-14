@@ -9,6 +9,25 @@ import type { VideoModel } from "@/types/studio.types";
 
 const LOOP_KEYFRAME_ID = "__loop__";
 
+/** Derive the display keyframes list, appending a synthetic loop frame when enabled. */
+function buildKeyframesWithLoop(
+  keyframes: FlowKeyframe[],
+  loop: boolean,
+): FlowKeyframe[] {
+  if (!loop || keyframes.length < 2) return keyframes;
+  const first = keyframes[0];
+  return [
+    ...keyframes,
+    {
+      id: LOOP_KEYFRAME_ID,
+      keyframeUuid: first.keyframeUuid,
+      imageUrl: first.imageUrl,
+      name: first.name,
+      isLoopKeyframe: true,
+    },
+  ];
+}
+
 type FlowStoreState = {
   // Phase 0
   keyframes: FlowKeyframe[];
@@ -129,9 +148,7 @@ export const useFlowStore = create<FlowStoreState>()(
 
       removeKeyframe: (id) =>
         set((s) => ({
-          keyframes: s.keyframes.filter(
-            (kf) => kf.id !== id && !kf.isLoopKeyframe,
-          ),
+          keyframes: s.keyframes.filter((kf) => kf.id !== id),
         })),
 
       reorderKeyframes: (orderedIds) =>
@@ -148,18 +165,7 @@ export const useFlowStore = create<FlowStoreState>()(
 
       keyframesWithLoop: () => {
         const { keyframes, loop } = get();
-        if (!loop || keyframes.length < 2) return keyframes;
-        const first = keyframes[0];
-        return [
-          ...keyframes,
-          {
-            id: LOOP_KEYFRAME_ID,
-            keyframeUuid: first.keyframeUuid,
-            imageUrl: first.imageUrl,
-            name: first.name,
-            isLoopKeyframe: true,
-          },
-        ];
+        return buildKeyframesWithLoop(keyframes, loop);
       },
 
       resetFlow: () =>
@@ -250,12 +256,12 @@ export const useFlowStore = create<FlowStoreState>()(
         }),
 
       recomputeTransitions: () =>
-        set((s) => {
-          const allKfs = get().keyframesWithLoop();
-          return {
-            transitions: deriveTransitions(allKfs, s.transitions),
-          };
-        }),
+        set((s) => ({
+          transitions: deriveTransitions(
+            buildKeyframesWithLoop(s.keyframes, s.loop),
+            s.transitions,
+          ),
+        })),
 
       reconcileStaleTransitions: () =>
         set((s) => ({
@@ -281,6 +287,8 @@ export const useFlowStore = create<FlowStoreState>()(
       },
       onRehydrateStorage: () => (state) => {
         if (state) {
+          // Order matters: reconcile must run first to mark stale in-flight
+          // jobs as "failed" before recompute preserves them via the existing map.
           state.reconcileStaleTransitions();
           state.recomputeTransitions();
         }

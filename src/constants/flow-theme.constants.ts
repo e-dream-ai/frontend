@@ -1,3 +1,5 @@
+import { keyframes } from "styled-components";
+
 /**
  * Flow Builder design tokens.
  * Matches the studio roadmap deck (2026-05-13-jay-studio-roadmap-v2.html).
@@ -36,23 +38,22 @@ export const FLOW = {
   // Typography
   fontFamily: "'DM Sans', sans-serif",
   fontFamilySerif: "'Instrument Serif', serif", // Headers — the "old school Apple" look
-
-  // Animations
-  fadeSlideUp: "fadeSlideUp 0.4s ease",
-  fadeIn: "fadeIn 0.6s ease both",
 } as const;
 
 /**
- * Keyframe animations for flow builder components.
- * Import and inject via createGlobalStyle or use in styled-components.
+ * Shared keyframe animations for flow builder components.
  */
-export const FLOW_KEYFRAMES = `
-  @keyframes fadeSlideUp {
-    from { opacity: 0; transform: translateY(12px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
+export const flowFadeSlideUp = keyframes`
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+export const flowSlideIn = keyframes`
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+`;
+
+export const flowFadeIn = keyframes`
+  from { opacity: 0; }
+  to { opacity: 1; }
 `;

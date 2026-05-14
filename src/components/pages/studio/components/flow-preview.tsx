@@ -40,13 +40,10 @@ export function FlowPreview() {
     }
   }, [completedSegments.length, currentIndex]);
 
+  const segmentCount = completedSegments.length;
   const handleEnded = useCallback(() => {
-    if (currentIndex < completedSegments.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      setCurrentIndex(0); // Loop back
-    }
-  }, [currentIndex, completedSegments.length]);
+    setCurrentIndex((prev) => (prev < segmentCount - 1 ? prev + 1 : 0));
+  }, [segmentCount]);
 
   if (completedSegments.length === 0) return null;
 
@@ -58,6 +55,7 @@ export function FlowPreview() {
         <PreviewLabel>Preview</PreviewLabel>
         <VideoWrapper onClick={() => setLightboxOpen(true)}>
           <video
+            key={currentUrl}
             ref={videoRef}
             src={currentUrl}
             autoPlay
@@ -77,7 +75,7 @@ export function FlowPreview() {
         createPortal(
           <LightboxOverlay onClick={() => setLightboxOpen(false)}>
             <LightboxVideo onClick={(e) => e.stopPropagation()}>
-              <video src={currentUrl} autoPlay controls onEnded={handleEnded} />
+              <video key={currentUrl} src={currentUrl} autoPlay controls />
             </LightboxVideo>
           </LightboxOverlay>,
           document.body,

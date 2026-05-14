@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from "react";
+import { toast } from "react-toastify";
 import { v4 as uuidv4 } from "uuid";
 import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
@@ -46,7 +47,7 @@ export const FlowBuilder: React.FC = () => {
   // Recompute transitions when keyframes or loop changes
   useEffect(() => {
     recomputeTransitions();
-  }, [keyframes.length, loop, recomputeTransitions]);
+  }, [keyframes, loop, recomputeTransitions]);
 
   // Mount progress tracking
   useFlowJobProgress();
@@ -58,7 +59,7 @@ export const FlowBuilder: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddGenerate = useCallback(() => {
-    alert("Inline image generation coming in Phase 1");
+    toast.info("Inline image generation coming in Phase 1");
   }, []);
 
   const handleAddUpload = useCallback(() => {

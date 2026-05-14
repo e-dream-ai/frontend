@@ -40,6 +40,9 @@ export async function uploadKeyframeImage(file: File): Promise<UploadResult> {
       method: "PUT",
       body: chunk,
     });
+    if (!uploadRes.ok) {
+      throw new Error(`Chunk ${i + 1} upload failed: ${uploadRes.status}`);
+    }
     parts.push({
       ETag: uploadRes.headers.get("ETag") ?? "",
       PartNumber: i + 1,

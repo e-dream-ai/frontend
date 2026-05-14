@@ -100,8 +100,10 @@ export function TransitionSettingsPanel({
   const currentDuration =
     selectedTransition?.durationOverride ?? globalDuration;
   const currentModel = selectedTransition?.modelOverride ?? globalModel;
-  const currentSteps = globalNumInferenceSteps;
-  const currentGuidance = globalGuidance;
+  const currentSteps =
+    selectedTransition?.numInferenceStepsOverride ?? globalNumInferenceSteps;
+  const currentGuidance =
+    selectedTransition?.guidanceOverride ?? globalGuidance;
 
   // Filter presets by model
   const filteredPresets = useMemo(
@@ -159,7 +161,7 @@ export function TransitionSettingsPanel({
 
   const handlePresetChange = useCallback(
     (presetName: string) => {
-      setValue("presetOverride", presetName || undefined);
+      setValue("presetOverride", presetName || "");
 
       // Fill prompt from preset
       const action = resolvePresetAction(presetName);
@@ -187,7 +189,7 @@ export function TransitionSettingsPanel({
       if (currentPresetId) {
         const pack = ACTION_PRESETS.find((p) => p.name === currentPresetId);
         if (pack && pack.model !== "all" && pack.model !== model) {
-          setValue("presetOverride", undefined);
+          setValue("presetOverride", "");
         }
       }
 
@@ -207,6 +209,7 @@ export function TransitionSettingsPanel({
   // Generate All disabled?
   const generateAllDisabled =
     isGenerating ||
+    transitions.length === 0 ||
     transitions.every((t) =>
       ["processed", "queue", "processing"].includes(t.status),
     );
@@ -344,9 +347,16 @@ export function TransitionSettingsPanel({
                     min={1}
                     max={100}
                     value={currentSteps}
-                    onChange={(e) =>
-                      setGlobalNumInferenceSteps(Number(e.target.value))
-                    }
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      if (isPerTransition && selectedTransitionIndex !== null) {
+                        setTransitionOverride(selectedTransitionIndex, {
+                          numInferenceStepsOverride: val,
+                        });
+                      } else {
+                        setGlobalNumInferenceSteps(val);
+                      }
+                    }}
                   />
                 </FieldGroup>
                 <FieldGroup>
@@ -357,7 +367,16 @@ export function TransitionSettingsPanel({
                     max={20}
                     step={0.5}
                     value={currentGuidance}
-                    onChange={(e) => setGlobalGuidance(Number(e.target.value))}
+                    onChange={(e) => {
+                      const val = Number(e.target.value);
+                      if (isPerTransition && selectedTransitionIndex !== null) {
+                        setTransitionOverride(selectedTransitionIndex, {
+                          guidanceOverride: val,
+                        });
+                      } else {
+                        setGlobalGuidance(val);
+                      }
+                    }}
                   />
                 </FieldGroup>
               </AdvancedFields>

@@ -50,8 +50,9 @@ export function resolveEffectiveSettings(
   const prompt = transition.promptOverride ?? global.globalPrompt;
   const duration = transition.durationOverride ?? global.globalDuration;
   const model = transition.modelOverride ?? global.globalModel;
-  const numInferenceSteps = global.globalNumInferenceSteps;
-  const guidance = global.globalGuidance;
+  const numInferenceSteps =
+    transition.numInferenceStepsOverride ?? global.globalNumInferenceSteps;
+  const guidance = transition.guidanceOverride ?? global.globalGuidance;
 
   // Resolve preset → StudioAction
   let action: Pick<StudioAction, "prompt" | "highNoiseLoras" | "lowNoiseLoras">;

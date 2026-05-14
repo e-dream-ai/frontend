@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { axiosClient } from "@/client/axios.client";
@@ -9,6 +9,7 @@ import type { FlowTransition } from "@/types/flow.types";
 
 export function useFlowGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
+  const generatingCount = useRef(0);
 
   const {
     keyframes,
@@ -71,7 +72,7 @@ export function useFlowGeneration() {
       const algoParams = buildVideoAlgoParams({
         model: settings.model,
         action: settings.action,
-        imageUuid: fromKf.imageUrl,
+        imageUuid: fromKf.keyframeUuid,
         imageSize: undefined,
         duration: settings.duration,
         numInferenceSteps: settings.numInferenceSteps,
@@ -121,8 +122,21 @@ export function useFlowGeneration() {
     [keyframes, globalSettings, setTransitionDream, updateTransitionStatus],
   );
 
-  const generateAll = useCallback(async () => {
+  const startGenerating = useCallback(() => {
+    generatingCount.current += 1;
     setIsGenerating(true);
+  }, []);
+
+  const stopGenerating = useCallback(() => {
+    generatingCount.current -= 1;
+    if (generatingCount.current <= 0) {
+      generatingCount.current = 0;
+      setIsGenerating(false);
+    }
+  }, []);
+
+  const generateAll = useCallback(async () => {
+    startGenerating();
     try {
       // Read current transitions from store (fresh read)
       const currentTransitions = useFlowStore.getState().transitions;
@@ -139,23 +153,23 @@ export function useFlowGeneration() {
         await generateTransition(i, t);
       }
     } finally {
-      setIsGenerating(false);
+      stopGenerating();
     }
-  }, [generateTransition]);
+  }, [generateTransition, startGenerating, stopGenerating]);
 
   const generateOne = useCallback(
     async (index: number) => {
-      setIsGenerating(true);
+      startGenerating();
       try {
         const t = useFlowStore.getState().transitions[index];
         if (t) {
           await generateTransition(index, t);
         }
       } finally {
-        setIsGenerating(false);
+        stopGenerating();
       }
     },
-    [generateTransition],
+    [generateTransition, startGenerating, stopGenerating],
   );
 
   return { generateAll, generateOne, isGenerating };

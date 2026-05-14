@@ -10,11 +10,6 @@ export interface FlowKeyframe {
   isLoopKeyframe?: boolean; // true for auto-generated loop frame
 }
 
-export interface FlowState {
-  keyframes: FlowKeyframe[]; // ordered list (excludes loop keyframe — derived)
-  loop: boolean;
-}
-
 export type TransitionStatus =
   | "idle"
   | "queue"
@@ -31,6 +26,8 @@ export interface FlowTransition {
   promptOverride?: string;
   durationOverride?: number; // seconds
   modelOverride?: VideoModel;
+  numInferenceStepsOverride?: number;
+  guidanceOverride?: number;
   loraOverride?: LoRAConfig[];
 
   // Generation state

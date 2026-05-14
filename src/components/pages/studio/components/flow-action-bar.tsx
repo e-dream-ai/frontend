@@ -1,4 +1,5 @@
 import { useState, useCallback } from "react";
+import { toast } from "react-toastify";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { axiosClient } from "@/client/axios.client";
@@ -17,14 +18,19 @@ interface FlowActionBarProps {
 }
 
 export function FlowActionBar({ onPreviewAll }: FlowActionBarProps) {
-  const { transitions, setTransitionUprez, updateTransitionUprezStatus } =
-    useFlowStore(
-      useShallow((s) => ({
-        transitions: s.transitions,
-        setTransitionUprez: s.setTransitionUprez,
-        updateTransitionUprezStatus: s.updateTransitionUprezStatus,
-      })),
-    );
+  const {
+    transitions,
+    keyframes,
+    setTransitionUprez,
+    updateTransitionUprezStatus,
+  } = useFlowStore(
+    useShallow((s) => ({
+      transitions: s.transitions,
+      keyframes: s.keyframes,
+      setTransitionUprez: s.setTransitionUprez,
+      updateTransitionUprezStatus: s.updateTransitionUprezStatus,
+    })),
+  );
 
   const [uprezDropdownOpen, setUprezDropdownOpen] = useState(false);
   const [isUprezzing, setIsUprezzing] = useState(false);
@@ -38,10 +44,15 @@ export function FlowActionBar({ onPreviewAll }: FlowActionBarProps) {
       const headers = getRequestHeaders({ contentType: ContentType.json });
 
       try {
-        for (let i = 0; i < transitions.length; i++) {
-          const t = transitions[i];
-          if (t.status !== "processed" || !t.dreamUuid) continue;
-          if (t.uprezStatus === "processed" || t.uprezStatus === "processing")
+        const transitionCount = transitions.length;
+        for (let i = 0; i < transitionCount; i++) {
+          const t = useFlowStore.getState().transitions[i];
+          if (!t || t.status !== "processed" || !t.dreamUuid) continue;
+          if (
+            t.uprezStatus === "processed" ||
+            t.uprezStatus === "processing" ||
+            t.uprezStatus === "queue"
+          )
             continue;
 
           try {
@@ -55,7 +66,13 @@ export function FlowActionBar({ onPreviewAll }: FlowActionBarProps) {
             const { data } = await axiosClient.post(
               "/v1/dream",
               {
-                name: `Uprez: ${t.fromKeyframeId} \u2192 ${t.toKeyframeId}`,
+                name: `Uprez: ${
+                  keyframes.find((kf) => kf.id === t.fromKeyframeId)?.name ||
+                  "frame"
+                } \u2192 ${
+                  keyframes.find((kf) => kf.id === t.toKeyframeId)?.name ||
+                  "frame"
+                }`,
                 prompt: JSON.stringify(algoParams),
               },
               { headers },
@@ -75,13 +92,13 @@ export function FlowActionBar({ onPreviewAll }: FlowActionBarProps) {
         setIsUprezzing(false);
       }
     },
-    [transitions, setTransitionUprez, updateTransitionUprezStatus],
+    [transitions.length, setTransitionUprez, updateTransitionUprezStatus],
   );
 
   const handleSaveToPlaylist = useCallback(() => {
-    // Phase 1 stub
-    // TODO: Replace with actual toast notification system
-    alert("Coming soon \u2014 Save to Playlist will be available in Phase 2");
+    toast.info(
+      "Coming soon \u2014 Save to Playlist will be available in Phase 2",
+    );
   }, []);
 
   if (!hasResults) return null;

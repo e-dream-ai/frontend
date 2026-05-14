@@ -1,16 +1,5 @@
-import styled, { keyframes } from "styled-components";
-import { FLOW } from "@/constants/flow-theme.constants";
-
-const slideIn = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(8px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
+import styled from "styled-components";
+import { FLOW, flowSlideIn } from "@/constants/flow-theme.constants";
 
 export const PanelContainer = styled.div`
   background: ${FLOW.bgCard};
@@ -18,7 +7,7 @@ export const PanelContainer = styled.div`
   border-radius: ${FLOW.radius};
   padding: 16px 20px;
   margin-top: 12px;
-  animation: ${slideIn} 0.4s ease;
+  animation: ${flowSlideIn} 0.4s ease;
 `;
 
 export const PanelHeader = styled.div`

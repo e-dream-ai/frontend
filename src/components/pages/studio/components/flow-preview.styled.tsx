@@ -1,10 +1,5 @@
-import styled, { keyframes } from "styled-components";
-import { FLOW } from "@/constants/flow-theme.constants";
-
-const fadeIn = keyframes`
-  from { opacity: 0; }
-  to { opacity: 1; }
-`;
+import styled from "styled-components";
+import { FLOW, flowFadeIn } from "@/constants/flow-theme.constants";
 
 export const PreviewContainer = styled.div`
   background: ${FLOW.bgCard};
@@ -16,7 +11,7 @@ export const PreviewContainer = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  animation: ${fadeIn} 0.4s ease;
+  animation: ${flowFadeIn} 0.4s ease;
 `;
 
 export const PreviewLabel = styled.span`
@@ -58,7 +53,7 @@ export const LightboxOverlay = styled.div`
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  animation: ${fadeIn} 0.3s ease;
+  animation: ${flowFadeIn} 0.3s ease;
   cursor: pointer;
 `;
 

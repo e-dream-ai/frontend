@@ -1,16 +1,5 @@
-import styled, { css, keyframes } from "styled-components";
-import { FLOW } from "@/constants/flow-theme.constants";
-
-const fadeSlideUp = keyframes`
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-`;
+import styled, { css } from "styled-components";
+import { FLOW, flowFadeSlideUp } from "@/constants/flow-theme.constants";
 
 export const GapContainer = styled.div<{ $expanded: boolean }>`
   flex-shrink: 0;
@@ -42,7 +31,7 @@ export const GapThumbnail = styled.div<{ $status: string }>`
   overflow: hidden;
   position: relative;
   background: ${FLOW.bgCard};
-  animation: ${fadeSlideUp} 0.4s ease;
+  animation: ${flowFadeSlideUp} 0.4s ease;
 
   ${(p) =>
     p.$status === "failed" &&

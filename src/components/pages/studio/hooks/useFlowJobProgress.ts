@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useMemo } from "react";
+import { useEffect, useCallback, useMemo, useRef } from "react";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { useSocket } from "@/hooks/useSocket";
@@ -122,32 +122,56 @@ export function useFlowJobProgress() {
     };
   }, [socket, handleProgress]);
 
-  // Join/leave Socket.IO rooms for pending UUIDs
+  // Join/leave Socket.IO rooms — diff against previous set to avoid churn
+  const joinedUuidsRef = useRef<Set<string>>(new Set());
+
   useEffect(() => {
-    if (!socket || pendingUuids.length === 0) return;
+    if (!socket) return;
 
-    const joinRooms = () => {
-      pendingUuids.forEach((uuid) => socket.emit(JOIN_DREAM_ROOM_EVENT, uuid));
+    const currentSet = new Set(pendingUuids);
+    const prevSet = joinedUuidsRef.current;
+
+    // Join rooms for newly added UUIDs
+    for (const uuid of currentSet) {
+      if (!prevSet.has(uuid)) {
+        socket.emit(JOIN_DREAM_ROOM_EVENT, uuid);
+      }
+    }
+    // Leave rooms for removed UUIDs
+    for (const uuid of prevSet) {
+      if (!currentSet.has(uuid)) {
+        socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
+      }
+    }
+    joinedUuidsRef.current = currentSet;
+
+    // Rejoin all rooms on reconnect
+    const rejoinAll = () => {
+      joinedUuidsRef.current.forEach((uuid) =>
+        socket.emit(JOIN_DREAM_ROOM_EVENT, uuid),
+      );
     };
-
-    joinRooms();
-    socket.on("connect", joinRooms);
+    socket.on("connect", rejoinAll);
 
     return () => {
-      socket.off("connect", joinRooms);
-      pendingUuids.forEach((uuid) => socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid));
+      socket.off("connect", rejoinAll);
     };
   }, [socket, pendingUuids]);
 
-  // Polling fallback
+  // Keep a ref to pendingEntries so the polling interval doesn't restart on every status update
+  const pendingEntriesRef = useRef(pendingEntries);
+  pendingEntriesRef.current = pendingEntries;
+
+  // Polling fallback — deps only on pendingUuids.length so the interval stays stable
   useEffect(() => {
     if (pendingUuids.length === 0) return;
 
     const poll = async () => {
+      const entries = pendingEntriesRef.current;
       const headers = getRequestHeaders({
         contentType: ContentType.json,
       });
-      for (const entry of pendingEntries) {
+      for (const entry of entries) {
         try {
           const { data } = await axiosClient.get(`/v1/dream/${entry.uuid}`, {
             headers,
@@ -163,7 +187,9 @@ export function useFlowJobProgress() {
               .getState()
               .updateTransitionUprezStatus(entry.index, mappedStatus);
           } else {
-            updateTransitionStatus(entry.index, mappedStatus);
+            useFlowStore
+              .getState()
+              .updateTransitionStatus(entry.index, mappedStatus);
           }
         } catch {
           // Polling failure is non-fatal — Socket.IO is primary
@@ -173,5 +199,5 @@ export function useFlowJobProgress() {
 
     const interval = setInterval(poll, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
-  }, [pendingEntries, pendingUuids.length, updateTransitionStatus]);
+  }, [pendingUuids.length]);
 }

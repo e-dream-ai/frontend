@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useMemo } from "react";
 import {
   DndContext,
   closestCenter,
@@ -46,10 +46,23 @@ export const KeyframeStrip: React.FC<Props> = ({
   const setLoop = useFlowStore((s) => s.setLoop);
   const rawKeyframes = useFlowStore((s) => s.keyframes);
 
-  // Reactive selector — subscribes to state changes and recomputes derived list
-  const displayKeyframes = useFlowStore((s) => s.keyframesWithLoop());
-  // Read loop separately for the checkbox (also ensures re-render on toggle)
   const loop = useFlowStore((s) => s.loop);
+
+  // Derive display keyframes from raw data to avoid new-array-every-render
+  const displayKeyframes = useMemo(() => {
+    if (!loop || rawKeyframes.length < 2) return rawKeyframes;
+    const first = rawKeyframes[0];
+    return [
+      ...rawKeyframes,
+      {
+        id: "__loop__",
+        keyframeUuid: first.keyframeUuid,
+        imageUrl: first.imageUrl,
+        name: first.name,
+        isLoopKeyframe: true,
+      },
+    ];
+  }, [rawKeyframes, loop]);
 
   const { transitions, selectTransition, globalDuration } = useFlowStore(
     useShallow((s) => ({
