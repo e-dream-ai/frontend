@@ -3,9 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
-import { axiosClient } from "@/client/axios.client";
-import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { FLOW } from "@/constants/flow-theme.constants";
+import { uploadKeyframeImage } from "@/components/pages/studio/utils/upload-keyframe-image";
 import { KeyframeStrip } from "./keyframe-strip";
 import { TransitionSettingsPanel } from "./transition-settings-panel";
 import { FlowPreview } from "./flow-preview";
@@ -68,56 +67,14 @@ export const FlowBuilder: React.FC = () => {
 
   const uploadFiles = useCallback(
     async (files: File[]) => {
-      const headers = getRequestHeaders({ contentType: ContentType.json });
-
       for (const file of files) {
         try {
-          const extension = file.name.split(".").pop() ?? "jpg";
-
-          const createRes = await axiosClient.post(
-            "/v1/keyframe",
-            { name: file.name.replace(/\.[^.]+$/, "") },
-            { headers },
-          );
-          const keyframeUuid = createRes.data.data.keyframe.uuid;
-
-          const initRes = await axiosClient.post(
-            `/v1/keyframe/${keyframeUuid}/image/init`,
-            { extension },
-            { headers },
-          );
-          const { uploadId, urls } = initRes.data.data;
-
-          const parts: { ETag: string; PartNumber: number }[] = [];
-          const chunkSize = 5 * 1024 * 1024;
-          for (let i = 0; i < urls.length; i++) {
-            const start = i * chunkSize;
-            const end = Math.min(start + chunkSize, file.size);
-            const chunk = file.slice(start, end);
-            const uploadRes = await fetch(urls[i], {
-              method: "PUT",
-              body: chunk,
-            });
-            parts.push({
-              ETag: uploadRes.headers.get("ETag") ?? "",
-              PartNumber: i + 1,
-            });
-          }
-
-          await axiosClient.post(
-            `/v1/keyframe/${keyframeUuid}/image/complete`,
-            { extension, parts, uploadId },
-            { headers },
-          );
-
-          const kfRes = await axiosClient.get(`/v1/keyframe/${keyframeUuid}`);
-          const kfData = kfRes.data.data.keyframe;
-
+          const result = await uploadKeyframeImage(file);
           addKeyframe({
             id: uuidv4(),
-            keyframeUuid: kfData.uuid,
-            imageUrl: kfData.image,
-            name: kfData.name,
+            keyframeUuid: result.keyframeUuid,
+            imageUrl: result.imageUrl,
+            name: result.name,
           });
         } catch (err) {
           console.error("Failed to upload keyframe image:", err);
