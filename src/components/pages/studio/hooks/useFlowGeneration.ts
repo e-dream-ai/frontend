@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { axiosClient } from "@/client/axios.client";
@@ -34,14 +34,24 @@ export function useFlowGeneration() {
     })),
   );
 
-  const globalSettings = {
-    globalPresetId,
-    globalPrompt,
-    globalDuration,
-    globalModel,
-    globalNumInferenceSteps,
-    globalGuidance,
-  };
+  const globalSettings = useMemo(
+    () => ({
+      globalPresetId,
+      globalPrompt,
+      globalDuration,
+      globalModel,
+      globalNumInferenceSteps,
+      globalGuidance,
+    }),
+    [
+      globalPresetId,
+      globalPrompt,
+      globalDuration,
+      globalModel,
+      globalNumInferenceSteps,
+      globalGuidance,
+    ],
+  );
 
   const generateTransition = useCallback(
     async (index: number, transition: FlowTransition) => {
