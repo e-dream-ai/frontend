@@ -12,7 +12,9 @@ import {
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { useFlowStore } from "@/stores/flow.store";
+import { useShallow } from "zustand/react/shallow";
 import { KeyframeCard } from "./keyframe-card";
+import { TransitionGapEnhanced } from "./transition-gap";
 import {
   StripSection,
   SectionLabel,
@@ -49,6 +51,14 @@ export const KeyframeStrip: React.FC<Props> = ({
   // Read loop separately for the checkbox (also ensures re-render on toggle)
   const loop = useFlowStore((s) => s.loop);
 
+  const { transitions, selectTransition, globalDuration } = useFlowStore(
+    useShallow((s) => ({
+      transitions: s.transitions,
+      selectTransition: s.selectTransition,
+      globalDuration: s.globalDuration,
+    })),
+  );
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
   );
@@ -76,11 +86,26 @@ export const KeyframeStrip: React.FC<Props> = ({
 
   displayKeyframes.forEach((kf, i) => {
     if (i > 0) {
-      stripItems.push(
-        <TransitionGap key={`gap-${i}`}>
-          <GapLine />
-        </TransitionGap>,
-      );
+      const transitionIndex = i - 1;
+      const transition = transitions[transitionIndex];
+      if (transition) {
+        const effectiveDuration = transition.durationOverride ?? globalDuration;
+        stripItems.push(
+          <TransitionGapEnhanced
+            key={`gap-${transitionIndex}`}
+            transition={transition}
+            effectiveDuration={effectiveDuration}
+            onClick={() => selectTransition(transitionIndex)}
+          />,
+        );
+      } else {
+        // Fallback for transitions not yet computed
+        stripItems.push(
+          <TransitionGap key={`gap-${i}`}>
+            <GapLine />
+          </TransitionGap>,
+        );
+      }
     }
     stripItems.push(
       <KeyframeCard

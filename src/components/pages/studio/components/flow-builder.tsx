@@ -1,12 +1,18 @@
-import React, { useState, useCallback, useRef } from "react";
+import React, { useState, useCallback, useRef, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
+import { useShallow } from "zustand/react/shallow";
 import { axiosClient } from "@/client/axios.client";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { FLOW } from "@/constants/flow-theme.constants";
 import { KeyframeStrip } from "./keyframe-strip";
+import { TransitionSettingsPanel } from "./transition-settings-panel";
+import { FlowPreview } from "./flow-preview";
+import { FlowActionBar } from "./flow-action-bar";
 import { AddKeyframesFromPlaylistModal } from "./add-keyframes-from-playlist-modal";
+import { useFlowGeneration } from "@/components/pages/studio/hooks/useFlowGeneration";
+import { useFlowJobProgress } from "@/components/pages/studio/hooks/useFlowJobProgress";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
 
 const FlowContainer = styled.div<{ $dragOver?: boolean }>`
@@ -30,6 +36,25 @@ const FlowContainer = styled.div<{ $dragOver?: boolean }>`
 
 export const FlowBuilder: React.FC = () => {
   const addKeyframe = useFlowStore((s) => s.addKeyframe);
+  const { keyframes, loop, recomputeTransitions } = useFlowStore(
+    useShallow((s) => ({
+      keyframes: s.keyframes,
+      loop: s.loop,
+      recomputeTransitions: s.recomputeTransitions,
+    })),
+  );
+
+  // Recompute transitions when keyframes or loop changes
+  useEffect(() => {
+    recomputeTransitions();
+  }, [keyframes.length, loop, recomputeTransitions]);
+
+  // Mount progress tracking
+  useFlowJobProgress();
+
+  // Generation controls
+  const { generateAll, generateOne, isGenerating } = useFlowGeneration();
+
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -128,6 +153,15 @@ export const FlowBuilder: React.FC = () => {
         onAddUpload={handleAddUpload}
         onAddFromPlaylist={handleAddFromPlaylist}
       />
+
+      <TransitionSettingsPanel
+        onGenerateAll={generateAll}
+        onGenerateOne={generateOne}
+        isGenerating={isGenerating}
+      />
+
+      <FlowPreview />
+      <FlowActionBar onPreviewAll={() => {}} />
 
       <input
         ref={fileInputRef}
