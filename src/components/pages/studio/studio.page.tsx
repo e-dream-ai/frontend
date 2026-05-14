@@ -1,8 +1,12 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { useStudioStore } from "@/stores/studio.store";
 import { useStudioModeStore } from "@/stores/studio-mode.store";
+import { useFlowStore } from "@/stores/flow.store";
 import { StudioTabs } from "./components/studio-tabs";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
+import { useFileDropUpload } from "./hooks/useFileDropUpload";
+import { uploadKeyframeImage } from "./utils/upload-keyframe-image";
 import {
   StudioContainer,
   StudioHeader,
@@ -39,6 +43,62 @@ export const StudioPage: React.FC = () => {
   );
   useStudioJobProgress();
 
+  const addImage = useStudioStore((s) => s.addImage);
+  const updateImage = useStudioStore((s) => s.updateImage);
+  const addKeyframe = useFlowStore((s) => s.addKeyframe);
+
+  const handleStudioDrop = useCallback(
+    async (files: File[]) => {
+      const currentMode = useStudioModeStore.getState().mode;
+
+      for (const file of files) {
+        if (currentMode === "batch") {
+          const placeholderUuid = uuidv4();
+          const blobUrl = URL.createObjectURL(file);
+          addImage({
+            uuid: placeholderUuid,
+            url: blobUrl,
+            name: file.name.replace(/\.[^.]+$/, ""),
+            status: "processing",
+            selected: false,
+          });
+
+          try {
+            const result = await uploadKeyframeImage(file);
+            updateImage(placeholderUuid, {
+              url: result.imageUrl,
+              status: "processed",
+              name: result.name,
+            });
+          } catch (err) {
+            console.error("Failed to upload image:", err);
+            updateImage(placeholderUuid, { status: "failed" });
+          } finally {
+            URL.revokeObjectURL(blobUrl);
+          }
+        } else {
+          try {
+            const result = await uploadKeyframeImage(file);
+            addKeyframe({
+              id: uuidv4(),
+              keyframeUuid: result.keyframeUuid,
+              imageUrl: result.imageUrl,
+              name: result.name,
+            });
+          } catch (err) {
+            console.error("Failed to upload keyframe:", err);
+          }
+        }
+      }
+    },
+    [addImage, updateImage, addKeyframe],
+  );
+
+  const { isDragOver, dropHandlers } = useFileDropUpload({
+    accept: ["image/jpeg", "image/png", "image/webp"],
+    onFiles: handleStudioDrop,
+  });
+
   const handleNewSession = () => {
     if (
       !window.confirm(
@@ -50,7 +110,7 @@ export const StudioPage: React.FC = () => {
   };
 
   return (
-    <StudioContainer>
+    <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
         <StudioTitle>Studio</StudioTitle>
         <ModeToggle>

@@ -1,11 +1,21 @@
 import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 
-export const StudioContainer = styled.div`
+export const StudioContainer = styled.div<{ $dragOver?: boolean }>`
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem;
   min-height: calc(100vh - 80px);
+  transition: outline-color 0.2s;
+  outline: 2px solid transparent;
+  outline-offset: -2px;
+  border-radius: 12px;
+
+  ${(props) =>
+    props.$dragOver &&
+    `
+    outline-color: ${props.theme.colorPrimary};
+  `}
 `;
 
 export const StudioHeader = styled.div`
