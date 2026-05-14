@@ -1,3 +1,5 @@
+import type { VideoModel, LoRAConfig } from "@/types/studio.types";
+
 export type StudioMode = "flow" | "batch";
 
 export interface FlowKeyframe {
@@ -11,4 +13,33 @@ export interface FlowKeyframe {
 export interface FlowState {
   keyframes: FlowKeyframe[]; // ordered list (excludes loop keyframe — derived)
   loop: boolean;
+}
+
+export type TransitionStatus =
+  | "idle"
+  | "queue"
+  | "processing"
+  | "processed"
+  | "failed";
+
+export interface FlowTransition {
+  fromKeyframeId: string; // FlowKeyframe.id
+  toKeyframeId: string; // FlowKeyframe.id
+
+  // Per-transition overrides (undefined = use global)
+  presetOverride?: string; // PresetPack name
+  promptOverride?: string;
+  durationOverride?: number; // seconds
+  modelOverride?: VideoModel;
+  loraOverride?: LoRAConfig[];
+
+  // Generation state
+  dreamUuid?: string;
+  status: TransitionStatus;
+  progress?: number; // 0-100
+
+  // Uprez state (undefined = not started)
+  uprezDreamUuid?: string;
+  uprezStatus?: "queue" | "processing" | "processed" | "failed";
+  uprezProgress?: number;
 }
