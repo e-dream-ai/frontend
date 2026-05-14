@@ -2,7 +2,14 @@ import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 
 export const StripSection = styled.div`
-  padding: 28px;
+  padding: 24px 28px;
+`;
+
+export const SectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
 `;
 
 export const SectionLabel = styled.div`
@@ -11,13 +18,13 @@ export const SectionLabel = styled.div`
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: ${FLOW.textMuted};
-  margin-bottom: 20px;
   font-family: ${FLOW.fontFamily};
 `;
 
 export const StripContainer = styled.div`
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 0;
   overflow-x: auto;
   padding-bottom: 8px;
@@ -41,7 +48,8 @@ export const GapLine = styled.div`
 export const StripControls = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: center;
+  gap: 24px;
   margin-top: 20px;
 `;
 

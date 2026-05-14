@@ -1,6 +1,6 @@
 import { useEffect, useCallback, useMemo, useRef } from "react";
+import Bugsnag from "@bugsnag/js";
 import { useFlowStore } from "@/stores/flow.store";
-import { useShallow } from "zustand/react/shallow";
 import { useSocket } from "@/hooks/useSocket";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
@@ -38,12 +38,8 @@ function mapStatus(
 export function useFlowJobProgress() {
   const { socket } = useSocket();
 
-  const { transitions, updateTransitionStatus } = useFlowStore(
-    useShallow((s) => ({
-      transitions: s.transitions,
-      updateTransitionStatus: s.updateTransitionStatus,
-    })),
-  );
+  const transitions = useFlowStore((s) => s.transitions);
+  const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
 
   // Collect pending dream UUIDs with their transition indices
   const pendingEntries = useMemo(() => {
@@ -131,32 +127,29 @@ export function useFlowJobProgress() {
     const currentSet = new Set(pendingUuids);
     const prevSet = joinedUuidsRef.current;
 
-    // Join rooms for newly added UUIDs
     for (const uuid of currentSet) {
-      if (!prevSet.has(uuid)) {
-        socket.emit(JOIN_DREAM_ROOM_EVENT, uuid);
-      }
+      if (!prevSet.has(uuid)) socket.emit(JOIN_DREAM_ROOM_EVENT, uuid);
     }
-    // Leave rooms for removed UUIDs
     for (const uuid of prevSet) {
-      if (!currentSet.has(uuid)) {
-        socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
-      }
+      if (!currentSet.has(uuid)) socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
     }
     joinedUuidsRef.current = currentSet;
+  }, [socket, pendingUuids]);
 
-    // Rejoin all rooms on reconnect
+  // Rejoin all known rooms on reconnect — separate effect so this listener
+  // isn't re-registered every time the pending set changes.
+  useEffect(() => {
+    if (!socket) return;
     const rejoinAll = () => {
       joinedUuidsRef.current.forEach((uuid) =>
         socket.emit(JOIN_DREAM_ROOM_EVENT, uuid),
       );
     };
     socket.on("connect", rejoinAll);
-
     return () => {
       socket.off("connect", rejoinAll);
     };
-  }, [socket, pendingUuids]);
+  }, [socket]);
 
   // Keep a ref to pendingEntries so the polling interval doesn't restart on every status update
   const pendingEntriesRef = useRef(pendingEntries);
@@ -191,8 +184,9 @@ export function useFlowJobProgress() {
               .getState()
               .updateTransitionStatus(entry.index, mappedStatus);
           }
-        } catch {
-          // Polling failure is non-fatal — Socket.IO is primary
+        } catch (err) {
+          // Polling failure is non-fatal — Socket.IO is primary.
+          Bugsnag.notify(err as Error);
         }
       }
     };

@@ -2,11 +2,8 @@ import styled from "styled-components";
 import { FLOW, flowSlideIn } from "@/constants/flow-theme.constants";
 
 export const PanelContainer = styled.div`
-  background: ${FLOW.bgCard};
-  border: 1px solid ${FLOW.border};
-  border-radius: ${FLOW.radius};
-  padding: 16px 20px;
-  margin-top: 12px;
+  padding: 24px 28px;
+  border-top: 1px solid ${FLOW.border};
   animation: ${flowSlideIn} 0.4s ease;
 `;
 
@@ -14,15 +11,16 @@ export const PanelHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 20px;
 `;
 
 export const PanelTitle = styled.span`
-  font-family: ${FLOW.fontFamilySerif};
-  font-size: 14px;
-  color: ${FLOW.text};
+  font-family: ${FLOW.fontFamily};
+  font-size: 11px;
+  font-weight: 600;
+  color: ${FLOW.textMuted};
   text-transform: uppercase;
-  letter-spacing: 1px;
+  letter-spacing: 0.12em;
 `;
 
 export const PanelSubtitle = styled.span`
@@ -47,7 +45,7 @@ export const CloseButton = styled.button`
 
 export const FieldRow = styled.div`
   display: flex;
-  align-items: center;
+  align-items: flex-end;
   gap: 12px;
   flex-wrap: wrap;
 `;
@@ -67,13 +65,19 @@ export const FieldLabel = styled.label`
 `;
 
 export const Select = styled.select`
-  background: ${FLOW.bgInput};
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background-color: ${FLOW.bgInput};
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6' fill='none'><path d='M1 1l4 4 4-4' stroke='%238a8890' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/></svg>");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
   border: 1px solid ${FLOW.border};
   border-radius: ${FLOW.radiusSm};
   color: ${FLOW.text};
   font-family: ${FLOW.fontFamily};
   font-size: 13px;
-  padding: 6px 10px;
+  padding: 6px 32px 6px 12px;
   cursor: pointer;
   min-width: 140px;
 
@@ -87,30 +91,44 @@ export const Select = styled.select`
   }
 `;
 
-export const PromptTextarea = styled.textarea`
+export const PromptTextarea = styled.textarea<{ $invalid?: boolean }>`
   background: ${FLOW.bgInput};
-  border: 1px solid ${FLOW.border};
+  border: 1px solid ${(p) => (p.$invalid ? FLOW.error : FLOW.border)};
   border-radius: ${FLOW.radiusSm};
   color: ${FLOW.text};
   font-family: ${FLOW.fontFamily};
   font-size: 13px;
-  padding: 8px 10px;
+  padding: 10px 12px;
   width: 100%;
-  min-height: 60px;
-  resize: vertical;
+  min-height: 120px;
+  resize: none;
+  transition: border-color 0.18s ease;
 
   &:hover {
-    border-color: ${FLOW.borderHover};
+    border-color: ${(p) => (p.$invalid ? FLOW.error : FLOW.borderHover)};
   }
 
   &:focus {
     outline: none;
-    border-color: ${FLOW.accent};
+    border-color: ${(p) => (p.$invalid ? FLOW.error : FLOW.accent)};
   }
 
   &::placeholder {
     color: ${FLOW.textMuted};
   }
+`;
+
+export const RequiredMark = styled.span`
+  color: ${FLOW.error};
+  margin-left: 4px;
+`;
+
+export const ValidationHint = styled.div`
+  margin-top: 10px;
+  font-family: ${FLOW.fontFamily};
+  font-size: 11px;
+  color: ${FLOW.error};
+  letter-spacing: 0.04em;
 `;
 
 export const GenerateButton = styled.button<{ $disabled?: boolean }>`
@@ -119,9 +137,9 @@ export const GenerateButton = styled.button<{ $disabled?: boolean }>`
   border: 1px solid ${(p) => (p.$disabled ? FLOW.border : FLOW.accent)};
   border-radius: ${FLOW.radiusSm};
   font-family: ${FLOW.fontFamily};
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 500;
-  padding: 6px 16px;
+  padding: 6px 14px;
   cursor: ${(p) => (p.$disabled ? "not-allowed" : "pointer")};
   transition: all 0.2s ease;
   white-space: nowrap;

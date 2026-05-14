@@ -1,14 +1,12 @@
+import { Check, Loader2, AlertTriangle, RotateCcw } from "lucide-react";
 import type { FlowTransition } from "@/types/flow.types";
-import { FLOW } from "@/constants/flow-theme.constants";
 import {
   GapContainer,
   GapLine,
-  GapThumbnail,
+  StatusNode,
+  ProgressRing,
   GapStatusLabel,
-  GapProgressBar,
-  GapProgressFill,
   DurationLabel,
-  GapIcon,
 } from "./transition-gap.styled";
 
 interface TransitionGapProps {
@@ -35,7 +33,7 @@ export function TransitionGapEnhanced({
   const { status, progress } = transition;
   const configured = hasOverrides(transition);
 
-  // Empty state
+  // Idle, no config — just the connecting line.
   if (status === "idle" && !configured) {
     return (
       <GapContainer $expanded={false} onClick={onClick}>
@@ -44,7 +42,7 @@ export function TransitionGapEnhanced({
     );
   }
 
-  // Configured but not yet generated
+  // Idle but configured — solid line + duration pill.
   if (status === "idle" && configured) {
     return (
       <GapContainer $expanded={false} onClick={onClick}>
@@ -54,50 +52,60 @@ export function TransitionGapEnhanced({
     );
   }
 
-  // Queued
+  // Queued — soft pulsing dot.
   if (status === "queue") {
     return (
       <GapContainer $expanded onClick={onClick}>
-        <GapThumbnail $status="queue">
-          <GapStatusLabel $status="queue">queued</GapStatusLabel>
-        </GapThumbnail>
+        <StatusNode $variant="queued" />
+        <GapStatusLabel $status="queued">queued</GapStatusLabel>
       </GapContainer>
     );
   }
 
-  // Processing
+  // Processing — spinning loader inside a node, with progress ring.
   if (status === "processing") {
+    const pct = Math.max(0, Math.min(100, progress ?? 0));
     return (
       <GapContainer $expanded onClick={onClick}>
-        <GapThumbnail $status="processing">
-          <GapStatusLabel $status="processing">{progress ?? 0}%</GapStatusLabel>
-        </GapThumbnail>
-        <GapProgressBar>
-          <GapProgressFill $percent={progress ?? 0} />
-        </GapProgressBar>
+        <StatusNode $variant="processing">
+          {pct > 0 && <ProgressRing $percent={pct} />}
+          <Loader2 size={14} strokeWidth={2.4} />
+        </StatusNode>
+        <GapStatusLabel $status="processing">
+          {pct > 0 ? `${Math.round(pct)}%` : "rendering"}
+        </GapStatusLabel>
       </GapContainer>
     );
   }
 
-  // Complete
+  // Success — filled gold disc with a check, soft halo, duration below.
   if (status === "processed") {
     return (
       <GapContainer $expanded onClick={onClick}>
-        <GapThumbnail $status="processed">
-          <GapIcon $color={FLOW.success}>&#x2713;</GapIcon>
-        </GapThumbnail>
+        <StatusNode $variant="processed">
+          <Check size={14} strokeWidth={3} />
+        </StatusNode>
         <DurationLabel>{effectiveDuration}s</DurationLabel>
       </GapContainer>
     );
   }
 
-  // Failed
+  // Failed — red ring with warning icon. Whole node is "click to retry".
   return (
-    <GapContainer $expanded onClick={onClick}>
-      <GapThumbnail $status="failed">
-        <GapIcon $color="#ef4444">!</GapIcon>
-      </GapThumbnail>
-      <GapStatusLabel $status="failed">failed</GapStatusLabel>
+    <GapContainer
+      $expanded
+      onClick={onClick}
+      title="Click to retry"
+      role="button"
+      tabIndex={0}
+    >
+      <StatusNode $variant="failed">
+        <AlertTriangle size={13} strokeWidth={2.4} />
+      </StatusNode>
+      <GapStatusLabel $status="failed">
+        <RotateCcw size={9} strokeWidth={2.4} />
+        retry
+      </GapStatusLabel>
     </GapContainer>
   );
 }

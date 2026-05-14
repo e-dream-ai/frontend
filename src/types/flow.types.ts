@@ -4,10 +4,14 @@ export type StudioMode = "flow" | "batch";
 
 export interface FlowKeyframe {
   id: string; // local UUID for drag/drop identity
-  keyframeUuid: string; // backend Keyframe.uuid
-  imageUrl: string; // presigned URL for display
+  keyframeUuid: string; // backend Keyframe.uuid ("" while uploading)
+  imageUrl: string; // presigned URL or local objectURL while uploading
   name: string; // display name
   isLoopKeyframe?: boolean; // true for auto-generated loop frame
+
+  // Local-only upload state — never persisted to backend.
+  uploadStatus?: "uploading" | "failed";
+  uploadProgress?: number; // 0-100
 }
 
 export type TransitionStatus =

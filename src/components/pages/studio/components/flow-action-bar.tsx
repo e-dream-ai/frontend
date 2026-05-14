@@ -1,5 +1,7 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { toast } from "react-toastify";
+import Bugsnag from "@bugsnag/js";
+import { Loader2, Check } from "lucide-react";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { axiosClient } from "@/client/axios.client";
@@ -11,13 +13,13 @@ import {
   UprezDropdown,
   DropdownMenu,
   DropdownItem,
+  UprezProgressButton,
+  UprezButtonContent,
+  UprezDivider,
+  UprezDoneBadge,
 } from "./flow-action-bar.styled";
 
-interface FlowActionBarProps {
-  onPreviewAll: () => void;
-}
-
-export function FlowActionBar({ onPreviewAll }: FlowActionBarProps) {
+export function FlowActionBar() {
   const {
     transitions,
     keyframes,
@@ -36,6 +38,46 @@ export function FlowActionBar({ onPreviewAll }: FlowActionBarProps) {
   const [isUprezzing, setIsUprezzing] = useState(false);
 
   const hasResults = transitions.some((t) => t.status === "processed");
+
+  // Aggregate uprez state across all transitions that are eligible (or already running).
+  const uprezState = useMemo(() => {
+    const eligible = transitions.filter(
+      (t) =>
+        t.status === "processed" &&
+        t.dreamUuid &&
+        (t.uprezStatus === "queue" ||
+          t.uprezStatus === "processing" ||
+          t.uprezStatus === "processed" ||
+          t.uprezStatus === "failed"),
+    );
+    if (eligible.length === 0) {
+      return { inFlight: 0, done: 0, failed: 0, total: 0, percent: 0 };
+    }
+    const inFlight = eligible.filter(
+      (t) => t.uprezStatus === "queue" || t.uprezStatus === "processing",
+    );
+    const done = eligible.filter((t) => t.uprezStatus === "processed");
+    const failed = eligible.filter((t) => t.uprezStatus === "failed");
+
+    // Average completion across the whole batch:
+    // done → 100%, processing → uprezProgress, queue → 0%, failed → 0%.
+    const totalProgress =
+      done.length * 100 +
+      inFlight.reduce(
+        (acc, t) =>
+          acc + (t.uprezStatus === "processing" ? t.uprezProgress ?? 0 : 0),
+        0,
+      );
+    const percent = totalProgress / eligible.length;
+
+    return {
+      inFlight: inFlight.length,
+      done: done.length,
+      failed: failed.length,
+      total: eligible.length,
+      percent,
+    };
+  }, [transitions]);
 
   const handleUprezAll = useCallback(
     async (uprezModel: UprezModel) => {
@@ -69,7 +111,7 @@ export function FlowActionBar({ onPreviewAll }: FlowActionBarProps) {
                 name: `Uprez: ${
                   keyframes.find((kf) => kf.id === t.fromKeyframeId)?.name ||
                   "frame"
-                } \u2192 ${
+                } → ${
                   keyframes.find((kf) => kf.id === t.toKeyframeId)?.name ||
                   "frame"
                 }`,
@@ -84,7 +126,7 @@ export function FlowActionBar({ onPreviewAll }: FlowActionBarProps) {
               updateTransitionUprezStatus(i, "queue");
             }
           } catch (error) {
-            console.error(`Uprez failed for transition ${i}:`, error);
+            Bugsnag.notify(error as Error);
             updateTransitionUprezStatus(i, "failed");
           }
         }
@@ -92,30 +134,82 @@ export function FlowActionBar({ onPreviewAll }: FlowActionBarProps) {
         setIsUprezzing(false);
       }
     },
-    [transitions.length, setTransitionUprez, updateTransitionUprezStatus],
+    [
+      transitions.length,
+      keyframes,
+      setTransitionUprez,
+      updateTransitionUprezStatus,
+    ],
   );
 
+  const handlePreviewAll = useCallback(() => {
+    toast.info("Coming soon — Preview All will be available in Phase 2");
+  }, []);
+
   const handleSaveToPlaylist = useCallback(() => {
-    toast.info(
-      "Coming soon \u2014 Save to Playlist will be available in Phase 2",
-    );
+    toast.info("Coming soon — Save to Playlist will be available in Phase 2");
   }, []);
 
   if (!hasResults) return null;
 
+  // Visual state for the Uprez slot:
+  //  - submitting: HTTP roundtrip for /v1/dream POSTs is in flight (local state)
+  //  - running:    at least one transition is queue/processing on the worker
+  //  - allDone:    every eligible transition has finished uprez successfully
+  //  - idle:       not in any of the above — show the dropdown trigger
+  const running = uprezState.inFlight > 0;
+  const allDone =
+    uprezState.total > 0 &&
+    uprezState.done === uprezState.total &&
+    uprezState.failed === 0;
+  const showProgressButton = isUprezzing || running;
+
   return (
     <ActionBarContainer>
-      <ActionButton onClick={onPreviewAll}>Preview All</ActionButton>
+      <ActionButton onClick={handlePreviewAll}>Preview All</ActionButton>
 
       <UprezDropdown>
-        <ActionButton
-          $accent
-          disabled={isUprezzing}
-          onClick={() => setUprezDropdownOpen(!uprezDropdownOpen)}
-        >
-          Uprez All &#9662;
-        </ActionButton>
-        {uprezDropdownOpen && (
+        {showProgressButton ? (
+          <UprezProgressButton
+            $percent={uprezState.percent}
+            aria-live="polite"
+            aria-label={`Upscaling ${uprezState.done} of ${
+              uprezState.total
+            }, ${Math.round(uprezState.percent)} percent`}
+          >
+            <UprezButtonContent>
+              <Loader2 size={13} strokeWidth={2.4} className="spin" />
+              <span>Upscaling</span>
+              <UprezDivider />
+              <span>
+                {uprezState.done}/{uprezState.total}
+              </span>
+            </UprezButtonContent>
+          </UprezProgressButton>
+        ) : allDone ? (
+          <ActionButton
+            $accent
+            onClick={() => setUprezDropdownOpen(!uprezDropdownOpen)}
+          >
+            <UprezButtonContent>
+              <Check size={13} strokeWidth={2.8} />
+              <span>Upscaled</span>
+              <UprezDoneBadge>{uprezState.done}</UprezDoneBadge>
+            </UprezButtonContent>
+          </ActionButton>
+        ) : (
+          <ActionButton
+            $accent
+            onClick={() => setUprezDropdownOpen(!uprezDropdownOpen)}
+          >
+            <UprezButtonContent>
+              <span>Uprez All</span>
+              <span aria-hidden>&#9662;</span>
+            </UprezButtonContent>
+          </ActionButton>
+        )}
+
+        {uprezDropdownOpen && !showProgressButton && (
           <DropdownMenu>
             <DropdownItem onClick={() => handleUprezAll("nvidia-uprez")}>
               Nvidia Super Resolution

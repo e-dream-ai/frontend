@@ -21,6 +21,9 @@ importers:
 
   .:
     dependencies:
+      '@babel/runtime':
+        specifier: ^7.28.4
+        version: 7.28.4
       '@bugsnag/browser-performance':
         specifier: ^2.2.0
         version: 2.2.0

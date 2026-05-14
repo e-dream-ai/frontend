@@ -26,6 +26,8 @@ import {
   AdvancedToggle,
   AdvancedFields,
   NumberInput,
+  ValidationHint,
+  RequiredMark,
 } from "./transition-settings-panel.styled";
 
 interface TransitionSettingsPanelProps {
@@ -39,6 +41,7 @@ export function TransitionSettingsPanel({
   onGenerateOne,
   isGenerating,
 }: TransitionSettingsPanelProps) {
+  // Data via useShallow (re-renders when any selected value changes).
   const {
     transitions,
     keyframes,
@@ -50,16 +53,6 @@ export function TransitionSettingsPanel({
     globalModel,
     globalNumInferenceSteps,
     globalGuidance,
-    setGlobalPreset,
-    setGlobalPrompt,
-    setGlobalDuration,
-    setGlobalModel,
-    setGlobalNumInferenceSteps,
-    setGlobalGuidance,
-    setTransitionOverride,
-    clearTransitionOverride,
-    selectTransition,
-    setSettingsExpanded,
   } = useFlowStore(
     useShallow((s) => ({
       transitions: s.transitions,
@@ -72,18 +65,24 @@ export function TransitionSettingsPanel({
       globalModel: s.globalModel,
       globalNumInferenceSteps: s.globalNumInferenceSteps,
       globalGuidance: s.globalGuidance,
-      setGlobalPreset: s.setGlobalPreset,
-      setGlobalPrompt: s.setGlobalPrompt,
-      setGlobalDuration: s.setGlobalDuration,
-      setGlobalModel: s.setGlobalModel,
-      setGlobalNumInferenceSteps: s.setGlobalNumInferenceSteps,
-      setGlobalGuidance: s.setGlobalGuidance,
-      setTransitionOverride: s.setTransitionOverride,
-      clearTransitionOverride: s.clearTransitionOverride,
-      selectTransition: s.selectTransition,
-      setSettingsExpanded: s.setSettingsExpanded,
     })),
   );
+
+  // Actions are stable refs — individual selectors are cheaper than useShallow.
+  const setGlobalPreset = useFlowStore((s) => s.setGlobalPreset);
+  const setGlobalPrompt = useFlowStore((s) => s.setGlobalPrompt);
+  const setGlobalDuration = useFlowStore((s) => s.setGlobalDuration);
+  const setGlobalModel = useFlowStore((s) => s.setGlobalModel);
+  const setGlobalNumInferenceSteps = useFlowStore(
+    (s) => s.setGlobalNumInferenceSteps,
+  );
+  const setGlobalGuidance = useFlowStore((s) => s.setGlobalGuidance);
+  const setTransitionOverride = useFlowStore((s) => s.setTransitionOverride);
+  const clearTransitionOverride = useFlowStore(
+    (s) => s.clearTransitionOverride,
+  );
+  const selectTransition = useFlowStore((s) => s.selectTransition);
+  const setSettingsExpanded = useFlowStore((s) => s.setSettingsExpanded);
 
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
@@ -124,28 +123,41 @@ export function TransitionSettingsPanel({
     return getAllowedDurationsForActions([action], currentModel);
   }, [currentPresetId, currentModel]);
 
-  // Setter helpers — dispatch to override or global depending on mode
+  type FieldMap = {
+    presetOverride: string;
+    promptOverride: string;
+    durationOverride: number;
+    modelOverride: VideoModel;
+    numInferenceStepsOverride: number;
+    guidanceOverride: number;
+  };
   const setValue = useCallback(
-    (field: string, value: unknown) => {
+    <K extends keyof FieldMap>(field: K, value: FieldMap[K]) => {
       if (isPerTransition && selectedTransitionIndex !== null) {
         setTransitionOverride(selectedTransitionIndex, {
           [field]: value,
         });
-      } else {
-        switch (field) {
-          case "presetOverride":
-            setGlobalPreset(value as string);
-            break;
-          case "promptOverride":
-            setGlobalPrompt(value as string);
-            break;
-          case "durationOverride":
-            setGlobalDuration(value as number);
-            break;
-          case "modelOverride":
-            setGlobalModel(value as VideoModel);
-            break;
-        }
+        return;
+      }
+      switch (field) {
+        case "presetOverride":
+          setGlobalPreset(value as string);
+          break;
+        case "promptOverride":
+          setGlobalPrompt(value as string);
+          break;
+        case "durationOverride":
+          setGlobalDuration(value as number);
+          break;
+        case "modelOverride":
+          setGlobalModel(value as VideoModel);
+          break;
+        case "numInferenceStepsOverride":
+          setGlobalNumInferenceSteps(value as number);
+          break;
+        case "guidanceOverride":
+          setGlobalGuidance(value as number);
+          break;
       }
     },
     [
@@ -156,6 +168,8 @@ export function TransitionSettingsPanel({
       setGlobalPrompt,
       setGlobalDuration,
       setGlobalModel,
+      setGlobalNumInferenceSteps,
+      setGlobalGuidance,
     ],
   );
 
@@ -206,13 +220,20 @@ export function TransitionSettingsPanel({
     [setValue, currentPresetId, currentDuration],
   );
 
+  // When no preset is selected, the prompt drives the generation —
+  // so it becomes required. With a preset, the preset supplies a prompt.
+  const needsPrompt = !currentPresetId && !currentPrompt.trim();
+
   // Generate All disabled?
   const generateAllDisabled =
     isGenerating ||
     transitions.length === 0 ||
     transitions.every((t) =>
       ["processed", "queue", "processing"].includes(t.status),
-    );
+    ) ||
+    needsPrompt;
+
+  const generateOneDisabled = isGenerating || needsPrompt;
 
   // Don't show if fewer than 2 keyframes
   if (keyframes.length < 2) return null;
@@ -280,8 +301,15 @@ export function TransitionSettingsPanel({
         </FieldGroup>
 
         <GenerateButton
-          $disabled={isPerTransition ? isGenerating : generateAllDisabled}
-          disabled={isPerTransition ? isGenerating : generateAllDisabled}
+          $disabled={
+            isPerTransition ? generateOneDisabled : generateAllDisabled
+          }
+          disabled={isPerTransition ? generateOneDisabled : generateAllDisabled}
+          title={
+            needsPrompt
+              ? "Add a prompt or pick a preset to generate"
+              : undefined
+          }
           onClick={() => {
             if (isPerTransition && selectedTransitionIndex !== null) {
               onGenerateOne(selectedTransitionIndex);
@@ -298,6 +326,12 @@ export function TransitionSettingsPanel({
         </GenerateButton>
       </FieldRow>
 
+      {needsPrompt && (
+        <ValidationHint>
+          Pick a preset or write a prompt to describe the motion.
+        </ValidationHint>
+      )}
+
       {/* Expand/collapse toggle */}
       {!settingsExpanded ? (
         <ToggleLink onClick={() => setSettingsExpanded(true)}>
@@ -311,10 +345,14 @@ export function TransitionSettingsPanel({
 
           <ExpandedSection>
             <FieldGroup>
-              <FieldLabel>Prompt</FieldLabel>
+              <FieldLabel>
+                Prompt
+                {needsPrompt && <RequiredMark>*</RequiredMark>}
+              </FieldLabel>
               <PromptTextarea
                 value={currentPrompt}
                 placeholder="Describe the transition motion..."
+                $invalid={needsPrompt}
                 onChange={(e) => setValue("promptOverride", e.target.value)}
               />
             </FieldGroup>
@@ -328,8 +366,8 @@ export function TransitionSettingsPanel({
                     handleModelChange(e.target.value as VideoModel)
                   }
                 >
-                  <option value="wan-i2v">Wan I2V</option>
                   <option value="ltx-i2v">LTX 2.3</option>
+                  <option value="wan-i2v">Wan I2V</option>
                 </Select>
               </FieldGroup>
             </FieldRow>
@@ -347,16 +385,12 @@ export function TransitionSettingsPanel({
                     min={1}
                     max={100}
                     value={currentSteps}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      if (isPerTransition && selectedTransitionIndex !== null) {
-                        setTransitionOverride(selectedTransitionIndex, {
-                          numInferenceStepsOverride: val,
-                        });
-                      } else {
-                        setGlobalNumInferenceSteps(val);
-                      }
-                    }}
+                    onChange={(e) =>
+                      setValue(
+                        "numInferenceStepsOverride",
+                        Number(e.target.value),
+                      )
+                    }
                   />
                 </FieldGroup>
                 <FieldGroup>
@@ -367,16 +401,9 @@ export function TransitionSettingsPanel({
                     max={20}
                     step={0.5}
                     value={currentGuidance}
-                    onChange={(e) => {
-                      const val = Number(e.target.value);
-                      if (isPerTransition && selectedTransitionIndex !== null) {
-                        setTransitionOverride(selectedTransitionIndex, {
-                          guidanceOverride: val,
-                        });
-                      } else {
-                        setGlobalGuidance(val);
-                      }
-                    }}
+                    onChange={(e) =>
+                      setValue("guidanceOverride", Number(e.target.value))
+                    }
                   />
                 </FieldGroup>
               </AdvancedFields>

@@ -2,6 +2,7 @@ import React, { useCallback, useMemo } from "react";
 import {
   DndContext,
   closestCenter,
+  KeyboardSensor,
   PointerSensor,
   useSensor,
   useSensors,
@@ -10,13 +11,15 @@ import {
 import {
   SortableContext,
   horizontalListSortingStrategy,
+  sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { useFlowStore } from "@/stores/flow.store";
-import { useShallow } from "zustand/react/shallow";
 import { KeyframeCard } from "./keyframe-card";
 import { TransitionGapEnhanced } from "./transition-gap";
+import { FlowReset } from "./flow-reset";
 import {
   StripSection,
+  SectionHeader,
   SectionLabel,
   StripContainer,
   TransitionGap,
@@ -31,22 +34,27 @@ import {
 } from "./keyframe-strip.styled";
 
 interface Props {
-  onAddGenerate: () => void;
   onAddUpload: () => void;
   onAddFromPlaylist: () => void;
+  onRetry: (index: number) => void;
 }
 
 export const KeyframeStrip: React.FC<Props> = ({
-  onAddGenerate,
   onAddUpload,
   onAddFromPlaylist,
+  onRetry,
 }) => {
+  // Actions (stable refs)
   const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
   const reorderKeyframes = useFlowStore((s) => s.reorderKeyframes);
   const setLoop = useFlowStore((s) => s.setLoop);
-  const rawKeyframes = useFlowStore((s) => s.keyframes);
+  const selectTransition = useFlowStore((s) => s.selectTransition);
 
+  // Data
+  const rawKeyframes = useFlowStore((s) => s.keyframes);
   const loop = useFlowStore((s) => s.loop);
+  const transitions = useFlowStore((s) => s.transitions);
+  const globalDuration = useFlowStore((s) => s.globalDuration);
 
   // Derive display keyframes from raw data to avoid new-array-every-render
   const displayKeyframes = useMemo(() => {
@@ -64,16 +72,11 @@ export const KeyframeStrip: React.FC<Props> = ({
     ];
   }, [rawKeyframes, loop]);
 
-  const { transitions, selectTransition, globalDuration } = useFlowStore(
-    useShallow((s) => ({
-      transitions: s.transitions,
-      selectTransition: s.selectTransition,
-      globalDuration: s.globalDuration,
-    })),
-  );
-
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
   );
 
   const handleDragEnd = useCallback(
@@ -108,7 +111,13 @@ export const KeyframeStrip: React.FC<Props> = ({
             key={`gap-${transitionIndex}`}
             transition={transition}
             effectiveDuration={effectiveDuration}
-            onClick={() => selectTransition(transitionIndex)}
+            onClick={() => {
+              if (transition.status === "failed") {
+                onRetry(transitionIndex);
+              } else {
+                selectTransition(transitionIndex);
+              }
+            }}
           />,
         );
       } else {
@@ -132,7 +141,10 @@ export const KeyframeStrip: React.FC<Props> = ({
 
   return (
     <StripSection>
-      <SectionLabel>Keyframes</SectionLabel>
+      <SectionHeader>
+        <SectionLabel>Keyframes</SectionLabel>
+        <FlowReset />
+      </SectionHeader>
 
       {displayKeyframes.length === 0 ? (
         <EmptyState>
@@ -156,9 +168,6 @@ export const KeyframeStrip: React.FC<Props> = ({
 
       <StripControls>
         <AddButtons>
-          <AddButton onClick={onAddGenerate}>
-            <AddButtonPlus>+</AddButtonPlus> Generate
-          </AddButton>
           <AddButton onClick={onAddUpload}>
             <AddButtonPlus>+</AddButtonPlus> Upload
           </AddButton>

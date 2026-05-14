@@ -1,9 +1,8 @@
-import React, { useState, useCallback, useRef, useEffect } from "react";
-import { toast } from "react-toastify";
+import React, { useState, useCallback, useRef } from "react";
+import Bugsnag from "@bugsnag/js";
 import { v4 as uuidv4 } from "uuid";
 import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
-import { useShallow } from "zustand/react/shallow";
 import { FLOW } from "@/constants/flow-theme.constants";
 import { uploadKeyframeImage } from "@/components/pages/studio/utils/upload-keyframe-image";
 import { KeyframeStrip } from "./keyframe-strip";
@@ -36,18 +35,8 @@ const FlowContainer = styled.div<{ $dragOver?: boolean }>`
 
 export const FlowBuilder: React.FC = () => {
   const addKeyframe = useFlowStore((s) => s.addKeyframe);
-  const { keyframes, loop, recomputeTransitions } = useFlowStore(
-    useShallow((s) => ({
-      keyframes: s.keyframes,
-      loop: s.loop,
-      recomputeTransitions: s.recomputeTransitions,
-    })),
-  );
-
-  // Recompute transitions when keyframes or loop changes
-  useEffect(() => {
-    recomputeTransitions();
-  }, [keyframes, loop, recomputeTransitions]);
+  const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
+  const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
 
   // Mount progress tracking
   useFlowJobProgress();
@@ -58,31 +47,58 @@ export const FlowBuilder: React.FC = () => {
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleAddGenerate = useCallback(() => {
-    toast.info("Inline image generation coming in Phase 1");
-  }, []);
-
   const handleAddUpload = useCallback(() => {
     fileInputRef.current?.click();
   }, []);
 
   const uploadFiles = useCallback(
     async (files: File[]) => {
-      for (const file of files) {
-        try {
-          const result = await uploadKeyframeImage(file);
+      // Insert placeholder cards up-front so the user sees immediate feedback.
+      // Each one carries a local objectURL preview + uploading state, then we
+      // patch it in place with the real keyframe data when the upload settles.
+      await Promise.all(
+        files.map(async (file) => {
+          const id = uuidv4();
+          const objectUrl = URL.createObjectURL(file);
           addKeyframe({
-            id: uuidv4(),
-            keyframeUuid: result.keyframeUuid,
-            imageUrl: result.imageUrl,
-            name: result.name,
+            id,
+            keyframeUuid: "",
+            imageUrl: objectUrl,
+            name: file.name.replace(/\.[^.]+$/, ""),
+            uploadStatus: "uploading",
+            uploadProgress: 0,
           });
-        } catch (err) {
-          console.error("Failed to upload keyframe image:", err);
-        }
-      }
+
+          try {
+            const result = await uploadKeyframeImage(file, (percent) => {
+              updateKeyframe(id, { uploadProgress: percent });
+            });
+            updateKeyframe(id, {
+              keyframeUuid: result.keyframeUuid,
+              imageUrl: result.imageUrl,
+              name: result.name,
+              uploadStatus: undefined,
+              uploadProgress: undefined,
+            });
+            URL.revokeObjectURL(objectUrl);
+          } catch (err) {
+            Bugsnag.notify(err as Error);
+            updateKeyframe(id, {
+              uploadStatus: "failed",
+              uploadProgress: undefined,
+            });
+            // Auto-clean failed placeholders after a few seconds so the strip
+            // doesn't fill with orphans. The user has the option to dismiss
+            // sooner via the card's delete button (visible on hover).
+            window.setTimeout(() => {
+              removeKeyframe(id);
+              URL.revokeObjectURL(objectUrl);
+            }, 6000);
+          }
+        }),
+      );
     },
-    [addKeyframe],
+    [addKeyframe, updateKeyframe, removeKeyframe],
   );
 
   const handleFileSelected = useCallback(
@@ -107,9 +123,9 @@ export const FlowBuilder: React.FC = () => {
   return (
     <FlowContainer $dragOver={isDragOver} {...dropHandlers}>
       <KeyframeStrip
-        onAddGenerate={handleAddGenerate}
         onAddUpload={handleAddUpload}
         onAddFromPlaylist={handleAddFromPlaylist}
+        onRetry={generateOne}
       />
 
       <TransitionSettingsPanel
@@ -119,7 +135,7 @@ export const FlowBuilder: React.FC = () => {
       />
 
       <FlowPreview />
-      <FlowActionBar onPreviewAll={() => {}} />
+      <FlowActionBar />
 
       <input
         ref={fileInputRef}

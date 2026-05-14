@@ -4,6 +4,7 @@
   "type": "module",
   "private": true,
   "dependencies": {
+    "@babel/runtime": "^7.28.4",
     "@bugsnag/browser-performance": "^2.2.0",
     "@bugsnag/js": "^8.6.0",
     "@bugsnag/plugin-react": "^8.6.0",

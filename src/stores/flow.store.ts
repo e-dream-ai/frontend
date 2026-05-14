@@ -33,6 +33,7 @@ type FlowStoreState = {
   keyframes: FlowKeyframe[];
   loop: boolean;
   addKeyframe: (keyframe: FlowKeyframe) => void;
+  updateKeyframe: (id: string, patch: Partial<FlowKeyframe>) => void;
   removeKeyframe: (id: string) => void;
   reorderKeyframes: (orderedIds: string[]) => void;
   setLoop: (loop: boolean) => void;
@@ -88,7 +89,7 @@ const PHASE_1_DEFAULTS = {
   globalPresetId: "",
   globalPrompt: "",
   globalDuration: 5,
-  globalModel: "wan-i2v" as VideoModel,
+  globalModel: "ltx-i2v" as VideoModel,
   globalNumInferenceSteps: 30,
   globalGuidance: 5.0,
   transitions: [] as FlowTransition[],
@@ -144,24 +145,59 @@ export const useFlowStore = create<FlowStoreState>()(
       loop: false,
 
       addKeyframe: (keyframe) =>
-        set((s) => ({ keyframes: [...s.keyframes, keyframe] })),
+        set((s) => {
+          const keyframes = [...s.keyframes, keyframe];
+          return {
+            keyframes,
+            transitions: deriveTransitions(
+              buildKeyframesWithLoop(keyframes, s.loop),
+              s.transitions,
+            ),
+          };
+        }),
+
+      updateKeyframe: (id, patch) =>
+        set((s) => ({
+          keyframes: s.keyframes.map((kf) =>
+            kf.id === id ? { ...kf, ...patch } : kf,
+          ),
+        })),
 
       removeKeyframe: (id) =>
-        set((s) => ({
-          keyframes: s.keyframes.filter((kf) => kf.id !== id),
-        })),
+        set((s) => {
+          const keyframes = s.keyframes.filter((kf) => kf.id !== id);
+          return {
+            keyframes,
+            transitions: deriveTransitions(
+              buildKeyframesWithLoop(keyframes, s.loop),
+              s.transitions,
+            ),
+          };
+        }),
 
       reorderKeyframes: (orderedIds) =>
         set((s) => {
           const map = new Map(s.keyframes.map((kf) => [kf.id, kf]));
+          const keyframes = orderedIds
+            .map((id) => map.get(id))
+            .filter((kf): kf is FlowKeyframe => kf !== undefined);
           return {
-            keyframes: orderedIds
-              .map((id) => map.get(id))
-              .filter(Boolean) as FlowKeyframe[],
+            keyframes,
+            transitions: deriveTransitions(
+              buildKeyframesWithLoop(keyframes, s.loop),
+              s.transitions,
+            ),
           };
         }),
 
-      setLoop: (loop) => set({ loop }),
+      setLoop: (loop) =>
+        set((s) => ({
+          loop,
+          transitions: deriveTransitions(
+            buildKeyframesWithLoop(s.keyframes, loop),
+            s.transitions,
+          ),
+        })),
 
       keyframesWithLoop: () => {
         const { keyframes, loop } = get();
@@ -222,7 +258,7 @@ export const useFlowStore = create<FlowStoreState>()(
           transitions[index] = {
             ...transitions[index],
             status,
-            progress: progress ?? undefined,
+            progress,
           };
           return { transitions };
         }),
@@ -250,7 +286,7 @@ export const useFlowStore = create<FlowStoreState>()(
           transitions[index] = {
             ...transitions[index],
             uprezStatus: status,
-            uprezProgress: progress ?? undefined,
+            uprezProgress: progress,
           };
           return { transitions };
         }),
@@ -265,11 +301,24 @@ export const useFlowStore = create<FlowStoreState>()(
 
       reconcileStaleTransitions: () =>
         set((s) => ({
-          transitions: s.transitions.map((t) =>
-            t.status === "processing" || t.status === "queue"
-              ? { ...t, status: "failed" as const, progress: undefined }
-              : t,
-          ),
+          transitions: s.transitions.map((t) => {
+            const dreamStale =
+              t.status === "processing" || t.status === "queue";
+            const uprezStale =
+              t.uprezStatus === "processing" || t.uprezStatus === "queue";
+            if (!dreamStale && !uprezStale) return t;
+            return {
+              ...t,
+              ...(dreamStale && {
+                status: "failed" as const,
+                progress: undefined,
+              }),
+              ...(uprezStale && {
+                uprezStatus: "failed" as const,
+                uprezProgress: undefined,
+              }),
+            };
+          }),
         })),
     }),
     {
@@ -286,15 +335,29 @@ export const useFlowStore = create<FlowStoreState>()(
         return state;
       },
       onRehydrateStorage: () => (state) => {
-        if (state) {
-          // Order matters: reconcile must run first to mark stale in-flight
-          // jobs as "failed" before recompute preserves them via the existing map.
-          state.reconcileStaleTransitions();
-          state.recomputeTransitions();
+        if (!state) return;
+        // Order matters: reconcile must run first to mark stale in-flight
+        // jobs as "failed" before recompute preserves them via the existing map.
+        state.reconcileStaleTransitions();
+        state.recomputeTransitions();
+        // Drop a persisted selection that no longer points at a real transition.
+        const idx = state.selectedTransitionIndex;
+        if (idx !== null && (idx < 0 || idx >= state.transitions.length)) {
+          state.selectTransition(null);
         }
       },
       partialize: (state) => ({
-        keyframes: state.keyframes,
+        // Strip transient upload state and skip not-yet-finalized keyframes —
+        // a half-uploaded record with a dead objectURL is worse than nothing.
+        keyframes: state.keyframes
+          .filter((kf) => kf.keyframeUuid && !kf.uploadStatus)
+          .map((kf) => ({
+            id: kf.id,
+            keyframeUuid: kf.keyframeUuid,
+            imageUrl: kf.imageUrl,
+            name: kf.name,
+            isLoopKeyframe: kf.isLoopKeyframe,
+          })),
         loop: state.loop,
         transitions: state.transitions,
         globalPresetId: state.globalPresetId,
@@ -303,8 +366,6 @@ export const useFlowStore = create<FlowStoreState>()(
         globalModel: state.globalModel,
         globalNumInferenceSteps: state.globalNumInferenceSteps,
         globalGuidance: state.globalGuidance,
-        selectedTransitionIndex: state.selectedTransitionIndex,
-        settingsExpanded: state.settingsExpanded,
       }),
     },
   ),

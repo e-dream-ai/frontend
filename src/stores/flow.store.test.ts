@@ -363,7 +363,7 @@ describe("Phase 1: transitions", () => {
       expect(s.globalPresetId).toBe("");
       expect(s.globalPrompt).toBe("");
       expect(s.globalDuration).toBe(5);
-      expect(s.globalModel).toBe("wan-i2v");
+      expect(s.globalModel).toBe("ltx-i2v");
       expect(s.globalNumInferenceSteps).toBe(30);
       expect(s.globalGuidance).toBe(5.0);
       expect(s.selectedTransitionIndex).toBeNull();
@@ -375,7 +375,7 @@ describe("Phase 1: transitions", () => {
       store.setGlobalPreset("Organic");
       store.setGlobalPrompt("gentle drift");
       store.setGlobalDuration(8);
-      store.setGlobalModel("ltx-i2v");
+      store.setGlobalModel("wan-i2v");
       store.setGlobalNumInferenceSteps(20);
       store.setGlobalGuidance(3.5);
 
@@ -383,7 +383,7 @@ describe("Phase 1: transitions", () => {
       expect(s.globalPresetId).toBe("Organic");
       expect(s.globalPrompt).toBe("gentle drift");
       expect(s.globalDuration).toBe(8);
-      expect(s.globalModel).toBe("ltx-i2v");
+      expect(s.globalModel).toBe("wan-i2v");
       expect(s.globalNumInferenceSteps).toBe(20);
       expect(s.globalGuidance).toBe(3.5);
     });

@@ -1,22 +1,31 @@
-import styled, { css } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
+
+const errorBreathe = keyframes`
+  0%, 100% { box-shadow: 0 0 0 0 ${FLOW.errorDim}; }
+  50%      { box-shadow: 0 0 0 6px transparent; }
+`;
 
 export const CardWrapper = styled.div<{
   $loop?: boolean;
   $isDragging?: boolean;
+  $uploading?: boolean;
+  $failed?: boolean;
 }>`
   flex-shrink: 0;
   width: 140px;
   height: 100px;
   border-radius: ${FLOW.radiusSm};
   overflow: hidden;
+  isolation: isolate;
   border: 2px solid ${FLOW.border};
   position: relative;
   cursor: grab;
   transition:
     border-color 0.2s,
     opacity 0.2s,
-    transform 0.2s;
+    transform 0.2s,
+    box-shadow 0.2s;
 
   ${(props) =>
     props.$loop &&
@@ -33,16 +42,113 @@ export const CardWrapper = styled.div<{
       transform: scale(0.95);
     `}
 
+  ${(props) =>
+    props.$uploading &&
+    css`
+      cursor: default;
+      border-color: ${FLOW.accent};
+    `}
+
+  ${(props) =>
+    props.$failed &&
+    css`
+      cursor: default;
+      border-color: ${FLOW.error};
+      animation: ${errorBreathe} 1.8s ease-in-out infinite;
+    `}
+
   &:hover {
-    border-color: ${(props) => (props.$loop ? FLOW.border : FLOW.borderHover)};
+    border-color: ${(props) =>
+      props.$failed
+        ? FLOW.error
+        : props.$uploading
+          ? FLOW.accent
+          : props.$loop
+            ? FLOW.border
+            : FLOW.borderHover};
   }
 `;
 
-export const CardImage = styled.img`
+export const CardImage = styled.img<{ $uploading?: boolean }>`
   width: 100%;
   height: 100%;
   object-fit: cover;
   display: block;
+  transition: filter 0.4s ease;
+  ${(p) =>
+    p.$uploading &&
+    css`
+      filter: brightness(0.4) saturate(0.55);
+    `}
+`;
+
+export const UploadOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(12, 12, 14, 0.35);
+  pointer-events: none;
+`;
+
+export const UploadRing = styled.svg`
+  width: 38px;
+  height: 38px;
+  transform: rotate(-90deg);
+`;
+
+export const UploadRingTrack = styled.circle`
+  fill: none;
+  stroke: rgba(212, 168, 83, 0.18);
+  stroke-width: 3;
+`;
+
+export const UploadRingFill = styled.circle<{ $percent: number }>`
+  fill: none;
+  stroke: ${FLOW.accent};
+  stroke-width: 3;
+  stroke-linecap: round;
+  /* circumference = 2π × 16 ≈ 100.53 → use 100 for cleaner math */
+  stroke-dasharray: 100;
+  stroke-dashoffset: ${(p) => 100 - Math.max(0, Math.min(100, p.$percent))};
+  transition: stroke-dashoffset 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+`;
+
+export const UploadPercent = styled.span`
+  font-family: ${FLOW.fontFamily};
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: ${FLOW.accent};
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+`;
+
+export const FailedOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(12, 12, 14, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  color: ${FLOW.error};
+  font-family: ${FLOW.fontFamily};
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  pointer-events: none;
+
+  svg {
+    color: ${FLOW.error};
+  }
 `;
 
 export const CardPlaceholder = styled.div`

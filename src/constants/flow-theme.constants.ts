@@ -28,16 +28,20 @@ export const FLOW = {
 
   // Status
   success: "#4ade80",
+  successDim: "rgba(74, 222, 128, 0.18)",
   processing: "#60a5fa",
+  processingDim: "rgba(96, 165, 250, 0.18)",
   queued: "#6b7280",
+  error: "#f87171",
+  errorDim: "rgba(248, 113, 113, 0.16)",
 
   // Radii
   radius: "12px",
   radiusSm: "8px",
 
-  // Typography
-  fontFamily: "'DM Sans', sans-serif",
-  fontFamilySerif: "'Instrument Serif', serif", // Headers — the "old school Apple" look
+  // Typography — match the rest of the app
+  fontFamily: "'Comfortaa', sans-serif",
+  fontFamilySerif: "'Comfortaa', sans-serif",
 } as const;
 
 /**
