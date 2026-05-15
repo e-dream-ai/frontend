@@ -7,6 +7,7 @@ export interface FlowKeyframe {
   keyframeUuid: string; // backend Keyframe.uuid ("" while uploading)
   imageUrl: string; // presigned URL or local objectURL while uploading
   name: string; // display name
+  dreamUuid?: string; // dream UUID for library images — preferred over imageUrl when present
   isLoopKeyframe?: boolean; // true for auto-generated loop frame
 
   // Local-only upload state — never persisted to backend.

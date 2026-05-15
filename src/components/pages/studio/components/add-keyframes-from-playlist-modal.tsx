@@ -78,6 +78,7 @@ export const AddKeyframesFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
           keyframeUuid: kf.uuid,
           imageUrl: kf.image,
           name: kf.name,
+          dreamUuid: kf.dreams?.[0]?.uuid,
         });
       }
     }

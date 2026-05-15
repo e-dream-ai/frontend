@@ -43,26 +43,26 @@ export function useFlowGeneration() {
         return;
       }
 
-      // The worker resolves the image from either a fetchable URL or an entity UUID;
-      // the keyframeUuid alone is neither (it's a keyframe row, not a dream/image asset
-      // the worker can look up), so prefer the presigned URL when we have one.
-      const imageRef = fromKf.imageUrl?.startsWith("http")
-        ? fromKf.imageUrl
-        : fromKf.keyframeUuid;
+      const imageRef = fromKf.dreamUuid || fromKf.imageUrl;
+
+      const toKf = store.keyframes.find(
+        (kf) => kf.id === transition.toKeyframeId,
+      );
+      const endImageRef =
+        settings.model === "ltx-i2v" && toKf
+          ? toKf.dreamUuid || toKf.imageUrl
+          : undefined;
 
       const algoParams = buildVideoAlgoParams({
         model: settings.model,
         action: settings.action,
         imageUuid: imageRef,
+        endImageUuid: endImageRef,
         imageSize: undefined,
         duration: settings.duration,
         numInferenceSteps: settings.numInferenceSteps,
         guidance: settings.guidance,
       });
-
-      const toKf = store.keyframes.find(
-        (kf) => kf.id === transition.toKeyframeId,
-      );
       const name = `${fromKf.name || "frame"} → ${toKf?.name || "frame"}`;
 
       try {
