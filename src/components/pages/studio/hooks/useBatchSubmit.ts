@@ -92,7 +92,7 @@ export const useBatchSubmit = () => {
             const algoParams = buildVideoAlgoParams({
               model: videoGenParams.model,
               action,
-              imageUuid: image.uuid,
+              imageUuid: image.url?.startsWith("http") ? image.url : image.uuid,
               imageSize: image.size,
               duration,
               numInferenceSteps: videoGenParams.numInferenceSteps,

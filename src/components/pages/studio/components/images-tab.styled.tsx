@@ -215,3 +215,23 @@ export const LightboxImage = styled(PresignedImage)`
   object-fit: contain;
   border-radius: 8px;
 `;
+
+export const ImagesTabContainer = styled.div<{ $dragOver?: boolean }>`
+  transition: border-color 0.2s;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  padding: 2px;
+
+  ${(props) =>
+    props.$dragOver &&
+    `
+    border-color: ${props.theme.colorPrimary};
+  `}
+`;
+
+export const LightboxUploadedImage = styled.img`
+  max-width: 90vw;
+  max-height: 90vh;
+  object-fit: contain;
+  border-radius: 8px;
+`;
