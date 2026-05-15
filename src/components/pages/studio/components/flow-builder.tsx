@@ -4,12 +4,13 @@ import { v4 as uuidv4 } from "uuid";
 import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
 import { FLOW } from "@/constants/flow-theme.constants";
-import { uploadKeyframeImage } from "@/components/pages/studio/utils/upload-keyframe-image";
+import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import { KeyframeStrip } from "./keyframe-strip";
 import { TransitionSettingsPanel } from "./transition-settings-panel";
 import { FlowPreview } from "./flow-preview";
 import { FlowActionBar } from "./flow-action-bar";
 import { AddKeyframesFromPlaylistModal } from "./add-keyframes-from-playlist-modal";
+import { SelectImageDreamModal } from "./select-image-dream-modal";
 import { useFlowGeneration } from "@/components/pages/studio/hooks/useFlowGeneration";
 import { useFlowJobProgress } from "@/components/pages/studio/hooks/useFlowJobProgress";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
@@ -43,8 +44,10 @@ export const FlowBuilder: React.FC = () => {
 
   // Generation controls
   const { generateAll, generateOne, isGenerating } = useFlowGeneration();
+  const uploadDream = useUploadImageDream();
 
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [showLibraryModal, setShowLibraryModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddUpload = useCallback(() => {
@@ -62,7 +65,6 @@ export const FlowBuilder: React.FC = () => {
           const objectUrl = URL.createObjectURL(file);
           addKeyframe({
             id,
-            keyframeUuid: "",
             imageUrl: objectUrl,
             name: file.name.replace(/\.[^.]+$/, ""),
             uploadStatus: "uploading",
@@ -70,11 +72,13 @@ export const FlowBuilder: React.FC = () => {
           });
 
           try {
-            const result = await uploadKeyframeImage(file, (percent) => {
-              updateKeyframe(id, { uploadProgress: percent });
+            const result = await uploadDream.mutateAsync({
+              file,
+              onProgress: (percent) =>
+                updateKeyframe(id, { uploadProgress: percent }),
             });
             updateKeyframe(id, {
-              keyframeUuid: result.keyframeUuid,
+              dreamUuid: result.dreamUuid,
               imageUrl: result.imageUrl,
               name: result.name,
               uploadStatus: undefined,
@@ -98,7 +102,7 @@ export const FlowBuilder: React.FC = () => {
         }),
       );
     },
-    [addKeyframe, updateKeyframe, removeKeyframe],
+    [addKeyframe, updateKeyframe, removeKeyframe, uploadDream],
   );
 
   const handleFileSelected = useCallback(
@@ -115,6 +119,10 @@ export const FlowBuilder: React.FC = () => {
     setShowPlaylistModal(true);
   }, []);
 
+  const handleAddFromLibrary = useCallback(() => {
+    setShowLibraryModal(true);
+  }, []);
+
   const { isDragOver, dropHandlers } = useFileDropUpload({
     accept: ["image/jpeg", "image/png", "image/webp"],
     onFiles: uploadFiles,
@@ -125,6 +133,7 @@ export const FlowBuilder: React.FC = () => {
       <KeyframeStrip
         onAddUpload={handleAddUpload}
         onAddFromPlaylist={handleAddFromPlaylist}
+        onAddFromLibrary={handleAddFromLibrary}
         onRetry={generateOne}
       />
 
@@ -150,6 +159,10 @@ export const FlowBuilder: React.FC = () => {
         <AddKeyframesFromPlaylistModal
           onClose={() => setShowPlaylistModal(false)}
         />
+      )}
+
+      {showLibraryModal && (
+        <SelectImageDreamModal onClose={() => setShowLibraryModal(false)} />
       )}
     </FlowContainer>
   );

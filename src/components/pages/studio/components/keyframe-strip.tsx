@@ -36,12 +36,14 @@ import {
 interface Props {
   onAddUpload: () => void;
   onAddFromPlaylist: () => void;
+  onAddFromLibrary: () => void;
   onRetry: (index: number) => void;
 }
 
 export const KeyframeStrip: React.FC<Props> = ({
   onAddUpload,
   onAddFromPlaylist,
+  onAddFromLibrary,
   onRetry,
 }) => {
   // Actions (stable refs)
@@ -65,6 +67,7 @@ export const KeyframeStrip: React.FC<Props> = ({
       {
         id: "__loop__",
         keyframeUuid: first.keyframeUuid,
+        dreamUuid: first.dreamUuid,
         imageUrl: first.imageUrl,
         name: first.name,
         isLoopKeyframe: true,
@@ -173,6 +176,9 @@ export const KeyframeStrip: React.FC<Props> = ({
           </AddButton>
           <AddButton onClick={onAddFromPlaylist}>
             <AddButtonPlus>+</AddButtonPlus> From Playlist
+          </AddButton>
+          <AddButton onClick={onAddFromLibrary}>
+            <AddButtonPlus>+</AddButtonPlus> My Images
           </AddButton>
         </AddButtons>
 

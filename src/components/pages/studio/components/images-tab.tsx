@@ -4,7 +4,7 @@ import { useStudioStore } from "@/stores/studio.store";
 import { axiosClient } from "@/client/axios.client";
 import type { StudioImage, ImageModel } from "@/types/studio.types";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
-import { uploadKeyframeImage } from "@/components/pages/studio/utils/upload-keyframe-image";
+import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import {
   SIZE_OPTIONS,
   IMAGE_COUNT_OPTIONS,
@@ -60,6 +60,7 @@ export const ImagesTab: React.FC = () => {
 
   const updateImage = useStudioStore((s) => s.updateImage);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadDream = useUploadImageDream();
 
   const isGenerating = useStudioStore((s) => s.isGenerating);
   const setIsGenerating = useStudioStore((s) => s.setIsGenerating);
@@ -144,8 +145,9 @@ export const ImagesTab: React.FC = () => {
         });
 
         try {
-          const result = await uploadKeyframeImage(file);
+          const result = await uploadDream.mutateAsync({ file });
           updateImage(placeholderUuid, {
+            uuid: result.dreamUuid,
             url: result.imageUrl,
             status: "processed",
             name: result.name,
@@ -158,7 +160,7 @@ export const ImagesTab: React.FC = () => {
         }
       }
     },
-    [addImage, updateImage],
+    [addImage, updateImage, uploadDream],
   );
 
   const handleFileSelected = useCallback(

@@ -6,7 +6,7 @@ import { useFlowStore } from "@/stores/flow.store";
 import { StudioTabs } from "./components/studio-tabs";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
 import { useFileDropUpload } from "./hooks/useFileDropUpload";
-import { uploadKeyframeImage } from "./utils/upload-keyframe-image";
+import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import {
   StudioContainer,
   StudioHeader,
@@ -46,6 +46,7 @@ export const StudioPage: React.FC = () => {
   const addImage = useStudioStore((s) => s.addImage);
   const updateImage = useStudioStore((s) => s.updateImage);
   const addKeyframe = useFlowStore((s) => s.addKeyframe);
+  const uploadDream = useUploadImageDream();
 
   const handleStudioDrop = useCallback(
     async (files: File[]) => {
@@ -64,8 +65,9 @@ export const StudioPage: React.FC = () => {
           });
 
           try {
-            const result = await uploadKeyframeImage(file);
+            const result = await uploadDream.mutateAsync({ file });
             updateImage(placeholderUuid, {
+              uuid: result.dreamUuid,
               url: result.imageUrl,
               status: "processed",
               name: result.name,
@@ -78,10 +80,10 @@ export const StudioPage: React.FC = () => {
           }
         } else {
           try {
-            const result = await uploadKeyframeImage(file);
+            const result = await uploadDream.mutateAsync({ file });
             addKeyframe({
               id: uuidv4(),
-              keyframeUuid: result.keyframeUuid,
+              dreamUuid: result.dreamUuid,
               imageUrl: result.imageUrl,
               name: result.name,
             });
@@ -91,7 +93,7 @@ export const StudioPage: React.FC = () => {
         }
       }
     },
-    [addImage, updateImage, addKeyframe],
+    [addImage, updateImage, addKeyframe, uploadDream],
   );
 
   const { isDragOver, dropHandlers } = useFileDropUpload({

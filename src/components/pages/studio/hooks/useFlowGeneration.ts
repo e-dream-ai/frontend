@@ -77,14 +77,16 @@ export function useFlowGeneration() {
           throw new Error("No dream UUID returned from API");
         }
 
-        await axiosClient.put(
-          `/v1/dream/${dreamUuid}`,
-          {
-            startKeyframe: fromKf.keyframeUuid,
-            endKeyframe: toKf?.keyframeUuid,
-          },
-          { headers },
-        );
+        if (fromKf.keyframeUuid || toKf?.keyframeUuid) {
+          await axiosClient.put(
+            `/v1/dream/${dreamUuid}`,
+            {
+              startKeyframe: fromKf.keyframeUuid,
+              endKeyframe: toKf?.keyframeUuid,
+            },
+            { headers },
+          );
+        }
 
         setTransitionDream(index, dreamUuid);
         updateTransitionStatus(index, "queue");
