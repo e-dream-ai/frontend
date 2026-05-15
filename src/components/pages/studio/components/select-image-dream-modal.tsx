@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback } from "react";
+import React, { useState, useMemo, useCallback, useEffect } from "react";
 import { v4 as uuidv4 } from "uuid";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { useMyImageDreams } from "@/api/dream/query/useMyImageDreams";
@@ -85,6 +85,14 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
     }
     onClose();
   }, [dreams, selectedUuids, existingDreamUuids, addKeyframe, onClose]);
+
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, []);
 
   const isEmpty = !isLoading && dreams.length === 0;
 
