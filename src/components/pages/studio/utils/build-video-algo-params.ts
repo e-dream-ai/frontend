@@ -5,6 +5,7 @@ interface BuildVideoAlgoParamsInput {
   model: VideoModel;
   action: Pick<StudioAction, "prompt" | "highNoiseLoras" | "lowNoiseLoras">;
   imageUuid: string;
+  endImageUuid?: string;
   imageSize: string | undefined;
   duration: number;
   numInferenceSteps: number;
@@ -15,6 +16,7 @@ export const buildVideoAlgoParams = ({
   model,
   action,
   imageUuid,
+  endImageUuid,
   imageSize,
   duration,
   numInferenceSteps,
@@ -31,6 +33,9 @@ export const buildVideoAlgoParams = ({
       source_dream_uuid: imageUuid,
       duration,
     };
+    if (endImageUuid) {
+      params.end_source_uuid = endImageUuid;
+    }
     if (hasLoras && action.highNoiseLoras?.length) {
       params.high_noise_loras = action.highNoiseLoras;
     }

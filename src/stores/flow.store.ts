@@ -21,6 +21,7 @@ function buildKeyframesWithLoop(
     {
       id: LOOP_KEYFRAME_ID,
       keyframeUuid: first.keyframeUuid,
+      dreamUuid: first.dreamUuid,
       imageUrl: first.imageUrl,
       name: first.name,
       isLoopKeyframe: true,
@@ -349,11 +350,14 @@ export const useFlowStore = create<FlowStoreState>()(
       partialize: (state) => ({
         // Strip transient upload state and skip not-yet-finalized keyframes —
         // a half-uploaded record with a dead objectURL is worse than nothing.
+        // A finalized keyframe has either a backend Keyframe UUID (playlist)
+        // or an image Dream UUID (uploaded).
         keyframes: state.keyframes
-          .filter((kf) => kf.keyframeUuid && !kf.uploadStatus)
+          .filter((kf) => (kf.keyframeUuid || kf.dreamUuid) && !kf.uploadStatus)
           .map((kf) => ({
             id: kf.id,
             keyframeUuid: kf.keyframeUuid,
+            dreamUuid: kf.dreamUuid,
             imageUrl: kf.imageUrl,
             name: kf.name,
             isLoopKeyframe: kf.isLoopKeyframe,

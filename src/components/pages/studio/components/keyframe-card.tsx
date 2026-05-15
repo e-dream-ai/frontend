@@ -55,6 +55,18 @@ export const KeyframeCard: React.FC<Props> = ({
 
   const percent = Math.round(keyframe.uploadProgress ?? 0);
 
+  const navigateTarget = keyframe.dreamUuid
+    ? `/dream/${keyframe.dreamUuid}`
+    : keyframe.keyframeUuid
+      ? `/keyframe/${keyframe.keyframeUuid}`
+      : null;
+  const isClickable = !isLoop && !isBusy && !!navigateTarget;
+  const handleOpen = (e: React.MouseEvent) => {
+    if (!navigateTarget) return;
+    e.stopPropagation();
+    window.open(navigateTarget, "_blank");
+  };
+
   return (
     <CardWrapper
       ref={setNodeRef}
@@ -70,6 +82,8 @@ export const KeyframeCard: React.FC<Props> = ({
           src={keyframe.imageUrl}
           alt={keyframe.name}
           $uploading={isUploading}
+          onClick={isClickable ? handleOpen : undefined}
+          style={isClickable ? { cursor: "pointer" } : undefined}
         />
       ) : (
         <CardPlaceholder>{keyframe.name}</CardPlaceholder>
