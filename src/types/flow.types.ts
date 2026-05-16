@@ -18,6 +18,8 @@ export interface FlowKeyframe {
   // Local-only upload state — never persisted to backend.
   uploadStatus?: "uploading" | "failed";
   uploadProgress?: number; // 0-100
+  // Set after upload completes while the backend ingestion pipeline runs.
+  ingestStatus?: "ingesting";
 }
 
 export type TransitionStatus =

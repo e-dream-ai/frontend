@@ -16,6 +16,9 @@ import {
   UploadRingFill,
   UploadPercent,
   FailedOverlay,
+  IngestOverlay,
+  IngestDot,
+  IngestLabel,
 } from "./keyframe-card.styled";
 
 interface Props {
@@ -32,7 +35,8 @@ export const KeyframeCard: React.FC<Props> = ({
   const isLoop = keyframe.isLoopKeyframe ?? false;
   const isUploading = keyframe.uploadStatus === "uploading";
   const isFailed = keyframe.uploadStatus === "failed";
-  const isBusy = isUploading || isFailed;
+  const isIngesting = keyframe.ingestStatus === "ingesting";
+  const isBusy = isUploading || isFailed || isIngesting;
 
   const {
     attributes,
@@ -74,6 +78,7 @@ export const KeyframeCard: React.FC<Props> = ({
       $loop={isLoop}
       $isDragging={isDragging}
       $uploading={isUploading}
+      $ingesting={isIngesting}
       $failed={isFailed}
       {...(isLoop || isBusy ? {} : { ...attributes, ...listeners })}
     >
@@ -105,6 +110,13 @@ export const KeyframeCard: React.FC<Props> = ({
         </UploadOverlay>
       )}
 
+      {isIngesting && (
+        <IngestOverlay>
+          <IngestDot />
+          <IngestLabel>Processing</IngestLabel>
+        </IngestOverlay>
+      )}
+
       {isFailed && (
         <FailedOverlay role="alert">
           <AlertTriangle size={16} strokeWidth={2.2} />
@@ -122,7 +134,7 @@ export const KeyframeCard: React.FC<Props> = ({
         )}
       </CardLabel>
 
-      {!isLoop && !isUploading && onDelete && (
+      {!isLoop && !isBusy && onDelete && (
         <DeleteButton
           onClick={(e) => {
             e.stopPropagation();

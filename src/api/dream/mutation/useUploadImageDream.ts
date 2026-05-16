@@ -16,6 +16,7 @@ const W_COMPLETE = 10;
 export type UploadImageDreamVars = {
   file: File;
   onProgress?: (percent: number) => void;
+  onUploadComplete?: (dreamUuid: string) => void;
 };
 
 export type UploadImageDreamResult = {
@@ -27,6 +28,7 @@ export type UploadImageDreamResult = {
 const uploadImageDream = async ({
   file,
   onProgress,
+  onUploadComplete,
 }: UploadImageDreamVars): Promise<UploadImageDreamResult> => {
   const report = (n: number) => onProgress?.(Math.max(0, Math.min(100, n)));
   const headers = getRequestHeaders({ contentType: ContentType.json });
@@ -80,6 +82,7 @@ const uploadImageDream = async ({
     { headers },
   );
   report(W_CREATE + W_CHUNKS + W_COMPLETE);
+  onUploadComplete?.(dreamUuid);
 
   const dreamRes = await axiosClient.get(`/v1/dream/${dreamUuid}`, { headers });
   const finalDream = dreamRes.data.data.dream;

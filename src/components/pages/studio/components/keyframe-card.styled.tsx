@@ -11,6 +11,7 @@ export const CardWrapper = styled.div<{
   $isDragging?: boolean;
   $uploading?: boolean;
   $failed?: boolean;
+  $ingesting?: boolean;
 }>`
   flex-shrink: 0;
   width: 140px;
@@ -50,6 +51,14 @@ export const CardWrapper = styled.div<{
     `}
 
   ${(props) =>
+    props.$ingesting &&
+    css`
+      cursor: default;
+      border-color: ${FLOW.accent};
+      opacity: 0.75;
+    `}
+
+  ${(props) =>
     props.$failed &&
     css`
       cursor: default;
@@ -61,7 +70,7 @@ export const CardWrapper = styled.div<{
     border-color: ${(props) =>
       props.$failed
         ? FLOW.error
-        : props.$uploading
+        : props.$uploading || props.$ingesting
           ? FLOW.accent
           : props.$loop
             ? FLOW.border
@@ -125,6 +134,44 @@ export const UploadPercent = styled.span`
   color: ${FLOW.accent};
   font-variant-numeric: tabular-nums;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+`;
+
+const ingestPulse = keyframes`
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.45; transform: scale(0.85); }
+`;
+
+export const IngestOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  background: rgba(12, 12, 14, 0.5);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  pointer-events: none;
+`;
+
+export const IngestDot = styled.div`
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: ${FLOW.accent};
+  animation: ${ingestPulse} 1.2s ease-in-out infinite;
+`;
+
+export const IngestLabel = styled.span`
+  font-family: ${FLOW.fontFamily};
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: ${FLOW.accent};
+  text-transform: uppercase;
+  animation: ${ingestPulse} 1.2s ease-in-out infinite;
+  animation-delay: 0.1s;
 `;
 
 export const FailedOverlay = styled.div`
