@@ -1,6 +1,5 @@
 import { useCallback, useRef, useState } from "react";
 import Bugsnag from "@bugsnag/js";
-import { toast } from "react-toastify";
 import { useFlowStore } from "@/stores/flow.store";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
@@ -113,16 +112,9 @@ export function useFlowGeneration() {
   }, []);
 
   const generateAll = useCallback(async () => {
-    const { keyframes, transitions: currentTransitions } =
-      useFlowStore.getState();
-    if (keyframes.some((kf) => kf.ingestStatus === "ingesting")) {
-      toast.warning(
-        "Some images are still processing. Please wait a moment and try again.",
-      );
-      return;
-    }
     startGenerating();
     try {
+      const { transitions: currentTransitions } = useFlowStore.getState();
       const targets: Array<{ index: number; t: FlowTransition }> = [];
       currentTransitions.forEach((t, index) => {
         if (

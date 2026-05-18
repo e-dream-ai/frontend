@@ -5,9 +5,6 @@ import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
 import { FLOW } from "@/constants/flow-theme.constants";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
-import { axiosClient } from "@/client/axios.client";
-import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
-import type { FlowKeyframe } from "@/types/flow.types";
 import { KeyframeStrip } from "./keyframe-strip";
 import { TransitionSettingsPanel } from "./transition-settings-panel";
 import { FlowPreview } from "./flow-preview";
@@ -17,44 +14,6 @@ import { SelectImageDreamModal } from "./select-image-dream-modal";
 import { useFlowGeneration } from "@/components/pages/studio/hooks/useFlowGeneration";
 import { useFlowJobProgress } from "@/components/pages/studio/hooks/useFlowJobProgress";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
-
-const INGEST_POLL_INTERVAL_MS = 3000;
-const INGEST_POLL_MAX_ATTEMPTS = 30;
-
-function pollUntilIngested(
-  dreamUuid: string,
-  keyframeId: string,
-  updateKeyframe: (id: string, patch: Partial<FlowKeyframe>) => void,
-) {
-  let attempts = 0;
-
-  const tick = async () => {
-    attempts++;
-    try {
-      const headers = getRequestHeaders({ contentType: ContentType.json });
-      const { data } = await axiosClient.get(`/v1/dream/${dreamUuid}`, {
-        headers,
-      });
-      const dream = data?.data?.dream;
-      if (dream?.status === "processed") {
-        updateKeyframe(keyframeId, {
-          ingestStatus: undefined,
-          imageUrl: dream.video || dream.original_video || undefined,
-        });
-        return;
-      }
-    } catch {
-      // transient error — keep polling
-    }
-    if (attempts < INGEST_POLL_MAX_ATTEMPTS) {
-      setTimeout(tick, INGEST_POLL_INTERVAL_MS);
-    } else {
-      updateKeyframe(keyframeId, { ingestStatus: undefined });
-    }
-  };
-
-  setTimeout(tick, INGEST_POLL_INTERVAL_MS);
-}
 
 const FlowContainer = styled.div<{ $dragOver?: boolean }>`
   background: ${FLOW.bgCard};
@@ -122,16 +81,14 @@ export const FlowBuilder: React.FC = () => {
                   dreamUuid,
                   uploadStatus: undefined,
                   uploadProgress: undefined,
-                  ingestStatus: "ingesting",
                 });
-                URL.revokeObjectURL(objectUrl);
-                pollUntilIngested(dreamUuid, id, updateKeyframe);
               },
             });
             updateKeyframe(id, {
               imageUrl: result.imageUrl,
               name: result.name,
             });
+            URL.revokeObjectURL(objectUrl);
           } catch (err) {
             Bugsnag.notify(err as Error);
             updateKeyframe(id, {

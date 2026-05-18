@@ -1,8 +1,11 @@
-import React from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AlertTriangle } from "lucide-react";
 import type { FlowKeyframe } from "@/types/flow.types";
+import { axiosClient } from "@/client/axios.client";
+import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
+import { useFlowStore } from "@/stores/flow.store";
 import {
   CardWrapper,
   CardImage,
@@ -16,9 +19,6 @@ import {
   UploadRingFill,
   UploadPercent,
   FailedOverlay,
-  IngestOverlay,
-  IngestDot,
-  IngestLabel,
 } from "./keyframe-card.styled";
 
 interface Props {
@@ -35,8 +35,41 @@ export const KeyframeCard: React.FC<Props> = ({
   const isLoop = keyframe.isLoopKeyframe ?? false;
   const isUploading = keyframe.uploadStatus === "uploading";
   const isFailed = keyframe.uploadStatus === "failed";
-  const isIngesting = keyframe.ingestStatus === "ingesting";
-  const isBusy = isUploading || isFailed || isIngesting;
+  const isBusy = isUploading || isFailed;
+
+  const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
+  const [imgSrc, setImgSrc] = useState(keyframe.imageUrl);
+
+  useEffect(() => {
+    setImgSrc(keyframe.imageUrl);
+  }, [keyframe.imageUrl]);
+
+  const handleImgError = useCallback(async () => {
+    if (!keyframe.dreamUuid) return;
+    try {
+      const headers = getRequestHeaders({ contentType: ContentType.json });
+      const { data } = await axiosClient.get(
+        `/v1/dream/${keyframe.dreamUuid}`,
+        { headers },
+      );
+      const dream = data?.data?.dream;
+      const freshUrl: string =
+        dream?.video || dream?.original_video || dream?.thumbnail || "";
+      if (freshUrl) {
+        setImgSrc(freshUrl);
+        if (!keyframe.isLoopKeyframe) {
+          updateKeyframe(keyframe.id, { imageUrl: freshUrl });
+        }
+      }
+    } catch {
+      // Leave broken image rather than crashing
+    }
+  }, [
+    keyframe.dreamUuid,
+    keyframe.id,
+    keyframe.isLoopKeyframe,
+    updateKeyframe,
+  ]);
 
   const {
     attributes,
@@ -78,17 +111,17 @@ export const KeyframeCard: React.FC<Props> = ({
       $loop={isLoop}
       $isDragging={isDragging}
       $uploading={isUploading}
-      $ingesting={isIngesting}
       $failed={isFailed}
       {...(isLoop || isBusy ? {} : { ...attributes, ...listeners })}
     >
-      {keyframe.imageUrl ? (
+      {imgSrc ? (
         <CardImage
-          src={keyframe.imageUrl}
+          src={imgSrc}
           alt={keyframe.name}
           $uploading={isUploading}
           onClick={isClickable ? handleOpen : undefined}
           style={isClickable ? { cursor: "pointer" } : undefined}
+          onError={keyframe.dreamUuid ? handleImgError : undefined}
         />
       ) : (
         <CardPlaceholder>{keyframe.name}</CardPlaceholder>
@@ -108,13 +141,6 @@ export const KeyframeCard: React.FC<Props> = ({
           </UploadRing>
           <UploadPercent>{percent}%</UploadPercent>
         </UploadOverlay>
-      )}
-
-      {isIngesting && (
-        <IngestOverlay>
-          <IngestDot />
-          <IngestLabel>Processing</IngestLabel>
-        </IngestOverlay>
       )}
 
       {isFailed && (
