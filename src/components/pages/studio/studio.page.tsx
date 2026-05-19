@@ -1,7 +1,20 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useCallback } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { useStudioStore } from "@/stores/studio.store";
+import { useStudioModeStore } from "@/stores/studio-mode.store";
+import { useFlowStore } from "@/stores/flow.store";
 import { StudioTabs } from "./components/studio-tabs";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
+import { useFileDropUpload } from "./hooks/useFileDropUpload";
+import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
+import {
+  StudioContainer,
+  StudioHeader,
+  StudioTitle,
+  NewSessionButton,
+  ModeToggle,
+  ModeButton,
+} from "./studio.page.styled";
 
 const ImagesTab = lazy(() =>
   import("./components/images-tab").then((m) => ({ default: m.ImagesTab })),
@@ -15,20 +28,78 @@ const GenerateTab = lazy(() =>
 const ResultsTab = lazy(() =>
   import("./components/results-tab").then((m) => ({ default: m.ResultsTab })),
 );
-import {
-  StudioContainer,
-  StudioHeader,
-  StudioTitle,
-  NewSessionButton,
-} from "./studio.page.styled";
+const FlowBuilder = lazy(() =>
+  import("./components/flow-builder").then((m) => ({ default: m.FlowBuilder })),
+);
 
 export const StudioPage: React.FC = () => {
+  const mode = useStudioModeStore((s) => s.mode);
+  const setMode = useStudioModeStore((s) => s.setMode);
+
   const activeTab = useStudioStore((s) => s.activeTab);
   const resetSession = useStudioStore((s) => s.resetSession);
   const hasContent = useStudioStore(
     (s) => s.images.length > 0 || s.actions.length > 0 || s.jobs.length > 0,
   );
   useStudioJobProgress();
+
+  const addImage = useStudioStore((s) => s.addImage);
+  const updateImage = useStudioStore((s) => s.updateImage);
+  const addKeyframe = useFlowStore((s) => s.addKeyframe);
+  const uploadDream = useUploadImageDream();
+
+  const handleStudioDrop = useCallback(
+    async (files: File[]) => {
+      const currentMode = useStudioModeStore.getState().mode;
+
+      for (const file of files) {
+        if (currentMode === "batch") {
+          const placeholderUuid = uuidv4();
+          const blobUrl = URL.createObjectURL(file);
+          addImage({
+            uuid: placeholderUuid,
+            url: blobUrl,
+            name: file.name.replace(/\.[^.]+$/, ""),
+            status: "processing",
+            selected: false,
+          });
+
+          try {
+            const result = await uploadDream.mutateAsync({ file });
+            updateImage(placeholderUuid, {
+              uuid: result.dreamUuid,
+              url: result.imageUrl,
+              status: "processed",
+              name: result.name,
+            });
+          } catch (err) {
+            console.error("Failed to upload image:", err);
+            updateImage(placeholderUuid, { status: "failed" });
+          } finally {
+            URL.revokeObjectURL(blobUrl);
+          }
+        } else {
+          try {
+            const result = await uploadDream.mutateAsync({ file });
+            addKeyframe({
+              id: uuidv4(),
+              dreamUuid: result.dreamUuid,
+              imageUrl: result.imageUrl,
+              name: result.name,
+            });
+          } catch (err) {
+            console.error("Failed to upload keyframe:", err);
+          }
+        }
+      }
+    },
+    [addImage, updateImage, addKeyframe, uploadDream],
+  );
+
+  const { isDragOver, dropHandlers } = useFileDropUpload({
+    accept: ["image/jpeg", "image/png", "image/webp"],
+    onFiles: handleStudioDrop,
+  });
 
   const handleNewSession = () => {
     if (
@@ -41,21 +112,38 @@ export const StudioPage: React.FC = () => {
   };
 
   return (
-    <StudioContainer>
+    <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
         <StudioTitle>Studio</StudioTitle>
-        {hasContent && (
+        <ModeToggle>
+          <ModeButton $active={mode === "flow"} onClick={() => setMode("flow")}>
+            Flow
+          </ModeButton>
+          <ModeButton
+            $active={mode === "batch"}
+            onClick={() => setMode("batch")}
+          >
+            Batch (Advanced)
+          </ModeButton>
+        </ModeToggle>
+        {mode === "batch" && hasContent && (
           <NewSessionButton onClick={handleNewSession}>
             New Session
           </NewSessionButton>
         )}
       </StudioHeader>
-      <StudioTabs />
+
       <Suspense fallback={null}>
-        {activeTab === "images" && <ImagesTab />}
-        {activeTab === "actions" && <ActionsTab />}
-        {activeTab === "generate" && <GenerateTab />}
-        {activeTab === "results" && <ResultsTab />}
+        {mode === "flow" && <FlowBuilder />}
+        {mode === "batch" && (
+          <>
+            <StudioTabs />
+            {activeTab === "images" && <ImagesTab />}
+            {activeTab === "actions" && <ActionsTab />}
+            {activeTab === "generate" && <GenerateTab />}
+            {activeTab === "results" && <ResultsTab />}
+          </>
+        )}
       </Suspense>
     </StudioContainer>
   );

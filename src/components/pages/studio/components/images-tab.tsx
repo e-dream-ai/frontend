@@ -1,7 +1,10 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
+import { v4 as uuidv4 } from "uuid";
 import { useStudioStore } from "@/stores/studio.store";
 import { axiosClient } from "@/client/axios.client";
 import type { StudioImage, ImageModel } from "@/types/studio.types";
+import { useFileDropUpload } from "../hooks/useFileDropUpload";
+import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import {
   SIZE_OPTIONS,
   IMAGE_COUNT_OPTIONS,
@@ -30,6 +33,8 @@ import {
   ButtonRow,
   LightboxOverlay,
   LightboxImage,
+  ImagesTabContainer,
+  LightboxUploadedImage,
 } from "./images-tab.styled";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import { AddFromPlaylistModal } from "./add-from-playlist-modal";
@@ -52,6 +57,10 @@ export const ImagesTab: React.FC = () => {
   const selectAllImages = useStudioStore((s) => s.selectAllImages);
   const deselectAllImages = useStudioStore((s) => s.deselectAllImages);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
+
+  const updateImage = useStudioStore((s) => s.updateImage);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const uploadDream = useUploadImageDream();
 
   const isGenerating = useStudioStore((s) => s.isGenerating);
   const setIsGenerating = useStudioStore((s) => s.setIsGenerating);
@@ -122,8 +131,55 @@ export const ImagesTab: React.FC = () => {
     setIsGenerating(false);
   }, [imagePrompt, imageGenParams, addImage, setIsGenerating]);
 
+  const handleUploadFiles = useCallback(
+    async (files: File[]) => {
+      for (const file of files) {
+        const placeholderUuid = uuidv4();
+        const blobUrl = URL.createObjectURL(file);
+        addImage({
+          uuid: placeholderUuid,
+          url: blobUrl,
+          name: file.name.replace(/\.[^.]+$/, ""),
+          status: "processing",
+          selected: false,
+        });
+
+        try {
+          const result = await uploadDream.mutateAsync({ file });
+          updateImage(placeholderUuid, {
+            uuid: result.dreamUuid,
+            url: result.imageUrl,
+            status: "processed",
+            name: result.name,
+          });
+        } catch (err) {
+          console.error("Failed to upload image:", err);
+          updateImage(placeholderUuid, { status: "failed" });
+        } finally {
+          URL.revokeObjectURL(blobUrl);
+        }
+      }
+    },
+    [addImage, updateImage, uploadDream],
+  );
+
+  const handleFileSelected = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const files = e.target.files;
+      if (!files) return;
+      await handleUploadFiles(Array.from(files));
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    },
+    [handleUploadFiles],
+  );
+
+  const { isDragOver, dropHandlers } = useFileDropUpload({
+    accept: ["image/jpeg", "image/png", "image/webp"],
+    onFiles: handleUploadFiles,
+  });
+
   return (
-    <>
+    <ImagesTabContainer $dragOver={isDragOver} {...dropHandlers}>
       <GenerateSection>
         <SectionTitle>Generate New Images</SectionTitle>
         <PromptTextarea
@@ -179,6 +235,9 @@ export const ImagesTab: React.FC = () => {
               ))}
             </StyledSelect>
           </FormField>
+          <SecondaryNavButton onClick={() => fileInputRef.current?.click()}>
+            Upload
+          </SecondaryNavButton>
           <GenerateButton
             onClick={handleGenerate}
             disabled={!imagePrompt.trim() || isGenerating}
@@ -192,19 +251,34 @@ export const ImagesTab: React.FC = () => {
         <SectionTitle>Image Library</SectionTitle>
         {images.length === 0 ? (
           <EmptyStateText>
-            No images yet. Generate some above or add from a playlist.
+            No images yet. Generate some above, upload, or add from a playlist.
           </EmptyStateText>
         ) : (
           <ImageGrid>
             {images.map((img) => (
               <ImageCard key={img.uuid} $selected={img.selected}>
                 {img.status === "processed" ? (
+                  img.url.startsWith("http") ? (
+                    <ImageThumbnail
+                      src={img.url}
+                      alt={img.name}
+                      onClick={() => setExpandedImageUuid(img.uuid)}
+                      style={{ cursor: "zoom-in" }}
+                    />
+                  ) : (
+                    <ImageThumbnail
+                      as={PresignedImage}
+                      dreamUuid={img.uuid}
+                      alt={img.name}
+                      onClick={() => setExpandedImageUuid(img.uuid)}
+                      style={{ cursor: "zoom-in" }}
+                    />
+                  )
+                ) : img.status === "processing" && img.url ? (
                   <ImageThumbnail
-                    as={PresignedImage}
-                    dreamUuid={img.uuid}
+                    src={img.url}
                     alt={img.name}
-                    onClick={() => setExpandedImageUuid(img.uuid)}
-                    style={{ cursor: "zoom-in" }}
+                    style={{ opacity: 0.5 }}
                   />
                 ) : (
                   <ImageStatus>
@@ -253,15 +327,31 @@ export const ImagesTab: React.FC = () => {
         </BottomRow>
       </GenerateSection>
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        style={{ display: "none" }}
+        onChange={handleFileSelected}
+      />
+
       {showPlaylistModal && (
         <AddFromPlaylistModal onClose={() => setShowPlaylistModal(false)} />
       )}
 
       {expandedImageUuid && (
         <LightboxOverlay onClick={() => setExpandedImageUuid(null)}>
-          <LightboxImage dreamUuid={expandedImageUuid} alt="Expanded" />
+          {(() => {
+            const img = images.find((i) => i.uuid === expandedImageUuid);
+            return img?.url.startsWith("http") ? (
+              <LightboxUploadedImage src={img.url} alt="Expanded" />
+            ) : (
+              <LightboxImage dreamUuid={expandedImageUuid} alt="Expanded" />
+            );
+          })()}
         </LightboxOverlay>
       )}
-    </>
+    </ImagesTabContainer>
   );
 };

@@ -43,16 +43,14 @@ export const confirmPasswordSchemaProperty = yup
   .required()
   .oneOf([yup.ref("password"), ""], "Passwords must match");
 
-export const getSignupSchema = (isSignupCodeActive: boolean) =>
+export const getSignupSchema = () =>
   yup.object({
     email: emailSchema,
     firstName: yup.string().required().max(50),
     lastName: yup.string().required().max(50),
     // password: passwordSchemaProperty,
     // confirmPassword: confirmPasswordSchemaProperty,
-    code: isSignupCodeActive
-      ? yup.string().required("Code is required.")
-      : yup.string().optional(),
+    code: yup.string().optional(),
     terms: yup.boolean().oneOf([true], "You have to accept Terms of Service"),
   });
 
