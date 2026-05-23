@@ -8,6 +8,12 @@ import Text from "@/components/shared/text/text";
 import usePWAInstall from "@/hooks/usePWAInstall";
 import useUserAgent from "@/hooks/useUserAgent";
 import { APP_VERSION } from "@/version";
+import {
+  faApple,
+  faLinux,
+  faWindows,
+} from "@fortawesome/free-brands-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
@@ -16,6 +22,7 @@ const SECTION_ID = "install";
 const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
 const MAC_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.zip`;
 const WINDOWS_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-windows-${APP_VERSION}-setup.exe`;
+const LINUX_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}-x86_64.AppImage`;
 
 const ResponsiveDownloadButton = styled(Button)`
   max-width: 100%;
@@ -27,9 +34,22 @@ const ResponsiveDownloadButton = styled(Button)`
   height: 100%;
 `;
 
+const PlatformCard = styled(Card)`
+  position: relative;
+`;
+
+const PlatformIcon = styled.div`
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  font-size: 2.25rem;
+  line-height: 1;
+  color: ${(props) => props.theme.textAccentColor};
+`;
+
 const InstallSection = () => {
   const { t } = useTranslation();
-  const { isMacOS } = useUserAgent();
+  const { isMacOS, isLinux } = useUserAgent();
 
   const handleDownloadMac = () => {
     window.open(MAC_APP_URL, "_blank");
@@ -39,9 +59,16 @@ const InstallSection = () => {
     window.open(WINDOWS_APP_URL, "_blank");
   };
 
+  const handleDownloadLinux = () => {
+    window.open(LINUX_APP_URL, "_blank");
+  };
+
   const macCard = (
     <Row flexWrap={["wrap", "nowrap", "nowrap"]} key="mac">
-      <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+      <PlatformCard flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+        <PlatformIcon>
+          <FontAwesomeIcon icon={faApple} />
+        </PlatformIcon>
         <Row justifyContent="center">
           <ResponsiveDownloadButton
             buttonType="secondary"
@@ -62,13 +89,16 @@ const InstallSection = () => {
             </p>
           </Text>
         </Row>
-      </Card>
+      </PlatformCard>
     </Row>
   );
 
   const windowsCard = (
     <Row flexWrap={["wrap", "nowrap", "nowrap"]} key="windows">
-      <Card flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+      <PlatformCard flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+        <PlatformIcon>
+          <FontAwesomeIcon icon={faWindows} />
+        </PlatformIcon>
         <Row justifyContent="center">
           <ResponsiveDownloadButton
             buttonType="secondary"
@@ -88,26 +118,55 @@ const InstallSection = () => {
             </p>
           </Text>
         </Row>
-      </Card>
+      </PlatformCard>
     </Row>
   );
+
+  const linuxCard = (
+    <Row flexWrap={["wrap", "nowrap", "nowrap"]} key="linux">
+      <PlatformCard flex="auto" mt={3} px={[2, 3, 4]} py={4}>
+        <PlatformIcon>
+          <FontAwesomeIcon icon={faLinux} />
+        </PlatformIcon>
+        <Row justifyContent="center">
+          <ResponsiveDownloadButton
+            buttonType="secondary"
+            onClick={handleDownloadLinux}
+          >
+            Download for Linux
+          </ResponsiveDownloadButton>
+        </Row>
+        <Row>
+          <Text>
+            <p>
+              <em>Requirements:</em> Linux x86_64 with Vulkan support.
+            </p>
+            <p>
+              Make the{" "}
+              <Anchor target="_blank" href="https://appimage.org/">
+                AppImage
+              </Anchor>{" "}
+              executable (<code>chmod +x</code>) and run it. Sign-in by entering
+              your email, then enter the code emailed to you.
+            </p>
+          </Text>
+        </Row>
+      </PlatformCard>
+    </Row>
+  );
+
+  const orderedCards = isMacOS
+    ? [macCard, windowsCard, linuxCard]
+    : isLinux
+      ? [linuxCard, windowsCard, macCard]
+      : [windowsCard, macCard, linuxCard];
 
   return (
     <>
       <h2>{t("page.install.title")}</h2>
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
-        {isMacOS ? (
-          <>
-            {macCard}
-            {windowsCard}
-          </>
-        ) : (
-          <>
-            {windowsCard}
-            {macCard}
-          </>
-        )}
+        {orderedCards}
         <Text>
           <p>
             Each time you sign-in, a fresh code is required. Never reuse the
