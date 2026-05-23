@@ -13,6 +13,7 @@ export default function useUserAgent() {
   const [userAgent, setUserAgent] = useState<string | null>(null);
   const [isIOS, setIsIOS] = useState<boolean | null>(null);
   const [isMacOS, setIsMacOS] = useState<boolean | null>(null);
+  const [isLinux, setIsLinux] = useState<boolean | null>(null);
   const [isStandalone, setIsStandalone] = useState<boolean | null>(null);
   const [userAgentString, setUserAgentString] = useState<string | null>(null);
 
@@ -52,6 +53,8 @@ export default function useUserAgent() {
       setIsMobile(!!isMobile);
       const isMacOS = userAgentString.match(/Mac/i);
       setIsMacOS(!!isMacOS);
+      const isLinux = !isAndroid && userAgentString.match(/Linux/i);
+      setIsLinux(!!isLinux);
 
       // Check if app is installed (if it's installed we wont show the prompt)
       if (window.matchMedia("(display-mode: standalone)").matches) {
@@ -60,5 +63,13 @@ export default function useUserAgent() {
     }
   }, []);
 
-  return { isMobile, userAgent, isIOS, isMacOS, isStandalone, userAgentString };
+  return {
+    isMobile,
+    userAgent,
+    isIOS,
+    isMacOS,
+    isLinux,
+    isStandalone,
+    userAgentString,
+  };
 }
