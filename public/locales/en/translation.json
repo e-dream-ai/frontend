@@ -108,7 +108,14 @@
       "signin": "Sign in",
       "verify_email": "Verify email",
       "welcome_user": "Welcome {{username}}",
-      "error_verifying_code": "Error signing in."
+      "error_verifying_code": "Error signing in.",
+      "error_invalid_code": "Invalid code. Check for typos and make sure you're using the most recent code.",
+      "error_code_expired": "This code has expired. Please request a new one.",
+      "error_code_locked": "Too many incorrect attempts. Please request a new code.",
+      "error_rate_limited": "Too many requests. Please wait {{seconds}} seconds and try again.",
+      "error_rate_limited_generic": "Too many requests. Please wait a moment and try again.",
+      "error_user_not_found": "No account found for this email.",
+      "error_bad_request": "Invalid request. Please check your input and try again."
     },
     "confirm_forgot_password": {
       "code": "Code",
