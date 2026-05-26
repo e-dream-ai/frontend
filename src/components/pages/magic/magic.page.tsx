@@ -56,16 +56,39 @@ export const MagicPage: React.FC = () => {
 
   const { mutate, isLoading } = useMagic();
 
-  const isCodeExpiredMessage = (message?: string) =>
-    (message ?? "").toLowerCase().includes("expired");
-
-  const handleExpiredCode = () => {
-    setShowCodeExpiredModal(true);
-  };
-
   const handleExpiredCodeConfirm = () => {
     setShowCodeExpiredModal(false);
     router.navigate(ROUTES.SIGNIN);
+  };
+
+  const getErrorToast = (errorCode?: string, retryAfterSeconds?: number) => {
+    switch (errorCode) {
+      case "INVALID_CODE":
+        return t("page.magic.error_invalid_code");
+      case "CODE_EXPIRED":
+        return null;
+      case "CODE_LOCKED_OUT":
+        return t("page.magic.error_code_locked");
+      case "RATE_LIMITED":
+        return retryAfterSeconds
+          ? t("page.magic.error_rate_limited", { seconds: retryAfterSeconds })
+          : t("page.magic.error_rate_limited_generic");
+      case "USER_NOT_FOUND":
+        return t("page.magic.error_user_not_found");
+      case "BAD_REQUEST":
+        return t("page.magic.error_bad_request");
+      default:
+        return t("page.magic.error_verifying_code");
+    }
+  };
+
+  const handleAuthError = (errorCode?: string, retryAfterSeconds?: number) => {
+    if (errorCode === "CODE_EXPIRED") {
+      setShowCodeExpiredModal(true);
+      return;
+    }
+    const message = getErrorToast(errorCode, retryAfterSeconds);
+    if (message) toast.error(message);
   };
 
   const onSubmit = (data: MagicFormValues) => {
@@ -88,30 +111,17 @@ export const MagicPage: React.FC = () => {
               router.navigate(ROUTES.PLAYLISTS);
             }
           } else {
-            if (isCodeExpiredMessage(data.message)) {
-              handleExpiredCode();
-              return;
-            }
-
-            toast.error(
-              `${t("page.magic.error_verifying_code")} ${data.message}`,
-            );
+            handleAuthError(data.errorCode, data.retryAfterSeconds);
           }
         },
         onError: (error) => {
           if (axios.isAxiosError(error)) {
             const axiosError = error as AxiosError<ApiResponse<unknown>>;
-            if (isCodeExpiredMessage(axiosError.response?.data?.message)) {
-              handleExpiredCode();
-              return;
-            }
-          }
-
-          if (isCodeExpiredMessage(error.message)) {
-            handleExpiredCode();
+            const { errorCode, retryAfterSeconds } =
+              axiosError.response?.data ?? {};
+            handleAuthError(errorCode, retryAfterSeconds);
             return;
           }
-
           toast.error(t("page.magic.error_verifying_code"));
         },
       },
