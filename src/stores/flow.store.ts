@@ -55,6 +55,7 @@ type FlowStoreState = {
   // Phase 1 — UI state
   selectedTransitionIndex: number | null;
   settingsExpanded: boolean;
+  previewLightboxOpen: boolean;
 
   // Phase 1 — actions
   setGlobalPreset: (id: string) => void;
@@ -70,6 +71,7 @@ type FlowStoreState = {
   clearTransitionOverride: (index: number) => void;
   selectTransition: (index: number | null) => void;
   setSettingsExpanded: (expanded: boolean) => void;
+  setPreviewLightboxOpen: (open: boolean) => void;
   updateTransitionStatus: (
     index: number,
     status: TransitionStatus,
@@ -96,6 +98,7 @@ const PHASE_1_DEFAULTS = {
   transitions: [] as FlowTransition[],
   selectedTransitionIndex: null as number | null,
   settingsExpanded: false,
+  previewLightboxOpen: false,
 };
 
 /**
@@ -251,6 +254,7 @@ export const useFlowStore = create<FlowStoreState>()(
 
       selectTransition: (index) => set({ selectedTransitionIndex: index }),
       setSettingsExpanded: (expanded) => set({ settingsExpanded: expanded }),
+      setPreviewLightboxOpen: (open) => set({ previewLightboxOpen: open }),
 
       updateTransitionStatus: (index, status, progress) =>
         set((s) => {

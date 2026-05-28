@@ -25,12 +25,14 @@ export function FlowActionBar() {
     keyframes,
     setTransitionUprez,
     updateTransitionUprezStatus,
+    setPreviewLightboxOpen,
   } = useFlowStore(
     useShallow((s) => ({
       transitions: s.transitions,
       keyframes: s.keyframes,
       setTransitionUprez: s.setTransitionUprez,
       updateTransitionUprezStatus: s.updateTransitionUprezStatus,
+      setPreviewLightboxOpen: s.setPreviewLightboxOpen,
     })),
   );
 
@@ -143,8 +145,8 @@ export function FlowActionBar() {
   );
 
   const handlePreviewAll = useCallback(() => {
-    toast.info("Coming soon — Preview All will be available in Phase 2");
-  }, []);
+    setPreviewLightboxOpen(true);
+  }, [setPreviewLightboxOpen]);
 
   const handleSaveToPlaylist = useCallback(() => {
     toast.info("Coming soon — Save to Playlist will be available in Phase 2");
