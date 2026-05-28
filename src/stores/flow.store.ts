@@ -5,7 +5,7 @@ import type {
   FlowTransition,
   TransitionStatus,
 } from "@/types/flow.types";
-import type { VideoModel } from "@/types/studio.types";
+import type { VideoModel, LoRAConfig } from "@/types/studio.types";
 
 const LOOP_KEYFRAME_ID = "__loop__";
 
@@ -48,6 +48,7 @@ type FlowStoreState = {
   globalModel: VideoModel;
   globalNumInferenceSteps: number;
   globalGuidance: number;
+  globalLora: LoRAConfig[] | undefined;
 
   // Phase 1 — transitions
   transitions: FlowTransition[];
@@ -63,6 +64,7 @@ type FlowStoreState = {
   setGlobalModel: (model: VideoModel) => void;
   setGlobalNumInferenceSteps: (steps: number) => void;
   setGlobalGuidance: (guidance: number) => void;
+  setGlobalLora: (lora: LoRAConfig[] | undefined) => void;
   setTransitionOverride: (
     index: number,
     overrides: Partial<FlowTransition>,
@@ -93,6 +95,7 @@ const PHASE_1_DEFAULTS = {
   globalModel: "ltx-i2v" as VideoModel,
   globalNumInferenceSteps: 30,
   globalGuidance: 5.0,
+  globalLora: undefined as LoRAConfig[] | undefined,
   transitions: [] as FlowTransition[],
   selectedTransitionIndex: null as number | null,
   settingsExpanded: false,
@@ -221,6 +224,7 @@ export const useFlowStore = create<FlowStoreState>()(
       setGlobalNumInferenceSteps: (steps) =>
         set({ globalNumInferenceSteps: steps }),
       setGlobalGuidance: (guidance) => set({ globalGuidance: guidance }),
+      setGlobalLora: (lora) => set({ globalLora: lora }),
 
       // Phase 1 — transition actions
       setTransitionOverride: (index, overrides) =>
@@ -370,6 +374,7 @@ export const useFlowStore = create<FlowStoreState>()(
         globalModel: state.globalModel,
         globalNumInferenceSteps: state.globalNumInferenceSteps,
         globalGuidance: state.globalGuidance,
+        globalLora: state.globalLora,
       }),
     },
   ),

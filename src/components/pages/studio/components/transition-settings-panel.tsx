@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
-import type { VideoModel } from "@/types/studio.types";
+import type { VideoModel, LoRAConfig } from "@/types/studio.types";
 import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
 import {
   getAllowedDurationsForActions,
@@ -53,6 +53,7 @@ export function TransitionSettingsPanel({
     globalModel,
     globalNumInferenceSteps,
     globalGuidance,
+    globalLora,
   } = useFlowStore(
     useShallow((s) => ({
       transitions: s.transitions,
@@ -65,6 +66,7 @@ export function TransitionSettingsPanel({
       globalModel: s.globalModel,
       globalNumInferenceSteps: s.globalNumInferenceSteps,
       globalGuidance: s.globalGuidance,
+      globalLora: s.globalLora,
     })),
   );
 
@@ -77,6 +79,7 @@ export function TransitionSettingsPanel({
     (s) => s.setGlobalNumInferenceSteps,
   );
   const setGlobalGuidance = useFlowStore((s) => s.setGlobalGuidance);
+  const setGlobalLora = useFlowStore((s) => s.setGlobalLora);
   const setTransitionOverride = useFlowStore((s) => s.setTransitionOverride);
   const clearTransitionOverride = useFlowStore(
     (s) => s.clearTransitionOverride,
@@ -122,6 +125,49 @@ export function TransitionSettingsPanel({
     if (!action) return getAllowedDurationsForActions([], currentModel);
     return getAllowedDurationsForActions([action], currentModel);
   }, [currentPresetId, currentModel]);
+
+  // Extract available LoRA options for the current model from preset packs.
+  // Each unique LoRA (by path) becomes a selectable option.
+  const loraOptions = useMemo(() => {
+    const options: Array<{
+      label: string;
+      key: string;
+      highNoiseLoras: LoRAConfig[];
+      lowNoiseLoras: LoRAConfig[];
+    }> = [];
+    const seen = new Set<string>();
+
+    for (const pack of ACTION_PRESETS) {
+      if (pack.model !== currentModel && pack.model !== "all") continue;
+      for (const action of pack.actions) {
+        if (!action.highNoiseLoras?.length) continue;
+        const path = action.highNoiseLoras[0].path;
+        if (seen.has(path)) continue;
+        seen.add(path);
+        // Derive a short label from the action's prompt (first clause before comma)
+        const label = action.prompt.split(",")[0].trim();
+        options.push({
+          label,
+          key: path,
+          highNoiseLoras: action.highNoiseLoras,
+          lowNoiseLoras: action.lowNoiseLoras ?? [],
+        });
+      }
+    }
+    return options;
+  }, [currentModel]);
+
+  // Determine current effective LoRA: per-transition override > global > preset > none.
+  // Returns the LoRA path key for matching against dropdown options.
+  const currentLoraKey = useMemo(() => {
+    const override = selectedTransition?.loraOverride ?? globalLora;
+    if (override?.length) return override[0].path;
+    const presetAction = resolvePresetAction(currentPresetId);
+    if (presetAction?.highNoiseLoras?.length) {
+      return presetAction.highNoiseLoras[0].path;
+    }
+    return "";
+  }, [selectedTransition?.loraOverride, globalLora, currentPresetId]);
 
   type FieldMap = {
     presetOverride: string;
@@ -183,6 +229,15 @@ export function TransitionSettingsPanel({
         setValue("promptOverride", action.prompt);
       }
 
+      // Clear any explicit LoRA override so the preset's LoRA takes effect
+      if (isPerTransition && selectedTransitionIndex !== null) {
+        setTransitionOverride(selectedTransitionIndex, {
+          loraOverride: undefined,
+        });
+      } else {
+        setGlobalLora(undefined);
+      }
+
       // Clamp duration if needed
       const newAllowed = presetName
         ? getAllowedDurationsForActions(action ? [action] : [], currentModel)
@@ -192,7 +247,15 @@ export function TransitionSettingsPanel({
         setValue("durationOverride", clamped);
       }
     },
-    [setValue, currentModel, currentDuration],
+    [
+      setValue,
+      currentModel,
+      currentDuration,
+      isPerTransition,
+      selectedTransitionIndex,
+      setTransitionOverride,
+      setGlobalLora,
+    ],
   );
 
   const handleModelChange = useCallback(
@@ -207,6 +270,15 @@ export function TransitionSettingsPanel({
         }
       }
 
+      // Clear LoRA override — LoRAs are model-specific
+      if (isPerTransition && selectedTransitionIndex !== null) {
+        setTransitionOverride(selectedTransitionIndex, {
+          loraOverride: undefined,
+        });
+      } else {
+        setGlobalLora(undefined);
+      }
+
       // Clamp duration to new model's allowed values
       const action = resolvePresetAction(currentPresetId);
       const newAllowed = action
@@ -217,7 +289,61 @@ export function TransitionSettingsPanel({
         setValue("durationOverride", clamped);
       }
     },
-    [setValue, currentPresetId, currentDuration],
+    [
+      setValue,
+      currentPresetId,
+      currentDuration,
+      isPerTransition,
+      selectedTransitionIndex,
+      setTransitionOverride,
+      setGlobalLora,
+    ],
+  );
+
+  const handleLoraChange = useCallback(
+    (loraKey: string) => {
+      const loraOption = loraKey
+        ? loraOptions.find((o) => o.key === loraKey)
+        : undefined;
+
+      // Update store: set or clear the LoRA override
+      if (isPerTransition && selectedTransitionIndex !== null) {
+        setTransitionOverride(selectedTransitionIndex, {
+          loraOverride: loraOption?.highNoiseLoras,
+        });
+      } else {
+        setGlobalLora(loraOption?.highNoiseLoras);
+      }
+
+      // LoRA changes may constrain duration (LoRA presets often limit to shorter durations).
+      // Build a representative action for duration clamping, overlaying the new LoRA
+      // onto the current preset action (same pattern as handlePresetChange/handleModelChange).
+      const baseAction = resolvePresetAction(currentPresetId);
+      const clampAction = loraOption
+        ? {
+            prompt: baseAction?.prompt ?? "",
+            highNoiseLoras: loraOption.highNoiseLoras,
+          }
+        : baseAction;
+      const newAllowed = clampAction
+        ? getAllowedDurationsForActions([clampAction], currentModel)
+        : getAllowedDurationsForActions([], currentModel);
+      const clamped = clampDurationToAllowed(currentDuration, newAllowed);
+      if (clamped !== currentDuration) {
+        setValue("durationOverride", clamped);
+      }
+    },
+    [
+      isPerTransition,
+      selectedTransitionIndex,
+      setTransitionOverride,
+      setGlobalLora,
+      loraOptions,
+      currentPresetId,
+      currentModel,
+      currentDuration,
+      setValue,
+    ],
   );
 
   // When no preset is selected, the prompt drives the generation —
@@ -370,6 +496,23 @@ export function TransitionSettingsPanel({
                   <option value="wan-i2v">Wan I2V</option>
                 </Select>
               </FieldGroup>
+
+              {loraOptions.length > 0 && (
+                <FieldGroup>
+                  <FieldLabel>LoRA</FieldLabel>
+                  <Select
+                    value={currentLoraKey}
+                    onChange={(e) => handleLoraChange(e.target.value)}
+                  >
+                    <option value="">None</option>
+                    {loraOptions.map((o) => (
+                      <option key={o.key} value={o.key}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </Select>
+                </FieldGroup>
+              )}
             </FieldRow>
 
             <AdvancedToggle onClick={() => setAdvancedOpen(!advancedOpen)}>
