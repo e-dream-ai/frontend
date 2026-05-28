@@ -13,7 +13,7 @@ import {
   horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { useFlowStore } from "@/stores/flow.store";
+import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { KeyframeCard } from "./keyframe-card";
 import { TransitionGapEnhanced } from "./transition-gap";
 import { FlowReset } from "./flow-reset";
@@ -65,7 +65,7 @@ export const KeyframeStrip: React.FC<Props> = ({
     return [
       ...rawKeyframes,
       {
-        id: "__loop__",
+        id: LOOP_KEYFRAME_ID,
         keyframeUuid: first.keyframeUuid,
         dreamUuid: first.dreamUuid,
         imageUrl: first.imageUrl,

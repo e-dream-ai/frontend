@@ -7,7 +7,7 @@ import type {
 } from "@/types/flow.types";
 import type { VideoModel } from "@/types/studio.types";
 
-const LOOP_KEYFRAME_ID = "__loop__";
+export const LOOP_KEYFRAME_ID = "__loop__";
 
 /** Derive the display keyframes list, appending a synthetic loop frame when enabled. */
 function buildKeyframesWithLoop(

@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useFlowStore } from "@/stores/flow.store";
+import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import type { VideoModel } from "@/types/studio.types";
 import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
@@ -240,7 +240,7 @@ export function TransitionSettingsPanel({
 
   // Transition header info — __loop__ maps back to the first keyframe
   const findName = (id: string | undefined) =>
-    id === "__loop__"
+    id === LOOP_KEYFRAME_ID
       ? keyframes[0]?.name
       : keyframes.find((kf) => kf.id === id)?.name;
   const fromName =
