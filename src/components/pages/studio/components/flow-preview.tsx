@@ -35,7 +35,14 @@ function pad(n: number) {
 }
 
 export function FlowPreview() {
-  const transitions = useFlowStore(useShallow((s) => s.transitions));
+  const { transitions, previewLightboxOpen, setPreviewLightboxOpen } =
+    useFlowStore(
+      useShallow((s) => ({
+        transitions: s.transitions,
+        previewLightboxOpen: s.previewLightboxOpen,
+        setPreviewLightboxOpen: s.setPreviewLightboxOpen,
+      })),
+    );
 
   const completedUuids = useMemo(
     () =>
@@ -66,7 +73,6 @@ export function FlowPreview() {
   );
 
   const [rawIndex, setCurrentIndex] = useState(0);
-  const [lightboxOpen, setLightboxOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -92,20 +98,20 @@ export function FlowPreview() {
   // Escape closes the lightbox; ←/→ navigate when the preview is focused.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (lightboxOpen && e.key === "Escape") {
-        setLightboxOpen(false);
+      if (previewLightboxOpen && e.key === "Escape") {
+        setPreviewLightboxOpen(false);
         return;
       }
       if (segmentCount < 2) return;
       const active = document.activeElement;
       const inWrapper = active && wrapperRef.current?.contains(active as Node);
-      if (!inWrapper && !lightboxOpen) return;
+      if (!inWrapper && !previewLightboxOpen) return;
       if (e.key === "ArrowRight") goTo(currentIndex + 1);
       else if (e.key === "ArrowLeft") goTo(currentIndex - 1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [lightboxOpen, segmentCount, currentIndex, goTo]);
+  }, [previewLightboxOpen, segmentCount, currentIndex, goTo]);
 
   if (segmentCount === 0) return null;
 
@@ -120,7 +126,7 @@ export function FlowPreview() {
         <VideoWrapper
           ref={wrapperRef}
           tabIndex={0}
-          onClick={() => setLightboxOpen(true)}
+          onClick={() => setPreviewLightboxOpen(true)}
         >
           <video
             key={currentUrl}
@@ -182,10 +188,10 @@ export function FlowPreview() {
         <ClickHint>Click to expand</ClickHint>
       </PreviewContainer>
 
-      {lightboxOpen &&
+      {previewLightboxOpen &&
         createPortal(
           <LightboxOverlay
-            onClick={() => setLightboxOpen(false)}
+            onClick={() => setPreviewLightboxOpen(false)}
             role="dialog"
             aria-modal="true"
             aria-label="Video preview"

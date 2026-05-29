@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { useFlowStore } from "@/stores/flow.store";
+import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
 import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
@@ -364,13 +364,15 @@ export function TransitionSettingsPanel({
   // Don't show if fewer than 2 keyframes
   if (keyframes.length < 2) return null;
 
-  // Transition header info
+  // Transition header info — __loop__ maps back to the first keyframe
+  const findName = (id: string | undefined) =>
+    id === LOOP_KEYFRAME_ID
+      ? keyframes[0]?.name
+      : keyframes.find((kf) => kf.id === id)?.name;
   const fromName =
-    selectedTransition &&
-    keyframes.find((kf) => kf.id === selectedTransition.fromKeyframeId)?.name;
+    selectedTransition && findName(selectedTransition.fromKeyframeId);
   const toName =
-    selectedTransition &&
-    keyframes.find((kf) => kf.id === selectedTransition.toKeyframeId)?.name;
+    selectedTransition && findName(selectedTransition.toKeyframeId);
 
   const isComplete = selectedTransition?.status === "processed";
 
