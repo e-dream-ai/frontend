@@ -1,4 +1,8 @@
-import type { StudioAction, VideoModel } from "@/types/studio.types";
+import type {
+  StudioAction,
+  VideoModel,
+  LoRAConfig,
+} from "@/types/studio.types";
 import type { FlowTransition } from "@/types/flow.types";
 import {
   ACTION_PRESETS,
@@ -26,6 +30,7 @@ interface GlobalSettings {
   globalModel: VideoModel;
   globalNumInferenceSteps: number;
   globalGuidance: number;
+  globalLora: LoRAConfig[] | undefined;
 }
 
 interface EffectiveSettings {
@@ -54,27 +59,29 @@ export function resolveEffectiveSettings(
     transition.numInferenceStepsOverride ?? global.globalNumInferenceSteps;
   const guidance = transition.guidanceOverride ?? global.globalGuidance;
 
-  // Resolve preset → StudioAction
+  // Resolve LoRAs: per-transition override > global override > preset > none
   let action: Pick<StudioAction, "prompt" | "highNoiseLoras" | "lowNoiseLoras">;
 
-  if (transition.loraOverride) {
-    // Explicit LoRA override — use it directly
+  const explicitLora = transition.loraOverride ?? global.globalLora;
+  if (explicitLora) {
+    // Explicit LoRA override — look up matching preset action for lowNoiseLoras
+    const presetAction = resolvePresetAction(presetId);
+    const matchesPreset =
+      presetAction?.highNoiseLoras?.[0]?.path === explicitLora[0]?.path;
     action = {
       prompt,
-      highNoiseLoras: transition.loraOverride,
-      lowNoiseLoras: [],
+      highNoiseLoras: explicitLora,
+      lowNoiseLoras: matchesPreset ? presetAction!.lowNoiseLoras ?? [] : [],
     };
   } else {
     const presetAction = resolvePresetAction(presetId);
     if (presetAction) {
-      // Use preset's LoRAs, but override prompt if specified
       action = {
         prompt,
         highNoiseLoras: presetAction.highNoiseLoras ?? [],
         lowNoiseLoras: presetAction.lowNoiseLoras ?? [],
       };
     } else {
-      // No preset — bare prompt, no LoRAs
       action = { prompt, highNoiseLoras: [], lowNoiseLoras: [] };
     }
   }

@@ -30,6 +30,7 @@ export function useFlowGeneration() {
         globalModel: store.globalModel,
         globalNumInferenceSteps: store.globalNumInferenceSteps,
         globalGuidance: store.globalGuidance,
+        globalLora: store.globalLora,
       });
 
       const fromKf = store.keyframes.find(
