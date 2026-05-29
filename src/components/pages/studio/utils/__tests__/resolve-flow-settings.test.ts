@@ -150,4 +150,18 @@ describe("resolveEffectiveSettings", () => {
     expect(settings.action.highNoiseLoras!.length).toBeGreaterThan(0);
     expect(settings.action.highNoiseLoras![0].path).toContain("zoom_in");
   });
+
+  it("an explicit empty globalLora strips the preset's LoRA (None)", () => {
+    const transition: FlowTransition = {
+      fromKeyframeId: "a",
+      toKeyframeId: "b",
+      status: "idle",
+    };
+    const settings = resolveEffectiveSettings(transition, {
+      ...globalSettings,
+      globalLora: [],
+    });
+    expect(settings.action.highNoiseLoras).toEqual([]);
+    expect(settings.action.lowNoiseLoras).toEqual([]);
+  });
 });

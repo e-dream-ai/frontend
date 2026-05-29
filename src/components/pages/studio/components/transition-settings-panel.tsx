@@ -161,7 +161,7 @@ export function TransitionSettingsPanel({
   // Returns the LoRA path key for matching against dropdown options.
   const currentLoraKey = useMemo(() => {
     const override = selectedTransition?.loraOverride ?? globalLora;
-    if (override?.length) return override[0].path;
+    if (override !== undefined) return override[0]?.path ?? "";
     const presetAction = resolvePresetAction(currentPresetId);
     if (presetAction?.highNoiseLoras?.length) {
       return presetAction.highNoiseLoras[0].path;
@@ -305,29 +305,26 @@ export function TransitionSettingsPanel({
       const loraOption = loraKey
         ? loraOptions.find((o) => o.key === loraKey)
         : undefined;
+      const nextLora = loraOption?.highNoiseLoras ?? [];
 
-      // Update store: set or clear the LoRA override
       if (isPerTransition && selectedTransitionIndex !== null) {
         setTransitionOverride(selectedTransitionIndex, {
-          loraOverride: loraOption?.highNoiseLoras,
+          loraOverride: nextLora,
         });
       } else {
-        setGlobalLora(loraOption?.highNoiseLoras);
+        setGlobalLora(nextLora);
       }
 
-      // LoRA changes may constrain duration (LoRA presets often limit to shorter durations).
-      // Build a representative action for duration clamping, overlaying the new LoRA
-      // onto the current preset action (same pattern as handlePresetChange/handleModelChange).
+      // Re-clamp duration against the new LoRA, since LoRAs can restrict durations.
       const baseAction = resolvePresetAction(currentPresetId);
-      const clampAction = loraOption
-        ? {
-            prompt: baseAction?.prompt ?? "",
-            highNoiseLoras: loraOption.highNoiseLoras,
-          }
-        : baseAction;
-      const newAllowed = clampAction
-        ? getAllowedDurationsForActions([clampAction], currentModel)
-        : getAllowedDurationsForActions([], currentModel);
+      const clampAction = {
+        prompt: baseAction?.prompt ?? "",
+        highNoiseLoras: nextLora,
+      };
+      const newAllowed = getAllowedDurationsForActions(
+        [clampAction],
+        currentModel,
+      );
       const clamped = clampDurationToAllowed(currentDuration, newAllowed);
       if (clamped !== currentDuration) {
         setValue("durationOverride", clamped);
