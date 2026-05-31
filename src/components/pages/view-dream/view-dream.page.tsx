@@ -413,7 +413,12 @@ const ViewDreamPage: React.FC = () => {
   }, [dream?.prompt]);
 
   const isCancellableAlgorithm = useMemo(() => {
-    const cancellableAlgorithms = ["animatediff", "deforum", "uprez"];
+    const cancellableAlgorithms = [
+      "animatediff",
+      "deforum",
+      "uprez",
+      "nvidia-uprez",
+    ];
     return cancellableAlgorithms.includes(dreamAlgorithm);
   }, [dreamAlgorithm]);
 
