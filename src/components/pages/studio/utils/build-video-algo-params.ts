@@ -10,6 +10,7 @@ interface BuildVideoAlgoParamsInput {
   duration: number;
   numInferenceSteps: number;
   guidance: number;
+  negativePrompt?: string;
 }
 
 export const buildVideoAlgoParams = ({
@@ -21,8 +22,10 @@ export const buildVideoAlgoParams = ({
   duration,
   numInferenceSteps,
   guidance,
+  negativePrompt,
 }: BuildVideoAlgoParamsInput): Record<string, unknown> => {
   const hasLoras = hasActionLoras(action);
+  const trimmedNegative = negativePrompt?.trim();
 
   if (model === "ltx-i2v") {
     // Worker handles steps/guidance internally (8+3 steps, cfg 1.0).
@@ -33,6 +36,9 @@ export const buildVideoAlgoParams = ({
       source_dream_uuid: imageUuid,
       duration,
     };
+    if (trimmedNegative) {
+      params.negative_prompt = trimmedNegative;
+    }
     if (endImageUuid) {
       params.end_source_uuid = endImageUuid;
     }
@@ -43,7 +49,7 @@ export const buildVideoAlgoParams = ({
   }
 
   if (hasLoras) {
-    return {
+    const params: Record<string, unknown> = {
       infinidream_algorithm: "wan-i2v-lora",
       prompt: action.prompt,
       image: imageUuid,
@@ -54,9 +60,13 @@ export const buildVideoAlgoParams = ({
       high_noise_loras: action.highNoiseLoras ?? [],
       low_noise_loras: action.lowNoiseLoras ?? [],
     };
+    if (trimmedNegative) {
+      params.negative_prompt = trimmedNegative;
+    }
+    return params;
   }
 
-  return {
+  const params: Record<string, unknown> = {
     infinidream_algorithm: "wan-i2v",
     prompt: action.prompt,
     image: imageUuid,
@@ -65,4 +75,8 @@ export const buildVideoAlgoParams = ({
     num_inference_steps: numInferenceSteps,
     guidance,
   };
+  if (trimmedNegative) {
+    params.negative_prompt = trimmedNegative;
+  }
+  return params;
 };

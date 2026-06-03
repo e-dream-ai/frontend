@@ -44,6 +44,7 @@ type FlowStoreState = {
   // Phase 1 — global transition settings
   globalPresetId: string;
   globalPrompt: string;
+  globalNegativePrompt: string;
   globalDuration: number;
   globalModel: VideoModel;
   globalNumInferenceSteps: number;
@@ -61,6 +62,7 @@ type FlowStoreState = {
   // Phase 1 — actions
   setGlobalPreset: (id: string) => void;
   setGlobalPrompt: (prompt: string) => void;
+  setGlobalNegativePrompt: (prompt: string) => void;
   setGlobalDuration: (duration: number) => void;
   setGlobalModel: (model: VideoModel) => void;
   setGlobalNumInferenceSteps: (steps: number) => void;
@@ -93,6 +95,7 @@ type FlowStoreState = {
 const PHASE_1_DEFAULTS = {
   globalPresetId: "",
   globalPrompt: "",
+  globalNegativePrompt: "",
   globalDuration: 5,
   globalModel: "ltx-i2v" as VideoModel,
   globalNumInferenceSteps: 30,
@@ -222,6 +225,8 @@ export const useFlowStore = create<FlowStoreState>()(
       ...PHASE_1_DEFAULTS,
       setGlobalPreset: (id) => set({ globalPresetId: id }),
       setGlobalPrompt: (prompt) => set({ globalPrompt: prompt }),
+      setGlobalNegativePrompt: (prompt) =>
+        set({ globalNegativePrompt: prompt }),
       setGlobalDuration: (duration) => set({ globalDuration: duration }),
       setGlobalModel: (model) => set({ globalModel: model }),
       setGlobalNumInferenceSteps: (steps) =>
@@ -332,13 +337,21 @@ export const useFlowStore = create<FlowStoreState>()(
     }),
     {
       name: "flow-session",
-      version: 2,
+      version: 3,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as Record<string, unknown>;
         if (version < 2) {
           return {
             ...state,
             ...PHASE_1_DEFAULTS,
+          };
+        }
+        if (version < 3) {
+          // Negative prompt added; force LTX since it's the only working model.
+          return {
+            ...state,
+            globalNegativePrompt: "",
+            globalModel: "ltx-i2v",
           };
         }
         return state;
@@ -374,6 +387,7 @@ export const useFlowStore = create<FlowStoreState>()(
         transitions: state.transitions,
         globalPresetId: state.globalPresetId,
         globalPrompt: state.globalPrompt,
+        globalNegativePrompt: state.globalNegativePrompt,
         globalDuration: state.globalDuration,
         globalModel: state.globalModel,
         globalNumInferenceSteps: state.globalNumInferenceSteps,
