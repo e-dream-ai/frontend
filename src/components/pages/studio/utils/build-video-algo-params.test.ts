@@ -139,6 +139,42 @@ describe("buildVideoAlgoParams", () => {
     expect(result).not.toHaveProperty("low_noise_loras");
   });
 
+  it("includes negative_prompt for ltx-i2v when provided", () => {
+    const result = buildVideoAlgoParams({
+      model: "ltx-i2v",
+      action: makeAction(),
+      imageUuid: "img-uuid",
+      imageSize: "1280*720",
+      duration: 5,
+      numInferenceSteps: 30,
+      guidance: 5.0,
+      negativePrompt: "blurry, distorted, watermark",
+    });
+
+    expect(result).toEqual({
+      infinidream_algorithm: "ltx-i2v",
+      prompt: "slow zoom in",
+      source_dream_uuid: "img-uuid",
+      duration: 5,
+      negative_prompt: "blurry, distorted, watermark",
+    });
+  });
+
+  it("omits negative_prompt when blank or whitespace-only", () => {
+    const result = buildVideoAlgoParams({
+      model: "ltx-i2v",
+      action: makeAction(),
+      imageUuid: "img-uuid",
+      imageSize: "1280*720",
+      duration: 5,
+      numInferenceSteps: 30,
+      guidance: 5.0,
+      negativePrompt: "   ",
+    });
+
+    expect(result).not.toHaveProperty("negative_prompt");
+  });
+
   it("defaults imageSize to 1280*720 when empty for wan-i2v", () => {
     const result = buildVideoAlgoParams({
       model: "wan-i2v",

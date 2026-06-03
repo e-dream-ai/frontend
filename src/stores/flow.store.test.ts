@@ -362,6 +362,7 @@ describe("Phase 1: transitions", () => {
       const s = useFlowStore.getState();
       expect(s.globalPresetId).toBe("");
       expect(s.globalPrompt).toBe("");
+      expect(s.globalNegativePrompt).toBe("");
       expect(s.globalDuration).toBe(5);
       expect(s.globalModel).toBe("ltx-i2v");
       expect(s.globalNumInferenceSteps).toBe(30);
@@ -374,6 +375,7 @@ describe("Phase 1: transitions", () => {
       const store = useFlowStore.getState();
       store.setGlobalPreset("Organic");
       store.setGlobalPrompt("gentle drift");
+      store.setGlobalNegativePrompt("blurry, distorted");
       store.setGlobalDuration(8);
       store.setGlobalModel("wan-i2v");
       store.setGlobalNumInferenceSteps(20);
@@ -382,6 +384,7 @@ describe("Phase 1: transitions", () => {
       const s = useFlowStore.getState();
       expect(s.globalPresetId).toBe("Organic");
       expect(s.globalPrompt).toBe("gentle drift");
+      expect(s.globalNegativePrompt).toBe("blurry, distorted");
       expect(s.globalDuration).toBe(8);
       expect(s.globalModel).toBe("wan-i2v");
       expect(s.globalNumInferenceSteps).toBe(20);

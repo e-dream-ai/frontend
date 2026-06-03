@@ -26,6 +26,7 @@ export function useFlowGeneration() {
       const settings = resolveEffectiveSettings(transition, {
         globalPresetId: store.globalPresetId,
         globalPrompt: store.globalPrompt,
+        globalNegativePrompt: store.globalNegativePrompt,
         globalDuration: store.globalDuration,
         globalModel: store.globalModel,
         globalNumInferenceSteps: store.globalNumInferenceSteps,
@@ -49,13 +50,11 @@ export function useFlowGeneration() {
       const toKf = store.keyframes.find(
         (kf) => kf.id === transition.toKeyframeId,
       );
-      const endImageRef =
-        settings.model === "ltx-i2v" && toKf
-          ? toKf.dreamUuid || toKf.imageUrl
-          : undefined;
+      // LTX is the only working model — always generate i2v with an end frame.
+      const endImageRef = toKf ? toKf.dreamUuid || toKf.imageUrl : undefined;
 
       const algoParams = buildVideoAlgoParams({
-        model: settings.model,
+        model: "ltx-i2v",
         action: settings.action,
         imageUuid: imageRef,
         endImageUuid: endImageRef,
@@ -63,6 +62,7 @@ export function useFlowGeneration() {
         duration: settings.duration,
         numInferenceSteps: settings.numInferenceSteps,
         guidance: settings.guidance,
+        negativePrompt: settings.negativePrompt,
       });
       const name = `${fromKf.name || "frame"} → ${toKf?.name || "frame"}`;
 

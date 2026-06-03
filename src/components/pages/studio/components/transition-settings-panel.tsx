@@ -49,8 +49,8 @@ export function TransitionSettingsPanel({
     settingsExpanded,
     globalPresetId,
     globalPrompt,
+    globalNegativePrompt,
     globalDuration,
-    globalModel,
     globalNumInferenceSteps,
     globalGuidance,
     globalLora,
@@ -62,8 +62,8 @@ export function TransitionSettingsPanel({
       settingsExpanded: s.settingsExpanded,
       globalPresetId: s.globalPresetId,
       globalPrompt: s.globalPrompt,
+      globalNegativePrompt: s.globalNegativePrompt,
       globalDuration: s.globalDuration,
-      globalModel: s.globalModel,
       globalNumInferenceSteps: s.globalNumInferenceSteps,
       globalGuidance: s.globalGuidance,
       globalLora: s.globalLora,
@@ -73,8 +73,10 @@ export function TransitionSettingsPanel({
   // Actions are stable refs — individual selectors are cheaper than useShallow.
   const setGlobalPreset = useFlowStore((s) => s.setGlobalPreset);
   const setGlobalPrompt = useFlowStore((s) => s.setGlobalPrompt);
+  const setGlobalNegativePrompt = useFlowStore(
+    (s) => s.setGlobalNegativePrompt,
+  );
   const setGlobalDuration = useFlowStore((s) => s.setGlobalDuration);
-  const setGlobalModel = useFlowStore((s) => s.setGlobalModel);
   const setGlobalNumInferenceSteps = useFlowStore(
     (s) => s.setGlobalNumInferenceSteps,
   );
@@ -99,9 +101,12 @@ export function TransitionSettingsPanel({
   // Effective values (override > global)
   const currentPresetId = selectedTransition?.presetOverride ?? globalPresetId;
   const currentPrompt = selectedTransition?.promptOverride ?? globalPrompt;
+  const currentNegativePrompt =
+    selectedTransition?.negativePromptOverride ?? globalNegativePrompt;
   const currentDuration =
     selectedTransition?.durationOverride ?? globalDuration;
-  const currentModel = selectedTransition?.modelOverride ?? globalModel;
+  // LTX is the only working model — generation is hardwired to it.
+  const currentModel: VideoModel = "ltx-i2v";
   const currentSteps =
     selectedTransition?.numInferenceStepsOverride ?? globalNumInferenceSteps;
   const currentGuidance =
@@ -172,8 +177,8 @@ export function TransitionSettingsPanel({
   type FieldMap = {
     presetOverride: string;
     promptOverride: string;
+    negativePromptOverride: string;
     durationOverride: number;
-    modelOverride: VideoModel;
     numInferenceStepsOverride: number;
     guidanceOverride: number;
   };
@@ -192,11 +197,11 @@ export function TransitionSettingsPanel({
         case "promptOverride":
           setGlobalPrompt(value as string);
           break;
+        case "negativePromptOverride":
+          setGlobalNegativePrompt(value as string);
+          break;
         case "durationOverride":
           setGlobalDuration(value as number);
-          break;
-        case "modelOverride":
-          setGlobalModel(value as VideoModel);
           break;
         case "numInferenceStepsOverride":
           setGlobalNumInferenceSteps(value as number);
@@ -212,8 +217,8 @@ export function TransitionSettingsPanel({
       setTransitionOverride,
       setGlobalPreset,
       setGlobalPrompt,
+      setGlobalNegativePrompt,
       setGlobalDuration,
-      setGlobalModel,
       setGlobalNumInferenceSteps,
       setGlobalGuidance,
     ],
@@ -250,48 +255,6 @@ export function TransitionSettingsPanel({
     [
       setValue,
       currentModel,
-      currentDuration,
-      isPerTransition,
-      selectedTransitionIndex,
-      setTransitionOverride,
-      setGlobalLora,
-    ],
-  );
-
-  const handleModelChange = useCallback(
-    (model: VideoModel) => {
-      setValue("modelOverride", model);
-
-      // Check if current preset is valid for new model
-      if (currentPresetId) {
-        const pack = ACTION_PRESETS.find((p) => p.name === currentPresetId);
-        if (pack && pack.model !== "all" && pack.model !== model) {
-          setValue("presetOverride", "");
-        }
-      }
-
-      // Clear LoRA override — LoRAs are model-specific
-      if (isPerTransition && selectedTransitionIndex !== null) {
-        setTransitionOverride(selectedTransitionIndex, {
-          loraOverride: undefined,
-        });
-      } else {
-        setGlobalLora(undefined);
-      }
-
-      // Clamp duration to new model's allowed values
-      const action = resolvePresetAction(currentPresetId);
-      const newAllowed = action
-        ? getAllowedDurationsForActions([action], model)
-        : getAllowedDurationsForActions([], model);
-      const clamped = clampDurationToAllowed(currentDuration, newAllowed);
-      if (clamped !== currentDuration) {
-        setValue("durationOverride", clamped);
-      }
-    },
-    [
-      setValue,
-      currentPresetId,
       currentDuration,
       isPerTransition,
       selectedTransitionIndex,
@@ -482,20 +445,18 @@ export function TransitionSettingsPanel({
               />
             </FieldGroup>
 
-            <FieldRow>
-              <FieldGroup>
-                <FieldLabel>Model</FieldLabel>
-                <Select
-                  value={currentModel}
-                  onChange={(e) =>
-                    handleModelChange(e.target.value as VideoModel)
-                  }
-                >
-                  <option value="ltx-i2v">LTX 2.3</option>
-                  <option value="wan-i2v">Wan I2V</option>
-                </Select>
-              </FieldGroup>
+            <FieldGroup>
+              <FieldLabel>Negative Prompt</FieldLabel>
+              <PromptTextarea
+                value={currentNegativePrompt}
+                placeholder="Describe what to avoid..."
+                onChange={(e) =>
+                  setValue("negativePromptOverride", e.target.value)
+                }
+              />
+            </FieldGroup>
 
+            <FieldRow>
               {loraOptions.length > 0 && (
                 <FieldGroup>
                   <FieldLabel>LoRA</FieldLabel>

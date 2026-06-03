@@ -26,6 +26,7 @@ export function resolvePresetAction(
 interface GlobalSettings {
   globalPresetId: string;
   globalPrompt: string;
+  globalNegativePrompt: string;
   globalDuration: number;
   globalModel: VideoModel;
   globalNumInferenceSteps: number;
@@ -36,6 +37,7 @@ interface GlobalSettings {
 interface EffectiveSettings {
   presetId: string;
   prompt: string;
+  negativePrompt: string;
   duration: number;
   model: VideoModel;
   numInferenceSteps: number;
@@ -53,6 +55,8 @@ export function resolveEffectiveSettings(
 ): EffectiveSettings {
   const presetId = transition.presetOverride ?? global.globalPresetId;
   const prompt = transition.promptOverride ?? global.globalPrompt;
+  const negativePrompt =
+    transition.negativePromptOverride ?? global.globalNegativePrompt;
   const duration = transition.durationOverride ?? global.globalDuration;
   const model = transition.modelOverride ?? global.globalModel;
   const numInferenceSteps =
@@ -89,6 +93,7 @@ export function resolveEffectiveSettings(
   return {
     presetId,
     prompt,
+    negativePrompt,
     duration,
     model,
     numInferenceSteps,

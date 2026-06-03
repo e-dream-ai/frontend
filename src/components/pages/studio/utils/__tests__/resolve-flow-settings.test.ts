@@ -26,6 +26,7 @@ describe("resolveEffectiveSettings", () => {
   const globalSettings = {
     globalPresetId: "Camera Basics",
     globalPrompt: "global prompt",
+    globalNegativePrompt: "global negative",
     globalDuration: 5,
     globalModel: "wan-i2v" as const,
     globalNumInferenceSteps: 30,
@@ -42,6 +43,7 @@ describe("resolveEffectiveSettings", () => {
     const settings = resolveEffectiveSettings(transition, globalSettings);
     expect(settings.presetId).toBe("Camera Basics");
     expect(settings.prompt).toBe("global prompt");
+    expect(settings.negativePrompt).toBe("global negative");
     expect(settings.duration).toBe(5);
     expect(settings.model).toBe("wan-i2v");
     expect(settings.numInferenceSteps).toBe(30);
@@ -55,12 +57,14 @@ describe("resolveEffectiveSettings", () => {
       status: "idle",
       presetOverride: "Organic",
       promptOverride: "override prompt",
+      negativePromptOverride: "override negative",
       durationOverride: 10,
       modelOverride: "ltx-i2v",
     };
     const settings = resolveEffectiveSettings(transition, globalSettings);
     expect(settings.presetId).toBe("Organic");
     expect(settings.prompt).toBe("override prompt");
+    expect(settings.negativePrompt).toBe("override negative");
     expect(settings.duration).toBe(10);
     expect(settings.model).toBe("ltx-i2v");
     expect(settings.numInferenceSteps).toBe(30);
