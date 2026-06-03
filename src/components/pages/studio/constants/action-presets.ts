@@ -198,7 +198,11 @@ export const ACTION_PRESETS: PresetPack[] = [
     name: "Abstract",
     model: "all",
     actions: [
-      { prompt: "The scene transitions through a continuous, viscous metamorphosis, forms dissolving and rebuilding from within as though the material itself is alive. Shape bleeds into shape with cellular fluidity - no cut, no dissolve, no opacity ramp - only the slow-pressure pull of one state becoming another. Camera holds locked and still throughout. The transformation drives forward with organic inevitability, each intermediate state a coherent world briefly passing through.", enabled: true },
+      {
+        prompt:
+          "The scene transitions through a continuous, viscous metamorphosis, forms dissolving and rebuilding from within as though the material itself is alive. Shape bleeds into shape with cellular fluidity - no cut, no dissolve, no opacity ramp - only the slow-pressure pull of one state becoming another. Camera holds locked and still throughout. The transformation drives forward with organic inevitability, each intermediate state a coherent world briefly passing through.",
+        enabled: true,
+      },
       { prompt: "color shift, gradual hue rotation", enabled: true },
       { prompt: "kaleidoscope spin, symmetrical rotation", enabled: true },
       { prompt: "fractal zoom, infinite recursive detail", enabled: true },
