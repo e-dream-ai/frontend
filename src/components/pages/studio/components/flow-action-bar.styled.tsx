@@ -46,6 +46,26 @@ export const UprezDropdown = styled.div`
   display: inline-block;
 `;
 
+// Split button: a primary action fused with a caret that opens the dropdown.
+// The main part runs the default model; the caret lets you pick the other one.
+export const SplitButtonGroup = styled.div`
+  display: inline-flex;
+  align-items: stretch;
+`;
+
+export const SplitMainButton = styled(ActionButton)`
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+`;
+
+export const SplitCaretButton = styled(ActionButton)`
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: 11px;
+  padding-right: 11px;
+`;
+
 export const DropdownMenu = styled.div`
   position: absolute;
   bottom: 100%;

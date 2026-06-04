@@ -11,6 +11,9 @@ import {
   ActionBarContainer,
   ActionButton,
   UprezDropdown,
+  SplitButtonGroup,
+  SplitMainButton,
+  SplitCaretButton,
   DropdownMenu,
   DropdownItem,
   UprezProgressButton,
@@ -18,6 +21,10 @@ import {
   UprezDivider,
   UprezDoneBadge,
 } from "./flow-action-bar.styled";
+
+// Default model for the one-click "Uprez All" action. The caret menu still
+// exposes both models for an explicit choice.
+const DEFAULT_UPREZ_MODEL: UprezModel = "uprez";
 
 export function FlowActionBar() {
   const {
@@ -200,24 +207,34 @@ export function FlowActionBar() {
             </UprezButtonContent>
           </ActionButton>
         ) : (
-          <ActionButton
-            $accent
-            onClick={() => setUprezDropdownOpen(!uprezDropdownOpen)}
-          >
-            <UprezButtonContent>
-              <span>Uprez All</span>
+          <SplitButtonGroup>
+            <SplitMainButton
+              $accent
+              onClick={() => handleUprezAll(DEFAULT_UPREZ_MODEL)}
+            >
+              <UprezButtonContent>
+                <span>Uprez All</span>
+              </UprezButtonContent>
+            </SplitMainButton>
+            <SplitCaretButton
+              $accent
+              aria-label="Choose upscale model"
+              aria-haspopup="menu"
+              aria-expanded={uprezDropdownOpen}
+              onClick={() => setUprezDropdownOpen(!uprezDropdownOpen)}
+            >
               <span aria-hidden>&#9662;</span>
-            </UprezButtonContent>
-          </ActionButton>
+            </SplitCaretButton>
+          </SplitButtonGroup>
         )}
 
         {uprezDropdownOpen && !showProgressButton && (
           <DropdownMenu>
+            <DropdownItem onClick={() => handleUprezAll("uprez")}>
+              Standard Uprez (default)
+            </DropdownItem>
             <DropdownItem onClick={() => handleUprezAll("nvidia-uprez")}>
               Nvidia Super Resolution
-            </DropdownItem>
-            <DropdownItem onClick={() => handleUprezAll("uprez")}>
-              Standard Uprez
             </DropdownItem>
           </DropdownMenu>
         )}
