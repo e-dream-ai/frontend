@@ -32,7 +32,7 @@ import { SignupPage } from "@/components/pages/signup/signup.page";
 import PublicRoute from "@/routes/public-route";
 import PlaylistsFeedPage from "@/components/pages/playlist-feed/playlist-feed";
 import PlaygroundPage from "@/components/pages/playground/playground.page";
-import { StudioLayoutWithProviders } from "@/components/pages/studio/studio.layout";
+import { StudioLayout } from "@/components/pages/studio/studio.layout";
 import NotFoundPage from "@/components/pages/not-found/not-found.page";
 import UnsubscribePage from "@/components/pages/unsubscribe/unsubscribe.page";
 import { useEffect } from "react";
@@ -83,6 +83,11 @@ export const RootElement = () => {
 
 const RootElementWithProviders = withProviders(...Providers)(RootElement);
 const NotFoundPageWithProviders = withProviders(...Providers)(NotFoundPage);
+const StudioRouteWithProviders = withProviders(...Providers)(() => (
+  <ProtectedRoute allowedRoles={[ROLES.CREATOR_GROUP, ROLES.ADMIN_GROUP]}>
+    <StudioLayout />
+  </ProtectedRoute>
+));
 
 export const router = createBrowserRouter([
   {
@@ -366,11 +371,7 @@ export const router = createBrowserRouter([
   },
   {
     path: ROUTES.STUDIO,
-    element: (
-      <ProtectedRoute allowedRoles={[ROLES.CREATOR_GROUP, ROLES.ADMIN_GROUP]}>
-        <StudioLayoutWithProviders />
-      </ProtectedRoute>
-    ),
+    element: <StudioRouteWithProviders />,
     errorElement: <NotFoundPageWithProviders />,
   },
 ]);
