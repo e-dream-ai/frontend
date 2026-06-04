@@ -2,48 +2,96 @@ import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 
 export const StudioContainer = styled.div<{ $dragOver?: boolean }>`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 1.5rem;
-  min-height: calc(100vh - 80px);
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: ${FLOW.bg};
   transition: outline-color 0.2s;
   outline: 2px solid transparent;
   outline-offset: -2px;
-  border-radius: 12px;
 
   ${(props) =>
     props.$dragOver &&
     `
-    outline-color: ${props.theme.colorPrimary};
+    outline-color: ${FLOW.accent};
   `}
 `;
 
 export const StudioHeader = styled.div`
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.5rem;
+  padding: 12px 20px;
+  border-bottom: 1px solid ${FLOW.border};
+  gap: 16px;
+  flex-shrink: 0;
+`;
+
+export const BackButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: ${FLOW.radiusSm};
+  border: 1px solid ${FLOW.border};
+  background: transparent;
+  color: ${FLOW.textDim};
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+
+  &:hover {
+    border-color: ${FLOW.borderHover};
+    color: ${FLOW.text};
+  }
 `;
 
 export const StudioTitle = styled.h1`
-  font-size: 1.5rem;
+  font-size: 1.125rem;
   font-weight: 600;
-  color: ${(props) => props.theme.textPrimaryColor};
+  color: ${FLOW.text};
+  font-family: ${FLOW.fontFamily};
+`;
+
+export const HeaderSpacer = styled.div`
+  flex: 1;
 `;
 
 export const NewSessionButton = styled.button`
   background: transparent;
-  border: 1px solid #555;
-  color: #aaa;
+  border: 1px solid ${FLOW.border};
+  color: ${FLOW.textDim};
   padding: 0.375rem 0.75rem;
   border-radius: 6px;
   font-size: 0.8125rem;
+  font-family: ${FLOW.fontFamily};
   cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    border-color: ${FLOW.borderHover};
+    color: ${FLOW.text};
+  }
+`;
+
+export const StudioBody = styled.div<{ $constrain?: boolean }>`
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+  ${(props) =>
+    props.$constrain &&
+    `
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  `}
 `;
 
 export const ModeToggle = styled.div`
   display: flex;
   background: ${FLOW.bg};
+  border: 1px solid ${FLOW.border};
   border-radius: 8px;
   padding: 3px;
   gap: 2px;
