@@ -41,8 +41,8 @@ export function useFlowJobProgress() {
   const transitions = useFlowStore((s) => s.transitions);
   const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
 
-  // Collect pending dream UUIDs with their transition indices
-  const pendingEntries = useMemo(() => {
+  // Collect pending entries, UUIDs, and lookup map in one pass
+  const { pendingEntries, pendingUuids, uuidMap } = useMemo(() => {
     const entries: Array<{ uuid: string; index: number; isUprez: boolean }> =
       [];
     transitions.forEach((t, i) => {
@@ -53,29 +53,15 @@ export function useFlowJobProgress() {
         t.uprezDreamUuid &&
         (t.uprezStatus === "queue" || t.uprezStatus === "processing")
       ) {
-        entries.push({
-          uuid: t.uprezDreamUuid,
-          index: i,
-          isUprez: true,
-        });
+        entries.push({ uuid: t.uprezDreamUuid, index: i, isUprez: true });
       }
     });
-    return entries;
+    const uuids = entries.map((e) => e.uuid);
+    const map = new Map(
+      entries.map((e) => [e.uuid, { index: e.index, isUprez: e.isUprez }]),
+    );
+    return { pendingEntries: entries, pendingUuids: uuids, uuidMap: map };
   }, [transitions]);
-
-  const pendingUuids = useMemo(
-    () => pendingEntries.map((e) => e.uuid),
-    [pendingEntries],
-  );
-
-  // Build UUID → { index, isUprez } lookup
-  const uuidMap = useMemo(() => {
-    const map = new Map<string, { index: number; isUprez: boolean }>();
-    for (const e of pendingEntries) {
-      map.set(e.uuid, { index: e.index, isUprez: e.isUprez });
-    }
-    return map;
-  }, [pendingEntries]);
 
   // Handle job:progress events
   const handleProgress = useCallback(
@@ -136,8 +122,8 @@ export function useFlowJobProgress() {
     joinedUuidsRef.current = currentSet;
   }, [socket, pendingUuids]);
 
-  // Rejoin all known rooms on reconnect — separate effect so this listener
-  // isn't re-registered every time the pending set changes.
+  // Rejoin all known rooms on reconnect, and leave them all on unmount or
+  // socket swap. Keyed on [socket] so neither runs when the pending set changes.
   useEffect(() => {
     if (!socket) return;
     const rejoinAll = () => {
@@ -148,6 +134,10 @@ export function useFlowJobProgress() {
     socket.on("connect", rejoinAll);
     return () => {
       socket.off("connect", rejoinAll);
+      joinedUuidsRef.current.forEach((uuid) =>
+        socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid),
+      );
+      joinedUuidsRef.current = new Set();
     };
   }, [socket]);
 

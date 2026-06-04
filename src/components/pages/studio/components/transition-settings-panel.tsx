@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
-import type { VideoModel, LoRAConfig } from "@/types/studio.types";
+import type { LoRAConfig } from "@/types/studio.types";
 import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
 import {
   getAllowedDurationsForActions,
@@ -35,6 +35,8 @@ interface TransitionSettingsPanelProps {
   onGenerateOne: (index: number) => void;
   isGenerating: boolean;
 }
+
+const FORCED_MODEL = "ltx-i2v" as const;
 
 export function TransitionSettingsPanel({
   onGenerateAll,
@@ -70,25 +72,6 @@ export function TransitionSettingsPanel({
     })),
   );
 
-  // Actions are stable refs — individual selectors are cheaper than useShallow.
-  const setGlobalPreset = useFlowStore((s) => s.setGlobalPreset);
-  const setGlobalPrompt = useFlowStore((s) => s.setGlobalPrompt);
-  const setGlobalNegativePrompt = useFlowStore(
-    (s) => s.setGlobalNegativePrompt,
-  );
-  const setGlobalDuration = useFlowStore((s) => s.setGlobalDuration);
-  const setGlobalNumInferenceSteps = useFlowStore(
-    (s) => s.setGlobalNumInferenceSteps,
-  );
-  const setGlobalGuidance = useFlowStore((s) => s.setGlobalGuidance);
-  const setGlobalLora = useFlowStore((s) => s.setGlobalLora);
-  const setTransitionOverride = useFlowStore((s) => s.setTransitionOverride);
-  const clearTransitionOverride = useFlowStore(
-    (s) => s.clearTransitionOverride,
-  );
-  const selectTransition = useFlowStore((s) => s.selectTransition);
-  const setSettingsExpanded = useFlowStore((s) => s.setSettingsExpanded);
-
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
   // Per-transition mode?
@@ -105,8 +88,7 @@ export function TransitionSettingsPanel({
     selectedTransition?.negativePromptOverride ?? globalNegativePrompt;
   const currentDuration =
     selectedTransition?.durationOverride ?? globalDuration;
-  // LTX is the only working model — generation is hardwired to it.
-  const currentModel: VideoModel = "ltx-i2v";
+  const currentModel = FORCED_MODEL;
   const currentSteps =
     selectedTransition?.numInferenceStepsOverride ?? globalNumInferenceSteps;
   const currentGuidance =
@@ -184,44 +166,35 @@ export function TransitionSettingsPanel({
   };
   const setValue = useCallback(
     <K extends keyof FieldMap>(field: K, value: FieldMap[K]) => {
+      const store = useFlowStore.getState();
       if (isPerTransition && selectedTransitionIndex !== null) {
-        setTransitionOverride(selectedTransitionIndex, {
+        store.setTransitionOverride(selectedTransitionIndex, {
           [field]: value,
         });
         return;
       }
       switch (field) {
         case "presetOverride":
-          setGlobalPreset(value as string);
+          store.setGlobalPreset(value as string);
           break;
         case "promptOverride":
-          setGlobalPrompt(value as string);
+          store.setGlobalPrompt(value as string);
           break;
         case "negativePromptOverride":
-          setGlobalNegativePrompt(value as string);
+          store.setGlobalNegativePrompt(value as string);
           break;
         case "durationOverride":
-          setGlobalDuration(value as number);
+          store.setGlobalDuration(value as number);
           break;
         case "numInferenceStepsOverride":
-          setGlobalNumInferenceSteps(value as number);
+          store.setGlobalNumInferenceSteps(value as number);
           break;
         case "guidanceOverride":
-          setGlobalGuidance(value as number);
+          store.setGlobalGuidance(value as number);
           break;
       }
     },
-    [
-      isPerTransition,
-      selectedTransitionIndex,
-      setTransitionOverride,
-      setGlobalPreset,
-      setGlobalPrompt,
-      setGlobalNegativePrompt,
-      setGlobalDuration,
-      setGlobalNumInferenceSteps,
-      setGlobalGuidance,
-    ],
+    [isPerTransition, selectedTransitionIndex],
   );
 
   const handlePresetChange = useCallback(
@@ -235,12 +208,13 @@ export function TransitionSettingsPanel({
       }
 
       // Clear any explicit LoRA override so the preset's LoRA takes effect
+      const store = useFlowStore.getState();
       if (isPerTransition && selectedTransitionIndex !== null) {
-        setTransitionOverride(selectedTransitionIndex, {
+        store.setTransitionOverride(selectedTransitionIndex, {
           loraOverride: undefined,
         });
       } else {
-        setGlobalLora(undefined);
+        store.setGlobalLora(undefined);
       }
 
       // Clamp duration if needed
@@ -258,8 +232,6 @@ export function TransitionSettingsPanel({
       currentDuration,
       isPerTransition,
       selectedTransitionIndex,
-      setTransitionOverride,
-      setGlobalLora,
     ],
   );
 
@@ -270,12 +242,13 @@ export function TransitionSettingsPanel({
         : undefined;
       const nextLora = loraOption?.highNoiseLoras ?? [];
 
+      const store = useFlowStore.getState();
       if (isPerTransition && selectedTransitionIndex !== null) {
-        setTransitionOverride(selectedTransitionIndex, {
+        store.setTransitionOverride(selectedTransitionIndex, {
           loraOverride: nextLora,
         });
       } else {
-        setGlobalLora(nextLora);
+        store.setGlobalLora(nextLora);
       }
 
       // Re-clamp duration against the new LoRA, since LoRAs can restrict durations.
@@ -296,8 +269,6 @@ export function TransitionSettingsPanel({
     [
       isPerTransition,
       selectedTransitionIndex,
-      setTransitionOverride,
-      setGlobalLora,
       loraOptions,
       currentPresetId,
       currentModel,
@@ -349,7 +320,9 @@ export function TransitionSettingsPanel({
           )}
         </div>
         {isPerTransition && (
-          <CloseButton onClick={() => selectTransition(null)}>
+          <CloseButton
+            onClick={() => useFlowStore.getState().selectTransition(null)}
+          >
             &times;
           </CloseButton>
         )}
@@ -422,12 +395,16 @@ export function TransitionSettingsPanel({
 
       {/* Expand/collapse toggle */}
       {!settingsExpanded ? (
-        <ToggleLink onClick={() => setSettingsExpanded(true)}>
+        <ToggleLink
+          onClick={() => useFlowStore.getState().setSettingsExpanded(true)}
+        >
           &#9662; Customize
         </ToggleLink>
       ) : (
         <>
-          <ToggleLink onClick={() => setSettingsExpanded(false)}>
+          <ToggleLink
+            onClick={() => useFlowStore.getState().setSettingsExpanded(false)}
+          >
             &#9652; Collapse
           </ToggleLink>
 
@@ -518,7 +495,11 @@ export function TransitionSettingsPanel({
       {/* Per-transition extras */}
       {isPerTransition && selectedTransitionIndex !== null && (
         <ResetLink
-          onClick={() => clearTransitionOverride(selectedTransitionIndex)}
+          onClick={() =>
+            useFlowStore
+              .getState()
+              .clearTransitionOverride(selectedTransitionIndex)
+          }
         >
           Reset to defaults
         </ResetLink>

@@ -5,26 +5,24 @@ import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
-import type { UprezModel } from "@/types/studio.types";
 import { SaveToPlaylistModal } from "./save-to-playlist-modal";
 import {
   ActionBarContainer,
   ActionButton,
   UprezDropdown,
-  SplitButtonGroup,
-  SplitMainButton,
-  SplitCaretButton,
-  DropdownMenu,
-  DropdownItem,
   UprezProgressButton,
   UprezButtonContent,
   UprezDivider,
   UprezDoneBadge,
+  FactorPopup,
+  FactorLabel,
+  FactorGrid,
+  FactorOption,
+  FactorValue,
+  SplitButtonGroup,
+  SplitMainButton,
+  SplitCaretButton,
 } from "./flow-action-bar.styled";
-
-// Default model for the one-click "Uprez All" action. The caret menu still
-// exposes both models for an explicit choice.
-const DEFAULT_UPREZ_MODEL: UprezModel = "uprez";
 
 export function FlowActionBar() {
   const {
@@ -43,9 +41,10 @@ export function FlowActionBar() {
     })),
   );
 
-  const [uprezDropdownOpen, setUprezDropdownOpen] = useState(false);
   const [isUprezzing, setIsUprezzing] = useState(false);
   const [showSaveModal, setShowSaveModal] = useState(false);
+  const [interpolationFactor, setInterpolationFactor] = useState<2 | 4>(2);
+  const [factorPopupOpen, setFactorPopupOpen] = useState(false);
 
   const hasResults = transitions.some((t) => t.status === "processed");
 
@@ -90,8 +89,8 @@ export function FlowActionBar() {
   }, [transitions]);
 
   const handleUprezAll = useCallback(
-    async (uprezModel: UprezModel) => {
-      setUprezDropdownOpen(false);
+    async (factor: 2 | 4 = interpolationFactor) => {
+      setFactorPopupOpen(false);
       setIsUprezzing(true);
       const headers = getRequestHeaders({ contentType: ContentType.json });
 
@@ -109,10 +108,10 @@ export function FlowActionBar() {
 
           try {
             const algoParams = {
-              infinidream_algorithm: uprezModel,
+              infinidream_algorithm: "uprez",
               video_uuid: t.dreamUuid,
               upscale_factor: 2,
-              interpolation_factor: 2,
+              interpolation_factor: factor,
             };
 
             const { data } = await axiosClient.post(
@@ -145,6 +144,7 @@ export function FlowActionBar() {
       }
     },
     [
+      interpolationFactor,
       transitions.length,
       keyframes,
       setTransitionUprez,
@@ -184,13 +184,13 @@ export function FlowActionBar() {
             <UprezProgressButton
               $percent={uprezState.percent}
               aria-live="polite"
-              aria-label={`Upscaling ${uprezState.done} of ${
+              aria-label={`Interpolating ${uprezState.done} of ${
                 uprezState.total
               }, ${Math.round(uprezState.percent)} percent`}
             >
               <UprezButtonContent>
                 <Loader2 size={13} strokeWidth={2.4} className="spin" />
-                <span>Upscaling</span>
+                <span>Interpolating</span>
                 <UprezDivider />
                 <span>
                   {uprezState.done}/{uprezState.total}
@@ -198,47 +198,52 @@ export function FlowActionBar() {
               </UprezButtonContent>
             </UprezProgressButton>
           ) : allDone ? (
-            <ActionButton
-              $accent
-              onClick={() => setUprezDropdownOpen(!uprezDropdownOpen)}
-            >
+            <ActionButton $accent>
               <UprezButtonContent>
                 <Check size={13} strokeWidth={2.8} />
-                <span>Upscaled</span>
+                <span>Interpolated</span>
                 <UprezDoneBadge>{uprezState.done}</UprezDoneBadge>
               </UprezButtonContent>
             </ActionButton>
           ) : (
             <SplitButtonGroup>
-              <SplitMainButton
-                $accent
-                onClick={() => handleUprezAll(DEFAULT_UPREZ_MODEL)}
-              >
+              <SplitMainButton $accent onClick={() => handleUprezAll()}>
                 <UprezButtonContent>
-                  <span>Uprez All</span>
+                  <span>Interpolate All</span>
+                  <UprezDivider />
+                  <span>{interpolationFactor}×</span>
                 </UprezButtonContent>
               </SplitMainButton>
               <SplitCaretButton
                 $accent
-                aria-label="Choose upscale model"
+                aria-label="Choose interpolation factor"
                 aria-haspopup="menu"
-                aria-expanded={uprezDropdownOpen}
-                onClick={() => setUprezDropdownOpen(!uprezDropdownOpen)}
+                aria-expanded={factorPopupOpen}
+                onClick={() => setFactorPopupOpen((o) => !o)}
               >
                 <span aria-hidden>&#9662;</span>
               </SplitCaretButton>
             </SplitButtonGroup>
           )}
 
-          {uprezDropdownOpen && !showProgressButton && (
-            <DropdownMenu>
-              <DropdownItem onClick={() => handleUprezAll("uprez")}>
-                Standard Uprez (default)
-              </DropdownItem>
-              <DropdownItem onClick={() => handleUprezAll("nvidia-uprez")}>
-                Nvidia Super Resolution
-              </DropdownItem>
-            </DropdownMenu>
+          {factorPopupOpen && !showProgressButton && (
+            <FactorPopup>
+              <FactorLabel>Interpolation Factor</FactorLabel>
+              <FactorGrid>
+                {([2, 4] as const).map((f) => (
+                  <FactorOption
+                    key={f}
+                    $active={interpolationFactor === f}
+                    onClick={() => {
+                      setInterpolationFactor(f);
+                      setFactorPopupOpen(false);
+                    }}
+                  >
+                    <FactorValue>{f}×</FactorValue>
+                  </FactorOption>
+                ))}
+              </FactorGrid>
+            </FactorPopup>
           )}
         </UprezDropdown>
 

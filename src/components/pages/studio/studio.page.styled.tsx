@@ -79,6 +79,7 @@ export const StudioBody = styled.div<{ $constrain?: boolean }>`
   flex: 1;
   overflow-y: auto;
   width: 100%;
+  padding: 1.5rem 20px;
   ${(props) =>
     props.$constrain &&
     `

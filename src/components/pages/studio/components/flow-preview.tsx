@@ -75,10 +75,12 @@ export function FlowPreview() {
   const [rawIndex, setCurrentIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement>(null);
   const wrapperRef = useRef<HTMLDivElement>(null);
+  const currentIndexRef = useRef(0);
 
   // Clamp during render so segment churn never points at a dead index.
   const segmentCount = completedSegments.length;
   const currentIndex = rawIndex >= segmentCount ? 0 : rawIndex;
+  currentIndexRef.current = currentIndex;
 
   const goTo = useCallback(
     (next: number) => {
@@ -106,12 +108,12 @@ export function FlowPreview() {
       const active = document.activeElement;
       const inWrapper = active && wrapperRef.current?.contains(active as Node);
       if (!inWrapper && !previewLightboxOpen) return;
-      if (e.key === "ArrowRight") goTo(currentIndex + 1);
-      else if (e.key === "ArrowLeft") goTo(currentIndex - 1);
+      if (e.key === "ArrowRight") goTo(currentIndexRef.current + 1);
+      else if (e.key === "ArrowLeft") goTo(currentIndexRef.current - 1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [previewLightboxOpen, segmentCount, currentIndex, goTo]);
+  }, [previewLightboxOpen, segmentCount, goTo]);
 
   if (segmentCount === 0) return null;
 

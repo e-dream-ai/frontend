@@ -1,4 +1,4 @@
-import styled, { keyframes } from "styled-components";
+import styled, { keyframes, css } from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 
 const shimmer = keyframes`
@@ -44,26 +44,6 @@ export const ActionButton = styled.button<{ $accent?: boolean }>`
 export const UprezDropdown = styled.div`
   position: relative;
   display: inline-block;
-`;
-
-// Split button: a primary action fused with a caret that opens the dropdown.
-// The main part runs the default model; the caret lets you pick the other one.
-export const SplitButtonGroup = styled.div`
-  display: inline-flex;
-  align-items: stretch;
-`;
-
-export const SplitMainButton = styled(ActionButton)`
-  border-top-right-radius: 0;
-  border-bottom-right-radius: 0;
-  border-right: none;
-`;
-
-export const SplitCaretButton = styled(ActionButton)`
-  border-top-left-radius: 0;
-  border-bottom-left-radius: 0;
-  padding-left: 11px;
-  padding-right: 11px;
 `;
 
 export const DropdownMenu = styled.div`
@@ -184,4 +164,106 @@ export const UprezDoneBadge = styled.span`
   padding: 2px 6px;
   border-radius: 999px;
   font-variant-numeric: tabular-nums;
+`;
+
+const popupReveal = keyframes`
+  from { opacity: 0; transform: translateY(6px) scale(0.97); }
+  to   { opacity: 1; transform: translateY(0)   scale(1); }
+`;
+
+export const FactorPopup = styled.div`
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  background: ${FLOW.bgElevated};
+  border: 1px solid ${FLOW.border};
+  border-radius: ${FLOW.radius};
+  padding: 14px 14px 12px;
+  min-width: 180px;
+  z-index: 20;
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(212, 168, 83, 0.06);
+  animation: ${popupReveal} 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+`;
+
+export const FactorLabel = styled.p`
+  font-family: ${FLOW.fontFamily};
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: ${FLOW.textMuted};
+  margin: 0 0 10px 2px;
+`;
+
+export const FactorGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px;
+`;
+
+export const FactorOption = styled.button<{ $active: boolean }>`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 10px 8px;
+  border-radius: ${FLOW.radiusSm};
+  font-family: ${FLOW.fontFamily};
+  cursor: pointer;
+  transition: all 0.15s ease;
+
+  ${(p) =>
+    p.$active
+      ? css`
+          background: ${FLOW.accentDim};
+          border: 1px solid ${FLOW.accent};
+          color: ${FLOW.accent};
+        `
+      : css`
+          background: ${FLOW.bgInput};
+          border: 1px solid ${FLOW.border};
+          color: ${FLOW.textDim};
+
+          &:hover {
+            border-color: ${FLOW.borderHover};
+            color: ${FLOW.text};
+          }
+        `}
+`;
+
+export const FactorValue = styled.span`
+  font-size: 18px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+`;
+
+export const FactorSub = styled.span`
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  opacity: 0.7;
+`;
+
+export const SplitButtonGroup = styled.div`
+  display: inline-flex;
+  align-items: stretch;
+`;
+
+export const SplitMainButton = styled(ActionButton)`
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  border-right: none;
+`;
+
+export const SplitCaretButton = styled(ActionButton)`
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  padding-left: 10px;
+  padding-right: 10px;
+  font-size: 10px;
 `;

@@ -114,8 +114,7 @@ export const useBatchSubmit = () => {
                 (j) =>
                   j.imageId === image.uuid &&
                   j.actionId === action.id &&
-                  j.jobType !== "uprez" &&
-                  j.jobType !== "nvidia-uprez",
+                  j.jobType !== "uprez",
               );
             if (existingJob) {
               useStudioStore.getState().removeJob(existingJob.dreamUuid);
