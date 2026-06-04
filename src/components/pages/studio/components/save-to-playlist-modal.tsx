@@ -24,6 +24,7 @@ import {
   ModalFooter,
   CancelButton,
   SaveButton,
+  SpinningIcon,
 } from "./save-to-playlist-modal.styled";
 
 interface Props {
@@ -126,7 +127,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
   ]);
 
   return (
-    <ModalOverlay onClick={onClose}>
+    <ModalOverlay onClick={isSaving ? undefined : onClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
         <ModalHeader>
           <ModalTitle>Save to Playlist</ModalTitle>
@@ -185,11 +186,9 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
           </CancelButton>
           <SaveButton onClick={handleSave} disabled={!canSave || isSaving}>
             {isSaving ? (
-              <Loader2
-                size={14}
-                strokeWidth={2.4}
-                style={{ animation: "spin 1.4s linear infinite" }}
-              />
+              <SpinningIcon>
+                <Loader2 size={14} strokeWidth={2.4} />
+              </SpinningIcon>
             ) : (
               "Save"
             )}

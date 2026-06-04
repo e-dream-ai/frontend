@@ -1,5 +1,16 @@
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
+
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
+export const SpinningIcon = styled.span`
+  display: inline-flex;
+  svg {
+    animation: ${spin} 1.4s linear infinite;
+  }
+`;
 
 export const ModalOverlay = styled.div`
   position: fixed;

@@ -75,13 +75,17 @@ export const NewSessionButton = styled.button`
   }
 `;
 
-export const StudioBody = styled.div`
+export const StudioBody = styled.div<{ $constrain?: boolean }>`
   flex: 1;
   overflow-y: auto;
-  max-width: 1200px;
   width: 100%;
-  margin: 0 auto;
-  padding: 1.5rem;
+  ${(props) =>
+    props.$constrain &&
+    `
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1.5rem;
+  `}
 `;
 
 export const ModeToggle = styled.div`

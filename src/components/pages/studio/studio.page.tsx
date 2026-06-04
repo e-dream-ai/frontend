@@ -155,7 +155,7 @@ export const StudioPage: React.FC = () => {
         )}
       </StudioHeader>
 
-      <StudioBody>
+      <StudioBody $constrain={mode === "batch"}>
         <Suspense fallback={null}>
           {mode === "flow" && <FlowBuilder />}
           {mode === "batch" && (
