@@ -79,16 +79,16 @@ export const AuthCardBox = styled.div`
 
   .auth-cta {
     width: -webkit-fill-available;
-    background: rgba(0, 208, 219, 0.18);
-    color: rgba(0, 208, 219, 0.7);
-    border: 1px solid rgba(0, 208, 219, 0.25);
+    background: #1f1f1f;
+    color: rgba(255, 255, 255, 0.35);
+    border: 1px solid rgba(255, 255, 255, 0.07);
   }
 
   .auth-cta:hover:not(:disabled) {
     filter: none;
-    background: rgba(0, 208, 219, 0.25);
-    color: rgba(0, 208, 219, 0.9);
-    border-color: rgba(0, 208, 219, 0.35);
+    background: #252525;
+    color: rgba(255, 255, 255, 0.5);
+    border-color: rgba(255, 255, 255, 0.12);
   }
 
   .auth-cta.is-ready {
@@ -106,9 +106,9 @@ export const AuthCardBox = styled.div`
 
   .auth-cta:disabled {
     opacity: 1;
-    background: rgba(0, 208, 219, 0.1);
-    color: rgba(0, 208, 219, 0.35);
-    border-color: rgba(0, 208, 219, 0.15);
+    background: #1f1f1f;
+    color: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.05);
     cursor: not-allowed;
   }
 
