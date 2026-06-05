@@ -36,9 +36,7 @@ export const ResendButton = styled.button`
   font-size: 0.9rem;
   color: ${(props) => props.theme.textAccentColor};
   cursor: pointer;
-  transition:
-    color linear 0.2s,
-    filter linear 0.2s;
+  transition: color linear 0.2s;
 
   &:hover:not(:disabled) {
     color: #ff9d6b;

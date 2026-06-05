@@ -79,28 +79,37 @@ export const AuthCardBox = styled.div`
 
   .auth-cta {
     width: -webkit-fill-available;
-    background: #1f1f1f;
-    color: rgba(252, 217, 183, 0.72);
-    border: 1px solid rgba(252, 217, 183, 0.18);
+    background: rgba(0, 208, 219, 0.18);
+    color: rgba(0, 208, 219, 0.7);
+    border: 1px solid rgba(0, 208, 219, 0.25);
   }
 
   .auth-cta:hover:not(:disabled) {
     filter: none;
-    background: #252220;
-    color: rgba(252, 217, 183, 0.92);
-    border-color: rgba(252, 217, 183, 0.3);
+    background: rgba(0, 208, 219, 0.25);
+    color: rgba(0, 208, 219, 0.9);
+    border-color: rgba(0, 208, 219, 0.35);
   }
 
   .auth-cta.is-ready {
-    background: #fcd9b7;
-    color: #161616;
+    background: ${(props) => props.theme.colorSecondary};
+    color: #000;
     border-color: transparent;
   }
 
   .auth-cta.is-ready:hover:not(:disabled) {
     filter: none;
-    background: #ffe6cc;
-    color: #161616;
+    background: ${(props) => props.theme.colorSecondary};
+    color: #000;
+    filter: brightness(1.1);
+  }
+
+  .auth-cta:disabled {
+    opacity: 1;
+    background: rgba(0, 208, 219, 0.1);
+    color: rgba(0, 208, 219, 0.35);
+    border-color: rgba(0, 208, 219, 0.15);
+    cursor: not-allowed;
   }
 
   @media (max-width: ${DEVICES.TABLET}) {
@@ -121,7 +130,7 @@ export const AuthFooterLinks = styled.div`
   justify-content: center;
   align-items: center;
   gap: 0.5rem 1.25rem;
-  margin-top: 1.5rem;
+  margin-top: 1rem;
   padding-top: 1.4rem;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
   font-size: 0.9rem;

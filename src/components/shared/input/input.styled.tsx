@@ -23,6 +23,15 @@ export const StyledInput = styled.input`
   &:focus {
     outline: none;
   }
+
+  &:-webkit-autofill,
+  &:-webkit-autofill:hover,
+  &:-webkit-autofill:focus {
+    -webkit-text-fill-color: ${(props) => props.theme.inputTextColorPrimary};
+    box-shadow: 0 0 0 1000px ${(props) => props.theme.inputBackgroundColor}
+      inset;
+    transition: background-color 5000s ease-in-out 0s;
+  }
 `;
 
 export const DisabledInput = styled.div`
