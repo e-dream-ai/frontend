@@ -26,10 +26,12 @@ describe("resolveEffectiveSettings", () => {
   const globalSettings = {
     globalPresetId: "Camera Basics",
     globalPrompt: "global prompt",
+    globalNegativePrompt: "global negative",
     globalDuration: 5,
     globalModel: "wan-i2v" as const,
     globalNumInferenceSteps: 30,
     globalGuidance: 5.0,
+    globalLora: undefined,
   };
 
   it("uses global settings when transition has no overrides", () => {
@@ -41,6 +43,7 @@ describe("resolveEffectiveSettings", () => {
     const settings = resolveEffectiveSettings(transition, globalSettings);
     expect(settings.presetId).toBe("Camera Basics");
     expect(settings.prompt).toBe("global prompt");
+    expect(settings.negativePrompt).toBe("global negative");
     expect(settings.duration).toBe(5);
     expect(settings.model).toBe("wan-i2v");
     expect(settings.numInferenceSteps).toBe(30);
@@ -54,12 +57,14 @@ describe("resolveEffectiveSettings", () => {
       status: "idle",
       presetOverride: "Organic",
       promptOverride: "override prompt",
+      negativePromptOverride: "override negative",
       durationOverride: 10,
       modelOverride: "ltx-i2v",
     };
     const settings = resolveEffectiveSettings(transition, globalSettings);
     expect(settings.presetId).toBe("Organic");
     expect(settings.prompt).toBe("override prompt");
+    expect(settings.negativePrompt).toBe("override negative");
     expect(settings.duration).toBe(10);
     expect(settings.model).toBe("ltx-i2v");
     expect(settings.numInferenceSteps).toBe(30);
@@ -101,5 +106,66 @@ describe("resolveEffectiveSettings", () => {
     };
     const settings = resolveEffectiveSettings(transition, globalSettings);
     expect(settings.action.prompt).toBe("my custom prompt");
+  });
+
+  it("globalLora overrides preset LoRAs", () => {
+    const customLora = [{ path: "custom-lora.safetensors", scale: 0.8 }];
+    const transition: FlowTransition = {
+      fromKeyframeId: "a",
+      toKeyframeId: "b",
+      status: "idle",
+    };
+    const settings = resolveEffectiveSettings(transition, {
+      ...globalSettings,
+      globalLora: customLora,
+    });
+    expect(settings.action.highNoiseLoras).toEqual(customLora);
+  });
+
+  it("transition loraOverride overrides globalLora", () => {
+    const globalLoraConfig = [{ path: "global-lora.safetensors", scale: 0.5 }];
+    const transitionLoraConfig = [
+      { path: "transition-lora.safetensors", scale: 1.0 },
+    ];
+    const transition: FlowTransition = {
+      fromKeyframeId: "a",
+      toKeyframeId: "b",
+      status: "idle",
+      loraOverride: transitionLoraConfig,
+    };
+    const settings = resolveEffectiveSettings(transition, {
+      ...globalSettings,
+      globalLora: globalLoraConfig,
+    });
+    expect(settings.action.highNoiseLoras).toEqual(transitionLoraConfig);
+  });
+
+  it("falls through to preset LoRAs when globalLora is undefined", () => {
+    const transition: FlowTransition = {
+      fromKeyframeId: "a",
+      toKeyframeId: "b",
+      status: "idle",
+    };
+    const settings = resolveEffectiveSettings(transition, {
+      ...globalSettings,
+      globalLora: undefined,
+    });
+    // Camera Basics preset's first action has LoRAs (zoom in)
+    expect(settings.action.highNoiseLoras!.length).toBeGreaterThan(0);
+    expect(settings.action.highNoiseLoras![0].path).toContain("zoom_in");
+  });
+
+  it("an explicit empty globalLora strips the preset's LoRA (None)", () => {
+    const transition: FlowTransition = {
+      fromKeyframeId: "a",
+      toKeyframeId: "b",
+      status: "idle",
+    };
+    const settings = resolveEffectiveSettings(transition, {
+      ...globalSettings,
+      globalLora: [],
+    });
+    expect(settings.action.highNoiseLoras).toEqual([]);
+    expect(settings.action.lowNoiseLoras).toEqual([]);
   });
 });

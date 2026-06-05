@@ -145,7 +145,7 @@ describe("studio.store", () => {
   });
 
   describe("selectAllJobsForUprez", () => {
-    it("does not select nvidia-uprez jobs for uprezzing", () => {
+    it("does not select uprez jobs for uprezzing", () => {
       useStudioStore.getState().addJob({
         imageId: "img1",
         actionId: "act1",
@@ -158,14 +158,6 @@ describe("studio.store", () => {
         imageId: "img1",
         actionId: "uprez-act1",
         dreamUuid: "dream2",
-        jobType: "nvidia-uprez",
-        status: "processed",
-        selectedForUprez: false,
-      });
-      useStudioStore.getState().addJob({
-        imageId: "img1",
-        actionId: "uprez-act2",
-        dreamUuid: "dream3",
         jobType: "uprez",
         status: "processed",
         selectedForUprez: false,
@@ -176,10 +168,8 @@ describe("studio.store", () => {
       const jobs = useStudioStore.getState().jobs;
       // wan-i2v job should be selected
       expect(jobs[0].selectedForUprez).toBe(true);
-      // nvidia-uprez job should NOT be selected
-      expect(jobs[1].selectedForUprez).toBe(false);
       // uprez job should NOT be selected
-      expect(jobs[2].selectedForUprez).toBe(false);
+      expect(jobs[1].selectedForUprez).toBe(false);
     });
   });
 
@@ -200,23 +190,6 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(5); // preserved
       expect(params.numInferenceSteps).toBe(30); // preserved
-    });
-  });
-
-  describe("uprezModel", () => {
-    it("defaults to uprez", () => {
-      expect(useStudioStore.getState().uprezModel).toBe("uprez");
-    });
-
-    it("can be set to nvidia-uprez", () => {
-      useStudioStore.getState().setUprezModel("nvidia-uprez");
-      expect(useStudioStore.getState().uprezModel).toBe("nvidia-uprez");
-    });
-
-    it("resets on resetSession", () => {
-      useStudioStore.getState().setUprezModel("nvidia-uprez");
-      useStudioStore.getState().resetSession();
-      expect(useStudioStore.getState().uprezModel).toBe("uprez");
     });
   });
 

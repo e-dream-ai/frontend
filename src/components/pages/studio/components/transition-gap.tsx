@@ -19,9 +19,12 @@ function hasOverrides(t: FlowTransition): boolean {
   return !!(
     t.presetOverride ||
     t.promptOverride ||
+    t.negativePromptOverride ||
     t.durationOverride !== undefined ||
     t.modelOverride ||
-    t.loraOverride
+    t.loraOverride ||
+    t.numInferenceStepsOverride !== undefined ||
+    t.guidanceOverride !== undefined
   );
 }
 

@@ -1,8 +1,12 @@
 import React, { lazy, Suspense, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
+import Bugsnag from "@bugsnag/js";
 import { useStudioStore } from "@/stores/studio.store";
 import { useStudioModeStore } from "@/stores/studio-mode.store";
 import { useFlowStore } from "@/stores/flow.store";
+import { ROUTES } from "@/constants/routes.constants";
 import { StudioTabs } from "./components/studio-tabs";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
 import { useFileDropUpload } from "./hooks/useFileDropUpload";
@@ -11,7 +15,10 @@ import {
   StudioContainer,
   StudioHeader,
   StudioTitle,
+  BackButton,
+  HeaderSpacer,
   NewSessionButton,
+  StudioBody,
   ModeToggle,
   ModeButton,
 } from "./studio.page.styled";
@@ -29,10 +36,13 @@ const ResultsTab = lazy(() =>
   import("./components/results-tab").then((m) => ({ default: m.ResultsTab })),
 );
 const FlowBuilder = lazy(() =>
-  import("./components/flow-builder").then((m) => ({ default: m.FlowBuilder })),
+  import("./components/flow-builder").then((m) => ({
+    default: m.FlowBuilder,
+  })),
 );
 
 export const StudioPage: React.FC = () => {
+  const navigate = useNavigate();
   const mode = useStudioModeStore((s) => s.mode);
   const setMode = useStudioModeStore((s) => s.setMode);
 
@@ -47,6 +57,14 @@ export const StudioPage: React.FC = () => {
   const updateImage = useStudioStore((s) => s.updateImage);
   const addKeyframe = useFlowStore((s) => s.addKeyframe);
   const uploadDream = useUploadImageDream();
+
+  const handleBack = useCallback(() => {
+    if (window.history.length > 1) {
+      navigate(-1);
+    } else {
+      navigate(ROUTES.REMOTE_CONTROL);
+    }
+  }, [navigate]);
 
   const handleStudioDrop = useCallback(
     async (files: File[]) => {
@@ -73,7 +91,7 @@ export const StudioPage: React.FC = () => {
               name: result.name,
             });
           } catch (err) {
-            console.error("Failed to upload image:", err);
+            Bugsnag.notify(err as Error);
             updateImage(placeholderUuid, { status: "failed" });
           } finally {
             URL.revokeObjectURL(blobUrl);
@@ -88,7 +106,7 @@ export const StudioPage: React.FC = () => {
               name: result.name,
             });
           } catch (err) {
-            console.error("Failed to upload keyframe:", err);
+            Bugsnag.notify(err as Error);
           }
         }
       }
@@ -114,6 +132,9 @@ export const StudioPage: React.FC = () => {
   return (
     <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
+        <BackButton onClick={handleBack} aria-label="Go back">
+          <ArrowLeft size={16} />
+        </BackButton>
         <StudioTitle>Studio</StudioTitle>
         <ModeToggle>
           <ModeButton $active={mode === "flow"} onClick={() => setMode("flow")}>
@@ -126,6 +147,7 @@ export const StudioPage: React.FC = () => {
             Batch (Advanced)
           </ModeButton>
         </ModeToggle>
+        <HeaderSpacer />
         {mode === "batch" && hasContent && (
           <NewSessionButton onClick={handleNewSession}>
             New Session
@@ -133,18 +155,20 @@ export const StudioPage: React.FC = () => {
         )}
       </StudioHeader>
 
-      <Suspense fallback={null}>
-        {mode === "flow" && <FlowBuilder />}
-        {mode === "batch" && (
-          <>
-            <StudioTabs />
-            {activeTab === "images" && <ImagesTab />}
-            {activeTab === "actions" && <ActionsTab />}
-            {activeTab === "generate" && <GenerateTab />}
-            {activeTab === "results" && <ResultsTab />}
-          </>
-        )}
-      </Suspense>
+      <StudioBody $constrain={mode === "batch"}>
+        <Suspense fallback={null}>
+          {mode === "flow" && <FlowBuilder />}
+          {mode === "batch" && (
+            <>
+              <StudioTabs />
+              {activeTab === "images" && <ImagesTab />}
+              {activeTab === "actions" && <ActionsTab />}
+              {activeTab === "generate" && <GenerateTab />}
+              {activeTab === "results" && <ResultsTab />}
+            </>
+          )}
+        </Suspense>
+      </StudioBody>
     </StudioContainer>
   );
 };

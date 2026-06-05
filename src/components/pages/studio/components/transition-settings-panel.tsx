@@ -1,7 +1,7 @@
 import { useState, useMemo, useCallback } from "react";
-import { useFlowStore } from "@/stores/flow.store";
+import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
-import type { VideoModel } from "@/types/studio.types";
+import type { LoRAConfig } from "@/types/studio.types";
 import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
 import {
   getAllowedDurationsForActions,
@@ -36,6 +36,8 @@ interface TransitionSettingsPanelProps {
   isGenerating: boolean;
 }
 
+const FORCED_MODEL = "ltx-i2v" as const;
+
 export function TransitionSettingsPanel({
   onGenerateAll,
   onGenerateOne,
@@ -49,10 +51,11 @@ export function TransitionSettingsPanel({
     settingsExpanded,
     globalPresetId,
     globalPrompt,
+    globalNegativePrompt,
     globalDuration,
-    globalModel,
     globalNumInferenceSteps,
     globalGuidance,
+    globalLora,
   } = useFlowStore(
     useShallow((s) => ({
       transitions: s.transitions,
@@ -61,28 +64,13 @@ export function TransitionSettingsPanel({
       settingsExpanded: s.settingsExpanded,
       globalPresetId: s.globalPresetId,
       globalPrompt: s.globalPrompt,
+      globalNegativePrompt: s.globalNegativePrompt,
       globalDuration: s.globalDuration,
-      globalModel: s.globalModel,
       globalNumInferenceSteps: s.globalNumInferenceSteps,
       globalGuidance: s.globalGuidance,
+      globalLora: s.globalLora,
     })),
   );
-
-  // Actions are stable refs — individual selectors are cheaper than useShallow.
-  const setGlobalPreset = useFlowStore((s) => s.setGlobalPreset);
-  const setGlobalPrompt = useFlowStore((s) => s.setGlobalPrompt);
-  const setGlobalDuration = useFlowStore((s) => s.setGlobalDuration);
-  const setGlobalModel = useFlowStore((s) => s.setGlobalModel);
-  const setGlobalNumInferenceSteps = useFlowStore(
-    (s) => s.setGlobalNumInferenceSteps,
-  );
-  const setGlobalGuidance = useFlowStore((s) => s.setGlobalGuidance);
-  const setTransitionOverride = useFlowStore((s) => s.setTransitionOverride);
-  const clearTransitionOverride = useFlowStore(
-    (s) => s.clearTransitionOverride,
-  );
-  const selectTransition = useFlowStore((s) => s.selectTransition);
-  const setSettingsExpanded = useFlowStore((s) => s.setSettingsExpanded);
 
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
@@ -96,9 +84,11 @@ export function TransitionSettingsPanel({
   // Effective values (override > global)
   const currentPresetId = selectedTransition?.presetOverride ?? globalPresetId;
   const currentPrompt = selectedTransition?.promptOverride ?? globalPrompt;
+  const currentNegativePrompt =
+    selectedTransition?.negativePromptOverride ?? globalNegativePrompt;
   const currentDuration =
     selectedTransition?.durationOverride ?? globalDuration;
-  const currentModel = selectedTransition?.modelOverride ?? globalModel;
+  const currentModel = FORCED_MODEL;
   const currentSteps =
     selectedTransition?.numInferenceStepsOverride ?? globalNumInferenceSteps;
   const currentGuidance =
@@ -123,54 +113,88 @@ export function TransitionSettingsPanel({
     return getAllowedDurationsForActions([action], currentModel);
   }, [currentPresetId, currentModel]);
 
+  // Extract available LoRA options for the current model from preset packs.
+  // Each unique LoRA (by path) becomes a selectable option.
+  const loraOptions = useMemo(() => {
+    const options: Array<{
+      label: string;
+      key: string;
+      highNoiseLoras: LoRAConfig[];
+      lowNoiseLoras: LoRAConfig[];
+    }> = [];
+    const seen = new Set<string>();
+
+    for (const pack of ACTION_PRESETS) {
+      if (pack.model !== currentModel && pack.model !== "all") continue;
+      for (const action of pack.actions) {
+        if (!action.highNoiseLoras?.length) continue;
+        const path = action.highNoiseLoras[0].path;
+        if (seen.has(path)) continue;
+        seen.add(path);
+        // Derive a short label from the action's prompt (first clause before comma)
+        const label = action.prompt.split(",")[0].trim();
+        options.push({
+          label,
+          key: path,
+          highNoiseLoras: action.highNoiseLoras,
+          lowNoiseLoras: action.lowNoiseLoras ?? [],
+        });
+      }
+    }
+    return options;
+  }, [currentModel]);
+
+  // Determine current effective LoRA: per-transition override > global > preset > none.
+  // Returns the LoRA path key for matching against dropdown options.
+  const currentLoraKey = useMemo(() => {
+    const override = selectedTransition?.loraOverride ?? globalLora;
+    if (override !== undefined) return override[0]?.path ?? "";
+    const presetAction = resolvePresetAction(currentPresetId);
+    if (presetAction?.highNoiseLoras?.length) {
+      return presetAction.highNoiseLoras[0].path;
+    }
+    return "";
+  }, [selectedTransition?.loraOverride, globalLora, currentPresetId]);
+
   type FieldMap = {
     presetOverride: string;
     promptOverride: string;
+    negativePromptOverride: string;
     durationOverride: number;
-    modelOverride: VideoModel;
     numInferenceStepsOverride: number;
     guidanceOverride: number;
   };
   const setValue = useCallback(
     <K extends keyof FieldMap>(field: K, value: FieldMap[K]) => {
+      const store = useFlowStore.getState();
       if (isPerTransition && selectedTransitionIndex !== null) {
-        setTransitionOverride(selectedTransitionIndex, {
+        store.setTransitionOverride(selectedTransitionIndex, {
           [field]: value,
         });
         return;
       }
       switch (field) {
         case "presetOverride":
-          setGlobalPreset(value as string);
+          store.setGlobalPreset(value as string);
           break;
         case "promptOverride":
-          setGlobalPrompt(value as string);
+          store.setGlobalPrompt(value as string);
+          break;
+        case "negativePromptOverride":
+          store.setGlobalNegativePrompt(value as string);
           break;
         case "durationOverride":
-          setGlobalDuration(value as number);
-          break;
-        case "modelOverride":
-          setGlobalModel(value as VideoModel);
+          store.setGlobalDuration(value as number);
           break;
         case "numInferenceStepsOverride":
-          setGlobalNumInferenceSteps(value as number);
+          store.setGlobalNumInferenceSteps(value as number);
           break;
         case "guidanceOverride":
-          setGlobalGuidance(value as number);
+          store.setGlobalGuidance(value as number);
           break;
       }
     },
-    [
-      isPerTransition,
-      selectedTransitionIndex,
-      setTransitionOverride,
-      setGlobalPreset,
-      setGlobalPrompt,
-      setGlobalDuration,
-      setGlobalModel,
-      setGlobalNumInferenceSteps,
-      setGlobalGuidance,
-    ],
+    [isPerTransition, selectedTransitionIndex],
   );
 
   const handlePresetChange = useCallback(
@@ -183,6 +207,16 @@ export function TransitionSettingsPanel({
         setValue("promptOverride", action.prompt);
       }
 
+      // Clear any explicit LoRA override so the preset's LoRA takes effect
+      const store = useFlowStore.getState();
+      if (isPerTransition && selectedTransitionIndex !== null) {
+        store.setTransitionOverride(selectedTransitionIndex, {
+          loraOverride: undefined,
+        });
+      } else {
+        store.setGlobalLora(undefined);
+      }
+
       // Clamp duration if needed
       const newAllowed = presetName
         ? getAllowedDurationsForActions(action ? [action] : [], currentModel)
@@ -192,32 +226,55 @@ export function TransitionSettingsPanel({
         setValue("durationOverride", clamped);
       }
     },
-    [setValue, currentModel, currentDuration],
+    [
+      setValue,
+      currentModel,
+      currentDuration,
+      isPerTransition,
+      selectedTransitionIndex,
+    ],
   );
 
-  const handleModelChange = useCallback(
-    (model: VideoModel) => {
-      setValue("modelOverride", model);
+  const handleLoraChange = useCallback(
+    (loraKey: string) => {
+      const loraOption = loraKey
+        ? loraOptions.find((o) => o.key === loraKey)
+        : undefined;
+      const nextLora = loraOption?.highNoiseLoras ?? [];
 
-      // Check if current preset is valid for new model
-      if (currentPresetId) {
-        const pack = ACTION_PRESETS.find((p) => p.name === currentPresetId);
-        if (pack && pack.model !== "all" && pack.model !== model) {
-          setValue("presetOverride", "");
-        }
+      const store = useFlowStore.getState();
+      if (isPerTransition && selectedTransitionIndex !== null) {
+        store.setTransitionOverride(selectedTransitionIndex, {
+          loraOverride: nextLora,
+        });
+      } else {
+        store.setGlobalLora(nextLora);
       }
 
-      // Clamp duration to new model's allowed values
-      const action = resolvePresetAction(currentPresetId);
-      const newAllowed = action
-        ? getAllowedDurationsForActions([action], model)
-        : getAllowedDurationsForActions([], model);
+      // Re-clamp duration against the new LoRA, since LoRAs can restrict durations.
+      const baseAction = resolvePresetAction(currentPresetId);
+      const clampAction = {
+        prompt: baseAction?.prompt ?? "",
+        highNoiseLoras: nextLora,
+      };
+      const newAllowed = getAllowedDurationsForActions(
+        [clampAction],
+        currentModel,
+      );
       const clamped = clampDurationToAllowed(currentDuration, newAllowed);
       if (clamped !== currentDuration) {
         setValue("durationOverride", clamped);
       }
     },
-    [setValue, currentPresetId, currentDuration],
+    [
+      isPerTransition,
+      selectedTransitionIndex,
+      loraOptions,
+      currentPresetId,
+      currentModel,
+      currentDuration,
+      setValue,
+    ],
   );
 
   // When no preset is selected, the prompt drives the generation —
@@ -238,13 +295,15 @@ export function TransitionSettingsPanel({
   // Don't show if fewer than 2 keyframes
   if (keyframes.length < 2) return null;
 
-  // Transition header info
+  // Transition header info — __loop__ maps back to the first keyframe
+  const findName = (id: string | undefined) =>
+    id === LOOP_KEYFRAME_ID
+      ? keyframes[0]?.name
+      : keyframes.find((kf) => kf.id === id)?.name;
   const fromName =
-    selectedTransition &&
-    keyframes.find((kf) => kf.id === selectedTransition.fromKeyframeId)?.name;
+    selectedTransition && findName(selectedTransition.fromKeyframeId);
   const toName =
-    selectedTransition &&
-    keyframes.find((kf) => kf.id === selectedTransition.toKeyframeId)?.name;
+    selectedTransition && findName(selectedTransition.toKeyframeId);
 
   const isComplete = selectedTransition?.status === "processed";
 
@@ -261,7 +320,9 @@ export function TransitionSettingsPanel({
           )}
         </div>
         {isPerTransition && (
-          <CloseButton onClick={() => selectTransition(null)}>
+          <CloseButton
+            onClick={() => useFlowStore.getState().selectTransition(null)}
+          >
             &times;
           </CloseButton>
         )}
@@ -334,12 +395,16 @@ export function TransitionSettingsPanel({
 
       {/* Expand/collapse toggle */}
       {!settingsExpanded ? (
-        <ToggleLink onClick={() => setSettingsExpanded(true)}>
+        <ToggleLink
+          onClick={() => useFlowStore.getState().setSettingsExpanded(true)}
+        >
           &#9662; Customize
         </ToggleLink>
       ) : (
         <>
-          <ToggleLink onClick={() => setSettingsExpanded(false)}>
+          <ToggleLink
+            onClick={() => useFlowStore.getState().setSettingsExpanded(false)}
+          >
             &#9652; Collapse
           </ToggleLink>
 
@@ -357,19 +422,34 @@ export function TransitionSettingsPanel({
               />
             </FieldGroup>
 
+            <FieldGroup>
+              <FieldLabel>Negative Prompt</FieldLabel>
+              <PromptTextarea
+                value={currentNegativePrompt}
+                placeholder="Describe what to avoid..."
+                onChange={(e) =>
+                  setValue("negativePromptOverride", e.target.value)
+                }
+              />
+            </FieldGroup>
+
             <FieldRow>
-              <FieldGroup>
-                <FieldLabel>Model</FieldLabel>
-                <Select
-                  value={currentModel}
-                  onChange={(e) =>
-                    handleModelChange(e.target.value as VideoModel)
-                  }
-                >
-                  <option value="ltx-i2v">LTX 2.3</option>
-                  <option value="wan-i2v">Wan I2V</option>
-                </Select>
-              </FieldGroup>
+              {loraOptions.length > 0 && (
+                <FieldGroup>
+                  <FieldLabel>LoRA</FieldLabel>
+                  <Select
+                    value={currentLoraKey}
+                    onChange={(e) => handleLoraChange(e.target.value)}
+                  >
+                    <option value="">None</option>
+                    {loraOptions.map((o) => (
+                      <option key={o.key} value={o.key}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </Select>
+                </FieldGroup>
+              )}
             </FieldRow>
 
             <AdvancedToggle onClick={() => setAdvancedOpen(!advancedOpen)}>
@@ -415,7 +495,11 @@ export function TransitionSettingsPanel({
       {/* Per-transition extras */}
       {isPerTransition && selectedTransitionIndex !== null && (
         <ResetLink
-          onClick={() => clearTransitionOverride(selectedTransitionIndex)}
+          onClick={() =>
+            useFlowStore
+              .getState()
+              .clearTransitionOverride(selectedTransitionIndex)
+          }
         >
           Reset to defaults
         </ResetLink>

@@ -5,9 +5,9 @@ import type {
   FlowTransition,
   TransitionStatus,
 } from "@/types/flow.types";
-import type { VideoModel } from "@/types/studio.types";
+import type { VideoModel, LoRAConfig } from "@/types/studio.types";
 
-const LOOP_KEYFRAME_ID = "__loop__";
+export const LOOP_KEYFRAME_ID = "__loop__";
 
 /** Derive the display keyframes list, appending a synthetic loop frame when enabled. */
 function buildKeyframesWithLoop(
@@ -44,10 +44,12 @@ type FlowStoreState = {
   // Phase 1 — global transition settings
   globalPresetId: string;
   globalPrompt: string;
+  globalNegativePrompt: string;
   globalDuration: number;
   globalModel: VideoModel;
   globalNumInferenceSteps: number;
   globalGuidance: number;
+  globalLora: LoRAConfig[] | undefined;
 
   // Phase 1 — transitions
   transitions: FlowTransition[];
@@ -55,14 +57,17 @@ type FlowStoreState = {
   // Phase 1 — UI state
   selectedTransitionIndex: number | null;
   settingsExpanded: boolean;
+  previewLightboxOpen: boolean;
 
   // Phase 1 — actions
   setGlobalPreset: (id: string) => void;
   setGlobalPrompt: (prompt: string) => void;
+  setGlobalNegativePrompt: (prompt: string) => void;
   setGlobalDuration: (duration: number) => void;
   setGlobalModel: (model: VideoModel) => void;
   setGlobalNumInferenceSteps: (steps: number) => void;
   setGlobalGuidance: (guidance: number) => void;
+  setGlobalLora: (lora: LoRAConfig[] | undefined) => void;
   setTransitionOverride: (
     index: number,
     overrides: Partial<FlowTransition>,
@@ -70,6 +75,7 @@ type FlowStoreState = {
   clearTransitionOverride: (index: number) => void;
   selectTransition: (index: number | null) => void;
   setSettingsExpanded: (expanded: boolean) => void;
+  setPreviewLightboxOpen: (open: boolean) => void;
   updateTransitionStatus: (
     index: number,
     status: TransitionStatus,
@@ -89,13 +95,16 @@ type FlowStoreState = {
 const PHASE_1_DEFAULTS = {
   globalPresetId: "",
   globalPrompt: "",
+  globalNegativePrompt: "",
   globalDuration: 5,
   globalModel: "ltx-i2v" as VideoModel,
   globalNumInferenceSteps: 30,
   globalGuidance: 5.0,
+  globalLora: undefined as LoRAConfig[] | undefined,
   transitions: [] as FlowTransition[],
   selectedTransitionIndex: null as number | null,
   settingsExpanded: false,
+  previewLightboxOpen: false,
 };
 
 /**
@@ -216,11 +225,14 @@ export const useFlowStore = create<FlowStoreState>()(
       ...PHASE_1_DEFAULTS,
       setGlobalPreset: (id) => set({ globalPresetId: id }),
       setGlobalPrompt: (prompt) => set({ globalPrompt: prompt }),
+      setGlobalNegativePrompt: (prompt) =>
+        set({ globalNegativePrompt: prompt }),
       setGlobalDuration: (duration) => set({ globalDuration: duration }),
       setGlobalModel: (model) => set({ globalModel: model }),
       setGlobalNumInferenceSteps: (steps) =>
         set({ globalNumInferenceSteps: steps }),
       setGlobalGuidance: (guidance) => set({ globalGuidance: guidance }),
+      setGlobalLora: (lora) => set({ globalLora: lora }),
 
       // Phase 1 — transition actions
       setTransitionOverride: (index, overrides) =>
@@ -251,6 +263,7 @@ export const useFlowStore = create<FlowStoreState>()(
 
       selectTransition: (index) => set({ selectedTransitionIndex: index }),
       setSettingsExpanded: (expanded) => set({ settingsExpanded: expanded }),
+      setPreviewLightboxOpen: (open) => set({ previewLightboxOpen: open }),
 
       updateTransitionStatus: (index, status, progress) =>
         set((s) => {
@@ -324,13 +337,21 @@ export const useFlowStore = create<FlowStoreState>()(
     }),
     {
       name: "flow-session",
-      version: 2,
+      version: 3,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as Record<string, unknown>;
         if (version < 2) {
           return {
             ...state,
             ...PHASE_1_DEFAULTS,
+          };
+        }
+        if (version < 3) {
+          // Negative prompt added; force LTX since it's the only working model.
+          return {
+            ...state,
+            globalNegativePrompt: "",
+            globalModel: "ltx-i2v",
           };
         }
         return state;
@@ -366,10 +387,12 @@ export const useFlowStore = create<FlowStoreState>()(
         transitions: state.transitions,
         globalPresetId: state.globalPresetId,
         globalPrompt: state.globalPrompt,
+        globalNegativePrompt: state.globalNegativePrompt,
         globalDuration: state.globalDuration,
         globalModel: state.globalModel,
         globalNumInferenceSteps: state.globalNumInferenceSteps,
         globalGuidance: state.globalGuidance,
+        globalLora: state.globalLora,
       }),
     },
   ),

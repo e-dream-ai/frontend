@@ -7,7 +7,6 @@ import type {
   StudioJob,
   ImageGenParams,
   VideoGenParams,
-  UprezModel,
 } from "@/types/studio.types";
 
 type StudioState = {
@@ -40,8 +39,6 @@ type StudioState = {
   setVideoGenParams: (params: Partial<VideoGenParams>) => void;
   outputPlaylistId: string | null;
   setOutputPlaylistId: (id: string | null) => void;
-  uprezModel: UprezModel;
-  setUprezModel: (model: UprezModel) => void;
   uprezPlaylistId: string | null;
   setUprezPlaylistId: (id: string | null) => void;
 
@@ -145,8 +142,6 @@ export const useStudioStore = create<StudioState>()(
         set((s) => ({ videoGenParams: { ...s.videoGenParams, ...params } })),
       outputPlaylistId: null,
       setOutputPlaylistId: (id: string | null) => set({ outputPlaylistId: id }),
-      uprezModel: "uprez" as UprezModel,
-      setUprezModel: (model: UprezModel) => set({ uprezModel: model }),
       uprezPlaylistId: null,
       setUprezPlaylistId: (id: string | null) => set({ uprezPlaylistId: id }),
 
@@ -190,10 +185,7 @@ export const useStudioStore = create<StudioState>()(
       selectAllJobsForUprez: () =>
         set((s) => ({
           jobs: s.jobs.map((j) =>
-            j.status === "processed" &&
-            j.jobType !== "uprez" &&
-            j.jobType !== "nvidia-uprez" &&
-            !j.uprezed
+            j.status === "processed" && j.jobType !== "uprez" && !j.uprezed
               ? { ...j, selectedForUprez: true }
               : j,
           ),
@@ -216,7 +208,6 @@ export const useStudioStore = create<StudioState>()(
           images: [],
           actions: [],
           videoGenParams: DEFAULT_VIDEO_GEN_PARAMS,
-          uprezModel: "uprez" as UprezModel,
           outputPlaylistId: null,
           uprezPlaylistId: null,
           excludedCombos: new Set<string>(),
@@ -238,7 +229,6 @@ export const useStudioStore = create<StudioState>()(
         })),
         actions: state.actions,
         videoGenParams: state.videoGenParams,
-        uprezModel: state.uprezModel,
         outputPlaylistId: state.outputPlaylistId,
         uprezPlaylistId: state.uprezPlaylistId,
         excludedCombos: [...(state.excludedCombos as Set<string>)],

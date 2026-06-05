@@ -34,6 +34,7 @@ export interface FlowTransition {
   // Per-transition overrides (undefined = use global)
   presetOverride?: string; // PresetPack name
   promptOverride?: string;
+  negativePromptOverride?: string;
   durationOverride?: number; // seconds
   modelOverride?: VideoModel;
   numInferenceStepsOverride?: number;

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import Bugsnag from "@bugsnag/js";
 import { useShallow } from "zustand/react/shallow";
 import useSocket from "@/hooks/useSocket";
 import { axiosClient } from "@/client/axios.client";
@@ -122,8 +123,8 @@ export const useStudioJobProgress = () => {
           state.updateImage(img.uuid, {
             status: dream.status,
           });
-        } catch {
-          // Silently skip failed polls
+        } catch (err) {
+          Bugsnag.notify(err as Error);
         }
       }
 
@@ -145,8 +146,8 @@ export const useStudioJobProgress = () => {
           ) {
             state.incrementNewCompleted();
           }
-        } catch {
-          // Silently skip failed polls
+        } catch (err) {
+          Bugsnag.notify(err as Error);
         }
       }
     };

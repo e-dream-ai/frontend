@@ -1,22 +1,27 @@
 import { useState, useCallback, useMemo } from "react";
-import { toast } from "react-toastify";
 import Bugsnag from "@bugsnag/js";
 import { Loader2, Check } from "lucide-react";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
-import type { UprezModel } from "@/types/studio.types";
+import { SaveToPlaylistModal } from "./save-to-playlist-modal";
 import {
   ActionBarContainer,
   ActionButton,
   UprezDropdown,
-  DropdownMenu,
-  DropdownItem,
   UprezProgressButton,
   UprezButtonContent,
   UprezDivider,
   UprezDoneBadge,
+  FactorPopup,
+  FactorLabel,
+  FactorGrid,
+  FactorOption,
+  FactorValue,
+  SplitButtonGroup,
+  SplitMainButton,
+  SplitCaretButton,
 } from "./flow-action-bar.styled";
 
 export function FlowActionBar() {
@@ -25,17 +30,21 @@ export function FlowActionBar() {
     keyframes,
     setTransitionUprez,
     updateTransitionUprezStatus,
+    setPreviewLightboxOpen,
   } = useFlowStore(
     useShallow((s) => ({
       transitions: s.transitions,
       keyframes: s.keyframes,
       setTransitionUprez: s.setTransitionUprez,
       updateTransitionUprezStatus: s.updateTransitionUprezStatus,
+      setPreviewLightboxOpen: s.setPreviewLightboxOpen,
     })),
   );
 
-  const [uprezDropdownOpen, setUprezDropdownOpen] = useState(false);
   const [isUprezzing, setIsUprezzing] = useState(false);
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [interpolationFactor, setInterpolationFactor] = useState<2 | 4>(2);
+  const [factorPopupOpen, setFactorPopupOpen] = useState(false);
 
   const hasResults = transitions.some((t) => t.status === "processed");
 
@@ -80,8 +89,8 @@ export function FlowActionBar() {
   }, [transitions]);
 
   const handleUprezAll = useCallback(
-    async (uprezModel: UprezModel) => {
-      setUprezDropdownOpen(false);
+    async (factor: 2 | 4 = interpolationFactor) => {
+      setFactorPopupOpen(false);
       setIsUprezzing(true);
       const headers = getRequestHeaders({ contentType: ContentType.json });
 
@@ -99,10 +108,10 @@ export function FlowActionBar() {
 
           try {
             const algoParams = {
-              infinidream_algorithm: uprezModel,
+              infinidream_algorithm: "uprez",
               video_uuid: t.dreamUuid,
               upscale_factor: 2,
-              interpolation_factor: 2,
+              interpolation_factor: factor,
             };
 
             const { data } = await axiosClient.post(
@@ -135,6 +144,7 @@ export function FlowActionBar() {
       }
     },
     [
+      interpolationFactor,
       transitions.length,
       keyframes,
       setTransitionUprez,
@@ -143,11 +153,11 @@ export function FlowActionBar() {
   );
 
   const handlePreviewAll = useCallback(() => {
-    toast.info("Coming soon — Preview All will be available in Phase 2");
-  }, []);
+    setPreviewLightboxOpen(true);
+  }, [setPreviewLightboxOpen]);
 
   const handleSaveToPlaylist = useCallback(() => {
-    toast.info("Coming soon — Save to Playlist will be available in Phase 2");
+    setShowSaveModal(true);
   }, []);
 
   if (!hasResults) return null;
@@ -165,65 +175,85 @@ export function FlowActionBar() {
   const showProgressButton = isUprezzing || running;
 
   return (
-    <ActionBarContainer>
-      <ActionButton onClick={handlePreviewAll}>Preview All</ActionButton>
+    <>
+      <ActionBarContainer>
+        <ActionButton onClick={handlePreviewAll}>Preview All</ActionButton>
 
-      <UprezDropdown>
-        {showProgressButton ? (
-          <UprezProgressButton
-            $percent={uprezState.percent}
-            aria-live="polite"
-            aria-label={`Upscaling ${uprezState.done} of ${
-              uprezState.total
-            }, ${Math.round(uprezState.percent)} percent`}
-          >
-            <UprezButtonContent>
-              <Loader2 size={13} strokeWidth={2.4} className="spin" />
-              <span>Upscaling</span>
-              <UprezDivider />
-              <span>
-                {uprezState.done}/{uprezState.total}
-              </span>
-            </UprezButtonContent>
-          </UprezProgressButton>
-        ) : allDone ? (
-          <ActionButton
-            $accent
-            onClick={() => setUprezDropdownOpen(!uprezDropdownOpen)}
-          >
-            <UprezButtonContent>
-              <Check size={13} strokeWidth={2.8} />
-              <span>Upscaled</span>
-              <UprezDoneBadge>{uprezState.done}</UprezDoneBadge>
-            </UprezButtonContent>
-          </ActionButton>
-        ) : (
-          <ActionButton
-            $accent
-            onClick={() => setUprezDropdownOpen(!uprezDropdownOpen)}
-          >
-            <UprezButtonContent>
-              <span>Uprez All</span>
-              <span aria-hidden>&#9662;</span>
-            </UprezButtonContent>
-          </ActionButton>
-        )}
+        <UprezDropdown>
+          {showProgressButton ? (
+            <UprezProgressButton
+              $percent={uprezState.percent}
+              aria-live="polite"
+              aria-label={`Interpolating ${uprezState.done} of ${
+                uprezState.total
+              }, ${Math.round(uprezState.percent)} percent`}
+            >
+              <UprezButtonContent>
+                <Loader2 size={13} strokeWidth={2.4} className="spin" />
+                <span>Interpolating</span>
+                <UprezDivider />
+                <span>
+                  {uprezState.done}/{uprezState.total}
+                </span>
+              </UprezButtonContent>
+            </UprezProgressButton>
+          ) : allDone ? (
+            <ActionButton $accent>
+              <UprezButtonContent>
+                <Check size={13} strokeWidth={2.8} />
+                <span>Interpolated</span>
+                <UprezDoneBadge>{uprezState.done}</UprezDoneBadge>
+              </UprezButtonContent>
+            </ActionButton>
+          ) : (
+            <SplitButtonGroup>
+              <SplitMainButton $accent onClick={() => handleUprezAll()}>
+                <UprezButtonContent>
+                  <span>Interpolate All</span>
+                  <UprezDivider />
+                  <span>{interpolationFactor}×</span>
+                </UprezButtonContent>
+              </SplitMainButton>
+              <SplitCaretButton
+                $accent
+                aria-label="Choose interpolation factor"
+                aria-haspopup="menu"
+                aria-expanded={factorPopupOpen}
+                onClick={() => setFactorPopupOpen((o) => !o)}
+              >
+                <span aria-hidden>&#9662;</span>
+              </SplitCaretButton>
+            </SplitButtonGroup>
+          )}
 
-        {uprezDropdownOpen && !showProgressButton && (
-          <DropdownMenu>
-            <DropdownItem onClick={() => handleUprezAll("nvidia-uprez")}>
-              Nvidia Super Resolution
-            </DropdownItem>
-            <DropdownItem onClick={() => handleUprezAll("uprez")}>
-              Standard Uprez
-            </DropdownItem>
-          </DropdownMenu>
-        )}
-      </UprezDropdown>
+          {factorPopupOpen && !showProgressButton && (
+            <FactorPopup>
+              <FactorLabel>Interpolation Factor</FactorLabel>
+              <FactorGrid>
+                {([2, 4] as const).map((f) => (
+                  <FactorOption
+                    key={f}
+                    $active={interpolationFactor === f}
+                    onClick={() => {
+                      setInterpolationFactor(f);
+                      setFactorPopupOpen(false);
+                    }}
+                  >
+                    <FactorValue>{f}×</FactorValue>
+                  </FactorOption>
+                ))}
+              </FactorGrid>
+            </FactorPopup>
+          )}
+        </UprezDropdown>
 
-      <ActionButton onClick={handleSaveToPlaylist}>
-        Save to Playlist
-      </ActionButton>
-    </ActionBarContainer>
+        <ActionButton onClick={handleSaveToPlaylist}>
+          Save to Playlist
+        </ActionButton>
+      </ActionBarContainer>
+      {showSaveModal && (
+        <SaveToPlaylistModal onClose={() => setShowSaveModal(false)} />
+      )}
+    </>
   );
 }
