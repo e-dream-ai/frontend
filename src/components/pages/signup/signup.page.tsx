@@ -5,9 +5,10 @@ import { Section } from "@/components/shared/section/section";
 import {
   Anchor,
   AnchorLink,
+  AuthCard,
+  AuthFooterLinks,
   Button,
   Checkbox,
-  Column,
   Input,
   Row,
 } from "@/components/shared";
@@ -19,14 +20,13 @@ import { toast } from "react-toastify";
 import { SignupFormValues, getSignupSchema } from "@/schemas/signup.schema";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faAngleRight,
   faEnvelope,
   faKey,
   // faLock,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
+import { ChevronRight } from "lucide-react";
 // import InputPassword from "@/components/shared/input-password/input-password";
-import { StyledSignup } from "./signup.styled";
 import { useSearchParams } from "react-router-dom";
 import { ROUTES } from "@/constants/routes.constants";
 import router from "@/routes/router";
@@ -106,14 +106,15 @@ export const SignupPage: React.FC = () => {
   return (
     <Container>
       <Section id={SECTION_ID}>
-        <StyledSignup>
-          <Row alignContent="flex-start">
-            <h2>{t("page.signup.title")}</h2>
-          </Row>
+        <AuthCard
+          title={t("page.signup.title")}
+          subtitle={t("page.signup.subtitle")}
+        >
           <form onSubmit={handleSubmit(onSubmit)}>
             <Input
               placeholder={t("page.signup.email")}
               type="email"
+              autoComplete="email"
               before={<FontAwesomeIcon icon={faEnvelope} />}
               error={errors.email?.message}
               {...register("email")}
@@ -163,31 +164,26 @@ export const SignupPage: React.FC = () => {
               </Checkbox>
             </Row>
 
-            <Row justifyContent="space-between">
-              <Column>
-                <Row justifyContent="space-between" mb="0.4rem">
-                  <AnchorLink to={ROUTES.SIGNIN}>
-                    {t("page.signup.already_have_account")}
-                  </AnchorLink>
-                </Row>
-                {/* <Row mb="0.4rem">
-                  <Anchor onClick={handleOpenForgotPasswordModal}>
-                    {t("page.signup.forgot_your_password")}
-                  </Anchor>
-                </Row> */}
-              </Column>
-
+            <Row flex="auto">
               <Button
                 type="submit"
-                buttonType={isValid && isDirty ? "secondary" : "primary"}
-                after={<FontAwesomeIcon icon={faAngleRight} />}
+                className={
+                  isValid && isDirty ? "auth-cta is-ready" : "auth-cta"
+                }
+                after={<ChevronRight size={18} strokeWidth={2.25} />}
                 isLoading={isLoading}
               >
                 {t("page.signup.next")}
               </Button>
             </Row>
+
+            <AuthFooterLinks>
+              <AnchorLink to={ROUTES.SIGNIN}>
+                {t("page.signup.already_have_account")}
+              </AnchorLink>
+            </AuthFooterLinks>
           </form>
-        </StyledSignup>
+        </AuthCard>
       </Section>
     </Container>
   );

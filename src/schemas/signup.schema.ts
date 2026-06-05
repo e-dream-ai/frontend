@@ -46,8 +46,8 @@ export const confirmPasswordSchemaProperty = yup
 export const getSignupSchema = () =>
   yup.object({
     email: emailSchema,
-    firstName: yup.string().required().max(50),
-    lastName: yup.string().required().max(50),
+    firstName: yup.string().required("First name is required.").max(50),
+    lastName: yup.string().required("Last name is required.").max(50),
     // password: passwordSchemaProperty,
     // confirmPassword: confirmPasswordSchemaProperty,
     code: yup.string().optional(),

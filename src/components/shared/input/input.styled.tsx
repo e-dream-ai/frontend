@@ -91,6 +91,7 @@ export const InputAfter = styled.div`
 `;
 
 export const InputError = styled.span`
+  margin-top: 0.5rem;
   font-size: 0.875rem;
   color: ${(props) => props.theme.colorDanger};
 `;

@@ -1,12 +1,13 @@
 import styled from "styled-components";
 
 export const CheckboxContainer = styled.label`
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
   position: relative;
-  padding-left: 34px;
-  margin-bottom: 24px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
   cursor: pointer;
-  font-size: 22px;
   user-select: none;
 
   input {
@@ -17,59 +18,53 @@ export const CheckboxContainer = styled.label`
     width: 0;
   }
 
-  /**
-   * custom checkbox 
-   */
   span {
     position: absolute;
     top: 0;
     left: 0;
-    height: 25px;
-    width: 25px;
+    height: 16px;
+    width: 16px;
     background-color: ${(props) => props.theme.inputBackgroundEnabledColor};
-    border-radius: 5px;
+    border-radius: 3px;
   }
 
-  /**
-   * add a background color when the checkbox is checked
-   */
   input:checked ~ span {
     background-color: ${(props) => props.theme.colorPrimary};
   }
 
-  /**
-   * create the checkmark/indicator, hidden when not checked
-   */
   span:after {
     content: "";
     position: absolute;
     display: none;
   }
 
-  /**
-   * show the checkmark when checked 
-   */
   input:checked ~ span:after {
     display: block;
   }
 
   span:after {
-    left: 9px;
-    top: 5px;
-    width: 5px;
-    height: 10px;
+    left: 5px;
+    top: 2px;
+    width: 4px;
+    height: 8px;
     border: solid white;
-    border-width: 0 3px 3px 0;
+    border-width: 0 2px 2px 0;
     transform: rotate(45deg);
   }
 `;
 
+export const CheckboxRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
 export const StyledCheckbox = styled.input`
   cursor: pointer;
-  margin: 0.5rem;
 `;
 
 export const CheckboxLabel = styled.span`
+  font-size: 0.875rem;
   color: ${(props) => props.theme.textSecondaryColor};
 `;
 

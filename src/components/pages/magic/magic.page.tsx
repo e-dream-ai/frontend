@@ -2,50 +2,66 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import router from "@/routes/router";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
-import { Button, Input, Row, Text } from "@/components/shared";
-import { ConfirmModal } from "@/components/modals/confirm.modal";
+import {
+  AuthAlert,
+  AuthAlertActionLink,
+  AuthCard,
+  Button,
+  OtpInput,
+  Row,
+} from "@/components/shared";
+import { OtpInputHandle } from "@/components/shared/otp-input/otp-input";
 import { useAuth } from "@/hooks/useAuth";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLock, faEnvelope } from "@fortawesome/free-solid-svg-icons";
+import { RotateCw } from "lucide-react";
 import { ROUTES } from "@/constants/routes.constants";
-import { StyledMagic } from "./magic.styled";
+import { AuthActionsRow, ResendButton, ResendIcon } from "./magic.styled";
 import useMagic from "@/api/auth/useMagic";
 import MagicSchema, { MagicFormValues } from "@/schemas/magic.schema";
 import { useLocation, Navigate } from "react-router-dom";
-import { useTheme } from "styled-components";
-import { useState } from "react";
-import axios, { AxiosError } from "axios";
-import { ApiResponse } from "@/types/api.types";
+import { useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import {
+  AuthErrorInfo,
+  classifyAuthError,
+  extractAuthError,
+} from "@/utils/auth-error.util";
+import { useCountdown } from "@/hooks/useCountdown";
 
 const SECTION_ID = "magic";
-const CODE_EXPIRED_MODAL_TITLE = "Code expired";
-const CODE_EXPIRED_MODAL_TEXT = "Code expired, try again.";
-const CODE_EXPIRED_MODAL_CONFIRM = "OK";
+const RESEND_COOLDOWN_SECONDS = 30;
+const CODE_ERROR_KINDS = ["INVALID_CODE", "CODE_EXPIRED", "CODE_LOCKED_OUT"];
 
 type LocationState = {
   email?: string;
   isEmailVerification?: boolean;
 };
 
+type Pending = "verify" | "resend" | null;
+
 export const MagicPage: React.FC = () => {
   const { t } = useTranslation();
   const { login } = useAuth();
   const location = useLocation();
-  const theme = useTheme();
-  const [showCodeExpiredModal, setShowCodeExpiredModal] = useState(false);
 
-  const state = location.state as LocationState;
+  const [authError, setAuthError] = useState<AuthErrorInfo | null>(null);
+  const [resent, setResent] = useState(false);
+  const [pending, setPending] = useState<Pending>(null);
+  const { secondsLeft: cooldown, start: startCooldown } = useCountdown();
+  const otpRef = useRef<OtpInputHandle>(null);
+
+  const state = (location.state as LocationState) ?? {};
   const email = state.email!;
   const isEmailVerification = state.isEmailVerification;
 
   const {
-    register,
+    control,
     handleSubmit,
     formState: { errors, isValid, isDirty },
     reset,
+    setValue,
   } = useForm<MagicFormValues>({
     resolver: yupResolver(MagicSchema),
     values: {
@@ -56,48 +72,26 @@ export const MagicPage: React.FC = () => {
 
   const { mutate, isLoading } = useMagic();
 
-  const handleExpiredCodeConfirm = () => {
-    setShowCodeExpiredModal(false);
-    router.navigate(ROUTES.SIGNIN);
-  };
-
-  const getErrorToast = (errorCode?: string, retryAfterSeconds?: number) => {
-    switch (errorCode) {
-      case "INVALID_CODE":
-        return t("page.magic.error_invalid_code");
-      case "CODE_EXPIRED":
-        return null;
-      case "CODE_LOCKED_OUT":
-        return t("page.magic.error_code_locked");
-      case "RATE_LIMITED":
-        return retryAfterSeconds
-          ? t("page.magic.error_rate_limited", { seconds: retryAfterSeconds })
-          : t("page.magic.error_rate_limited_generic");
-      case "USER_NOT_FOUND":
-        return t("page.magic.error_user_not_found");
-      case "BAD_REQUEST":
-        return t("page.magic.error_bad_request");
-      default:
-        return t("page.magic.error_verifying_code");
+  const presentError = (errorCode?: string, retryAfterSeconds?: number) => {
+    const info = classifyAuthError(errorCode, retryAfterSeconds);
+    setResent(false);
+    setAuthError(info);
+    setValue("code", "");
+    otpRef.current?.focus();
+    if (info.kind === "RATE_LIMITED" && retryAfterSeconds) {
+      startCooldown(retryAfterSeconds);
     }
   };
 
-  const handleAuthError = (errorCode?: string, retryAfterSeconds?: number) => {
-    if (errorCode === "CODE_EXPIRED") {
-      setShowCodeExpiredModal(true);
-      return;
-    }
-    const message = getErrorToast(errorCode, retryAfterSeconds);
-    if (message) toast.error(message);
-  };
-
-  const onSubmit = (data: MagicFormValues) => {
+  const verify = (code: string) => {
+    if (isLoading) return;
+    setPending("verify");
     mutate(
-      { email: data.email, code: data.code },
+      { email, code },
       {
-        onSuccess: (data) => {
-          if (data.success) {
-            const user = data.data!.user!;
+        onSuccess: (response) => {
+          if (response.success) {
+            const user = response.data!.user!;
             login(user);
             toast.success(
               `${t("page.magic.welcome_user", {
@@ -105,95 +99,157 @@ export const MagicPage: React.FC = () => {
               })}.`,
             );
             reset();
-            if (isEmailVerification) {
-              router.navigate(ROUTES.HELP);
-            } else {
-              router.navigate(ROUTES.PLAYLISTS);
-            }
+            router.navigate(
+              isEmailVerification ? ROUTES.HELP : ROUTES.PLAYLISTS,
+            );
           } else {
-            handleAuthError(data.errorCode, data.retryAfterSeconds);
+            presentError(response.errorCode, response.retryAfterSeconds);
           }
         },
         onError: (error) => {
-          if (axios.isAxiosError(error)) {
-            const axiosError = error as AxiosError<ApiResponse<unknown>>;
-            const { errorCode, retryAfterSeconds } =
-              axiosError.response?.data ?? {};
-            handleAuthError(errorCode, retryAfterSeconds);
-            return;
-          }
-          toast.error(t("page.magic.error_verifying_code"));
+          const { errorCode, retryAfterSeconds } = extractAuthError(error);
+          presentError(errorCode, retryAfterSeconds);
         },
+        onSettled: () => setPending(null),
       },
     );
+  };
+
+  const handleResend = () => {
+    if (cooldown > 0 || isLoading) return;
+    setPending("resend");
+    mutate(
+      { email },
+      {
+        onSuccess: (response) => {
+          if (response.success === false) {
+            presentError(response.errorCode, response.retryAfterSeconds);
+            return;
+          }
+          setAuthError(null);
+          setResent(true);
+          setValue("code", "");
+          startCooldown(RESEND_COOLDOWN_SECONDS);
+          otpRef.current?.focus();
+        },
+        onError: (error) => {
+          const { errorCode, retryAfterSeconds } = extractAuthError(error);
+          presentError(errorCode, retryAfterSeconds);
+        },
+        onSettled: () => setPending(null),
+      },
+    );
+  };
+
+  const handleStartOver = () => {
+    router.navigate(isEmailVerification ? ROUTES.SIGNUP : ROUTES.SIGNIN);
   };
 
   if (!email) {
     return <Navigate to={ROUTES.SIGNIN} />;
   }
 
+  const resendDisabled = cooldown > 0 || isLoading;
+  const codeHasError =
+    !!errors.code || (!!authError && CODE_ERROR_KINDS.includes(authError.kind));
+
   return (
-    <>
-      <ConfirmModal
-        isOpen={showCodeExpiredModal}
-        onCancel={handleExpiredCodeConfirm}
-        onConfirm={handleExpiredCodeConfirm}
-        title={CODE_EXPIRED_MODAL_TITLE}
-        confirmText={CODE_EXPIRED_MODAL_CONFIRM}
-        cancelText=""
-        text={<Text>{CODE_EXPIRED_MODAL_TEXT}</Text>}
-      />
-      <Container>
-        <Section id={SECTION_ID}>
-          <StyledMagic>
-            <Row alignContent="flex-start">
-              <h2>
-                {isEmailVerification
-                  ? t("page.magic.title_verification")
-                  : t("page.magic.title_signin")}
-              </h2>
-            </Row>
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <Text mb={3} fontSize="1rem" color={theme.textSecondaryColor}>
-                {isEmailVerification
-                  ? t("page.magic.instructions_verification")
-                  : t("page.magic.instructions_signin")}
-              </Text>
+    <Container>
+      <Section id={SECTION_ID}>
+        <AuthCard
+          title={
+            isEmailVerification
+              ? t("page.magic.title_verification")
+              : t("page.magic.title_signin")
+          }
+          subtitle={t("page.magic.sent_to", { email })}
+        >
+          <form onSubmit={handleSubmit((data) => verify(data.code))}>
+            <Controller
+              name="code"
+              control={control}
+              render={({ field }) => (
+                <OtpInput
+                  ref={otpRef}
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  hasError={codeHasError}
+                  autoFocus
+                  disabled={isLoading}
+                  onComplete={(code) => verify(code)}
+                />
+              )}
+            />
 
-              <Input
-                disabled
-                value={email}
-                placeholder={t("page.magic.email")}
-                before={<FontAwesomeIcon icon={faEnvelope} />}
-                error={errors.email?.message}
-                {...register("email")}
-              />
-              <Input
-                type="number"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                placeholder={t("page.magic.code")}
-                before={<FontAwesomeIcon icon={faLock} />}
-                error={errors.code?.message}
-                {...register("code")}
-              />
-
-              <Row flex="auto">
-                <Button
-                  type="submit"
-                  buttonType={isValid && isDirty ? "secondary" : "primary"}
-                  isLoading={isLoading}
-                  style={{ width: "-webkit-fill-available" }}
+            <AnimatePresence mode="wait" initial={false}>
+              {resent && (
+                <AuthAlert
+                  key="resent"
+                  variant="success"
+                  title={t("page.auth.code_resent_title")}
                 >
-                  {isEmailVerification
-                    ? t("page.magic.verify_email")
-                    : t("page.magic.signin")}
-                </Button>
-              </Row>
-            </form>
-          </StyledMagic>
-        </Section>
-      </Container>
-    </>
+                  {t("page.auth.code_resent_message")}
+                </AuthAlert>
+              )}
+              {authError && (
+                <AuthAlert
+                  key={authError.kind}
+                  variant={authError.variant}
+                  title={t(authError.titleKey)}
+                  actions={
+                    authError.kind === "USER_NOT_FOUND" ? (
+                      <AuthAlertActionLink
+                        type="button"
+                        variant={authError.variant}
+                        onClick={() => router.navigate(ROUTES.SIGNUP)}
+                      >
+                        {t("page.auth.go_to_signup")}
+                      </AuthAlertActionLink>
+                    ) : undefined
+                  }
+                >
+                  {t(authError.messageKey, {
+                    seconds: authError.retryAfterSeconds,
+                  })}
+                </AuthAlert>
+              )}
+            </AnimatePresence>
+
+            <Row flex="auto">
+              <Button
+                type="submit"
+                className={
+                  isValid && isDirty ? "auth-cta is-ready" : "auth-cta"
+                }
+                isLoading={pending === "verify" && isLoading}
+              >
+                {isEmailVerification
+                  ? t("page.magic.verify_email")
+                  : t("page.magic.signin")}
+              </Button>
+            </Row>
+
+            <AuthActionsRow>
+              <ResendButton
+                type="button"
+                onClick={handleResend}
+                disabled={resendDisabled}
+              >
+                <ResendIcon $spinning={pending === "resend" && isLoading}>
+                  <RotateCw size={16} strokeWidth={2.25} />
+                </ResendIcon>
+                {cooldown > 0
+                  ? t("page.auth.resend_in", { seconds: cooldown })
+                  : t("page.auth.resend_code")}
+              </ResendButton>
+
+              <ResendButton type="button" onClick={handleStartOver}>
+                {t("page.auth.start_over")}
+              </ResendButton>
+            </AuthActionsRow>
+          </form>
+        </AuthCard>
+      </Section>
+    </Container>
   );
 };

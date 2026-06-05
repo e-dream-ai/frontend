@@ -1,4 +1,7 @@
 export { Anchor, AnchorLink } from "./anchor/anchor";
+export { AuthAlert, AuthAlertActionLink } from "./auth-alert/auth-alert";
+export { AuthCard } from "./auth-card/auth-card";
+export { AuthFooterLinks } from "./auth-card/auth-card.styled";
 export { Button } from "./button/button";
 export { Checkbox } from "./checkbox/checkbox";
 export { FileUploader } from "./file-uploader/file-uploader";
@@ -7,6 +10,7 @@ export { Input } from "./input/input";
 export { ItemCard } from "./item-card/item-card";
 export { ItemCardList } from "./item-card-list/item-card-list";
 export { Modal } from "./modal/modal";
+export { OtpInput } from "./otp-input/otp-input";
 export { AddItemPlaylistDropzone } from "./playlist-dropzone/playlist-dropzone";
 export { Column, Row } from "./row/row";
 export { Thumbnail, ThumbnailPlaceholder } from "./thumbnail/thumbnail";
