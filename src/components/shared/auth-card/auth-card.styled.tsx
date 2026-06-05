@@ -3,15 +3,13 @@ import { DEVICES } from "@/constants/devices.constants";
 
 export const AuthScreen = styled.div`
   width: 100%;
-  min-height: calc(100vh - 193px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
-  padding: 2rem 1rem 3rem;
+  padding-top: 1rem;
 
   @media (max-width: ${DEVICES.TABLET}) {
-    min-height: auto;
-    padding: 1.5rem 0 2.5rem;
+    padding-top: 0.5rem;
   }
 `;
 

@@ -61,6 +61,7 @@ export const SignupPage: React.FC = () => {
       email: email,
       firstName: "",
       lastName: "",
+      terms: false,
       // password: "",
       // confirmPassword: "",
     },
@@ -171,7 +172,6 @@ export const SignupPage: React.FC = () => {
               <Button
                 type="submit"
                 className={isReady ? "auth-cta is-ready" : "auth-cta"}
-                disabled={!isReady}
                 after={<ChevronRight size={18} strokeWidth={2.25} />}
                 isLoading={isLoading}
               >

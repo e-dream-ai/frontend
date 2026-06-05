@@ -8,7 +8,7 @@ export type SignupFormValues = {
   // password: string;
   // confirmPassword: string;
   code?: string;
-  terms?: boolean;
+  terms: boolean;
 };
 
 export type SignupRequestValues = {
@@ -51,7 +51,10 @@ export const getSignupSchema = () =>
     // password: passwordSchemaProperty,
     // confirmPassword: confirmPasswordSchemaProperty,
     code: yup.string().optional(),
-    terms: yup.boolean().oneOf([true], "You have to accept Terms of Service"),
+    terms: yup
+      .boolean()
+      .required("You must agree to the Terms of Service.")
+      .oneOf([true], "You must agree to the Terms of Service."),
   });
 
 export default getSignupSchema;
