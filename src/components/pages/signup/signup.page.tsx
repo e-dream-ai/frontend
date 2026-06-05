@@ -52,7 +52,7 @@ export const SignupPage: React.FC = () => {
     register,
     handleSubmit,
     watch,
-    formState: { errors },
+    formState: { errors, isValid, isDirty },
     reset,
   } = useForm<SignupFormValues>({
     resolver: yupResolver(signupSchema),
@@ -70,6 +70,7 @@ export const SignupPage: React.FC = () => {
 
   const isLoading = isSignupLoading;
   const termsAccepted = !!watch("terms");
+  const isReady = isValid && isDirty && termsAccepted;
 
   const onSubmit = (data: SignupFormValues) => {
     const email = data.email;
@@ -169,8 +170,8 @@ export const SignupPage: React.FC = () => {
             <Row flex="auto">
               <Button
                 type="submit"
-                className={termsAccepted ? "auth-cta is-ready" : "auth-cta"}
-                disabled={!termsAccepted}
+                className={isReady ? "auth-cta is-ready" : "auth-cta"}
+                disabled={!isReady}
                 after={<ChevronRight size={18} strokeWidth={2.25} />}
                 isLoading={isLoading}
               >
