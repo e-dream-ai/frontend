@@ -21,7 +21,8 @@ export default defineConfig({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,json,jpeg}"],
         runtimeCaching: [
           {
-            urlPattern: ({ url }) => url.origin === self.location.origin,
+            urlPattern: ({ url, request }) =>
+              url.origin === self.location.origin && request.method === "GET",
             handler: "NetworkFirst",
             options: {
               cacheName: "site-cache",
