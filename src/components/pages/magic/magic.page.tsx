@@ -21,7 +21,7 @@ import { AuthActionsRow, ResendButton, ResendIcon } from "./magic.styled";
 import useMagic from "@/api/auth/useMagic";
 import MagicSchema, { MagicFormValues } from "@/schemas/magic.schema";
 import { useLocation, Navigate } from "react-router-dom";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import {
   AuthErrorInfo,
@@ -157,6 +157,12 @@ export const MagicPage: React.FC = () => {
     router.navigate(isEmailVerification ? ROUTES.SIGNUP : ROUTES.SIGNIN);
   };
 
+  useEffect(() => {
+    if (cooldown === 0 && authError?.kind === "RATE_LIMITED") {
+      setAuthError(null);
+    }
+  }, [cooldown, authError?.kind]);
+
   if (!email) {
     return <Navigate to={ROUTES.SIGNIN} />;
   }
@@ -221,7 +227,8 @@ export const MagicPage: React.FC = () => {
                   }
                 >
                   {t(authError.messageKey, {
-                    seconds: authError.retryAfterSeconds,
+                    seconds:
+                      cooldown > 0 ? cooldown : authError.retryAfterSeconds,
                   })}
                 </AuthAlert>
               )}
