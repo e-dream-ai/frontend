@@ -7,10 +7,17 @@ import { toast } from "react-toastify";
 import { User } from "@/types/auth.types";
 import { ROUTES } from "@/constants/routes.constants";
 import { Spinner } from "@/components/shared/spinner/spinner";
-import { Row } from "@/components/shared";
-import { useCallback, useEffect } from "react";
+import { AuthAlert, AuthAlertActionLink, AuthCard } from "@/components/shared";
+import { useCallback, useEffect, useState } from "react";
 import useAuthenticate from "@/api/auth/useAuthenticate";
 import { Navigate, useSearchParams } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import {
+  AuthErrorInfo,
+  classifyAuthError,
+  extractAuthError,
+} from "@/utils/auth-error.util";
+import { VerifyingBlock } from "./authenticate.styled";
 
 const SECTION_ID = "authenticate";
 
@@ -21,7 +28,10 @@ export const AuthenticatePage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const code = searchParams.get("code");
 
+  const [authError, setAuthError] = useState<AuthErrorInfo | null>(null);
+
   const onAuthenticate = useCallback(() => {
+    setAuthError(null);
     mutate(
       { code: code! },
       {
@@ -36,11 +46,14 @@ export const AuthenticatePage: React.FC = () => {
             );
             router.navigate(ROUTES.PLAYLISTS);
           } else {
-            toast.error(`${t("page.login.error_logging_in")} ${data.message}`);
+            setAuthError(
+              classifyAuthError(data.errorCode, data.retryAfterSeconds),
+            );
           }
         },
-        onError: () => {
-          toast.error(t("page.login.error_logging_in"));
+        onError: (error) => {
+          const { errorCode, retryAfterSeconds } = extractAuthError(error);
+          setAuthError(classifyAuthError(errorCode, retryAfterSeconds));
         },
       },
     );
@@ -57,9 +70,46 @@ export const AuthenticatePage: React.FC = () => {
   return (
     <Container>
       <Section id={SECTION_ID}>
-        <Row justifyContent="center">
-          <Spinner />
-        </Row>
+        <AuthCard>
+          <AnimatePresence mode="wait" initial={false}>
+            {authError ? (
+              <AuthAlert
+                key={authError.kind}
+                variant={authError.variant}
+                title={t(authError.titleKey)}
+                actions={
+                  <>
+                    {authError.canRetry && (
+                      <AuthAlertActionLink
+                        type="button"
+                        variant={authError.variant}
+                        onClick={onAuthenticate}
+                      >
+                        {t("page.auth.try_again")}
+                      </AuthAlertActionLink>
+                    )}
+                    <AuthAlertActionLink
+                      type="button"
+                      variant={authError.variant}
+                      onClick={() => router.navigate(ROUTES.SIGNIN)}
+                    >
+                      {t("page.auth.go_to_signin")}
+                    </AuthAlertActionLink>
+                  </>
+                }
+              >
+                {t(authError.messageKey, {
+                  seconds: authError.retryAfterSeconds,
+                })}
+              </AuthAlert>
+            ) : (
+              <VerifyingBlock key="verifying">
+                <Spinner />
+                <span>{t("page.auth.verifying")}</span>
+              </VerifyingBlock>
+            )}
+          </AnimatePresence>
+        </AuthCard>
       </Section>
     </Container>
   );

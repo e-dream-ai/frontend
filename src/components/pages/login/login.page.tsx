@@ -2,7 +2,15 @@ import router from "@/routes/router";
 import useLogin from "@/api/auth/useLogin";
 import Container from "@/components/shared/container/container";
 import { Section } from "@/components/shared/section/section";
-import { AnchorLink, Button, Input, Row } from "@/components/shared";
+import {
+  AnchorLink,
+  AuthAlert,
+  AuthCard,
+  AuthFooterLinks,
+  Button,
+  Input,
+  Row,
+} from "@/components/shared";
 // import InputPassword from "@/components/shared/input-password/input-password";
 import { useAuth } from "@/hooks/useAuth";
 import { useForm } from "react-hook-form";
@@ -19,10 +27,16 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope /* , faLock */ } from "@fortawesome/free-solid-svg-icons";
 import { ROUTES } from "@/constants/routes.constants";
-import { StyledLogin } from "./login.styled";
 // import useModal from "@/hooks/useModal";
 // import { ModalsKeys } from "@/constants/modal.constants";
 import useMagic from "@/api/auth/useMagic";
+import { useState } from "react";
+import { AnimatePresence } from "framer-motion";
+import {
+  AuthErrorInfo,
+  classifyAuthError,
+  extractAuthError,
+} from "@/utils/auth-error.util";
 
 type SubmitType = "login" | "magic";
 
@@ -32,6 +46,8 @@ export const LoginPage: React.FC = () => {
   const { t } = useTranslation();
   // const { showModal } = useModal();
   const { login } = useAuth();
+
+  const [authError, setAuthError] = useState<AuthErrorInfo | null>(null);
 
   const {
     formState: { errors, isValid, isDirty },
@@ -55,6 +71,7 @@ export const LoginPage: React.FC = () => {
     (submitType: SubmitType) =>
     async (data: LoginFormValues | MagicLoginFormValues) => {
       clearErrors();
+      setAuthError(null);
       const schema = submitType === "login" ? LoginSchema : MagicLoginSchema;
 
       try {
@@ -97,11 +114,14 @@ export const LoginPage: React.FC = () => {
             reset();
             router.navigate(ROUTES.PLAYLISTS);
           } else {
-            toast.error(`${t("page.login.error_logging_in")} ${data.message}`);
+            setAuthError(
+              classifyAuthError(data.errorCode, data.retryAfterSeconds),
+            );
           }
         },
-        onError: () => {
-          toast.error(t("page.login.error_logging_in"));
+        onError: (error) => {
+          const { errorCode, retryAfterSeconds } = extractAuthError(error);
+          setAuthError(classifyAuthError(errorCode, retryAfterSeconds));
         },
       },
     );
@@ -121,13 +141,14 @@ export const LoginPage: React.FC = () => {
               },
             });
           } else {
-            toast.error(
-              `${t("page.login.error_sending_code")} ${data.message}`,
+            setAuthError(
+              classifyAuthError(data.errorCode, data.retryAfterSeconds),
             );
           }
         },
-        onError: () => {
-          toast.error(t("page.login.error_sending_code"));
+        onError: (error) => {
+          const { errorCode, retryAfterSeconds } = extractAuthError(error);
+          setAuthError(classifyAuthError(errorCode, retryAfterSeconds));
         },
       },
     );
@@ -136,15 +157,16 @@ export const LoginPage: React.FC = () => {
   return (
     <Container>
       <Section id={SECTION_ID}>
-        <StyledLogin>
-          <Row alignContent="flex-start">
-            <h2>{t("page.login.title")}</h2>
-          </Row>
-
-          <form onSubmit={handleSubmit(onSubmit("login"))}>
+        <AuthCard
+          title={t("page.login.title")}
+          subtitle={t("page.login.subtitle")}
+        >
+          <form onSubmit={handleSubmit(onSubmit("magic"))}>
             <Input
               placeholder={t("page.login.email")}
               type="email"
+              autoComplete="email"
+              autoFocus
               before={<FontAwesomeIcon icon={faEnvelope} />}
               error={errors.email?.message}
               {...register("email")}
@@ -156,9 +178,22 @@ export const LoginPage: React.FC = () => {
               {...register("password")}
             /> */}
 
+            <AnimatePresence mode="wait" initial={false}>
+              {authError && (
+                <AuthAlert
+                  key={authError.kind}
+                  variant={authError.variant}
+                  title={t(authError.titleKey)}
+                >
+                  {t(authError.messageKey, {
+                    seconds: authError.retryAfterSeconds,
+                  })}
+                </AuthAlert>
+              )}
+            </AnimatePresence>
+
             {/* <Row flex="auto">
               <Button
-                style={{ width: "-webkit-fill-available" }}
                 onClick={handleSubmit(onSubmit("login"))}
                 isLoading={isLoading}
                 disabled={isMagicLoading}
@@ -173,9 +208,10 @@ export const LoginPage: React.FC = () => {
 
             <Row flex="auto">
               <Button
-                buttonType={isValid && isDirty ? "secondary" : "primary"}
-                style={{ width: "-webkit-fill-available" }}
-                onClick={handleSubmit(onSubmit("magic"))}
+                type="submit"
+                className={
+                  isValid && isDirty ? "auth-cta is-ready" : "auth-cta"
+                }
                 isLoading={isMagicLoading}
                 disabled={isLoading}
               >
@@ -183,19 +219,13 @@ export const LoginPage: React.FC = () => {
               </Button>
             </Row>
 
-            <Row justifyContent="space-between" mb="0.4rem">
+            <AuthFooterLinks>
               <AnchorLink to={ROUTES.SIGNUP}>
                 {t("page.login.dont_have_account")}
               </AnchorLink>
-            </Row>
-
-            {/* <Row justifyContent="space-between" mb="0.4rem">
-              <Anchor onClick={handleOpenForgotPasswordModal}>
-                {t("page.login.forgot_your_password")}
-              </Anchor>
-            </Row> */}
+            </AuthFooterLinks>
           </form>
-        </StyledLogin>
+        </AuthCard>
       </Section>
     </Container>
   );

@@ -45,9 +45,13 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     ref,
   ) => {
     return (
-      <InputGroup data-tooltip-id={name}>
+      <InputGroup>
         <Tooltip id={name} place={tooltipPlace} content={placeholder} />
-        <InputRow outlined={outlined}>
+        <InputRow
+          className="input-control"
+          outlined={outlined}
+          data-tooltip-id={name}
+        >
           {before && <InputBefore>{before}</InputBefore>}
           {disabled ? (
             <DisabledInput>

@@ -1,8 +1,9 @@
 import React from "react";
-import { InputError, InputGroup, InputRow } from "../input/input.styled";
+import { InputError, InputGroup } from "../input/input.styled";
 import {
   CheckboxContainer,
   CheckboxLabel,
+  CheckboxRow,
   StyledCheckbox,
 } from "./checkbox.styled";
 
@@ -15,13 +16,13 @@ export const Checkbox: React.FC<CheckboxProps> = React.forwardRef<
   CheckboxProps
 >(({ children, error, ...props }, ref) => (
   <InputGroup>
-    <InputRow>
+    <CheckboxRow>
       <CheckboxContainer>
         <StyledCheckbox ref={ref} type="checkbox" {...props} />
         <span />
       </CheckboxContainer>
       <CheckboxLabel>{children}</CheckboxLabel>
-    </InputRow>
+    </CheckboxRow>
     {error && <InputError>{error}</InputError>}
   </InputGroup>
 ));

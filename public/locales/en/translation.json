@@ -76,6 +76,7 @@
       "or": "OR",
       "dont_have_account": "Don't have an account?",
       "forgot_your_password": "Forgot your password?",
+      "subtitle": "Enter your email and we'll send you a one-time sign-in code.",
       "user_logged_successfully": "{{role}} signed in successfully.",
       "welcome_user": "Welcome {{username}}",
       "error_logging_in": "Error signing in.",
@@ -84,6 +85,7 @@
     },
     "signup": {
       "title": "Create account",
+      "subtitle": "Join infinidream — enter your details and we'll email a verification code.",
       "email": "Email",
       "first_name": "First name",
       "last_name": "Last name",
@@ -99,8 +101,9 @@
       "error_signingup_user": "Error creating account."
     },
     "magic": {
-      "title_signin": "Enter code",
-      "title_verification": "Email verification",
+      "title_signin": "Check your email",
+      "title_verification": "Verify your email",
+      "sent_to": "Enter the 6-digit code we sent to {{email}}.",
       "instructions_signin": "Find the one-time code in your email and enter it below.",
       "instructions_verification": "Find the code in your email and enter it below.",
       "email": "Email",
@@ -116,6 +119,37 @@
       "error_rate_limited_generic": "Too many requests. Please wait a moment and try again.",
       "error_user_not_found": "No account found for this email.",
       "error_bad_request": "Invalid request. Please check your input and try again."
+    },
+    "auth": {
+      "resend_code": "Resend code",
+      "resend_in": "Resend available in {{seconds}}s",
+      "resend_too_soon": "Please wait {{seconds}}s before requesting another code.",
+      "code_resent_title": "New code sent",
+      "code_resent_message": "Check your inbox — your previous code no longer works.",
+      "start_over": "Wrong email? Start over",
+      "go_to_signin": "Go to sign in",
+      "go_to_signup": "Create an account",
+      "try_again": "Try again",
+      "verifying": "Signing you in…",
+      "error": {
+        "invalid_code_title": "Incorrect code",
+        "invalid_code_message": "Double-check for typos and make sure you're using the most recent code we emailed you.",
+        "expired_title": "This code has expired",
+        "expired_message": "Codes are only valid for a few minutes. Request a new one and we'll email it right away.",
+        "locked_title": "Too many attempts",
+        "locked_message": "This code is locked after too many incorrect tries. Request a new code to continue.",
+        "rate_limited_title": "Slow down a moment",
+        "rate_limited_message": "You've made too many requests. Please try again in {{seconds}} seconds.",
+        "rate_limited_message_generic": "You've made too many requests. Please wait a moment and try again.",
+        "user_not_found_title": "No account found",
+        "user_not_found_message": "Double-check the address, or sign up below.",
+        "bad_request_title": "Something looks off",
+        "bad_request_message": "We couldn't process that request. Please check your details and try again.",
+        "network_title": "Connection problem",
+        "network_message": "We couldn't reach our servers. Check your connection and try again.",
+        "unknown_title": "Something went wrong",
+        "unknown_message": "An unexpected error occurred. Please try again."
+      }
     },
     "confirm_forgot_password": {
       "code": "Code",

@@ -8,7 +8,7 @@ export type SignupFormValues = {
   // password: string;
   // confirmPassword: string;
   code?: string;
-  terms?: boolean;
+  terms: boolean;
 };
 
 export type SignupRequestValues = {
@@ -46,12 +46,15 @@ export const confirmPasswordSchemaProperty = yup
 export const getSignupSchema = () =>
   yup.object({
     email: emailSchema,
-    firstName: yup.string().required().max(50),
-    lastName: yup.string().required().max(50),
+    firstName: yup.string().required("First name is required.").max(50),
+    lastName: yup.string().required("Last name is required.").max(50),
     // password: passwordSchemaProperty,
     // confirmPassword: confirmPasswordSchemaProperty,
     code: yup.string().optional(),
-    terms: yup.boolean().oneOf([true], "You have to accept Terms of Service"),
+    terms: yup
+      .boolean()
+      .required("You must agree to the Terms of Service.")
+      .oneOf([true], "You must agree to the Terms of Service."),
   });
 
 export default getSignupSchema;
