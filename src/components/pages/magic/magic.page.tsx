@@ -59,9 +59,11 @@ export const MagicPage: React.FC = () => {
   const {
     control,
     handleSubmit,
-    formState: { errors, isValid, isDirty },
+    formState: { errors },
     reset,
     setValue,
+    watch,
+    clearErrors,
   } = useForm<MagicFormValues>({
     resolver: yupResolver(MagicSchema),
     values: {
@@ -141,6 +143,7 @@ export const MagicPage: React.FC = () => {
           setAuthError(null);
           setResent(true);
           setValue("code", "");
+          clearErrors("code");
           startCooldown(RESEND_COOLDOWN_SECONDS);
           otpRef.current?.focus();
         },
@@ -167,9 +170,11 @@ export const MagicPage: React.FC = () => {
     return <Navigate to={ROUTES.SIGNIN} />;
   }
 
+  const codeValue = watch("code") ?? "";
   const resendDisabled = isLoading;
   const codeHasError =
     !!errors.code || (!!authError && CODE_ERROR_KINDS.includes(authError.kind));
+  const isReady = codeValue.length === 6 && !codeHasError;
 
   return (
     <Container>
@@ -237,9 +242,7 @@ export const MagicPage: React.FC = () => {
             <Row flex="auto">
               <Button
                 type="submit"
-                className={
-                  isValid && isDirty ? "auth-cta is-ready" : "auth-cta"
-                }
+                className={isReady ? "auth-cta is-ready" : "auth-cta"}
                 isLoading={pending === "verify" && isLoading}
               >
                 {isEmailVerification

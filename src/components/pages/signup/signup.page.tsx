@@ -119,6 +119,7 @@ export const SignupPage: React.FC = () => {
               placeholder={t("page.signup.email")}
               type="email"
               autoComplete="email"
+              autoFocus
               before={<FontAwesomeIcon icon={faEnvelope} />}
               error={errors.email?.message}
               {...register("email")}
