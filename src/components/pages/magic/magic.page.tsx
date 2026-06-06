@@ -116,7 +116,19 @@ export const MagicPage: React.FC = () => {
   };
 
   const handleResend = () => {
-    if (cooldown > 0 || isLoading) return;
+    if (isLoading) return;
+    if (cooldown > 0) {
+      setResent(false);
+      setAuthError({
+        kind: "RATE_LIMITED",
+        variant: "warning",
+        titleKey: "page.auth.error.rate_limited_title",
+        messageKey: "page.auth.resend_too_soon",
+        canResend: false,
+        canRetry: false,
+      });
+      return;
+    }
     setPending("resend");
     mutate(
       { email },
@@ -149,7 +161,7 @@ export const MagicPage: React.FC = () => {
     return <Navigate to={ROUTES.SIGNIN} />;
   }
 
-  const resendDisabled = cooldown > 0 || isLoading;
+  const resendDisabled = isLoading;
   const codeHasError =
     !!errors.code || (!!authError && CODE_ERROR_KINDS.includes(authError.kind));
 
@@ -238,9 +250,7 @@ export const MagicPage: React.FC = () => {
                 <ResendIcon $spinning={pending === "resend" && isLoading}>
                   <RotateCw size={16} strokeWidth={2.25} />
                 </ResendIcon>
-                {cooldown > 0
-                  ? t("page.auth.resend_in", { seconds: cooldown })
-                  : t("page.auth.resend_code")}
+                {t("page.auth.resend_code")}
               </ResendButton>
 
               <ResendButton type="button" onClick={handleStartOver}>

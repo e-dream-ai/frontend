@@ -122,7 +122,8 @@
     },
     "auth": {
       "resend_code": "Resend code",
-      "resend_in": "Resend in {{seconds}}s",
+      "resend_in": "Resend available in {{seconds}}s",
+      "resend_too_soon": "Please wait a moment before requesting another code.",
       "code_resent_title": "New code sent",
       "code_resent_message": "Check your inbox — your previous code no longer works.",
       "start_over": "Wrong email? Start over",
