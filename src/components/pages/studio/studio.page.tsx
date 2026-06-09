@@ -10,6 +10,8 @@ import { ROUTES } from "@/constants/routes.constants";
 import { StudioTabs } from "./components/studio-tabs";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
 import { useFileDropUpload } from "./hooks/useFileDropUpload";
+import { SessionSwitcher } from "./components/session-switcher";
+import { useSessionAutoSave } from "./hooks/useSessionAutoSave";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import {
   StudioContainer,
@@ -52,6 +54,7 @@ export const StudioPage: React.FC = () => {
     (s) => s.images.length > 0 || s.actions.length > 0 || s.jobs.length > 0,
   );
   useStudioJobProgress();
+  useSessionAutoSave();
 
   const addImage = useStudioStore((s) => s.addImage);
   const updateImage = useStudioStore((s) => s.updateImage);
@@ -133,8 +136,9 @@ export const StudioPage: React.FC = () => {
     <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
         <BackButton onClick={handleBack} aria-label="Go back">
-          <ArrowLeft size={16} />
+          <ArrowLeft size={18} />
         </BackButton>
+        <SessionSwitcher />
         <StudioTitle>Studio</StudioTitle>
         <ModeToggle>
           <ModeButton $active={mode === "flow"} onClick={() => setMode("flow")}>
