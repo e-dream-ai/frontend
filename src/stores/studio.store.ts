@@ -9,7 +9,7 @@ import type {
   VideoGenParams,
 } from "@/types/studio.types";
 
-type StudioState = {
+export type StudioState = {
   activeTab: StudioTab;
   setActiveTab: (tab: StudioTab) => void;
 
