@@ -3,8 +3,11 @@ import Bugsnag from "@bugsnag/js";
 import { v4 as uuidv4 } from "uuid";
 import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
+import { useStudioStore } from "@/stores/studio.store";
 import { FLOW } from "@/constants/flow-theme.constants";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
+import { axiosClient } from "@/client/axios.client";
+import type { VariationCandidate } from "@/types/flow.types";
 import { KeyframeStrip } from "./keyframe-strip";
 import { TransitionSettingsPanel } from "./transition-settings-panel";
 import { FlowPreview } from "./flow-preview";
@@ -109,6 +112,70 @@ export const FlowBuilder: React.FC = () => {
     [addKeyframe, updateKeyframe, removeKeyframe, uploadDream],
   );
 
+  const handleKeyframeVariations = useCallback(async (keyframeId: string) => {
+    // Read image generation settings at call time (NOT via React subscription)
+    // to keep callback identity stable across settings keystrokes.
+    const { imagePrompt, imageGenParams } = useStudioStore.getState();
+    const keyframe = useFlowStore
+      .getState()
+      .keyframes.find((kf) => kf.id === keyframeId);
+    if (!keyframe) return;
+
+    const VARIATION_COUNT = 4;
+    const baseSeed = Math.floor(Math.random() * 99_000) + 1;
+
+    // Build placeholder candidates up-front so the grid appears immediately.
+    const candidates: VariationCandidate[] = Array.from(
+      { length: VARIATION_COUNT },
+      (_, i) => ({
+        id: uuidv4(),
+        method: "seed" as const,
+        prompt: imagePrompt || keyframe.name,
+        seed: baseSeed + i,
+        status: "queue" as const,
+      }),
+    );
+
+    useFlowStore.getState().addKeyframeVariations(keyframeId, candidates);
+
+    // Fire all API calls in parallel — never sequential for-loop.
+    await Promise.all(
+      candidates.map(async (candidate) => {
+        const algoParams = {
+          infinidream_algorithm: imageGenParams.model,
+          prompt: candidate.prompt,
+          size: imageGenParams.size,
+          seed: candidate.seed,
+        };
+
+        try {
+          const { data } = await axiosClient.post("/v1/dream", {
+            name: `${keyframe.name} v${candidate.seed}`,
+            prompt: JSON.stringify(algoParams),
+            description: "Keyframe variation",
+          });
+          const dreamUuid = data?.data?.dream?.uuid;
+          if (!dreamUuid) {
+            throw new Error("No dream UUID returned from API");
+          }
+          useFlowStore
+            .getState()
+            .updateKeyframeVariation(keyframeId, candidate.id, {
+              dreamUuid,
+              status: "queue",
+            });
+        } catch (err) {
+          Bugsnag.notify(err as Error);
+          useFlowStore
+            .getState()
+            .updateKeyframeVariation(keyframeId, candidate.id, {
+              status: "failed",
+            });
+        }
+      }),
+    );
+  }, []);
+
   const handleFileSelected = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const files = e.target.files;
@@ -139,6 +206,7 @@ export const FlowBuilder: React.FC = () => {
         onAddFromPlaylist={handleAddFromPlaylist}
         onAddFromLibrary={handleAddFromLibrary}
         onRetry={generateOne}
+        onRequestVariations={handleKeyframeVariations}
       />
 
       <TransitionSettingsPanel

@@ -38,6 +38,7 @@ interface Props {
   onAddFromPlaylist: () => void;
   onAddFromLibrary: () => void;
   onRetry: (index: number) => void;
+  onRequestVariations?: (keyframeId: string) => void;
 }
 
 export const KeyframeStrip: React.FC<Props> = ({
@@ -45,6 +46,7 @@ export const KeyframeStrip: React.FC<Props> = ({
   onAddFromPlaylist,
   onAddFromLibrary,
   onRetry,
+  onRequestVariations,
 }) => {
   // Actions (stable refs)
   const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
@@ -138,6 +140,7 @@ export const KeyframeStrip: React.FC<Props> = ({
         keyframe={kf}
         index={i}
         onDelete={removeKeyframe}
+        onRequestVariations={onRequestVariations}
       />,
     );
   });

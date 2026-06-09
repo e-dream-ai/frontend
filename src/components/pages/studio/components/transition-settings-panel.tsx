@@ -8,6 +8,7 @@ import {
   clampDurationToAllowed,
 } from "@/components/pages/studio/constants/duration-options";
 import { resolvePresetAction } from "@/components/pages/studio/utils/resolve-flow-settings";
+import { PromptExpansionBadge } from "./prompt-expansion-badge";
 import {
   PanelContainer,
   PanelHeader,
@@ -412,7 +413,8 @@ export function TransitionSettingsPanel({
             <FieldGroup>
               <FieldLabel>
                 Prompt
-                {needsPrompt && <RequiredMark>*</RequiredMark>}
+                {needsPrompt && <RequiredMark>*</RequiredMark>}{" "}
+                <PromptExpansionBadge prompt={currentPrompt} />
               </FieldLabel>
               <PromptTextarea
                 value={currentPrompt}
