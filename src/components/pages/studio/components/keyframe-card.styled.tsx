@@ -208,3 +208,29 @@ export const DeleteButton = styled.button`
     opacity: 1;
   }
 `;
+
+export const VariationsButton = styled.button`
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.7);
+  color: ${FLOW.textMuted};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  ${CardWrapper}:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: ${FLOW.accent};
+  }
+`;

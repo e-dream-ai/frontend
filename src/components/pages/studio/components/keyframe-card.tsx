@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Shuffle } from "lucide-react";
 import type { FlowKeyframe } from "@/types/flow.types";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { useFlowStore } from "@/stores/flow.store";
+import { VariationGrid } from "./variation-grid";
 import {
   CardWrapper,
   CardImage,
@@ -13,6 +14,7 @@ import {
   CardLabel,
   LoopBadge,
   DeleteButton,
+  VariationsButton,
   UploadOverlay,
   UploadRing,
   UploadRingTrack,
@@ -25,20 +27,28 @@ interface Props {
   keyframe: FlowKeyframe;
   index: number;
   onDelete?: (id: string) => void;
+  onRequestVariations?: (keyframeId: string) => void;
 }
 
 export const KeyframeCard: React.FC<Props> = ({
   keyframe,
   index,
   onDelete,
+  onRequestVariations,
 }) => {
   const isLoop = keyframe.isLoopKeyframe ?? false;
   const isUploading = keyframe.uploadStatus === "uploading";
   const isFailed = keyframe.uploadStatus === "failed";
   const isBusy = isUploading || isFailed;
+  const isSettled = !!(keyframe.dreamUuid || keyframe.keyframeUuid);
 
   const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
+  const selectKeyframeVariation = useFlowStore(
+    (s) => s.selectKeyframeVariation,
+  );
+
   const [imgSrc, setImgSrc] = useState(keyframe.imageUrl);
+  const [showVariations, setShowVariations] = useState(false);
 
   useEffect(() => {
     setImgSrc(keyframe.imageUrl);
@@ -105,71 +115,105 @@ export const KeyframeCard: React.FC<Props> = ({
   };
 
   return (
-    <CardWrapper
-      ref={setNodeRef}
-      style={style}
-      $loop={isLoop}
-      $isDragging={isDragging}
-      $uploading={isUploading}
-      $failed={isFailed}
-      {...(isLoop || isBusy ? {} : { ...attributes, ...listeners })}
-    >
-      {imgSrc ? (
-        <CardImage
-          src={imgSrc}
-          alt={keyframe.name}
-          $uploading={isUploading}
-          onClick={isClickable ? handleOpen : undefined}
-          style={isClickable ? { cursor: "pointer" } : undefined}
-          onError={keyframe.dreamUuid ? handleImgError : undefined}
-        />
-      ) : (
-        <CardPlaceholder>{keyframe.name}</CardPlaceholder>
-      )}
-
-      {isUploading && (
-        <UploadOverlay
-          role="progressbar"
-          aria-label={`Uploading ${keyframe.name}`}
-          aria-valuenow={percent}
-          aria-valuemin={0}
-          aria-valuemax={100}
-        >
-          <UploadRing viewBox="0 0 36 36">
-            <UploadRingTrack cx="18" cy="18" r="16" />
-            <UploadRingFill cx="18" cy="18" r="16" $percent={percent} />
-          </UploadRing>
-          <UploadPercent>{percent}%</UploadPercent>
-        </UploadOverlay>
-      )}
-
-      {isFailed && (
-        <FailedOverlay role="alert">
-          <AlertTriangle size={16} strokeWidth={2.2} />
-          Upload failed
-        </FailedOverlay>
-      )}
-
-      <CardLabel>
-        {isLoop ? (
-          <>
-            {keyframe.name} <LoopBadge>Loop</LoopBadge>
-          </>
+    <>
+      <CardWrapper
+        ref={setNodeRef}
+        style={style}
+        $loop={isLoop}
+        $isDragging={isDragging}
+        $uploading={isUploading}
+        $failed={isFailed}
+        {...(isLoop || isBusy ? {} : { ...attributes, ...listeners })}
+      >
+        {imgSrc ? (
+          <CardImage
+            src={imgSrc}
+            alt={keyframe.name}
+            $uploading={isUploading}
+            onClick={isClickable ? handleOpen : undefined}
+            style={isClickable ? { cursor: "pointer" } : undefined}
+            onError={keyframe.dreamUuid ? handleImgError : undefined}
+          />
         ) : (
-          `${index + 1}`
+          <CardPlaceholder>{keyframe.name}</CardPlaceholder>
         )}
-      </CardLabel>
 
-      {!isLoop && !isBusy && onDelete && (
-        <DeleteButton
-          onClick={(e) => {
-            e.stopPropagation();
-            onDelete(keyframe.id);
-          }}
-        >
-          &times;
-        </DeleteButton>
-      )}
-    </CardWrapper>
+        {isUploading && (
+          <UploadOverlay
+            role="progressbar"
+            aria-label={`Uploading ${keyframe.name}`}
+            aria-valuenow={percent}
+            aria-valuemin={0}
+            aria-valuemax={100}
+          >
+            <UploadRing viewBox="0 0 36 36">
+              <UploadRingTrack cx="18" cy="18" r="16" />
+              <UploadRingFill cx="18" cy="18" r="16" $percent={percent} />
+            </UploadRing>
+            <UploadPercent>{percent}%</UploadPercent>
+          </UploadOverlay>
+        )}
+
+        {isFailed && (
+          <FailedOverlay role="alert">
+            <AlertTriangle size={16} strokeWidth={2.2} />
+            Upload failed
+          </FailedOverlay>
+        )}
+
+        <CardLabel>
+          {isLoop ? (
+            <>
+              {keyframe.name} <LoopBadge>Loop</LoopBadge>
+            </>
+          ) : (
+            `${index + 1}`
+          )}
+        </CardLabel>
+
+        {!isLoop && !isBusy && onDelete && (
+          <DeleteButton
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete(keyframe.id);
+            }}
+          >
+            &times;
+          </DeleteButton>
+        )}
+
+        {!isLoop && !isBusy && isSettled && onRequestVariations && (
+          <VariationsButton
+            onClick={(e) => {
+              e.stopPropagation();
+              if (
+                !showVariations &&
+                (!keyframe.variations || keyframe.variations.length === 0)
+              ) {
+                onRequestVariations(keyframe.id);
+              }
+              setShowVariations((v) => !v);
+            }}
+            title="Generate variations"
+          >
+            <Shuffle size={11} />
+          </VariationsButton>
+        )}
+      </CardWrapper>
+
+      {showVariations &&
+        keyframe.variations &&
+        keyframe.variations.length > 0 && (
+          <VariationGrid
+            variations={keyframe.variations}
+            activeVariationId={keyframe.activeVariationId}
+            onSelect={(variationId) =>
+              selectKeyframeVariation(keyframe.id, variationId)
+            }
+            onGenerateMore={() => onRequestVariations?.(keyframe.id)}
+            onClose={() => setShowVariations(false)}
+          />
+        )}
+    </>
   );
 };
