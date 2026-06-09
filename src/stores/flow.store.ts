@@ -4,6 +4,7 @@ import type {
   FlowKeyframe,
   FlowTransition,
   TransitionStatus,
+  VariationCandidate,
 } from "@/types/flow.types";
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
 
@@ -29,7 +30,7 @@ function buildKeyframesWithLoop(
   ];
 }
 
-type FlowStoreState = {
+export type FlowStoreState = {
   // Phase 0
   keyframes: FlowKeyframe[];
   loop: boolean;
@@ -90,6 +91,35 @@ type FlowStoreState = {
   ) => void;
   recomputeTransitions: () => void;
   reconcileStaleTransitions: () => void;
+
+  // Variation actions — keyframes
+  addKeyframeVariations: (
+    keyframeId: string,
+    candidates: VariationCandidate[],
+  ) => void;
+  selectKeyframeVariation: (keyframeId: string, variationId: string) => void;
+  clearKeyframeVariations: (keyframeId: string) => void;
+  updateKeyframeVariation: (
+    keyframeId: string,
+    variationId: string,
+    patch: Partial<VariationCandidate>,
+  ) => void;
+
+  // Variation actions — transitions
+  addTransitionVariations: (
+    transitionIndex: number,
+    candidates: VariationCandidate[],
+  ) => void;
+  selectTransitionVariation: (
+    transitionIndex: number,
+    variationId: string,
+  ) => void;
+  clearTransitionVariations: (transitionIndex: number) => void;
+  updateTransitionVariation: (
+    transitionIndex: number,
+    variationId: string,
+    patch: Partial<VariationCandidate>,
+  ) => void;
 };
 
 const PHASE_1_DEFAULTS = {
@@ -334,10 +364,117 @@ export const useFlowStore = create<FlowStoreState>()(
             };
           }),
         })),
+
+      // Variation actions — keyframes
+      addKeyframeVariations: (keyframeId, candidates) =>
+        set((s) => ({
+          keyframes: s.keyframes.map((kf) =>
+            kf.id === keyframeId
+              ? { ...kf, variations: [...(kf.variations || []), ...candidates] }
+              : kf,
+          ),
+        })),
+
+      selectKeyframeVariation: (keyframeId, variationId) =>
+        set((s) => {
+          const kf = s.keyframes.find((k) => k.id === keyframeId);
+          const variation = kf?.variations?.find((v) => v.id === variationId);
+          if (!kf || !variation || variation.status !== "processed") return s;
+          return {
+            keyframes: s.keyframes.map((k) =>
+              k.id === keyframeId
+                ? {
+                    ...k,
+                    activeVariationId: variationId,
+                    imageUrl: variation.imageUrl || k.imageUrl,
+                    dreamUuid: variation.dreamUuid || k.dreamUuid,
+                  }
+                : k,
+            ),
+          };
+        }),
+
+      clearKeyframeVariations: (keyframeId) =>
+        set((s) => ({
+          keyframes: s.keyframes.map((kf) =>
+            kf.id === keyframeId
+              ? { ...kf, variations: undefined, activeVariationId: undefined }
+              : kf,
+          ),
+        })),
+
+      updateKeyframeVariation: (keyframeId, variationId, patch) =>
+        set((s) => ({
+          keyframes: s.keyframes.map((kf) =>
+            kf.id === keyframeId
+              ? {
+                  ...kf,
+                  variations: kf.variations?.map((v) =>
+                    v.id === variationId ? { ...v, ...patch } : v,
+                  ),
+                }
+              : kf,
+          ),
+        })),
+
+      // Variation actions — transitions
+      addTransitionVariations: (index, candidates) =>
+        set((s) => ({
+          transitions: s.transitions.map((t, i) =>
+            i === index
+              ? { ...t, variations: [...(t.variations || []), ...candidates] }
+              : t,
+          ),
+        })),
+
+      selectTransitionVariation: (index, variationId) =>
+        set((s) => {
+          const transition = s.transitions[index];
+          const variation = transition?.variations?.find(
+            (v) => v.id === variationId,
+          );
+          if (!transition || !variation || variation.status !== "processed")
+            return s;
+          return {
+            transitions: s.transitions.map((t, i) =>
+              i === index
+                ? {
+                    ...t,
+                    activeVariationId: variationId,
+                    dreamUuid: variation.dreamUuid || t.dreamUuid,
+                    status: "processed" as const,
+                  }
+                : t,
+            ),
+          };
+        }),
+
+      clearTransitionVariations: (index) =>
+        set((s) => ({
+          transitions: s.transitions.map((t, i) =>
+            i === index
+              ? { ...t, variations: undefined, activeVariationId: undefined }
+              : t,
+          ),
+        })),
+
+      updateTransitionVariation: (index, variationId, patch) =>
+        set((s) => ({
+          transitions: s.transitions.map((t, i) =>
+            i === index
+              ? {
+                  ...t,
+                  variations: t.variations?.map((v) =>
+                    v.id === variationId ? { ...v, ...patch } : v,
+                  ),
+                }
+              : t,
+          ),
+        })),
     }),
     {
       name: "flow-session",
-      version: 3,
+      version: 4,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as Record<string, unknown>;
         if (version < 2) {
@@ -353,6 +490,10 @@ export const useFlowStore = create<FlowStoreState>()(
             globalNegativePrompt: "",
             globalModel: "ltx-i2v",
           };
+        }
+        if (version < 4) {
+          // VariationCandidate fields added to keyframes and transitions; no data migration needed.
+          return state;
         }
         return state;
       },
@@ -382,9 +523,18 @@ export const useFlowStore = create<FlowStoreState>()(
             imageUrl: kf.imageUrl,
             name: kf.name,
             isLoopKeyframe: kf.isLoopKeyframe,
+            variations: kf.variations?.filter(
+              (v) => v.status !== "queue" && v.status !== "processing",
+            ),
+            activeVariationId: kf.activeVariationId,
           })),
         loop: state.loop,
-        transitions: state.transitions,
+        transitions: state.transitions.map((t) => ({
+          ...t,
+          variations: t.variations?.filter(
+            (v) => v.status !== "queue" && v.status !== "processing",
+          ),
+        })),
         globalPresetId: state.globalPresetId,
         globalPrompt: state.globalPrompt,
         globalNegativePrompt: state.globalNegativePrompt,

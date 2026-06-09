@@ -18,6 +18,10 @@ export interface FlowKeyframe {
   // Local-only upload state — never persisted to backend.
   uploadStatus?: "uploading" | "failed";
   uploadProgress?: number; // 0-100
+
+  // Variation candidates for this keyframe
+  variations?: VariationCandidate[];
+  activeVariationId?: string;
 }
 
 export type TransitionStatus =
@@ -50,4 +54,19 @@ export interface FlowTransition {
   uprezDreamUuid?: string;
   uprezStatus?: "queue" | "processing" | "processed" | "failed";
   uprezProgress?: number;
+
+  // Variation candidates for this transition
+  variations?: VariationCandidate[];
+  activeVariationId?: string;
+}
+
+export interface VariationCandidate {
+  id: string;
+  method: "seed" | "expansion" | "i2i";
+  prompt?: string;
+  seed?: number;
+  dreamUuid?: string;
+  imageUrl?: string;
+  status: TransitionStatus;
+  progress?: number;
 }
