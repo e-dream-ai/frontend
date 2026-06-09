@@ -22,6 +22,7 @@ import {
   SummaryBox,
   SummaryHighlight,
 } from "./actions-tab.styled";
+import { PromptExpansionBadge } from "./prompt-expansion-badge";
 
 export const ActionsTab: React.FC = () => {
   const actions = useStudioStore((s) => s.actions);
@@ -97,6 +98,7 @@ export const ActionsTab: React.FC = () => {
                     updateAction(action.id, { prompt: e.target.value })
                   }
                 />
+                <PromptExpansionBadge prompt={action.prompt} />
                 <DeleteButton onClick={() => removeAction(action.id)}>
                   &times;
                 </DeleteButton>

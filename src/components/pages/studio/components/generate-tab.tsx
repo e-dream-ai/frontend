@@ -4,6 +4,7 @@ import { useBatchSubmit } from "../hooks/useBatchSubmit";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import { axiosClient } from "@/client/axios.client";
 import type { VideoModel } from "@/types/studio.types";
+import { expandPrompt } from "../utils/expand-prompt";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
@@ -69,6 +70,20 @@ export const GenerateTab: React.FC = () => {
     [actions],
   );
 
+  const expandedActions = useMemo(
+    () =>
+      enabledActions.flatMap((action) => {
+        const expanded = expandPrompt(action.prompt);
+        if (expanded.length <= 1) return [action];
+        return expanded.map((prompt, i) => ({
+          ...action,
+          id: `${action.id}__exp${i}`,
+          prompt,
+        }));
+      }),
+    [enabledActions],
+  );
+
   const newCombos = useMemo(
     () => getSelectedCombinations(),
     [getSelectedCombinations],
@@ -85,10 +100,10 @@ export const GenerateTab: React.FC = () => {
   const showLtxHint = useMemo(() => {
     if (videoGenParams.model !== "ltx-i2v") return false;
     return (
-      enabledActions.length > 0 &&
-      enabledActions.some((a) => !hasActionLoras(a))
+      expandedActions.length > 0 &&
+      expandedActions.some((a) => !hasActionLoras(a))
     );
-  }, [videoGenParams.model, enabledActions]);
+  }, [videoGenParams.model, expandedActions]);
 
   useEffect(() => {
     const nextDuration = clampDurationToAllowed(
@@ -100,7 +115,7 @@ export const GenerateTab: React.FC = () => {
     }
   }, [durationOptions, videoGenParams.duration, setVideoGenParams]);
 
-  const totalPossible = selectedImages.length * enabledActions.length;
+  const totalPossible = selectedImages.length * expandedActions.length;
 
   const handleCreatePlaylist = async () => {
     const now = new Date();
@@ -129,7 +144,7 @@ export const GenerateTab: React.FC = () => {
             <thead>
               <tr>
                 <GridHeader />
-                {enabledActions.map((action) => (
+                {expandedActions.map((action) => (
                   <GridHeader key={action.id} title={action.prompt}>
                     {action.prompt.slice(0, 20)}...
                   </GridHeader>
@@ -140,7 +155,7 @@ export const GenerateTab: React.FC = () => {
               {selectedImages.map((image) => (
                 <tr key={image.uuid}>
                   <GridRowHeader>{image.name}</GridRowHeader>
-                  {enabledActions.map((action) => {
+                  {expandedActions.map((action) => {
                     const comboKey = `${image.uuid}:${action.id}`;
                     const excluded = excludedCombos.has(comboKey);
                     const existingJob = jobs.find(

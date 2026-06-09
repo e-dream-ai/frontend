@@ -8,6 +8,7 @@ import {
   getAllowedDurationsForActions,
 } from "../constants/duration-options";
 import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
+import { expandPrompt } from "../utils/expand-prompt";
 
 // Serialized to avoid concurrent auth refresh races (see fix/session-refresh-race on backend)
 const BATCH_SIZE = 1;
@@ -30,7 +31,17 @@ export const useBatchSubmit = () => {
     const selectedImages = images.filter(
       (img) => img.selected && img.status === "processed",
     );
-    const enabledActions = actions.filter((a) => a.enabled && a.prompt.trim());
+    const enabledActions = actions
+      .filter((a) => a.enabled && a.prompt.trim())
+      .flatMap((action) => {
+        const expanded = expandPrompt(action.prompt);
+        if (expanded.length <= 1) return [action];
+        return expanded.map((prompt, i) => ({
+          ...action,
+          id: `${action.id}__exp${i}`,
+          prompt,
+        }));
+      });
 
     const existingJobKeys = new Set(
       jobs
