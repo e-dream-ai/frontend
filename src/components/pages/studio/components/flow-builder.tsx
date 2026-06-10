@@ -46,6 +46,15 @@ export const FlowBuilder: React.FC = () => {
   // Mount progress tracking
   useFlowJobProgress();
 
+  // Subscribe to the open transition for the lightbox — avoids IIFE with getState()
+  // during render, which would bypass React's subscription and miss updates.
+  const openTransition = useFlowStore((s) =>
+    variationLightboxIndex !== null
+      ? s.transitions[variationLightboxIndex] ?? null
+      : null,
+  );
+  const lightboxGlobalPrompt = useFlowStore((s) => s.globalPrompt);
+
   // Generation controls
   const { generateAll, generateOne, isGenerating } = useFlowGeneration();
   const uploadDream = useUploadImageDream();
@@ -242,54 +251,22 @@ export const FlowBuilder: React.FC = () => {
         <SelectImageDreamModal onClose={() => setShowLibraryModal(false)} />
       )}
 
-      {variationLightboxIndex !== null &&
-        (() => {
-          const t = useFlowStore.getState().transitions[variationLightboxIndex];
-          if (!t) return null;
-          const prompt =
-            t.promptOverride ?? useFlowStore.getState().globalPrompt;
-          // Dream video URL will be fetched by the lightbox or already cached
-          const videoUrl = t.dreamUuid
-            ? `${window.location.origin}/api/v1/dream/${t.dreamUuid}/video`
-            : undefined;
-          return (
-            <VariationLightbox
-              transition={t}
-              transitionIndex={variationLightboxIndex}
-              effectivePrompt={prompt}
-              videoUrl={videoUrl}
-              onSelectVariation={(idx, vid) => {
-                useFlowStore.getState().selectTransitionVariation(idx, vid);
-              }}
-              onRegenerate={(idx) => {
-                generateOne(idx);
-              }}
-              onGenerateMore={(idx) => {
-                // Generate 4 seed variations for this transition
-                const store = useFlowStore.getState();
-                const transition = store.transitions[idx];
-                if (!transition) return;
-                const effectivePrompt =
-                  transition.promptOverride ?? store.globalPrompt;
-                const candidates: VariationCandidate[] = Array.from(
-                  { length: 4 },
-                  () => ({
-                    id: uuidv4(),
-                    method: "seed" as const,
-                    prompt: effectivePrompt,
-                    seed: Math.floor(Math.random() * 99_000) + 1,
-                    status: "queue" as const,
-                  }),
-                );
-                store.addTransitionVariations(idx, candidates);
-                // The generation will be picked up by the transition generation
-                // pipeline — for now, candidates are created as placeholders.
-                // A full implementation would call generateTransition per candidate.
-              }}
-              onClose={() => setVariationLightboxIndex(null)}
-            />
-          );
-        })()}
+      {variationLightboxIndex !== null && openTransition && (
+        <VariationLightbox
+          transition={openTransition}
+          transitionIndex={variationLightboxIndex}
+          effectivePrompt={
+            openTransition.promptOverride ?? lightboxGlobalPrompt
+          }
+          onSelectVariation={(idx, vid) => {
+            useFlowStore.getState().selectTransitionVariation(idx, vid);
+          }}
+          onRegenerate={(idx) => {
+            generateOne(idx);
+          }}
+          onClose={() => setVariationLightboxIndex(null)}
+        />
+      )}
     </FlowContainer>
   );
 };
