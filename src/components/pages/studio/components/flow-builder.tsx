@@ -43,6 +43,14 @@ export const FlowBuilder: React.FC = () => {
   const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
   const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
 
+  // State declarations must come before selectors that reference them (TDZ).
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [showLibraryModal, setShowLibraryModal] = useState(false);
+  const [variationLightboxIndex, setVariationLightboxIndex] = useState<
+    number | null
+  >(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   // Mount progress tracking
   useFlowJobProgress();
 
@@ -58,13 +66,6 @@ export const FlowBuilder: React.FC = () => {
   // Generation controls
   const { generateAll, generateOne, isGenerating } = useFlowGeneration();
   const uploadDream = useUploadImageDream();
-
-  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
-  const [showLibraryModal, setShowLibraryModal] = useState(false);
-  const [variationLightboxIndex, setVariationLightboxIndex] = useState<
-    number | null
-  >(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddUpload = useCallback(() => {
     fileInputRef.current?.click();
