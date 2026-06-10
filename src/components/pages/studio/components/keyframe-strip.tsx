@@ -39,6 +39,7 @@ interface Props {
   onAddFromLibrary: () => void;
   onRetry: (index: number) => void;
   onRequestVariations?: (keyframeId: string) => void;
+  onOpenVariationLightbox?: (transitionIndex: number) => void;
 }
 
 export const KeyframeStrip: React.FC<Props> = ({
@@ -47,6 +48,7 @@ export const KeyframeStrip: React.FC<Props> = ({
   onAddFromLibrary,
   onRetry,
   onRequestVariations,
+  onOpenVariationLightbox,
 }) => {
   // Actions (stable refs)
   const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
@@ -119,6 +121,11 @@ export const KeyframeStrip: React.FC<Props> = ({
             onClick={() => {
               if (transition.status === "failed") {
                 onRetry(transitionIndex);
+              } else if (
+                transition.status === "processed" &&
+                onOpenVariationLightbox
+              ) {
+                onOpenVariationLightbox(transitionIndex);
               } else {
                 selectTransition(transitionIndex);
               }
