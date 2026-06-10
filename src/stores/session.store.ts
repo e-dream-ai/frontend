@@ -293,6 +293,13 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
       useFlowStore.setState(
         flowRevived as Parameters<typeof useFlowStore.setState>[0],
       );
+      // Reset UI state to defaults — these are intentionally not captured in
+      // sessions because persisted indices go stale when transitions change.
+      useFlowStore.setState({
+        selectedTransitionIndex: null,
+        settingsExpanded: false,
+        previewLightboxOpen: false,
+      });
       // Order matters: reconcile first (mark stale in-flight as failed),
       // then recompute (rebuild transition list from keyframes).
       useFlowStore.getState().reconcileStaleTransitions();

@@ -116,74 +116,78 @@ export function useFlowJobProgress() {
       status?: string;
       progress?: number;
     }) => {
-      const uuid = data.dreamUuid || data.dream_uuid;
-      if (!uuid) return;
+      try {
+        const uuid = data.dreamUuid || data.dream_uuid;
+        if (!uuid) return;
 
-      const entry = uuidMap.get(uuid);
-      if (!entry) return;
+        const entry = uuidMap.get(uuid);
+        if (!entry) return;
 
-      const mappedStatus = mapStatus(data.status ?? "");
-      if (!mappedStatus) return;
+        const mappedStatus = mapStatus(data.status ?? "");
+        if (!mappedStatus) return;
 
-      // Variation candidate progress
-      if (entry.variationType && entry.variationId) {
-        const patch: {
-          status: typeof mappedStatus;
-          progress?: number;
-          imageUrl?: string;
-        } = {
-          status: mappedStatus,
-          progress: data.progress,
-        };
+        // Variation candidate progress
+        if (entry.variationType && entry.variationId) {
+          const patch: {
+            status: typeof mappedStatus;
+            progress?: number;
+            imageUrl?: string;
+          } = {
+            status: mappedStatus,
+            progress: data.progress,
+          };
 
-        // When a variation dream completes via Socket.IO, fetch the dream to
-        // resolve imageUrl (Socket.IO events don't carry the URL).
-        if (mappedStatus === "processed") {
-          try {
-            const headers = getRequestHeaders({
-              contentType: ContentType.json,
-            });
-            const { data: dreamData } = await axiosClient.get(
-              `/v1/dream/${uuid}`,
-              { headers },
-            );
-            const dream = dreamData?.data?.dream;
-            if (dream) {
-              patch.imageUrl =
-                dream.video || dream.original_video || dream.thumbnail || "";
+          // When a variation dream completes via Socket.IO, fetch the dream to
+          // resolve imageUrl (Socket.IO events don't carry the URL).
+          if (mappedStatus === "processed") {
+            try {
+              const headers = getRequestHeaders({
+                contentType: ContentType.json,
+              });
+              const { data: dreamData } = await axiosClient.get(
+                `/v1/dream/${uuid}`,
+                { headers },
+              );
+              const dream = dreamData?.data?.dream;
+              if (dream) {
+                patch.imageUrl =
+                  dream.video || dream.original_video || dream.thumbnail || "";
+              }
+            } catch {
+              // Non-fatal — imageUrl will be resolved by the next poll cycle.
             }
-          } catch {
-            // Non-fatal — imageUrl will be resolved by the next poll cycle.
           }
+
+          if (entry.variationType === "keyframe" && entry.variationKeyframeId) {
+            useFlowStore
+              .getState()
+              .updateKeyframeVariation(
+                entry.variationKeyframeId,
+                entry.variationId,
+                patch,
+              );
+          } else if (entry.variationType === "transition") {
+            useFlowStore
+              .getState()
+              .updateTransitionVariation(entry.index, entry.variationId, patch);
+          }
+          return;
         }
 
-        if (entry.variationType === "keyframe" && entry.variationKeyframeId) {
+        // Standard transition progress (existing)
+        if (entry.isUprez) {
           useFlowStore
             .getState()
-            .updateKeyframeVariation(
-              entry.variationKeyframeId,
-              entry.variationId,
-              patch,
+            .updateTransitionUprezStatus(
+              entry.index,
+              mappedStatus,
+              data.progress,
             );
-        } else if (entry.variationType === "transition") {
-          useFlowStore
-            .getState()
-            .updateTransitionVariation(entry.index, entry.variationId, patch);
+        } else {
+          updateTransitionStatus(entry.index, mappedStatus, data.progress);
         }
-        return;
-      }
-
-      // Standard transition progress (existing)
-      if (entry.isUprez) {
-        useFlowStore
-          .getState()
-          .updateTransitionUprezStatus(
-            entry.index,
-            mappedStatus,
-            data.progress,
-          );
-      } else {
-        updateTransitionStatus(entry.index, mappedStatus, data.progress);
+      } catch (err) {
+        Bugsnag.notify(err as Error);
       }
     },
     [uuidMap, updateTransitionStatus],
