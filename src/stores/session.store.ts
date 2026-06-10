@@ -197,8 +197,9 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
           globalNumInferenceSteps: flowRaw.globalNumInferenceSteps,
           globalGuidance: flowRaw.globalGuidance,
           globalLora: flowRaw.globalLora,
-          selectedTransitionIndex: flowRaw.selectedTransitionIndex,
-          settingsExpanded: flowRaw.settingsExpanded,
+          // NOTE: selectedTransitionIndex and settingsExpanded are intentionally
+          // excluded — they are UI state that goes stale when transitions change.
+          // See AGENTS.md anti-rationalization: "Persist data, not UI state."
         },
         stateReplacer,
       ),

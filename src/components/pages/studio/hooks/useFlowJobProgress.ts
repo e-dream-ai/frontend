@@ -110,7 +110,7 @@ export function useFlowJobProgress() {
 
   // Handle job:progress events
   const handleProgress = useCallback(
-    (data: {
+    async (data: {
       dreamUuid?: string;
       dream_uuid?: string;
       status?: string;
@@ -127,21 +127,48 @@ export function useFlowJobProgress() {
 
       // Variation candidate progress
       if (entry.variationType && entry.variationId) {
+        const patch: {
+          status: typeof mappedStatus;
+          progress?: number;
+          imageUrl?: string;
+        } = {
+          status: mappedStatus,
+          progress: data.progress,
+        };
+
+        // When a variation dream completes via Socket.IO, fetch the dream to
+        // resolve imageUrl (Socket.IO events don't carry the URL).
+        if (mappedStatus === "processed") {
+          try {
+            const headers = getRequestHeaders({
+              contentType: ContentType.json,
+            });
+            const { data: dreamData } = await axiosClient.get(
+              `/v1/dream/${uuid}`,
+              { headers },
+            );
+            const dream = dreamData?.data?.dream;
+            if (dream) {
+              patch.imageUrl =
+                dream.video || dream.original_video || dream.thumbnail || "";
+            }
+          } catch {
+            // Non-fatal — imageUrl will be resolved by the next poll cycle.
+          }
+        }
+
         if (entry.variationType === "keyframe" && entry.variationKeyframeId) {
           useFlowStore
             .getState()
             .updateKeyframeVariation(
               entry.variationKeyframeId,
               entry.variationId,
-              { status: mappedStatus, progress: data.progress },
+              patch,
             );
         } else if (entry.variationType === "transition") {
           useFlowStore
             .getState()
-            .updateTransitionVariation(entry.index, entry.variationId, {
-              status: mappedStatus,
-              progress: data.progress,
-            });
+            .updateTransitionVariation(entry.index, entry.variationId, patch);
         }
         return;
       }
@@ -242,8 +269,10 @@ export function useFlowJobProgress() {
               status: mappedStatus,
             };
             if (mappedStatus === "processed") {
-              // Extract image URL from the dream's thumbnail or video field
-              patch.imageUrl = dream.thumbnail || dream.video || dream.image;
+              // Match the field priority from useUploadImageDream:
+              // video (R2 URL) > original_video > thumbnail
+              patch.imageUrl =
+                dream.video || dream.original_video || dream.thumbnail || "";
             }
             if (
               entry.variationType === "keyframe" &&
