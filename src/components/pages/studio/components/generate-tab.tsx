@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo } from "react";
+import Bugsnag from "@bugsnag/js";
 import { useStudioStore } from "@/stores/studio.store";
 import { useBatchSubmit } from "../hooks/useBatchSubmit";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
@@ -126,7 +127,7 @@ export const GenerateTab: React.FC = () => {
       setOutputPlaylistId(playlist.uuid);
       addPlaylistToCache({ uuid: playlist.uuid, name: playlist.name });
     } catch (err) {
-      console.error("Failed to create playlist:", err);
+      Bugsnag.notify(err instanceof Error ? err : new Error(String(err)));
     }
   };
 
