@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import Bugsnag from "@bugsnag/js";
 import { useStudioStore } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import { axiosClient } from "@/client/axios.client";
@@ -155,7 +156,11 @@ export const useBatchSubmit = () => {
 
         for (const result of results) {
           if (result.status === "rejected") {
-            console.error("Failed to create dream for combo:", result.reason);
+            Bugsnag.notify(
+              result.reason instanceof Error
+                ? result.reason
+                : new Error(String(result.reason)),
+            );
           }
         }
       }

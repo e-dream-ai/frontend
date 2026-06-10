@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { v4 as uuidv4 } from "uuid";
 import { useFlowStore } from "./flow.store";
 import { useStudioStore } from "./studio.store";
 import { useStudioModeStore } from "./studio-mode.store";
@@ -109,11 +110,14 @@ const initialState = loadInitialState();
 // ---------------------------------------------------------------------------
 
 function defaultSessionName(): string {
-  return new Date().toLocaleString();
-}
-
-function generateId(): string {
-  return `${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
+  const now = new Date();
+  return `Session — ${now.toLocaleString(undefined, {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+  })}`;
 }
 
 function extractThumbnail(
@@ -172,17 +176,49 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
     const idx = sessions.findIndex((s) => s.id === activeSessionId);
     if (idx === -1) return;
 
-    // Capture raw state — serialize to strip functions, revive Sets so the
-    // stored snapshot is plain JSON (no live Set instances).
+    // Capture only serializable data fields — explicitly exclude function
+    // properties so the snapshot is pure data. This is safer than serializing
+    // the full store and relying on Zustand's shallow merge to preserve actions.
     const flowRaw = useFlowStore.getState();
     const batchRaw = useStudioStore.getState();
     const mode = useStudioModeStore.getState().mode;
 
     const flowState = JSON.parse(
-      JSON.stringify(flowRaw, stateReplacer),
+      JSON.stringify(
+        {
+          keyframes: flowRaw.keyframes,
+          loop: flowRaw.loop,
+          transitions: flowRaw.transitions,
+          globalPresetId: flowRaw.globalPresetId,
+          globalPrompt: flowRaw.globalPrompt,
+          globalNegativePrompt: flowRaw.globalNegativePrompt,
+          globalDuration: flowRaw.globalDuration,
+          globalModel: flowRaw.globalModel,
+          globalNumInferenceSteps: flowRaw.globalNumInferenceSteps,
+          globalGuidance: flowRaw.globalGuidance,
+          globalLora: flowRaw.globalLora,
+          selectedTransitionIndex: flowRaw.selectedTransitionIndex,
+          settingsExpanded: flowRaw.settingsExpanded,
+        },
+        stateReplacer,
+      ),
     ) as Record<string, unknown>;
     const batchState = JSON.parse(
-      JSON.stringify(batchRaw, stateReplacer),
+      JSON.stringify(
+        {
+          activeTab: batchRaw.activeTab,
+          imagePrompt: batchRaw.imagePrompt,
+          imageGenParams: batchRaw.imageGenParams,
+          images: batchRaw.images,
+          actions: batchRaw.actions,
+          videoGenParams: batchRaw.videoGenParams,
+          outputPlaylistId: batchRaw.outputPlaylistId,
+          uprezPlaylistId: batchRaw.uprezPlaylistId,
+          excludedCombos: batchRaw.excludedCombos,
+          jobs: batchRaw.jobs,
+        },
+        stateReplacer,
+      ),
     ) as Record<string, unknown>;
 
     const thumbnail = extractThumbnail(flowState, batchState, mode);
@@ -207,13 +243,12 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
    */
   createSession: (name?: string) => {
     const { sessions, saveCurrentSession } = get();
-    if (sessions.length >= MAX_SESSIONS) return;
 
     saveCurrentSession();
 
     const mode = useStudioModeStore.getState().mode;
     const session: StudioSession = {
-      id: generateId(),
+      id: uuidv4(),
       name: name ?? defaultSessionName(),
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -222,7 +257,11 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
       batchState: {},
     };
 
-    const next = [...sessions, session];
+    // Enforce cap — drop oldest sessions when over the limit
+    let next = [...sessions, session];
+    if (next.length > MAX_SESSIONS) {
+      next = next.slice(next.length - MAX_SESSIONS);
+    }
     set({ sessions: next, activeSessionId: session.id });
     persistSessions(next);
     persistActiveId(session.id);
@@ -332,7 +371,7 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
 
     const copy: StudioSession = {
       ...source,
-      id: generateId(),
+      id: uuidv4(),
       name: `${source.name} (copy)`,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),

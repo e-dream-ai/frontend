@@ -35,16 +35,28 @@ function mapStatus(
   }
 }
 
+type PendingEntry = {
+  uuid: string;
+  index: number;
+  isUprez: boolean;
+  // Variation tracking — when set, the entry is a variation candidate
+  variationType?: "keyframe" | "transition";
+  variationKeyframeId?: string;
+  variationId?: string;
+};
+
 export function useFlowJobProgress() {
   const { socket } = useSocket();
 
   const transitions = useFlowStore((s) => s.transitions);
+  const keyframes = useFlowStore((s) => s.keyframes);
   const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
 
-  // Collect pending entries, UUIDs, and lookup map in one pass
+  // Collect pending entries from transitions AND variation candidates
   const { pendingEntries, pendingUuids, uuidMap } = useMemo(() => {
-    const entries: Array<{ uuid: string; index: number; isUprez: boolean }> =
-      [];
+    const entries: PendingEntry[] = [];
+
+    // Transition dreams (existing)
     transitions.forEach((t, i) => {
       if (t.dreamUuid && (t.status === "queue" || t.status === "processing")) {
         entries.push({ uuid: t.dreamUuid, index: i, isUprez: false });
@@ -55,13 +67,46 @@ export function useFlowJobProgress() {
       ) {
         entries.push({ uuid: t.uprezDreamUuid, index: i, isUprez: true });
       }
+      // Transition variation candidates
+      t.variations?.forEach((v) => {
+        if (
+          v.dreamUuid &&
+          (v.status === "queue" || v.status === "processing")
+        ) {
+          entries.push({
+            uuid: v.dreamUuid,
+            index: i,
+            isUprez: false,
+            variationType: "transition",
+            variationId: v.id,
+          });
+        }
+      });
     });
+
+    // Keyframe variation candidates
+    keyframes.forEach((kf) => {
+      kf.variations?.forEach((v) => {
+        if (
+          v.dreamUuid &&
+          (v.status === "queue" || v.status === "processing")
+        ) {
+          entries.push({
+            uuid: v.dreamUuid,
+            index: -1,
+            isUprez: false,
+            variationType: "keyframe",
+            variationKeyframeId: kf.id,
+            variationId: v.id,
+          });
+        }
+      });
+    });
+
     const uuids = entries.map((e) => e.uuid);
-    const map = new Map(
-      entries.map((e) => [e.uuid, { index: e.index, isUprez: e.isUprez }]),
-    );
+    const map = new Map(entries.map((e) => [e.uuid, e]));
     return { pendingEntries: entries, pendingUuids: uuids, uuidMap: map };
-  }, [transitions]);
+  }, [transitions, keyframes]);
 
   // Handle job:progress events
   const handleProgress = useCallback(
@@ -80,6 +125,28 @@ export function useFlowJobProgress() {
       const mappedStatus = mapStatus(data.status ?? "");
       if (!mappedStatus) return;
 
+      // Variation candidate progress
+      if (entry.variationType && entry.variationId) {
+        if (entry.variationType === "keyframe" && entry.variationKeyframeId) {
+          useFlowStore
+            .getState()
+            .updateKeyframeVariation(
+              entry.variationKeyframeId,
+              entry.variationId,
+              { status: mappedStatus, progress: data.progress },
+            );
+        } else if (entry.variationType === "transition") {
+          useFlowStore
+            .getState()
+            .updateTransitionVariation(entry.index, entry.variationId, {
+              status: mappedStatus,
+              progress: data.progress,
+            });
+        }
+        return;
+      }
+
+      // Standard transition progress (existing)
       if (entry.isUprez) {
         useFlowStore
           .getState()
@@ -165,6 +232,43 @@ export function useFlowJobProgress() {
           const mappedStatus = mapStatus(dream.status);
           if (!mappedStatus) continue;
 
+          // Variation candidate — update with status + imageUrl when processed
+          if (entry.variationType && entry.variationId) {
+            const patch: {
+              status: typeof mappedStatus;
+              progress?: number;
+              imageUrl?: string;
+            } = {
+              status: mappedStatus,
+            };
+            if (mappedStatus === "processed") {
+              // Extract image URL from the dream's thumbnail or video field
+              patch.imageUrl = dream.thumbnail || dream.video || dream.image;
+            }
+            if (
+              entry.variationType === "keyframe" &&
+              entry.variationKeyframeId
+            ) {
+              useFlowStore
+                .getState()
+                .updateKeyframeVariation(
+                  entry.variationKeyframeId,
+                  entry.variationId,
+                  patch,
+                );
+            } else if (entry.variationType === "transition") {
+              useFlowStore
+                .getState()
+                .updateTransitionVariation(
+                  entry.index,
+                  entry.variationId,
+                  patch,
+                );
+            }
+            continue;
+          }
+
+          // Standard transition progress (existing)
           if (entry.isUprez) {
             useFlowStore
               .getState()
