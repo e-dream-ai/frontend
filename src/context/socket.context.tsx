@@ -31,9 +31,14 @@ export const SocketContext = createContext<SocketContextType>(
 
 const REMOTE_CONTROL_NAMESPACE = "remote-control";
 
-// backoff for retrying when re-authentication itself fails (offline / backend down)
-const RECONNECT_BASE_DELAY_MS = 2_000;
-const RECONNECT_MAX_DELAY_MS = 60_000;
+// socket.io's own reconnection handles connectivity loss with built-in
+// exponential backoff + jitter; these tune how gentle it stays on a long
+// backend outage (default delayMax is 5s, which is a bit hot for a fleet).
+const RECONNECTION_DELAY_MS = 1_000;
+const RECONNECTION_DELAY_MAX_MS = 30_000;
+// Minimum gap between cookie refreshes, so a persistently rejected socket
+// can't hammer /authenticate.
+const REAUTH_COOLDOWN_MS = 10_000;
 
 export const SocketProvider: React.FC<{
   children?: React.ReactNode;
@@ -45,36 +50,40 @@ export const SocketProvider: React.FC<{
   const [connectedDevicesCount, setConnectedDevicesCount] = useState<number>(0);
   const [hasWebPlayer, setHasWebPlayer] = useState<boolean>(false);
 
-  /**
-   * flag to prevent multiple simultaneous authentication attempts during socket reconnection
-   * implemented as a ref (useRef) instead of state (useState) because changes to this flag shouldn't trigger re-renders
-   * and need update value immediately in operations
-   */
-  const isReconnecting = useRef(false);
-
   // ref to save socket instance
   const socketRef = useRef<Socket | null>();
 
-  const handleReconnectRef = useRef<() => void>();
+  /**
+   * latest cookie-refresh handler, called from the (stable) socket listeners.
+   * a ref because `generateSocketInstance` is intentionally stable but the
+   * handler closes over the current `user`/`authenticateUser`.
+   */
+  const refreshAuthRef = useRef<() => void>();
 
-  // consecutive failed re-authentication attempts, drives retry backoff
-  const reconnectFailures = useRef(0);
-  const retryTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  // guards so re-auth can't run concurrently or spin on /authenticate
+  const reauthInFlight = useRef(false);
+  const lastReauthAt = useRef(0);
 
   const emitListeners = React.useRef<Set<EmitListener>>(new Set());
 
   const generateSocketInstance = useCallback(() => {
-    // if there's no user don't create instance
-
     const newSocket = socketIO(`${SOCKET_URL}/${REMOTE_CONTROL_NAMESPACE}`, {
       /**
        * 5 seconds timeout
        */
       timeout: 5 * 1000,
-      // default reconnectionAttempts value is Infinity, which could trigger socket reconnection requests to the server with expired auth cookie producing a loop after unauthorization
-      // refresh session using authenticateUser to fetch fresh credentials and generate an new socket instance would work better
-      // attempts limited to 2, continue under observation
-      reconnectionAttempts: 2,
+      /**
+       * Let socket.io own reconnection: it retries indefinitely with built-in
+       * exponential backoff + jitter, re-sending the auth cookie on every
+       * attempt. We previously capped this at 2 and ran a manual rebuild loop,
+       * which bypassed the backoff entirely and hammered the server while the
+       * backend was down. The only thing socket.io can't recover from on its
+       * own is an expired cookie (it would retry forever with the dead one) —
+       * that's handled in the `connect_error` UNAUTHORIZED branch below.
+       */
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: RECONNECTION_DELAY_MS,
+      reconnectionDelayMax: RECONNECTION_DELAY_MAX_MS,
       withCredentials: true,
       transports: ["websocket"],
       extraHeaders: {
@@ -85,16 +94,13 @@ export const SocketProvider: React.FC<{
 
     setIsConnected(newSocket.connected);
 
-    // Listen connect event
+    // "connect" fires on the initial connection and on every reconnection
     newSocket.on("connect", () => {
-      // Socket connected
-      reconnectFailures.current = 0;
       setIsConnected(true);
     });
 
     // Listen disconnection event
     newSocket.on("disconnect", () => {
-      // Socket disconnected
       setIsConnected(false);
     });
 
@@ -103,23 +109,14 @@ export const SocketProvider: React.FC<{
       setIsConnected(false);
 
       /**
-       * when a connect_error is triggered and the socket backend message is "UNAUTHORIZED"
-       * the session cookie should be refreshed using `authenticateUser`
-       * handleReconnect tears down this socket, refreshes the cookie and builds a new instance
+       * Only auth failures need our intervention. socket.io can't refresh an
+       * expired session cookie on its own, so it would retry forever with the
+       * dead cookie — refresh it and let the next reconnection attempt use it.
+       * Every other error is connectivity, which socket.io's backoff handles.
        */
       if (error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED) {
-        handleReconnectRef.current?.();
+        refreshAuthRef.current?.();
       }
-    });
-
-    // Handle reconnection success
-    newSocket.on("reconnect", (/* attemptNumber */) => {
-      setIsConnected(true);
-    });
-
-    // socket.io gave up (reconnectionAttempts exhausted) — start a fresh cycle
-    newSocket.io.on("reconnect_failed", () => {
-      handleReconnectRef.current?.();
     });
 
     // Listen presence updates
@@ -142,9 +139,6 @@ export const SocketProvider: React.FC<{
     try {
       // Prevent listeners execute functions
       socket.removeAllListeners();
-      // reconnect_failed lives on the manager, which socket.io reuses across
-      // instances for the same URL — removeAllListeners() above doesn't reach it
-      socket.io.removeAllListeners("reconnect_failed");
       socket.disconnect();
     } catch {
       // ignore teardown errors on the stale socket
@@ -152,53 +146,39 @@ export const SocketProvider: React.FC<{
     socketRef.current = null;
   }, []);
 
-  // Handle reconnection
-  const handleReconnect = useCallback(async () => {
-    // No signed-in user: there's nothing to reconnect, and creating a socket
-    // anyway would loop forever on UNAUTHORIZED, flashing the page on every
-    // authenticateUser() isLoading toggle
-    if (!user) {
-      return;
-    }
+  /**
+   * Refresh the session cookie when the socket is rejected as UNAUTHORIZED,
+   * then let socket.io reconnect with it. Rate-limited so a persistently
+   * rejected socket can't spin on /authenticate. A hard 401 logs the user out
+   * (axios interceptor), which tears the socket down via the effect below.
+   */
+  const refreshAuthAndReconnect = useCallback(async () => {
+    if (!user) return;
+    if (reauthInFlight.current) return;
+    if (Date.now() - lastReauthAt.current < REAUTH_COOLDOWN_MS) return;
 
-    // If we're already reconnecting, don't start another attempt
-    if (isReconnecting.current) {
-      return;
-    }
-    clearTimeout(retryTimerRef.current);
-
-    // Socket already connected, nothing to do
-    if (socketRef.current?.connected) {
-      return;
-    }
-
+    reauthInFlight.current = true;
     try {
-      isReconnecting.current = true;
-
-      // Remove socket listeners, disconnect, fetch `/authenticate` and try a reconnection (refresh cookie session)
-      teardownSocket();
       await authenticateUser();
-      // After re-authentication, immediately create a fresh socket instance
-      socketRef.current = generateSocketInstance();
-    } catch {
-      // authenticateUser failed (offline / backend down). socketRef is null
-      // here, so no socket event will ever fire — without this timer the
-      // client would stay disconnected until a visibility/online event
-      reconnectFailures.current += 1;
-      const delay = Math.min(
-        RECONNECT_BASE_DELAY_MS * 2 ** reconnectFailures.current,
-        RECONNECT_MAX_DELAY_MS,
-      );
-      retryTimerRef.current = setTimeout(() => {
-        handleReconnectRef.current?.();
-      }, delay);
+      // nudge an immediate attempt with the refreshed cookie
+      socketRef.current?.connect();
     } finally {
-      // Reset the flag when we're done
-      isReconnecting.current = false;
+      lastReauthAt.current = Date.now();
+      reauthInFlight.current = false;
     }
-  }, [user, authenticateUser, generateSocketInstance, teardownSocket]);
+  }, [user, authenticateUser]);
 
-  handleReconnectRef.current = handleReconnect;
+  refreshAuthRef.current = refreshAuthAndReconnect;
+
+  /**
+   * On regaining focus / network, nudge an immediate reconnect instead of
+   * waiting out socket.io's current backoff delay (up to RECONNECTION_DELAY_MAX_MS).
+   */
+  const nudgeReconnect = useCallback(() => {
+    const socket = socketRef.current;
+    if (!socket || socket.connected) return;
+    socket.connect();
+  }, []);
 
   const addEmitListener = useCallback((listener: EmitListener) => {
     emitListeners.current.add(listener);
@@ -230,12 +210,12 @@ export const SocketProvider: React.FC<{
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
-        handleReconnect();
+        nudgeReconnect();
       }
     };
 
     const handleOnline = () => {
-      handleReconnect();
+      nudgeReconnect();
     };
 
     const handleOffline = () => {
@@ -249,7 +229,6 @@ export const SocketProvider: React.FC<{
     window.addEventListener("offline", handleOffline);
     return () => {
       // Remove socket listeners, disconnect socket and set socketRef to null
-      clearTimeout(retryTimerRef.current);
       teardownSocket();
 
       // Clean ups functions to prevent execute them when are no longer needed
@@ -257,7 +236,7 @@ export const SocketProvider: React.FC<{
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [user, generateSocketInstance, handleReconnect, teardownSocket]);
+  }, [user, generateSocketInstance, nudgeReconnect, teardownSocket]);
 
   // useMemo to memoize context value
   const contextValue = useMemo(
