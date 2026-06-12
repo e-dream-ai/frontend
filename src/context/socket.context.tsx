@@ -51,6 +51,8 @@ export const SocketProvider: React.FC<{
   // ref to save socket instance
   const socketRef = useRef<Socket | null>();
 
+  const handleReconnectRef = useRef<() => void>();
+
   const emitListeners = React.useRef<Set<EmitListener>>(new Set());
 
   const generateSocketInstance = useCallback(() => {
@@ -106,7 +108,9 @@ export const SocketProvider: React.FC<{
           try {
             newSocket.removeAllListeners();
             newSocket.disconnect();
-          } catch {}
+          } catch {
+            // ignore teardown errors on the stale socket
+          }
           socketRef.current = generateSocketInstance();
         } finally {
           isReconnecting.current = false;
@@ -117,6 +121,10 @@ export const SocketProvider: React.FC<{
     // Handle reconnection success
     newSocket.on("reconnect", (/* attemptNumber */) => {
       setIsConnected(true);
+    });
+
+    newSocket.io.on("reconnect_failed", () => {
+      handleReconnectRef.current?.();
     });
 
     // Listen presence updates
@@ -165,6 +173,8 @@ export const SocketProvider: React.FC<{
       isReconnecting.current = false;
     }
   }, [authenticateUser]);
+
+  handleReconnectRef.current = handleReconnect;
 
   const addEmitListener = useCallback((listener: EmitListener) => {
     emitListeners.current.add(listener);
