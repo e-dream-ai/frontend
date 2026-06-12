@@ -12,6 +12,7 @@ export default defineConfig({
     tsconfigPaths(),
     VitePWA({
       registerType: "autoUpdate",
+      selfDestroying: true,
       devOptions: {
         enabled: true,
       },
