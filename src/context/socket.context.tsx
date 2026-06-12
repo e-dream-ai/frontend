@@ -154,6 +154,13 @@ export const SocketProvider: React.FC<{
 
   // Handle reconnection
   const handleReconnect = useCallback(async () => {
+    // No signed-in user: there's nothing to reconnect, and creating a socket
+    // anyway would loop forever on UNAUTHORIZED, flashing the page on every
+    // authenticateUser() isLoading toggle
+    if (!user) {
+      return;
+    }
+
     // If we're already reconnecting, don't start another attempt
     if (isReconnecting.current) {
       return;
@@ -189,7 +196,7 @@ export const SocketProvider: React.FC<{
       // Reset the flag when we're done
       isReconnecting.current = false;
     }
-  }, [authenticateUser, generateSocketInstance, teardownSocket]);
+  }, [user, authenticateUser, generateSocketInstance, teardownSocket]);
 
   handleReconnectRef.current = handleReconnect;
 
