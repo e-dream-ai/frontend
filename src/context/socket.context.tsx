@@ -31,6 +31,10 @@ export const SocketContext = createContext<SocketContextType>(
 
 const REMOTE_CONTROL_NAMESPACE = "remote-control";
 
+// backoff for retrying when re-authentication itself fails (offline / backend down)
+const RECONNECT_BASE_DELAY_MS = 2_000;
+const RECONNECT_MAX_DELAY_MS = 60_000;
+
 export const SocketProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
@@ -52,6 +56,10 @@ export const SocketProvider: React.FC<{
   const socketRef = useRef<Socket | null>();
 
   const handleReconnectRef = useRef<() => void>();
+
+  // consecutive failed re-authentication attempts, drives retry backoff
+  const reconnectFailures = useRef(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout>>();
 
   const emitListeners = React.useRef<Set<EmitListener>>(new Set());
 
@@ -80,6 +88,7 @@ export const SocketProvider: React.FC<{
     // Listen connect event
     newSocket.on("connect", () => {
       // Socket connected
+      reconnectFailures.current = 0;
       setIsConnected(true);
     });
 
@@ -90,31 +99,16 @@ export const SocketProvider: React.FC<{
     });
 
     // Handle connection error
-    newSocket.on("connect_error", async (error) => {
+    newSocket.on("connect_error", (error) => {
       setIsConnected(false);
 
       /**
        * when a connect_error is triggered and the socket backend message is "UNAUTHORIZED"
        * the session cookie should be refreshed using `authenticateUser`
-       * will cause user could get a fresh cookie and a new socket instance will be generated with the proper authorization
+       * handleReconnect tears down this socket, refreshes the cookie and builds a new instance
        */
-      if (
-        error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED &&
-        !isReconnecting.current
-      ) {
-        try {
-          isReconnecting.current = true;
-          await authenticateUser();
-          try {
-            newSocket.removeAllListeners();
-            newSocket.disconnect();
-          } catch {
-            // ignore teardown errors on the stale socket
-          }
-          socketRef.current = generateSocketInstance();
-        } finally {
-          isReconnecting.current = false;
-        }
+      if (error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED) {
+        handleReconnectRef.current?.();
       }
     });
 
@@ -123,6 +117,7 @@ export const SocketProvider: React.FC<{
       setIsConnected(true);
     });
 
+    // socket.io gave up (reconnectionAttempts exhausted) — start a fresh cycle
     newSocket.io.on("reconnect_failed", () => {
       handleReconnectRef.current?.();
     });
@@ -139,7 +134,23 @@ export const SocketProvider: React.FC<{
     );
 
     return newSocket;
-  }, [authenticateUser]);
+  }, []);
+
+  const teardownSocket = useCallback(() => {
+    const socket = socketRef.current;
+    if (!socket) return;
+    try {
+      // Prevent listeners execute functions
+      socket.removeAllListeners();
+      // reconnect_failed lives on the manager, which socket.io reuses across
+      // instances for the same URL — removeAllListeners() above doesn't reach it
+      socket.io.removeAllListeners("reconnect_failed");
+      socket.disconnect();
+    } catch {
+      // ignore teardown errors on the stale socket
+    }
+    socketRef.current = null;
+  }, []);
 
   // Handle reconnection
   const handleReconnect = useCallback(async () => {
@@ -147,32 +158,38 @@ export const SocketProvider: React.FC<{
     if (isReconnecting.current) {
       return;
     }
+    clearTimeout(retryTimerRef.current);
+
+    // Socket already connected, nothing to do
+    if (socketRef.current?.connected) {
+      return;
+    }
 
     try {
       isReconnecting.current = true;
 
-      if (socketRef.current) {
-        // Tab focused and checking connection
-        if (!socketRef.current.connected) {
-          // Attempting to reconnect
-
-          // Remove socket listeners, disconnect, fetch `/authenticate` and try a reconnection (refresh cookie session)
-          // Prevent listeners execute functions
-          socketRef.current.removeAllListeners();
-          socketRef.current.disconnect();
-          socketRef.current = null;
-          await authenticateUser();
-          // After re-authentication, immediately create a fresh socket instance
-          socketRef.current = generateSocketInstance();
-        } else {
-          // Socket already connected
-        }
-      }
+      // Remove socket listeners, disconnect, fetch `/authenticate` and try a reconnection (refresh cookie session)
+      teardownSocket();
+      await authenticateUser();
+      // After re-authentication, immediately create a fresh socket instance
+      socketRef.current = generateSocketInstance();
+    } catch {
+      // authenticateUser failed (offline / backend down). socketRef is null
+      // here, so no socket event will ever fire — without this timer the
+      // client would stay disconnected until a visibility/online event
+      reconnectFailures.current += 1;
+      const delay = Math.min(
+        RECONNECT_BASE_DELAY_MS * 2 ** reconnectFailures.current,
+        RECONNECT_MAX_DELAY_MS,
+      );
+      retryTimerRef.current = setTimeout(() => {
+        handleReconnectRef.current?.();
+      }, delay);
     } finally {
       // Reset the flag when we're done
       isReconnecting.current = false;
     }
-  }, [authenticateUser]);
+  }, [authenticateUser, generateSocketInstance, teardownSocket]);
 
   handleReconnectRef.current = handleReconnect;
 
@@ -225,19 +242,15 @@ export const SocketProvider: React.FC<{
     window.addEventListener("offline", handleOffline);
     return () => {
       // Remove socket listeners, disconnect socket and set socketRef to null
-      if (socketRef.current) {
-        // Prevent listeners execute functions
-        socketRef.current.removeAllListeners();
-        socketRef.current.disconnect();
-        socketRef.current = null;
-      }
+      clearTimeout(retryTimerRef.current);
+      teardownSocket();
 
       // Clean ups functions to prevent execute them when are no longer needed
       document.removeEventListener("visibilitychange", handleVisibilityChange);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [user, generateSocketInstance, handleReconnect]);
+  }, [user, generateSocketInstance, handleReconnect, teardownSocket]);
 
   // useMemo to memoize context value
   const contextValue = useMemo(
