@@ -1,6 +1,11 @@
 // src/components/pages/studio/utils/__tests__/expand-prompt.test.ts
 import { describe, it, expect } from "vitest";
-import { expandPrompt, countExpansions } from "../expand-prompt";
+import {
+  expandPrompt,
+  countExpansions,
+  countRawExpansions,
+  MAX_EXPANSIONS,
+} from "../expand-prompt";
 
 describe("expandPrompt", () => {
   it("returns single-element array for plain text", () => {
@@ -55,6 +60,32 @@ describe("expandPrompt", () => {
   it("caps at 16 expansions", () => {
     const result = expandPrompt("{a|b|c} {x|y|z} {1|2|3}");
     expect(result).toHaveLength(16);
+  });
+
+  it("caps DURING expansion without building the full cross-product", () => {
+    // 30 binary groups = 2^30 combinations. The old implementation built the
+    // entire array before slicing, which froze/OOM'd the tab. If the cap is
+    // applied during expansion this returns instantly; otherwise this test
+    // hangs or runs out of memory.
+    const huge = "{a|b} ".repeat(30).trim();
+    const result = expandPrompt(huge);
+    expect(result).toHaveLength(MAX_EXPANSIONS);
+  });
+});
+
+describe("countRawExpansions", () => {
+  it("returns 1 for plain text", () => {
+    expect(countRawExpansions("no expansions here")).toBe(1);
+  });
+
+  it("returns the UNcapped cross-product count", () => {
+    expect(countRawExpansions("{a|b|c} {x|y|z} {1|2|3}")).toBe(27);
+  });
+
+  it("returns large counts without building the product", () => {
+    // 2^30 — a multiply, never an array.
+    const huge = "{a|b} ".repeat(30).trim();
+    expect(countRawExpansions(huge)).toBe(2 ** 30);
   });
 });
 

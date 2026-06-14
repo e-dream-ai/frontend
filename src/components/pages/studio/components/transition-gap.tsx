@@ -1,5 +1,9 @@
-import { Check, Loader2, AlertTriangle, RotateCcw } from "lucide-react";
+import { Check, Loader2, AlertTriangle, RotateCcw, Layers } from "lucide-react";
 import type { FlowTransition } from "@/types/flow.types";
+import {
+  effectiveTransitionStatus,
+  aggregateVariationProgress,
+} from "../utils/variation-status";
 import {
   GapContainer,
   GapLine,
@@ -33,8 +37,19 @@ export function TransitionGapEnhanced({
   effectiveDuration,
   onClick,
 }: TransitionGapProps) {
-  const { status, progress } = transition;
   const configured = hasOverrides(transition);
+  // Derive the display status from the transition's own status OR, for a
+  // multi-variant transition that stays "idle" until one is picked, from the
+  // aggregate state of its variation candidates. Without this an idle
+  // transition with generating/ready variations would render as a blank line.
+  const status = effectiveTransitionStatus(transition);
+  const progress =
+    transition.variations && transition.variations.length > 0
+      ? aggregateVariationProgress(transition.variations)
+      : transition.progress;
+  const variationCount = transition.variations?.length ?? 0;
+  const readyCount =
+    transition.variations?.filter((v) => v.status === "processed").length ?? 0;
 
   // Idle, no config — just the connecting line.
   if (status === "idle" && !configured) {
@@ -51,6 +66,20 @@ export function TransitionGapEnhanced({
       <GapContainer $expanded={false} onClick={onClick}>
         <GapLine $configured $failed={false} />
         <DurationLabel>{effectiveDuration}s</DurationLabel>
+      </GapContainer>
+    );
+  }
+
+  // Variations finished, none selected yet — invite the user to review & pick.
+  if (status === "review") {
+    return (
+      <GapContainer $expanded onClick={onClick} title="Review variations">
+        <StatusNode $variant="processed">
+          <Layers size={13} strokeWidth={2.6} />
+        </StatusNode>
+        <GapStatusLabel $status="processed">
+          {readyCount}/{variationCount} pick
+        </GapStatusLabel>
       </GapContainer>
     );
   }

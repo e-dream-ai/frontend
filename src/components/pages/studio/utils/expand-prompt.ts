@@ -50,7 +50,13 @@ function parse(template: string): ParsedSegment[] {
   return segments;
 }
 
-function crossProduct(segments: ParsedSegment[]): string[] {
+export const MAX_EXPANSIONS = 16;
+
+// Builds the cross-product but never grows beyond `limit` entries. Capping
+// here (rather than slicing a fully-materialized product) is essential: a
+// prompt with many groups expands exponentially, so building the full product
+// first would freeze or OOM the tab before the cap is ever applied.
+function crossProduct(segments: ParsedSegment[], limit: number): string[] {
   let results = [""];
 
   for (const seg of segments) {
@@ -58,28 +64,28 @@ function crossProduct(segments: ParsedSegment[]): string[] {
       results = results.map((r) => r + seg.value);
     } else {
       const next: string[] = [];
-      for (const r of results) {
+      outer: for (const r of results) {
         for (const opt of seg.options) {
           next.push(r + opt);
+          if (next.length >= limit) break outer;
         }
       }
       results = next;
     }
   }
 
-  return results;
+  return results.slice(0, limit);
 }
-
-const MAX_EXPANSIONS = 16;
 
 export function expandPrompt(template: string): string[] {
   if (!template) return [template];
   const segments = parse(template);
-  const results = crossProduct(segments);
-  return results.slice(0, MAX_EXPANSIONS);
+  return crossProduct(segments, MAX_EXPANSIONS);
 }
 
-export function countExpansions(template: string): number {
+// Uncapped count of how many combinations the template would expand to. Pure
+// multiplication — never materializes the product, so it's safe for any input.
+export function countRawExpansions(template: string): number {
   if (!template) return 1;
   const segments = parse(template);
   let count = 1;
@@ -88,5 +94,9 @@ export function countExpansions(template: string): number {
       count *= seg.options.length;
     }
   }
-  return Math.min(count, MAX_EXPANSIONS);
+  return count;
+}
+
+export function countExpansions(template: string): number {
+  return Math.min(countRawExpansions(template), MAX_EXPANSIONS);
 }

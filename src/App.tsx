@@ -20,9 +20,12 @@ const App = () => {
 
   useEffect(() => {
     /**
-     * Initialize TagManager
+     * Initialize TagManager — only when a GTM id is configured. Without it
+     * react-gtm-module warns and injects a broken tag; skip on local/preview.
      */
-    TagManager.initialize({ gtmId: import.meta.env.VITE_GTM_ID });
+    if (import.meta.env.VITE_GTM_ID) {
+      TagManager.initialize({ gtmId: import.meta.env.VITE_GTM_ID });
+    }
 
     unregisterDocumentEvents();
   }, []);

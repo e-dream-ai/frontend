@@ -1,11 +1,13 @@
 import React from "react";
 import { Check } from "lucide-react";
 import type { VariationCandidate } from "@/types/flow.types";
+import { isVideoUrl } from "../utils/variation-status";
 import {
   GridContainer,
   Grid,
   GridCell,
   GridCellImg,
+  GridCellVideo,
   QueuedOverlay,
   ProcessingOverlay,
   FailedOverlay,
@@ -49,9 +51,19 @@ export const VariationGrid: React.FC<VariationGridProps> = ({
               if (v.status === "processed") onSelect(v.id);
             }}
           >
-            {v.status === "processed" && v.imageUrl && (
-              <GridCellImg src={v.imageUrl} alt={v.prompt || "variation"} />
-            )}
+            {v.status === "processed" &&
+              v.imageUrl &&
+              (isVideoUrl(v.imageUrl) ? (
+                <GridCellVideo
+                  src={v.imageUrl}
+                  muted
+                  loop
+                  playsInline
+                  autoPlay
+                />
+              ) : (
+                <GridCellImg src={v.imageUrl} alt={v.prompt || "variation"} />
+              ))}
             {v.status === "queue" && <QueuedOverlay>Queued</QueuedOverlay>}
             {v.status === "processing" && (
               <ProcessingOverlay>

@@ -14,6 +14,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
+import { shouldOpenVariationLightbox } from "../utils/variation-status";
 import { KeyframeCard } from "./keyframe-card";
 import { TransitionGapEnhanced } from "./transition-gap";
 import { FlowReset } from "./flow-reset";
@@ -122,9 +123,11 @@ export const KeyframeStrip: React.FC<Props> = ({
               if (transition.status === "failed") {
                 onRetry(transitionIndex);
               } else if (
-                transition.status === "processed" &&
+                shouldOpenVariationLightbox(transition) &&
                 onOpenVariationLightbox
               ) {
+                // Processed single result OR a transition that owns variations
+                // (in-flight or ready) — open the review lightbox.
                 onOpenVariationLightbox(transitionIndex);
               } else {
                 selectTransition(transitionIndex);

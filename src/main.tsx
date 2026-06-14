@@ -23,40 +23,72 @@ const root = ReactDOM.createRoot(
   document.getElementById("root") as HTMLElement,
 );
 
+const BUGSNAG_API_KEY = import.meta.env.VITE_BUGSNAG_API_KEY;
+const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
+
+// Matches the props the Bugsnag React error boundary passes to its fallback,
+// so both the real boundary and the passthrough share one type.
+type BoundaryFallbackProps = {
+  error: Error;
+  info: React.ErrorInfo;
+  clearError: () => void;
+};
+type AppErrorBoundary = React.ComponentType<{
+  children?: React.ReactNode;
+  FallbackComponent?: React.ComponentType<BoundaryFallbackProps>;
+}>;
+
+// Passthrough used when Bugsnag can't start (missing key on local/preview).
+const PassthroughBoundary: AppErrorBoundary = ({ children }) => <>{children}</>;
+
 /**
- * Initialize Bugsnag
+ * Initialize Bugsnag.
+ *
+ * Guarded: with no API key (local/preview builds) Bugsnag.start() throws, and
+ * Bugsnag.getPlugin("react")! would then throw again — either one white-screens
+ * the entire app. When the key is absent we skip init and fall back to a
+ * passthrough error boundary so the app still boots.
  */
-Bugsnag.start({
-  apiKey: import.meta.env.VITE_BUGSNAG_API_KEY,
-  plugins: [new BugsnagPluginReact()],
-  enabledReleaseStages: ["production", "development"],
-  releaseStage: getReleaseStage(),
-  appVersion: import.meta.env.VITE_COMMIT_REF,
-  onError: function (event) {
-    if (event.originalError && event.originalError.stack) {
-      const stack = event.originalError.stack?.toLowerCase();
-      // Check for various types of browser extensions
-      if (
-        stack?.includes("chrome-extension://") ||
-        stack?.includes("moz-extension://") ||
-        stack?.includes("safari-extension://") ||
-        stack?.includes("safari-web-extension://") ||
-        stack?.includes("ms-browser-extension://") ||
-        stack?.includes("edge-extension://")
-      ) {
-        // Don't send event if comes from an extension
-        return false;
+export let ErrorBoundary: AppErrorBoundary = PassthroughBoundary;
+
+if (BUGSNAG_API_KEY) {
+  Bugsnag.start({
+    apiKey: BUGSNAG_API_KEY,
+    plugins: [new BugsnagPluginReact()],
+    enabledReleaseStages: ["production", "development"],
+    releaseStage: getReleaseStage(),
+    appVersion: import.meta.env.VITE_COMMIT_REF,
+    onError: function (event) {
+      if (event.originalError && event.originalError.stack) {
+        const stack = event.originalError.stack?.toLowerCase();
+        // Check for various types of browser extensions
+        if (
+          stack?.includes("chrome-extension://") ||
+          stack?.includes("moz-extension://") ||
+          stack?.includes("safari-extension://") ||
+          stack?.includes("safari-web-extension://") ||
+          stack?.includes("ms-browser-extension://") ||
+          stack?.includes("edge-extension://")
+        ) {
+          // Don't send event if comes from an extension
+          return false;
+        }
       }
-    }
 
-    return true;
-  },
-});
+      return true;
+    },
+  });
 
-BugsnagPerformance.start({ apiKey: import.meta.env.VITE_BUGSNAG_API_KEY });
+  BugsnagPerformance.start({ apiKey: BUGSNAG_API_KEY });
 
-export const ErrorBoundary =
-  Bugsnag.getPlugin("react")!.createErrorBoundary(React);
+  const reactPlugin = Bugsnag.getPlugin("react");
+  if (reactPlugin) {
+    ErrorBoundary = reactPlugin.createErrorBoundary(React);
+  }
+} else {
+  // eslint-disable-next-line no-console
+  console.warn("VITE_BUGSNAG_API_KEY not set — Bugsnag disabled.");
+}
 
 /**
  * Initialize GA4
@@ -64,13 +96,20 @@ export const ErrorBoundary =
  * using react-ga4 since is the latest package for Google Analytics
  *  recommended keep up to date with new Google releases and changes for GA
  * https://www.npmjs.com/package/react-ga4
+ *
+ * Guarded for the same reason as Bugsnag: initialize() throws on a missing id.
  */
-ReactGA.initialize(import.meta.env.VITE_GA_MEASUREMENT_ID, {
-  gaOptions: {
-    debug: IS_DEV,
-    titleCase: false,
-  },
-});
+if (GA_MEASUREMENT_ID) {
+  ReactGA.initialize(GA_MEASUREMENT_ID, {
+    gaOptions: {
+      debug: IS_DEV,
+      titleCase: false,
+    },
+  });
+} else {
+  // eslint-disable-next-line no-console
+  console.warn("VITE_GA_MEASUREMENT_ID not set — Google Analytics disabled.");
+}
 
 root.render(
   <ErrorBoundary FallbackComponent={ErrorFallback}>

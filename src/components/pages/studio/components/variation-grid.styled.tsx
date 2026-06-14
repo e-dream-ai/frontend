@@ -48,6 +48,12 @@ export const GridCellImg = styled.img`
   object-fit: cover;
 `;
 
+export const GridCellVideo = styled.video`
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+`;
+
 export const GridCellOverlay = styled.div`
   position: absolute;
   inset: 0;

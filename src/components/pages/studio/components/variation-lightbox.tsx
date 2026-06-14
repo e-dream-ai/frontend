@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useQuery } from "@tanstack/react-query";
 import { X } from "lucide-react";
@@ -64,6 +64,15 @@ export const VariationLightbox: React.FC<VariationLightboxProps> = ({
     },
     [onClose],
   );
+
+  // Close on Escape — expected dismissal affordance for a modal.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [onClose]);
 
   const hasVariations =
     transition.variations && transition.variations.length > 0;

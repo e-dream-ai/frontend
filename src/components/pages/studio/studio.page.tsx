@@ -18,7 +18,7 @@ import {
   StudioHeader,
   StudioTitle,
   BackButton,
-  HeaderSpacer,
+  HeaderSide,
   NewSessionButton,
   StudioBody,
   ModeToggle,
@@ -135,28 +135,34 @@ export const StudioPage: React.FC = () => {
   return (
     <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
-        <BackButton onClick={handleBack} aria-label="Go back">
-          <ArrowLeft size={18} />
-        </BackButton>
+        <HeaderSide $align="left">
+          <BackButton onClick={handleBack} aria-label="Go back">
+            <ArrowLeft size={18} />
+          </BackButton>
+          <StudioTitle>Studio</StudioTitle>
+        </HeaderSide>
         <SessionSwitcher />
-        <StudioTitle>Studio</StudioTitle>
-        <ModeToggle>
-          <ModeButton $active={mode === "flow"} onClick={() => setMode("flow")}>
-            Flow
-          </ModeButton>
-          <ModeButton
-            $active={mode === "batch"}
-            onClick={() => setMode("batch")}
-          >
-            Batch (Advanced)
-          </ModeButton>
-        </ModeToggle>
-        <HeaderSpacer />
-        {mode === "batch" && hasContent && (
-          <NewSessionButton onClick={handleNewSession}>
-            New Session
-          </NewSessionButton>
-        )}
+        <HeaderSide $align="right">
+          <ModeToggle>
+            <ModeButton
+              $active={mode === "flow"}
+              onClick={() => setMode("flow")}
+            >
+              Flow
+            </ModeButton>
+            <ModeButton
+              $active={mode === "batch"}
+              onClick={() => setMode("batch")}
+            >
+              Batch
+            </ModeButton>
+          </ModeToggle>
+          {mode === "batch" && hasContent && (
+            <NewSessionButton onClick={handleNewSession}>
+              New Session
+            </NewSessionButton>
+          )}
+        </HeaderSide>
       </StudioHeader>
 
       <StudioBody $constrain={mode === "batch"}>
