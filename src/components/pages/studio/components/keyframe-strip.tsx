@@ -42,6 +42,8 @@ interface Props {
   onRequestVariations?: (keyframeId: string) => void;
   onOpenVariationLightbox?: (transitionIndex: number) => void;
   onRequestI2iVariation?: (keyframe: FlowKeyframe) => void;
+  onAcceptI2iCandidate?: (keyframe: FlowKeyframe) => void;
+  onDiscardI2iCandidate?: (keyframe: FlowKeyframe) => void;
 }
 
 export const KeyframeStrip: React.FC<Props> = ({
@@ -52,6 +54,8 @@ export const KeyframeStrip: React.FC<Props> = ({
   onRequestVariations,
   onOpenVariationLightbox,
   onRequestI2iVariation,
+  onAcceptI2iCandidate,
+  onDiscardI2iCandidate,
 }) => {
   // Actions (stable refs)
   const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
@@ -154,6 +158,8 @@ export const KeyframeStrip: React.FC<Props> = ({
         onDelete={removeKeyframe}
         onRequestVariations={onRequestVariations}
         onRequestI2iVariation={onRequestI2iVariation}
+        onAcceptI2iCandidate={onAcceptI2iCandidate}
+        onDiscardI2iCandidate={onDiscardI2iCandidate}
       />,
     );
   });

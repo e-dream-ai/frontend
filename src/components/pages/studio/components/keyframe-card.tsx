@@ -14,9 +14,13 @@ import {
   CardPlaceholder,
   CardLabel,
   LoopBadge,
+  CandidateBadge,
   DeleteButton,
   VariationsButton,
   VaryButton,
+  CandidateActions,
+  AcceptButton,
+  DiscardButton,
   UploadOverlay,
   UploadRing,
   UploadRingTrack,
@@ -31,6 +35,8 @@ interface Props {
   onDelete?: (id: string) => void;
   onRequestVariations?: (keyframeId: string) => void;
   onRequestI2iVariation?: (keyframe: FlowKeyframe) => void;
+  onAcceptI2iCandidate?: (keyframe: FlowKeyframe) => void;
+  onDiscardI2iCandidate?: (keyframe: FlowKeyframe) => void;
 }
 
 export const KeyframeCard: React.FC<Props> = ({
@@ -39,8 +45,11 @@ export const KeyframeCard: React.FC<Props> = ({
   onDelete,
   onRequestVariations,
   onRequestI2iVariation,
+  onAcceptI2iCandidate,
+  onDiscardI2iCandidate,
 }) => {
   const isLoop = keyframe.isLoopKeyframe ?? false;
+  const isCandidate = keyframe.i2iCandidate ?? false;
   const isUploading = keyframe.uploadStatus === "uploading";
   const isFailed = keyframe.uploadStatus === "failed";
   const isBusy = isUploading || isFailed;
@@ -132,6 +141,7 @@ export const KeyframeCard: React.FC<Props> = ({
         $isDragging={isDragging}
         $uploading={isUploading}
         $failed={isFailed}
+        $candidate={isCandidate}
         {...(isLoop || isBusy ? {} : { ...attributes, ...listeners })}
       >
         {imgSrc ? (
@@ -175,12 +185,43 @@ export const KeyframeCard: React.FC<Props> = ({
             <>
               {keyframe.name} <LoopBadge>Loop</LoopBadge>
             </>
+          ) : isCandidate ? (
+            <CandidateBadge>Variation</CandidateBadge>
           ) : (
             `${index + 1}`
           )}
         </CardLabel>
 
-        {!isLoop && !isBusy && onDelete && (
+        {isCandidate &&
+          !isBusy &&
+          (onAcceptI2iCandidate || onDiscardI2iCandidate) && (
+            <CandidateActions>
+              {onAcceptI2iCandidate && (
+                <AcceptButton
+                  title="Accept this variation as a keyframe"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onAcceptI2iCandidate(keyframe);
+                  }}
+                >
+                  Accept
+                </AcceptButton>
+              )}
+              {onDiscardI2iCandidate && (
+                <DiscardButton
+                  title="Discard this variation"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onDiscardI2iCandidate(keyframe);
+                  }}
+                >
+                  Discard
+                </DiscardButton>
+              )}
+            </CandidateActions>
+          )}
+
+        {!isLoop && !isCandidate && !isBusy && onDelete && (
           <DeleteButton
             onClick={(e) => {
               e.stopPropagation();
@@ -191,25 +232,29 @@ export const KeyframeCard: React.FC<Props> = ({
           </DeleteButton>
         )}
 
-        {!isLoop && !isBusy && isSettled && onRequestVariations && (
-          <VariationsButton
-            onClick={(e) => {
-              e.stopPropagation();
-              if (
-                !showVariations &&
-                (!keyframe.variations || keyframe.variations.length === 0)
-              ) {
-                onRequestVariations(keyframe.id);
-              }
-              setShowVariations((v) => !v);
-            }}
-            title="Generate variations"
-          >
-            <Shuffle size={11} />
-          </VariationsButton>
-        )}
+        {!isLoop &&
+          !isCandidate &&
+          !isBusy &&
+          isSettled &&
+          onRequestVariations && (
+            <VariationsButton
+              onClick={(e) => {
+                e.stopPropagation();
+                if (
+                  !showVariations &&
+                  (!keyframe.variations || keyframe.variations.length === 0)
+                ) {
+                  onRequestVariations(keyframe.id);
+                }
+                setShowVariations((v) => !v);
+              }}
+              title="Generate variations"
+            >
+              <Shuffle size={11} />
+            </VariationsButton>
+          )}
 
-        {!isLoop && !isBusy && onRequestI2iVariation && (
+        {!isLoop && !isCandidate && !isBusy && onRequestI2iVariation && (
           <VaryButton
             disabled={!hasI2iEndpoints}
             title={

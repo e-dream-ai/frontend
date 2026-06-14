@@ -48,6 +48,9 @@ export const FlowBuilder: React.FC = () => {
   const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
   const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
   const setI2iEndpoint = useFlowStore((s) => s.setI2iEndpoint);
+  const addI2iCandidates = useFlowStore((s) => s.addI2iCandidates);
+  const acceptI2iCandidate = useFlowStore((s) => s.acceptI2iCandidate);
+  const discardI2iCandidate = useFlowStore((s) => s.discardI2iCandidate);
 
   // User i2i endpoints (BYO key) for image-to-image variations.
   const { data: endpointsData } = useUserApiEndpoints();
@@ -277,34 +280,35 @@ export const FlowBuilder: React.FC = () => {
         setI2iEndpoint(endpointUuid);
       }
 
-      // Source image — prefer the backend dream UUID, fall back to the URL.
-      const sourceImage = keyframe.dreamUuid ?? keyframe.imageUrl;
+      // Source image — the worker adapter DOWNLOADS the `image` field as a
+      // fetchable URL, so we must send the presigned imageUrl, NOT a Dream UUID
+      // (a UUID is not fetchable). Skip if there's no usable URL.
+      const sourceImage = keyframe.imageUrl;
       if (!sourceImage) return;
 
       const I2I_VARIATION_COUNT = 4;
       const baseName = keyframe.name || "frame";
 
-      // Create placeholder candidate keyframes up-front so the user sees them
-      // immediately, then patch each in place as its generation request settles.
+      // Create candidate keyframes as a GATED staging area: addI2iCandidates
+      // flags them so transition derivation skips them — they will not spawn
+      // generation jobs until the user accepts one. Patch each in place as its
+      // generation request settles.
       const candidates = Array.from(
         { length: I2I_VARIATION_COUNT },
-        (_, i) => {
-          const id = uuidv4();
-          addKeyframe({
-            id,
-            imageUrl: keyframe.imageUrl,
-            name: `${baseName} · variation ${i + 1}`,
-            uploadStatus: "uploading",
-            uploadProgress: 0,
-          });
-          return id;
-        },
+        (_, i) => ({
+          id: uuidv4(),
+          imageUrl: keyframe.imageUrl,
+          name: `${baseName} · variation ${i + 1}`,
+          uploadStatus: "uploading" as const,
+          uploadProgress: 0,
+        }),
       );
+      addI2iCandidates(keyframe.id, candidates);
 
       // Fire all variation generations concurrently (no sequential await loop).
       const headers = getRequestHeaders({ contentType: ContentType.json });
       void Promise.allSettled(
-        candidates.map(async (id, i) => {
+        candidates.map(async ({ id }, i) => {
           const algoParams = {
             userEndpointUuid: endpointUuid,
             image: sourceImage,
@@ -341,7 +345,21 @@ export const FlowBuilder: React.FC = () => {
         }),
       );
     },
-    [i2iEndpoints, setI2iEndpoint, addKeyframe, updateKeyframe],
+    [i2iEndpoints, setI2iEndpoint, addI2iCandidates, updateKeyframe],
+  );
+
+  const handleAcceptI2iCandidate = useCallback(
+    (keyframe: FlowKeyframe) => {
+      acceptI2iCandidate(keyframe.id);
+    },
+    [acceptI2iCandidate],
+  );
+
+  const handleDiscardI2iCandidate = useCallback(
+    (keyframe: FlowKeyframe) => {
+      discardI2iCandidate(keyframe.id);
+    },
+    [discardI2iCandidate],
   );
 
   const handleAddFromPlaylist = useCallback(() => {
@@ -367,6 +385,8 @@ export const FlowBuilder: React.FC = () => {
         onRequestVariations={handleKeyframeVariations}
         onOpenVariationLightbox={setVariationLightboxIndex}
         onRequestI2iVariation={handleI2iVariation}
+        onAcceptI2iCandidate={handleAcceptI2iCandidate}
+        onDiscardI2iCandidate={handleDiscardI2iCandidate}
       />
 
       <TransitionSettingsPanel

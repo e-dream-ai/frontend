@@ -1,4 +1,11 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import Bugsnag from "@bugsnag/js";
 import { v4 as uuidv4 } from "uuid";
 import { useStudioStore } from "@/stores/studio.store";
 import { axiosClient } from "@/client/axios.client";
@@ -86,6 +93,18 @@ export const ImagesTab: React.FC = () => {
   const [selectedEndpoint, setSelectedEndpoint] =
     useState<UserApiEndpoint | null>(null);
 
+  // Reconcile a stale endpoint selection: if the chosen endpoint was deleted
+  // (refetch dropped it from userEndpoints), clear it so the <select> falls
+  // back to the built-in model instead of showing a value with no option.
+  useEffect(() => {
+    if (
+      selectedEndpoint &&
+      !userEndpoints.some((ep) => ep.uuid === selectedEndpoint.uuid)
+    ) {
+      setSelectedEndpoint(null);
+    }
+  }, [userEndpoints, selectedEndpoint]);
+
   const sizeOptions = SIZE_OPTIONS[imageGenParams.model];
 
   const processedImages = useMemo(
@@ -168,7 +187,7 @@ export const ImagesTab: React.FC = () => {
           });
         })
         .catch((err) => {
-          console.error("Failed to create image:", err);
+          Bugsnag.notify(err as Error);
         });
     });
 
@@ -198,7 +217,7 @@ export const ImagesTab: React.FC = () => {
             name: result.name,
           });
         } catch (err) {
-          console.error("Failed to upload image:", err);
+          Bugsnag.notify(err as Error);
           updateImage(placeholderUuid, { status: "failed" });
         } finally {
           URL.revokeObjectURL(blobUrl);

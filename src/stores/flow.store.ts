@@ -38,6 +38,12 @@ export type FlowStoreState = {
   updateKeyframe: (id: string, patch: Partial<FlowKeyframe>) => void;
   removeKeyframe: (id: string) => void;
   reorderKeyframes: (orderedIds: string[]) => void;
+
+  // i2i candidate staging — candidates are excluded from transition derivation
+  // until accepted, so they never spawn generation jobs.
+  addI2iCandidates: (parentId: string, candidates: FlowKeyframe[]) => void;
+  acceptI2iCandidate: (id: string) => void;
+  discardI2iCandidate: (id: string) => void;
   setLoop: (loop: boolean) => void;
   keyframesWithLoop: () => FlowKeyframe[];
   resetFlow: () => void;
@@ -144,6 +150,20 @@ const PHASE_1_DEFAULTS = {
 };
 
 /**
+ * Build the keyframe sequence that drives transition derivation.
+ * i2i candidates are a staging area and must NOT participate in the timeline,
+ * so they are filtered out BEFORE the synthetic loop frame is appended.
+ * Transitions are therefore derived only over real (non-candidate) keyframes.
+ */
+function timelineKeyframesWithLoop(
+  keyframes: FlowKeyframe[],
+  loop: boolean,
+): FlowKeyframe[] {
+  const real = keyframes.filter((kf) => !kf.i2iCandidate);
+  return buildKeyframesWithLoop(real, loop);
+}
+
+/**
  * Build transitions from adjacent keyframe pairs.
  * Preserves existing transition state when pairs still match.
  */
@@ -196,7 +216,7 @@ export const useFlowStore = create<FlowStoreState>()(
           return {
             keyframes,
             transitions: deriveTransitions(
-              buildKeyframesWithLoop(keyframes, s.loop),
+              timelineKeyframesWithLoop(keyframes, s.loop),
               s.transitions,
             ),
           };
@@ -215,7 +235,7 @@ export const useFlowStore = create<FlowStoreState>()(
           return {
             keyframes,
             transitions: deriveTransitions(
-              buildKeyframesWithLoop(keyframes, s.loop),
+              timelineKeyframesWithLoop(keyframes, s.loop),
               s.transitions,
             ),
           };
@@ -230,7 +250,58 @@ export const useFlowStore = create<FlowStoreState>()(
           return {
             keyframes,
             transitions: deriveTransitions(
-              buildKeyframesWithLoop(keyframes, s.loop),
+              timelineKeyframesWithLoop(keyframes, s.loop),
+              s.transitions,
+            ),
+          };
+        }),
+
+      // Append i2i candidates flagged so derivation skips them. Recompute
+      // transitions: per the filter in timelineKeyframesWithLoop the candidates
+      // are excluded, so no garbage transitions appear between them.
+      addI2iCandidates: (parentId, candidates) =>
+        set((s) => {
+          const flagged = candidates.map((kf) => ({
+            ...kf,
+            i2iCandidate: true,
+            i2iParentId: parentId,
+          }));
+          const keyframes = [...s.keyframes, ...flagged];
+          return {
+            keyframes,
+            transitions: deriveTransitions(
+              timelineKeyframesWithLoop(keyframes, s.loop),
+              s.transitions,
+            ),
+          };
+        }),
+
+      // Promote a candidate to a real keyframe: clear the staging flags and
+      // re-derive so it is wired into the timeline transitions.
+      acceptI2iCandidate: (id) =>
+        set((s) => {
+          const keyframes = s.keyframes.map((kf) =>
+            kf.id === id
+              ? { ...kf, i2iCandidate: undefined, i2iParentId: undefined }
+              : kf,
+          );
+          return {
+            keyframes,
+            transitions: deriveTransitions(
+              timelineKeyframesWithLoop(keyframes, s.loop),
+              s.transitions,
+            ),
+          };
+        }),
+
+      // Remove a candidate entirely and re-derive (mirrors removeKeyframe).
+      discardI2iCandidate: (id) =>
+        set((s) => {
+          const keyframes = s.keyframes.filter((kf) => kf.id !== id);
+          return {
+            keyframes,
+            transitions: deriveTransitions(
+              timelineKeyframesWithLoop(keyframes, s.loop),
               s.transitions,
             ),
           };
@@ -240,7 +311,7 @@ export const useFlowStore = create<FlowStoreState>()(
         set((s) => ({
           loop,
           transitions: deriveTransitions(
-            buildKeyframesWithLoop(s.keyframes, loop),
+            timelineKeyframesWithLoop(s.keyframes, loop),
             s.transitions,
           ),
         })),
@@ -345,7 +416,7 @@ export const useFlowStore = create<FlowStoreState>()(
       recomputeTransitions: () =>
         set((s) => ({
           transitions: deriveTransitions(
-            buildKeyframesWithLoop(s.keyframes, s.loop),
+            timelineKeyframesWithLoop(s.keyframes, s.loop),
             s.transitions,
           ),
         })),
@@ -545,7 +616,15 @@ export const useFlowStore = create<FlowStoreState>()(
         // A finalized keyframe has either a backend Keyframe UUID (playlist)
         // or an image Dream UUID (uploaded).
         keyframes: state.keyframes
-          .filter((kf) => (kf.keyframeUuid || kf.dreamUuid) && !kf.uploadStatus)
+          // Exclude unsettled records AND i2i candidates. A candidate has no
+          // accepted place in the timeline yet; persisting one would resurrect
+          // a staging card on reload that no transition references.
+          .filter(
+            (kf) =>
+              (kf.keyframeUuid || kf.dreamUuid) &&
+              !kf.uploadStatus &&
+              !kf.i2iCandidate,
+          )
           .map((kf) => ({
             id: kf.id,
             keyframeUuid: kf.keyframeUuid,

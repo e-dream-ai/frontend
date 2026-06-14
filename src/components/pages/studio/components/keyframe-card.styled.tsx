@@ -11,6 +11,7 @@ export const CardWrapper = styled.div<{
   $isDragging?: boolean;
   $uploading?: boolean;
   $failed?: boolean;
+  $candidate?: boolean;
 }>`
   flex-shrink: 0;
   width: 140px;
@@ -55,6 +56,13 @@ export const CardWrapper = styled.div<{
       cursor: default;
       border-color: ${FLOW.error};
       animation: ${errorBreathe} 1.8s ease-in-out infinite;
+    `}
+
+  ${(props) =>
+    props.$candidate &&
+    css`
+      border-style: dashed;
+      border-color: ${FLOW.accent};
     `}
 
   &:hover {
@@ -184,6 +192,66 @@ export const LoopBadge = styled.span`
   letter-spacing: 0.1em;
   color: ${FLOW.accent};
   opacity: 0.7;
+`;
+
+export const CandidateBadge = styled.span`
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: ${FLOW.accent};
+`;
+
+export const CandidateActions = styled.div`
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  display: flex;
+  gap: 4px;
+`;
+
+export const AcceptButton = styled.button`
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: ${FLOW.successDim};
+  color: ${FLOW.success};
+  font-family: ${FLOW.fontFamily};
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.2s;
+
+  &:hover {
+    filter: brightness(1.2);
+  }
+`;
+
+export const DiscardButton = styled.button`
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: ${FLOW.errorDim};
+  color: ${FLOW.error};
+  font-family: ${FLOW.fontFamily};
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  transition: filter 0.2s;
+
+  &:hover {
+    filter: brightness(1.2);
+  }
 `;
 
 export const DeleteButton = styled.button`

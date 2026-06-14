@@ -410,6 +410,76 @@ describe("Phase 1: transitions", () => {
     });
   });
 
+  describe("i2i candidates", () => {
+    it("does not create transitions between candidates", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframe(makeKf("b"));
+      store.recomputeTransitions();
+      expect(useFlowStore.getState().transitions).toHaveLength(1);
+
+      // Add 4 candidates varied from "b" — they must not add transitions.
+      store.addI2iCandidates("b", [
+        makeKf("c1"),
+        makeKf("c2"),
+        makeKf("c3"),
+        makeKf("c4"),
+      ]);
+
+      const state = useFlowStore.getState();
+      // Candidates are appended to keyframes (rendered as cards)...
+      expect(state.keyframes).toHaveLength(6);
+      expect(state.keyframes.filter((k) => k.i2iCandidate)).toHaveLength(4);
+      // ...but the timeline still only has the a→b transition.
+      expect(state.transitions).toHaveLength(1);
+      expect(state.transitions[0].fromKeyframeId).toBe("a");
+      expect(state.transitions[0].toKeyframeId).toBe("b");
+    });
+
+    it("flags candidates with i2iCandidate and i2iParentId", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addI2iCandidates("a", [makeKf("c1")]);
+      const cand = useFlowStore
+        .getState()
+        .keyframes.find((k) => k.id === "c1");
+      expect(cand?.i2iCandidate).toBe(true);
+      expect(cand?.i2iParentId).toBe("a");
+    });
+
+    it("accept promotes a candidate into the timeline", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addI2iCandidates("a", [makeKf("c1")]);
+      expect(useFlowStore.getState().transitions).toHaveLength(0);
+
+      store.acceptI2iCandidate("c1");
+      const state = useFlowStore.getState();
+      const promoted = state.keyframes.find((k) => k.id === "c1");
+      expect(promoted?.i2iCandidate).toBeUndefined();
+      expect(promoted?.i2iParentId).toBeUndefined();
+      // Now a→c1 is a real transition.
+      expect(state.transitions).toHaveLength(1);
+      expect(state.transitions[0].fromKeyframeId).toBe("a");
+      expect(state.transitions[0].toKeyframeId).toBe("c1");
+    });
+
+    it("discard removes a candidate without touching transitions", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframe(makeKf("b"));
+      store.recomputeTransitions();
+      store.addI2iCandidates("b", [makeKf("c1"), makeKf("c2")]);
+
+      store.discardI2iCandidate("c1");
+      const state = useFlowStore.getState();
+      expect(state.keyframes.find((k) => k.id === "c1")).toBeUndefined();
+      expect(state.keyframes.find((k) => k.id === "c2")).toBeDefined();
+      // a→b transition untouched.
+      expect(state.transitions).toHaveLength(1);
+    });
+  });
+
   describe("hydration", () => {
     it("resets stale processing/queue transitions to failed on recompute", () => {
       const store = useFlowStore.getState();

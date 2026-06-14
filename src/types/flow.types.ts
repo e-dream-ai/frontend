@@ -15,6 +15,12 @@ export interface FlowKeyframe {
   name: string; // display name
   isLoopKeyframe?: boolean; // true for auto-generated loop frame
 
+  // i2i staging — a pending image-to-image variation candidate. Candidates are
+  // a staging area: they render as cards but are EXCLUDED from transition
+  // derivation (and therefore from generation) until the user accepts one.
+  i2iCandidate?: boolean;
+  i2iParentId?: string; // FlowKeyframe.id this candidate was varied from
+
   // Local-only upload state — never persisted to backend.
   uploadStatus?: "uploading" | "failed";
   uploadProgress?: number; // 0-100
