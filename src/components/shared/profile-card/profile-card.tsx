@@ -67,6 +67,7 @@ import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
 import { joinPaths } from "@/utils/router.util";
 import { filterNsfwOption } from "@/utils/select.util";
+import { ApiEndpointsSection } from "@/components/pages/profile/api-endpoints-section";
 
 type ProfileDetailsProps = {
   user?: Omit<User, "token">;
@@ -283,6 +284,12 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
         >
           <ApiKeyCard user={user} />
         </Row>
+      )}
+
+      {showApiKeyCard && (
+        <Column flex={["0 0 100%", "0 0 100%"]}>
+          <ApiEndpointsSection />
+        </Column>
       )}
     </Row>
   );
