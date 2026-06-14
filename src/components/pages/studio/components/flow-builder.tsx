@@ -5,9 +5,11 @@ import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
 import { useStudioStore } from "@/stores/studio.store";
 import { FLOW } from "@/constants/flow-theme.constants";
-import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import { axiosClient } from "@/client/axios.client";
-import type { VariationCandidate } from "@/types/flow.types";
+import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
+import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
+import { useUserApiEndpoints } from "@/api/user-api-endpoints/useUserApiEndpoints";
+import type { VariationCandidate, FlowKeyframe } from "@/types/flow.types";
 import { getVariationPreset } from "../constants/variation-presets";
 import { expandPrompt } from "../utils/expand-prompt";
 import { KeyframeStrip } from "./keyframe-strip";
@@ -45,6 +47,13 @@ export const FlowBuilder: React.FC = () => {
   const addKeyframe = useFlowStore((s) => s.addKeyframe);
   const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
   const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
+  const setI2iEndpoint = useFlowStore((s) => s.setI2iEndpoint);
+
+  // User i2i endpoints (BYO key) for image-to-image variations.
+  const { data: endpointsData } = useUserApiEndpoints();
+  const i2iEndpoints = (endpointsData?.data?.endpoints ?? []).filter(
+    (ep) => ep.capabilities.imageToImage,
+  );
 
   // State declarations must come before selectors that reference them (TDZ).
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -254,6 +263,87 @@ export const FlowBuilder: React.FC = () => {
     [uploadFiles],
   );
 
+  const handleI2iVariation = useCallback(
+    (keyframe: FlowKeyframe) => {
+      // Resolve which i2i endpoint to use. Prefer the one already selected this
+      // session; otherwise auto-select (single -> that one, multiple -> first).
+      const endpoints = i2iEndpoints;
+      if (endpoints.length === 0) return;
+
+      let endpointUuid = useFlowStore.getState().i2iEndpointUuid;
+      if (!endpointUuid || !endpoints.some((ep) => ep.uuid === endpointUuid)) {
+        // TODO: inline picker when multiple i2i endpoints are configured.
+        endpointUuid = endpoints[0].uuid;
+        setI2iEndpoint(endpointUuid);
+      }
+
+      // Source image — prefer the backend dream UUID, fall back to the URL.
+      const sourceImage = keyframe.dreamUuid ?? keyframe.imageUrl;
+      if (!sourceImage) return;
+
+      const I2I_VARIATION_COUNT = 4;
+      const baseName = keyframe.name || "frame";
+
+      // Create placeholder candidate keyframes up-front so the user sees them
+      // immediately, then patch each in place as its generation request settles.
+      const candidates = Array.from(
+        { length: I2I_VARIATION_COUNT },
+        (_, i) => {
+          const id = uuidv4();
+          addKeyframe({
+            id,
+            imageUrl: keyframe.imageUrl,
+            name: `${baseName} · variation ${i + 1}`,
+            uploadStatus: "uploading",
+            uploadProgress: 0,
+          });
+          return id;
+        },
+      );
+
+      // Fire all variation generations concurrently (no sequential await loop).
+      const headers = getRequestHeaders({ contentType: ContentType.json });
+      void Promise.allSettled(
+        candidates.map(async (id, i) => {
+          const algoParams = {
+            userEndpointUuid: endpointUuid,
+            image: sourceImage,
+            prompt: keyframe.name ?? "",
+            n: 1,
+          };
+          try {
+            const { data } = await axiosClient.post(
+              "/v1/dream",
+              {
+                name: `${baseName} · variation ${i + 1}`,
+                prompt: JSON.stringify(algoParams),
+                description: "Studio i2i variation",
+              },
+              { headers },
+            );
+            const dreamUuid = data?.data?.dream?.uuid;
+            if (!dreamUuid) {
+              throw new Error("No dream UUID returned from API");
+            }
+            // Settle the placeholder into a real, queued keyframe.
+            updateKeyframe(id, {
+              dreamUuid,
+              uploadStatus: undefined,
+              uploadProgress: undefined,
+            });
+          } catch (err) {
+            Bugsnag.notify(err as Error);
+            updateKeyframe(id, {
+              uploadStatus: "failed",
+              uploadProgress: undefined,
+            });
+          }
+        }),
+      );
+    },
+    [i2iEndpoints, setI2iEndpoint, addKeyframe, updateKeyframe],
+  );
+
   const handleAddFromPlaylist = useCallback(() => {
     setShowPlaylistModal(true);
   }, []);
@@ -276,6 +366,7 @@ export const FlowBuilder: React.FC = () => {
         onRetry={generateOne}
         onRequestVariations={handleKeyframeVariations}
         onOpenVariationLightbox={setVariationLightboxIndex}
+        onRequestI2iVariation={handleI2iVariation}
       />
 
       <TransitionSettingsPanel

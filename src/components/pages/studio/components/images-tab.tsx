@@ -40,6 +40,8 @@ import {
 } from "./images-tab.styled";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import { AddFromPlaylistModal } from "./add-from-playlist-modal";
+import { useUserApiEndpoints } from "@/api/user-api-endpoints/useUserApiEndpoints";
+import type { UserApiEndpoint } from "@/types/user-api-endpoint.types";
 
 const MODEL_LABELS: Record<ImageModel, string> = {
   "z-image-turbo": "Z Image Turbo",
@@ -70,6 +72,19 @@ export const ImagesTab: React.FC = () => {
   const [expandedImageUuid, setExpandedImageUuid] = useState<string | null>(
     null,
   );
+
+  // User-configured text-to-image API endpoints (BYO key).
+  const { data: endpointsData } = useUserApiEndpoints();
+  const userEndpoints = useMemo(
+    () =>
+      (endpointsData?.data?.endpoints ?? []).filter(
+        (ep) => ep.capabilities.textToImage,
+      ),
+    [endpointsData],
+  );
+  // When a user endpoint is chosen the built-in model picker falls through to it.
+  const [selectedEndpoint, setSelectedEndpoint] =
+    useState<UserApiEndpoint | null>(null);
 
   const sizeOptions = SIZE_OPTIONS[imageGenParams.model];
 
@@ -107,19 +122,35 @@ export const ImagesTab: React.FC = () => {
       })),
     );
 
+    // When a user endpoint is selected, route generation to it via
+    // userEndpointUuid and the endpoint's own size; otherwise use the
+    // built-in algorithm + size.
+    const endpoint = selectedEndpoint;
+    const effectiveSize = endpoint
+      ? endpoint.capabilities.sizes[0] ?? imageGenParams.size
+      : imageGenParams.size;
+    const namePrefix = endpoint
+      ? endpoint.name
+      : MODEL_LABELS[imageGenParams.model];
+
     const promises = jobs.map(({ prompt, seed }, idx) => {
-      const algoParams = {
-        infinidream_algorithm: imageGenParams.model,
-        prompt,
-        size: imageGenParams.size,
-        seed,
-      };
+      const algoParams = endpoint
+        ? {
+            userEndpointUuid: endpoint.uuid,
+            prompt,
+            size: effectiveSize,
+            seed,
+          }
+        : {
+            infinidream_algorithm: imageGenParams.model,
+            prompt,
+            size: effectiveSize,
+            seed,
+          };
 
       return axiosClient
         .post("/v1/dream", {
-          name: `${MODEL_LABELS[imageGenParams.model]} ${
-            currentImageCount + idx + 1
-          }`,
+          name: `${namePrefix} ${currentImageCount + idx + 1}`,
           prompt: JSON.stringify(algoParams),
           description: "Studio generated image",
         })
@@ -131,7 +162,7 @@ export const ImagesTab: React.FC = () => {
             url: dream.thumbnail || "",
             name: dream.name,
             seed,
-            size: imageGenParams.size,
+            size: effectiveSize,
             status: (dream.status as StudioImage["status"]) || "queue",
             selected: false,
           });
@@ -143,7 +174,7 @@ export const ImagesTab: React.FC = () => {
 
     await Promise.all(promises);
     setIsGenerating(false);
-  }, [imagePrompt, imageGenParams, addImage, setIsGenerating]);
+  }, [imagePrompt, imageGenParams, selectedEndpoint, addImage, setIsGenerating]);
 
   const handleUploadFiles = useCallback(
     async (files: File[]) => {
@@ -208,9 +239,16 @@ export const ImagesTab: React.FC = () => {
           <FormField>
             <FieldLabel>Model:</FieldLabel>
             <StyledSelect
-              value={imageGenParams.model}
+              value={selectedEndpoint ? selectedEndpoint.uuid : imageGenParams.model}
               onChange={(e) => {
-                const newModel = e.target.value as ImageModel;
+                const value = e.target.value;
+                const endpoint = userEndpoints.find((ep) => ep.uuid === value);
+                if (endpoint) {
+                  setSelectedEndpoint(endpoint);
+                  return;
+                }
+                setSelectedEndpoint(null);
+                const newModel = value as ImageModel;
                 setImageGenParams({
                   model: newModel,
                   size: clampSizeToModel(imageGenParams.size, newModel),
@@ -220,6 +258,11 @@ export const ImagesTab: React.FC = () => {
               {IMAGE_MODELS.map((m) => (
                 <option key={m} value={m}>
                   {MODEL_LABELS[m]}
+                </option>
+              ))}
+              {userEndpoints.map((ep) => (
+                <option key={ep.uuid} value={ep.uuid}>
+                  {ep.name} · your key
                 </option>
               ))}
             </StyledSelect>

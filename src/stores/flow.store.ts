@@ -60,6 +60,10 @@ export type FlowStoreState = {
   settingsExpanded: boolean;
   previewLightboxOpen: boolean;
 
+  // i2i — selected user API endpoint for image-to-image variations.
+  // Non-persisted UI state (resolved fresh from the user's endpoint list each session).
+  i2iEndpointUuid: string | null;
+
   // Phase 1 — actions
   setGlobalPreset: (id: string) => void;
   setGlobalPrompt: (prompt: string) => void;
@@ -77,6 +81,7 @@ export type FlowStoreState = {
   selectTransition: (index: number | null) => void;
   setSettingsExpanded: (expanded: boolean) => void;
   setPreviewLightboxOpen: (open: boolean) => void;
+  setI2iEndpoint: (uuid: string | null) => void;
   updateTransitionStatus: (
     index: number,
     status: TransitionStatus,
@@ -135,6 +140,7 @@ const PHASE_1_DEFAULTS = {
   selectedTransitionIndex: null as number | null,
   settingsExpanded: false,
   previewLightboxOpen: false,
+  i2iEndpointUuid: null as string | null,
 };
 
 /**
@@ -294,6 +300,7 @@ export const useFlowStore = create<FlowStoreState>()(
       selectTransition: (index) => set({ selectedTransitionIndex: index }),
       setSettingsExpanded: (expanded) => set({ settingsExpanded: expanded }),
       setPreviewLightboxOpen: (open) => set({ previewLightboxOpen: open }),
+      setI2iEndpoint: (uuid) => set({ i2iEndpointUuid: uuid }),
 
       updateTransitionStatus: (index, status, progress) =>
         set((s) => {

@@ -15,6 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { shouldOpenVariationLightbox } from "../utils/variation-status";
+import type { FlowKeyframe } from "@/types/flow.types";
 import { KeyframeCard } from "./keyframe-card";
 import { TransitionGapEnhanced } from "./transition-gap";
 import {
@@ -40,6 +41,7 @@ interface Props {
   onRetry: (index: number) => void;
   onRequestVariations?: (keyframeId: string) => void;
   onOpenVariationLightbox?: (transitionIndex: number) => void;
+  onRequestI2iVariation?: (keyframe: FlowKeyframe) => void;
 }
 
 export const KeyframeStrip: React.FC<Props> = ({
@@ -49,6 +51,7 @@ export const KeyframeStrip: React.FC<Props> = ({
   onRetry,
   onRequestVariations,
   onOpenVariationLightbox,
+  onRequestI2iVariation,
 }) => {
   // Actions (stable refs)
   const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
@@ -150,6 +153,7 @@ export const KeyframeStrip: React.FC<Props> = ({
         index={i}
         onDelete={removeKeyframe}
         onRequestVariations={onRequestVariations}
+        onRequestI2iVariation={onRequestI2iVariation}
       />,
     );
   });

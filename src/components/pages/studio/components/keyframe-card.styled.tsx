@@ -234,3 +234,34 @@ export const VariationsButton = styled.button`
     color: ${FLOW.accent};
   }
 `;
+
+export const VaryButton = styled.button`
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  height: 20px;
+  padding: 0 8px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.7);
+  color: ${FLOW.accent};
+  font-family: ${FLOW.fontFamily};
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  &:disabled {
+    color: ${FLOW.textMuted};
+    cursor: not-allowed;
+  }
+
+  ${CardWrapper}:hover & {
+    opacity: 1;
+  }
+`;

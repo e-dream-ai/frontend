@@ -7,6 +7,7 @@ import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { useFlowStore } from "@/stores/flow.store";
 import { VariationGrid } from "./variation-grid";
+import { useUserApiEndpoints } from "@/api/user-api-endpoints/useUserApiEndpoints";
 import {
   CardWrapper,
   CardImage,
@@ -15,6 +16,7 @@ import {
   LoopBadge,
   DeleteButton,
   VariationsButton,
+  VaryButton,
   UploadOverlay,
   UploadRing,
   UploadRingTrack,
@@ -28,6 +30,7 @@ interface Props {
   index: number;
   onDelete?: (id: string) => void;
   onRequestVariations?: (keyframeId: string) => void;
+  onRequestI2iVariation?: (keyframe: FlowKeyframe) => void;
 }
 
 export const KeyframeCard: React.FC<Props> = ({
@@ -35,6 +38,7 @@ export const KeyframeCard: React.FC<Props> = ({
   index,
   onDelete,
   onRequestVariations,
+  onRequestI2iVariation,
 }) => {
   const isLoop = keyframe.isLoopKeyframe ?? false;
   const isUploading = keyframe.uploadStatus === "uploading";
@@ -47,6 +51,11 @@ export const KeyframeCard: React.FC<Props> = ({
     (s) => s.selectKeyframeVariation,
   );
 
+  // Whether the user has at least one image-to-image capable endpoint configured.
+  const { data: endpointsData } = useUserApiEndpoints();
+  const hasI2iEndpoints = (endpointsData?.data?.endpoints ?? []).some(
+    (ep) => ep.capabilities.imageToImage,
+  );
   const [imgSrc, setImgSrc] = useState(keyframe.imageUrl);
   const [showVariations, setShowVariations] = useState(false);
 
@@ -198,6 +207,24 @@ export const KeyframeCard: React.FC<Props> = ({
           >
             <Shuffle size={11} />
           </VariationsButton>
+        )}
+
+        {!isLoop && !isBusy && onRequestI2iVariation && (
+          <VaryButton
+            disabled={!hasI2iEndpoints}
+            title={
+              hasI2iEndpoints
+                ? "Generate image-to-image variations"
+                : "Configure an image-to-image endpoint in account settings to use this"
+            }
+            onClick={(e) => {
+              e.stopPropagation();
+              if (!hasI2iEndpoints) return;
+              onRequestI2iVariation(keyframe);
+            }}
+          >
+            Vary (i2i)
+          </VaryButton>
         )}
       </CardWrapper>
 
