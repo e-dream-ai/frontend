@@ -219,11 +219,13 @@ export const KeyframeStrip: React.FC<Props> = ({
         <VariationsSection>
           <VariationsLabel>Variations</VariationsLabel>
           <VariationsRow>
-            {candidateKeyframes.map((kf, i) => (
+            {candidateKeyframes.map((kf) => (
               <KeyframeCard
                 key={kf.id}
                 keyframe={kf}
-                index={i}
+                // `index` is unused for candidates: they show a "Variation"
+                // badge instead of a numbered label.
+                index={0}
                 onAcceptI2iCandidate={onAcceptI2iCandidate}
                 onDiscardI2iCandidate={onDiscardI2iCandidate}
               />
@@ -245,7 +247,10 @@ export const KeyframeStrip: React.FC<Props> = ({
           </AddButton>
         </AddButtons>
 
-        {rawKeyframes.length >= 2 && (
+        {/* Loop only engages when there are >= 2 real timeline keyframes;
+            i2i candidates are excluded from the transition derivation, so the
+            toggle must gate on the candidate-free count (matches displayKeyframes). */}
+        {timelineKeyframes.length >= 2 && (
           <LoopToggle>
             <LoopCheckbox
               type="checkbox"

@@ -3,6 +3,8 @@ import { useUserApiEndpoints } from "@/api/user-api-endpoints/useUserApiEndpoint
 import { useDeleteUserApiEndpoint } from "@/api/user-api-endpoints/useDeleteUserApiEndpoint";
 import { useTestUserApiEndpoint } from "@/api/user-api-endpoints/useTestUserApiEndpoint";
 import { AddEndpointModal } from "./add-endpoint-modal";
+import { ConfirmModal } from "@/components/modals/confirm.modal";
+import { Text } from "@/components/shared";
 import { toast } from "react-toastify";
 import type { UserApiEndpoint } from "@/types/user-api-endpoint.types";
 import {
@@ -34,19 +36,31 @@ export function ApiEndpointsSection() {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingEndpoint, setEditingEndpoint] =
     useState<UserApiEndpoint | null>(null);
+  const [deletingUuid, setDeletingUuid] = useState<string | null>(null);
 
   const endpoints = data?.data?.endpoints ?? [];
 
-  const handleDelete = useCallback(
-    (uuid: string) => {
-      if (!confirm("Delete this endpoint?")) return;
-      deleteMutation.mutate(uuid, {
-        onSuccess: () => toast.success("Endpoint deleted"),
-        onError: () => toast.error("Failed to delete endpoint"),
-      });
-    },
-    [deleteMutation],
-  );
+  const handleDelete = useCallback((uuid: string) => {
+    setDeletingUuid(uuid);
+  }, []);
+
+  const handleCancelDelete = useCallback(() => {
+    setDeletingUuid(null);
+  }, []);
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!deletingUuid) return;
+    deleteMutation.mutate(deletingUuid, {
+      onSuccess: () => {
+        toast.success("Endpoint deleted");
+        setDeletingUuid(null);
+      },
+      onError: () => {
+        toast.error("Failed to delete endpoint");
+        setDeletingUuid(null);
+      },
+    });
+  }, [deleteMutation, deletingUuid]);
 
   const handleTest = useCallback(
     (uuid: string) => {
@@ -132,6 +146,17 @@ export function ApiEndpointsSection() {
         isOpen={modalOpen}
         onClose={handleCloseModal}
         editingEndpoint={editingEndpoint}
+      />
+
+      <ConfirmModal
+        isOpen={deletingUuid !== null}
+        onCancel={handleCancelDelete}
+        onConfirm={handleConfirmDelete}
+        confirmButtonType="danger"
+        confirmText="Delete"
+        isConfirming={deleteMutation.isLoading}
+        title="Delete endpoint"
+        text={<Text>Delete this endpoint? This cannot be undone.</Text>}
       />
     </SectionContainer>
   );
