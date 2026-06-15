@@ -32,6 +32,9 @@ import {
   LoopToggle,
   LoopCheckbox,
   EmptyState,
+  VariationsSection,
+  VariationsLabel,
+  VariationsRow,
 } from "./keyframe-strip.styled";
 
 interface Props {
@@ -69,12 +72,27 @@ export const KeyframeStrip: React.FC<Props> = ({
   const transitions = useFlowStore((s) => s.transitions);
   const globalDuration = useFlowStore((s) => s.globalDuration);
 
-  // Derive display keyframes from raw data to avoid new-array-every-render
+  // i2i candidates are a staging area: they are excluded from the store's
+  // `transitions` derivation (see timelineKeyframesWithLoop in flow.store). The
+  // strip's timeline must be built from the SAME non-candidate list so the
+  // transition-gap index mapping (transitionIndex = i - 1) lines up with the
+  // `transitions` array. Candidates render separately, without gaps.
+  const timelineKeyframes = useMemo(
+    () => rawKeyframes.filter((kf) => !kf.i2iCandidate),
+    [rawKeyframes],
+  );
+  const candidateKeyframes = useMemo(
+    () => rawKeyframes.filter((kf) => kf.i2iCandidate),
+    [rawKeyframes],
+  );
+
+  // Derive display keyframes (timeline + synthetic loop frame) from the
+  // candidate-free list to avoid new-array-every-render.
   const displayKeyframes = useMemo(() => {
-    if (!loop || rawKeyframes.length < 2) return rawKeyframes;
-    const first = rawKeyframes[0];
+    if (!loop || timelineKeyframes.length < 2) return timelineKeyframes;
+    const first = timelineKeyframes[0];
     return [
-      ...rawKeyframes,
+      ...timelineKeyframes,
       {
         id: LOOP_KEYFRAME_ID,
         keyframeUuid: first.keyframeUuid,
@@ -84,7 +102,7 @@ export const KeyframeStrip: React.FC<Props> = ({
         isLoopKeyframe: true,
       },
     ];
-  }, [rawKeyframes, loop]);
+  }, [timelineKeyframes, loop]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -98,21 +116,28 @@ export const KeyframeStrip: React.FC<Props> = ({
       const { active, over } = event;
       if (!over || active.id === over.id) return;
 
-      const oldIndex = rawKeyframes.findIndex((kf) => kf.id === active.id);
-      const newIndex = rawKeyframes.findIndex((kf) => kf.id === over.id);
+      // Only timeline (non-candidate) keyframes are sortable.
+      const oldIndex = timelineKeyframes.findIndex((kf) => kf.id === active.id);
+      const newIndex = timelineKeyframes.findIndex((kf) => kf.id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
 
-      const newOrder = [...rawKeyframes];
+      const newOrder = [...timelineKeyframes];
       const [moved] = newOrder.splice(oldIndex, 1);
       newOrder.splice(newIndex, 0, moved);
-      reorderKeyframes(newOrder.map((kf) => kf.id));
+      // Preserve candidates (untouched by drag) so reorderKeyframes does not
+      // drop them — it rebuilds keyframes from the id list it receives.
+      reorderKeyframes([
+        ...newOrder.map((kf) => kf.id),
+        ...candidateKeyframes.map((kf) => kf.id),
+      ]);
     },
-    [rawKeyframes, reorderKeyframes],
+    [timelineKeyframes, candidateKeyframes, reorderKeyframes],
   );
 
-  // Build items with gaps interleaved
+  // Build items with gaps interleaved. Only timeline keyframes are sortable;
+  // candidates are excluded so they never participate in drag/gap interleaving.
   const stripItems: React.ReactNode[] = [];
-  const sortableIds = rawKeyframes.map((kf) => kf.id);
+  const sortableIds = timelineKeyframes.map((kf) => kf.id);
 
   displayKeyframes.forEach((kf, i) => {
     if (i > 0) {
@@ -188,6 +213,23 @@ export const KeyframeStrip: React.FC<Props> = ({
             <StripContainer>{stripItems}</StripContainer>
           </SortableContext>
         </DndContext>
+      )}
+
+      {candidateKeyframes.length > 0 && (
+        <VariationsSection>
+          <VariationsLabel>Variations</VariationsLabel>
+          <VariationsRow>
+            {candidateKeyframes.map((kf, i) => (
+              <KeyframeCard
+                key={kf.id}
+                keyframe={kf}
+                index={i}
+                onAcceptI2iCandidate={onAcceptI2iCandidate}
+                onDiscardI2iCandidate={onDiscardI2iCandidate}
+              />
+            ))}
+          </VariationsRow>
+        </VariationsSection>
       )}
 
       <StripControls>

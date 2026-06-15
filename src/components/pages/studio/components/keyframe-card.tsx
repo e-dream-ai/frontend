@@ -110,7 +110,9 @@ export const KeyframeCard: React.FC<Props> = ({
     id: keyframe.id,
     // Dragging a card mid-upload would re-key React and abort the visual
     // continuity of the preview, so lock it until the upload settles.
-    disabled: isLoop || isBusy,
+    // i2i candidates live in a separate staging row and are not part of the
+    // timeline, so reordering them is meaningless — keep them non-draggable.
+    disabled: isLoop || isBusy || isCandidate,
   });
 
   const style = {
@@ -142,7 +144,9 @@ export const KeyframeCard: React.FC<Props> = ({
         $uploading={isUploading}
         $failed={isFailed}
         $candidate={isCandidate}
-        {...(isLoop || isBusy ? {} : { ...attributes, ...listeners })}
+        {...(isLoop || isBusy || isCandidate
+          ? {}
+          : { ...attributes, ...listeners })}
       >
         {imgSrc ? (
           <CardImage
