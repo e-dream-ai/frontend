@@ -75,6 +75,15 @@ export function TransitionSettingsPanel({
 
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
+  // i2i candidates are a staging area excluded from the store's `transitions`
+  // derivation, so gate/look up against the non-candidate list only — otherwise
+  // a single real keyframe + a candidate would render this panel with zero
+  // real transitions (matches keyframe-strip's timelineKeyframes filter).
+  const realKeyframes = useMemo(
+    () => keyframes.filter((kf) => !kf.i2iCandidate),
+    [keyframes],
+  );
+
   // Per-transition mode?
   const isPerTransition = selectedTransitionIndex !== null;
   const selectedTransition =
@@ -293,14 +302,14 @@ export function TransitionSettingsPanel({
 
   const generateOneDisabled = isGenerating || needsPrompt;
 
-  // Don't show if fewer than 2 keyframes
-  if (keyframes.length < 2) return null;
+  // Don't show if fewer than 2 real (non-candidate) keyframes
+  if (realKeyframes.length < 2) return null;
 
-  // Transition header info — __loop__ maps back to the first keyframe
+  // Transition header info — __loop__ maps back to the first real keyframe
   const findName = (id: string | undefined) =>
     id === LOOP_KEYFRAME_ID
-      ? keyframes[0]?.name
-      : keyframes.find((kf) => kf.id === id)?.name;
+      ? realKeyframes[0]?.name
+      : realKeyframes.find((kf) => kf.id === id)?.name;
   const fromName =
     selectedTransition && findName(selectedTransition.fromKeyframeId);
   const toName =
