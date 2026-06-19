@@ -329,30 +329,29 @@ export const DeleteButton = styled.button`
   }
 `;
 
+// Per-keyframe "Vary" trigger — a circular shuffle icon button (bottom-right),
+// revealed on hover. Generates i2i/t2i variation candidates for this frame.
 export const VaryButton = styled.button`
   position: absolute;
   bottom: 4px;
   right: 4px;
-  height: 20px;
-  padding: 0 8px;
-  border-radius: 10px;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
   background: rgba(0, 0, 0, 0.7);
-  color: ${FLOW.accent};
-  font-family: ${FLOW.fontFamily};
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.04em;
+  color: ${FLOW.textDim};
   display: flex;
   align-items: center;
   justify-content: center;
   border: none;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s;
+  transition:
+    opacity 0.2s,
+    color 0.2s;
 
-  &:disabled {
-    color: ${FLOW.textMuted};
-    cursor: not-allowed;
+  &:hover {
+    color: ${FLOW.accent};
   }
 
   ${CardWrapper}:hover & {

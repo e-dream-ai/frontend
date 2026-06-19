@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Shuffle } from "lucide-react";
 import type { FlowKeyframe } from "@/types/flow.types";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
@@ -252,7 +252,7 @@ export const KeyframeCard: React.FC<Props> = ({
             onRequestI2iVariation(keyframe);
           }}
         >
-          Vary
+          <Shuffle size={12} />
         </VaryButton>
       )}
     </CardWrapper>
