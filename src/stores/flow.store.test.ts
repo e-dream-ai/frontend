@@ -431,6 +431,24 @@ describe("Phase 1: transitions", () => {
       expect(transitions[1].status).toBe("failed");
     });
 
+    it("keeps in-flight transitions that have a dreamUuid (recoverable) so polling can recover them", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframe(makeKf("b"));
+      store.recomputeTransitions();
+
+      // A transition with a real backend job, still cooking.
+      store.setTransitionDream(0, "dream-123");
+      store.updateTransitionStatus(0, "processing", 50);
+
+      store.reconcileStaleTransitions();
+
+      const { transitions } = useFlowStore.getState();
+      // Recoverable: left in-flight, not failed.
+      expect(transitions[0].status).toBe("processing");
+      expect(transitions[0].dreamUuid).toBe("dream-123");
+    });
+
     it("does not reset processed or idle transitions", () => {
       const store = useFlowStore.getState();
       store.addKeyframe(makeKf("a"));

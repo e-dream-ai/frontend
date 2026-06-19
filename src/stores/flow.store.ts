@@ -344,26 +344,49 @@ export const useFlowStore = create<FlowStoreState>()(
         })),
 
       reconcileStaleTransitions: () =>
-        set((s) => ({
-          transitions: s.transitions.map((t) => {
-            const dreamStale =
-              t.status === "processing" || t.status === "queue";
-            const uprezStale =
-              t.uprezStatus === "processing" || t.uprezStatus === "queue";
-            if (!dreamStale && !uprezStale) return t;
-            return {
-              ...t,
-              ...(dreamStale && {
-                status: "failed" as const,
-                progress: undefined,
-              }),
-              ...(uprezStale && {
-                uprezStatus: "failed" as const,
-                uprezProgress: undefined,
-              }),
-            };
-          }),
-        })),
+        set((s) => {
+          // Only fail in-flight work that has NO backend job to recover (no
+          // dreamUuid). Items WITH a dreamUuid are left in queue/processing so
+          // the polling hook (useFlowJobProgress) re-attaches and recovers their
+          // real status after a reload / session switch — work cooking in
+          // another session must survive switching back and forth.
+          const reconcileVariations = (vars?: VariationCandidate[]) =>
+            vars?.map((v) =>
+              (v.status === "queue" || v.status === "processing") &&
+              !v.dreamUuid
+                ? { ...v, status: "failed" as const, progress: undefined }
+                : v,
+            );
+          return {
+            transitions: s.transitions.map((t) => {
+              const dreamInFlight =
+                t.status === "processing" || t.status === "queue";
+              const uprezInFlight =
+                t.uprezStatus === "processing" || t.uprezStatus === "queue";
+              return {
+                ...t,
+                ...(dreamInFlight &&
+                  !t.dreamUuid && {
+                    status: "failed" as const,
+                    progress: undefined,
+                  }),
+                ...(uprezInFlight &&
+                  !t.uprezDreamUuid && {
+                    uprezStatus: "failed" as const,
+                    uprezProgress: undefined,
+                  }),
+                ...(t.variations && {
+                  variations: reconcileVariations(t.variations),
+                }),
+              };
+            }),
+            keyframes: s.keyframes.map((kf) =>
+              kf.variations
+                ? { ...kf, variations: reconcileVariations(kf.variations) }
+                : kf,
+            ),
+          };
+        }),
 
       // Variation actions — keyframes
       addKeyframeVariations: (keyframeId, candidates) =>

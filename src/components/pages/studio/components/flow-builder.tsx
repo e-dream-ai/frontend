@@ -8,8 +8,11 @@ import { FLOW } from "@/constants/flow-theme.constants";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import { axiosClient } from "@/client/axios.client";
 import type { VariationCandidate } from "@/types/flow.types";
+import { getVariationPreset } from "../constants/variation-presets";
+import { expandPrompt } from "../utils/expand-prompt";
 import { KeyframeStrip } from "./keyframe-strip";
 import { TransitionSettingsPanel } from "./transition-settings-panel";
+import { VariationSettingsPanel } from "./variation-settings-panel";
 import { FlowPreview } from "./flow-preview";
 import { FlowActionBar } from "./flow-action-bar";
 import { AddKeyframesFromPlaylistModal } from "./add-keyframes-from-playlist-modal";
@@ -129,23 +132,74 @@ export const FlowBuilder: React.FC = () => {
   const handleKeyframeVariations = useCallback(async (keyframeId: string) => {
     // Read image generation settings at call time (NOT via React subscription)
     // to keep callback identity stable across settings keystrokes.
-    const { imagePrompt, imageGenParams } = useStudioStore.getState();
+    const {
+      imagePrompt,
+      imageGenParams,
+      variationPresetId,
+      variationCustomPrompt,
+      variationSeed,
+    } = useStudioStore.getState();
     const keyframe = useFlowStore
       .getState()
       .keyframes.find((kf) => kf.id === keyframeId);
     if (!keyframe) return;
 
-    const VARIATION_COUNT = 4;
-    const baseSeed = Math.floor(Math.random() * 99_000) + 1;
+    // Custom prompt (Customize section) overrides the canned preset: split per
+    // line and apply {a|b|c} expansion to each line. Falls back to the preset.
+    // Custom prompts (Customize section) override the preset when present: split
+    // per line and apply {a|b|c} expansion to each line.
+    const customModifiers = variationCustomPrompt
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .flatMap((line) => expandPrompt(line));
+    const modifiers = (
+      customModifiers.length > 0
+        ? customModifiers
+        : getVariationPreset(variationPresetId).modifiers
+    ).slice(0, 8);
 
-    // Build placeholder candidates up-front so the grid appears immediately.
+    const VARIATION_COUNT = modifiers.length;
+    // The user's seed is the anchor (stable across a batch — variation comes
+    // from the prompt). Each +More batch is offset by the count of variations
+    // already present, so pressing +More yields NEW images rather than
+    // regenerating the same seed/prompt, while staying reproducible.
+    const existingCount = keyframe.variations?.length ?? 0;
+    const baseSeed = variationSeed + existingCount;
+
+    // Use the SOURCE image's own prompt as the base so variations stay on-theme.
+    // Without this the tool fell back to the keyframe name and produced generic
+    // qwen output. The original prompt is stored as algoParams JSON on the dream.
+    let originalPrompt = "";
+    if (keyframe.dreamUuid) {
+      try {
+        const { data } = await axiosClient.get(
+          `/v1/dream/${keyframe.dreamUuid}`,
+        );
+        const rawPrompt = data?.data?.dream?.prompt;
+        if (typeof rawPrompt === "string" && rawPrompt) {
+          try {
+            originalPrompt = JSON.parse(rawPrompt)?.prompt || "";
+          } catch {
+            originalPrompt = rawPrompt;
+          }
+        }
+      } catch (err) {
+        Bugsnag.notify(err as Error);
+      }
+    }
+    const basePrompt = originalPrompt || imagePrompt || keyframe.name;
+
+    // Layer a canned variation modifier onto the source prompt so the set is
+    // meaningfully different (not generic seed jitter), and keep the seed STABLE
+    // across the set so the difference comes from the prompt.
     const candidates: VariationCandidate[] = Array.from(
       { length: VARIATION_COUNT },
       (_, i) => ({
         id: uuidv4(),
-        method: "seed" as const,
-        prompt: imagePrompt || keyframe.name,
-        seed: baseSeed + i,
+        method: "expansion" as const,
+        prompt: `${basePrompt}, ${modifiers[i % modifiers.length]}`,
+        seed: baseSeed,
         status: "queue" as const,
       }),
     );
@@ -154,7 +208,7 @@ export const FlowBuilder: React.FC = () => {
 
     // Fire all API calls in parallel — never sequential for-loop.
     await Promise.all(
-      candidates.map(async (candidate) => {
+      candidates.map(async (candidate, i) => {
         const algoParams = {
           infinidream_algorithm: imageGenParams.model,
           prompt: candidate.prompt,
@@ -164,7 +218,7 @@ export const FlowBuilder: React.FC = () => {
 
         try {
           const { data } = await axiosClient.post("/v1/dream", {
-            name: `${keyframe.name} v${candidate.seed}`,
+            name: `${keyframe.name} v${i + 1}`,
             prompt: JSON.stringify(algoParams),
             description: "Keyframe variation",
           });
@@ -232,6 +286,8 @@ export const FlowBuilder: React.FC = () => {
 
       <FlowPreview />
       <FlowActionBar />
+
+      <VariationSettingsPanel />
 
       <input
         ref={fileInputRef}

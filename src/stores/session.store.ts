@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
 import { useFlowStore } from "./flow.store";
-import { useStudioStore } from "./studio.store";
+import { useStudioStore, DEFAULT_VARIATION_SEED } from "./studio.store";
 import { useStudioModeStore } from "./studio-mode.store";
+import { DEFAULT_VARIATION_PRESET_ID } from "@/components/pages/studio/constants/variation-presets";
 import type { StudioSession } from "@/types/session.types";
 import {
   MAX_SESSIONS,
@@ -210,6 +211,9 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
           activeTab: batchRaw.activeTab,
           imagePrompt: batchRaw.imagePrompt,
           imageGenParams: batchRaw.imageGenParams,
+          variationPresetId: batchRaw.variationPresetId,
+          variationCustomPrompt: batchRaw.variationCustomPrompt,
+          variationSeed: batchRaw.variationSeed,
           images: batchRaw.images,
           actions: batchRaw.actions,
           videoGenParams: batchRaw.videoGenParams,
@@ -300,8 +304,9 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
         settingsExpanded: false,
         previewLightboxOpen: false,
       });
-      // Order matters: reconcile first (mark stale in-flight as failed),
-      // then recompute (rebuild transition list from keyframes).
+      // Order matters: reconcile first (fail only UNRECOVERABLE in-flight work
+      // — items with no dreamUuid; recoverable ones keep their queue/processing
+      // status so polling re-attaches), then recompute the transition list.
       useFlowStore.getState().reconcileStaleTransitions();
       useFlowStore.getState().recomputeTransitions();
     } else {
@@ -314,9 +319,15 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
         string,
         unknown
       >;
-      useStudioStore.setState(
-        batchRevived as Parameters<typeof useStudioStore.setState>[0],
-      );
+      // Default the variation settings first so sessions saved before these
+      // fields existed don't leak the previous session's values; the session's
+      // own saved values (if any) override.
+      useStudioStore.setState({
+        variationPresetId: DEFAULT_VARIATION_PRESET_ID,
+        variationCustomPrompt: "",
+        variationSeed: DEFAULT_VARIATION_SEED,
+        ...batchRevived,
+      } as Parameters<typeof useStudioStore.setState>[0]);
     } else {
       useStudioStore.getState().resetSession();
     }

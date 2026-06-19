@@ -5,6 +5,8 @@ import { axiosClient } from "@/client/axios.client";
 import type { StudioImage, ImageModel } from "@/types/studio.types";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
+import { expandPrompt } from "../utils/expand-prompt";
+import { PromptExpansionBadge } from "./prompt-expansion-badge";
 import {
   SIZE_OPTIONS,
   IMAGE_COUNT_OPTIONS,
@@ -89,43 +91,55 @@ export const ImagesTab: React.FC = () => {
     const baseSeed = Math.floor(Math.random() * 99_000) + 1;
     const currentImageCount = useStudioStore.getState().images.length;
 
-    const promises = Array.from(
-      { length: imageGenParams.seedCount },
-      (_, i) => {
-        const seed = baseSeed + i;
-        const algoParams = {
-          infinidream_algorithm: imageGenParams.model,
-          prompt: imagePrompt,
-          size: imageGenParams.size,
-          seed,
-        };
+    // Expand {A|B|C} syntax into distinct prompts so a single template fans out
+    // into meaningfully different images. Each expanded prompt is then rendered
+    // across `seedCount` seeds. A plain prompt expands to itself ([prompt]).
+    const expandedPrompts = expandPrompt(imagePrompt);
 
-        return axiosClient
-          .post("/v1/dream", {
-            name: `${MODEL_LABELS[imageGenParams.model]} ${
-              currentImageCount + i + 1
-            }`,
-            prompt: JSON.stringify(algoParams),
-            description: "Studio generated image",
-          })
-          .then(({ data }) => {
-            const dream = data.data?.dream;
-            if (!dream) return;
-            addImage({
-              uuid: dream.uuid,
-              url: dream.thumbnail || "",
-              name: dream.name,
-              seed,
-              size: imageGenParams.size,
-              status: (dream.status as StudioImage["status"]) || "queue",
-              selected: false,
-            });
-          })
-          .catch((err) => {
-            console.error("Failed to create image:", err);
-          });
-      },
+    // Seed is stable across the prompt-expansion dimension: every expanded
+    // prompt is rendered at the SAME seed slot, so the difference between
+    // variations comes from the prompt, not the seed. The seedCount dimension
+    // still adds extra seeds per prompt.
+    const jobs = expandedPrompts.flatMap((prompt) =>
+      Array.from({ length: imageGenParams.seedCount }, (_, sIdx) => ({
+        prompt,
+        seed: baseSeed + sIdx,
+      })),
     );
+
+    const promises = jobs.map(({ prompt, seed }, idx) => {
+      const algoParams = {
+        infinidream_algorithm: imageGenParams.model,
+        prompt,
+        size: imageGenParams.size,
+        seed,
+      };
+
+      return axiosClient
+        .post("/v1/dream", {
+          name: `${MODEL_LABELS[imageGenParams.model]} ${
+            currentImageCount + idx + 1
+          }`,
+          prompt: JSON.stringify(algoParams),
+          description: "Studio generated image",
+        })
+        .then(({ data }) => {
+          const dream = data.data?.dream;
+          if (!dream) return;
+          addImage({
+            uuid: dream.uuid,
+            url: dream.thumbnail || "",
+            name: dream.name,
+            seed,
+            size: imageGenParams.size,
+            status: (dream.status as StudioImage["status"]) || "queue",
+            selected: false,
+          });
+        })
+        .catch((err) => {
+          console.error("Failed to create image:", err);
+        });
+    });
 
     await Promise.all(promises);
     setIsGenerating(false);
@@ -183,10 +197,11 @@ export const ImagesTab: React.FC = () => {
       <GenerateSection>
         <SectionTitle>Generate New Images</SectionTitle>
         <PromptTextarea
-          placeholder="Describe the image you want to generate..."
+          placeholder="Describe the image you want to generate... use {a|b|c} to make variations"
           value={imagePrompt}
           onChange={(e) => setImagePrompt(e.target.value)}
         />
+        <PromptExpansionBadge prompt={imagePrompt} />
         <FormRow>
           <FormField>
             <FieldLabel>Model:</FieldLabel>

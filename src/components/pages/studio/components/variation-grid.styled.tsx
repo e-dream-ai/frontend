@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 
 export const GridContainer = styled.div`
-  padding: 12px 0;
+  padding: 16px;
   animation: fadeSlideUp 0.3s ease;
 
   @keyframes fadeSlideUp {
@@ -20,7 +20,7 @@ export const GridContainer = styled.div`
 export const Grid = styled.div<{ $columns: number }>`
   display: grid;
   grid-template-columns: repeat(${(p) => p.$columns}, 1fr);
-  gap: 8px;
+  gap: 12px;
   max-width: 480px;
 `;
 
