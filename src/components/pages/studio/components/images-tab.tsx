@@ -193,7 +193,13 @@ export const ImagesTab: React.FC = () => {
 
     await Promise.all(promises);
     setIsGenerating(false);
-  }, [imagePrompt, imageGenParams, selectedEndpoint, addImage, setIsGenerating]);
+  }, [
+    imagePrompt,
+    imageGenParams,
+    selectedEndpoint,
+    addImage,
+    setIsGenerating,
+  ]);
 
   const handleUploadFiles = useCallback(
     async (files: File[]) => {
@@ -258,7 +264,9 @@ export const ImagesTab: React.FC = () => {
           <FormField>
             <FieldLabel>Model:</FieldLabel>
             <StyledSelect
-              value={selectedEndpoint ? selectedEndpoint.uuid : imageGenParams.model}
+              value={
+                selectedEndpoint ? selectedEndpoint.uuid : imageGenParams.model
+              }
               onChange={(e) => {
                 const value = e.target.value;
                 const endpoint = userEndpoints.find((ep) => ep.uuid === value);
