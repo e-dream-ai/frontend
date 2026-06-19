@@ -24,6 +24,9 @@ import {
   UploadRingFill,
   UploadPercent,
   FailedOverlay,
+  GeneratingOverlay,
+  GeneratingSpinner,
+  GeneratingLabel,
 } from "./keyframe-card.styled";
 
 interface Props {
@@ -48,6 +51,12 @@ export const KeyframeCard: React.FC<Props> = ({
   const isUploading = keyframe.uploadStatus === "uploading";
   const isFailed = keyframe.uploadStatus === "failed";
   const isBusy = isUploading || isFailed;
+  // A candidate whose own dream is still rendering. Show a loader instead of the
+  // placeholder source image (which is identical across a batch and reads as
+  // frozen); job progress swaps in the distinct result once processed.
+  const isGenerating =
+    isCandidate &&
+    (keyframe.i2iStatus === "queue" || keyframe.i2iStatus === "processing");
 
   const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
 
@@ -168,6 +177,13 @@ export const KeyframeCard: React.FC<Props> = ({
         </FailedOverlay>
       )}
 
+      {isGenerating && (
+        <GeneratingOverlay role="status" aria-label="Generating variation">
+          <GeneratingSpinner />
+          <GeneratingLabel>Generating…</GeneratingLabel>
+        </GeneratingOverlay>
+      )}
+
       {/* Index / loop label sits bottom-left. Not shown for candidates —
           they get their own top-left badge so it can't collide with the
           bottom-right Accept/Discard actions on narrow cards. */}
@@ -189,6 +205,7 @@ export const KeyframeCard: React.FC<Props> = ({
 
       {isCandidate &&
         !isBusy &&
+        !isGenerating &&
         (onAcceptI2iCandidate || onDiscardI2iCandidate) && (
           <CandidateActions>
             {onAcceptI2iCandidate && (

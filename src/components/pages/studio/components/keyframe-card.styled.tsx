@@ -6,6 +6,10 @@ const errorBreathe = keyframes`
   50%      { box-shadow: 0 0 0 6px transparent; }
 `;
 
+const spin = keyframes`
+  to { transform: rotate(360deg); }
+`;
+
 export const CardWrapper = styled.div<{
   $loop?: boolean;
   $isDragging?: boolean;
@@ -132,6 +136,41 @@ export const UploadPercent = styled.span`
   letter-spacing: 0.06em;
   color: ${FLOW.accent};
   font-variant-numeric: tabular-nums;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
+`;
+
+// i2i candidate "generating" state — an indeterminate gold spinner over a
+// dimmed card, so a varying candidate reads as working rather than showing a
+// frozen copy of its source image while its own result is still rendering.
+export const GeneratingOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: rgba(12, 12, 14, 0.55);
+  backdrop-filter: blur(1px);
+  pointer-events: none;
+`;
+
+export const GeneratingSpinner = styled.div`
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 2px solid rgba(212, 168, 83, 0.22);
+  border-top-color: ${FLOW.accent};
+  animation: ${spin} 0.8s linear infinite;
+`;
+
+export const GeneratingLabel = styled.span`
+  font-family: ${FLOW.fontFamily};
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${FLOW.accent};
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6);
 `;
 

@@ -43,6 +43,9 @@ type PendingEntry = {
   variationType?: "keyframe" | "transition";
   variationKeyframeId?: string;
   variationId?: string;
+  // i2i candidate tracking — when set, the entry is a staged i2i candidate
+  // keyframe (top-level keyframe with i2iParentId), not a kf.variations entry.
+  i2iCandidateId?: string;
 };
 
 export function useFlowJobProgress() {
@@ -101,6 +104,22 @@ export function useFlowJobProgress() {
           });
         }
       });
+
+      // i2i candidate keyframes — staged top-level keyframes whose own dream is
+      // still generating. Track them so we can swap the placeholder source image
+      // for each candidate's distinct result once it is processed.
+      if (
+        kf.i2iCandidate &&
+        kf.dreamUuid &&
+        (kf.i2iStatus === "queue" || kf.i2iStatus === "processing")
+      ) {
+        entries.push({
+          uuid: kf.dreamUuid,
+          index: -1,
+          isUprez: false,
+          i2iCandidateId: kf.id,
+        });
+      }
     });
 
     const uuids = entries.map((e) => e.uuid);
@@ -125,6 +144,38 @@ export function useFlowJobProgress() {
 
         const mappedStatus = mapStatus(data.status ?? "");
         if (!mappedStatus) return;
+
+        // i2i candidate keyframe progress — swap the placeholder source image
+        // for this candidate's own result once its dream is processed.
+        if (entry.i2iCandidateId) {
+          const patch: {
+            i2iStatus: typeof mappedStatus;
+            imageUrl?: string;
+          } = { i2iStatus: mappedStatus };
+          if (mappedStatus === "processed") {
+            try {
+              const headers = getRequestHeaders({
+                contentType: ContentType.json,
+              });
+              const { data: dreamData } = await axiosClient.get(
+                `/v1/dream/${uuid}`,
+                { headers },
+              );
+              const dream = dreamData?.data?.dream;
+              if (dream) {
+                patch.imageUrl =
+                  dream.video || dream.original_video || dream.thumbnail || "";
+              }
+            } catch {
+              // Non-fatal — imageUrl will be resolved by the next poll cycle.
+            }
+            // If the result URL didn't resolve, stay pending so the poll
+            // fallback retries instead of freezing on the placeholder image.
+            if (!patch.imageUrl) patch.i2iStatus = "processing";
+          }
+          useFlowStore.getState().updateKeyframe(entry.i2iCandidateId, patch);
+          return;
+        }
 
         // Variation candidate progress
         if (entry.variationType && entry.variationId) {
@@ -262,6 +313,21 @@ export function useFlowJobProgress() {
 
           const mappedStatus = mapStatus(dream.status);
           if (!mappedStatus) continue;
+
+          // i2i candidate keyframe — swap the placeholder source image for this
+          // candidate's own result once processed.
+          if (entry.i2iCandidateId) {
+            const patch: {
+              i2iStatus: typeof mappedStatus;
+              imageUrl?: string;
+            } = { i2iStatus: mappedStatus };
+            if (mappedStatus === "processed") {
+              patch.imageUrl =
+                dream.video || dream.original_video || dream.thumbnail || "";
+            }
+            useFlowStore.getState().updateKeyframe(entry.i2iCandidateId, patch);
+            continue;
+          }
 
           // Variation candidate — update with status + imageUrl when processed
           if (entry.variationType && entry.variationId) {

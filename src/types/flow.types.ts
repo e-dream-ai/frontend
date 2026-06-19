@@ -20,6 +20,10 @@ export interface FlowKeyframe {
   // derivation (and therefore from generation) until the user accepts one.
   i2iCandidate?: boolean;
   i2iParentId?: string; // FlowKeyframe.id this candidate was varied from
+  // Generation status of a candidate's own i2i/t2i dream. While "queue"/
+  // "processing" the card shows the parent's source image as a placeholder;
+  // job progress swaps in this candidate's distinct result once "processed".
+  i2iStatus?: "queue" | "processing" | "processed" | "failed";
 
   // Local-only upload state — never persisted to backend.
   uploadStatus?: "uploading" | "failed";

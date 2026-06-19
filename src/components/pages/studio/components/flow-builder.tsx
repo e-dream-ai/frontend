@@ -275,17 +275,21 @@ export const FlowBuilder: React.FC = () => {
             if (!dreamUuid) {
               throw new Error("No dream UUID returned from API");
             }
-            // Settle the placeholder into a real, queued keyframe.
+            // Settle the placeholder into a real, queued candidate. i2iStatus
+            // marks it pending so job progress polls the dream and swaps in this
+            // candidate's distinct result once it finishes generating.
             updateKeyframe(id, {
               dreamUuid,
               uploadStatus: undefined,
               uploadProgress: undefined,
+              i2iStatus: "queue",
             });
           } catch (err) {
             Bugsnag.notify(err as Error);
             updateKeyframe(id, {
               uploadStatus: "failed",
               uploadProgress: undefined,
+              i2iStatus: "failed",
             });
           }
         }),
