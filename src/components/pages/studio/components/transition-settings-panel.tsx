@@ -93,6 +93,7 @@ export function TransitionSettingsPanel({
   const currentDuration =
     selectedTransition?.durationOverride ?? globalDuration;
   const currentModel = selectedTransition?.modelOverride ?? globalModel;
+  const isKlingModel = currentModel.startsWith("kling");
   const currentSteps =
     selectedTransition?.numInferenceStepsOverride ?? globalNumInferenceSteps;
   const currentGuidance =
@@ -495,14 +496,12 @@ export function TransitionSettingsPanel({
 
             <AdvancedToggle onClick={() => setAdvancedOpen(!advancedOpen)}>
               {advancedOpen ? "\u25BE" : "\u25B8"} Advanced
-              {currentModel !== "kling-i2v"
-                ? " (steps, guidance)"
-                : " (guidance)"}
+              {isKlingModel ? " (guidance)" : " (steps, guidance)"}
             </AdvancedToggle>
 
             {advancedOpen && (
               <AdvancedFields>
-                {currentModel !== "kling-i2v" && (
+                {!isKlingModel && (
                   <FieldGroup>
                     <FieldLabel>Steps</FieldLabel>
                     <NumberInput
