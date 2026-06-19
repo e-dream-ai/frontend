@@ -1,7 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
-import type { LoRAConfig } from "@/types/studio.types";
+import type { LoRAConfig, VideoModel } from "@/types/studio.types";
+import { useModels } from "@/api/model/query/useModels";
 import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
 import {
   getAllowedDurationsForActions,
@@ -36,8 +37,6 @@ interface TransitionSettingsPanelProps {
   isGenerating: boolean;
 }
 
-const FORCED_MODEL = "ltx-i2v" as const;
-
 export function TransitionSettingsPanel({
   onGenerateAll,
   onGenerateOne,
@@ -53,6 +52,7 @@ export function TransitionSettingsPanel({
     globalPrompt,
     globalNegativePrompt,
     globalDuration,
+    globalModel,
     globalNumInferenceSteps,
     globalGuidance,
     globalLora,
@@ -66,11 +66,15 @@ export function TransitionSettingsPanel({
       globalPrompt: s.globalPrompt,
       globalNegativePrompt: s.globalNegativePrompt,
       globalDuration: s.globalDuration,
+      globalModel: s.globalModel,
       globalNumInferenceSteps: s.globalNumInferenceSteps,
       globalGuidance: s.globalGuidance,
       globalLora: s.globalLora,
     })),
   );
+
+  const { data: modelsData } = useModels({ mediaType: "video" });
+  const modelOptions = modelsData?.data?.models ?? [];
 
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
@@ -88,7 +92,7 @@ export function TransitionSettingsPanel({
     selectedTransition?.negativePromptOverride ?? globalNegativePrompt;
   const currentDuration =
     selectedTransition?.durationOverride ?? globalDuration;
-  const currentModel = FORCED_MODEL;
+  const currentModel = selectedTransition?.modelOverride ?? globalModel;
   const currentSteps =
     selectedTransition?.numInferenceStepsOverride ?? globalNumInferenceSteps;
   const currentGuidance =
@@ -161,6 +165,7 @@ export function TransitionSettingsPanel({
     promptOverride: string;
     negativePromptOverride: string;
     durationOverride: number;
+    modelOverride: VideoModel;
     numInferenceStepsOverride: number;
     guidanceOverride: number;
   };
@@ -185,6 +190,9 @@ export function TransitionSettingsPanel({
           break;
         case "durationOverride":
           store.setGlobalDuration(value as number);
+          break;
+        case "modelOverride":
+          store.setGlobalModel(value as VideoModel);
           break;
         case "numInferenceStepsOverride":
           store.setGlobalNumInferenceSteps(value as number);
@@ -233,6 +241,23 @@ export function TransitionSettingsPanel({
       isPerTransition,
       selectedTransitionIndex,
     ],
+  );
+
+  const handleModelChange = useCallback(
+    (model: VideoModel) => {
+      setValue("modelOverride", model);
+
+      const action = resolvePresetAction(currentPresetId);
+      const newAllowed = getAllowedDurationsForActions(
+        action ? [action] : [],
+        model,
+      );
+      const clamped = clampDurationToAllowed(currentDuration, newAllowed);
+      if (clamped !== currentDuration) {
+        setValue("durationOverride", clamped);
+      }
+    },
+    [currentPresetId, currentDuration, setValue],
   );
 
   const handleLoraChange = useCallback(
@@ -330,6 +355,22 @@ export function TransitionSettingsPanel({
 
       {/* Collapsed view */}
       <FieldRow>
+        {modelOptions.length > 0 && (
+          <FieldGroup>
+            <FieldLabel>Model</FieldLabel>
+            <Select
+              value={currentModel}
+              onChange={(e) => handleModelChange(e.target.value as VideoModel)}
+            >
+              {modelOptions.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label}
+                </option>
+              ))}
+            </Select>
+          </FieldGroup>
+        )}
+
         <FieldGroup>
           <FieldLabel>Preset</FieldLabel>
           <Select
@@ -453,26 +494,31 @@ export function TransitionSettingsPanel({
             </FieldRow>
 
             <AdvancedToggle onClick={() => setAdvancedOpen(!advancedOpen)}>
-              {advancedOpen ? "\u25BE" : "\u25B8"} Advanced (steps, guidance)
+              {advancedOpen ? "\u25BE" : "\u25B8"} Advanced
+              {currentModel !== "kling-i2v"
+                ? " (steps, guidance)"
+                : " (guidance)"}
             </AdvancedToggle>
 
             {advancedOpen && (
               <AdvancedFields>
-                <FieldGroup>
-                  <FieldLabel>Steps</FieldLabel>
-                  <NumberInput
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={currentSteps}
-                    onChange={(e) =>
-                      setValue(
-                        "numInferenceStepsOverride",
-                        Number(e.target.value),
-                      )
-                    }
-                  />
-                </FieldGroup>
+                {currentModel !== "kling-i2v" && (
+                  <FieldGroup>
+                    <FieldLabel>Steps</FieldLabel>
+                    <NumberInput
+                      type="number"
+                      min={1}
+                      max={100}
+                      value={currentSteps}
+                      onChange={(e) =>
+                        setValue(
+                          "numInferenceStepsOverride",
+                          Number(e.target.value),
+                        )
+                      }
+                    />
+                  </FieldGroup>
+                )}
                 <FieldGroup>
                   <FieldLabel>Guidance</FieldLabel>
                   <NumberInput

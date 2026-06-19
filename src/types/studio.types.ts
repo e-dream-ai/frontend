@@ -25,11 +25,11 @@ export interface StudioAction {
   lowNoiseLoras?: LoRAConfig[];
 }
 
-export type VideoModel = "wan-i2v" | "ltx-i2v";
+export type VideoModel = "wan-i2v" | "ltx-i2v" | "kling-i2v";
 
 export type UprezModel = "uprez";
 
-export type StudioJobType = "wan-i2v" | "ltx-i2v" | "uprez";
+export type StudioJobType = "wan-i2v" | "ltx-i2v" | "kling-i2v" | "uprez";
 
 export interface StudioJob {
   imageId: string;

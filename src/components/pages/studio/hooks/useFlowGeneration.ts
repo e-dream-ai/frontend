@@ -50,11 +50,10 @@ export function useFlowGeneration() {
       const toKf = store.keyframes.find(
         (kf) => kf.id === transition.toKeyframeId,
       );
-      // LTX is the only working model — always generate i2v with an end frame.
       const endImageRef = toKf ? toKf.dreamUuid || toKf.imageUrl : undefined;
 
       const algoParams = buildVideoAlgoParams({
-        model: "ltx-i2v",
+        model: settings.model,
         action: settings.action,
         imageUuid: imageRef,
         endImageUuid: endImageRef,
