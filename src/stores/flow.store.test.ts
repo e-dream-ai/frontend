@@ -440,9 +440,7 @@ describe("Phase 1: transitions", () => {
       const store = useFlowStore.getState();
       store.addKeyframe(makeKf("a"));
       store.addI2iCandidates("a", [makeKf("c1")]);
-      const cand = useFlowStore
-        .getState()
-        .keyframes.find((k) => k.id === "c1");
+      const cand = useFlowStore.getState().keyframes.find((k) => k.id === "c1");
       expect(cand?.i2iCandidate).toBe(true);
       expect(cand?.i2iParentId).toBe("a");
     });

@@ -106,7 +106,8 @@ export const ActionBtn = styled.button<{ $danger?: boolean }>`
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid #333;
   border-radius: 6px;
-  color: ${(p) => (p.$danger ? "#ef4444" : p.theme.textSecondaryColor || "#aaa")};
+  color: ${(p) =>
+    p.$danger ? "#ef4444" : p.theme.textSecondaryColor || "#aaa"};
   padding: 0.375rem 0.625rem;
   font-size: 0.75rem;
   cursor: pointer;

@@ -66,8 +66,7 @@ export function ApiEndpointsSection() {
     (uuid: string) => {
       testMutation.mutate(uuid, {
         onSuccess: () => toast.success("Connection successful"),
-        onError: (err) =>
-          toast.error(err.message || "Connection failed"),
+        onError: (err) => toast.error(err.message || "Connection failed"),
       });
     },
     [testMutation],
@@ -92,9 +91,7 @@ export function ApiEndpointsSection() {
             Bring your own AI models to the studio
           </SectionSubtitle>
         </div>
-        <AddButton onClick={() => setModalOpen(true)}>
-          + Add Endpoint
-        </AddButton>
+        <AddButton onClick={() => setModalOpen(true)}>+ Add Endpoint</AddButton>
       </SectionHeader>
 
       {endpoints.length === 0 ? (
@@ -115,7 +112,8 @@ export function ApiEndpointsSection() {
               <div>
                 <EndpointName>{ep.name}</EndpointName>
                 <EndpointMeta>
-                  <StatusDot $color="#4ade80">●</StatusDot> Key: ...{ep.apiKeyLastFour}
+                  <StatusDot $color="#4ade80">●</StatusDot> Key: ...
+                  {ep.apiKeyLastFour}
                   &nbsp;·&nbsp;
                   {[
                     ep.capabilities.textToImage && "t2i",

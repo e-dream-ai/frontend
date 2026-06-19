@@ -8,7 +8,10 @@ import type {
 } from "@/types/user-api-endpoint.types";
 import { USER_API_ENDPOINTS_QUERY_KEY } from "./useUserApiEndpoints";
 
-const updateEndpoint = async ({ uuid, ...params }: UpdateUserApiEndpointParams) => {
+const updateEndpoint = async ({
+  uuid,
+  ...params
+}: UpdateUserApiEndpointParams) => {
   const { data } = await axiosClient.put<
     ApiResponse<{ endpoint: UserApiEndpoint }>
   >(`/v1/user/api-endpoints/${uuid}`, params, {

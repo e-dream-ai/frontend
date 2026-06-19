@@ -233,9 +233,7 @@ export function AddEndpointModal({
               <PresetIcon $color="#2a2a2a">⚙</PresetIcon>
               <PresetInfo>
                 <PresetName>Custom OpenAI-Compatible</PresetName>
-                <PresetDesc>
-                  Any endpoint that speaks OpenAI format
-                </PresetDesc>
+                <PresetDesc>Any endpoint that speaks OpenAI format</PresetDesc>
               </PresetInfo>
               <PresetCaps style={{ color: "#888" }}>manual</PresetCaps>
             </PresetCard>
@@ -291,9 +289,7 @@ export function AddEndpointModal({
                   <FormSelect
                     value={providerType}
                     onChange={(e) =>
-                      setProviderType(
-                        e.target.value as EndpointProviderType,
-                      )
+                      setProviderType(e.target.value as EndpointProviderType)
                     }
                   >
                     <option value="openai">OpenAI-Compatible</option>
