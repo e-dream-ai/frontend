@@ -3,12 +3,15 @@ import Bugsnag from "@bugsnag/js";
 import { v4 as uuidv4 } from "uuid";
 import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
+import { useStudioStore } from "@/stores/studio.store";
 import { FLOW } from "@/constants/flow-theme.constants";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import { useUserApiEndpoints } from "@/api/user-api-endpoints/useUserApiEndpoints";
 import type { FlowKeyframe } from "@/types/flow.types";
+import { getVariationPreset } from "../constants/variation-presets";
+import { expandPrompt } from "../utils/expand-prompt";
 import { KeyframeStrip } from "./keyframe-strip";
 import { TransitionSettingsPanel } from "./transition-settings-panel";
 import { VariationSettingsPanel } from "./variation-settings-panel";
@@ -149,7 +152,7 @@ export const FlowBuilder: React.FC = () => {
   );
 
   const handleI2iVariation = useCallback(
-    (keyframe: FlowKeyframe) => {
+    async (keyframe: FlowKeyframe) => {
       // Resolve which i2i endpoint to use. Prefer the one already selected this
       // session; otherwise auto-select (single -> that one, multiple -> first).
       const endpoints = i2iEndpoints;
@@ -168,50 +171,97 @@ export const FlowBuilder: React.FC = () => {
       const sourceImage = keyframe.imageUrl;
       if (!sourceImage) return;
 
-      const I2I_VARIATION_COUNT = 4;
+      // Read Variation Settings at call time (NOT via React subscription) to
+      // keep the callback identity stable across settings keystrokes.
+      const {
+        imagePrompt,
+        variationPresetId,
+        variationCustomPrompt,
+        variationSeed,
+      } = useStudioStore.getState();
+
+      // Custom prompts (Customize section) override the preset when present:
+      // split per line and apply {a|b|c} expansion to each line. Falls back to
+      // the selected preset's modifiers. Capped at 8 (matches the panel).
+      const customModifiers = variationCustomPrompt
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .flatMap((line) => expandPrompt(line));
+      const modifiers = (
+        customModifiers.length > 0
+          ? customModifiers
+          : getVariationPreset(variationPresetId).modifiers
+      ).slice(0, 8);
+
+      const VARIATION_COUNT = modifiers.length;
+      if (VARIATION_COUNT === 0) return;
+
       const baseName = keyframe.name || "frame";
 
-      // Distinct per-candidate prompts so the four i2i outputs actually differ
-      // from one another. Using the keyframe name (the old behaviour) gave the
-      // model no variation direction, so it just reproduced the source image.
-      const VARIATION_PROMPTS = [
-        "Reinterpret this scene as a vivid impressionist oil painting, keeping the same subject and composition.",
-        "Reimagine this scene as a moody, cinematic night shot with dramatic lighting, same subject and composition.",
-        "Render this scene as a bright, saturated watercolor illustration, same subject and composition.",
-        "Restyle this scene as a warm-toned vintage film photograph with grain, same subject and composition.",
-      ];
+      // The user's seed is the anchor (stable across a batch — variation comes
+      // from the prompt). Each +More batch is offset by the count of candidates
+      // already staged for this parent, so +More yields NEW images while
+      // staying reproducible.
+      const existingCount = useFlowStore
+        .getState()
+        .keyframes.filter((kf) => kf.i2iParentId === keyframe.id).length;
+      const baseSeed = variationSeed + existingCount;
 
       // Create candidate keyframes as a GATED staging area: addI2iCandidates
       // flags them so transition derivation skips them — they will not spawn
       // generation jobs until the user accepts one. Patch each in place as its
       // generation request settles.
-      const candidates = Array.from(
-        { length: I2I_VARIATION_COUNT },
-        (_, i) => ({
-          id: uuidv4(),
-          imageUrl: keyframe.imageUrl,
-          name: `${baseName} · variation ${i + 1}`,
-          uploadStatus: "uploading" as const,
-          uploadProgress: 0,
-        }),
-      );
+      const candidates = Array.from({ length: VARIATION_COUNT }, (_, i) => ({
+        id: uuidv4(),
+        imageUrl: keyframe.imageUrl,
+        name: `${baseName} · variation ${existingCount + i + 1}`,
+        uploadStatus: "uploading" as const,
+        uploadProgress: 0,
+      }));
       addI2iCandidates(keyframe.id, candidates);
 
+      // Use the SOURCE image's own prompt as the base so variations stay
+      // on-theme. The original prompt is stored as algoParams JSON on the dream;
+      // fall back to the studio prompt, then the keyframe name.
+      let originalPrompt = "";
+      if (keyframe.dreamUuid) {
+        try {
+          const { data } = await axiosClient.get(
+            `/v1/dream/${keyframe.dreamUuid}`,
+          );
+          const rawPrompt = data?.data?.dream?.prompt;
+          if (typeof rawPrompt === "string" && rawPrompt) {
+            try {
+              originalPrompt = JSON.parse(rawPrompt)?.prompt || "";
+            } catch {
+              originalPrompt = rawPrompt;
+            }
+          }
+        } catch (err) {
+          Bugsnag.notify(err as Error);
+        }
+      }
+      const basePrompt = originalPrompt || imagePrompt || baseName;
+
       // Fire all variation generations concurrently (no sequential await loop).
+      // Layer a variation modifier onto the source prompt so the set is
+      // meaningfully different, with a STABLE seed across the batch.
       const headers = getRequestHeaders({ contentType: ContentType.json });
       void Promise.allSettled(
         candidates.map(async ({ id }, i) => {
           const algoParams = {
             userEndpointUuid: endpointUuid,
             image: sourceImage,
-            prompt: VARIATION_PROMPTS[i % VARIATION_PROMPTS.length],
+            prompt: `${basePrompt}, ${modifiers[i % modifiers.length]}`,
+            seed: baseSeed,
             n: 1,
           };
           try {
             const { data } = await axiosClient.post(
               "/v1/dream",
               {
-                name: `${baseName} · variation ${i + 1}`,
+                name: `${baseName} · variation ${existingCount + i + 1}`,
                 prompt: JSON.stringify(algoParams),
                 description: "Studio i2i variation",
               },
