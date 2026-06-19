@@ -198,6 +198,14 @@ export const FailedOverlay = styled.div`
   }
 `;
 
+// Candidate variant — a candidate card also carries a bottom-right Discard
+// pill, so shift the failed message up out of its way (the shared overlay
+// centers vertically and crowds the button on these short cards).
+export const CandidateFailedOverlay = styled(FailedOverlay)`
+  justify-content: flex-start;
+  padding-top: 16px;
+`;
+
 export const CardPlaceholder = styled.div`
   width: 100%;
   height: 100%;

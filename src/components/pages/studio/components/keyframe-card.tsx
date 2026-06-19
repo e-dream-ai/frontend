@@ -24,6 +24,7 @@ import {
   UploadRingFill,
   UploadPercent,
   FailedOverlay,
+  CandidateFailedOverlay,
   GeneratingOverlay,
   GeneratingSpinner,
   GeneratingLabel,
@@ -57,6 +58,10 @@ export const KeyframeCard: React.FC<Props> = ({
   const isGenerating =
     isCandidate &&
     (keyframe.i2iStatus === "queue" || keyframe.i2iStatus === "processing");
+  // A candidate whose generation failed. Surface it as failed rather than
+  // silently falling back to the source image (which is identical across the
+  // batch and reads as "nothing happened / they all look the same").
+  const isGenFailed = isCandidate && keyframe.i2iStatus === "failed";
 
   const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
 
@@ -184,6 +189,13 @@ export const KeyframeCard: React.FC<Props> = ({
         </GeneratingOverlay>
       )}
 
+      {isGenFailed && (
+        <CandidateFailedOverlay role="alert">
+          <AlertTriangle size={16} strokeWidth={2.2} />
+          Variation failed
+        </CandidateFailedOverlay>
+      )}
+
       {/* Index / loop label sits bottom-left. Not shown for candidates —
           they get their own top-left badge so it can't collide with the
           bottom-right Accept/Discard actions on narrow cards. */}
@@ -201,14 +213,16 @@ export const KeyframeCard: React.FC<Props> = ({
 
       {/* Candidate badge: top-left, hidden while busy so the full-card
           progress/failed overlay owns the card. */}
-      {isCandidate && !isBusy && <CandidateBadge>Variation</CandidateBadge>}
+      {isCandidate && !isBusy && !isGenFailed && (
+        <CandidateBadge>Variation</CandidateBadge>
+      )}
 
       {isCandidate &&
         !isBusy &&
         !isGenerating &&
         (onAcceptI2iCandidate || onDiscardI2iCandidate) && (
           <CandidateActions>
-            {onAcceptI2iCandidate && (
+            {onAcceptI2iCandidate && !isGenFailed && (
               <AcceptButton
                 title="Accept this variation as a keyframe"
                 onClick={(e) => {

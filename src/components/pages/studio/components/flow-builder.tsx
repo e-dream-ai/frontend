@@ -242,7 +242,8 @@ export const FlowBuilder: React.FC = () => {
 
       // Fire all variation generations concurrently (no sequential await loop).
       // Layer a variation modifier onto the source prompt so the set is
-      // meaningfully different, with a STABLE seed across the batch.
+      // meaningfully different, with a STABLE seed across the batch (variation
+      // comes from the prompt, not seed jitter — keeps results reproducible).
       const headers = getRequestHeaders({ contentType: ContentType.json });
       void Promise.allSettled(
         candidates.map(async ({ id }, i) => {
