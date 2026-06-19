@@ -49,13 +49,21 @@ export const StripControls = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 24px;
+  gap: 12px;
   margin-top: 20px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+
+  @media (max-width: 480px) {
+    justify-content: flex-start;
+    gap: 8px;
+  }
 `;
 
 export const AddButtons = styled.div`
   display: flex;
-  gap: 10px;
+  gap: 8px;
+  flex-shrink: 0;
 `;
 
 export const AddButton = styled.button`
@@ -71,10 +79,17 @@ export const AddButton = styled.button`
   cursor: pointer;
   font-family: ${FLOW.fontFamily};
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 
   &:hover {
     border-color: ${FLOW.borderHover};
     color: ${FLOW.text};
+  }
+
+  @media (max-width: 480px) {
+    padding: 7px 10px;
+    font-size: 12px;
   }
 `;
 
@@ -92,6 +107,8 @@ export const LoopToggle = styled.label`
   cursor: pointer;
   user-select: none;
   font-family: ${FLOW.fontFamily};
+  flex-shrink: 0;
+  white-space: nowrap;
 `;
 
 export const LoopCheckbox = styled.input`

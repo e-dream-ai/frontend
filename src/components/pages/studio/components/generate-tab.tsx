@@ -38,6 +38,7 @@ import {
 const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
   "ltx-i2v": "LTX 2.3",
   "wan-i2v": "Wan I2V",
+  "kling-i2v": "Kling 3.0 Pro",
 };
 
 const VIDEO_MODELS: VideoModel[] = ["ltx-i2v", "wan-i2v"];
