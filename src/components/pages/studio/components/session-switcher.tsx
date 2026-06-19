@@ -1,10 +1,17 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { ChevronDown, Plus, Copy, Trash2 } from "lucide-react";
 import { useSessionStore } from "@/stores/session.store";
 import {
   SwitcherContainer,
   SwitcherBar,
   TitleInput,
+  TitleSizer,
   CaretButton,
   Dropdown,
   SessionItem,
@@ -66,6 +73,15 @@ export const SessionSwitcher: React.FC = () => {
     }
   }, [titleDraft, activeSessionId, activeSession?.name, renameSession]);
 
+  // Auto-size the title input to its content via a hidden mirror span.
+  const sizerRef = useRef<HTMLSpanElement>(null);
+  const [titleWidth, setTitleWidth] = useState(0);
+  useLayoutEffect(() => {
+    if (sizerRef.current) {
+      setTitleWidth(sizerRef.current.offsetWidth + 2);
+    }
+  }, [titleDraft, activeSessionId]);
+
   const handleNew = useCallback(() => {
     createSession();
     setOpen(false);
@@ -105,6 +121,7 @@ export const SessionSwitcher: React.FC = () => {
           value={titleDraft}
           placeholder="No Session"
           disabled={!activeSessionId}
+          style={{ width: titleWidth || undefined }}
           onChange={(e) => setTitleDraft(e.target.value)}
           onBlur={commitTitle}
           onKeyDown={(e) => {
@@ -117,6 +134,9 @@ export const SessionSwitcher: React.FC = () => {
             }
           }}
         />
+        <TitleSizer ref={sizerRef} aria-hidden>
+          {titleDraft || "No Session"}
+        </TitleSizer>
         <CaretButton
           onClick={() => setOpen((o) => !o)}
           aria-label="Switch session"

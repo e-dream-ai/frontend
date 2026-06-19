@@ -6,33 +6,34 @@ export const SwitcherContainer = styled.div`
 `;
 
 export const SwitcherBar = styled.div`
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 2px;
-  padding: 3px 4px 3px 12px;
-  background: ${FLOW.bgElevated};
-  border: 1px solid ${FLOW.border};
-  border-radius: 8px;
-  max-width: 260px;
-  transition: border-color 0.2s;
-
-  &:focus-within {
-    border-color: ${FLOW.borderHover};
-  }
+  max-width: 100%;
 `;
 
 export const TitleInput = styled.input`
-  flex: 1;
-  min-width: 0;
+  box-sizing: border-box;
+  min-width: 1ch;
+  max-width: 320px;
   background: transparent;
   border: none;
   outline: none;
   color: ${FLOW.text};
   font-size: 13px;
+  font-weight: 500;
   font-family: inherit;
-  padding: 3px 0;
+  padding: 3px 2px;
+  border-radius: 4px;
   text-overflow: ellipsis;
+  transition: background 0.15s;
 
+  &:hover:not(:disabled) {
+    background: ${FLOW.bgElevated};
+  }
+  &:focus {
+    background: ${FLOW.bgElevated};
+  }
   &::placeholder {
     color: ${FLOW.textMuted};
   }
@@ -40,6 +41,20 @@ export const TitleInput = styled.input`
     color: ${FLOW.textMuted};
     cursor: default;
   }
+`;
+
+// Hidden mirror used to measure the title text so the input can grow/shrink
+// to fit its content. Must match TitleInput's font + horizontal padding.
+export const TitleSizer = styled.span`
+  position: absolute;
+  top: 0;
+  left: -9999px;
+  visibility: hidden;
+  white-space: pre;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  padding: 3px 2px;
 `;
 
 export const CaretButton = styled.button`
