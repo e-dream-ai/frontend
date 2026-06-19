@@ -17,7 +17,6 @@ import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { shouldOpenVariationLightbox } from "../utils/variation-status";
 import { KeyframeCard } from "./keyframe-card";
 import { TransitionGapEnhanced } from "./transition-gap";
-import { FlowReset } from "./flow-reset";
 import {
   StripSection,
   SectionHeader,
@@ -159,7 +158,6 @@ export const KeyframeStrip: React.FC<Props> = ({
     <StripSection>
       <SectionHeader>
         <SectionLabel>Keyframes</SectionLabel>
-        <FlowReset />
       </SectionHeader>
 
       {displayKeyframes.length === 0 ? (

@@ -195,13 +195,15 @@ export const ImagesTab: React.FC = () => {
   return (
     <ImagesTabContainer $dragOver={isDragOver} {...dropHandlers}>
       <GenerateSection>
-        <SectionTitle>Generate New Images</SectionTitle>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <SectionTitle>Generate New Images</SectionTitle>
+          <PromptExpansionBadge prompt={imagePrompt} />
+        </div>
         <PromptTextarea
           placeholder="Describe the image you want to generate... use {a|b|c} to make variations"
           value={imagePrompt}
           onChange={(e) => setImagePrompt(e.target.value)}
         />
-        <PromptExpansionBadge prompt={imagePrompt} />
         <FormRow>
           <FormField>
             <FieldLabel>Model:</FieldLabel>

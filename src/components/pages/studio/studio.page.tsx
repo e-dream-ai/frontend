@@ -19,7 +19,6 @@ import {
   StudioTitle,
   BackButton,
   HeaderSide,
-  NewSessionButton,
   StudioBody,
   ModeToggle,
   ModeButton,
@@ -49,10 +48,6 @@ export const StudioPage: React.FC = () => {
   const setMode = useStudioModeStore((s) => s.setMode);
 
   const activeTab = useStudioStore((s) => s.activeTab);
-  const resetSession = useStudioStore((s) => s.resetSession);
-  const hasContent = useStudioStore(
-    (s) => s.images.length > 0 || s.actions.length > 0 || s.jobs.length > 0,
-  );
   useStudioJobProgress();
   useSessionAutoSave();
 
@@ -122,16 +117,6 @@ export const StudioPage: React.FC = () => {
     onFiles: handleStudioDrop,
   });
 
-  const handleNewSession = () => {
-    if (
-      !window.confirm(
-        "Start a new session? This will clear all current images, actions, and results.",
-      )
-    )
-      return;
-    resetSession();
-  };
-
   return (
     <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
@@ -157,11 +142,6 @@ export const StudioPage: React.FC = () => {
               Batch
             </ModeButton>
           </ModeToggle>
-          {mode === "batch" && hasContent && (
-            <NewSessionButton onClick={handleNewSession}>
-              New Session
-            </NewSessionButton>
-          )}
         </HeaderSide>
       </StudioHeader>
 

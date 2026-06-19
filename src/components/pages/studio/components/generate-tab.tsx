@@ -47,11 +47,15 @@ const VIDEO_MODELS: VideoModel[] = ["ltx-i2v", "wan-i2v"];
 const STEPS_OPTIONS = [20, 25, 30, 40];
 const GUIDANCE_OPTIONS = [3.0, 4.0, 5.0, 6.0, 7.0];
 
+const LTX_FIXED_TOOLTIP =
+  "LTX 2.3 uses optimized fixed settings (8 steps, guidance 1) — not configurable here.";
+
 export const GenerateTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const actions = useStudioStore((s) => s.actions);
   const videoGenParams = useStudioStore((s) => s.videoGenParams);
   const setVideoGenParams = useStudioStore((s) => s.setVideoGenParams);
+  const isLtx = videoGenParams.model === "ltx-i2v";
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
   const toggleComboExcluded = useStudioStore((s) => s.toggleComboExcluded);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
@@ -245,10 +249,12 @@ export const GenerateTab: React.FC = () => {
               ))}
             </StyledSelect>
           </FormField>
-          <FormField>
+          <FormField title={isLtx ? LTX_FIXED_TOOLTIP : undefined}>
             <FieldLabel>Steps:</FieldLabel>
             <StyledSelect
               value={videoGenParams.numInferenceSteps}
+              disabled={isLtx}
+              title={isLtx ? LTX_FIXED_TOOLTIP : undefined}
               onChange={(e) =>
                 setVideoGenParams({ numInferenceSteps: Number(e.target.value) })
               }
@@ -260,10 +266,12 @@ export const GenerateTab: React.FC = () => {
               ))}
             </StyledSelect>
           </FormField>
-          <FormField>
+          <FormField title={isLtx ? LTX_FIXED_TOOLTIP : undefined}>
             <FieldLabel>Guidance:</FieldLabel>
             <StyledSelect
               value={videoGenParams.guidance}
+              disabled={isLtx}
+              title={isLtx ? LTX_FIXED_TOOLTIP : undefined}
               onChange={(e) =>
                 setVideoGenParams({ guidance: Number(e.target.value) })
               }
