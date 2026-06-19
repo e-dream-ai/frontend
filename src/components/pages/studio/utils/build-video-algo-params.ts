@@ -27,6 +27,22 @@ export const buildVideoAlgoParams = ({
   const hasLoras = hasActionLoras(action);
   const trimmedNegative = negativePrompt?.trim();
 
+  if (model === "kling-i2v") {
+    const params: Record<string, unknown> = {
+      infinidream_algorithm: "kling-i2v",
+      prompt: action.prompt,
+      source_dream_uuid: imageUuid,
+      duration,
+    };
+    if (trimmedNegative) {
+      params.negative_prompt = trimmedNegative;
+    }
+    if (endImageUuid) {
+      params.end_source_uuid = endImageUuid;
+    }
+    return params;
+  }
+
   if (model === "ltx-i2v") {
     // Worker handles steps/guidance internally (8+3 steps, cfg 1.0).
     // Only high_noise_loras[0] is used (single LoRA via Power Lora Loader).

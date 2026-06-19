@@ -6,6 +6,9 @@ type ActionWithLoras = Pick<StudioAction, "highNoiseLoras" | "lowNoiseLoras">;
 export const DURATION_OPTIONS_LORA = [5, 8] as const;
 export const DURATION_OPTIONS_DEFAULT = [5, 8, 10] as const;
 export const DURATION_OPTIONS_LTX = [5, 10, 15, 20] as const;
+export const DURATION_OPTIONS_KLING = [
+  3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15,
+] as const;
 
 export const hasActionLoras = (action: ActionWithLoras): boolean =>
   (action.highNoiseLoras?.length ?? 0) > 0 ||
@@ -17,6 +20,10 @@ export const getAllowedDurationsForActions = (
 ): number[] => {
   if (model === "ltx-i2v") {
     return [...DURATION_OPTIONS_LTX];
+  }
+
+  if (model === "kling-i2v") {
+    return [...DURATION_OPTIONS_KLING];
   }
 
   if (actions.length === 0) {
