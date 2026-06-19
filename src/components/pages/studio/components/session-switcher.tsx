@@ -3,7 +3,9 @@ import { ChevronDown, Plus, Copy, Trash2 } from "lucide-react";
 import { useSessionStore } from "@/stores/session.store";
 import {
   SwitcherContainer,
-  SwitcherButton,
+  SwitcherBar,
+  TitleInput,
+  CaretButton,
   Dropdown,
   SessionItem,
   SessionThumb,
@@ -48,6 +50,22 @@ export const SessionSwitcher: React.FC = () => {
 
   const activeSession = sessions.find((s) => s.id === activeSessionId);
 
+  // Inline-editable title for the active session. Kept in sync when the active
+  // session changes; commits the rename on blur/Enter, reverts on Escape/empty.
+  const [titleDraft, setTitleDraft] = useState(activeSession?.name ?? "");
+  useEffect(() => {
+    setTitleDraft(activeSession?.name ?? "");
+  }, [activeSession?.id, activeSession?.name]);
+
+  const commitTitle = useCallback(() => {
+    const v = titleDraft.trim();
+    if (activeSessionId && v && v !== activeSession?.name) {
+      renameSession(activeSessionId, v);
+    } else {
+      setTitleDraft(activeSession?.name ?? "");
+    }
+  }, [titleDraft, activeSessionId, activeSession?.name, renameSession]);
+
   const handleNew = useCallback(() => {
     createSession();
     setOpen(false);
@@ -82,10 +100,30 @@ export const SessionSwitcher: React.FC = () => {
 
   return (
     <SwitcherContainer ref={containerRef}>
-      <SwitcherButton onClick={() => setOpen((o) => !o)}>
-        {activeSession?.name || "No Session"}
-        <ChevronDown size={14} />
-      </SwitcherButton>
+      <SwitcherBar>
+        <TitleInput
+          value={titleDraft}
+          placeholder="No Session"
+          disabled={!activeSessionId}
+          onChange={(e) => setTitleDraft(e.target.value)}
+          onBlur={commitTitle}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              (e.target as HTMLInputElement).blur();
+            }
+            if (e.key === "Escape") {
+              setTitleDraft(activeSession?.name ?? "");
+              (e.target as HTMLInputElement).blur();
+            }
+          }}
+        />
+        <CaretButton
+          onClick={() => setOpen((o) => !o)}
+          aria-label="Switch session"
+        >
+          <ChevronDown size={14} />
+        </CaretButton>
+      </SwitcherBar>
 
       {open && (
         <Dropdown>

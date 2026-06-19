@@ -5,26 +5,62 @@ export const SwitcherContainer = styled.div`
   position: relative;
 `;
 
-export const SwitcherButton = styled.button`
+export const SwitcherBar = styled.div`
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
+  gap: 2px;
+  padding: 3px 4px 3px 12px;
   background: ${FLOW.bgElevated};
   border: 1px solid ${FLOW.border};
   border-radius: 8px;
+  max-width: 260px;
+  transition: border-color 0.2s;
+
+  &:focus-within {
+    border-color: ${FLOW.borderHover};
+  }
+`;
+
+export const TitleInput = styled.input`
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
   color: ${FLOW.text};
   font-size: 13px;
   font-family: inherit;
-  cursor: pointer;
-  transition: border-color 0.2s;
-  max-width: 200px;
-  overflow: hidden;
+  padding: 3px 0;
   text-overflow: ellipsis;
-  white-space: nowrap;
+
+  &::placeholder {
+    color: ${FLOW.textMuted};
+  }
+  &:disabled {
+    color: ${FLOW.textMuted};
+    cursor: default;
+  }
+`;
+
+export const CaretButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: ${FLOW.textDim};
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    color 0.15s;
 
   &:hover {
-    border-color: ${FLOW.borderHover};
+    background: ${FLOW.bgInput};
+    color: ${FLOW.text};
   }
 `;
 
