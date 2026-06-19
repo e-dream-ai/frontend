@@ -289,6 +289,16 @@ export const FlowBuilder: React.FC = () => {
       const I2I_VARIATION_COUNT = 4;
       const baseName = keyframe.name || "frame";
 
+      // Distinct per-candidate prompts so the four i2i outputs actually differ
+      // from one another. Using the keyframe name (the old behaviour) gave the
+      // model no variation direction, so it just reproduced the source image.
+      const VARIATION_PROMPTS = [
+        "Reinterpret this scene as a vivid impressionist oil painting, keeping the same subject and composition.",
+        "Reimagine this scene as a moody, cinematic night shot with dramatic lighting, same subject and composition.",
+        "Render this scene as a bright, saturated watercolor illustration, same subject and composition.",
+        "Restyle this scene as a warm-toned vintage film photograph with grain, same subject and composition.",
+      ];
+
       // Create candidate keyframes as a GATED staging area: addI2iCandidates
       // flags them so transition derivation skips them — they will not spawn
       // generation jobs until the user accepts one. Patch each in place as its
@@ -312,7 +322,7 @@ export const FlowBuilder: React.FC = () => {
           const algoParams = {
             userEndpointUuid: endpointUuid,
             image: sourceImage,
-            prompt: keyframe.name ?? "",
+            prompt: VARIATION_PROMPTS[i % VARIATION_PROMPTS.length],
             n: 1,
           };
           try {

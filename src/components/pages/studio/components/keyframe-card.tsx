@@ -184,17 +184,24 @@ export const KeyframeCard: React.FC<Props> = ({
           </FailedOverlay>
         )}
 
-        <CardLabel>
-          {isLoop ? (
-            <>
-              {keyframe.name} <LoopBadge>Loop</LoopBadge>
-            </>
-          ) : isCandidate ? (
-            <CandidateBadge>Variation</CandidateBadge>
-          ) : (
-            `${index + 1}`
-          )}
-        </CardLabel>
+        {/* Index / loop label sits bottom-left. Not shown for candidates —
+            they get their own top-left badge so it can't collide with the
+            bottom-right Accept/Discard actions on narrow cards. */}
+        {!isCandidate && (
+          <CardLabel>
+            {isLoop ? (
+              <>
+                {keyframe.name} <LoopBadge>Loop</LoopBadge>
+              </>
+            ) : (
+              `${index + 1}`
+            )}
+          </CardLabel>
+        )}
+
+        {/* Candidate badge: top-left, hidden while busy so the full-card
+            progress/failed overlay owns the card. */}
+        {isCandidate && !isBusy && <CandidateBadge>Variation</CandidateBadge>}
 
         {isCandidate &&
           !isBusy &&

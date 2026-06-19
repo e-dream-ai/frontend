@@ -195,19 +195,32 @@ export const LoopBadge = styled.span`
 `;
 
 export const CandidateBadge = styled.span`
+  position: absolute;
+  top: 6px;
+  left: 8px;
+  z-index: 3;
   font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: ${FLOW.accent};
+  background: rgba(0, 0, 0, 0.6);
+  padding: 2px 6px;
+  border-radius: 4px;
+  backdrop-filter: blur(4px);
 `;
 
 export const CandidateActions = styled.div`
   position: absolute;
   bottom: 4px;
   right: 4px;
+  z-index: 3;
   display: flex;
   gap: 4px;
+  padding: 3px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(4px);
 `;
 
 export const AcceptButton = styled.button`
