@@ -1,13 +1,11 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle, Shuffle } from "lucide-react";
+import { AlertTriangle } from "lucide-react";
 import type { FlowKeyframe } from "@/types/flow.types";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { useFlowStore } from "@/stores/flow.store";
-import { VariationGrid } from "./variation-grid";
-import { useUserApiEndpoints } from "@/api/user-api-endpoints/useUserApiEndpoints";
 import {
   CardWrapper,
   CardImage,
@@ -16,7 +14,6 @@ import {
   LoopBadge,
   CandidateBadge,
   DeleteButton,
-  VariationsButton,
   VaryButton,
   CandidateActions,
   AcceptButton,
@@ -33,7 +30,6 @@ interface Props {
   keyframe: FlowKeyframe;
   index: number;
   onDelete?: (id: string) => void;
-  onRequestVariations?: (keyframeId: string) => void;
   onRequestI2iVariation?: (keyframe: FlowKeyframe) => void;
   onAcceptI2iCandidate?: (keyframe: FlowKeyframe) => void;
   onDiscardI2iCandidate?: (keyframe: FlowKeyframe) => void;
@@ -43,7 +39,6 @@ export const KeyframeCard: React.FC<Props> = ({
   keyframe,
   index,
   onDelete,
-  onRequestVariations,
   onRequestI2iVariation,
   onAcceptI2iCandidate,
   onDiscardI2iCandidate,
@@ -53,20 +48,10 @@ export const KeyframeCard: React.FC<Props> = ({
   const isUploading = keyframe.uploadStatus === "uploading";
   const isFailed = keyframe.uploadStatus === "failed";
   const isBusy = isUploading || isFailed;
-  const isSettled = !!(keyframe.dreamUuid || keyframe.keyframeUuid);
 
   const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
-  const selectKeyframeVariation = useFlowStore(
-    (s) => s.selectKeyframeVariation,
-  );
 
-  // Whether the user has at least one image-to-image capable endpoint configured.
-  const { data: endpointsData } = useUserApiEndpoints();
-  const hasI2iEndpoints = (endpointsData?.data?.endpoints ?? []).some(
-    (ep) => ep.capabilities.imageToImage,
-  );
   const [imgSrc, setImgSrc] = useState(keyframe.imageUrl);
-  const [showVariations, setShowVariations] = useState(false);
 
   useEffect(() => {
     setImgSrc(keyframe.imageUrl);
@@ -135,168 +120,124 @@ export const KeyframeCard: React.FC<Props> = ({
   };
 
   return (
-    <>
-      <CardWrapper
-        ref={setNodeRef}
-        style={style}
-        $loop={isLoop}
-        $isDragging={isDragging}
-        $uploading={isUploading}
-        $failed={isFailed}
-        $candidate={isCandidate}
-        {...(isLoop || isBusy || isCandidate
-          ? {}
-          : { ...attributes, ...listeners })}
-      >
-        {imgSrc ? (
-          <CardImage
-            src={imgSrc}
-            alt={keyframe.name}
-            $uploading={isUploading}
-            onClick={isClickable ? handleOpen : undefined}
-            style={isClickable ? { cursor: "pointer" } : undefined}
-            onError={keyframe.dreamUuid ? handleImgError : undefined}
-          />
-        ) : (
-          <CardPlaceholder>{keyframe.name}</CardPlaceholder>
-        )}
+    <CardWrapper
+      ref={setNodeRef}
+      style={style}
+      $loop={isLoop}
+      $isDragging={isDragging}
+      $uploading={isUploading}
+      $failed={isFailed}
+      $candidate={isCandidate}
+      {...(isLoop || isBusy || isCandidate
+        ? {}
+        : { ...attributes, ...listeners })}
+    >
+      {imgSrc ? (
+        <CardImage
+          src={imgSrc}
+          alt={keyframe.name}
+          $uploading={isUploading}
+          onClick={isClickable ? handleOpen : undefined}
+          style={isClickable ? { cursor: "pointer" } : undefined}
+          onError={keyframe.dreamUuid ? handleImgError : undefined}
+        />
+      ) : (
+        <CardPlaceholder>{keyframe.name}</CardPlaceholder>
+      )}
 
-        {isUploading && (
-          <UploadOverlay
-            role="progressbar"
-            aria-label={`Uploading ${keyframe.name}`}
-            aria-valuenow={percent}
-            aria-valuemin={0}
-            aria-valuemax={100}
-          >
-            <UploadRing viewBox="0 0 36 36">
-              <UploadRingTrack cx="18" cy="18" r="16" />
-              <UploadRingFill cx="18" cy="18" r="16" $percent={percent} />
-            </UploadRing>
-            <UploadPercent>{percent}%</UploadPercent>
-          </UploadOverlay>
-        )}
+      {isUploading && (
+        <UploadOverlay
+          role="progressbar"
+          aria-label={`Uploading ${keyframe.name}`}
+          aria-valuenow={percent}
+          aria-valuemin={0}
+          aria-valuemax={100}
+        >
+          <UploadRing viewBox="0 0 36 36">
+            <UploadRingTrack cx="18" cy="18" r="16" />
+            <UploadRingFill cx="18" cy="18" r="16" $percent={percent} />
+          </UploadRing>
+          <UploadPercent>{percent}%</UploadPercent>
+        </UploadOverlay>
+      )}
 
-        {isFailed && (
-          <FailedOverlay role="alert">
-            <AlertTriangle size={16} strokeWidth={2.2} />
-            Upload failed
-          </FailedOverlay>
-        )}
+      {isFailed && (
+        <FailedOverlay role="alert">
+          <AlertTriangle size={16} strokeWidth={2.2} />
+          Upload failed
+        </FailedOverlay>
+      )}
 
-        {/* Index / loop label sits bottom-left. Not shown for candidates —
-            they get their own top-left badge so it can't collide with the
-            bottom-right Accept/Discard actions on narrow cards. */}
-        {!isCandidate && (
-          <CardLabel>
-            {isLoop ? (
-              <>
-                {keyframe.name} <LoopBadge>Loop</LoopBadge>
-              </>
-            ) : (
-              `${index + 1}`
+      {/* Index / loop label sits bottom-left. Not shown for candidates —
+          they get their own top-left badge so it can't collide with the
+          bottom-right Accept/Discard actions on narrow cards. */}
+      {!isCandidate && (
+        <CardLabel>
+          {isLoop ? (
+            <>
+              {keyframe.name} <LoopBadge>Loop</LoopBadge>
+            </>
+          ) : (
+            `${index + 1}`
+          )}
+        </CardLabel>
+      )}
+
+      {/* Candidate badge: top-left, hidden while busy so the full-card
+          progress/failed overlay owns the card. */}
+      {isCandidate && !isBusy && <CandidateBadge>Variation</CandidateBadge>}
+
+      {isCandidate &&
+        !isBusy &&
+        (onAcceptI2iCandidate || onDiscardI2iCandidate) && (
+          <CandidateActions>
+            {onAcceptI2iCandidate && (
+              <AcceptButton
+                title="Accept this variation as a keyframe"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onAcceptI2iCandidate(keyframe);
+                }}
+              >
+                Accept
+              </AcceptButton>
             )}
-          </CardLabel>
+            {onDiscardI2iCandidate && (
+              <DiscardButton
+                title="Discard this variation"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onDiscardI2iCandidate(keyframe);
+                }}
+              >
+                Discard
+              </DiscardButton>
+            )}
+          </CandidateActions>
         )}
 
-        {/* Candidate badge: top-left, hidden while busy so the full-card
-            progress/failed overlay owns the card. */}
-        {isCandidate && !isBusy && <CandidateBadge>Variation</CandidateBadge>}
+      {!isLoop && !isCandidate && !isBusy && onDelete && (
+        <DeleteButton
+          onClick={(e) => {
+            e.stopPropagation();
+            onDelete(keyframe.id);
+          }}
+        >
+          &times;
+        </DeleteButton>
+      )}
 
-        {isCandidate &&
-          !isBusy &&
-          (onAcceptI2iCandidate || onDiscardI2iCandidate) && (
-            <CandidateActions>
-              {onAcceptI2iCandidate && (
-                <AcceptButton
-                  title="Accept this variation as a keyframe"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onAcceptI2iCandidate(keyframe);
-                  }}
-                >
-                  Accept
-                </AcceptButton>
-              )}
-              {onDiscardI2iCandidate && (
-                <DiscardButton
-                  title="Discard this variation"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onDiscardI2iCandidate(keyframe);
-                  }}
-                >
-                  Discard
-                </DiscardButton>
-              )}
-            </CandidateActions>
-          )}
-
-        {!isLoop && !isCandidate && !isBusy && onDelete && (
-          <DeleteButton
-            onClick={(e) => {
-              e.stopPropagation();
-              onDelete(keyframe.id);
-            }}
-          >
-            &times;
-          </DeleteButton>
-        )}
-
-        {!isLoop &&
-          !isCandidate &&
-          !isBusy &&
-          isSettled &&
-          onRequestVariations && (
-            <VariationsButton
-              onClick={(e) => {
-                e.stopPropagation();
-                if (
-                  !showVariations &&
-                  (!keyframe.variations || keyframe.variations.length === 0)
-                ) {
-                  onRequestVariations(keyframe.id);
-                }
-                setShowVariations((v) => !v);
-              }}
-              title="Generate variations"
-            >
-              <Shuffle size={11} />
-            </VariationsButton>
-          )}
-
-        {!isLoop && !isCandidate && !isBusy && onRequestI2iVariation && (
-          <VaryButton
-            disabled={!hasI2iEndpoints}
-            title={
-              hasI2iEndpoints
-                ? "Generate image-to-image variations"
-                : "Configure an image-to-image endpoint in account settings to use this"
-            }
-            onClick={(e) => {
-              e.stopPropagation();
-              if (!hasI2iEndpoints) return;
-              onRequestI2iVariation(keyframe);
-            }}
-          >
-            Vary (i2i)
-          </VaryButton>
-        )}
-      </CardWrapper>
-
-      {showVariations &&
-        keyframe.variations &&
-        keyframe.variations.length > 0 && (
-          <VariationGrid
-            variations={keyframe.variations}
-            activeVariationId={keyframe.activeVariationId}
-            onSelect={(variationId) =>
-              selectKeyframeVariation(keyframe.id, variationId)
-            }
-            onGenerateMore={() => onRequestVariations?.(keyframe.id)}
-            onClose={() => setShowVariations(false)}
-          />
-        )}
-    </>
+      {!isLoop && !isCandidate && !isBusy && onRequestI2iVariation && (
+        <VaryButton
+          title="Generate variations"
+          onClick={(e) => {
+            e.stopPropagation();
+            onRequestI2iVariation(keyframe);
+          }}
+        >
+          Vary
+        </VaryButton>
+      )}
+    </CardWrapper>
   );
 };

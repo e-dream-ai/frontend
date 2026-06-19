@@ -42,7 +42,6 @@ interface Props {
   onAddFromPlaylist: () => void;
   onAddFromLibrary: () => void;
   onRetry: (index: number) => void;
-  onRequestVariations?: (keyframeId: string) => void;
   onOpenVariationLightbox?: (transitionIndex: number) => void;
   onRequestI2iVariation?: (keyframe: FlowKeyframe) => void;
   onAcceptI2iCandidate?: (keyframe: FlowKeyframe) => void;
@@ -54,7 +53,6 @@ export const KeyframeStrip: React.FC<Props> = ({
   onAddFromPlaylist,
   onAddFromLibrary,
   onRetry,
-  onRequestVariations,
   onOpenVariationLightbox,
   onRequestI2iVariation,
   onAcceptI2iCandidate,
@@ -181,7 +179,6 @@ export const KeyframeStrip: React.FC<Props> = ({
         keyframe={kf}
         index={i}
         onDelete={removeKeyframe}
-        onRequestVariations={onRequestVariations}
         onRequestI2iVariation={onRequestI2iVariation}
         onAcceptI2iCandidate={onAcceptI2iCandidate}
         onDiscardI2iCandidate={onDiscardI2iCandidate}
