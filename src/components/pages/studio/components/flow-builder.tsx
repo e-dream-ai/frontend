@@ -47,7 +47,6 @@ export const FlowBuilder: React.FC = () => {
   const addKeyframe = useFlowStore((s) => s.addKeyframe);
   const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
   const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
-  const setI2iEndpoint = useFlowStore((s) => s.setI2iEndpoint);
   const addI2iCandidates = useFlowStore((s) => s.addI2iCandidates);
   const acceptI2iCandidate = useFlowStore((s) => s.acceptI2iCandidate);
   const discardI2iCandidate = useFlowStore((s) => s.discardI2iCandidate);
@@ -153,28 +152,25 @@ export const FlowBuilder: React.FC = () => {
 
   const handleI2iVariation = useCallback(
     async (keyframe: FlowKeyframe) => {
-      // Resolve which i2i endpoint to use. Prefer the one already selected this
-      // session; otherwise auto-select (single -> that one, multiple -> first).
-      const endpoints = i2iEndpoints;
-      if (endpoints.length === 0) return;
+      // Route by the Variation Settings "Model" dropdown: a BYO i2i endpoint
+      // (i2iEndpointUuid set) runs image-to-image off the source frame; with no
+      // endpoint selected we fall back to the built-in text-to-image model.
+      const endpointUuid = useFlowStore.getState().i2iEndpointUuid;
+      const i2iEndpoint = endpointUuid
+        ? i2iEndpoints.find((ep) => ep.uuid === endpointUuid)
+        : undefined;
 
-      let endpointUuid = useFlowStore.getState().i2iEndpointUuid;
-      if (!endpointUuid || !endpoints.some((ep) => ep.uuid === endpointUuid)) {
-        // TODO: inline picker when multiple i2i endpoints are configured.
-        endpointUuid = endpoints[0].uuid;
-        setI2iEndpoint(endpointUuid);
-      }
-
-      // Source image — the worker adapter DOWNLOADS the `image` field as a
+      // Source image — the i2i worker adapter DOWNLOADS the `image` field as a
       // fetchable URL, so we must send the presigned imageUrl, NOT a Dream UUID
-      // (a UUID is not fetchable). Skip if there's no usable URL.
+      // (a UUID is not fetchable). Required only for the i2i route.
       const sourceImage = keyframe.imageUrl;
-      if (!sourceImage) return;
+      if (i2iEndpoint && !sourceImage) return;
 
       // Read Variation Settings at call time (NOT via React subscription) to
       // keep the callback identity stable across settings keystrokes.
       const {
         imagePrompt,
+        imageGenParams,
         variationPresetId,
         variationCustomPrompt,
         variationSeed,
@@ -250,13 +246,21 @@ export const FlowBuilder: React.FC = () => {
       const headers = getRequestHeaders({ contentType: ContentType.json });
       void Promise.allSettled(
         candidates.map(async ({ id }, i) => {
-          const algoParams = {
-            userEndpointUuid: endpointUuid,
-            image: sourceImage,
-            prompt: `${basePrompt}, ${modifiers[i % modifiers.length]}`,
-            seed: baseSeed,
-            n: 1,
-          };
+          const prompt = `${basePrompt}, ${modifiers[i % modifiers.length]}`;
+          const algoParams = i2iEndpoint
+            ? {
+                userEndpointUuid: i2iEndpoint.uuid,
+                image: sourceImage,
+                prompt,
+                seed: baseSeed,
+                n: 1,
+              }
+            : {
+                infinidream_algorithm: imageGenParams.model,
+                prompt,
+                size: imageGenParams.size,
+                seed: baseSeed,
+              };
           try {
             const { data } = await axiosClient.post(
               "/v1/dream",
@@ -287,7 +291,7 @@ export const FlowBuilder: React.FC = () => {
         }),
       );
     },
-    [i2iEndpoints, setI2iEndpoint, addI2iCandidates, updateKeyframe],
+    [i2iEndpoints, addI2iCandidates, updateKeyframe],
   );
 
   const handleAcceptI2iCandidate = useCallback(

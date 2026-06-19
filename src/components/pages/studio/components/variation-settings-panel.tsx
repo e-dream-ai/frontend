@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { useStudioStore, DEFAULT_VARIATION_SEED } from "@/stores/studio.store";
+import { useFlowStore } from "@/stores/flow.store";
+import { useUserApiEndpoints } from "@/api/user-api-endpoints/useUserApiEndpoints";
 import type { ImageModel } from "@/types/studio.types";
 import {
   VARIATION_PRESETS,
@@ -47,6 +49,17 @@ export const VariationSettingsPanel: React.FC = () => {
   const variationSeed = useStudioStore((s) => s.variationSeed);
   const setVariationSeed = useStudioStore((s) => s.setVariationSeed);
 
+  // BYO image-to-image endpoints (user-configured API keys). Selecting one in
+  // the Model dropdown routes Vary through that endpoint instead of a built-in
+  // text-to-image model. The selection lives on the flow store so the
+  // per-keyframe Vary handler can read it.
+  const { data: endpointsData } = useUserApiEndpoints();
+  const i2iEndpoints = (endpointsData?.data?.endpoints ?? []).filter(
+    (ep) => ep.capabilities.imageToImage,
+  );
+  const i2iEndpointUuid = useFlowStore((s) => s.i2iEndpointUuid);
+  const setI2iEndpoint = useFlowStore((s) => s.setI2iEndpoint);
+
   // Custom variations are optional and collapsed by default.
   const [expanded, setExpanded] = useState(false);
 
@@ -70,9 +83,18 @@ export const VariationSettingsPanel: React.FC = () => {
         <FieldGroup>
           <FieldLabel>Model</FieldLabel>
           <Select
-            value={model}
+            value={i2iEndpointUuid ? `endpoint:${i2iEndpointUuid}` : model}
             onChange={(e) => {
-              const newModel = e.target.value as ImageModel;
+              const value = e.target.value;
+              if (value.startsWith("endpoint:")) {
+                // BYO i2i endpoint: route Vary through it; leave the built-in
+                // model untouched so switching back restores the prior choice.
+                setI2iEndpoint(value.slice("endpoint:".length));
+                return;
+              }
+              // Built-in model: clear any i2i endpoint so Vary uses the model.
+              setI2iEndpoint(null);
+              const newModel = value as ImageModel;
               setImageGenParams({
                 model: newModel,
                 size: clampSizeToModel(size, newModel),
@@ -84,6 +106,15 @@ export const VariationSettingsPanel: React.FC = () => {
                 {MODEL_LABELS[m]}
               </option>
             ))}
+            {i2iEndpoints.length > 0 && (
+              <optgroup label="My i2i endpoints">
+                {i2iEndpoints.map((ep) => (
+                  <option key={ep.uuid} value={`endpoint:${ep.uuid}`}>
+                    {ep.name}
+                  </option>
+                ))}
+              </optgroup>
+            )}
           </Select>
         </FieldGroup>
         <FieldGroup>
