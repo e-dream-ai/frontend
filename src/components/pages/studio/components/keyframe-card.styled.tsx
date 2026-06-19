@@ -314,7 +314,7 @@ export const DeleteButton = styled.button`
   height: 20px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.7);
-  color: ${FLOW.textDim};
+  color: ${FLOW.text};
   font-size: 12px;
   display: flex;
   align-items: center;
@@ -339,7 +339,7 @@ export const VaryButton = styled.button`
   height: 22px;
   border-radius: 50%;
   background: rgba(0, 0, 0, 0.7);
-  color: ${FLOW.textDim};
+  color: ${FLOW.text};
   display: flex;
   align-items: center;
   justify-content: center;
