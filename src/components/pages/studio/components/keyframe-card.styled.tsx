@@ -329,12 +329,12 @@ export const DeleteButton = styled.button`
   }
 `;
 
-// Per-keyframe "Vary" trigger — a circular shuffle icon button (bottom-right),
+// Per-keyframe "Vary" trigger — a circular shuffle icon button (top-left),
 // revealed on hover. Generates i2i/t2i variation candidates for this frame.
 export const VaryButton = styled.button`
   position: absolute;
-  bottom: 4px;
-  right: 4px;
+  top: 4px;
+  left: 4px;
   width: 22px;
   height: 22px;
   border-radius: 50%;
