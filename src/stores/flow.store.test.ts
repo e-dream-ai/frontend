@@ -364,7 +364,7 @@ describe("Phase 1: transitions", () => {
       expect(s.globalPrompt).toBe("");
       expect(s.globalNegativePrompt).toBe("");
       expect(s.globalDuration).toBe(5);
-      expect(s.globalModel).toBe("ltx-i2v");
+      expect(s.globalModel).toBe("kling-25-i2v");
       expect(s.globalNumInferenceSteps).toBe(30);
       expect(s.globalGuidance).toBe(5.0);
       expect(s.selectedTransitionIndex).toBeNull();

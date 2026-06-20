@@ -25,11 +25,16 @@ export interface StudioAction {
   lowNoiseLoras?: LoRAConfig[];
 }
 
-export type VideoModel = "wan-i2v" | "ltx-i2v" | "kling-i2v";
+export type VideoModel = "wan-i2v" | "ltx-i2v" | "kling-i2v" | "kling-25-i2v";
 
 export type UprezModel = "uprez";
 
-export type StudioJobType = "wan-i2v" | "ltx-i2v" | "kling-i2v" | "uprez";
+export type StudioJobType =
+  | "wan-i2v"
+  | "ltx-i2v"
+  | "kling-i2v"
+  | "kling-25-i2v"
+  | "uprez";
 
 export interface StudioJob {
   imageId: string;
@@ -53,7 +58,7 @@ export interface VideoGenParams {
   guidance: number;
 }
 
-export type ImageModel = "qwen-image" | "z-image-turbo";
+export type ImageModel = "qwen-image" | "z-image-turbo" | "flux-schnell";
 
 export interface ImageGenParams {
   model: ImageModel;

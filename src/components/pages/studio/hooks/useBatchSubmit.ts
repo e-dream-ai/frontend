@@ -7,6 +7,7 @@ import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
 } from "../constants/duration-options";
+import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 
 // Serialized to avoid concurrent auth refresh races (see fix/session-refresh-race on backend)
@@ -24,6 +25,7 @@ export const useBatchSubmit = () => {
   const jobs = useStudioStore((s) => s.jobs);
 
   const createDream = useCreateDreamFromPrompt();
+  const modelConstraints = useModelConstraints({ mediaType: "video" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const getSelectedCombinations = useCallback(() => {
@@ -74,7 +76,7 @@ export const useBatchSubmit = () => {
       const combos = getSelectedCombinations();
       const allowedDurations = getAllowedDurationsForActions(
         combos.map(({ action }) => action),
-        videoGenParams.model,
+        modelConstraints.get(videoGenParams.model)?.durationsSec,
       );
       const duration = clampDurationToAllowed(
         videoGenParams.duration,
@@ -160,6 +162,7 @@ export const useBatchSubmit = () => {
     setOutputPlaylistId,
     getSelectedCombinations,
     videoGenParams,
+    modelConstraints,
     createDream,
     addJob,
     setActiveTab,

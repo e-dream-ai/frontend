@@ -97,7 +97,7 @@ const PHASE_1_DEFAULTS = {
   globalPrompt: "",
   globalNegativePrompt: "",
   globalDuration: 5,
-  globalModel: "ltx-i2v" as VideoModel,
+  globalModel: "kling-25-i2v" as VideoModel,
   globalNumInferenceSteps: 30,
   globalGuidance: 5.0,
   globalLora: undefined as LoRAConfig[] | undefined,
@@ -337,7 +337,7 @@ export const useFlowStore = create<FlowStoreState>()(
     }),
     {
       name: "flow-session",
-      version: 3,
+      version: 4,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as Record<string, unknown>;
         if (version < 2) {
@@ -352,6 +352,13 @@ export const useFlowStore = create<FlowStoreState>()(
             ...state,
             globalNegativePrompt: "",
             globalModel: "ltx-i2v",
+          };
+        }
+        if (version < 4) {
+          return {
+            ...state,
+            globalModel: "kling-25-i2v",
+            globalDuration: 5,
           };
         }
         return state;

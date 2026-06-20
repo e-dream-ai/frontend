@@ -27,9 +27,9 @@ export const buildVideoAlgoParams = ({
   const hasLoras = hasActionLoras(action);
   const trimmedNegative = negativePrompt?.trim();
 
-  if (model === "kling-i2v") {
+  if (model === "kling-i2v" || model === "kling-25-i2v") {
     const params: Record<string, unknown> = {
-      infinidream_algorithm: "kling-i2v",
+      infinidream_algorithm: model,
       prompt: action.prompt,
       source_dream_uuid: imageUuid,
       duration,

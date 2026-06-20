@@ -9,6 +9,7 @@ import {
   getAllowedDurationsForActions,
   hasActionLoras,
 } from "../constants/duration-options";
+import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import {
   GenerateSection,
@@ -39,6 +40,7 @@ const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
   "ltx-i2v": "LTX 2.3",
   "wan-i2v": "Wan I2V",
   "kling-i2v": "Kling 3.0 Pro",
+  "kling-25-i2v": "Kling 2.5 Turbo Pro",
 };
 
 const VIDEO_MODELS: VideoModel[] = ["ltx-i2v", "wan-i2v"];
@@ -74,13 +76,14 @@ export const GenerateTab: React.FC = () => {
     () => getSelectedCombinations(),
     [getSelectedCombinations],
   );
+  const modelConstraints = useModelConstraints({ mediaType: "video" });
   const durationOptions = useMemo(
     () =>
       getAllowedDurationsForActions(
         newCombos.map(({ action }) => action),
-        videoGenParams.model,
+        modelConstraints.get(videoGenParams.model)?.durationsSec,
       ),
-    [newCombos, videoGenParams.model],
+    [newCombos, videoGenParams.model, modelConstraints],
   );
 
   const showLtxHint = useMemo(() => {

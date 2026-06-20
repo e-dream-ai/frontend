@@ -3,6 +3,7 @@ import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import type { LoRAConfig, VideoModel } from "@/types/studio.types";
 import { useModels } from "@/api/model/query/useModels";
+import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
 import {
   getAllowedDurationsForActions,
@@ -75,6 +76,7 @@ export function TransitionSettingsPanel({
 
   const { data: modelsData } = useModels({ mediaType: "video" });
   const modelOptions = modelsData?.data?.models ?? [];
+  const modelConstraints = useModelConstraints({ mediaType: "video" });
 
   const [advancedOpen, setAdvancedOpen] = useState(false);
 
@@ -93,6 +95,9 @@ export function TransitionSettingsPanel({
   const currentDuration =
     selectedTransition?.durationOverride ?? globalDuration;
   const currentModel = selectedTransition?.modelOverride ?? globalModel;
+  const currentConstraints = modelConstraints.get(currentModel);
+  const currentModelDurations = currentConstraints?.durationsSec;
+  const supportsSteps = currentConstraints?.supportsSteps ?? true;
   const currentSteps =
     selectedTransition?.numInferenceStepsOverride ?? globalNumInferenceSteps;
   const currentGuidance =
@@ -110,12 +115,13 @@ export function TransitionSettingsPanel({
   // Compute allowed durations
   const allowedDurations = useMemo(() => {
     if (!currentPresetId) {
-      return getAllowedDurationsForActions([], currentModel);
+      return getAllowedDurationsForActions([], currentModelDurations);
     }
     const action = resolvePresetAction(currentPresetId);
-    if (!action) return getAllowedDurationsForActions([], currentModel);
-    return getAllowedDurationsForActions([action], currentModel);
-  }, [currentPresetId, currentModel]);
+    if (!action)
+      return getAllowedDurationsForActions([], currentModelDurations);
+    return getAllowedDurationsForActions([action], currentModelDurations);
+  }, [currentPresetId, currentModelDurations]);
 
   // Extract available LoRA options for the current model from preset packs.
   // Each unique LoRA (by path) becomes a selectable option.
@@ -226,9 +232,10 @@ export function TransitionSettingsPanel({
       }
 
       // Clamp duration if needed
-      const newAllowed = presetName
-        ? getAllowedDurationsForActions(action ? [action] : [], currentModel)
-        : getAllowedDurationsForActions([], currentModel);
+      const newAllowed = getAllowedDurationsForActions(
+        action ? [action] : [],
+        currentModelDurations,
+      );
       const clamped = clampDurationToAllowed(currentDuration, newAllowed);
       if (clamped !== currentDuration) {
         setValue("durationOverride", clamped);
@@ -236,7 +243,7 @@ export function TransitionSettingsPanel({
     },
     [
       setValue,
-      currentModel,
+      currentModelDurations,
       currentDuration,
       isPerTransition,
       selectedTransitionIndex,
@@ -248,16 +255,17 @@ export function TransitionSettingsPanel({
       setValue("modelOverride", model);
 
       const action = resolvePresetAction(currentPresetId);
+      const fixedDurations = modelConstraints.get(model)?.durationsSec;
       const newAllowed = getAllowedDurationsForActions(
         action ? [action] : [],
-        model,
+        fixedDurations,
       );
       const clamped = clampDurationToAllowed(currentDuration, newAllowed);
       if (clamped !== currentDuration) {
         setValue("durationOverride", clamped);
       }
     },
-    [currentPresetId, currentDuration, setValue],
+    [currentPresetId, currentDuration, setValue, modelConstraints],
   );
 
   const handleLoraChange = useCallback(
@@ -284,7 +292,7 @@ export function TransitionSettingsPanel({
       };
       const newAllowed = getAllowedDurationsForActions(
         [clampAction],
-        currentModel,
+        currentModelDurations,
       );
       const clamped = clampDurationToAllowed(currentDuration, newAllowed);
       if (clamped !== currentDuration) {
@@ -296,7 +304,7 @@ export function TransitionSettingsPanel({
       selectedTransitionIndex,
       loraOptions,
       currentPresetId,
-      currentModel,
+      currentModelDurations,
       currentDuration,
       setValue,
     ],
@@ -495,14 +503,12 @@ export function TransitionSettingsPanel({
 
             <AdvancedToggle onClick={() => setAdvancedOpen(!advancedOpen)}>
               {advancedOpen ? "\u25BE" : "\u25B8"} Advanced
-              {currentModel !== "kling-i2v"
-                ? " (steps, guidance)"
-                : " (guidance)"}
+              {supportsSteps ? " (steps, guidance)" : " (guidance)"}
             </AdvancedToggle>
 
             {advancedOpen && (
               <AdvancedFields>
-                {currentModel !== "kling-i2v" && (
+                {supportsSteps && (
                   <FieldGroup>
                     <FieldLabel>Steps</FieldLabel>
                     <NumberInput

@@ -9,6 +9,7 @@ import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
 } from "../constants/duration-options";
+import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import { GenerateSection, SectionTitle } from "./images-tab.styled";
@@ -51,6 +52,7 @@ export const ResultsTab: React.FC = () => {
 
   const videoGenParams = useStudioStore((s) => s.videoGenParams);
   const removeJob = useStudioStore((s) => s.removeJob);
+  const modelConstraints = useModelConstraints({ mediaType: "video" });
 
   const [isUprezzing, setIsUprezzing] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
@@ -245,7 +247,7 @@ export const ResultsTab: React.FC = () => {
     const failedActionIds = new Set(failedJobs.map((j) => j.actionId));
     const allowedDurations = getAllowedDurationsForActions(
       actions.filter((action) => failedActionIds.has(action.id)),
-      videoGenParams.model,
+      modelConstraints.get(videoGenParams.model)?.durationsSec,
     );
     const duration = clampDurationToAllowed(
       videoGenParams.duration,
@@ -326,6 +328,7 @@ export const ResultsTab: React.FC = () => {
     images,
     actions,
     videoGenParams,
+    modelConstraints,
     createDream,
     removeJob,
     addJob,
