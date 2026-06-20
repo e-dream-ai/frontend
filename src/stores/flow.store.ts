@@ -147,6 +147,29 @@ function deriveTransitions(
   });
 }
 
+export const flowPartialize = (state: FlowStoreState) => ({
+  keyframes: state.keyframes
+    .filter((kf) => (kf.keyframeUuid || kf.dreamUuid) && !kf.uploadStatus)
+    .map((kf) => ({
+      id: kf.id,
+      keyframeUuid: kf.keyframeUuid,
+      dreamUuid: kf.dreamUuid,
+      imageUrl: kf.imageUrl,
+      name: kf.name,
+      isLoopKeyframe: kf.isLoopKeyframe,
+    })),
+  loop: state.loop,
+  transitions: state.transitions,
+  globalPresetId: state.globalPresetId,
+  globalPrompt: state.globalPrompt,
+  globalNegativePrompt: state.globalNegativePrompt,
+  globalDuration: state.globalDuration,
+  globalModel: state.globalModel,
+  globalNumInferenceSteps: state.globalNumInferenceSteps,
+  globalGuidance: state.globalGuidance,
+  globalLora: state.globalLora,
+});
+
 export const useFlowStore = create<FlowStoreState>()(
   persist(
     (set, get) => ({
@@ -317,9 +340,11 @@ export const useFlowStore = create<FlowStoreState>()(
         set((s) => ({
           transitions: s.transitions.map((t) => {
             const dreamStale =
-              t.status === "processing" || t.status === "queue";
+              (t.status === "processing" || t.status === "queue") &&
+              !t.dreamUuid;
             const uprezStale =
-              t.uprezStatus === "processing" || t.uprezStatus === "queue";
+              (t.uprezStatus === "processing" || t.uprezStatus === "queue") &&
+              !t.uprezDreamUuid;
             if (!dreamStale && !uprezStale) return t;
             return {
               ...t,
@@ -365,42 +390,14 @@ export const useFlowStore = create<FlowStoreState>()(
       },
       onRehydrateStorage: () => (state) => {
         if (!state) return;
-        // Order matters: reconcile must run first to mark stale in-flight
-        // jobs as "failed" before recompute preserves them via the existing map.
         state.reconcileStaleTransitions();
         state.recomputeTransitions();
-        // Drop a persisted selection that no longer points at a real transition.
         const idx = state.selectedTransitionIndex;
         if (idx !== null && (idx < 0 || idx >= state.transitions.length)) {
           state.selectTransition(null);
         }
       },
-      partialize: (state) => ({
-        // Strip transient upload state and skip not-yet-finalized keyframes —
-        // a half-uploaded record with a dead objectURL is worse than nothing.
-        // A finalized keyframe has either a backend Keyframe UUID (playlist)
-        // or an image Dream UUID (uploaded).
-        keyframes: state.keyframes
-          .filter((kf) => (kf.keyframeUuid || kf.dreamUuid) && !kf.uploadStatus)
-          .map((kf) => ({
-            id: kf.id,
-            keyframeUuid: kf.keyframeUuid,
-            dreamUuid: kf.dreamUuid,
-            imageUrl: kf.imageUrl,
-            name: kf.name,
-            isLoopKeyframe: kf.isLoopKeyframe,
-          })),
-        loop: state.loop,
-        transitions: state.transitions,
-        globalPresetId: state.globalPresetId,
-        globalPrompt: state.globalPrompt,
-        globalNegativePrompt: state.globalNegativePrompt,
-        globalDuration: state.globalDuration,
-        globalModel: state.globalModel,
-        globalNumInferenceSteps: state.globalNumInferenceSteps,
-        globalGuidance: state.globalGuidance,
-        globalLora: state.globalLora,
-      }),
+      partialize: flowPartialize,
     },
   ),
 );

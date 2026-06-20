@@ -25,6 +25,26 @@ export const StudioHeader = styled.div`
   border-bottom: 1px solid ${FLOW.border};
   gap: 16px;
   flex-shrink: 0;
+
+  @media (max-width: 480px) {
+    flex-wrap: wrap;
+    padding: 10px 14px;
+    gap: 10px;
+  }
+`;
+
+export const TitleGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+export const Logo = styled.img`
+  width: 32px;
+  height: 32px;
+  border-radius: ${FLOW.radiusSm};
+  object-fit: contain;
+  flex-shrink: 0;
 `;
 
 export const BackButton = styled.button`
