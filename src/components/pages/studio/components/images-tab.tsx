@@ -5,10 +5,11 @@ import { axiosClient } from "@/client/axios.client";
 import type { StudioImage, ImageModel } from "@/types/studio.types";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
+import { useModels } from "@/api/model/query/useModels";
+import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import {
-  SIZE_OPTIONS,
   IMAGE_COUNT_OPTIONS,
-  clampSizeToModel,
+  clampSizeToAllowed,
 } from "../constants/size-options";
 import {
   GenerateSection,
@@ -39,13 +40,6 @@ import {
 import { PresignedImage } from "@/components/shared/presigned-image";
 import { AddFromPlaylistModal } from "./add-from-playlist-modal";
 
-const MODEL_LABELS: Record<ImageModel, string> = {
-  "z-image-turbo": "Z Image Turbo",
-  "qwen-image": "Qwen Image",
-};
-
-const IMAGE_MODELS: ImageModel[] = ["z-image-turbo", "qwen-image"];
-
 export const ImagesTab: React.FC = () => {
   const imagePrompt = useStudioStore((s) => s.imagePrompt);
   const setImagePrompt = useStudioStore((s) => s.setImagePrompt);
@@ -69,7 +63,14 @@ export const ImagesTab: React.FC = () => {
     null,
   );
 
-  const sizeOptions = SIZE_OPTIONS[imageGenParams.model];
+  const { data: modelsData } = useModels({ mediaType: "image" });
+  const modelOptions = useMemo(
+    () => modelsData?.data?.models ?? [],
+    [modelsData?.data?.models],
+  );
+  const modelConstraints = useModelConstraints({ mediaType: "image" });
+  const sizeOptions =
+    modelConstraints.get(imageGenParams.model)?.imageSizes ?? [];
 
   const processedImages = useMemo(
     () => images.filter((img) => img.status === "processed"),
@@ -88,6 +89,9 @@ export const ImagesTab: React.FC = () => {
 
     const baseSeed = Math.floor(Math.random() * 99_000) + 1;
     const currentImageCount = useStudioStore.getState().images.length;
+    const modelLabel =
+      modelOptions.find((m) => m.id === imageGenParams.model)?.label ??
+      imageGenParams.model;
 
     const promises = Array.from(
       { length: imageGenParams.seedCount },
@@ -102,9 +106,7 @@ export const ImagesTab: React.FC = () => {
 
         return axiosClient
           .post("/v1/dream", {
-            name: `${MODEL_LABELS[imageGenParams.model]} ${
-              currentImageCount + i + 1
-            }`,
+            name: `${modelLabel} ${currentImageCount + i + 1}`,
             prompt: JSON.stringify(algoParams),
             description: "Studio generated image",
           })
@@ -129,7 +131,7 @@ export const ImagesTab: React.FC = () => {
 
     await Promise.all(promises);
     setIsGenerating(false);
-  }, [imagePrompt, imageGenParams, addImage, setIsGenerating]);
+  }, [imagePrompt, imageGenParams, modelOptions, addImage, setIsGenerating]);
 
   const handleUploadFiles = useCallback(
     async (files: File[]) => {
@@ -194,15 +196,17 @@ export const ImagesTab: React.FC = () => {
               value={imageGenParams.model}
               onChange={(e) => {
                 const newModel = e.target.value as ImageModel;
+                const newSizes =
+                  modelConstraints.get(newModel)?.imageSizes ?? [];
                 setImageGenParams({
                   model: newModel,
-                  size: clampSizeToModel(imageGenParams.size, newModel),
+                  size: clampSizeToAllowed(imageGenParams.size, newSizes),
                 });
               }}
             >
-              {IMAGE_MODELS.map((m) => (
-                <option key={m} value={m}>
-                  {MODEL_LABELS[m]}
+              {modelOptions.map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.label}
                 </option>
               ))}
             </StyledSelect>

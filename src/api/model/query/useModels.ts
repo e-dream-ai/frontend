@@ -17,18 +17,25 @@ const getModels = (mediaType?: string) => {
       .then((res) => res.data);
 };
 
-type HookParams = {
+export type ModelsResponse = ApiResponse<{ models: ModelCatalogEntry[] }>;
+
+type HookParams<TData> = {
   mediaType?: "video" | "image";
+  select?: (data: ModelsResponse) => TData;
 };
 
-export const useModels = ({ mediaType }: HookParams = {}) => {
+export const useModels = <TData = ModelsResponse>({
+  mediaType,
+  select,
+}: HookParams<TData> = {}) => {
   const { user } = useAuth();
-  return useQuery<ApiResponse<{ models: ModelCatalogEntry[] }>, Error>(
+  return useQuery<ModelsResponse, Error, TData>(
     [MODELS_QUERY_KEY, mediaType ?? "all"],
     getModels(mediaType),
     {
       enabled: Boolean(user),
       staleTime: Infinity,
+      select,
     },
   );
 };

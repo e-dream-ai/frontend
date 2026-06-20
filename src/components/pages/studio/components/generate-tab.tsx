@@ -9,6 +9,7 @@ import {
   getAllowedDurationsForActions,
   hasActionLoras,
 } from "../constants/duration-options";
+import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import {
   GenerateSection,
@@ -75,13 +76,14 @@ export const GenerateTab: React.FC = () => {
     () => getSelectedCombinations(),
     [getSelectedCombinations],
   );
+  const modelConstraints = useModelConstraints({ mediaType: "video" });
   const durationOptions = useMemo(
     () =>
       getAllowedDurationsForActions(
         newCombos.map(({ action }) => action),
-        videoGenParams.model,
+        modelConstraints.get(videoGenParams.model)?.durationsSec,
       ),
-    [newCombos, videoGenParams.model],
+    [newCombos, videoGenParams.model, modelConstraints],
   );
 
   const showLtxHint = useMemo(() => {
