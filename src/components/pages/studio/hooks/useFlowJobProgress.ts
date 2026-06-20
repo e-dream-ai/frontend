@@ -181,6 +181,7 @@ export function useFlowJobProgress() {
       }
     };
 
+    poll();
     const interval = setInterval(poll, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [pendingUuids.length]);

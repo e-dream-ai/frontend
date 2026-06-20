@@ -152,6 +152,7 @@ export const useStudioJobProgress = () => {
       }
     };
 
+    pollPending();
     const interval = setInterval(pollPending, POLL_INTERVAL_MS);
     return () => clearInterval(interval);
   }, [hasPending]);
