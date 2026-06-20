@@ -103,16 +103,6 @@ export function AddEndpointModal({
     setStep("form");
   }, []);
 
-  const handleSelectCustom = useCallback(() => {
-    setSelectedPreset(null);
-    setIsCustom(true);
-    setName("");
-    setEndpointUrl("");
-    setModelId("");
-    setProviderType("openai");
-    setStep("form");
-  }, []);
-
   const handleSave = useCallback(async () => {
     setError("");
 
@@ -228,15 +218,6 @@ export function AddEndpointModal({
                 </PresetCaps>
               </PresetCard>
             ))}
-
-            <PresetCard onClick={handleSelectCustom} style={{ opacity: 0.7 }}>
-              <PresetIcon $color="#2a2a2a">⚙</PresetIcon>
-              <PresetInfo>
-                <PresetName>Custom OpenAI-Compatible</PresetName>
-                <PresetDesc>Any endpoint that speaks OpenAI format</PresetDesc>
-              </PresetInfo>
-              <PresetCaps style={{ color: "#888" }}>manual</PresetCaps>
-            </PresetCard>
           </>
         ) : (
           <>
