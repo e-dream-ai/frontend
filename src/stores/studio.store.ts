@@ -72,6 +72,22 @@ const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
   guidance: 5.0,
 };
 
+export const studioPartialize = (state: StudioState) => ({
+  activeTab: state.activeTab,
+  imagePrompt: state.imagePrompt,
+  imageGenParams: state.imageGenParams,
+  images: state.images.map((img) => ({
+    ...img,
+    previewFrame: undefined,
+  })),
+  actions: state.actions,
+  videoGenParams: state.videoGenParams,
+  outputPlaylistId: state.outputPlaylistId,
+  uprezPlaylistId: state.uprezPlaylistId,
+  excludedCombos: [...(state.excludedCombos as Set<string>)],
+  jobs: state.jobs.map((j) => ({ ...j, previewFrame: undefined })),
+});
+
 export const useStudioStore = create<StudioState>()(
   persist(
     (set) => ({
@@ -219,22 +235,7 @@ export const useStudioStore = create<StudioState>()(
     {
       name: "studio-session",
       version: 5,
-      partialize: (state) => ({
-        activeTab: state.activeTab,
-        imagePrompt: state.imagePrompt,
-        imageGenParams: state.imageGenParams,
-        images: state.images.map((img) => ({
-          ...img,
-          previewFrame: undefined,
-        })),
-        actions: state.actions,
-        videoGenParams: state.videoGenParams,
-        outputPlaylistId: state.outputPlaylistId,
-        uprezPlaylistId: state.uprezPlaylistId,
-        excludedCombos: [...(state.excludedCombos as Set<string>)],
-        jobs: state.jobs.map((j) => ({ ...j, previewFrame: undefined })),
-        // Intentionally excluded: newCompletedCount, isGenerating
-      }),
+      partialize: studioPartialize,
       storage: {
         getItem: (name) => {
           const raw = localStorage.getItem(name);
