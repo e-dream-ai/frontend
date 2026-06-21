@@ -73,7 +73,7 @@ export function resolveEffectiveSettings(
     const matchesPreset =
       presetAction?.highNoiseLoras?.[0]?.path === explicitLora[0]?.path;
     action = {
-      prompt,
+      prompt: prompt || presetAction?.prompt || "",
       highNoiseLoras: explicitLora,
       lowNoiseLoras: matchesPreset ? presetAction!.lowNoiseLoras ?? [] : [],
     };
@@ -81,7 +81,7 @@ export function resolveEffectiveSettings(
     const presetAction = resolvePresetAction(presetId);
     if (presetAction) {
       action = {
-        prompt,
+        prompt: prompt || presetAction.prompt,
         highNoiseLoras: presetAction.highNoiseLoras ?? [],
         lowNoiseLoras: presetAction.lowNoiseLoras ?? [],
       };

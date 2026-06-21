@@ -8,16 +8,19 @@ import { useStudioModeStore } from "@/stores/studio-mode.store";
 import { useFlowStore } from "@/stores/flow.store";
 import { ROUTES } from "@/constants/routes.constants";
 import { StudioTabs } from "./components/studio-tabs";
+import { SessionSwitcher } from "./components/session-switcher";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
+import { useSessionAutoSave } from "./hooks/useSessionAutoSave";
 import { useFileDropUpload } from "./hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import {
   StudioContainer,
   StudioHeader,
   StudioTitle,
+  TitleGroup,
+  Logo,
   BackButton,
   HeaderSpacer,
-  NewSessionButton,
   StudioBody,
   ModeToggle,
   ModeButton,
@@ -47,11 +50,8 @@ export const StudioPage: React.FC = () => {
   const setMode = useStudioModeStore((s) => s.setMode);
 
   const activeTab = useStudioStore((s) => s.activeTab);
-  const resetSession = useStudioStore((s) => s.resetSession);
-  const hasContent = useStudioStore(
-    (s) => s.images.length > 0 || s.actions.length > 0 || s.jobs.length > 0,
-  );
   useStudioJobProgress();
+  useSessionAutoSave();
 
   const addImage = useStudioStore((s) => s.addImage);
   const updateImage = useStudioStore((s) => s.updateImage);
@@ -119,23 +119,16 @@ export const StudioPage: React.FC = () => {
     onFiles: handleStudioDrop,
   });
 
-  const handleNewSession = () => {
-    if (
-      !window.confirm(
-        "Start a new session? This will clear all current images, actions, and results.",
-      )
-    )
-      return;
-    resetSession();
-  };
-
   return (
     <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
         <BackButton onClick={handleBack} aria-label="Go back">
           <ArrowLeft size={16} />
         </BackButton>
-        <StudioTitle>Studio</StudioTitle>
+        <TitleGroup>
+          <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
+          <StudioTitle>Studio</StudioTitle>
+        </TitleGroup>
         <ModeToggle>
           <ModeButton $active={mode === "flow"} onClick={() => setMode("flow")}>
             Flow
@@ -148,11 +141,7 @@ export const StudioPage: React.FC = () => {
           </ModeButton>
         </ModeToggle>
         <HeaderSpacer />
-        {mode === "batch" && hasContent && (
-          <NewSessionButton onClick={handleNewSession}>
-            New Session
-          </NewSessionButton>
-        )}
+        <SessionSwitcher />
       </StudioHeader>
 
       <StudioBody $constrain={mode === "batch"}>

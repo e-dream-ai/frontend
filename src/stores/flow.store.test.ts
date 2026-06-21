@@ -360,7 +360,7 @@ describe("Phase 1: transitions", () => {
   describe("global settings", () => {
     it("has correct defaults", () => {
       const s = useFlowStore.getState();
-      expect(s.globalPresetId).toBe("");
+      expect(s.globalPresetId).toBe("Abstract");
       expect(s.globalPrompt).toBe("");
       expect(s.globalNegativePrompt).toBe("");
       expect(s.globalDuration).toBe(5);

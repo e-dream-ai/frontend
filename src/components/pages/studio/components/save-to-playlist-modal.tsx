@@ -6,6 +6,7 @@ import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
+import { useLinkPlaylistKeyframes } from "@/api/playlist/mutation/useLinkPlaylistKeyframes";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import { ROUTES } from "@/constants/routes.constants";
 import {
@@ -32,8 +33,8 @@ interface Props {
 }
 
 export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
-  const { transitions } = useFlowStore(
-    useShallow((s) => ({ transitions: s.transitions })),
+  const { transitions, loop } = useFlowStore(
+    useShallow((s) => ({ transitions: s.transitions, loop: s.loop })),
   );
 
   const completedTransitions = transitions.filter(
@@ -51,6 +52,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
   const { playlists, addPlaylistToCache } = useUserPlaylists();
   const createPlaylist = useCreatePlaylist();
   const addPlaylistItem = useAddPlaylistItem();
+  const linkPlaylistKeyframes = useLinkPlaylistKeyframes();
 
   const canSave =
     completedTransitions.length > 0 &&
@@ -95,6 +97,13 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
         });
       }
 
+      if (mode === "new") {
+        await linkPlaylistKeyframes.mutateAsync({
+          uuid: playlistUUID,
+          values: { loop, clear: true },
+        });
+      }
+
       toast.success(
         <span>
           Saved {total} transition{total !== 1 ? "s" : ""} to{" "}
@@ -121,6 +130,8 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     completedTransitions,
     createPlaylist,
     addPlaylistItem,
+    linkPlaylistKeyframes,
+    loop,
     addPlaylistToCache,
     playlists,
     onClose,
