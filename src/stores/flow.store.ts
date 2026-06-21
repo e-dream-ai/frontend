@@ -93,7 +93,7 @@ type FlowStoreState = {
 };
 
 const PHASE_1_DEFAULTS = {
-  globalPresetId: "",
+  globalPresetId: "Abstract",
   globalPrompt: "",
   globalNegativePrompt: "",
   globalDuration: 5,
