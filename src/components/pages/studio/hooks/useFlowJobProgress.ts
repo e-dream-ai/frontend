@@ -1,58 +1,33 @@
 import { useEffect, useCallback, useMemo, useRef } from "react";
-import Bugsnag from "@bugsnag/js";
 import { useFlowStore } from "@/stores/flow.store";
+import { useSessionStore } from "@/stores/session.store";
 import { useSocket } from "@/hooks/useSocket";
-import { axiosClient } from "@/client/axios.client";
-import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
+import { fetchDream } from "@/api/dream/query/useDream";
 import {
   JOB_PROGRESS_EVENT,
   JOIN_DREAM_ROOM_EVENT,
   LEAVE_DREAM_ROOM_EVENT,
 } from "@/constants/remote-control.constants";
-
-const POLL_INTERVAL_MS = 10_000;
-
-// Maps backend status strings to TransitionStatus
-function mapStatus(
-  backendStatus: string,
-): "queue" | "processing" | "processed" | "failed" | null {
-  switch (backendStatus?.toUpperCase?.()) {
-    case "IN_QUEUE":
-    case "QUEUE":
-      return "queue";
-    case "IN_PROGRESS":
-    case "PROCESSING":
-      return "processing";
-    case "COMPLETED":
-    case "PROCESSED":
-      return "processed";
-    case "FAILED":
-    case "TIMED_OUT":
-    case "CANCELLED":
-      return "failed";
-    default:
-      return null;
-  }
-}
+import {
+  mapSocketStatus,
+  shouldApplyStatus,
+  isPendingStatus,
+} from "./mapSocketStatus";
 
 export function useFlowJobProgress() {
-  const { socket } = useSocket();
+  const { socket, isConnected } = useSocket();
 
   const transitions = useFlowStore((s) => s.transitions);
   const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
 
-  // Collect pending entries, UUIDs, and lookup map in one pass
   const { pendingEntries, pendingUuids, uuidMap } = useMemo(() => {
     const entries: Array<{ uuid: string; index: number; isUprez: boolean }> =
       [];
     transitions.forEach((t, i) => {
-      if (t.dreamUuid && (t.status === "queue" || t.status === "processing")) {
+      if (t.dreamUuid && isPendingStatus(t.status)) {
         entries.push({ uuid: t.dreamUuid, index: i, isUprez: false });
       }
-      if (
-        t.uprezDreamUuid &&
-        (t.uprezStatus === "queue" || t.uprezStatus === "processing")
-      ) {
+      if (t.uprezDreamUuid && isPendingStatus(t.uprezStatus)) {
         entries.push({ uuid: t.uprezDreamUuid, index: i, isUprez: true });
       }
     });
@@ -63,7 +38,6 @@ export function useFlowJobProgress() {
     return { pendingEntries: entries, pendingUuids: uuids, uuidMap: map };
   }, [transitions]);
 
-  // Handle job:progress events
   const handleProgress = useCallback(
     (data: {
       dreamUuid?: string;
@@ -77,25 +51,33 @@ export function useFlowJobProgress() {
       const entry = uuidMap.get(uuid);
       if (!entry) return;
 
-      const mappedStatus = mapStatus(data.status ?? "");
-      if (!mappedStatus) return;
+      const transition = useFlowStore.getState().transitions[entry.index];
+      if (!transition) return;
+
+      const current = entry.isUprez
+        ? transition.uprezStatus
+        : transition.status;
+      const mappedStatus = mapSocketStatus(data.status);
+
+      const currentTracked =
+        current === "queue" || current === "processing" ? current : undefined;
+      const nextStatus = shouldApplyStatus(current, mappedStatus)
+        ? mappedStatus
+        : currentTracked;
+
+      if (!nextStatus) return;
 
       if (entry.isUprez) {
         useFlowStore
           .getState()
-          .updateTransitionUprezStatus(
-            entry.index,
-            mappedStatus,
-            data.progress,
-          );
+          .updateTransitionUprezStatus(entry.index, nextStatus, data.progress);
       } else {
-        updateTransitionStatus(entry.index, mappedStatus, data.progress);
+        updateTransitionStatus(entry.index, nextStatus, data.progress);
       }
     },
     [uuidMap, updateTransitionStatus],
   );
 
-  // Register Socket.IO event listener
   useEffect(() => {
     if (!socket) return;
     socket.on(JOB_PROGRESS_EVENT, handleProgress);
@@ -104,7 +86,6 @@ export function useFlowJobProgress() {
     };
   }, [socket, handleProgress]);
 
-  // Join/leave Socket.IO rooms — diff against previous set to avoid churn
   const joinedUuidsRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -122,8 +103,6 @@ export function useFlowJobProgress() {
     joinedUuidsRef.current = currentSet;
   }, [socket, pendingUuids]);
 
-  // Rejoin all known rooms on reconnect, and leave them all on unmount or
-  // socket swap. Keyed on [socket] so neither runs when the pending set changes.
   useEffect(() => {
     if (!socket) return;
     const rejoinAll = () => {
@@ -141,29 +120,27 @@ export function useFlowJobProgress() {
     };
   }, [socket]);
 
-  // Keep a ref to pendingEntries so the polling interval doesn't restart on every status update
   const pendingEntriesRef = useRef(pendingEntries);
   pendingEntriesRef.current = pendingEntries;
 
-  // Polling fallback — deps only on pendingUuids.length so the interval stays stable
+  const activeSessionId = useSessionStore((s) => s.activeSessionId);
+
   useEffect(() => {
     if (pendingUuids.length === 0) return;
 
-    const poll = async () => {
-      const entries = pendingEntriesRef.current;
-      const headers = getRequestHeaders({
-        contentType: ContentType.json,
-      });
-      for (const entry of entries) {
-        try {
-          const { data } = await axiosClient.get(`/v1/dream/${entry.uuid}`, {
-            headers,
-          });
-          const dream = data?.data?.dream;
-          if (!dream) continue;
+    for (const entry of pendingEntriesRef.current) {
+      fetchDream(entry.uuid)
+        .then((dream) => {
+          if (!dream) return;
 
-          const mappedStatus = mapStatus(dream.status);
-          if (!mappedStatus) continue;
+          const mappedStatus = mapSocketStatus(dream.status);
+          if (!mappedStatus) return;
+
+          const transition = useFlowStore.getState().transitions[entry.index];
+          const current = entry.isUprez
+            ? transition?.uprezStatus
+            : transition?.status;
+          if (!shouldApplyStatus(current, mappedStatus)) return;
 
           if (entry.isUprez) {
             useFlowStore
@@ -174,15 +151,8 @@ export function useFlowJobProgress() {
               .getState()
               .updateTransitionStatus(entry.index, mappedStatus);
           }
-        } catch (err) {
-          // Polling failure is non-fatal — Socket.IO is primary.
-          Bugsnag.notify(err as Error);
-        }
-      }
-    };
-
-    poll();
-    const interval = setInterval(poll, POLL_INTERVAL_MS);
-    return () => clearInterval(interval);
-  }, [pendingUuids.length]);
+        })
+        .catch(() => {});
+    }
+  }, [pendingUuids.length, activeSessionId, isConnected]);
 }
