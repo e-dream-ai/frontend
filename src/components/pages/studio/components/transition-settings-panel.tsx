@@ -87,9 +87,14 @@ export function TransitionSettingsPanel({
       ? transitions[selectedTransitionIndex]
       : null;
 
-  // Effective values (override > global)
+  // Effective values (override > global > preset fallback)
   const currentPresetId = selectedTransition?.presetOverride ?? globalPresetId;
-  const currentPrompt = selectedTransition?.promptOverride ?? globalPrompt;
+  const storedPrompt = selectedTransition?.promptOverride ?? globalPrompt;
+  const currentPresetFallbackPrompt = useMemo(
+    () => resolvePresetAction(currentPresetId)?.prompt ?? "",
+    [currentPresetId],
+  );
+  const currentPrompt = storedPrompt || currentPresetFallbackPrompt;
   const currentNegativePrompt =
     selectedTransition?.negativePromptOverride ?? globalNegativePrompt;
   const currentDuration =
