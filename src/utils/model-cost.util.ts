@@ -3,6 +3,9 @@ import { formatUsd } from "@/utils/credits.util";
 
 export type CostParams = { durationSec?: number; imageSize?: string };
 
+// KEEP IN SYNC with backend/src/utils/cost.util.ts (priceFromPricing / calculateJobCostUsd).
+// This mirrors the backend pricing formula for display only; the backend is authoritative
+// for actual charging. If you change one, change the other.
 const parseMegapixels = (imageSize: string): number | null => {
   const match = imageSize.match(/^(\d+)\s*[*x]\s*(\d+)$/i);
   if (!match) return null;
