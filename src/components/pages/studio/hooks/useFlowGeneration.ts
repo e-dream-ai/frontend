@@ -6,6 +6,8 @@ import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { buildVideoAlgoParams } from "@/components/pages/studio/utils/build-video-algo-params";
 import { resolveEffectiveSettings } from "@/components/pages/studio/utils/resolve-flow-settings";
 import type { FlowTransition } from "@/types/flow.types";
+import queryClient from "@/api/query-client";
+import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 
 // Cap concurrent dream creations so "Generate All" doesn't fan out 50+ requests at once.
 const GENERATE_CONCURRENCY = 4;
@@ -141,6 +143,9 @@ export function useFlowGeneration() {
           worker,
         ),
       );
+      if (targets.length > 0) {
+        await queryClient.invalidateQueries([USER_QUERY_KEY]);
+      }
     } finally {
       stopGenerating();
     }
