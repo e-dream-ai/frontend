@@ -4,6 +4,10 @@ import { useShallow } from "zustand/react/shallow";
 import type { LoRAConfig, VideoModel } from "@/types/studio.types";
 import { useModels } from "@/api/model/query/useModels";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
+import { CostEstimate } from "@/components/shared/cost-estimate/cost-estimate";
+import { CreditLimitNotice } from "@/components/shared/credit-limit-notice/credit-limit-notice";
+import { useCostEstimate } from "@/hooks/useCostEstimate";
+import { useCreditGuard } from "@/hooks/useCreditGuard";
 import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
 import {
   getAllowedDurationsForActions,
@@ -330,6 +334,20 @@ export function TransitionSettingsPanel({
 
   const generateOneDisabled = isGenerating || needsPrompt;
 
+  const generateCount = isPerTransition
+    ? 1
+    : transitions.filter(
+        (tr) => !["processed", "processing", "queue"].includes(tr.status),
+      ).length;
+  const { totalCostUsd, costBreakdown } = useCostEstimate({
+    model: modelOptions.find((m) => m.id === currentModel),
+    params: { durationSec: currentDuration },
+    count: generateCount,
+    breakdownKey: "components.cost_estimate.clips",
+  });
+  const { overBudget, canManageKey, resetIn, guardOverBudget } =
+    useCreditGuard(totalCostUsd);
+
   // Don't show if fewer than 2 keyframes
   if (keyframes.length < 2) return null;
 
@@ -415,6 +433,8 @@ export function TransitionSettingsPanel({
           </Select>
         </FieldGroup>
 
+        <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
+
         <GenerateButton
           $disabled={
             isPerTransition ? generateOneDisabled : generateAllDisabled
@@ -426,6 +446,7 @@ export function TransitionSettingsPanel({
               : undefined
           }
           onClick={() => {
+            if (guardOverBudget()) return;
             if (isPerTransition && selectedTransitionIndex !== null) {
               onGenerateOne(selectedTransitionIndex);
             } else {
@@ -446,6 +467,12 @@ export function TransitionSettingsPanel({
           Pick a preset or write a prompt to describe the motion.
         </ValidationHint>
       )}
+
+      <CreditLimitNotice
+        overBudget={overBudget}
+        canManageKey={canManageKey}
+        resetIn={resetIn}
+      />
 
       {/* Expand/collapse toggle */}
       {!settingsExpanded ? (

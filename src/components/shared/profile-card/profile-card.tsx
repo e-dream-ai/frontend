@@ -63,6 +63,8 @@ import {
 import { bytesToGB, GBToBytes } from "@/utils/file.util";
 import { toFixedNumber } from "@/utils/number.util";
 import ApiKeyCard from "../apikey-card/ApiKeyCard";
+import { ProviderKeyCard } from "../provider-key-card/provider-key-card";
+import { CreditsMeter } from "../credits-meter/credits-meter";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
 import { joinPaths } from "@/utils/router.util";
@@ -116,8 +118,8 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
   );
 
   return (
-    <Row flexWrap="wrap">
-      <Column flex={["0 0 100%", "0 0 50%"]} alignItems="center">
+    <Row flexWrap="wrap" justifyContent="space-between">
+      <Column flex={["0 0 100%", "0 0 50%", "0 0 30%"]} alignItems="center">
         <Avatar size="lg" url={avatarUrl} />
 
         <Button
@@ -141,7 +143,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
         )}
       </Column>
 
-      <Column flex={["0 0 100%", "0 0 35%"]} mt={["3rem", 0, 0]}>
+      <Column flex={["0 0 100%", "0 0 50%", "0 0 34%"]} mt={["3rem", 0, 0]}>
         <Input
           disabled
           placeholder={t("components.profile_card.name")}
@@ -273,6 +275,20 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
           </>
         )}
       </Column>
+
+      {showApiKeyCard && (
+        <Restricted to={PROFILE_PERMISSIONS.CAN_MANAGE_PROVIDER_KEY}>
+          <Column
+            flex={["0 0 100%", "0 0 100%", "0 0 28%"]}
+            mt={["3rem", "3rem", 0]}
+          >
+            <CreditsMeter user={user} />
+            <Row mt="4" width="100%">
+              <ProviderKeyCard />
+            </Row>
+          </Column>
+        </Restricted>
+      )}
 
       {showApiKeyCard && (
         <Row

@@ -21,6 +21,7 @@ export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   error?: string;
   outlined?: boolean;
   tooltipPlace?: PlacesType;
+  hideTooltip?: boolean;
   onClickAfter?: () => void;
 };
 
@@ -40,13 +41,16 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       name,
       placeholder,
       tooltipPlace = "right",
+      hideTooltip,
       ...props
     },
     ref,
   ) => {
     return (
       <InputGroup>
-        <Tooltip id={name} place={tooltipPlace} content={placeholder} />
+        {!hideTooltip && (
+          <Tooltip id={name} place={tooltipPlace} content={placeholder} />
+        )}
         <InputRow
           className="input-control"
           outlined={outlined}

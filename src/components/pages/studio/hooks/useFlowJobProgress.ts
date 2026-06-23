@@ -1,4 +1,5 @@
 import { useEffect, useCallback, useMemo, useRef } from "react";
+import { toast } from "react-toastify";
 import { useFlowStore } from "@/stores/flow.store";
 import { useSessionStore } from "@/stores/session.store";
 import { useSocket } from "@/hooks/useSocket";
@@ -19,6 +20,13 @@ export function useFlowJobProgress() {
 
   const transitions = useFlowStore((s) => s.transitions);
   const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
+
+  const toastedFailuresRef = useRef<Set<string>>(new Set());
+  const toastFailure = useCallback((uuid: string, error?: string | null) => {
+    if (toastedFailuresRef.current.has(uuid)) return;
+    toastedFailuresRef.current.add(uuid);
+    if (error) toast.error(error);
+  }, []);
 
   const { pendingEntries, pendingUuids, uuidMap } = useMemo(() => {
     const entries: Array<{ uuid: string; index: number; isUprez: boolean }> =
@@ -74,8 +82,14 @@ export function useFlowJobProgress() {
       } else {
         updateTransitionStatus(entry.index, nextStatus, data.progress);
       }
+
+      if (nextStatus === "failed") {
+        fetchDream(uuid)
+          .then((dream) => toastFailure(uuid, dream?.error))
+          .catch(() => {});
+      }
     },
-    [uuidMap, updateTransitionStatus],
+    [uuidMap, updateTransitionStatus, toastFailure],
   );
 
   useEffect(() => {
@@ -136,6 +150,8 @@ export function useFlowJobProgress() {
           const mappedStatus = mapSocketStatus(dream.status);
           if (!mappedStatus) return;
 
+          if (mappedStatus === "failed") toastFailure(entry.uuid, dream.error);
+
           const transition = useFlowStore.getState().transitions[entry.index];
           const current = entry.isUprez
             ? transition?.uprezStatus
@@ -154,5 +170,5 @@ export function useFlowJobProgress() {
         })
         .catch(() => {});
     }
-  }, [pendingUuids.length, activeSessionId, isConnected]);
+  }, [pendingUuids.length, activeSessionId, isConnected, toastFailure]);
 }

@@ -656,6 +656,41 @@
     "not_found": {
       "title": "Not found",
       "go_home": "go home"
+    },
+    "provider_key_card": {
+      "title": "fal.ai API key",
+      "hint": "When your daily credits run out, generations use your own fal.ai key instead.",
+      "placeholder": "Paste your fal.ai API key",
+      "save": "Save key",
+      "replace": "Replace key",
+      "remove": "Remove",
+      "status_active": "Active",
+      "status_invalid": "Invalid",
+      "status_none": "No key",
+      "saved_valid": "fal.ai key saved and verified.",
+      "saved_invalid": "Key saved, but fal.ai rejected it. Check the key and try again.",
+      "error_saving": "Couldn't save your key. Try again.",
+      "removed": "fal.ai key removed.",
+      "error_removing": "Couldn't remove your key. Try again.",
+      "key_required": "Enter your fal.ai API key.",
+      "invalid_format": "Key contains invalid characters or spaces."
+    },
+    "credits_meter": {
+      "label": "Daily credits",
+      "amount_left": "{{amount}} left",
+      "resets_in": "Resets in {{time}}",
+      "depleted": "Daily credits used. Add your fal.ai key to keep generating."
+    },
+    "cost_estimate": {
+      "label": "Est. cost",
+      "clips": "{{count}} clips",
+      "images": "{{count}} images"
+    },
+    "credit_limit_notice": {
+      "over_credits": "This run needs more than your remaining daily credits.",
+      "add_key": "Add your fal.ai key",
+      "out_of_credits": "You're out of daily credits.",
+      "resets_in": "Resets in {{time}}."
     }
   },
   "units": {
