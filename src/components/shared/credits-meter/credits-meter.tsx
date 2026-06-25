@@ -4,6 +4,8 @@ import { deriveCredits, formatResetIn, formatUsd } from "@/utils/credits.util";
 import {
   Amount,
   Fill,
+  FlowFill,
+  FlowSheen,
   Label,
   LOW_THRESHOLD,
   SubText,
@@ -22,6 +24,38 @@ export const CreditsMeter: React.FC<CreditsMeterProps> = ({
   compact,
 }) => {
   const { t } = useTranslation();
+
+  if (user?.dailyQuotaUsd === null) {
+    return (
+      <Wrapper
+        $compact={compact}
+        aria-label={t("components.credits_meter.label")}
+      >
+        <TopRow>
+          <Label $compact={compact}>
+            {t("components.credits_meter.label")}
+          </Label>
+          <Amount $compact={compact} $unlimited>
+            {t("components.credits_meter.unlimited")}
+          </Amount>
+        </TopRow>
+
+        <Track
+          $compact={compact}
+          role="img"
+          aria-label={t("components.credits_meter.unlimited")}
+        >
+          <FlowFill />
+          <FlowSheen />
+        </Track>
+
+        {!compact && (
+          <SubText>{t("components.credits_meter.unlimited_hint")}</SubText>
+        )}
+      </Wrapper>
+    );
+  }
+
   const credits = deriveCredits(user);
 
   if (!credits) return null;

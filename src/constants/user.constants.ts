@@ -27,6 +27,35 @@ export const filterMarketingEmailOption = (
     label: t("user.marketing_emails.inactive"),
   };
 
+export const DAILY_QUOTA_MODE = {
+  LIMITED: "false",
+  UNLIMITED: "true",
+};
+
+export const DEFAULT_DAILY_QUOTA_USD = 10;
+
+export const getDailyQuotaModeOptions = (t: TFunction) => [
+  {
+    value: DAILY_QUOTA_MODE.LIMITED,
+    label: t("user.daily_quota_mode.limited"),
+  },
+  {
+    value: DAILY_QUOTA_MODE.UNLIMITED,
+    label: t("user.daily_quota_mode.unlimited"),
+  },
+];
+
+export const filterDailyQuotaModeOption = (
+  unlimited: boolean = false,
+  t: TFunction,
+) =>
+  getDailyQuotaModeOptions(t).find(
+    (option) => option.value === Boolean(unlimited).toString(),
+  ) ?? {
+    value: DAILY_QUOTA_MODE.LIMITED,
+    label: t("user.daily_quota_mode.limited"),
+  };
+
 export const ENABLE_CREATING_PROPRIETARY_DREAMS = {
   TRUE: "true",
   FALSE: "false",

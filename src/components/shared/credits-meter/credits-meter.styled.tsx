@@ -29,12 +29,21 @@ export const Label = styled.span<{ $compact?: boolean }>`
   color: ${({ theme }) => theme.textSecondaryColor};
 `;
 
-export const Amount = styled.span<{ $compact?: boolean; $low?: boolean }>`
+export const Amount = styled.span<{
+  $compact?: boolean;
+  $low?: boolean;
+  $unlimited?: boolean;
+}>`
   font-size: ${({ $compact }) => ($compact ? "0.72rem" : "0.85rem")};
   font-variant-numeric: tabular-nums;
   font-weight: 600;
   color: ${({ theme, $low }) =>
     $low ? theme.colorDanger : theme.textAccentColor};
+  ${({ $unlimited, theme }) =>
+    $unlimited &&
+    css`
+      text-shadow: 0 0 12px ${theme.colorLightPrimary}66;
+    `}
 `;
 
 export const Track = styled.div<{ $compact?: boolean }>`
@@ -74,6 +83,42 @@ export const Fill = styled.div<{ $pct: number; $low?: boolean }>`
   @media (prefers-reduced-motion: reduce) {
     transition: none;
     animation: none;
+  }
+`;
+
+export const FlowFill = styled.div`
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    ${({ theme }) => theme.colorDarkPrimary},
+    ${({ theme }) => theme.colorLightPrimary}
+  );
+  box-shadow: 0 0 10px ${({ theme }) => theme.colorDarkPrimary}99;
+`;
+
+const flowSweep = keyframes`
+  0% { transform: translateX(-160%) skewX(-18deg); }
+  100% { transform: translateX(360%) skewX(-18deg); }
+`;
+
+export const FlowSheen = styled.div`
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 32%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    ${({ theme }) => theme.textAccentColor}cc,
+    transparent
+  );
+  animation: ${flowSweep} 2.8s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    display: none;
   }
 `;
 

@@ -519,7 +519,12 @@
       "edit_profile": "Edit",
       "view_dreams": "View Dreams",
       "profile_successfully_updated": "Profile updated successfully.",
-      "error_updating_profile": "Error updating profile."
+      "error_updating_profile": "Error updating profile.",
+      "credits": "credits",
+      "current_credits_placeholder": "current credits in USD",
+      "current_credits_unlimited_hint": "Balance is unused while daily credits are unlimited.",
+      "daily_credit_limit": "daily credit limit",
+      "daily_credit_limit_placeholder": "daily credit limit in USD"
     },
     "thumbnail_input": {
       "processing": "Ingesting dream...",
@@ -679,7 +684,9 @@
       "label": "Daily credits",
       "amount_left": "{{amount}} left",
       "resets_in": "Resets in {{time}}",
-      "depleted": "Daily credits used. Add your fal.ai key to keep generating."
+      "depleted": "Daily credits used. Add your fal.ai key to keep generating.",
+      "unlimited": "∞ Unlimited",
+      "unlimited_hint": "Credits never run out."
     },
     "cost_estimate": {
       "label": "Est. cost",
@@ -716,6 +723,10 @@
     "enable_creating_proprietary_dreams": {
       "active": "active",
       "inactive": "inactive"
+    },
+    "daily_quota_mode": {
+      "limited": "Limited",
+      "unlimited": "Unlimited"
     }
   },
   "dream": {

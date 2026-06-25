@@ -28,7 +28,7 @@ export type User = {
   signupInvite?: Invite;
   quota?: number;
   providerCreditsUsd?: string;
-  dailyQuotaUsd?: string;
+  dailyQuotaUsd?: string | null;
   creditsResetAt?: string;
   created_at?: string;
   updated_at?: string;
