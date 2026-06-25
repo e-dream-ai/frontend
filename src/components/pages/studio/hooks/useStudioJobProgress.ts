@@ -19,6 +19,8 @@ import {
   type DreamJobStatus,
 } from "./mapSocketStatus";
 
+const RECONCILE_POLL_MS = 5000;
+
 export const useStudioJobProgress = () => {
   const { socket, isConnected } = useSocket();
 
@@ -138,11 +140,11 @@ export const useStudioJobProgress = () => {
         fetchDream(img.uuid)
           .then((dream) => {
             if (!dream) return;
-            if (shouldApplyStatus(img.status, dream.status)) {
-              useStudioStore.getState().updateImage(img.uuid, {
-                status: dream.status as DreamJobStatus,
-              });
-            }
+            if (dream.status === img.status) return;
+            if (!shouldApplyStatus(img.status, dream.status)) return;
+            useStudioStore.getState().updateImage(img.uuid, {
+              status: dream.status as DreamJobStatus,
+            });
           })
           .catch(() => {});
       }
@@ -151,6 +153,7 @@ export const useStudioJobProgress = () => {
         fetchDream(job.dreamUuid)
           .then((dream) => {
             if (!dream) return;
+            if (dream.status === job.status) return;
             if (!shouldApplyStatus(job.status, dream.status)) return;
 
             const wasNotCompleted = job.status !== "processed";
@@ -174,5 +177,19 @@ export const useStudioJobProgress = () => {
     };
 
     reconcile();
+
+    const interval = isConnected
+      ? null
+      : setInterval(reconcile, RECONCILE_POLL_MS);
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") reconcile();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      if (interval) clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [hasPending, activeSessionId, isConnected]);
 };
