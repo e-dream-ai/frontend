@@ -1,6 +1,6 @@
 import { useRef, useState, useCallback, useEffect, useMemo } from "react";
 import { createPortal } from "react-dom";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, type QueryFunctionContext } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
@@ -22,10 +22,13 @@ import {
   SegmentChip,
 } from "./flow-preview.styled";
 
-async function fetchDream(uuid: string): Promise<Dream | undefined> {
+async function fetchDream(
+  uuid: string,
+  signal?: AbortSignal,
+): Promise<Dream | undefined> {
   const res = await axiosClient.get<ApiResponse<{ dream: Dream }>>(
     `/v1/dream/${uuid}`,
-    { headers: getRequestHeaders({ contentType: ContentType.json }) },
+    { headers: getRequestHeaders({ contentType: ContentType.json }), signal },
   );
   return res.data?.data?.dream;
 }
@@ -55,8 +58,11 @@ export function FlowPreview() {
   const dreamQueries = useQueries({
     queries: completedUuids.map((uuid) => ({
       queryKey: [DREAM_QUERY_KEY, uuid],
-      queryFn: () => fetchDream(uuid),
+      queryFn: ({ signal }: QueryFunctionContext) => fetchDream(uuid, signal),
       staleTime: Infinity,
+      refetchInterval: (data: unknown) =>
+        (data as Dream | undefined)?.video ? false : 3000,
+      refetchIntervalInBackground: false,
     })),
   });
 
