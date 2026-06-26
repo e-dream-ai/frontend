@@ -13,6 +13,11 @@ import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
 import { useSessionAutoSave } from "./hooks/useSessionAutoSave";
 import { useFileDropUpload } from "./hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
+import useAuth from "@/hooks/useAuth";
+import usePermission from "@/hooks/usePermission";
+import { useUser } from "@/api/user/query/useUser";
+import { CreditsMeter } from "@/components/shared/credits-meter/credits-meter";
+import { PROFILE_PERMISSIONS } from "@/constants/permissions.constants";
 import {
   StudioContainer,
   StudioHeader,
@@ -52,6 +57,16 @@ export const StudioPage: React.FC = () => {
   const activeTab = useStudioStore((s) => s.activeTab);
   useStudioJobProgress();
   useSessionAutoSave();
+
+  const { user: authUser } = useAuth();
+  const canManageProviderKey = usePermission({
+    permission: PROFILE_PERMISSIONS.CAN_MANAGE_PROVIDER_KEY,
+  });
+  const { data: userData } = useUser({
+    uuid: authUser?.uuid,
+    enabled: canManageProviderKey,
+  });
+  const currentUser = userData?.data?.user;
 
   const addImage = useStudioStore((s) => s.addImage);
   const updateImage = useStudioStore((s) => s.updateImage);
@@ -141,6 +156,9 @@ export const StudioPage: React.FC = () => {
           </ModeButton>
         </ModeToggle>
         <HeaderSpacer />
+        {canManageProviderKey ? (
+          <CreditsMeter user={currentUser} compact />
+        ) : null}
         <SessionSwitcher />
       </StudioHeader>
 

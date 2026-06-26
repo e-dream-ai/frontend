@@ -7,6 +7,10 @@ import { useFileDropUpload } from "../hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import { useModels } from "@/api/model/query/useModels";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
+import { CostEstimate } from "@/components/shared/cost-estimate/cost-estimate";
+import { CreditLimitNotice } from "@/components/shared/credit-limit-notice/credit-limit-notice";
+import { useCostEstimate } from "@/hooks/useCostEstimate";
+import { useCreditGuard } from "@/hooks/useCreditGuard";
 import {
   IMAGE_COUNT_OPTIONS,
   clampSizeToAllowed,
@@ -72,6 +76,16 @@ export const ImagesTab: React.FC = () => {
   const sizeOptions =
     modelConstraints.get(imageGenParams.model)?.imageSizes ?? [];
 
+  const { totalCostUsd, costBreakdown } = useCostEstimate({
+    model: modelOptions.find((m) => m.id === imageGenParams.model),
+    params: { imageSize: imageGenParams.size },
+    count: imageGenParams.seedCount,
+    breakdownKey: "components.cost_estimate.images",
+  });
+
+  const { overBudget, canManageKey, resetIn, guardOverBudget } =
+    useCreditGuard(totalCostUsd);
+
   const processedImages = useMemo(
     () => images.filter((img) => img.status === "processed"),
     [images],
@@ -85,6 +99,7 @@ export const ImagesTab: React.FC = () => {
 
   const handleGenerate = useCallback(async () => {
     if (!imagePrompt.trim()) return;
+    if (guardOverBudget()) return;
     setIsGenerating(true);
 
     const baseSeed = Math.floor(Math.random() * 99_000) + 1;
@@ -131,7 +146,14 @@ export const ImagesTab: React.FC = () => {
 
     await Promise.all(promises);
     setIsGenerating(false);
-  }, [imagePrompt, imageGenParams, modelOptions, addImage, setIsGenerating]);
+  }, [
+    imagePrompt,
+    imageGenParams,
+    modelOptions,
+    addImage,
+    setIsGenerating,
+    guardOverBudget,
+  ]);
 
   const handleUploadFiles = useCallback(
     async (files: File[]) => {
@@ -242,6 +264,7 @@ export const ImagesTab: React.FC = () => {
           <SecondaryNavButton onClick={() => fileInputRef.current?.click()}>
             Upload
           </SecondaryNavButton>
+          <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
           <GenerateButton
             onClick={handleGenerate}
             disabled={!imagePrompt.trim() || isGenerating}
@@ -249,6 +272,11 @@ export const ImagesTab: React.FC = () => {
             {isGenerating ? "Generating..." : "Generate Images"}
           </GenerateButton>
         </FormRow>
+        <CreditLimitNotice
+          overBudget={overBudget}
+          canManageKey={canManageKey}
+          resetIn={resetIn}
+        />
       </GenerateSection>
 
       <GenerateSection>

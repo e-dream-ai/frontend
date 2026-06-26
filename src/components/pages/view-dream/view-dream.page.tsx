@@ -3,6 +3,7 @@ import { useDeleteDream } from "@/api/dream/mutation/useDeleteDream";
 import { useUpdateDream } from "@/api/dream/mutation/useUpdateDream";
 import { useUpdateThumbnailDream } from "@/api/dream/mutation/useUpdateThumbnailDream";
 import { DREAM_QUERY_KEY, useDream } from "@/api/dream/query/useDream";
+import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import queryClient from "@/api/query-client";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { Button, ItemCard, ItemCardList, Row } from "@/components/shared";
@@ -101,6 +102,10 @@ import { ApiResponse } from "@/types/api.types";
 import ProgressBar from "@/components/shared/progress-bar/progress-bar";
 import { formatEta } from "@/utils/video.utils";
 import Text from "@/components/shared/text/text";
+import { useModels } from "@/api/model/query/useModels";
+import { estimateUnitCostUsd } from "@/utils/model-cost.util";
+import { useCreditGuard } from "@/hooks/useCreditGuard";
+import { CostEstimate } from "@/components/shared/cost-estimate/cost-estimate";
 
 type Params = { uuid: string };
 
@@ -399,18 +404,41 @@ const ViewDreamPage: React.FC = () => {
     [dream],
   );
 
-  const dreamAlgorithm = useMemo(() => {
+  const promptMeta = useMemo(() => {
     if (!dream?.prompt) return null;
     try {
       const parsed =
         typeof dream.prompt === "string"
           ? JSON.parse(dream.prompt)
           : dream.prompt;
-      return parsed?.infinidream_algorithm ?? null;
+      return {
+        algorithm: parsed?.infinidream_algorithm ?? null,
+        durationSec:
+          typeof parsed?.duration === "number" ? parsed.duration : undefined,
+        imageSize: typeof parsed?.size === "string" ? parsed.size : undefined,
+      };
     } catch {
       return null;
     }
   }, [dream?.prompt]);
+
+  const dreamAlgorithm = promptMeta?.algorithm ?? null;
+
+  const { data: modelsData } = useModels();
+  const rerunModel = useMemo(
+    () => modelsData?.data?.models?.find((m) => m.id === dreamAlgorithm),
+    [modelsData, dreamAlgorithm],
+  );
+  const rerunCostUsd = useMemo(
+    () =>
+      estimateUnitCostUsd(rerunModel, {
+        durationSec: promptMeta?.durationSec,
+        imageSize: promptMeta?.imageSize,
+      }),
+    [rerunModel, promptMeta],
+  );
+
+  const { guardOverBudget } = useCreditGuard(rerunCostUsd);
 
   const isCancellableAlgorithm = useMemo(() => {
     const cancellableAlgorithms = [
@@ -713,12 +741,16 @@ const ViewDreamPage: React.FC = () => {
         setJobStatus(undefined);
         setCountdownMs(undefined);
         refetch();
+        queryClient.invalidateQueries([USER_QUERY_KEY, user?.uuid]);
         onHideConfirmProcessModal();
       } else {
         toast.error(`${t("page.view_dream.error_processing_dream")}`);
       }
-    } catch {
-      toast.error(`${t("page.view_dream.error_processing_dream")}`);
+    } catch (error) {
+      const serverMessage = (
+        error as { response?: { data?: { message?: string } } }
+      )?.response?.data?.message;
+      toast.error(serverMessage || t("page.view_dream.error_processing_dream"));
     }
   };
 
@@ -1199,15 +1231,21 @@ const ViewDreamPage: React.FC = () => {
                             </React.Fragment>
                           )
                         ) : (
-                          <Button
-                            type="button"
-                            mx="2"
-                            after={<FontAwesomeIcon icon={faGears} />}
-                            isLoading={processDreamMutation.isLoading}
-                            onClick={onShowConfirmProcessModal}
-                          >
-                            {t("page.view_dream.rerun")}{" "}
-                          </Button>
+                          <>
+                            <CostEstimate amountUsd={rerunCostUsd} />
+                            <Button
+                              type="button"
+                              mx="2"
+                              after={<FontAwesomeIcon icon={faGears} />}
+                              isLoading={processDreamMutation.isLoading}
+                              onClick={() => {
+                                if (guardOverBudget()) return;
+                                onShowConfirmProcessModal();
+                              }}
+                            >
+                              {t("page.view_dream.rerun")}{" "}
+                            </Button>
+                          </>
                         ))}
                       {!isDreamProcessing && (
                         <Restricted

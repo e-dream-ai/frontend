@@ -6,11 +6,12 @@ export const USER_QUERY_KEY = "getUser";
 
 type HookParams = {
   uuid?: string;
+  enabled?: boolean;
 };
 
 type UserResponse = { user: User };
 
-export const useUser = ({ uuid }: HookParams) => {
+export const useUser = ({ uuid, enabled }: HookParams) => {
   return useApiQuery<UserResponse>(
     [USER_QUERY_KEY, uuid],
     `/v1/user/${uuid}`,
@@ -20,5 +21,6 @@ export const useUser = ({ uuid }: HookParams) => {
       }),
     },
     {},
+    enabled === undefined ? {} : { enabled },
   );
 };

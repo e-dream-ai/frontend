@@ -27,6 +27,9 @@ export type User = {
   enableCreatingProprietaryDreams?: boolean;
   signupInvite?: Invite;
   quota?: number;
+  providerCreditsUsd?: string;
+  dailyQuotaUsd?: string | null;
+  creditsResetAt?: string;
   created_at?: string;
   updated_at?: string;
   last_login_at?: string;

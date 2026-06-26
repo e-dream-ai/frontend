@@ -7,7 +7,7 @@ import { PROFILE_PERMISSIONS } from "@/constants/permissions.constants";
 import { ROLES_NAMES } from "@/constants/role.constants";
 import useAuth from "@/hooks/useAuth";
 import { useMemo, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
+import { Controller, useForm, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { toast } from "react-toastify";
 import ProfileSchema, {
@@ -29,8 +29,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAlignJustify,
   faCalendar,
+  faCoins,
+  faDollarSign,
   faEnvelope,
   faHardDrive,
+  faInfinity,
   faKey,
   faPencil,
   faSave,
@@ -53,16 +56,22 @@ import { formatDateToYYYYMMDD } from "@/utils/date.util";
 import { FORMAT } from "@/constants/moment.constants";
 import moment from "moment";
 import {
+  DAILY_QUOTA_MODE,
+  DEFAULT_DAILY_QUOTA_USD,
   ENABLE_CREATING_PROPRIETARY_DREAMS,
   ENABLE_MARKETING_EMAILS,
+  filterDailyQuotaModeOption,
   filterEnableCreatingProprietaryDreamsOption,
   filterMarketingEmailOption,
+  getDailyQuotaModeOptions,
   getEnableCreatingProprietaryDreamsOptions,
   getEnableMarketingEmailsOptions,
 } from "@/constants/user.constants";
 import { bytesToGB, GBToBytes } from "@/utils/file.util";
 import { toFixedNumber } from "@/utils/number.util";
 import ApiKeyCard from "../apikey-card/ApiKeyCard";
+import { ProviderKeyCard } from "../provider-key-card/provider-key-card";
+import { CreditsMeter } from "../credits-meter/credits-meter";
 import router from "@/routes/router";
 import { ROUTES } from "@/constants/routes.constants";
 import { joinPaths } from "@/utils/router.util";
@@ -116,8 +125,8 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
   );
 
   return (
-    <Row flexWrap="wrap">
-      <Column flex={["0 0 100%", "0 0 50%"]} alignItems="center">
+    <Row flexWrap="wrap" justifyContent="space-between">
+      <Column flex={["0 0 100%", "0 0 50%", "0 0 30%"]} alignItems="center">
         <Avatar size="lg" url={avatarUrl} />
 
         <Button
@@ -141,7 +150,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
         )}
       </Column>
 
-      <Column flex={["0 0 100%", "0 0 35%"]} mt={["3rem", 0, 0]}>
+      <Column flex={["0 0 100%", "0 0 50%", "0 0 34%"]} mt={["3rem", 0, 0]}>
         <Input
           disabled
           placeholder={t("components.profile_card.name")}
@@ -275,6 +284,20 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
       </Column>
 
       {showApiKeyCard && (
+        <Restricted to={PROFILE_PERMISSIONS.CAN_MANAGE_PROVIDER_KEY}>
+          <Column
+            flex={["0 0 100%", "0 0 100%", "0 0 28%"]}
+            mt={["3rem", "3rem", 0]}
+          >
+            <CreditsMeter user={user} />
+            <Row mt="4" width="100%">
+              <ProviderKeyCard />
+            </Row>
+          </Column>
+        </Restricted>
+      )}
+
+      {showApiKeyCard && (
         <Row
           mt="2"
           width="100%"
@@ -355,8 +378,24 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           t,
         ),
       quota: user?.quota ? toFixedNumber(bytesToGB(user.quota), 2) : 0,
+      providerCreditsUsd:
+        user?.providerCreditsUsd != null
+          ? toFixedNumber(Number(user.providerCreditsUsd), 4)
+          : 0,
+      dailyQuotaUsd:
+        user?.dailyQuotaUsd != null
+          ? toFixedNumber(Number(user.dailyQuotaUsd), 4)
+          : DEFAULT_DAILY_QUOTA_USD,
+      dailyQuotaUnlimited: filterDailyQuotaModeOption(
+        user?.dailyQuotaUsd == null,
+        t,
+      ),
     },
   });
+
+  const dailyQuotaMode = useWatch({ control, name: "dailyQuotaUnlimited" });
+  const isDailyQuotaUnlimited =
+    dailyQuotaMode?.value === DAILY_QUOTA_MODE.UNLIMITED;
 
   const handleAvatarChange: HandleChangeFile = (files) => {
     if (files instanceof FileList) {
@@ -409,7 +448,14 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           : undefined,
     };
 
-    if (!isUserAdmin) {
+    if (isUserAdmin) {
+      data.dailyQuotaUsd = isDailyQuotaUnlimited
+        ? null
+        : formData.dailyQuotaUsd;
+      if (!isDailyQuotaUnlimited) {
+        data.providerCreditsUsd = formData.providerCreditsUsd;
+      }
+    } else {
       delete data.quota;
       delete data.enableCreatingProprietaryDreams;
     }
@@ -514,6 +560,64 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
               {...register("quota")}
             />
           </Restricted>
+
+          {isUserAdmin && (
+            <>
+              <Row my={3}>
+                <Text
+                  fontSize="1rem"
+                  color={theme.textPrimaryColor}
+                  style={{ textTransform: "uppercase", fontStyle: "italic" }}
+                >
+                  {t("components.profile_card.credits")}
+                </Text>
+              </Row>
+
+              <Input
+                disabled={isDailyQuotaUnlimited}
+                placeholder={t(
+                  "components.profile_card.current_credits_placeholder",
+                )}
+                type="text"
+                before={<FontAwesomeIcon icon={faCoins} />}
+                error={errors.providerCreditsUsd?.message}
+                {...register("providerCreditsUsd")}
+              />
+
+              {isDailyQuotaUnlimited && (
+                <Text fontSize="0.8rem" color={theme.textSecondaryColor} mb={2}>
+                  {t("components.profile_card.current_credits_unlimited_hint")}
+                </Text>
+              )}
+
+              <Controller
+                name="dailyQuotaUnlimited"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    {...field}
+                    placeholder={t(
+                      "components.profile_card.daily_credit_limit",
+                    )}
+                    before={<FontAwesomeIcon icon={faInfinity} />}
+                    options={getDailyQuotaModeOptions(t)}
+                  />
+                )}
+              />
+
+              {!isDailyQuotaUnlimited && (
+                <Input
+                  placeholder={t(
+                    "components.profile_card.daily_credit_limit_placeholder",
+                  )}
+                  type="text"
+                  before={<FontAwesomeIcon icon={faDollarSign} />}
+                  error={errors.dailyQuotaUsd?.message}
+                  {...register("dailyQuotaUsd")}
+                />
+              )}
+            </>
+          )}
 
           <Row my={3}>
             <Text

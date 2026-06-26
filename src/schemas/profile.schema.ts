@@ -8,6 +8,8 @@ export type ProfileFormRequest = {
   enableMarketingEmails?: boolean;
   enableCreatingProprietaryDreams?: boolean;
   quota?: number;
+  providerCreditsUsd?: number;
+  dailyQuotaUsd?: number | null;
 };
 
 export type ProfileFormValues = {
@@ -30,7 +32,24 @@ export type ProfileFormValues = {
     value?: string;
   };
   quota?: number;
+  providerCreditsUsd?: number;
+  dailyQuotaUsd?: number;
+  dailyQuotaUnlimited: {
+    label?: string;
+    value?: string;
+  };
 };
+
+const usdAmountField = (label: string) =>
+  yup
+    .number()
+    .transform((value, original) =>
+      original === "" || original == null ? undefined : value,
+    )
+    .typeError(`${label} must be a number.`)
+    .min(0)
+    .max(999999.9999)
+    .optional();
 
 export const ProfileSchema = yup
   .object({
@@ -65,6 +84,12 @@ export const ProfileSchema = yup
           return /^\d+(\.\d{1,2})?$/.test(stringValue);
         },
       ),
+    providerCreditsUsd: usdAmountField("current credits"),
+    dailyQuotaUsd: usdAmountField("daily credit limit"),
+    dailyQuotaUnlimited: yup.object({
+      label: yup.string(),
+      value: yup.string(),
+    }),
   })
   .required();
 

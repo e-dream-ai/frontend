@@ -1,10 +1,12 @@
 import { useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
+import { toast } from "react-toastify";
 import useSocket from "@/hooks/useSocket";
 import { useStudioStore } from "@/stores/studio.store";
 import { useSessionStore } from "@/stores/session.store";
 import queryClient from "@/api/query-client";
 import { DREAM_QUERY_KEY, fetchDream } from "@/api/dream/query/useDream";
+import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import {
   JOB_PROGRESS_EVENT,
   JOIN_DREAM_ROOM_EVENT,
@@ -16,6 +18,8 @@ import {
   isPendingStatus,
   type DreamJobStatus,
 } from "./mapSocketStatus";
+
+const RECONCILE_POLL_MS = 5000;
 
 export const useStudioJobProgress = () => {
   const { socket, isConnected } = useSocket();
@@ -58,8 +62,10 @@ export const useStudioJobProgress = () => {
       const job = state.jobs.find((j) => j.dreamUuid === dream_uuid);
       if (job) {
         const applyStatus = shouldApplyStatus(job.status, mappedStatus);
-        const wasNotCompleted = job.status !== "processed";
+        const wasPending =
+          job.status !== "processed" && job.status !== "failed";
         const isNowCompleted = applyStatus && mappedStatus === "processed";
+        const isNowFailed = applyStatus && mappedStatus === "failed";
 
         state.updateJob(dream_uuid, {
           progress,
@@ -69,6 +75,7 @@ export const useStudioJobProgress = () => {
 
         if (isNowCompleted) {
           queryClient.invalidateQueries([DREAM_QUERY_KEY, dream_uuid]);
+          queryClient.invalidateQueries([USER_QUERY_KEY]);
           fetchDream(dream_uuid)
             .then((dream) => {
               if (dream?.thumbnail) {
@@ -79,9 +86,19 @@ export const useStudioJobProgress = () => {
             })
             .catch(() => {});
 
-          if (wasNotCompleted && state.activeTab !== "results") {
+          if (wasPending && state.activeTab !== "results") {
             state.incrementNewCompleted();
           }
+        }
+
+        if (isNowFailed && wasPending) {
+          queryClient.invalidateQueries([DREAM_QUERY_KEY, dream_uuid]);
+          queryClient.invalidateQueries([USER_QUERY_KEY]);
+          fetchDream(dream_uuid)
+            .then((dream) => {
+              if (dream?.error) toast.error(dream.error);
+            })
+            .catch(() => {});
         }
       }
     };
@@ -94,6 +111,8 @@ export const useStudioJobProgress = () => {
 
   useEffect(() => {
     if (!socket || pendingUuids.length === 0) return;
+
+    queryClient.invalidateQueries([USER_QUERY_KEY]);
 
     const joinRooms = () => {
       pendingUuids.forEach((uuid) => socket.emit(JOIN_DREAM_ROOM_EVENT, uuid));
@@ -121,11 +140,11 @@ export const useStudioJobProgress = () => {
         fetchDream(img.uuid)
           .then((dream) => {
             if (!dream) return;
-            if (shouldApplyStatus(img.status, dream.status)) {
-              useStudioStore.getState().updateImage(img.uuid, {
-                status: dream.status as DreamJobStatus,
-              });
-            }
+            if (dream.status === img.status) return;
+            if (!shouldApplyStatus(img.status, dream.status)) return;
+            useStudioStore.getState().updateImage(img.uuid, {
+              status: dream.status as DreamJobStatus,
+            });
           })
           .catch(() => {});
       }
@@ -134,6 +153,7 @@ export const useStudioJobProgress = () => {
         fetchDream(job.dreamUuid)
           .then((dream) => {
             if (!dream) return;
+            if (dream.status === job.status) return;
             if (!shouldApplyStatus(job.status, dream.status)) return;
 
             const wasNotCompleted = job.status !== "processed";
@@ -157,5 +177,19 @@ export const useStudioJobProgress = () => {
     };
 
     reconcile();
+
+    const interval = isConnected
+      ? null
+      : setInterval(reconcile, RECONCILE_POLL_MS);
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") reconcile();
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+
+    return () => {
+      if (interval) clearInterval(interval);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [hasPending, activeSessionId, isConnected]);
 };
