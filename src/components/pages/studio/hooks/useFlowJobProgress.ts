@@ -14,11 +14,31 @@ import {
   shouldApplyStatus,
   isPendingStatus,
 } from "./mapSocketStatus";
+import type { Dream } from "@/types/dream.types";
+
+type PendingEntry = {
+  uuid: string;
+  index: number;
+  isUprez: boolean;
+  // Variation tracking — when set, the entry is a variation candidate
+  variationType?: "keyframe" | "transition";
+  variationKeyframeId?: string;
+  variationId?: string;
+  // i2i candidate tracking — when set, the entry is a staged i2i candidate
+  // keyframe (top-level keyframe with i2iParentId), not a kf.variations entry.
+  i2iCandidateId?: string;
+};
+
+// Result URL priority matches useUploadImageDream: video (R2) > original_video
+// > thumbnail. Used to swap a candidate placeholder for its distinct result.
+const resultUrlFromDream = (dream: Dream): string =>
+  dream.video || dream.original_video || dream.thumbnail || "";
 
 export function useFlowJobProgress() {
   const { socket, isConnected } = useSocket();
 
   const transitions = useFlowStore((s) => s.transitions);
+  const keyframes = useFlowStore((s) => s.keyframes);
   const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
 
   const toastedFailuresRef = useRef<Set<string>>(new Set());
@@ -29,8 +49,7 @@ export function useFlowJobProgress() {
   }, []);
 
   const { pendingEntries, pendingUuids, uuidMap } = useMemo(() => {
-    const entries: Array<{ uuid: string; index: number; isUprez: boolean }> =
-      [];
+    const entries: PendingEntry[] = [];
     transitions.forEach((t, i) => {
       if (t.dreamUuid && isPendingStatus(t.status)) {
         entries.push({ uuid: t.dreamUuid, index: i, isUprez: false });
@@ -38,16 +57,55 @@ export function useFlowJobProgress() {
       if (t.uprezDreamUuid && isPendingStatus(t.uprezStatus)) {
         entries.push({ uuid: t.uprezDreamUuid, index: i, isUprez: true });
       }
+      // Transition variation candidates
+      t.variations?.forEach((v) => {
+        if (v.dreamUuid && isPendingStatus(v.status)) {
+          entries.push({
+            uuid: v.dreamUuid,
+            index: i,
+            isUprez: false,
+            variationType: "transition",
+            variationId: v.id,
+          });
+        }
+      });
     });
+
+    keyframes.forEach((kf) => {
+      // Keyframe variation candidates
+      kf.variations?.forEach((v) => {
+        if (v.dreamUuid && isPendingStatus(v.status)) {
+          entries.push({
+            uuid: v.dreamUuid,
+            index: -1,
+            isUprez: false,
+            variationType: "keyframe",
+            variationKeyframeId: kf.id,
+            variationId: v.id,
+          });
+        }
+      });
+
+      // i2i candidate keyframes — staged top-level keyframes whose own dream is
+      // still generating. Track them so we can swap the placeholder source image
+      // for each candidate's distinct result once it is processed.
+      if (kf.i2iCandidate && kf.dreamUuid && isPendingStatus(kf.i2iStatus)) {
+        entries.push({
+          uuid: kf.dreamUuid,
+          index: -1,
+          isUprez: false,
+          i2iCandidateId: kf.id,
+        });
+      }
+    });
+
     const uuids = entries.map((e) => e.uuid);
-    const map = new Map(
-      entries.map((e) => [e.uuid, { index: e.index, isUprez: e.isUprez }]),
-    );
+    const map = new Map(entries.map((e) => [e.uuid, e]));
     return { pendingEntries: entries, pendingUuids: uuids, uuidMap: map };
-  }, [transitions]);
+  }, [transitions, keyframes]);
 
   const handleProgress = useCallback(
-    (data: {
+    async (data: {
       dreamUuid?: string;
       dream_uuid?: string;
       status?: string;
@@ -58,6 +116,63 @@ export function useFlowJobProgress() {
 
       const entry = uuidMap.get(uuid);
       if (!entry) return;
+
+      const mapped = mapSocketStatus(data.status);
+
+      // i2i candidate keyframe progress — swap the placeholder source image for
+      // this candidate's own result once its dream is processed.
+      if (entry.i2iCandidateId) {
+        if (!mapped) return;
+        const patch: { i2iStatus: typeof mapped; imageUrl?: string } = {
+          i2iStatus: mapped,
+        };
+        if (mapped === "processed") {
+          try {
+            const dream = await fetchDream(uuid);
+            if (dream) patch.imageUrl = resultUrlFromDream(dream);
+          } catch {
+            // Non-fatal — imageUrl will be resolved by the next poll cycle.
+          }
+          // If the result URL didn't resolve, stay pending so the poll fallback
+          // retries instead of freezing on the placeholder image.
+          if (!patch.imageUrl) patch.i2iStatus = "processing";
+        }
+        useFlowStore.getState().updateKeyframe(entry.i2iCandidateId, patch);
+        return;
+      }
+
+      // Variation candidate progress — Socket.IO events don't carry the URL, so
+      // fetch the dream to resolve imageUrl once processed.
+      if (entry.variationType && entry.variationId) {
+        if (!mapped) return;
+        const patch: {
+          status: typeof mapped;
+          progress?: number;
+          imageUrl?: string;
+        } = { status: mapped, progress: data.progress };
+        if (mapped === "processed") {
+          try {
+            const dream = await fetchDream(uuid);
+            if (dream) patch.imageUrl = resultUrlFromDream(dream);
+          } catch {
+            // Non-fatal — imageUrl will be resolved by the next poll cycle.
+          }
+        }
+        if (entry.variationType === "keyframe" && entry.variationKeyframeId) {
+          useFlowStore
+            .getState()
+            .updateKeyframeVariation(
+              entry.variationKeyframeId,
+              entry.variationId,
+              patch,
+            );
+        } else if (entry.variationType === "transition") {
+          useFlowStore
+            .getState()
+            .updateTransitionVariation(entry.index, entry.variationId, patch);
+        }
+        return;
+      }
 
       const transition = useFlowStore.getState().transitions[entry.index];
       if (!transition) return;
@@ -151,6 +266,50 @@ export function useFlowJobProgress() {
           if (!mappedStatus) return;
 
           if (mappedStatus === "failed") toastFailure(entry.uuid, dream.error);
+
+          // i2i candidate keyframe — swap the placeholder source image for this
+          // candidate's own result once processed.
+          if (entry.i2iCandidateId) {
+            const patch: { i2iStatus: typeof mappedStatus; imageUrl?: string } =
+              { i2iStatus: mappedStatus };
+            if (mappedStatus === "processed") {
+              patch.imageUrl = resultUrlFromDream(dream);
+            }
+            useFlowStore.getState().updateKeyframe(entry.i2iCandidateId, patch);
+            return;
+          }
+
+          // Variation candidate — update status + imageUrl when processed.
+          if (entry.variationType && entry.variationId) {
+            const patch: {
+              status: typeof mappedStatus;
+              imageUrl?: string;
+            } = { status: mappedStatus };
+            if (mappedStatus === "processed") {
+              patch.imageUrl = resultUrlFromDream(dream);
+            }
+            if (
+              entry.variationType === "keyframe" &&
+              entry.variationKeyframeId
+            ) {
+              useFlowStore
+                .getState()
+                .updateKeyframeVariation(
+                  entry.variationKeyframeId,
+                  entry.variationId,
+                  patch,
+                );
+            } else if (entry.variationType === "transition") {
+              useFlowStore
+                .getState()
+                .updateTransitionVariation(
+                  entry.index,
+                  entry.variationId,
+                  patch,
+                );
+            }
+            return;
+          }
 
           const transition = useFlowStore.getState().transitions[entry.index];
           const current = entry.isUprez

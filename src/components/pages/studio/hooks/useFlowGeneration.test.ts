@@ -89,7 +89,9 @@ vi.mock("../utils/build-video-algo-params", () => ({
 vi.mock("../utils/resolve-flow-settings", () => ({
   resolveEffectiveSettings: () => ({
     model: "ltx-i2v",
-    action: undefined,
+    // Plain prompt (no {a|b|c}) — expands to itself, so the single-transition
+    // path runs (one dream per transition), exercising the credit refresh.
+    action: { prompt: "move" },
     duration: 5,
     numInferenceSteps: 20,
     guidance: 3,
