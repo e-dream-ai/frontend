@@ -144,7 +144,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "slow dolly in, camera pushing forward into the scene",
-        enabled: false,
+        enabled: true,
         highNoiseLoras: [
           {
             path: "ltx-2-19b-lora-camera-control-dolly-in.safetensors",
@@ -154,7 +154,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "slow dolly out, camera pulling back to reveal",
-        enabled: false,
+        enabled: true,
         highNoiseLoras: [
           {
             path: "ltx-2-19b-lora-camera-control-dolly-out.safetensors",
@@ -163,8 +163,28 @@ export const ACTION_PRESETS: PresetPack[] = [
         ],
       },
       {
+        prompt: "dolly left, camera sliding to the left",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-dolly-left.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+      {
+        prompt: "dolly right, camera sliding to the right",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-dolly-right.safetensors",
+            scale: 0.4,
+          },
+        ],
+      },
+      {
         prompt: "jib up, camera rising above the scene",
-        enabled: false,
+        enabled: true,
         highNoiseLoras: [
           {
             path: "ltx-2-19b-lora-camera-control-jib-up.safetensors",
@@ -174,7 +194,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "jib down, camera descending into the scene",
-        enabled: false,
+        enabled: true,
         highNoiseLoras: [
           {
             path: "ltx-2-19b-lora-camera-control-jib-down.safetensors",
