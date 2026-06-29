@@ -74,8 +74,14 @@ export const StudioTitle = styled.h1`
   font-family: ${FLOW.fontFamily};
 `;
 
-export const HeaderSpacer = styled.div`
+export const HeaderSide = styled.div<{ $align: "left" | "right" }>`
   flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+  justify-content: ${(props) =>
+    props.$align === "right" ? "flex-end" : "flex-start"};
 `;
 
 export const NewSessionButton = styled.button`
