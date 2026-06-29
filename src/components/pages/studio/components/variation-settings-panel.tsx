@@ -74,6 +74,7 @@ export const VariationSettingsPanel: React.FC = () => {
       </PanelHeader>
       <FieldRow>
         <FieldGroup>
+          {/* i2i method has no built-in image path until Part 2 (fal Kontext); only expansion variations are reachable here. */}
           <FieldLabel>Model</FieldLabel>
           <Select
             value={model}
