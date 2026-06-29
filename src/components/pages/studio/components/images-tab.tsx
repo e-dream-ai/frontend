@@ -1,10 +1,13 @@
 import React, { useCallback, useMemo, useRef, useState } from "react";
+import Bugsnag from "@bugsnag/js";
 import { v4 as uuidv4 } from "uuid";
 import { useStudioStore } from "@/stores/studio.store";
 import { axiosClient } from "@/client/axios.client";
 import type { StudioImage, ImageModel } from "@/types/studio.types";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
+import { expandPrompt } from "../utils/expand-prompt";
+import { PromptExpansionBadge } from "./prompt-expansion-badge";
 import { useModels } from "@/api/model/query/useModels";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { CostEstimate } from "@/components/shared/cost-estimate/cost-estimate";
@@ -108,41 +111,53 @@ export const ImagesTab: React.FC = () => {
       modelOptions.find((m) => m.id === imageGenParams.model)?.label ??
       imageGenParams.model;
 
-    const promises = Array.from(
-      { length: imageGenParams.seedCount },
-      (_, i) => {
-        const seed = baseSeed + i;
-        const algoParams = {
-          infinidream_algorithm: imageGenParams.model,
-          prompt: imagePrompt,
-          size: imageGenParams.size,
-          seed,
-        };
+    // Expand {A|B|C} syntax into distinct prompts so a single template fans out
+    // into meaningfully different images. Each expanded prompt is then rendered
+    // across `seedCount` seeds. A plain prompt expands to itself ([prompt]).
+    const expandedPrompts = expandPrompt(imagePrompt);
 
-        return axiosClient
-          .post("/v1/dream", {
-            name: `${modelLabel} ${currentImageCount + i + 1}`,
-            prompt: JSON.stringify(algoParams),
-            description: "Studio generated image",
-          })
-          .then(({ data }) => {
-            const dream = data.data?.dream;
-            if (!dream) return;
-            addImage({
-              uuid: dream.uuid,
-              url: dream.thumbnail || "",
-              name: dream.name,
-              seed,
-              size: imageGenParams.size,
-              status: (dream.status as StudioImage["status"]) || "queue",
-              selected: false,
-            });
-          })
-          .catch((err) => {
-            console.error("Failed to create image:", err);
-          });
-      },
+    // Seed is stable across the prompt-expansion dimension: every expanded
+    // prompt is rendered at the SAME seed slot, so the difference between
+    // variations comes from the prompt, not the seed. The seedCount dimension
+    // still adds extra seeds per prompt.
+    const jobs = expandedPrompts.flatMap((prompt) =>
+      Array.from({ length: imageGenParams.seedCount }, (_, sIdx) => ({
+        prompt,
+        seed: baseSeed + sIdx,
+      })),
     );
+
+    const promises = jobs.map(({ prompt, seed }, idx) => {
+      const algoParams = {
+        infinidream_algorithm: imageGenParams.model,
+        prompt,
+        size: imageGenParams.size,
+        seed,
+      };
+
+      return axiosClient
+        .post("/v1/dream", {
+          name: `${modelLabel} ${currentImageCount + idx + 1}`,
+          prompt: JSON.stringify(algoParams),
+          description: "Studio generated image",
+        })
+        .then(({ data }) => {
+          const dream = data.data?.dream;
+          if (!dream) return;
+          addImage({
+            uuid: dream.uuid,
+            url: dream.thumbnail || "",
+            name: dream.name,
+            seed,
+            size: imageGenParams.size,
+            status: (dream.status as StudioImage["status"]) || "queue",
+            selected: false,
+          });
+        })
+        .catch((err) => {
+          Bugsnag.notify(err as Error);
+        });
+    });
 
     await Promise.all(promises);
     setIsGenerating(false);
@@ -177,7 +192,7 @@ export const ImagesTab: React.FC = () => {
             name: result.name,
           });
         } catch (err) {
-          console.error("Failed to upload image:", err);
+          Bugsnag.notify(err as Error);
           updateImage(placeholderUuid, { status: "failed" });
         } finally {
           URL.revokeObjectURL(blobUrl);
@@ -205,9 +220,12 @@ export const ImagesTab: React.FC = () => {
   return (
     <ImagesTabContainer $dragOver={isDragOver} {...dropHandlers}>
       <GenerateSection>
-        <SectionTitle>Generate New Images</SectionTitle>
+        <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+          <SectionTitle>Generate New Images</SectionTitle>
+          <PromptExpansionBadge prompt={imagePrompt} />
+        </div>
         <PromptTextarea
-          placeholder="Describe the image you want to generate..."
+          placeholder="Describe the image you want to generate... use {a|b|c} to make variations"
           value={imagePrompt}
           onChange={(e) => setImagePrompt(e.target.value)}
         />
