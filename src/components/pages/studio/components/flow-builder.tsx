@@ -3,10 +3,20 @@ import Bugsnag from "@bugsnag/js";
 import { v4 as uuidv4 } from "uuid";
 import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
+import { useStudioStore } from "@/stores/studio.store";
 import { FLOW } from "@/constants/flow-theme.constants";
+import { axiosClient } from "@/client/axios.client";
+import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
+import type { FlowKeyframe } from "@/types/flow.types";
+import {
+  getVariationPreset,
+  I2I_MODEL_ID,
+} from "../constants/variation-presets";
+import { expandPrompt } from "../utils/expand-prompt";
 import { KeyframeStrip } from "./keyframe-strip";
 import { TransitionSettingsPanel } from "./transition-settings-panel";
+import { VariationSettingsPanel } from "./variation-settings-panel";
 import { FlowPreview } from "./flow-preview";
 import { FlowActionBar } from "./flow-action-bar";
 import { AddKeyframesFromPlaylistModal } from "./add-keyframes-from-playlist-modal";
@@ -14,6 +24,7 @@ import { SelectImageDreamModal } from "./select-image-dream-modal";
 import { useFlowGeneration } from "@/components/pages/studio/hooks/useFlowGeneration";
 import { useFlowJobProgress } from "@/components/pages/studio/hooks/useFlowJobProgress";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
+import { VariationLightbox } from "./variation-lightbox";
 
 const FlowContainer = styled.div<{ $dragOver?: boolean }>`
   background: ${FLOW.bgCard};
@@ -38,17 +49,33 @@ export const FlowBuilder: React.FC = () => {
   const addKeyframe = useFlowStore((s) => s.addKeyframe);
   const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
   const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
+  const addI2iCandidates = useFlowStore((s) => s.addI2iCandidates);
+  const acceptI2iCandidate = useFlowStore((s) => s.acceptI2iCandidate);
+  const discardI2iCandidate = useFlowStore((s) => s.discardI2iCandidate);
+
+  // State declarations must come before selectors that reference them (TDZ).
+  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [showLibraryModal, setShowLibraryModal] = useState(false);
+  const [variationLightboxIndex, setVariationLightboxIndex] = useState<
+    number | null
+  >(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Mount progress tracking
   useFlowJobProgress();
 
+  // Subscribe to the open transition for the lightbox — avoids IIFE with getState()
+  // during render, which would bypass React's subscription and miss updates.
+  const openTransition = useFlowStore((s) =>
+    variationLightboxIndex !== null
+      ? s.transitions[variationLightboxIndex] ?? null
+      : null,
+  );
+  const lightboxGlobalPrompt = useFlowStore((s) => s.globalPrompt);
+
   // Generation controls
   const { generateAll, generateOne, isGenerating } = useFlowGeneration();
   const uploadDream = useUploadImageDream();
-
-  const [showPlaylistModal, setShowPlaylistModal] = useState(false);
-  const [showLibraryModal, setShowLibraryModal] = useState(false);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddUpload = useCallback(() => {
     fileInputRef.current?.click();
@@ -119,6 +146,176 @@ export const FlowBuilder: React.FC = () => {
     [uploadFiles],
   );
 
+  const handleI2iVariation = useCallback(
+    async (keyframe: FlowKeyframe) => {
+      // Variations layer the source frame's own prompt + a variation modifier
+      // onto the chosen image model. When the user picks the Kontext model
+      // (flux-kontext-i2i) the request becomes a real image-to-image edit of the
+      // source dream; any other (text-to-image) model re-renders from the prompt.
+
+      // Read Variation Settings at call time (NOT via React subscription) to
+      // keep the callback identity stable across settings keystrokes.
+      const {
+        imagePrompt,
+        imageGenParams,
+        variationPresetId,
+        variationCustomPrompt,
+        variationSeed,
+      } = useStudioStore.getState();
+
+      // Image-to-image (Kontext) re-images the source dream, so it needs the
+      // parent keyframe's source Dream UUID. Detect it from the selected model.
+      const isI2i = imageGenParams.model === I2I_MODEL_ID;
+
+      // Custom prompts (Customize section) override the preset when present:
+      // split per line and apply {a|b|c} expansion to each line. Falls back to
+      // the selected preset's modifiers. Capped at 8 (matches the panel).
+      const customModifiers = variationCustomPrompt
+        .split("\n")
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .flatMap((line) => expandPrompt(line));
+      const modifiers = (
+        customModifiers.length > 0
+          ? customModifiers
+          : getVariationPreset(variationPresetId).modifiers
+      ).slice(0, 8);
+
+      const VARIATION_COUNT = modifiers.length;
+      if (VARIATION_COUNT === 0) return;
+
+      const baseName = keyframe.name || "frame";
+
+      // i2i requires a real source image dream. Fail loud (Bugsnag) rather than
+      // silently degrading to a text-to-image render that ignores the source.
+      if (isI2i && !keyframe.dreamUuid) {
+        Bugsnag.notify(
+          new Error(
+            `i2i variation requires a source image; keyframe "${baseName}" has no dreamUuid`,
+          ),
+        );
+        return;
+      }
+
+      // The user's seed is the anchor (stable across a batch — variation comes
+      // from the prompt). Each +More batch is offset by the count of candidates
+      // already staged for this parent, so +More yields NEW images while
+      // staying reproducible.
+      const existingCount = useFlowStore
+        .getState()
+        .keyframes.filter((kf) => kf.i2iParentId === keyframe.id).length;
+      const baseSeed = variationSeed + existingCount;
+
+      // Create candidate keyframes as a GATED staging area: addI2iCandidates
+      // flags them so transition derivation skips them — they will not spawn
+      // generation jobs until the user accepts one. Patch each in place as its
+      // generation request settles.
+      const candidates = Array.from({ length: VARIATION_COUNT }, (_, i) => ({
+        id: uuidv4(),
+        imageUrl: keyframe.imageUrl,
+        name: `${baseName} · variation ${existingCount + i + 1}`,
+        uploadStatus: "uploading" as const,
+        uploadProgress: 0,
+      }));
+      addI2iCandidates(keyframe.id, candidates);
+
+      // Use the SOURCE image's own prompt as the base so variations stay
+      // on-theme. The original prompt is stored as algoParams JSON on the dream;
+      // fall back to the studio prompt, then the keyframe name.
+      let originalPrompt = "";
+      if (keyframe.dreamUuid) {
+        try {
+          const { data } = await axiosClient.get(
+            `/v1/dream/${keyframe.dreamUuid}`,
+          );
+          const rawPrompt = data?.data?.dream?.prompt;
+          if (typeof rawPrompt === "string" && rawPrompt) {
+            try {
+              originalPrompt = JSON.parse(rawPrompt)?.prompt || "";
+            } catch {
+              originalPrompt = rawPrompt;
+            }
+          }
+        } catch (err) {
+          Bugsnag.notify(err as Error);
+        }
+      }
+      const basePrompt = originalPrompt || imagePrompt || baseName;
+
+      // Fire all variation generations concurrently (no sequential await loop).
+      // Layer a variation modifier onto the source prompt so the set is
+      // meaningfully different, with a STABLE seed across the batch (variation
+      // comes from the prompt, not seed jitter — keeps results reproducible).
+      const headers = getRequestHeaders({ contentType: ContentType.json });
+      void Promise.allSettled(
+        candidates.map(async ({ id }, i) => {
+          const prompt = `${basePrompt}, ${modifiers[i % modifiers.length]}`;
+          // i2i edits the source dream (no size — the output follows the
+          // source); t2i renders fresh at the chosen size.
+          const algoParams = isI2i
+            ? {
+                infinidream_algorithm: I2I_MODEL_ID,
+                prompt,
+                source_dream_uuid: keyframe.dreamUuid,
+                seed: baseSeed,
+              }
+            : {
+                infinidream_algorithm: imageGenParams.model,
+                prompt,
+                size: imageGenParams.size,
+                seed: baseSeed,
+              };
+          try {
+            const { data } = await axiosClient.post(
+              "/v1/dream",
+              {
+                name: `${baseName} · variation ${existingCount + i + 1}`,
+                prompt: JSON.stringify(algoParams),
+                description: "Studio i2i variation",
+              },
+              { headers },
+            );
+            const dreamUuid = data?.data?.dream?.uuid;
+            if (!dreamUuid) {
+              throw new Error("No dream UUID returned from API");
+            }
+            // Settle the placeholder into a real, queued candidate. i2iStatus
+            // marks it pending so job progress polls the dream and swaps in this
+            // candidate's distinct result once it finishes generating.
+            updateKeyframe(id, {
+              dreamUuid,
+              uploadStatus: undefined,
+              uploadProgress: undefined,
+              i2iStatus: "queue",
+            });
+          } catch (err) {
+            Bugsnag.notify(err as Error);
+            updateKeyframe(id, {
+              uploadStatus: "failed",
+              uploadProgress: undefined,
+              i2iStatus: "failed",
+            });
+          }
+        }),
+      );
+    },
+    [addI2iCandidates, updateKeyframe],
+  );
+
+  const handleAcceptI2iCandidate = useCallback(
+    (keyframe: FlowKeyframe) => {
+      acceptI2iCandidate(keyframe.id);
+    },
+    [acceptI2iCandidate],
+  );
+
+  const handleDiscardI2iCandidate = useCallback(
+    (keyframe: FlowKeyframe) => {
+      discardI2iCandidate(keyframe.id);
+    },
+    [discardI2iCandidate],
+  );
+
   const handleAddFromPlaylist = useCallback(() => {
     setShowPlaylistModal(true);
   }, []);
@@ -139,6 +336,10 @@ export const FlowBuilder: React.FC = () => {
         onAddFromPlaylist={handleAddFromPlaylist}
         onAddFromLibrary={handleAddFromLibrary}
         onRetry={generateOne}
+        onOpenVariationLightbox={setVariationLightboxIndex}
+        onRequestI2iVariation={handleI2iVariation}
+        onAcceptI2iCandidate={handleAcceptI2iCandidate}
+        onDiscardI2iCandidate={handleDiscardI2iCandidate}
       />
 
       <TransitionSettingsPanel
@@ -149,6 +350,8 @@ export const FlowBuilder: React.FC = () => {
 
       <FlowPreview />
       <FlowActionBar />
+
+      <VariationSettingsPanel />
 
       <input
         ref={fileInputRef}
@@ -167,6 +370,23 @@ export const FlowBuilder: React.FC = () => {
 
       {showLibraryModal && (
         <SelectImageDreamModal onClose={() => setShowLibraryModal(false)} />
+      )}
+
+      {variationLightboxIndex !== null && openTransition && (
+        <VariationLightbox
+          transition={openTransition}
+          transitionIndex={variationLightboxIndex}
+          effectivePrompt={
+            openTransition.promptOverride ?? lightboxGlobalPrompt
+          }
+          onSelectVariation={(idx, vid) => {
+            useFlowStore.getState().selectTransitionVariation(idx, vid);
+          }}
+          onRegenerate={(idx) => {
+            generateOne(idx);
+          }}
+          onClose={() => setVariationLightboxIndex(null)}
+        />
       )}
     </FlowContainer>
   );

@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import type { FlowTransition, TransitionStatus } from "@/types/flow.types";
+import type {
+  FlowTransition,
+  TransitionStatus,
+  VariationCandidate,
+  FlowKeyframe,
+} from "@/types/flow.types";
 
 describe("FlowTransition type", () => {
   it("accepts a valid idle transition", () => {
@@ -39,5 +44,61 @@ describe("FlowTransition type", () => {
       "failed",
     ];
     expect(statuses).toHaveLength(5);
+  });
+});
+
+describe("VariationCandidate type", () => {
+  it("accepts a seed variation", () => {
+    const v: VariationCandidate = {
+      id: "v1",
+      method: "seed",
+      seed: 42,
+      dreamUuid: "dream-123",
+      imageUrl: "https://example.com/img.jpg",
+      status: "processed",
+    };
+    expect(v.method).toBe("seed");
+  });
+
+  it("accepts an expansion variation", () => {
+    const v: VariationCandidate = {
+      id: "v2",
+      method: "expansion",
+      prompt: "fire elemental",
+      status: "queue",
+    };
+    expect(v.prompt).toBe("fire elemental");
+  });
+
+  it("accepts i2i variation", () => {
+    const v: VariationCandidate = {
+      id: "v3",
+      method: "i2i",
+      status: "processing",
+      progress: 45,
+    };
+    expect(v.method).toBe("i2i");
+  });
+
+  it("FlowKeyframe accepts variations array", () => {
+    const kf: FlowKeyframe = {
+      id: "kf-1",
+      dreamUuid: "dream-settled",
+      imageUrl: "https://example.com/img.jpg",
+      name: "test",
+      variations: [
+        {
+          id: "v1",
+          method: "seed",
+          seed: 1,
+          status: "processed",
+          imageUrl: "url1",
+        },
+        { id: "v2", method: "seed", seed: 2, status: "queue" },
+      ],
+      activeVariationId: "v1",
+    };
+    expect(kf.variations).toHaveLength(2);
+    expect(kf.activeVariationId).toBe("v1");
   });
 });

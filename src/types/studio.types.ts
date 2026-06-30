@@ -58,7 +58,11 @@ export interface VideoGenParams {
   guidance: number;
 }
 
-export type ImageModel = "qwen-image" | "z-image-turbo" | "flux-schnell";
+export type ImageModel =
+  | "qwen-image"
+  | "z-image-turbo"
+  | "flux-schnell"
+  | "flux-kontext-i2i";
 
 export interface ImageGenParams {
   model: ImageModel;

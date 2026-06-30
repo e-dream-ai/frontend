@@ -410,6 +410,204 @@ describe("Phase 1: transitions", () => {
     });
   });
 
+  describe("i2i candidates", () => {
+    it("does not create transitions between candidates", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframe(makeKf("b"));
+      store.recomputeTransitions();
+      expect(useFlowStore.getState().transitions).toHaveLength(1);
+
+      // Add 4 candidates varied from "b" — they must not add transitions.
+      store.addI2iCandidates("b", [
+        makeKf("c1"),
+        makeKf("c2"),
+        makeKf("c3"),
+        makeKf("c4"),
+      ]);
+
+      const state = useFlowStore.getState();
+      // Candidates are appended to keyframes (rendered as cards)...
+      expect(state.keyframes).toHaveLength(6);
+      expect(state.keyframes.filter((k) => k.i2iCandidate)).toHaveLength(4);
+      // ...but the timeline still only has the a→b transition.
+      expect(state.transitions).toHaveLength(1);
+      expect(state.transitions[0].fromKeyframeId).toBe("a");
+      expect(state.transitions[0].toKeyframeId).toBe("b");
+    });
+
+    it("flags candidates with i2iCandidate and i2iParentId", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addI2iCandidates("a", [makeKf("c1")]);
+      const cand = useFlowStore.getState().keyframes.find((k) => k.id === "c1");
+      expect(cand?.i2iCandidate).toBe(true);
+      expect(cand?.i2iParentId).toBe("a");
+    });
+
+    it("accept promotes a candidate into the timeline", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addI2iCandidates("a", [makeKf("c1")]);
+      expect(useFlowStore.getState().transitions).toHaveLength(0);
+
+      store.acceptI2iCandidate("c1");
+      const state = useFlowStore.getState();
+      const promoted = state.keyframes.find((k) => k.id === "c1");
+      expect(promoted?.i2iCandidate).toBeUndefined();
+      expect(promoted?.i2iParentId).toBeUndefined();
+      // Now a→c1 is a real transition.
+      expect(state.transitions).toHaveLength(1);
+      expect(state.transitions[0].fromKeyframeId).toBe("a");
+      expect(state.transitions[0].toKeyframeId).toBe("c1");
+    });
+
+    it("discard removes a candidate without touching transitions", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframe(makeKf("b"));
+      store.recomputeTransitions();
+      store.addI2iCandidates("b", [makeKf("c1"), makeKf("c2")]);
+
+      store.discardI2iCandidate("c1");
+      const state = useFlowStore.getState();
+      expect(state.keyframes.find((k) => k.id === "c1")).toBeUndefined();
+      expect(state.keyframes.find((k) => k.id === "c2")).toBeDefined();
+      // a→b transition untouched.
+      expect(state.transitions).toHaveLength(1);
+    });
+  });
+
+  describe("keyframe variations", () => {
+    it("adds variations to a keyframe", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframeVariations("a", [
+        { id: "v1", method: "expansion", prompt: "fire", status: "queue" },
+        { id: "v2", method: "expansion", prompt: "ice", status: "queue" },
+      ]);
+      const kf = useFlowStore.getState().keyframes.find((k) => k.id === "a");
+      expect(kf?.variations).toHaveLength(2);
+    });
+
+    it("updateKeyframeVariation patches a single variation", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframeVariations("a", [
+        { id: "v1", method: "expansion", prompt: "fire", status: "queue" },
+      ]);
+      store.updateKeyframeVariation("a", "v1", {
+        status: "processed",
+        imageUrl: "url-v1",
+        dreamUuid: "dream-v1",
+      });
+      const v = useFlowStore
+        .getState()
+        .keyframes.find((k) => k.id === "a")
+        ?.variations?.find((x) => x.id === "v1");
+      expect(v?.status).toBe("processed");
+      expect(v?.imageUrl).toBe("url-v1");
+    });
+
+    it("selectKeyframeVariation only applies when status is processed", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframeVariations("a", [
+        { id: "v1", method: "expansion", prompt: "fire", status: "queue" },
+      ]);
+      // queued → ignored
+      store.selectKeyframeVariation("a", "v1");
+      expect(
+        useFlowStore.getState().keyframes.find((k) => k.id === "a")
+          ?.activeVariationId,
+      ).toBeUndefined();
+
+      // becomes processed → now selectable, swaps imageUrl/dreamUuid
+      store.updateKeyframeVariation("a", "v1", {
+        status: "processed",
+        imageUrl: "url-v1",
+        dreamUuid: "dream-v1",
+      });
+      store.selectKeyframeVariation("a", "v1");
+      const kf = useFlowStore.getState().keyframes.find((k) => k.id === "a");
+      expect(kf?.activeVariationId).toBe("v1");
+      expect(kf?.imageUrl).toBe("url-v1");
+      expect(kf?.dreamUuid).toBe("dream-v1");
+    });
+
+    it("clearKeyframeVariations drops variations and active id", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframeVariations("a", [
+        { id: "v1", method: "expansion", status: "processed" },
+      ]);
+      store.selectKeyframeVariation("a", "v1");
+      store.clearKeyframeVariations("a");
+      const kf = useFlowStore.getState().keyframes.find((k) => k.id === "a");
+      expect(kf?.variations).toBeUndefined();
+      expect(kf?.activeVariationId).toBeUndefined();
+    });
+  });
+
+  describe("transition variations", () => {
+    it("adds and updates transition variations", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframe(makeKf("b"));
+      store.recomputeTransitions();
+      store.addTransitionVariations(0, [
+        { id: "tv1", method: "expansion", prompt: "fire", status: "queue" },
+      ]);
+      expect(useFlowStore.getState().transitions[0].variations).toHaveLength(1);
+
+      store.updateTransitionVariation(0, "tv1", {
+        status: "processed",
+        dreamUuid: "dream-tv1",
+      });
+      expect(
+        useFlowStore.getState().transitions[0].variations?.[0].status,
+      ).toBe("processed");
+    });
+
+    it("selectTransitionVariation only applies when status is processed", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframe(makeKf("b"));
+      store.recomputeTransitions();
+      store.addTransitionVariations(0, [
+        { id: "tv1", method: "expansion", status: "queue" },
+      ]);
+      store.selectTransitionVariation(0, "tv1");
+      expect(
+        useFlowStore.getState().transitions[0].activeVariationId,
+      ).toBeUndefined();
+
+      store.updateTransitionVariation(0, "tv1", {
+        status: "processed",
+        dreamUuid: "dream-tv1",
+      });
+      store.selectTransitionVariation(0, "tv1");
+      const t = useFlowStore.getState().transitions[0];
+      expect(t.activeVariationId).toBe("tv1");
+      expect(t.dreamUuid).toBe("dream-tv1");
+      expect(t.status).toBe("processed");
+    });
+
+    it("clearTransitionVariations drops variations and active id", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframe(makeKf("b"));
+      store.recomputeTransitions();
+      store.addTransitionVariations(0, [
+        { id: "tv1", method: "expansion", status: "processed" },
+      ]);
+      store.clearTransitionVariations(0);
+      const t = useFlowStore.getState().transitions[0];
+      expect(t.variations).toBeUndefined();
+      expect(t.activeVariationId).toBeUndefined();
+    });
+  });
+
   describe("hydration", () => {
     it("resets stale processing/queue transitions to failed on recompute", () => {
       const store = useFlowStore.getState();
@@ -429,6 +627,54 @@ describe("Phase 1: transitions", () => {
       expect(transitions[0].status).toBe("failed");
       expect(transitions[0].progress).toBeUndefined();
       expect(transitions[1].status).toBe("failed");
+    });
+
+    it("keeps in-flight transitions that have a dreamUuid (recoverable) so polling can recover them", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframe(makeKf("b"));
+      store.recomputeTransitions();
+
+      // A transition with a real backend job, still cooking.
+      store.setTransitionDream(0, "dream-123");
+      store.updateTransitionStatus(0, "processing", 50);
+
+      store.reconcileStaleTransitions();
+
+      const { transitions } = useFlowStore.getState();
+      // Recoverable: left in-flight, not failed.
+      expect(transitions[0].status).toBe("processing");
+      expect(transitions[0].dreamUuid).toBe("dream-123");
+    });
+
+    it("fails in-flight variations with no dreamUuid but keeps recoverable ones", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe(makeKf("a"));
+      store.addKeyframe(makeKf("b"));
+      store.recomputeTransitions();
+
+      // Keyframe variation: one orphaned (no dreamUuid), one recoverable.
+      store.addKeyframeVariations("a", [
+        { id: "kv-orphan", method: "expansion", status: "processing" },
+        {
+          id: "kv-live",
+          method: "expansion",
+          status: "processing",
+          dreamUuid: "dream-live",
+        },
+      ]);
+      // Transition variation: orphaned in-flight.
+      store.addTransitionVariations(0, [
+        { id: "tv-orphan", method: "expansion", status: "queue" },
+      ]);
+
+      store.reconcileStaleTransitions();
+
+      const state = useFlowStore.getState();
+      const kvars = state.keyframes.find((k) => k.id === "a")?.variations ?? [];
+      expect(kvars.find((v) => v.id === "kv-orphan")?.status).toBe("failed");
+      expect(kvars.find((v) => v.id === "kv-live")?.status).toBe("processing");
+      expect(state.transitions[0].variations?.[0].status).toBe("failed");
     });
 
     it("does not reset processed or idle transitions", () => {

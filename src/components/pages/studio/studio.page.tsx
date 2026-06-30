@@ -25,7 +25,8 @@ import {
   TitleGroup,
   Logo,
   BackButton,
-  HeaderSpacer,
+  HeaderSide,
+  CreditsSlot,
   StudioBody,
   ModeToggle,
   ModeButton,
@@ -137,29 +138,37 @@ export const StudioPage: React.FC = () => {
   return (
     <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
-        <BackButton onClick={handleBack} aria-label="Go back">
-          <ArrowLeft size={16} />
-        </BackButton>
-        <TitleGroup>
-          <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
-          <StudioTitle>Studio</StudioTitle>
-        </TitleGroup>
-        <ModeToggle>
-          <ModeButton $active={mode === "flow"} onClick={() => setMode("flow")}>
-            Flow
-          </ModeButton>
-          <ModeButton
-            $active={mode === "batch"}
-            onClick={() => setMode("batch")}
-          >
-            Batch (Advanced)
-          </ModeButton>
-        </ModeToggle>
-        <HeaderSpacer />
-        {canManageProviderKey ? (
-          <CreditsMeter user={currentUser} compact />
-        ) : null}
+        <HeaderSide $align="left">
+          <BackButton onClick={handleBack} aria-label="Go back">
+            <ArrowLeft size={18} />
+          </BackButton>
+          <TitleGroup>
+            <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
+            <StudioTitle>Studio</StudioTitle>
+          </TitleGroup>
+          {canManageProviderKey ? (
+            <CreditsSlot>
+              <CreditsMeter user={currentUser} compact />
+            </CreditsSlot>
+          ) : null}
+        </HeaderSide>
         <SessionSwitcher />
+        <HeaderSide $align="right">
+          <ModeToggle>
+            <ModeButton
+              $active={mode === "flow"}
+              onClick={() => setMode("flow")}
+            >
+              Flow
+            </ModeButton>
+            <ModeButton
+              $active={mode === "batch"}
+              onClick={() => setMode("batch")}
+            >
+              Batch (Advanced)
+            </ModeButton>
+          </ModeToggle>
+        </HeaderSide>
       </StudioHeader>
 
       <StudioBody $constrain={mode === "batch"}>

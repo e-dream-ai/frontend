@@ -122,3 +122,27 @@ export const EmptyState = styled.div`
   color: ${FLOW.textDim};
   font-size: 14px;
 `;
+
+export const VariationsSection = styled.div`
+  margin-top: 20px;
+`;
+
+export const VariationsLabel = styled.div`
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: ${FLOW.textMuted};
+  font-family: ${FLOW.fontFamily};
+  margin-bottom: 12px;
+`;
+
+export const VariationsRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+`;

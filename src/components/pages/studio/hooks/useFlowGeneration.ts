@@ -1,11 +1,13 @@
 import { useCallback, useRef, useState } from "react";
 import Bugsnag from "@bugsnag/js";
+import { v4 as uuidv4 } from "uuid";
 import { useFlowStore } from "@/stores/flow.store";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { buildVideoAlgoParams } from "@/components/pages/studio/utils/build-video-algo-params";
 import { resolveEffectiveSettings } from "@/components/pages/studio/utils/resolve-flow-settings";
-import type { FlowTransition } from "@/types/flow.types";
+import { expandPrompt } from "@/components/pages/studio/utils/expand-prompt";
+import type { FlowTransition, VariationCandidate } from "@/types/flow.types";
 import queryClient from "@/api/query-client";
 import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 
@@ -19,6 +21,62 @@ export function useFlowGeneration() {
   // Actions are stable refs — subscribe individually, not via useShallow.
   const setTransitionDream = useFlowStore((s) => s.setTransitionDream);
   const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
+
+  /** Create a single dream for a transition with the given prompt text. */
+  const createTransitionDream = useCallback(
+    async (
+      transition: FlowTransition,
+      promptText: string,
+      settings: ReturnType<typeof resolveEffectiveSettings>,
+    ) => {
+      const store = useFlowStore.getState();
+      const fromKf = store.keyframes.find(
+        (kf) => kf.id === transition.fromKeyframeId,
+      );
+      if (!fromKf) {
+        throw new Error(`Keyframe not found: ${transition.fromKeyframeId}`);
+      }
+      const toKf = store.keyframes.find(
+        (kf) => kf.id === transition.toKeyframeId,
+      );
+      const imageRef = fromKf.dreamUuid || fromKf.imageUrl;
+      const endImageRef = toKf ? toKf.dreamUuid || toKf.imageUrl : undefined;
+
+      const algoParams = buildVideoAlgoParams({
+        model: settings.model,
+        action: { ...settings.action, prompt: promptText },
+        imageUuid: imageRef,
+        endImageUuid: endImageRef,
+        imageSize: undefined,
+        duration: settings.duration,
+        numInferenceSteps: settings.numInferenceSteps,
+        guidance: settings.guidance,
+        negativePrompt: settings.negativePrompt,
+      });
+      const name = `${fromKf.name || "frame"} → ${toKf?.name || "frame"}`;
+      const headers = getRequestHeaders({ contentType: ContentType.json });
+      const { data: createData } = await axiosClient.post(
+        "/v1/dream",
+        { name, prompt: JSON.stringify(algoParams) },
+        { headers },
+      );
+      const dreamUuid = createData?.data?.dream?.uuid;
+      if (!dreamUuid) throw new Error("No dream UUID returned from API");
+
+      if (fromKf.keyframeUuid || toKf?.keyframeUuid) {
+        await axiosClient.put(
+          `/v1/dream/${dreamUuid}`,
+          {
+            startKeyframe: fromKf.keyframeUuid,
+            endKeyframe: toKf?.keyframeUuid,
+          },
+          { headers },
+        );
+      }
+      return dreamUuid;
+    },
+    [],
+  );
 
   const generateTransition = useCallback(
     async (index: number, transition: FlowTransition) => {
@@ -36,60 +94,54 @@ export function useFlowGeneration() {
         globalLora: store.globalLora,
       });
 
-      const fromKf = store.keyframes.find(
-        (kf) => kf.id === transition.fromKeyframeId,
-      );
-      if (!fromKf) {
-        Bugsnag.notify(
-          new Error(`Keyframe not found: ${transition.fromKeyframeId}`),
+      // Check for prompt expansion — if the prompt has {A|B|C} syntax,
+      // generate multiple variations instead of a single transition.
+      const expanded = expandPrompt(settings.action.prompt);
+
+      if (expanded.length > 1) {
+        // Multi-variant: create variation candidates and generate each in parallel.
+        const candidates: VariationCandidate[] = expanded.map((promptText) => ({
+          id: uuidv4(),
+          method: "expansion" as const,
+          prompt: promptText,
+          status: "queue" as const,
+        }));
+        useFlowStore.getState().addTransitionVariations(index, candidates);
+
+        await Promise.all(
+          candidates.map(async (candidate) => {
+            try {
+              const dreamUuid = await createTransitionDream(
+                transition,
+                candidate.prompt!,
+                settings,
+              );
+              useFlowStore
+                .getState()
+                .updateTransitionVariation(index, candidate.id, {
+                  dreamUuid,
+                  status: "queue",
+                });
+            } catch (err) {
+              Bugsnag.notify(err as Error);
+              useFlowStore
+                .getState()
+                .updateTransitionVariation(index, candidate.id, {
+                  status: "failed",
+                });
+            }
+          }),
         );
-        updateTransitionStatus(index, "failed");
         return;
       }
 
-      const imageRef = fromKf.dreamUuid || fromKf.imageUrl;
-
-      const toKf = store.keyframes.find(
-        (kf) => kf.id === transition.toKeyframeId,
-      );
-      const endImageRef = toKf ? toKf.dreamUuid || toKf.imageUrl : undefined;
-
-      const algoParams = buildVideoAlgoParams({
-        model: settings.model,
-        action: settings.action,
-        imageUuid: imageRef,
-        endImageUuid: endImageRef,
-        imageSize: undefined,
-        duration: settings.duration,
-        numInferenceSteps: settings.numInferenceSteps,
-        guidance: settings.guidance,
-        negativePrompt: settings.negativePrompt,
-      });
-      const name = `${fromKf.name || "frame"} → ${toKf?.name || "frame"}`;
-
+      // Single prompt — standard generation (existing behavior)
       try {
-        const headers = getRequestHeaders({ contentType: ContentType.json });
-        const { data: createData } = await axiosClient.post(
-          "/v1/dream",
-          { name, prompt: JSON.stringify(algoParams) },
-          { headers },
+        const dreamUuid = await createTransitionDream(
+          transition,
+          settings.action.prompt,
+          settings,
         );
-        const dreamUuid = createData?.data?.dream?.uuid;
-        if (!dreamUuid) {
-          throw new Error("No dream UUID returned from API");
-        }
-
-        if (fromKf.keyframeUuid || toKf?.keyframeUuid) {
-          await axiosClient.put(
-            `/v1/dream/${dreamUuid}`,
-            {
-              startKeyframe: fromKf.keyframeUuid,
-              endKeyframe: toKf?.keyframeUuid,
-            },
-            { headers },
-          );
-        }
-
         setTransitionDream(index, dreamUuid);
         updateTransitionStatus(index, "queue");
       } catch (error) {
@@ -97,7 +149,7 @@ export function useFlowGeneration() {
         updateTransitionStatus(index, "failed");
       }
     },
-    [setTransitionDream, updateTransitionStatus],
+    [createTransitionDream, setTransitionDream, updateTransitionStatus],
   );
 
   const startGenerating = useCallback(() => {
