@@ -8,7 +8,8 @@ export interface ModelConstraints {
 
 export type ModelPricing =
   | { kind: "perMegapixel"; usdPerMegapixel: number }
-  | { kind: "perSecond"; usdPerSecond: number; baseUsd?: number };
+  | { kind: "perSecond"; usdPerSecond: number; baseUsd?: number }
+  | { kind: "perImage"; usdPerImage: number };
 
 export interface ModelCatalogEntry {
   id: string;
