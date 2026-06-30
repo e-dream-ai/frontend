@@ -26,6 +26,7 @@ import {
   Logo,
   BackButton,
   HeaderSide,
+  CreditsSlot,
   StudioBody,
   ModeToggle,
   ModeButton,
@@ -145,12 +146,14 @@ export const StudioPage: React.FC = () => {
             <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
             <StudioTitle>Studio</StudioTitle>
           </TitleGroup>
+          {canManageProviderKey ? (
+            <CreditsSlot>
+              <CreditsMeter user={currentUser} compact />
+            </CreditsSlot>
+          ) : null}
         </HeaderSide>
         <SessionSwitcher />
         <HeaderSide $align="right">
-          {canManageProviderKey ? (
-            <CreditsMeter user={currentUser} compact />
-          ) : null}
           <ModeToggle>
             <ModeButton
               $active={mode === "flow"}
