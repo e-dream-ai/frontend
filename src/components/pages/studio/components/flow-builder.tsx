@@ -9,7 +9,10 @@ import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import type { FlowKeyframe } from "@/types/flow.types";
-import { getVariationPreset } from "../constants/variation-presets";
+import {
+  getVariationPreset,
+  I2I_MODEL_ID,
+} from "../constants/variation-presets";
 import { expandPrompt } from "../utils/expand-prompt";
 import { KeyframeStrip } from "./keyframe-strip";
 import { TransitionSettingsPanel } from "./transition-settings-panel";
@@ -145,10 +148,10 @@ export const FlowBuilder: React.FC = () => {
 
   const handleI2iVariation = useCallback(
     async (keyframe: FlowKeyframe) => {
-      // Variations run through the built-in text-to-image model (the source
-      // frame's own prompt + a variation modifier). The BYO image-to-image
-      // route is deferred to Part 2 (fal Kontext), so there is no endpoint
-      // branch here — only expansion variations are reachable.
+      // Variations layer the source frame's own prompt + a variation modifier
+      // onto the chosen image model. When the user picks the Kontext model
+      // (flux-kontext-i2i) the request becomes a real image-to-image edit of the
+      // source dream; any other (text-to-image) model re-renders from the prompt.
 
       // Read Variation Settings at call time (NOT via React subscription) to
       // keep the callback identity stable across settings keystrokes.
@@ -159,6 +162,10 @@ export const FlowBuilder: React.FC = () => {
         variationCustomPrompt,
         variationSeed,
       } = useStudioStore.getState();
+
+      // Image-to-image (Kontext) re-images the source dream, so it needs the
+      // parent keyframe's source Dream UUID. Detect it from the selected model.
+      const isI2i = imageGenParams.model === I2I_MODEL_ID;
 
       // Custom prompts (Customize section) override the preset when present:
       // split per line and apply {a|b|c} expansion to each line. Falls back to
@@ -178,6 +185,17 @@ export const FlowBuilder: React.FC = () => {
       if (VARIATION_COUNT === 0) return;
 
       const baseName = keyframe.name || "frame";
+
+      // i2i requires a real source image dream. Fail loud (Bugsnag) rather than
+      // silently degrading to a text-to-image render that ignores the source.
+      if (isI2i && !keyframe.dreamUuid) {
+        Bugsnag.notify(
+          new Error(
+            `i2i variation requires a source image; keyframe "${baseName}" has no dreamUuid`,
+          ),
+        );
+        return;
+      }
 
       // The user's seed is the anchor (stable across a batch — variation comes
       // from the prompt). Each +More batch is offset by the count of candidates
@@ -232,12 +250,21 @@ export const FlowBuilder: React.FC = () => {
       void Promise.allSettled(
         candidates.map(async ({ id }, i) => {
           const prompt = `${basePrompt}, ${modifiers[i % modifiers.length]}`;
-          const algoParams = {
-            infinidream_algorithm: imageGenParams.model,
-            prompt,
-            size: imageGenParams.size,
-            seed: baseSeed,
-          };
+          // i2i edits the source dream (no size — the output follows the
+          // source); t2i renders fresh at the chosen size.
+          const algoParams = isI2i
+            ? {
+                infinidream_algorithm: I2I_MODEL_ID,
+                prompt,
+                source_dream_uuid: keyframe.dreamUuid,
+                seed: baseSeed,
+              }
+            : {
+                infinidream_algorithm: imageGenParams.model,
+                prompt,
+                size: imageGenParams.size,
+                seed: baseSeed,
+              };
           try {
             const { data } = await axiosClient.post(
               "/v1/dream",

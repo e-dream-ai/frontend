@@ -48,6 +48,12 @@ export const VARIATION_PRESETS: VariationPreset[] = [
 
 export const DEFAULT_VARIATION_PRESET_ID = "scene";
 
+// The image-to-image model id (fal FLUX.1 Kontext). When this model is selected
+// as the variation model, the Vary action re-images the source dream instead of
+// rendering a fresh text-to-image result. Must match the backend MODEL_CATALOG
+// id and the worker WORKER_MODELS key.
+export const I2I_MODEL_ID = "flux-kontext-i2i";
+
 export function getVariationPreset(id: string | undefined): VariationPreset {
   return (
     VARIATION_PRESETS.find((p) => p.id === id) ??

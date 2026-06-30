@@ -43,9 +43,10 @@ export const VariationSettingsPanel: React.FC = () => {
   const variationSeed = useStudioStore((s) => s.variationSeed);
   const setVariationSeed = useStudioStore((s) => s.setVariationSeed);
 
-  // Built-in image models drive the Vary tool — same backend-supplied list and
-  // size constraints used by the Images tab. (i2i has no built-in image path
-  // until Part 2, so only text-to-image models appear here.)
+  // Image models drive the Vary tool — same backend-supplied list and size
+  // constraints used by the Images tab. The list includes the Kontext i2i model
+  // (flux-kontext-i2i); selecting it makes the Vary action re-image the source
+  // dream instead of rendering a fresh text-to-image result.
   const { data: modelsData } = useModels({ mediaType: "image" });
   const modelOptions = useMemo(
     () => modelsData?.data?.models ?? [],
@@ -74,7 +75,8 @@ export const VariationSettingsPanel: React.FC = () => {
       </PanelHeader>
       <FieldRow>
         <FieldGroup>
-          {/* i2i method has no built-in image path until Part 2 (fal Kontext); only expansion variations are reachable here. */}
+          {/* Select the Kontext model to re-image the source (i2i); any other
+              model renders fresh from the prompt (text-to-image). */}
           <FieldLabel>Model</FieldLabel>
           <Select
             value={model}
