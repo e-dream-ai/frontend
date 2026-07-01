@@ -19,6 +19,18 @@ import {
 
 export const getDreamNameOrUUID = (dream?: Dream) => dream?.name || dream?.uuid;
 
+export const serializeDreamPrompt = (
+  prompt?: string | Record<string, unknown> | null,
+): string | undefined => {
+  if (prompt === null || prompt === undefined) return undefined;
+  if (typeof prompt === "string") return prompt;
+  try {
+    return JSON.stringify(prompt);
+  } catch {
+    return undefined;
+  }
+};
+
 export const generateDreamOptimisticApiResponse = ({
   dream,
 }: {
@@ -172,19 +184,10 @@ export const formatDreamRequest = (
   data: UpdateDreamFormValues,
   isAdmin: boolean = false,
 ): UpdateDreamRequestValues => {
-  let promptString: string | undefined;
-  if (data.prompt !== null && data.prompt !== undefined) {
-    try {
-      promptString = JSON.stringify(data.prompt);
-    } catch {
-      promptString = undefined;
-    }
-  }
-
   return {
     name: data.name,
     description: data.description,
-    prompt: promptString,
+    prompt: serializeDreamPrompt(data.prompt),
     sourceUrl: data.sourceUrl,
     activityLevel: data.activityLevel,
     featureRank: data.featureRank,

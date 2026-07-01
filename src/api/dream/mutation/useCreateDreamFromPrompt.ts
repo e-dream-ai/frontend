@@ -8,6 +8,8 @@ interface CreateDreamFromPromptParams {
   name: string;
   prompt: string;
   description?: string;
+  sourceUrl?: string;
+  draft?: boolean;
 }
 
 const createDreamFromPrompt = async (

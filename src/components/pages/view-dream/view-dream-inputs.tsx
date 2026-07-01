@@ -29,6 +29,8 @@ import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
 } from "@/utils/file-uploader.util";
+import { isUuid } from "@/utils/string.util";
+import { ROUTES } from "@/constants/routes.constants";
 import { Video, VideoPlaceholder } from "./view-dream.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -224,6 +226,9 @@ const calculatePromptContentHeight = (content: string): number => {
 
   return Math.min(calculatedHeight, maxHeight);
 };
+
+const resolveDreamSourceLink = (value: string): string | null =>
+  isUuid(value) ? `${ROUTES.VIEW_DREAM}/${value.trim()}` : null;
 
 const DreamPromptEditor: React.FC<DreamPromptEditorProps> = ({
   field,
@@ -711,6 +716,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
         <FormItem>
           <FormInput
             linkify
+            resolveInternalLink={resolveDreamSourceLink}
             disabled={!editMode}
             placeholder={t("page.view_dream.source_url")}
             type="text"

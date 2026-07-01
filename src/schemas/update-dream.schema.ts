@@ -1,4 +1,5 @@
 import * as yup from "yup";
+import { isHttpUrl, isUuid } from "@/utils/string.util";
 
 export type UpdateDreamFormValues = {
   name: string;
@@ -65,7 +66,11 @@ export const UpdateDreamSchema = yup
     prompt: yup.mixed().nullable(),
     sourceUrl: yup
       .string()
-      .url("Invalid URL format. URL must start with http:// or https://"),
+      .test(
+        "url-or-uuid",
+        "Source must be a valid http(s) URL or a dream UUID.",
+        (value) => !value || isHttpUrl(value) || isUuid(value),
+      ),
     activityLevel: yup.number().typeError("Activity level must be a number"),
     featureRank: yup
       .number()

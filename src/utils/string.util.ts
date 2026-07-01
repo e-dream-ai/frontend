@@ -1,3 +1,5 @@
+import isUUID from "validator/lib/isUUID";
+
 /**
  * Truncates a string based on character length
  * @param str - Input string
@@ -52,3 +54,16 @@ export const truncateWords = (
 
 export const removeEmptyString = (value?: string) =>
   value?.trim() === "" ? undefined : value;
+
+export const isUuid = (value?: string): boolean =>
+  typeof value === "string" && isUUID(value.trim());
+
+export const isHttpUrl = (value?: string): boolean => {
+  if (!value) return false;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch {
+    return false;
+  }
+};
