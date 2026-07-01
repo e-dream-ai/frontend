@@ -662,7 +662,7 @@ const ViewDreamPage: React.FC = () => {
     if (!prompt) return;
 
     const name = `${dream.name ?? ""} ${t(
-      "page.view_dream.copy_name_suffix",
+      "page.view_dream.remix_name_suffix",
     )}`.trim();
 
     try {
@@ -675,7 +675,7 @@ const ViewDreamPage: React.FC = () => {
 
       const newDream = response.data?.dream;
       if (!response.success || !newDream?.uuid) {
-        toast.error(t("page.view_dream.error_copying_dream"));
+        toast.error(t("page.view_dream.error_remixing_dream"));
         return;
       }
 
@@ -684,7 +684,7 @@ const ViewDreamPage: React.FC = () => {
         state: { startInEditMode: true } satisfies DreamNavState,
       });
     } catch {
-      toast.error(t("page.view_dream.error_copying_dream"));
+      toast.error(t("page.view_dream.error_remixing_dream"));
     }
   };
 
@@ -1008,9 +1008,9 @@ const ViewDreamPage: React.FC = () => {
         onCancel={() => setShowCopyConfirm(false)}
         onConfirm={handleCopyDream}
         isConfirming={copyDreamMutation.isLoading}
-        title={t("page.view_dream.copy")}
-        confirmText={t("page.view_dream.copy")}
-        text={<Text>{t("page.view_dream.copy_confirm")}</Text>}
+        title={t("page.view_dream.remix")}
+        confirmText={t("page.view_dream.remix")}
+        text={<Text>{t("page.view_dream.remix_confirm")}</Text>}
       />
 
       {/**
@@ -1351,7 +1351,7 @@ const ViewDreamPage: React.FC = () => {
                           after={<FontAwesomeIcon icon={faCopy} />}
                           onClick={() => setShowCopyConfirm(true)}
                         >
-                          {t("page.view_dream.copy")}
+                          {t("page.view_dream.remix")}
                         </Button>
                       )}
                     </React.Fragment>
