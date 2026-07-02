@@ -1,5 +1,5 @@
 import { ApiResponse } from "@/types/api.types";
-import { Dream } from "@/types/dream.types";
+import { Dream, DreamStatusType } from "@/types/dream.types";
 import { formatFileSize } from "./file.util";
 import { formatEta, framesToSeconds, secondsToTimeFormat } from "./video.utils";
 import { getUserName } from "./user.util";
@@ -18,6 +18,41 @@ import {
 } from "./select.util";
 
 export const getDreamNameOrUUID = (dream?: Dream) => dream?.name || dream?.uuid;
+
+export type DreamStatusBadgeTone =
+  | "draft"
+  | "uploading"
+  | "processing"
+  | "failed";
+
+export type DreamStatusBadge = {
+  tone: DreamStatusBadgeTone;
+  labelKey: string;
+};
+
+export const getDreamStatusBadge = (dream?: Dream): DreamStatusBadge | null => {
+  if (!dream) return null;
+  switch (dream.status) {
+    case DreamStatusType.FAILED:
+      return { tone: "failed", labelKey: "components.item_card.status.failed" };
+    case DreamStatusType.QUEUE:
+    case DreamStatusType.PROCESSING:
+      return {
+        tone: "processing",
+        labelKey: "components.item_card.status.processing",
+      };
+    case DreamStatusType.NONE:
+      return dream.prompt
+        ? { tone: "draft", labelKey: "components.item_card.status.draft" }
+        : {
+            tone: "uploading",
+            labelKey: "components.item_card.status.uploading",
+          };
+    case DreamStatusType.PROCESSED:
+    default:
+      return null;
+  }
+};
 
 export const serializeDreamPrompt = (
   prompt?: string | Record<string, unknown> | null,

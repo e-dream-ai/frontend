@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useUser } from "@/api/user/query/useUser";
 import { Row } from "@/components/shared";
 import { Avatar } from "@/components/shared/avatar/avatar";
@@ -9,6 +9,7 @@ import SearchBar from "@/components/shared/search-bar/search-bar";
 import { Section } from "@/components/shared/section/section";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import UserDreams from "@/components/shared/user-dreams/user-dreams";
+import MyDreamsGrid from "@/components/shared/my-dreams-grid/my-dreams-grid";
 import { USER_FEED_TYPES } from "@/constants/feed.constants";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useImage } from "@/hooks/useImage";
@@ -19,6 +20,9 @@ import { FeedItemFilterType, UserFeedType } from "@/types/feed.types";
 import UserVotedDreams from "@/components/shared/user-dreams/user-voted-dreams";
 import { VoteType } from "@/types/vote.types";
 import { useUserFeedFilter } from "./useUserFeedFilter";
+import useAuth from "@/hooks/useAuth";
+import { isAdmin } from "@/utils/user.util";
+import { User } from "@/types/auth.types";
 
 const SECTION_ID = "user-feed";
 
@@ -28,6 +32,12 @@ const USER_DREAMS_COMPONENT = [
   USER_FEED_TYPES.PLAYLIST,
   USER_FEED_TYPES.STILLS,
   USER_FEED_TYPES.HIDDEN,
+];
+
+const ALL_STATUS_DREAM_TABS: UserFeedType[] = [
+  USER_FEED_TYPES.ALL,
+  USER_FEED_TYPES.DREAM,
+  USER_FEED_TYPES.STILLS,
 ];
 
 export const UserFeedPage: React.FC = () => {
@@ -45,6 +55,7 @@ export const UserFeedPage: React.FC = () => {
   }, [debouncedSearch]);
 
   const radioGroupData = useUserFeedFilter();
+  const { user: authUser } = useAuth();
 
   const {
     data,
@@ -52,6 +63,13 @@ export const UserFeedPage: React.FC = () => {
     isLoading: isUserLoading,
   } = useUser({ uuid: userUUID });
   const user = data?.data?.user;
+
+  const isOwnProfile = Boolean(
+    authUser?.uuid && userUUID && authUser.uuid === userUUID,
+  );
+  const isUserAdmin = useMemo(() => isAdmin(authUser as User), [authUser]);
+
+  const canSeeAllStatuses = isOwnProfile || isUserAdmin;
 
   const avatarUrl = useImage(user?.avatar, {
     width: 142,
@@ -122,7 +140,22 @@ export const UserFeedPage: React.FC = () => {
             onChange={handleRadioButtonGroupChange}
           />
         </Row>
-        {USER_DREAMS_COMPONENT.includes(radioGroupState) ? (
+        {canSeeAllStatuses &&
+        ALL_STATUS_DREAM_TABS.includes(radioGroupState) ? (
+          <MyDreamsGrid
+            grid
+            columns={3}
+            search={search}
+            userUUID={isOwnProfile ? undefined : userUUID}
+            mediaType={
+              radioGroupState === USER_FEED_TYPES.STILLS
+                ? "image"
+                : radioGroupState === USER_FEED_TYPES.DREAM
+                  ? "video"
+                  : undefined
+            }
+          />
+        ) : USER_DREAMS_COMPONENT.includes(radioGroupState) ? (
           <UserDreams
             grid
             columns={3}

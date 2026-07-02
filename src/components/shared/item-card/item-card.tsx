@@ -24,6 +24,8 @@ import {
   ReorderActionButton,
   ReorderActions,
   ReorderActionsWrap,
+  StatusBadge,
+  StatusPlaceholderIcon,
   StyledItemCard,
   StyledItemCardSkeleton,
   ThumbnailGrid,
@@ -37,14 +39,18 @@ import {
   faAnglesUp,
   faChevronDown,
   faChevronUp,
+  faCloudArrowUp,
   faEllipsis,
   faExclamationCircle,
   faFilm,
   faImage,
   faListUl,
+  faPenToSquare,
   faPhotoFilm,
   faPlay,
+  faWandMagicSparkles,
   faXmark,
+  IconDefinition,
 } from "@fortawesome/free-solid-svg-icons";
 import { getUserName } from "@/utils/user.util";
 import { useTheme } from "styled-components";
@@ -63,6 +69,7 @@ import {
   shouldVirtualPlaylistDisplayDots,
 } from "@/utils/virtual-playlist.util";
 import { ItemCardImage } from "./item-card-image";
+import { DreamStatusBadgeTone, getDreamStatusBadge } from "@/utils/dream.util";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { AnchorLink } from "@/components/shared";
 import PlaylistPlay from "@/icons/playlist-play";
@@ -92,6 +99,7 @@ type ItemCardProps = {
   order?: number;
   deleteDisabled?: boolean;
   showPlayButton?: boolean;
+  showStatusBadge?: boolean;
   inline?: boolean;
   droppable?: boolean;
   showOrderNumber?: boolean;
@@ -123,6 +131,13 @@ const ROUTE_MAP = {
   "virtual-playlist": ROUTES.VIEW_PLAYLIST,
 } as const;
 
+const STATUS_PLACEHOLDER_ICONS: Record<DreamStatusBadgeTone, IconDefinition> = {
+  draft: faPenToSquare,
+  uploading: faCloudArrowUp,
+  processing: faWandMagicSparkles,
+  failed: faExclamationCircle,
+};
+
 const getThumbnail = (type: string, item?: Item) => {
   switch (type) {
     case "dream":
@@ -147,6 +162,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   deleteDisabled = false,
   inline = false,
   showPlayButton = false,
+  showStatusBadge = false,
   showOrderNumber = false,
   indexNumber,
   dndMode = DND_MODES.CROSS_WINDOW,
@@ -430,6 +446,14 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     [type, item],
   );
 
+  const statusBadge = useMemo(
+    () =>
+      showStatusBadge && type === "dream"
+        ? getDreamStatusBadge(item as Dream)
+        : null,
+    [showStatusBadge, type, item],
+  );
+
   const Thumbnail = useMemo(
     () => () => {
       if (type === "virtual-playlist") {
@@ -471,13 +495,33 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
         return <ItemCardImage size={size} src={thumbnailUrl} />;
       }
 
+      if (statusBadge) {
+        return (
+          <ThumbnailPlaceholder size={size}>
+            <StatusPlaceholderIcon tone={statusBadge.tone}>
+              <FontAwesomeIcon
+                icon={STATUS_PLACEHOLDER_ICONS[statusBadge.tone]}
+              />
+            </StatusPlaceholderIcon>
+          </ThumbnailPlaceholder>
+        );
+      }
+
       return (
         <ThumbnailPlaceholder size={size}>
           <FontAwesomeIcon icon={faPhotoFilm} />
         </ThumbnailPlaceholder>
       );
     },
-    [type, thumbnail, thumbnailDreams, size, thumbnailUrl, isDreamFailed],
+    [
+      type,
+      thumbnail,
+      thumbnailDreams,
+      size,
+      thumbnailUrl,
+      isDreamFailed,
+      statusBadge,
+    ],
   );
 
   const ThumbnailAndPlayButton = useMemo(
@@ -491,7 +535,13 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       >
         <Thumbnail />
 
-        {showPlayButton && (
+        {statusBadge && (
+          <StatusBadge tone={statusBadge.tone}>
+            {t(statusBadge.labelKey)}
+          </StatusBadge>
+        )}
+
+        {showPlayButton && !statusBadge && (
           <Row
             justifyContent="flex-end"
             style={{ position: "absolute", top: 0, right: 0 }}
@@ -539,7 +589,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
           )}
       </Row>
     ),
-    [Thumbnail, handlePlay, item, type, inline, showPlayButton],
+    [Thumbnail, handlePlay, item, type, inline, showPlayButton, statusBadge, t],
   );
 
   const onHideClientNotConnectedModal = () =>
@@ -778,9 +828,10 @@ const areItemsEqual = (
     );
   }
 
-  // If items has same uuid consider it equal
+  // If items has same uuid consider it equal, unless a dream's status changed
+  // (keeps the "My Dreams" status badge in sync on refetch without a remount)
   if (prevItem.uuid === nextItem.uuid) {
-    return true;
+    return (prevItem as Dream).status === (nextItem as Dream).status;
   }
 
   // If types don't match or aren't VirtualPlaylist, consider them not equal
