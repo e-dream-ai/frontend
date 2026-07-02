@@ -16,6 +16,7 @@ export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   linkify?: boolean;
   href?: string;
   to?: string;
+  resolveInternalLink?: (value: string) => string | null;
   before?: React.ReactNode;
   after?: React.ReactNode;
   error?: string;
@@ -38,6 +39,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       linkify,
       href,
       to,
+      resolveInternalLink,
       name,
       placeholder,
       tooltipPlace = "right",
@@ -46,6 +48,10 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     },
     ref,
   ) => {
+    const internalLinkTo =
+      disabled && typeof value === "string" && value
+        ? resolveInternalLink?.(value)
+        : undefined;
     return (
       <InputGroup>
         {!hideTooltip && (
@@ -59,7 +65,11 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {before && <InputBefore>{before}</InputBefore>}
           {disabled ? (
             <DisabledInput>
-              {linkify ? (
+              {internalLinkTo ? (
+                <AnchorLink type="secondary" to={internalLinkTo}>
+                  {value}
+                </AnchorLink>
+              ) : linkify ? (
                 <Linkify
                   componentDecorator={(decoratedHref, decoratedText, key) => (
                     <Anchor

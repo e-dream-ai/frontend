@@ -209,6 +209,8 @@
       "title": "View Dream",
       "edit": "Edit",
       "rerun": "Rerun",
+      "remix": "Remix",
+      "remix_confirm": "Create a new dream by editing the prompt of this one and then rerunning it.",
       "save": "Save",
       "saving": "Saving",
       "cancel": "Cancel",
@@ -261,6 +263,8 @@
       "confirm_process_dream_report_modal_body": "Are you sure to process dream report?",
       "dream_updated_successfully": "Dream updated successfully.",
       "error_updating_dream": "Error updating dream.",
+      "error_remixing_dream": "Error remixing dream.",
+      "remix_name_suffix": "(remix)",
       "dream_processing_successfully": "Dream processing successfully.",
       "error_processing_dream": "Error processing dream.",
       "dream_cancelled_successfully": "Dream cancelled successfully.",
@@ -476,7 +480,13 @@
       "created_at": "Created At",
       "owner": "Owner",
       "videos": "Videos",
-      "unnamed": "Unnamed item"
+      "unnamed": "Unnamed item",
+      "status": {
+        "draft": "Draft",
+        "uploading": "Uploading",
+        "processing": "Processing",
+        "failed": "Failed"
+      }
     },
     "paginate": {
       "previous": "previous",

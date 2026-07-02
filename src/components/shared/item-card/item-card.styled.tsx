@@ -6,6 +6,7 @@ import Text from "@/components/shared/text/text";
 import { Button } from "../button/button";
 import { HighlightPosition } from "@/types/item-card.types";
 import { ItemType } from "./item-card";
+import { DreamStatusBadgeTone } from "@/utils/dream.util";
 
 const ItemCardSizes = {
   sm: css``,
@@ -232,6 +233,74 @@ export const ThumbnailPlaceholder = styled.div<{ size: Sizes }>`
     max-width: 100%;
     width: auto;
   }
+`;
+
+const StatusBadgeTones = {
+  draft: css`
+    color: ${(props) => props.theme.textAccentColor};
+  `,
+  uploading: css`
+    color: ${(props) => props.theme.colorPrimary};
+  `,
+  processing: css`
+    color: ${(props) => props.theme.colorLightPrimary};
+  `,
+  failed: css`
+    color: ${(props) => props.theme.colorDanger};
+  `,
+};
+
+const PULSING_TONES: DreamStatusBadgeTone[] = ["uploading", "processing"];
+
+export const StatusBadge = styled.span<{ tone: DreamStatusBadgeTone }>`
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+  background-color: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+  ${(props) => StatusBadgeTones[props.tone]}
+
+  &::before {
+    content: "";
+    flex: none;
+    width: 0.4rem;
+    height: 0.4rem;
+    border-radius: 50%;
+    background-color: currentColor;
+    ${(props) =>
+      PULSING_TONES.includes(props.tone) &&
+      css`
+        animation: ${pulse} 1.5s infinite ease-in-out;
+      `}
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    &::before {
+      animation: none;
+    }
+  }
+`;
+
+export const StatusPlaceholderIcon = styled.span<{
+  tone: DreamStatusBadgeTone;
+}>`
+  display: inline-flex;
+  opacity: 0.45;
+  ${(props) => StatusBadgeTones[props.tone]}
 `;
 
 export const PlayButton = styled(Button)<{ playType: ItemType }>`

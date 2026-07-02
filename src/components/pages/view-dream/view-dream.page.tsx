@@ -26,7 +26,12 @@ import React, {
 } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { Navigate, useParams } from "react-router-dom";
+import {
+  Navigate,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router-dom";
 import { toast } from "react-toastify";
 import router from "@/routes/router";
 import UpdateDreamSchema, {
@@ -41,8 +46,10 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faCircle,
+  faCopy,
   faExclamationCircle,
   faEye,
+  faImage,
   faFlag,
   faGears,
   faPencil,
@@ -56,6 +63,7 @@ import {
 import { DreamStatusType, DreamMediaType } from "@/types/dream.types";
 import {
   Video,
+  VideoPlaceholder,
   ErrorTextAreaGroup,
   ErrorTextAreaRow,
   ErrorTextAreaBefore,
@@ -74,6 +82,7 @@ import { emitPlayDream } from "@/utils/socket.util";
 import { truncateString } from "@/utils/string.util";
 import { AnchorLink } from "@/components/shared";
 import { useProcessDream } from "@/api/dream/mutation/useProcessDream";
+import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import { useCancelDream } from "@/api/dream/mutation/useCancelDream";
 import { useGetDreamPreview } from "@/api/dream/mutation/useGetDreamPreview";
 import { User } from "@/types/auth.types";
@@ -85,7 +94,11 @@ import { VoteType } from "@/types/vote.types";
 import { FilmstripGallery } from "@/components/shared/filmstrip-gallery/filmstrip-gallery";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 import { NotFound } from "@/components/shared/not-found/not-found";
-import { formatDreamForm, formatDreamRequest } from "@/utils/dream.util";
+import {
+  formatDreamForm,
+  formatDreamRequest,
+  serializeDreamPrompt,
+} from "@/utils/dream.util";
 import { ReportDreamModal } from "@/components/modals/report-dream.modal";
 import { useUpdateReport } from "@/api/report/mutation/useUpdateReport";
 import { Tooltip } from "react-tooltip";
@@ -108,6 +121,8 @@ import { useCreditGuard } from "@/hooks/useCreditGuard";
 import { CostEstimate } from "@/components/shared/cost-estimate/cost-estimate";
 
 type Params = { uuid: string };
+
+type DreamNavState = { startInEditMode?: boolean };
 
 const SectionID = "dream";
 
@@ -191,8 +206,11 @@ const ViewDreamPage: React.FC = () => {
   const { t } = useTranslation();
   const { uuid } = useParams<Params>();
   const { user } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const [editMode, setEditMode] = useState<boolean>(false);
+  const [showCopyConfirm, setShowCopyConfirm] = useState<boolean>(false);
   const [video, setVideo] = useState<MultiMediaState>();
   const [originalImage, setOriginalImage] = useState<MultiMediaState>();
   const [thumbnail, setTumbnail] = useState<MultiMediaState>();
@@ -224,6 +242,7 @@ const ViewDreamPage: React.FC = () => {
   const upvoteMutation = useUpvoteDream(uuid);
   const downvoteMutation = useDownvoteDream(uuid);
   const unvoteMutation = useUnvoteDream(uuid);
+  const copyDreamMutation = useCreateDreamFromPrompt();
 
   const {
     data,
@@ -290,6 +309,18 @@ const ViewDreamPage: React.FC = () => {
   }, [uuid, socket]);
 
   const dream = useMemo(() => data?.data?.dream, [data]);
+
+  const displayDream = useMemo(() => {
+    if (!dream || dream.uuid === uuid) return dream;
+    return {
+      ...dream,
+      video: "",
+      thumbnail: "",
+      original_video: undefined,
+      filmstrip: undefined,
+    };
+  }, [dream, uuid]);
+
   const vote = useMemo(() => voteData?.data?.vote, [voteData]);
   const isImageDream = useMemo(
     () => dream?.mediaType === DreamMediaType.IMAGE,
@@ -459,6 +490,8 @@ const ViewDreamPage: React.FC = () => {
 
   const showEditButton = !editMode;
   const showSaveAndCancelButtons = editMode && !isDreamProcessingRaw;
+
+  const showCopyButton = isCreator && !isOwner && hasPrompt;
   // Handlers
   const handleMutateVideoDream = async (data: UpdateDreamFormValues) => {
     if (isImageDream) {
@@ -621,6 +654,38 @@ const ViewDreamPage: React.FC = () => {
   const handleEdit = (event: React.MouseEvent) => {
     event.preventDefault();
     setEditMode(true);
+  };
+
+  const handleCopyDream = async () => {
+    if (!dream) return;
+    const prompt = serializeDreamPrompt(dream.prompt);
+    if (!prompt) return;
+
+    const name = `${dream.name ?? ""} ${t(
+      "page.view_dream.remix_name_suffix",
+    )}`.trim();
+
+    try {
+      const response = await copyDreamMutation.mutateAsync({
+        name,
+        prompt,
+        sourceUrl: dream.uuid,
+        draft: true,
+      });
+
+      const newDream = response.data?.dream;
+      if (!response.success || !newDream?.uuid) {
+        toast.error(t("page.view_dream.error_remixing_dream"));
+        return;
+      }
+
+      setShowCopyConfirm(false);
+      navigate(`${ROUTES.VIEW_DREAM}/${newDream.uuid}`, {
+        state: { startInEditMode: true } satisfies DreamNavState,
+      });
+    } catch {
+      toast.error(t("page.view_dream.error_remixing_dream"));
+    }
   };
 
   const handleCancel = (event: React.MouseEvent) => {
@@ -892,6 +957,15 @@ const ViewDreamPage: React.FC = () => {
     resetRemoteDreamForm();
   }, [resetRemoteDreamForm]);
 
+  useEffect(() => {
+    const startInEditMode = (location.state as DreamNavState | null)
+      ?.startInEditMode;
+    if (startInEditMode) {
+      setEditMode(true);
+      navigate(".", { replace: true, state: null });
+    }
+  }, [location.state, navigate]);
+
   if (!uuid) return <Navigate to={ROUTES.ROOT} replace />;
 
   /**
@@ -927,6 +1001,16 @@ const ViewDreamPage: React.FC = () => {
             </em>
           </Text>
         }
+      />
+
+      <ConfirmModal
+        isOpen={showCopyConfirm}
+        onCancel={() => setShowCopyConfirm(false)}
+        onConfirm={handleCopyDream}
+        isConfirming={copyDreamMutation.isLoading}
+        title={t("page.view_dream.remix")}
+        confirmText={t("page.view_dream.remix")}
+        text={<Text>{t("page.view_dream.remix_confirm")}</Text>}
       />
 
       {/**
@@ -1261,6 +1345,15 @@ const ViewDreamPage: React.FC = () => {
                           </Button>
                         </Restricted>
                       )}
+                      {showCopyButton && (
+                        <Button
+                          type="button"
+                          after={<FontAwesomeIcon icon={faCopy} />}
+                          onClick={() => setShowCopyConfirm(true)}
+                        >
+                          {t("page.view_dream.remix")}
+                        </Button>
+                      )}
                     </React.Fragment>
                   )}
                   {showSaveAndCancelButtons && (
@@ -1288,7 +1381,7 @@ const ViewDreamPage: React.FC = () => {
               </Row>
 
               <ViewDreamInputs
-                dream={dream}
+                dream={displayDream}
                 isProcessing={isDreamProcessingRaw}
                 editMode={editMode}
                 // thumbnail props
@@ -1332,7 +1425,7 @@ const ViewDreamPage: React.FC = () => {
                           <h3>{t("page.view_dream.filmstrip")}</h3>
                         </Row>
                         <Row flexWrap="wrap">
-                          <FilmstripGallery dream={dream} />
+                          <FilmstripGallery dream={displayDream} />
                         </Row>
 
                         <Restricted
@@ -1358,7 +1451,7 @@ const ViewDreamPage: React.FC = () => {
                             justifyContent={["center", "center", "flex-start"]}
                           >
                             <DreamVideoInput
-                              dream={dream}
+                              dream={displayDream}
                               editMode={editMode}
                               video={video}
                               isRemoved={isVideoRemoved}
@@ -1372,7 +1465,10 @@ const ViewDreamPage: React.FC = () => {
                         <Row
                           justifyContent={["center", "center", "flex-start"]}
                         >
-                          <Video controls src={video?.url || dream?.video} />
+                          <Video
+                            controls
+                            src={video?.url || displayDream?.video}
+                          />
                         </Row>
                       </>
                     )
@@ -1399,7 +1495,7 @@ const ViewDreamPage: React.FC = () => {
                           justifyContent={["center", "center", "flex-start"]}
                         >
                           <DreamImageInput
-                            dream={dream}
+                            dream={displayDream}
                             editMode={editMode}
                             image={originalImage}
                             isRemoved={isOriginalImageRemoved}
@@ -1411,11 +1507,17 @@ const ViewDreamPage: React.FC = () => {
                         <h3>{t("page.view_dream.image")}</h3>
                       </Row>
                       <Row justifyContent={["center", "center", "flex-start"]}>
-                        <img
-                          src={dream?.video || dream?.thumbnail}
-                          alt={dream?.name}
-                          style={{ maxWidth: "100%", height: "auto" }}
-                        />
+                        {displayDream?.video || displayDream?.thumbnail ? (
+                          <img
+                            src={displayDream?.video || displayDream?.thumbnail}
+                            alt={dream?.name}
+                            style={{ maxWidth: "100%", height: "auto" }}
+                          />
+                        ) : (
+                          <VideoPlaceholder>
+                            <FontAwesomeIcon icon={faImage} />
+                          </VideoPlaceholder>
+                        )}
                       </Row>
                     </>
                   )}
