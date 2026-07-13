@@ -19,6 +19,7 @@ import { FeedList } from "./feed-list";
 import { UserFeedList } from "./user-feed-list";
 import { useInfiniteUsers } from "@/api/user/query/useInfiniteUsers";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import { Loader } from "@/components/shared/loader/loader";
 import { useTheme } from "styled-components";
 
@@ -135,6 +136,11 @@ export const FeedPage: React.FC = () => {
       ),
     [radioGroupState],
   );
+
+  const isContentReady = showUserList
+    ? !isUsersLoading && usersDataLength > 0
+    : !isFeedLoading && feedDataLength > 0;
+  useScrollRestoration(isContentReady);
 
   const handleRadioButtonGroupChange = (value?: string) => {
     if (value && isFeedItemType(value)) {
