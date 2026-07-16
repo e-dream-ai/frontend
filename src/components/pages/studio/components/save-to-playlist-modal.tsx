@@ -7,6 +7,7 @@ import { useShallow } from "zustand/react/shallow";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import { useLinkPlaylistKeyframes } from "@/api/playlist/mutation/useLinkPlaylistKeyframes";
+import { useRunPlaylist } from "@/api/playlist/mutation/useRunPlaylist";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import { ROUTES } from "@/constants/routes.constants";
 import {
@@ -19,6 +20,12 @@ import {
   ModeToggleRow,
   ModeTab,
   NameInput,
+  CheckboxLabel,
+  UprezParams,
+  UprezParamRow,
+  UprezParamLabel,
+  FactorToggleGroup,
+  FactorToggle,
   PlaylistList,
   PlaylistItem,
   Summary,
@@ -27,6 +34,31 @@ import {
   SaveButton,
   SpinningIcon,
 } from "./save-to-playlist-modal.styled";
+
+const FACTOR_OPTIONS = [2, 4] as const;
+type Factor = (typeof FACTOR_OPTIONS)[number];
+
+const FactorRow: React.FC<{
+  label: string;
+  value: Factor;
+  onChange: (factor: Factor) => void;
+}> = ({ label, value, onChange }) => (
+  <UprezParamRow>
+    <UprezParamLabel>{label}</UprezParamLabel>
+    <FactorToggleGroup>
+      {FACTOR_OPTIONS.map((f) => (
+        <FactorToggle
+          key={f}
+          type="button"
+          $active={value === f}
+          onClick={() => onChange(f)}
+        >
+          {f}×
+        </FactorToggle>
+      ))}
+    </FactorToggleGroup>
+  </UprezParamRow>
+);
 
 interface Props {
   onClose: () => void;
@@ -46,6 +78,9 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     `Studio Flow — ${new Date().toISOString().slice(0, 10)}`,
   );
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
+  const [createUprez, setCreateUprez] = useState(false);
+  const [upscaleFactor, setUpscaleFactor] = useState<Factor>(2);
+  const [interpolationFactor, setInterpolationFactor] = useState<Factor>(2);
   const [isSaving, setIsSaving] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
@@ -53,6 +88,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
   const createPlaylist = useCreatePlaylist();
   const addPlaylistItem = useAddPlaylistItem();
   const linkPlaylistKeyframes = useLinkPlaylistKeyframes();
+  const runPlaylist = useRunPlaylist();
 
   const canSave =
     completedTransitions.length > 0 &&
@@ -69,6 +105,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     try {
       let playlistUUID: string;
       let finalName: string;
+      let createdUprez: { uuid: string; name: string } | null = null;
 
       if (mode === "new") {
         const result = await createPlaylist.mutateAsync({
@@ -104,6 +141,40 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
         });
       }
 
+      if (mode === "new" && createUprez) {
+        try {
+          const uprezResult = await createPlaylist.mutateAsync({
+            name: `${finalName} (uprez)`,
+            prompt: {
+              infinidream_algorithm: "uprez_playlist",
+              source_playlist_uuid: playlistUUID,
+              dream_algorithm: "uprez",
+              params: {
+                upscale_factor: upscaleFactor,
+                interpolation_factor: interpolationFactor,
+              },
+            },
+          });
+          const uprezPlaylist = uprezResult.data?.playlist;
+          if (uprezPlaylist) {
+            addPlaylistToCache({
+              uuid: uprezPlaylist.uuid,
+              name: uprezPlaylist.name,
+            });
+            await runPlaylist.mutateAsync(uprezPlaylist.uuid);
+            createdUprez = {
+              uuid: uprezPlaylist.uuid,
+              name: uprezPlaylist.name,
+            };
+          }
+        } catch (uprezErr) {
+          Bugsnag.notify(uprezErr as Error);
+          toast.error(
+            "Playlist saved, but creating the uprez playlist failed.",
+          );
+        }
+      }
+
       toast.success(
         <span>
           Saved {total} transition{total !== 1 ? "s" : ""} to{" "}
@@ -113,6 +184,17 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
           >
             {finalName}
           </a>
+          {createdUprez && (
+            <>
+              {". "}Uprezing in{" "}
+              <a
+                href={`${ROUTES.VIEW_PLAYLIST}/${createdUprez.uuid}`}
+                style={{ color: "inherit", textDecoration: "underline" }}
+              >
+                {createdUprez.name}
+              </a>
+            </>
+          )}
         </span>,
       );
       onClose();
@@ -131,6 +213,10 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     createPlaylist,
     addPlaylistItem,
     linkPlaylistKeyframes,
+    runPlaylist,
+    createUprez,
+    upscaleFactor,
+    interpolationFactor,
     loop,
     addPlaylistToCache,
     playlists,
@@ -159,12 +245,38 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
           </ModeToggleRow>
 
           {mode === "new" ? (
-            <NameInput
-              value={playlistName}
-              onChange={(e) => setPlaylistName(e.target.value)}
-              placeholder="Playlist name"
-              autoFocus
-            />
+            <>
+              <NameInput
+                value={playlistName}
+                onChange={(e) => setPlaylistName(e.target.value)}
+                placeholder="Playlist name"
+                autoFocus
+              />
+              <CheckboxLabel>
+                <input
+                  type="checkbox"
+                  checked={createUprez}
+                  onChange={(e) => setCreateUprez(e.target.checked)}
+                />
+                Also create an uprez playlist (tracks this flow and uprezes new
+                dreams on demand)
+              </CheckboxLabel>
+
+              {createUprez && (
+                <UprezParams>
+                  <FactorRow
+                    label="Upscale factor"
+                    value={upscaleFactor}
+                    onChange={setUpscaleFactor}
+                  />
+                  <FactorRow
+                    label="Interpolation factor"
+                    value={interpolationFactor}
+                    onChange={setInterpolationFactor}
+                  />
+                </UprezParams>
+              )}
+            </>
           ) : (
             <PlaylistList>
               {playlists.length === 0 && (

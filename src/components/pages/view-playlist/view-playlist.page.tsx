@@ -1,8 +1,10 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, ItemCardList, Row } from "@/components/shared";
+import { UprezPlaylistControls } from "./components/uprez-playlist-controls";
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
+import { DreamStatusType } from "@/types/dream.types";
 import { Fragment, useCallback, useContext, useEffect, useState } from "react";
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import { useTranslation } from "react-i18next";
@@ -297,6 +299,11 @@ export const ViewPlaylistPage = () => {
     setHasJumpedToEndKeyframes,
   } = usePlaylistState();
   const playlistReferences = playlist?.playlistItems ?? [];
+  const isUprezRunning = items.some(
+    (item) =>
+      item.dreamItem?.status === DreamStatusType.QUEUE ||
+      item.dreamItem?.status === DreamStatusType.PROCESSING,
+  );
   const { isAllowedTo } = useContext(PermissionContext);
   const { mutate: mutateDeletePlaylistReferenceItem } = useDeletePlaylistItem();
 
@@ -832,18 +839,26 @@ export const ViewPlaylistPage = () => {
                       </Button>
                     </>
                   ) : (
-                    <Restricted
-                      to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
-                      isOwner={isOwner}
-                    >
-                      <Button
-                        type="button"
-                        after={<FontAwesomeIcon icon={faSave} />}
-                        onClick={handleEdit}
+                    <>
+                      <UprezPlaylistControls
+                        playlist={playlist}
+                        isOwner={isOwner}
+                        isUserAdmin={isUserAdmin}
+                        isRunning={isUprezRunning}
+                      />
+                      <Restricted
+                        to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
+                        isOwner={isOwner}
                       >
-                        {t("page.view_playlist.edit")}
-                      </Button>
-                    </Restricted>
+                        <Button
+                          type="button"
+                          after={<FontAwesomeIcon icon={faSave} />}
+                          onClick={handleEdit}
+                        >
+                          {t("page.view_playlist.edit")}
+                        </Button>
+                      </Restricted>
+                    </>
                   )}
                 </div>
               </Row>

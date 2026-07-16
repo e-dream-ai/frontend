@@ -111,6 +111,63 @@ export const NameInput = styled.input`
   }
 `;
 
+export const CheckboxLabel = styled.label`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 12px;
+  font-size: 14px;
+  color: ${FLOW.textDim};
+  cursor: pointer;
+`;
+
+export const UprezParams = styled.div`
+  margin-top: 12px;
+  margin-left: 26px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+`;
+
+export const UprezParamRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
+export const UprezParamLabel = styled.span`
+  font-size: 13px;
+  color: ${FLOW.textDim};
+  font-family: ${FLOW.fontFamily};
+`;
+
+export const FactorToggleGroup = styled.div`
+  display: flex;
+  background: ${FLOW.bgInput};
+  border: 1px solid ${FLOW.border};
+  border-radius: 6px;
+  padding: 2px;
+  gap: 2px;
+`;
+
+export const FactorToggle = styled.button<{ $active: boolean }>`
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  font-family: ${FLOW.fontFamily};
+  color: ${(p) => (p.$active ? FLOW.bg : FLOW.textMuted)};
+  background: ${(p) => (p.$active ? FLOW.accent : "transparent")};
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover {
+    color: ${(p) => (p.$active ? FLOW.bg : FLOW.text)};
+  }
+`;
+
 export const PlaylistList = styled.div`
   display: flex;
   flex-direction: column;
