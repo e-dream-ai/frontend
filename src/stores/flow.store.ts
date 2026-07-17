@@ -4,6 +4,7 @@ import type {
   FlowKeyframe,
   FlowTransition,
   TransitionStatus,
+  VariationCandidate,
 } from "@/types/flow.types";
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
 
@@ -37,6 +38,12 @@ type FlowStoreState = {
   updateKeyframe: (id: string, patch: Partial<FlowKeyframe>) => void;
   removeKeyframe: (id: string) => void;
   reorderKeyframes: (orderedIds: string[]) => void;
+
+  // i2i candidate staging — candidates are excluded from transition derivation
+  // until accepted, so they never spawn generation jobs.
+  addI2iCandidates: (parentId: string, candidates: FlowKeyframe[]) => void;
+  acceptI2iCandidate: (id: string) => void;
+  discardI2iCandidate: (id: string) => void;
   setLoop: (loop: boolean) => void;
   keyframesWithLoop: () => FlowKeyframe[];
   resetFlow: () => void;
@@ -90,6 +97,35 @@ type FlowStoreState = {
   ) => void;
   recomputeTransitions: () => void;
   reconcileStaleTransitions: () => void;
+
+  // Variation actions — keyframes
+  addKeyframeVariations: (
+    keyframeId: string,
+    candidates: VariationCandidate[],
+  ) => void;
+  selectKeyframeVariation: (keyframeId: string, variationId: string) => void;
+  clearKeyframeVariations: (keyframeId: string) => void;
+  updateKeyframeVariation: (
+    keyframeId: string,
+    variationId: string,
+    patch: Partial<VariationCandidate>,
+  ) => void;
+
+  // Variation actions — transitions
+  addTransitionVariations: (
+    transitionIndex: number,
+    candidates: VariationCandidate[],
+  ) => void;
+  selectTransitionVariation: (
+    transitionIndex: number,
+    variationId: string,
+  ) => void;
+  clearTransitionVariations: (transitionIndex: number) => void;
+  updateTransitionVariation: (
+    transitionIndex: number,
+    variationId: string,
+    patch: Partial<VariationCandidate>,
+  ) => void;
 };
 
 const PHASE_1_DEFAULTS = {
@@ -106,6 +142,20 @@ const PHASE_1_DEFAULTS = {
   settingsExpanded: false,
   previewLightboxOpen: false,
 };
+
+/**
+ * Like buildKeyframesWithLoop, but excludes i2i candidates. Candidates are a
+ * staging area that render as cards but must not appear in the timeline,
+ * so they are filtered out BEFORE the synthetic loop frame is appended.
+ * Transitions are therefore derived only over real (non-candidate) keyframes.
+ */
+function timelineKeyframesWithLoop(
+  keyframes: FlowKeyframe[],
+  loop: boolean,
+): FlowKeyframe[] {
+  const real = keyframes.filter((kf) => !kf.i2iCandidate);
+  return buildKeyframesWithLoop(real, loop);
+}
 
 /**
  * Build transitions from adjacent keyframe pairs.
@@ -149,7 +199,15 @@ function deriveTransitions(
 
 export const flowPartialize = (state: FlowStoreState) => ({
   keyframes: state.keyframes
-    .filter((kf) => (kf.keyframeUuid || kf.dreamUuid) && !kf.uploadStatus)
+    // Exclude unsettled records AND i2i candidates. A candidate has no
+    // accepted place in the timeline yet; persisting one would resurrect
+    // a staging card on reload that no transition references.
+    .filter(
+      (kf) =>
+        (kf.keyframeUuid || kf.dreamUuid) &&
+        !kf.uploadStatus &&
+        !kf.i2iCandidate,
+    )
     .map((kf) => ({
       id: kf.id,
       keyframeUuid: kf.keyframeUuid,
@@ -157,9 +215,18 @@ export const flowPartialize = (state: FlowStoreState) => ({
       imageUrl: kf.imageUrl,
       name: kf.name,
       isLoopKeyframe: kf.isLoopKeyframe,
+      variations: kf.variations?.filter(
+        (v) => v.status !== "queue" && v.status !== "processing",
+      ),
+      activeVariationId: kf.activeVariationId,
     })),
   loop: state.loop,
-  transitions: state.transitions,
+  transitions: state.transitions.map((t) => ({
+    ...t,
+    variations: t.variations?.filter(
+      (v) => v.status !== "queue" && v.status !== "processing",
+    ),
+  })),
   globalPresetId: state.globalPresetId,
   globalPrompt: state.globalPrompt,
   globalNegativePrompt: state.globalNegativePrompt,
@@ -183,7 +250,7 @@ export const useFlowStore = create<FlowStoreState>()(
           return {
             keyframes,
             transitions: deriveTransitions(
-              buildKeyframesWithLoop(keyframes, s.loop),
+              timelineKeyframesWithLoop(keyframes, s.loop),
               s.transitions,
             ),
           };
@@ -202,7 +269,7 @@ export const useFlowStore = create<FlowStoreState>()(
           return {
             keyframes,
             transitions: deriveTransitions(
-              buildKeyframesWithLoop(keyframes, s.loop),
+              timelineKeyframesWithLoop(keyframes, s.loop),
               s.transitions,
             ),
           };
@@ -217,7 +284,58 @@ export const useFlowStore = create<FlowStoreState>()(
           return {
             keyframes,
             transitions: deriveTransitions(
-              buildKeyframesWithLoop(keyframes, s.loop),
+              timelineKeyframesWithLoop(keyframes, s.loop),
+              s.transitions,
+            ),
+          };
+        }),
+
+      // Append i2i candidates flagged so derivation skips them. Recompute
+      // transitions: per the filter in timelineKeyframesWithLoop the candidates
+      // are excluded, so no garbage transitions appear between them.
+      addI2iCandidates: (parentId, candidates) =>
+        set((s) => {
+          const flagged = candidates.map((kf) => ({
+            ...kf,
+            i2iCandidate: true,
+            i2iParentId: parentId,
+          }));
+          const keyframes = [...s.keyframes, ...flagged];
+          return {
+            keyframes,
+            transitions: deriveTransitions(
+              timelineKeyframesWithLoop(keyframes, s.loop),
+              s.transitions,
+            ),
+          };
+        }),
+
+      // Promote a candidate to a real keyframe: clear the staging flags and
+      // re-derive so it is wired into the timeline transitions.
+      acceptI2iCandidate: (id) =>
+        set((s) => {
+          const keyframes = s.keyframes.map((kf) =>
+            kf.id === id
+              ? { ...kf, i2iCandidate: undefined, i2iParentId: undefined }
+              : kf,
+          );
+          return {
+            keyframes,
+            transitions: deriveTransitions(
+              timelineKeyframesWithLoop(keyframes, s.loop),
+              s.transitions,
+            ),
+          };
+        }),
+
+      // Remove a candidate entirely and re-derive (mirrors removeKeyframe).
+      discardI2iCandidate: (id) =>
+        set((s) => {
+          const keyframes = s.keyframes.filter((kf) => kf.id !== id);
+          return {
+            keyframes,
+            transitions: deriveTransitions(
+              timelineKeyframesWithLoop(keyframes, s.loop),
               s.transitions,
             ),
           };
@@ -227,7 +345,7 @@ export const useFlowStore = create<FlowStoreState>()(
         set((s) => ({
           loop,
           transitions: deriveTransitions(
-            buildKeyframesWithLoop(s.keyframes, loop),
+            timelineKeyframesWithLoop(s.keyframes, loop),
             s.transitions,
           ),
         })),
@@ -331,33 +449,161 @@ export const useFlowStore = create<FlowStoreState>()(
       recomputeTransitions: () =>
         set((s) => ({
           transitions: deriveTransitions(
-            buildKeyframesWithLoop(s.keyframes, s.loop),
+            timelineKeyframesWithLoop(s.keyframes, s.loop),
             s.transitions,
           ),
         })),
 
       reconcileStaleTransitions: () =>
+        set((s) => {
+          // Only fail in-flight work that has NO backend job to recover (no
+          // dreamUuid). Items WITH a dreamUuid are left in queue/processing so
+          // the polling hook (useFlowJobProgress) re-attaches and recovers their
+          // real status after a reload / session switch — work cooking in
+          // another session must survive switching back and forth.
+          const reconcileVariations = (vars?: VariationCandidate[]) =>
+            vars?.map((v) =>
+              (v.status === "queue" || v.status === "processing") &&
+              !v.dreamUuid
+                ? { ...v, status: "failed" as const, progress: undefined }
+                : v,
+            );
+          return {
+            transitions: s.transitions.map((t) => {
+              const dreamInFlight =
+                t.status === "processing" || t.status === "queue";
+              const uprezInFlight =
+                t.uprezStatus === "processing" || t.uprezStatus === "queue";
+              return {
+                ...t,
+                ...(dreamInFlight &&
+                  !t.dreamUuid && {
+                    status: "failed" as const,
+                    progress: undefined,
+                  }),
+                ...(uprezInFlight &&
+                  !t.uprezDreamUuid && {
+                    uprezStatus: "failed" as const,
+                    uprezProgress: undefined,
+                  }),
+                ...(t.variations && {
+                  variations: reconcileVariations(t.variations),
+                }),
+              };
+            }),
+            keyframes: s.keyframes.map((kf) =>
+              kf.variations
+                ? { ...kf, variations: reconcileVariations(kf.variations) }
+                : kf,
+            ),
+          };
+        }),
+
+      // Variation actions — keyframes
+      addKeyframeVariations: (keyframeId, candidates) =>
         set((s) => ({
-          transitions: s.transitions.map((t) => {
-            const dreamStale =
-              (t.status === "processing" || t.status === "queue") &&
-              !t.dreamUuid;
-            const uprezStale =
-              (t.uprezStatus === "processing" || t.uprezStatus === "queue") &&
-              !t.uprezDreamUuid;
-            if (!dreamStale && !uprezStale) return t;
-            return {
-              ...t,
-              ...(dreamStale && {
-                status: "failed" as const,
-                progress: undefined,
-              }),
-              ...(uprezStale && {
-                uprezStatus: "failed" as const,
-                uprezProgress: undefined,
-              }),
-            };
-          }),
+          keyframes: s.keyframes.map((kf) =>
+            kf.id === keyframeId
+              ? { ...kf, variations: [...(kf.variations || []), ...candidates] }
+              : kf,
+          ),
+        })),
+
+      selectKeyframeVariation: (keyframeId, variationId) =>
+        set((s) => {
+          const kf = s.keyframes.find((k) => k.id === keyframeId);
+          const variation = kf?.variations?.find((v) => v.id === variationId);
+          if (!kf || !variation || variation.status !== "processed") return s;
+          return {
+            keyframes: s.keyframes.map((k) =>
+              k.id === keyframeId
+                ? {
+                    ...k,
+                    activeVariationId: variationId,
+                    imageUrl: variation.imageUrl || k.imageUrl,
+                    dreamUuid: variation.dreamUuid || k.dreamUuid,
+                  }
+                : k,
+            ),
+          };
+        }),
+
+      clearKeyframeVariations: (keyframeId) =>
+        set((s) => ({
+          keyframes: s.keyframes.map((kf) =>
+            kf.id === keyframeId
+              ? { ...kf, variations: undefined, activeVariationId: undefined }
+              : kf,
+          ),
+        })),
+
+      updateKeyframeVariation: (keyframeId, variationId, patch) =>
+        set((s) => ({
+          keyframes: s.keyframes.map((kf) =>
+            kf.id === keyframeId
+              ? {
+                  ...kf,
+                  variations: kf.variations?.map((v) =>
+                    v.id === variationId ? { ...v, ...patch } : v,
+                  ),
+                }
+              : kf,
+          ),
+        })),
+
+      // Variation actions — transitions
+      addTransitionVariations: (index, candidates) =>
+        set((s) => ({
+          transitions: s.transitions.map((t, i) =>
+            i === index
+              ? { ...t, variations: [...(t.variations || []), ...candidates] }
+              : t,
+          ),
+        })),
+
+      selectTransitionVariation: (index, variationId) =>
+        set((s) => {
+          const transition = s.transitions[index];
+          const variation = transition?.variations?.find(
+            (v) => v.id === variationId,
+          );
+          if (!transition || !variation || variation.status !== "processed")
+            return s;
+          return {
+            transitions: s.transitions.map((t, i) =>
+              i === index
+                ? {
+                    ...t,
+                    activeVariationId: variationId,
+                    dreamUuid: variation.dreamUuid || t.dreamUuid,
+                    status: "processed" as const,
+                  }
+                : t,
+            ),
+          };
+        }),
+
+      clearTransitionVariations: (index) =>
+        set((s) => ({
+          transitions: s.transitions.map((t, i) =>
+            i === index
+              ? { ...t, variations: undefined, activeVariationId: undefined }
+              : t,
+          ),
+        })),
+
+      updateTransitionVariation: (index, variationId, patch) =>
+        set((s) => ({
+          transitions: s.transitions.map((t, i) =>
+            i === index
+              ? {
+                  ...t,
+                  variations: t.variations?.map((v) =>
+                    v.id === variationId ? { ...v, ...patch } : v,
+                  ),
+                }
+              : t,
+          ),
         })),
     }),
     {

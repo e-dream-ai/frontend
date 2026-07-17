@@ -1,9 +1,11 @@
 import React, { useEffect, useMemo } from "react";
+import Bugsnag from "@bugsnag/js";
 import { useStudioStore } from "@/stores/studio.store";
 import { useBatchSubmit } from "../hooks/useBatchSubmit";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import { axiosClient } from "@/client/axios.client";
 import type { VideoModel } from "@/types/studio.types";
+import { expandPrompt } from "../utils/expand-prompt";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
@@ -72,6 +74,23 @@ export const GenerateTab: React.FC = () => {
     [actions],
   );
 
+  // Expand {a|b|c} syntax in each action prompt into distinct actions, so a
+  // single templated action fans out into multiple grid columns. A plain
+  // prompt expands to itself (kept as the original action).
+  const expandedActions = useMemo(
+    () =>
+      enabledActions.flatMap((action) => {
+        const expanded = expandPrompt(action.prompt);
+        if (expanded.length <= 1) return [action];
+        return expanded.map((prompt, i) => ({
+          ...action,
+          id: `${action.id}__exp${i}`,
+          prompt,
+        }));
+      }),
+    [enabledActions],
+  );
+
   const newCombos = useMemo(
     () => getSelectedCombinations(),
     [getSelectedCombinations],
@@ -89,10 +108,10 @@ export const GenerateTab: React.FC = () => {
   const showLtxHint = useMemo(() => {
     if (videoGenParams.model !== "ltx-i2v") return false;
     return (
-      enabledActions.length > 0 &&
-      enabledActions.some((a) => !hasActionLoras(a))
+      expandedActions.length > 0 &&
+      expandedActions.some((a) => !hasActionLoras(a))
     );
-  }, [videoGenParams.model, enabledActions]);
+  }, [videoGenParams.model, expandedActions]);
 
   useEffect(() => {
     const nextDuration = clampDurationToAllowed(
@@ -104,7 +123,7 @@ export const GenerateTab: React.FC = () => {
     }
   }, [durationOptions, videoGenParams.duration, setVideoGenParams]);
 
-  const totalPossible = selectedImages.length * enabledActions.length;
+  const totalPossible = selectedImages.length * expandedActions.length;
 
   const handleCreatePlaylist = async () => {
     const now = new Date();
@@ -115,7 +134,7 @@ export const GenerateTab: React.FC = () => {
       setOutputPlaylistId(playlist.uuid);
       addPlaylistToCache({ uuid: playlist.uuid, name: playlist.name });
     } catch (err) {
-      console.error("Failed to create playlist:", err);
+      Bugsnag.notify(err instanceof Error ? err : new Error(String(err)));
     }
   };
 
@@ -133,7 +152,7 @@ export const GenerateTab: React.FC = () => {
             <thead>
               <tr>
                 <GridHeader />
-                {enabledActions.map((action) => (
+                {expandedActions.map((action) => (
                   <GridHeader key={action.id} title={action.prompt}>
                     {action.prompt.slice(0, 20)}...
                   </GridHeader>
@@ -144,7 +163,7 @@ export const GenerateTab: React.FC = () => {
               {selectedImages.map((image) => (
                 <tr key={image.uuid}>
                   <GridRowHeader>{image.name}</GridRowHeader>
-                  {enabledActions.map((action) => {
+                  {expandedActions.map((action) => {
                     const comboKey = `${image.uuid}:${action.id}`;
                     const excluded = excludedCombos.has(comboKey);
                     const existingJob = jobs.find(

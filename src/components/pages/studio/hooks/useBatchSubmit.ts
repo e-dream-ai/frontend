@@ -1,4 +1,5 @@
 import { useCallback, useState } from "react";
+import Bugsnag from "@bugsnag/js";
 import { useStudioStore } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import { axiosClient } from "@/client/axios.client";
@@ -9,6 +10,7 @@ import {
 } from "../constants/duration-options";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
+import { expandPrompt } from "../utils/expand-prompt";
 
 // Serialized to avoid concurrent auth refresh races (see fix/session-refresh-race on backend)
 const BATCH_SIZE = 1;
@@ -32,7 +34,17 @@ export const useBatchSubmit = () => {
     const selectedImages = images.filter(
       (img) => img.selected && img.status === "processed",
     );
-    const enabledActions = actions.filter((a) => a.enabled && a.prompt.trim());
+    const enabledActions = actions
+      .filter((a) => a.enabled && a.prompt.trim())
+      .flatMap((action) => {
+        const expanded = expandPrompt(action.prompt);
+        if (expanded.length <= 1) return [action];
+        return expanded.map((prompt, i) => ({
+          ...action,
+          id: `${action.id}__exp${i}`,
+          prompt,
+        }));
+      });
 
     const existingJobKeys = new Set(
       jobs
@@ -146,7 +158,11 @@ export const useBatchSubmit = () => {
 
         for (const result of results) {
           if (result.status === "rejected") {
-            console.error("Failed to create dream for combo:", result.reason);
+            Bugsnag.notify(
+              result.reason instanceof Error
+                ? result.reason
+                : new Error(String(result.reason)),
+            );
           }
         }
       }

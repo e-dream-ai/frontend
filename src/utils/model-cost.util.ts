@@ -25,6 +25,11 @@ const priceFor = (pricing: ModelPricing, params: CostParams): number | null => {
     return (pricing.baseUsd ?? 0) + pricing.usdPerSecond * duration;
   }
 
+  // Flat per-image cost (e.g. Kontext i2i), independent of size.
+  if (pricing.kind === "perImage") {
+    return pricing.usdPerImage;
+  }
+
   if (!params.imageSize) return null;
   const megapixels = parseMegapixels(params.imageSize);
   if (megapixels == null) return null;

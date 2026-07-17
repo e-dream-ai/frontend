@@ -8,6 +8,11 @@ import type {
   ImageGenParams,
   VideoGenParams,
 } from "@/types/studio.types";
+import { DEFAULT_VARIATION_PRESET_ID } from "@/components/pages/studio/constants/variation-presets";
+
+// Default variation seed: the same across all sessions until the user changes
+// it (then the new value is persisted for that session only).
+export const DEFAULT_VARIATION_SEED = 42;
 
 type StudioState = {
   activeTab: StudioTab;
@@ -17,6 +22,12 @@ type StudioState = {
   setImagePrompt: (prompt: string) => void;
   imageGenParams: ImageGenParams;
   setImageGenParams: (params: Partial<ImageGenParams>) => void;
+  variationPresetId: string;
+  setVariationPresetId: (id: string) => void;
+  variationCustomPrompt: string;
+  setVariationCustomPrompt: (prompt: string) => void;
+  variationSeed: number;
+  setVariationSeed: (seed: number) => void;
   images: StudioImage[];
   addImage: (image: StudioImage) => void;
   updateImage: (uuid: string, updates: Partial<StudioImage>) => void;
@@ -76,6 +87,9 @@ export const studioPartialize = (state: StudioState) => ({
   activeTab: state.activeTab,
   imagePrompt: state.imagePrompt,
   imageGenParams: state.imageGenParams,
+  variationPresetId: state.variationPresetId,
+  variationCustomPrompt: state.variationCustomPrompt,
+  variationSeed: state.variationSeed,
   images: state.images.map((img) => ({
     ...img,
     previewFrame: undefined,
@@ -102,6 +116,13 @@ export const useStudioStore = create<StudioState>()(
       imageGenParams: DEFAULT_IMAGE_GEN_PARAMS,
       setImageGenParams: (params: Partial<ImageGenParams>) =>
         set((s) => ({ imageGenParams: { ...s.imageGenParams, ...params } })),
+      variationPresetId: DEFAULT_VARIATION_PRESET_ID,
+      setVariationPresetId: (id: string) => set({ variationPresetId: id }),
+      variationCustomPrompt: "",
+      setVariationCustomPrompt: (prompt: string) =>
+        set({ variationCustomPrompt: prompt }),
+      variationSeed: DEFAULT_VARIATION_SEED,
+      setVariationSeed: (seed: number) => set({ variationSeed: seed }),
       images: [] as StudioImage[],
       addImage: (image: StudioImage) =>
         set((s) => ({ images: [...s.images, image] })),
@@ -221,6 +242,9 @@ export const useStudioStore = create<StudioState>()(
           activeTab: "images" as StudioTab,
           imagePrompt: "",
           imageGenParams: DEFAULT_IMAGE_GEN_PARAMS,
+          variationPresetId: DEFAULT_VARIATION_PRESET_ID,
+          variationCustomPrompt: "",
+          variationSeed: DEFAULT_VARIATION_SEED,
           images: [],
           actions: [],
           videoGenParams: DEFAULT_VIDEO_GEN_PARAMS,
