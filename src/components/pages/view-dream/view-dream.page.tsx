@@ -124,6 +124,14 @@ type Params = { uuid: string };
 
 type DreamNavState = { startInEditMode?: boolean };
 
+type DreamModal =
+  | "process"
+  | "cancel"
+  | "delete"
+  | "report"
+  | "processReport"
+  | "clientNotConnected";
+
 const SectionID = "dream";
 
 const FALLBACK_ERROR_MESSAGE = "An error occurred while processing this dream.";
@@ -219,17 +227,7 @@ const ViewDreamPage: React.FC = () => {
     useState<boolean>(false);
   const [isThumbnailRemoved, setIsThumbnailRemoved] = useState<boolean>(false);
 
-  const [showConfirmProcessModal, setShowConfirmProcessModal] =
-    useState<boolean>(false);
-  const [showConfirmCancelModal, setShowConfirmCancelModal] =
-    useState<boolean>(false);
-  const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
-    useState<boolean>(false);
-  const [showReportModal, setShowReportModal] = useState<boolean>(false);
-  const [showProcessDreamReportModal, setShowProcessDreamReportModal] =
-    useState<boolean>(false);
-  const [showClientNotConnectedModal, setShowClientNotConnectedModal] =
-    useState<boolean>(false);
+  const [activeModal, setActiveModal] = useState<DreamModal | null>(null);
   const [removingPlaylistItemId, setRemovingPlaylistItemId] = useState<
     number | null
   >(null);
@@ -729,29 +727,16 @@ const ViewDreamPage: React.FC = () => {
     }
   };
 
-  const onShowConfirmProcessModal = () => setShowConfirmProcessModal(true);
-  const onHideConfirmProcessModal = () => setShowConfirmProcessModal(false);
-  const onShowConfirmCancelModal = () => setShowConfirmCancelModal(true);
-  const onHideConfirmCancelModal = () => setShowConfirmCancelModal(false);
-  const onShowConfirmDeleteModal = () => setShowConfirmDeleteModal(true);
-  const onHideConfirmDeleteModal = () => setShowConfirmDeleteModal(false);
-  const onShowReportModal = () => setShowReportModal(true);
-  const onHideReportModal = () => setShowReportModal(false);
-  const onShowProcessDreamReportModal = () =>
-    setShowProcessDreamReportModal(true);
-  const onHideProcessDreamReportModal = () =>
-    setShowProcessDreamReportModal(false);
-  const onHideClientNotConnectedModal = () =>
-    setShowClientNotConnectedModal(false);
+  const openModal = useCallback(
+    (modal: DreamModal) => setActiveModal(modal),
+    [],
+  );
+  const closeModal = useCallback(() => setActiveModal(null), []);
 
   const handleFlagButton = useCallback(() => {
     // Show process report dream modal when dream is reported and authenticated user is admin
-    if (isDreamReported && isUserAdmin) {
-      onShowProcessDreamReportModal();
-    } else {
-      onShowReportModal();
-    }
-  }, [isDreamReported, isUserAdmin]);
+    openModal(isDreamReported && isUserAdmin ? "processReport" : "report");
+  }, [isDreamReported, isUserAdmin, openModal]);
 
   const resetRemoteDreamForm = useCallback(() => {
     formMethods.reset(formatDreamForm({ dream, isAdmin: isUserAdmin, t }));
@@ -807,7 +792,7 @@ const ViewDreamPage: React.FC = () => {
         setCountdownMs(undefined);
         refetch();
         queryClient.invalidateQueries([USER_QUERY_KEY, user?.uuid]);
-        onHideConfirmProcessModal();
+        closeModal();
       } else {
         toast.error(`${t("page.view_dream.error_processing_dream")}`);
       }
@@ -853,7 +838,7 @@ const ViewDreamPage: React.FC = () => {
         );
 
         refetch();
-        onHideConfirmCancelModal();
+        closeModal();
       } else {
         toast.error(`${t("page.view_dream.error_cancelling_dream")}`);
       }
@@ -867,7 +852,7 @@ const ViewDreamPage: React.FC = () => {
       onSuccess: (response) => {
         if (response.success) {
           toast.success(`${t("page.view_dream.dream_deleted_successfully")}`);
-          onHideConfirmDeleteModal();
+          closeModal();
           router.navigate(ROUTES.MY_DREAMS);
         } else {
           toast.error(
@@ -933,7 +918,7 @@ const ViewDreamPage: React.FC = () => {
 
       if (allSucceeded) {
         toast.success(t("page.view_dream.reports_processed_successfully"));
-        onHideProcessDreamReportModal();
+        closeModal();
       } else {
         failedReports.forEach((failedReport) => {
           toast.error(
@@ -988,8 +973,8 @@ const ViewDreamPage: React.FC = () => {
        * Confirm delete modal
        */}
       <ConfirmModal
-        isOpen={showConfirmDeleteModal}
-        onCancel={onHideConfirmDeleteModal}
+        isOpen={activeModal === "delete"}
+        onCancel={closeModal}
         onConfirm={onConfirmDeleteDream}
         isConfirming={isLoadingDeleteDreamMutation}
         title={t("page.view_dream.confirm_delete_modal_title")}
@@ -1017,8 +1002,8 @@ const ViewDreamPage: React.FC = () => {
        * Confirm rerun process dream modal
        */}
       <ConfirmModal
-        isOpen={showConfirmProcessModal}
-        onCancel={onHideConfirmProcessModal}
+        isOpen={activeModal === "process"}
+        onCancel={closeModal}
         onConfirm={onConfirmProcessDream}
         isConfirming={processDreamMutation.isLoading}
         title={t("page.view_dream.confirm_process_modal_title")}
@@ -1036,8 +1021,8 @@ const ViewDreamPage: React.FC = () => {
        * Confirm cancel dream modal
        */}
       <ConfirmModal
-        isOpen={showConfirmCancelModal}
-        onCancel={onHideConfirmCancelModal}
+        isOpen={activeModal === "cancel"}
+        onCancel={closeModal}
         onConfirm={onConfirmCancelDream}
         isConfirming={cancelDreamMutation.isLoading}
         title={t("page.view_dream.confirm_cancel_modal_title")}
@@ -1055,8 +1040,8 @@ const ViewDreamPage: React.FC = () => {
        * Process report dream modal
        */}
       <ConfirmModal
-        isOpen={showProcessDreamReportModal}
-        onCancel={onHideProcessDreamReportModal}
+        isOpen={activeModal === "processReport"}
+        onCancel={closeModal}
         onConfirm={onConfirmProcessDreamReport}
         isConfirming={isProcessingReport}
         title={t("page.view_dream.confirm_process_dream_report_modal_title")}
@@ -1074,8 +1059,8 @@ const ViewDreamPage: React.FC = () => {
        * Report dream modal
        */}
       <ReportDreamModal
-        isOpen={showReportModal}
-        onCancel={onHideReportModal}
+        isOpen={activeModal === "report"}
+        onCancel={closeModal}
         dream={dream}
       />
 
@@ -1083,9 +1068,9 @@ const ViewDreamPage: React.FC = () => {
        * Client not connected modal
        */}
       <ConfirmModal
-        isOpen={showClientNotConnectedModal}
-        onCancel={onHideClientNotConnectedModal}
-        onConfirm={onHideClientNotConnectedModal}
+        isOpen={activeModal === "clientNotConnected"}
+        onCancel={closeModal}
+        onConfirm={closeModal}
         title={t("page.view_dream.client_not_connected_modal_title")}
         confirmText={t("page.view_dream.client_not_connected_modal_ok")}
         cancelText=""
@@ -1239,7 +1224,7 @@ const ViewDreamPage: React.FC = () => {
                       buttonType="danger"
                       transparent
                       style={{ width: "3rem" }}
-                      onClick={onShowConfirmDeleteModal}
+                      onClick={() => openModal("delete")}
                       data-tooltip-id="dream-delete"
                     >
                       <FontAwesomeIcon icon={faTrash} />
@@ -1308,7 +1293,7 @@ const ViewDreamPage: React.FC = () => {
                                 buttonType="danger"
                                 after={<FontAwesomeIcon icon={faTimes} />}
                                 isLoading={cancelDreamMutation.isLoading}
-                                onClick={onShowConfirmCancelModal}
+                                onClick={() => openModal("cancel")}
                               >
                                 {t("page.view_dream.cancel")}{" "}
                               </Button>
@@ -1324,7 +1309,7 @@ const ViewDreamPage: React.FC = () => {
                               isLoading={processDreamMutation.isLoading}
                               onClick={() => {
                                 if (guardOverBudget()) return;
-                                onShowConfirmProcessModal();
+                                openModal("process");
                               }}
                             >
                               {t("page.view_dream.rerun")}{" "}

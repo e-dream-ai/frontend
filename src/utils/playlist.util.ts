@@ -7,6 +7,7 @@ import { getUserName } from "./user.util";
 import moment from "moment";
 import { FORMAT } from "@/constants/moment.constants";
 import { filterHiddenOption, filterNsfwOption } from "./select.util";
+import { parsePromptObject, serializeDreamPrompt } from "./dream.util";
 import {
   UpdatePlaylistFormValues,
   UpdatePlaylistRequestValues,
@@ -132,6 +133,7 @@ export const formatPlaylistForm = ({
 }) => ({
   name: playlist?.name,
   description: playlist?.description,
+  prompt: parsePromptObject(playlist?.prompt),
   user: playlist?.user?.name,
   /**
    * set displayedOwner
@@ -163,6 +165,7 @@ export const formatPlaylistRequest = (
   values: {
     name: data.name,
     description: data.description,
+    prompt: serializeDreamPrompt(data.prompt),
     featureRank: data?.featureRank,
     loops: data?.loops,
     displayedOwner: data?.displayedOwner?.value,

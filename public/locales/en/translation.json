@@ -282,6 +282,7 @@
     },
     "view_playlist": {
       "title": "View Playlist",
+      "invalid_prompt_json": "Invalid JSON format in prompt field. Please fix the JSON syntax before saving.",
       "edit": "Edit",
       "save": "Save",
       "saving": "Saving",
