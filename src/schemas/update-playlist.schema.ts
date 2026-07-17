@@ -3,6 +3,7 @@ import * as yup from "yup";
 export type UpdatePlaylistFormValues = {
   name: string;
   description?: string;
+  prompt?: Record<string, unknown> | null;
   featureRank?: number;
   loops?: number;
   user?: string;
@@ -38,6 +39,7 @@ export type UpdatePlaylistRequestValues = {
   values: {
     name: string;
     description?: string;
+    prompt?: string;
     featureRank?: number;
     loops?: number;
     displayedOwner?: number;
@@ -50,6 +52,7 @@ export const UpdatePlaylistSchema = yup
   .object({
     name: yup.string().required(),
     description: yup.string(),
+    prompt: yup.mixed().nullable(),
     featureRank: yup
       .number()
       .typeError("Activity level must be a integer")
