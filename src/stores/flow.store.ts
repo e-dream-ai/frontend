@@ -94,7 +94,7 @@ type FlowStoreState = {
   savedPlaylistUuid: string | null;
   syncedPlaylistDreamUuids: string[];
   linkSavedPlaylist: (uuid: string, syncedDreamUuids: string[]) => void;
-  markPlaylistDreamsSynced: (dreamUuids: string[]) => void;
+  setPlaylistDreamsSynced: (dreamUuids: string[]) => void;
 };
 
 const PHASE_1_DEFAULTS = {
@@ -375,12 +375,10 @@ export const useFlowStore = create<FlowStoreState>()(
           syncedPlaylistDreamUuids: Array.from(new Set(syncedDreamUuids)),
         }),
 
-      markPlaylistDreamsSynced: (dreamUuids) =>
-        set((s) => ({
-          syncedPlaylistDreamUuids: Array.from(
-            new Set([...s.syncedPlaylistDreamUuids, ...dreamUuids]),
-          ),
-        })),
+      setPlaylistDreamsSynced: (dreamUuids) =>
+        set({
+          syncedPlaylistDreamUuids: Array.from(new Set(dreamUuids)),
+        }),
     }),
     {
       name: "flow-session",
