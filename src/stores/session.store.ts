@@ -190,6 +190,10 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
     if (!session) return;
 
     if (Object.keys(session.flowState).length > 0) {
+      const flowState = session.flowState as {
+        savedPlaylistUuid?: string | null;
+        syncedPlaylistDreamUuids?: string[];
+      };
       useFlowStore.setState(
         session.flowState as Parameters<typeof useFlowStore.setState>[0],
       );
@@ -197,6 +201,8 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
         selectedTransitionIndex: null,
         settingsExpanded: false,
         previewLightboxOpen: false,
+        savedPlaylistUuid: flowState.savedPlaylistUuid ?? null,
+        syncedPlaylistDreamUuids: flowState.syncedPlaylistDreamUuids ?? [],
       });
       useFlowStore.getState().reconcileStaleTransitions();
       useFlowStore.getState().recomputeTransitions();

@@ -65,8 +65,12 @@ interface Props {
 }
 
 export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
-  const { transitions, loop } = useFlowStore(
-    useShallow((s) => ({ transitions: s.transitions, loop: s.loop })),
+  const { transitions, loop, linkSavedPlaylist } = useFlowStore(
+    useShallow((s) => ({
+      transitions: s.transitions,
+      loop: s.loop,
+      linkSavedPlaylist: s.linkSavedPlaylist,
+    })),
   );
 
   const completedTransitions = transitions.filter(
@@ -140,6 +144,12 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
           values: { loop, clear: true },
         });
       }
+
+      // Link this flow to the playlist so newly rendered dreams keep it in sync.
+      linkSavedPlaylist(
+        playlistUUID,
+        completedTransitions.map((t) => t.dreamUuid!),
+      );
 
       if (mode === "new" && createUprez) {
         try {
@@ -218,6 +228,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     upscaleFactor,
     interpolationFactor,
     loop,
+    linkSavedPlaylist,
     addPlaylistToCache,
     playlists,
     onClose,
