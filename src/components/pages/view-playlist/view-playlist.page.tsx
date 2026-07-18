@@ -1,9 +1,18 @@
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, ItemCardList, Row } from "@/components/shared";
+import { UprezPlaylistControls } from "./components/uprez-playlist-controls";
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
-import { Fragment, useCallback, useContext, useEffect, useState } from "react";
+import { DreamStatusType } from "@/types/dream.types";
+import {
+  Fragment,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { useForm, Controller, FormProvider } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { Navigate, useLocation } from "react-router-dom";
@@ -49,6 +58,7 @@ import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu
 import { getDisplayedOwnerProfileRoute } from "@/utils/router.util";
 import Input, { FormInput } from "@/components/shared/input/input";
 import { FormTextArea } from "@/components/shared/text-area/text-area";
+import { PromptEditor } from "@/components/shared/prompt-editor";
 import { formatPlaylistForm } from "@/utils/playlist.util";
 import { AnchorLink } from "@/components/shared";
 import { faClock, faListOl } from "@fortawesome/free-solid-svg-icons";
@@ -245,6 +255,8 @@ export const ViewPlaylistPage = () => {
   const [removingPlaylistItemId, setRemovingPlaylistItemId] = useState<
     number | null
   >(null);
+  const validatePromptRef = useRef<(() => boolean) | null>(null);
+  const resetPromptRef = useRef<(() => void) | null>(null);
 
   const handleRadioButtonGroupChange = (value?: string) => {
     setRadioGroupState(value as PlaylistTabs);
@@ -297,6 +309,11 @@ export const ViewPlaylistPage = () => {
     setHasJumpedToEndKeyframes,
   } = usePlaylistState();
   const playlistReferences = playlist?.playlistItems ?? [];
+  const isUprezRunning = items.some(
+    (item) =>
+      item.dreamItem?.status === DreamStatusType.QUEUE ||
+      item.dreamItem?.status === DreamStatusType.PROCESSING,
+  );
   const { isAllowedTo } = useContext(PermissionContext);
   const { mutate: mutateDeletePlaylistReferenceItem } = useDeletePlaylistItem();
 
@@ -417,6 +434,7 @@ export const ViewPlaylistPage = () => {
   const handleCancel = (event: React.MouseEvent) => {
     event.preventDefault();
     resetRemotePlaylistForm();
+    resetPromptRef.current?.();
     setEditMode(false);
     setIsThumbnailRemoved(false);
     setTumbnail(undefined);
@@ -506,6 +524,9 @@ export const ViewPlaylistPage = () => {
   };
 
   const onSubmit = async (data: UpdatePlaylistFormValues) => {
+    if (validatePromptRef.current && !validatePromptRef.current()) {
+      return;
+    }
     try {
       if (totalVideos === 0) {
         setIsUploadingFiles(false);
@@ -832,18 +853,26 @@ export const ViewPlaylistPage = () => {
                       </Button>
                     </>
                   ) : (
-                    <Restricted
-                      to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
-                      isOwner={isOwner}
-                    >
-                      <Button
-                        type="button"
-                        after={<FontAwesomeIcon icon={faSave} />}
-                        onClick={handleEdit}
+                    <>
+                      <UprezPlaylistControls
+                        playlist={playlist}
+                        isOwner={isOwner}
+                        isUserAdmin={isUserAdmin}
+                        isRunning={isUprezRunning}
+                      />
+                      <Restricted
+                        to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
+                        isOwner={isOwner}
                       >
-                        {t("page.view_playlist.edit")}
-                      </Button>
-                    </Restricted>
+                        <Button
+                          type="button"
+                          after={<FontAwesomeIcon icon={faSave} />}
+                          onClick={handleEdit}
+                        >
+                          {t("page.view_playlist.edit")}
+                        </Button>
+                      </Restricted>
+                    </>
                   )}
                 </div>
               </Row>
@@ -975,6 +1004,32 @@ export const ViewPlaylistPage = () => {
                     placeholder={t("page.view_playlist.description")}
                     before={<FontAwesomeIcon icon={faAlignLeft} />}
                     {...formMethods.register("description")}
+                  />
+                </Column>
+              </Row>
+              <Row flex="auto" m={0} style={{ overflowY: "hidden" }}>
+                <Column flex="auto" m={0}>
+                  <Controller
+                    name="prompt"
+                    control={formMethods.control}
+                    render={({ field }) => (
+                      <PromptEditor
+                        field={field}
+                        editMode={editMode}
+                        invalidJsonMessage={t(
+                          "page.view_playlist.invalid_prompt_json",
+                        )}
+                        onPromptValidationRequest={(validate) => {
+                          validatePromptRef.current = validate;
+                        }}
+                        onPromptResetRequest={(reset) => {
+                          resetPromptRef.current = reset;
+                        }}
+                        clearErrors={formMethods.clearErrors}
+                        setError={formMethods.setError}
+                        getValues={formMethods.getValues}
+                      />
+                    )}
                   />
                 </Column>
               </Row>

@@ -66,6 +66,24 @@ export const serializeDreamPrompt = (
   }
 };
 
+export const parsePromptObject = (
+  prompt?: string | Record<string, unknown> | null,
+): Record<string, unknown> | null => {
+  if (prompt === null || prompt === undefined) return null;
+  try {
+    if (typeof prompt === "string") {
+      const parsed = JSON.parse(prompt);
+      return typeof parsed === "object" && parsed !== null ? parsed : null;
+    }
+    if (typeof prompt === "object") {
+      return prompt as Record<string, unknown>;
+    }
+  } catch {
+    return null;
+  }
+  return null;
+};
+
 export const generateDreamOptimisticApiResponse = ({
   dream,
 }: {
@@ -137,25 +155,10 @@ export const formatDreamForm = ({
   isAdmin: boolean;
   t: TFunction;
 }) => {
-  let parsedPrompt: Record<string, unknown> | null = null;
-  if (dream?.prompt !== null && dream?.prompt !== undefined) {
-    try {
-      if (typeof dream.prompt === "string") {
-        const parsed = JSON.parse(dream.prompt);
-        parsedPrompt =
-          typeof parsed === "object" && parsed !== null ? parsed : null;
-      } else if (typeof dream.prompt === "object") {
-        parsedPrompt = dream.prompt as Record<string, unknown>;
-      }
-    } catch {
-      parsedPrompt = null;
-    }
-  }
-
   return {
     name: dream?.name ?? "",
     description: dream?.description ?? "",
-    prompt: parsedPrompt,
+    prompt: parsePromptObject(dream?.prompt),
     sourceUrl: dream?.sourceUrl ?? "",
     activityLevel: dream?.activityLevel,
     featureRank: dream?.featureRank,

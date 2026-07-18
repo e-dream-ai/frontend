@@ -7,6 +7,7 @@ export type CreatePlaylistFormValues = {
   ccbyLicense?: boolean;
   description?: string;
   sourceUrl?: string;
+  prompt?: Record<string, unknown> | string;
 };
 
 export const CreatePlaylistSchema = yup

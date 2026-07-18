@@ -13,6 +13,7 @@ import { AddKeyframesFromPlaylistModal } from "./add-keyframes-from-playlist-mod
 import { SelectImageDreamModal } from "./select-image-dream-modal";
 import { useFlowGeneration } from "@/components/pages/studio/hooks/useFlowGeneration";
 import { useFlowJobProgress } from "@/components/pages/studio/hooks/useFlowJobProgress";
+import { useSavedPlaylistSync } from "@/components/pages/studio/hooks/useSavedPlaylistSync";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
 
 const FlowContainer = styled.div<{ $dragOver?: boolean }>`
@@ -41,6 +42,8 @@ export const FlowBuilder: React.FC = () => {
 
   // Mount progress tracking
   useFlowJobProgress();
+
+  useSavedPlaylistSync();
 
   // Generation controls
   const { generateAll, generateOne, isGenerating } = useFlowGeneration();

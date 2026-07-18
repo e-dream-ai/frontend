@@ -90,6 +90,11 @@ type FlowStoreState = {
   ) => void;
   recomputeTransitions: () => void;
   reconcileStaleTransitions: () => void;
+
+  savedPlaylistUuid: string | null;
+  syncedPlaylistDreamUuids: string[];
+  linkSavedPlaylist: (uuid: string, syncedDreamUuids: string[]) => void;
+  setPlaylistDreamsSynced: (dreamUuids: string[]) => void;
 };
 
 const PHASE_1_DEFAULTS = {
@@ -105,6 +110,8 @@ const PHASE_1_DEFAULTS = {
   selectedTransitionIndex: null as number | null,
   settingsExpanded: false,
   previewLightboxOpen: false,
+  savedPlaylistUuid: null as string | null,
+  syncedPlaylistDreamUuids: [] as string[],
 };
 
 /**
@@ -160,6 +167,8 @@ export const flowPartialize = (state: FlowStoreState) => ({
     })),
   loop: state.loop,
   transitions: state.transitions,
+  savedPlaylistUuid: state.savedPlaylistUuid,
+  syncedPlaylistDreamUuids: state.syncedPlaylistDreamUuids,
   globalPresetId: state.globalPresetId,
   globalPrompt: state.globalPrompt,
   globalNegativePrompt: state.globalNegativePrompt,
@@ -359,6 +368,17 @@ export const useFlowStore = create<FlowStoreState>()(
             };
           }),
         })),
+
+      linkSavedPlaylist: (uuid, syncedDreamUuids) =>
+        set({
+          savedPlaylistUuid: uuid,
+          syncedPlaylistDreamUuids: Array.from(new Set(syncedDreamUuids)),
+        }),
+
+      setPlaylistDreamsSynced: (dreamUuids) =>
+        set({
+          syncedPlaylistDreamUuids: Array.from(new Set(dreamUuids)),
+        }),
     }),
     {
       name: "flow-session",
