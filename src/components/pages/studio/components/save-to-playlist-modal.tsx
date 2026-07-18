@@ -11,6 +11,10 @@ import { useRunPlaylist } from "@/api/playlist/mutation/useRunPlaylist";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import { ROUTES } from "@/constants/routes.constants";
 import {
+  INTERPOLATION_FACTOR_OPTIONS,
+  UPSCALE_FACTOR_OPTIONS,
+} from "@/components/pages/studio/constants/uprez-factor-options";
+import {
   ModalOverlay,
   ModalContent,
   ModalHeader,
@@ -35,30 +39,39 @@ import {
   SpinningIcon,
 } from "./save-to-playlist-modal.styled";
 
-const FACTOR_OPTIONS = [2, 4] as const;
-type Factor = (typeof FACTOR_OPTIONS)[number];
+type UpscaleFactor = (typeof UPSCALE_FACTOR_OPTIONS)[number];
+type InterpolationFactor = (typeof INTERPOLATION_FACTOR_OPTIONS)[number];
+type Factor = UpscaleFactor | InterpolationFactor;
 
-const FactorRow: React.FC<{
+function FactorRow<T extends Factor>({
+  label,
+  options,
+  value,
+  onChange,
+}: {
   label: string;
-  value: Factor;
-  onChange: (factor: Factor) => void;
-}> = ({ label, value, onChange }) => (
-  <UprezParamRow>
-    <UprezParamLabel>{label}</UprezParamLabel>
-    <FactorToggleGroup>
-      {FACTOR_OPTIONS.map((f) => (
-        <FactorToggle
-          key={f}
-          type="button"
-          $active={value === f}
-          onClick={() => onChange(f)}
-        >
-          {f}×
-        </FactorToggle>
-      ))}
-    </FactorToggleGroup>
-  </UprezParamRow>
-);
+  options: readonly T[];
+  value: T;
+  onChange: (factor: T) => void;
+}) {
+  return (
+    <UprezParamRow>
+      <UprezParamLabel>{label}</UprezParamLabel>
+      <FactorToggleGroup>
+        {options.map((factor) => (
+          <FactorToggle
+            key={factor}
+            type="button"
+            $active={value === factor}
+            onClick={() => onChange(factor)}
+          >
+            {factor}×
+          </FactorToggle>
+        ))}
+      </FactorToggleGroup>
+    </UprezParamRow>
+  );
+}
 
 interface Props {
   onClose: () => void;
@@ -83,8 +96,9 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
   );
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
   const [createUprez, setCreateUprez] = useState(false);
-  const [upscaleFactor, setUpscaleFactor] = useState<Factor>(2);
-  const [interpolationFactor, setInterpolationFactor] = useState<Factor>(2);
+  const [upscaleFactor, setUpscaleFactor] = useState<UpscaleFactor>(2);
+  const [interpolationFactor, setInterpolationFactor] =
+    useState<InterpolationFactor>(2);
   const [isSaving, setIsSaving] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
@@ -277,11 +291,13 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
                 <UprezParams>
                   <FactorRow
                     label="Upscale factor"
+                    options={UPSCALE_FACTOR_OPTIONS}
                     value={upscaleFactor}
                     onChange={setUpscaleFactor}
                   />
                   <FactorRow
                     label="Interpolation factor"
+                    options={INTERPOLATION_FACTOR_OPTIONS}
                     value={interpolationFactor}
                     onChange={setInterpolationFactor}
                   />
