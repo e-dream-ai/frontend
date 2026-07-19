@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 import { FLOW } from "@/constants/flow-theme.constants";
 
 export const StudioContainer = styled.div<{ $dragOver?: boolean }>`
@@ -37,6 +38,11 @@ export const TitleGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 8px;
+`;
+
+export const LogoLink = styled(Link)`
+  display: flex;
+  flex-shrink: 0;
 `;
 
 export const Logo = styled.img`

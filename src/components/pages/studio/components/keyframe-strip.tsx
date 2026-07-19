@@ -35,6 +35,7 @@ import {
 
 interface Props {
   onAddUpload: () => void;
+  onAddGenerate: () => void;
   onAddFromPlaylist: () => void;
   onAddFromLibrary: () => void;
   onRetry: (index: number) => void;
@@ -42,6 +43,7 @@ interface Props {
 
 export const KeyframeStrip: React.FC<Props> = ({
   onAddUpload,
+  onAddGenerate,
   onAddFromPlaylist,
   onAddFromLibrary,
   onRetry,
@@ -173,6 +175,9 @@ export const KeyframeStrip: React.FC<Props> = ({
         <AddButtons>
           <AddButton onClick={onAddUpload}>
             <AddButtonPlus>+</AddButtonPlus> Upload
+          </AddButton>
+          <AddButton onClick={onAddGenerate}>
+            <AddButtonPlus>+</AddButtonPlus> Generate
           </AddButton>
           <AddButton onClick={onAddFromPlaylist}>
             <AddButtonPlus>+</AddButtonPlus> From Playlist

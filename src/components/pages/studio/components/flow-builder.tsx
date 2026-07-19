@@ -11,6 +11,8 @@ import { FlowPreview } from "./flow-preview";
 import { FlowActionBar } from "./flow-action-bar";
 import { AddKeyframesFromPlaylistModal } from "./add-keyframes-from-playlist-modal";
 import { SelectImageDreamModal } from "./select-image-dream-modal";
+import { GenerateKeyframesModal } from "./generate-keyframes-modal";
+import { useGeneratedKeyframeSync } from "@/components/pages/studio/hooks/useGeneratedKeyframeSync";
 import { useFlowGeneration } from "@/components/pages/studio/hooks/useFlowGeneration";
 import { useFlowJobProgress } from "@/components/pages/studio/hooks/useFlowJobProgress";
 import { useSavedPlaylistSync } from "@/components/pages/studio/hooks/useSavedPlaylistSync";
@@ -45,12 +47,16 @@ export const FlowBuilder: React.FC = () => {
 
   useSavedPlaylistSync();
 
+  // Fill in progress/thumbnails for keyframes created by the Generate dialog
+  useGeneratedKeyframeSync();
+
   // Generation controls
   const { generateAll, generateOne, isGenerating } = useFlowGeneration();
   const uploadDream = useUploadImageDream();
 
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
   const [showLibraryModal, setShowLibraryModal] = useState(false);
+  const [showGenerateModal, setShowGenerateModal] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAddUpload = useCallback(() => {
@@ -139,6 +145,7 @@ export const FlowBuilder: React.FC = () => {
     <FlowContainer $dragOver={isDragOver} {...dropHandlers}>
       <KeyframeStrip
         onAddUpload={handleAddUpload}
+        onAddGenerate={() => setShowGenerateModal(true)}
         onAddFromPlaylist={handleAddFromPlaylist}
         onAddFromLibrary={handleAddFromLibrary}
         onRetry={generateOne}
@@ -170,6 +177,10 @@ export const FlowBuilder: React.FC = () => {
 
       {showLibraryModal && (
         <SelectImageDreamModal onClose={() => setShowLibraryModal(false)} />
+      )}
+
+      {showGenerateModal && (
+        <GenerateKeyframesModal onClose={() => setShowGenerateModal(false)} />
       )}
     </FlowContainer>
   );
