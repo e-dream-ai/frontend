@@ -24,6 +24,7 @@ import {
   StudioTitle,
   TitleGroup,
   Logo,
+  LogoLink,
   BackButton,
   HeaderSpacer,
   StudioBody,
@@ -141,7 +142,9 @@ export const StudioPage: React.FC = () => {
           <ArrowLeft size={16} />
         </BackButton>
         <TitleGroup>
-          <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
+          <LogoLink to={ROUTES.ROOT} aria-label="Go to home">
+            <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
+          </LogoLink>
           <StudioTitle>Studio</StudioTitle>
         </TitleGroup>
         <ModeToggle>
