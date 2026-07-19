@@ -18,8 +18,8 @@ export const FLOW = {
 
   // Text
   text: "#e8e6e3",
-  textDim: "#8a8890",
-  textMuted: "#5a5860",
+  textDim: "#b8b6be",
+  textMuted: "#94929a",
 
   // Accent (gold)
   accent: "#d4a853",
