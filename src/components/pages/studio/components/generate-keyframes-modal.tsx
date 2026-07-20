@@ -14,6 +14,7 @@ import {
   IMAGE_COUNT_OPTIONS,
   clampSizeToAllowed,
 } from "../constants/size-options";
+import { SizeSelect } from "./size-select";
 import {
   Overlay,
   Panel,
@@ -193,16 +194,11 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
             </FieldGroup>
             <FieldGroup>
               <FieldLabel>Size</FieldLabel>
-              <Select
+              <SizeSelect
                 value={imageGenParams.size}
-                onChange={(e) => setImageGenParams({ size: e.target.value })}
-              >
-                {sizeOptions.map((s) => (
-                  <option key={s} value={s}>
-                    {s.replace("*", "x")}
-                  </option>
-                ))}
-              </Select>
+                options={sizeOptions}
+                onChange={(size) => setImageGenParams({ size })}
+              />
             </FieldGroup>
           </FieldRow>
           <CreditLimitNotice

@@ -15,6 +15,7 @@ import {
   IMAGE_COUNT_OPTIONS,
   clampSizeToAllowed,
 } from "../constants/size-options";
+import { SizeSelect } from "./size-select";
 import {
   GenerateSection,
   SectionTitle,
@@ -22,6 +23,7 @@ import {
   FormRow,
   FormField,
   FieldLabel,
+  SectionHeaderRow,
   StyledSelect,
   GenerateButton,
   ImageGrid,
@@ -250,20 +252,12 @@ export const ImagesTab: React.FC = () => {
           </FormField>
           <FormField>
             <FieldLabel>Size:</FieldLabel>
-            <StyledSelect
+            <SizeSelect
               value={imageGenParams.size}
-              onChange={(e) => setImageGenParams({ size: e.target.value })}
-            >
-              {sizeOptions.map((s) => (
-                <option key={s} value={s}>
-                  {s.replace("*", "x")}
-                </option>
-              ))}
-            </StyledSelect>
+              options={sizeOptions}
+              onChange={(size) => setImageGenParams({ size })}
+            />
           </FormField>
-          <SecondaryNavButton onClick={() => fileInputRef.current?.click()}>
-            Upload
-          </SecondaryNavButton>
           <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
           <GenerateButton
             onClick={handleGenerate}
@@ -280,7 +274,17 @@ export const ImagesTab: React.FC = () => {
       </GenerateSection>
 
       <GenerateSection>
-        <SectionTitle>Image Library</SectionTitle>
+        <SectionHeaderRow>
+          <SectionTitle>Image Library</SectionTitle>
+          <ButtonRow>
+            <NavButton onClick={() => fileInputRef.current?.click()}>
+              + Upload
+            </NavButton>
+            <NavButton onClick={() => setShowPlaylistModal(true)}>
+              + Add from Playlist
+            </NavButton>
+          </ButtonRow>
+        </SectionHeaderRow>
         {images.length === 0 ? (
           <EmptyStateText>
             No images yet. Generate some above, upload, or add from a playlist.
@@ -349,9 +353,6 @@ export const ImagesTab: React.FC = () => {
             )}
           </ButtonRow>
           <ButtonRow>
-            <SecondaryNavButton onClick={() => setShowPlaylistModal(true)}>
-              + Add from Playlist
-            </SecondaryNavButton>
             <NavButton onClick={() => setActiveTab("actions")}>
               Continue to Actions &rarr;
             </NavButton>
