@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => {
   const invalidateQueries = vi.fn();
   const post = vi.fn();
+  const ensureFlowKeyframe = vi.fn(
+    async (keyframe: { id: string }) => `keyframe-${keyframe.id}`,
+  );
   const setTransitionDream = vi.fn();
   const updateTransitionStatus = vi.fn();
   const store = {
@@ -35,6 +38,7 @@ const mocks = vi.hoisted(() => {
   return {
     invalidateQueries,
     post,
+    ensureFlowKeyframe,
     setTransitionDream,
     updateTransitionStatus,
     store,
@@ -95,6 +99,10 @@ vi.mock("../utils/resolve-flow-settings", () => ({
     guidance: 3,
     negativePrompt: "",
   }),
+}));
+
+vi.mock("../utils/flow-keyframes", () => ({
+  ensureFlowKeyframe: mocks.ensureFlowKeyframe,
 }));
 
 import { useFlowGeneration } from "./useFlowGeneration";

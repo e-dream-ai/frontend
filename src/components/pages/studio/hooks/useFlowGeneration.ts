@@ -8,6 +8,7 @@ import { resolveEffectiveSettings } from "@/components/pages/studio/utils/resolv
 import type { FlowTransition } from "@/types/flow.types";
 import queryClient from "@/api/query-client";
 import { USER_QUERY_KEY } from "@/api/user/query/useUser";
+import { ensureFlowKeyframe } from "@/components/pages/studio/utils/flow-keyframes";
 
 // Cap concurrent dream creations so "Generate All" doesn't fan out 50+ requests at once.
 const GENERATE_CONCURRENCY = 4;
@@ -52,7 +53,14 @@ export function useFlowGeneration() {
       const toKf = store.keyframes.find(
         (kf) => kf.id === transition.toKeyframeId,
       );
-      const endImageRef = toKf ? toKf.dreamUuid || toKf.imageUrl : undefined;
+      if (!toKf) {
+        Bugsnag.notify(
+          new Error(`Keyframe not found: ${transition.toKeyframeId}`),
+        );
+        updateTransitionStatus(index, "failed");
+        return;
+      }
+      const endImageRef = toKf.dreamUuid || toKf.imageUrl;
 
       const algoParams = buildVideoAlgoParams({
         model: settings.model,
@@ -65,10 +73,14 @@ export function useFlowGeneration() {
         guidance: settings.guidance,
         negativePrompt: settings.negativePrompt,
       });
-      const name = `${fromKf.name || "frame"} → ${toKf?.name || "frame"}`;
+      const name = `${fromKf.name || "frame"} → ${toKf.name || "frame"}`;
 
       try {
         const headers = getRequestHeaders({ contentType: ContentType.json });
+        const [startKeyframe, endKeyframe] = await Promise.all([
+          ensureFlowKeyframe(fromKf),
+          ensureFlowKeyframe(toKf),
+        ]);
         const { data: createData } = await axiosClient.post(
           "/v1/dream",
           { name, prompt: JSON.stringify(algoParams) },
@@ -79,16 +91,11 @@ export function useFlowGeneration() {
           throw new Error("No dream UUID returned from API");
         }
 
-        if (fromKf.keyframeUuid || toKf?.keyframeUuid) {
-          await axiosClient.put(
-            `/v1/dream/${dreamUuid}`,
-            {
-              startKeyframe: fromKf.keyframeUuid,
-              endKeyframe: toKf?.keyframeUuid,
-            },
-            { headers },
-          );
-        }
+        await axiosClient.put(
+          `/v1/dream/${dreamUuid}`,
+          { startKeyframe, endKeyframe },
+          { headers },
+        );
 
         setTransitionDream(index, dreamUuid);
         updateTransitionStatus(index, "queue");
