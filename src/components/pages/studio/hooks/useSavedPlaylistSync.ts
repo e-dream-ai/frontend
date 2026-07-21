@@ -6,13 +6,13 @@ import { useFlowStore } from "@/stores/flow.store";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import { useDeletePlaylistItem } from "@/api/playlist/mutation/useDeletePlaylistItem";
 import { useOrderPlaylist } from "@/api/playlist/mutation/useOrderPlaylist";
-import { useLinkPlaylistKeyframes } from "@/api/playlist/mutation/useLinkPlaylistKeyframes";
 import {
   PLAYLIST_ITEMS_QUERY_KEY,
   fetchAllPlaylistItems,
 } from "@/api/playlist/query/usePlaylistItems";
 import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
 import { PLAYLIST_KEYFRAMES_QUERY_KEY } from "@/api/playlist/query/usePlaylistKeyframes";
+import { syncFlowPlaylistKeyframes } from "@/components/pages/studio/utils/flow-keyframes";
 
 const PLAYLIST_PLAYBACK_ITEMS_QUERY_KEY = "getPlaylistPlaybackItems";
 
@@ -24,19 +24,18 @@ export function useSavedPlaylistSync() {
   const addPlaylistItem = useAddPlaylistItem();
   const deletePlaylistItem = useDeletePlaylistItem();
   const orderPlaylist = useOrderPlaylist();
-  const linkPlaylistKeyframes = useLinkPlaylistKeyframes();
 
   const {
     savedPlaylistUuid,
+    keyframes,
     transitions,
-    loop,
     syncedPlaylistDreamUuids,
     setPlaylistDreamsSynced,
   } = useFlowStore(
     useShallow((s) => ({
       savedPlaylistUuid: s.savedPlaylistUuid,
+      keyframes: s.keyframes,
       transitions: s.transitions,
-      loop: s.loop,
       syncedPlaylistDreamUuids: s.syncedPlaylistDreamUuids,
       setPlaylistDreamsSynced: s.setPlaylistDreamsSynced,
     })),
@@ -51,6 +50,9 @@ export function useSavedPlaylistSync() {
 
   const desiredKey = desiredUuids.join(",");
   const syncedKey = syncedPlaylistDreamUuids.join(",");
+  const keyframeKey = keyframes
+    .map((keyframe) => `${keyframe.id}:${keyframe.keyframeUuid ?? ""}`)
+    .join(",");
 
   useEffect(() => {
     if (!savedPlaylistUuid) return;
@@ -141,16 +143,36 @@ export function useSavedPlaylistSync() {
           }
         }
 
-        if (changed) {
+        let keyframesSynced = false;
+        if (flowItems.length > 0) {
+          const currentDreamKeyframes = new Map(
+            flowItems
+              .filter((it) => it.dreamItem?.uuid)
+              .map((it) => [
+                it.dreamItem!.uuid,
+                {
+                  startKeyframe: it.dreamItem!.startKeyframe?.uuid,
+                  endKeyframe: it.dreamItem!.endKeyframe?.uuid,
+                },
+              ]),
+          );
           try {
-            await linkPlaylistKeyframes.mutateAsync({
-              uuid: savedPlaylistUuid,
-              values: { loop, clear: true },
+            await syncFlowPlaylistKeyframes({
+              playlistUuid: savedPlaylistUuid,
+              keyframes,
+              transitions: transitions.filter(
+                (transition) =>
+                  transition.status === "processed" && transition.dreamUuid,
+              ),
+              currentDreamKeyframes,
             });
+            keyframesSynced = true;
           } catch (err) {
             Bugsnag.notify(err as Error);
           }
+        }
 
+        if (changed || keyframesSynced) {
           queryClient.invalidateQueries([
             PLAYLIST_QUERY_KEY,
             savedPlaylistUuid,
@@ -173,5 +195,5 @@ export function useSavedPlaylistSync() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [savedPlaylistUuid, desiredKey, syncedKey, loop]);
+  }, [savedPlaylistUuid, desiredKey, syncedKey, keyframeKey]);
 }

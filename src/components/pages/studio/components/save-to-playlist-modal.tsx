@@ -6,7 +6,6 @@ import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
-import { useLinkPlaylistKeyframes } from "@/api/playlist/mutation/useLinkPlaylistKeyframes";
 import { useRunPlaylist } from "@/api/playlist/mutation/useRunPlaylist";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import { ROUTES } from "@/constants/routes.constants";
@@ -38,6 +37,7 @@ import {
   SaveButton,
   SpinningIcon,
 } from "./save-to-playlist-modal.styled";
+import { syncFlowPlaylistKeyframes } from "@/components/pages/studio/utils/flow-keyframes";
 
 type UpscaleFactor = (typeof UPSCALE_FACTOR_OPTIONS)[number];
 type InterpolationFactor = (typeof INTERPOLATION_FACTOR_OPTIONS)[number];
@@ -78,10 +78,10 @@ interface Props {
 }
 
 export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
-  const { transitions, loop, linkSavedPlaylist } = useFlowStore(
+  const { keyframes, transitions, linkSavedPlaylist } = useFlowStore(
     useShallow((s) => ({
+      keyframes: s.keyframes,
       transitions: s.transitions,
-      loop: s.loop,
       linkSavedPlaylist: s.linkSavedPlaylist,
     })),
   );
@@ -105,7 +105,6 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
   const { playlists, addPlaylistToCache } = useUserPlaylists();
   const createPlaylist = useCreatePlaylist();
   const addPlaylistItem = useAddPlaylistItem();
-  const linkPlaylistKeyframes = useLinkPlaylistKeyframes();
   const runPlaylist = useRunPlaylist();
 
   const canSave =
@@ -152,12 +151,11 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
         });
       }
 
-      if (mode === "new") {
-        await linkPlaylistKeyframes.mutateAsync({
-          uuid: playlistUUID,
-          values: { loop, clear: true },
-        });
-      }
+      await syncFlowPlaylistKeyframes({
+        playlistUuid: playlistUUID,
+        keyframes,
+        transitions: completedTransitions,
+      });
 
       // Link this flow to the playlist so newly rendered dreams keep it in sync.
       linkSavedPlaylist(
@@ -233,15 +231,14 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     mode,
     playlistName,
     selectedPlaylistId,
+    keyframes,
     completedTransitions,
     createPlaylist,
     addPlaylistItem,
-    linkPlaylistKeyframes,
     runPlaylist,
     createUprez,
     upscaleFactor,
     interpolationFactor,
-    loop,
     linkSavedPlaylist,
     addPlaylistToCache,
     playlists,
