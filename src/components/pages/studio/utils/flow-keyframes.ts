@@ -29,10 +29,11 @@ export const ensureFlowKeyframe = async (
   const pending = pendingKeyframes.get(keyframe.id);
   if (pending) return pending;
 
+  const name = keyframe.name.trim() || "Flow keyframe";
   const request = axiosClient
     .post(
       "/v1/keyframe",
-      { name: keyframe.name.trim() || "Flow keyframe" },
+      { name: name.startsWith("kf_") ? name : `kf_${name}` },
       {
         headers: getRequestHeaders({ contentType: ContentType.json }),
       },
