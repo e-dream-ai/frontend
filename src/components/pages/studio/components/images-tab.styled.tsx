@@ -17,6 +17,17 @@ export const SectionTitle = styled.h3`
   margin-bottom: 1rem;
 `;
 
+export const SectionHeaderRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+
+  ${SectionTitle} {
+    margin-bottom: 0;
+  }
+`;
+
 export const PromptTextarea = styled.textarea`
   width: 100%;
   min-height: 80px;
