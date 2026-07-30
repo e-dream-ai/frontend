@@ -84,6 +84,50 @@ export const parseAspectRatio = (
 };
 
 /**
+ * The most common preset ratio across a set of image dimensions — the flow's
+ * "auto" output shape. Frames matching it are left uncropped; only the odd ones
+ * out get cropped. Ties break toward the earliest-appearing frame. Returns
+ * undefined when no dimensions are known yet.
+ */
+export const majorityPresetRatio = (
+  dims: Array<Dimensions | undefined>,
+): PresetRatio | undefined => {
+  const counts = new Map<PresetRatio, number>();
+  const firstIdx = new Map<PresetRatio, number>();
+  dims.forEach((d, i) => {
+    if (!d || !d.width || !d.height) return;
+    const p = nearestPresetRatio(d.width, d.height);
+    counts.set(p, (counts.get(p) ?? 0) + 1);
+    if (!firstIdx.has(p)) firstIdx.set(p, i);
+  });
+  let best: PresetRatio | undefined;
+  let bestN = -1;
+  let bestIdx = Infinity;
+  for (const [p, n] of counts) {
+    const idx = firstIdx.get(p)!;
+    if (n > bestN || (n === bestN && idx < bestIdx)) {
+      best = p;
+      bestN = n;
+      bestIdx = idx;
+    }
+  }
+  return best;
+};
+
+/**
+ * Resolve the flow's numeric output ratio. An explicit preset wins; `auto`
+ * derives from the majority of the keyframe dimensions (16:9 when unknown).
+ */
+export const resolveFlowRatio = (
+  dims: Array<Dimensions | undefined>,
+  setting: AspectRatioSetting,
+): number => {
+  if (setting !== "auto") return PRESET_RATIOS[setting];
+  const majority = majorityPresetRatio(dims);
+  return majority ? PRESET_RATIOS[majority] : DEFAULT_RATIO;
+};
+
+/**
  * Largest centered crop of `targetRatio` that fits inside a source image
  * (a "cover" crop of the output within the source).
  */

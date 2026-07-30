@@ -415,7 +415,7 @@ describe("Phase 1: transitions", () => {
       expect(useFlowStore.getState().globalAspectRatio).toBe("auto");
     });
 
-    it("seeds a default center crop when dimensions load", () => {
+    it("stores dimensions without seeding a crop (crops are derived)", () => {
       const store = useFlowStore.getState();
       store.addKeyframe({
         id: "kf-1",
@@ -423,17 +423,15 @@ describe("Phase 1: transitions", () => {
         imageUrl: "https://cdn.example.com/1.jpg",
         name: "portrait",
       });
-      // auto ratio resolves from this image (1080x1920 -> 9:16)
       store.setKeyframeDimensions("kf-1", 1080, 1920);
       const kf = useFlowStore.getState().keyframes[0];
       expect(kf.naturalWidth).toBe(1080);
       expect(kf.naturalHeight).toBe(1920);
-      // 9:16 output from a 9:16 source is a full frame
-      expect(kf.crop?.width).toBeCloseTo(1, 3);
-      expect(kf.crop?.height).toBeCloseTo(1, 3);
+      // No eager crop — it's derived from dims + majority ratio at use time.
+      expect(kf.crop).toBeUndefined();
     });
 
-    it("re-fits crops and clears the reupload cache when the ratio changes", () => {
+    it("clears user crops + reupload cache when the ratio changes", () => {
       const store = useFlowStore.getState();
       store.addKeyframe({
         id: "kf-1",
@@ -442,7 +440,7 @@ describe("Phase 1: transitions", () => {
         name: "square",
       });
       store.setKeyframeDimensions("kf-1", 1000, 1000);
-      // pretend a cropped Dream was cached
+      store.setKeyframeCrop("kf-1", { x: 0.1, y: 0.1, width: 0.5, height: 0.5 });
       store.updateKeyframe("kf-1", {
         croppedDreamUuid: "cropped-1",
         croppedSignature: "sig-1",
@@ -452,9 +450,8 @@ describe("Phase 1: transitions", () => {
 
       const kf = useFlowStore.getState().keyframes[0];
       expect(useFlowStore.getState().globalAspectRatio).toBe("16:9");
-      // square source -> 16:9 crop is a centered horizontal band
-      expect(kf.crop?.width).toBeCloseTo(1, 3);
-      expect(kf.crop?.height).toBeCloseTo(9 / 16, 3);
+      // A shape change invalidates the old crop; it reverts to the derived one.
+      expect(kf.crop).toBeUndefined();
       expect(kf.croppedDreamUuid).toBeUndefined();
       expect(kf.croppedSignature).toBeUndefined();
     });

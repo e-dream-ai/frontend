@@ -17,7 +17,7 @@ import { resolvePresetAction } from "@/components/pages/studio/utils/resolve-flo
 import {
   ASPECT_RATIO_OPTIONS,
   type AspectRatioSetting,
-  nearestPresetRatio,
+  majorityPresetRatio,
 } from "@/utils/aspect-crop";
 import {
   PanelContainer,
@@ -86,12 +86,16 @@ export function TransitionSettingsPanel({
   );
 
   // Aspect ratio is a per-flow setting (not per-transition). The `auto` option
-  // shows the ratio it resolves to, derived from the first sized keyframe.
+  // shows the ratio it resolves to — the majority shape of the keyframes.
   const autoRatioLabel = useMemo(() => {
-    const sized = keyframes.find((k) => k.naturalWidth && k.naturalHeight);
-    return sized
-      ? `Auto (${nearestPresetRatio(sized.naturalWidth!, sized.naturalHeight!)})`
-      : "Auto";
+    const majority = majorityPresetRatio(
+      keyframes.map((k) =>
+        k.naturalWidth && k.naturalHeight
+          ? { width: k.naturalWidth, height: k.naturalHeight }
+          : undefined,
+      ),
+    );
+    return majority ? `Auto (${majority})` : "Auto";
   }, [keyframes]);
 
   const { data: modelsData } = useModels({ mediaType: "video" });

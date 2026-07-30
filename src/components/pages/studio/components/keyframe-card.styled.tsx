@@ -212,6 +212,25 @@ export const DeleteButton = styled.button`
   }
 `;
 
+export const CroppedBadge = styled.span`
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 6px 2px 5px;
+  border-radius: 5px;
+  background: ${FLOW.accentDim};
+  color: ${FLOW.accent};
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(4px);
+  pointer-events: none;
+`;
+
 export const CropButton = styled.button`
   position: absolute;
   bottom: 4px;

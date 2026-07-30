@@ -6,7 +6,11 @@ import type { FlowKeyframe } from "@/types/flow.types";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { useFlowStore } from "@/stores/flow.store";
-import type { CropRegion } from "@/utils/aspect-crop";
+import {
+  type CropRegion,
+  defaultCenterCrop,
+  isFullFrameCrop,
+} from "@/utils/aspect-crop";
 import {
   CardWrapper,
   CardImage,
@@ -15,6 +19,7 @@ import {
   LoopBadge,
   DeleteButton,
   CropButton,
+  CroppedBadge,
   UploadOverlay,
   UploadRing,
   UploadRingTrack,
@@ -138,8 +143,22 @@ export const KeyframeCard: React.FC<Props> = ({
     }
   };
 
+  // Effective crop = the user's explicit crop, else a derived center crop for
+  // the flow's output ratio. Frames whose source already matches the ratio come
+  // out full-frame (untouched); only the odd-aspect frames are actually cropped.
+  const effectiveCrop: CropRegion | undefined =
+    keyframe.naturalWidth && keyframe.naturalHeight
+      ? keyframe.crop ??
+        defaultCenterCrop(
+          keyframe.naturalWidth,
+          keyframe.naturalHeight,
+          outputRatio,
+        )
+      : undefined;
+  const isCropped = !isLoop && !!effectiveCrop && !isFullFrameCrop(effectiveCrop);
+
   const imageStyle: React.CSSProperties = {
-    ...(keyframe.crop ? cropStyle(keyframe.crop) : {}),
+    ...(effectiveCrop ? cropStyle(effectiveCrop) : {}),
     ...(isClickable ? { cursor: "pointer" } : {}),
   };
 
@@ -191,6 +210,12 @@ export const KeyframeCard: React.FC<Props> = ({
           <AlertTriangle size={16} strokeWidth={2.2} />
           Upload failed
         </FailedOverlay>
+      )}
+
+      {isCropped && !isBusy && (
+        <CroppedBadge title="Cropped to match the flow's output shape">
+          <Crop size={9} strokeWidth={2.4} /> cropped
+        </CroppedBadge>
       )}
 
       <CardLabel>

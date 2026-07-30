@@ -3,6 +3,8 @@ import {
   PRESET_RATIOS,
   ASPECT_RATIO_OPTIONS,
   parseAspectRatio,
+  majorityPresetRatio,
+  resolveFlowRatio,
   aspectRatioFromDimensions,
   nearestPresetRatio,
   defaultCenterCrop,
@@ -43,6 +45,50 @@ describe("parseAspectRatio", () => {
 
   it("falls back to 16:9 for auto with no dimensions", () => {
     expect(parseAspectRatio("auto")).toBeCloseTo(16 / 9, 5);
+  });
+});
+
+describe("majorityPresetRatio", () => {
+  const L = { width: 1920, height: 1080 }; // 16:9
+  const P = { width: 1080, height: 1920 }; // 9:16
+  const S = { width: 1000, height: 1000 }; // 1:1
+
+  it("returns the most common shape (the oddball loses)", () => {
+    expect(majorityPresetRatio([L, L, L, P])).toBe("16:9");
+    expect(majorityPresetRatio([P, P, L])).toBe("9:16");
+  });
+
+  it("ignores frames without dimensions", () => {
+    expect(majorityPresetRatio([undefined, L, undefined, L, P])).toBe("16:9");
+  });
+
+  it("breaks ties toward the earliest frame", () => {
+    expect(majorityPresetRatio([P, L])).toBe("9:16");
+    expect(majorityPresetRatio([L, P])).toBe("16:9");
+    expect(majorityPresetRatio([S, L, P])).toBe("1:1");
+  });
+
+  it("returns undefined when nothing is known", () => {
+    expect(majorityPresetRatio([undefined, undefined])).toBeUndefined();
+    expect(majorityPresetRatio([])).toBeUndefined();
+  });
+});
+
+describe("resolveFlowRatio", () => {
+  const L = { width: 1920, height: 1080 };
+  const P = { width: 1080, height: 1920 };
+
+  it("uses an explicit preset when set", () => {
+    expect(resolveFlowRatio([P, P, P], "16:9")).toBeCloseTo(16 / 9, 5);
+  });
+
+  it("uses the majority shape for auto", () => {
+    expect(resolveFlowRatio([L, L, P], "auto")).toBeCloseTo(16 / 9, 5);
+    expect(resolveFlowRatio([P, P, L], "auto")).toBeCloseTo(9 / 16, 5);
+  });
+
+  it("falls back to 16:9 for auto with no known dimensions", () => {
+    expect(resolveFlowRatio([undefined], "auto")).toBeCloseTo(16 / 9, 5);
   });
 });
 

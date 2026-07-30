@@ -12,11 +12,10 @@ import { ensureFlowKeyframe } from "@/components/pages/studio/utils/flow-keyfram
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import {
   type AspectRatioSetting,
-  type Dimensions,
   cropSignature,
   defaultCenterCrop,
   isFullFrameCrop,
-  parseAspectRatio,
+  resolveFlowRatio,
   sizeStringForRatio,
 } from "@/utils/aspect-crop";
 import { cropImageToFile, loadImageDimensions } from "@/utils/crop-image";
@@ -24,16 +23,19 @@ import { cropImageToFile, loadImageDimensions } from "@/utils/crop-image";
 // Cap concurrent dream creations so "Generate All" doesn't fan out 50+ requests at once.
 const GENERATE_CONCURRENCY = 4;
 
-/** Resolve the flow's numeric output ratio from the setting + first sized keyframe. */
+/** Resolve the flow's numeric output ratio (auto = the majority keyframe shape). */
 function resolveOutputRatio(
   keyframes: FlowKeyframe[],
   setting: AspectRatioSetting,
 ): number {
-  const sized = keyframes.find((k) => k.naturalWidth && k.naturalHeight);
-  const fallback: Dimensions | undefined = sized
-    ? { width: sized.naturalWidth!, height: sized.naturalHeight! }
-    : undefined;
-  return parseAspectRatio(setting, fallback);
+  return resolveFlowRatio(
+    keyframes.map((k) =>
+      k.naturalWidth && k.naturalHeight
+        ? { width: k.naturalWidth, height: k.naturalHeight }
+        : undefined,
+    ),
+    setting,
+  );
 }
 
 export function useFlowGeneration() {

@@ -14,7 +14,7 @@ import {
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
 import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
-import { parseAspectRatio, type Dimensions } from "@/utils/aspect-crop";
+import { resolveFlowRatio } from "@/utils/aspect-crop";
 import { KeyframeCard } from "./keyframe-card";
 import { KeyframeCropModal } from "./keyframe-crop-modal";
 import { TransitionGapEnhanced } from "./transition-gap";
@@ -64,14 +64,19 @@ export const KeyframeStrip: React.FC<Props> = ({
   const globalDuration = useFlowStore((s) => s.globalDuration);
   const globalAspectRatio = useFlowStore((s) => s.globalAspectRatio);
 
-  // Resolve the numeric output ratio (auto = first sized keyframe's shape).
-  const outputRatio = useMemo(() => {
-    const sized = rawKeyframes.find((k) => k.naturalWidth && k.naturalHeight);
-    const fallback: Dimensions | undefined = sized
-      ? { width: sized.naturalWidth!, height: sized.naturalHeight! }
-      : undefined;
-    return parseAspectRatio(globalAspectRatio, fallback);
-  }, [rawKeyframes, globalAspectRatio]);
+  // Resolve the numeric output ratio (auto = the majority keyframe shape).
+  const outputRatio = useMemo(
+    () =>
+      resolveFlowRatio(
+        rawKeyframes.map((k) =>
+          k.naturalWidth && k.naturalHeight
+            ? { width: k.naturalWidth, height: k.naturalHeight }
+            : undefined,
+        ),
+        globalAspectRatio,
+      ),
+    [rawKeyframes, globalAspectRatio],
+  );
 
   // Crop editor state
   const [cropEditId, setCropEditId] = useState<string | null>(null);

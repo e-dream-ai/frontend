@@ -6,42 +6,29 @@ import type {
   TransitionStatus,
 } from "@/types/flow.types";
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
-import {
-  type AspectRatioSetting,
-  type CropRegion,
-  type Dimensions,
-  defaultCenterCrop,
-  parseAspectRatio,
+import type {
+  AspectRatioSetting,
+  CropRegion,
 } from "@/utils/aspect-crop";
 
 export const LOOP_KEYFRAME_ID = "__loop__";
 
-/** Dimensions of the first keyframe (in order) that has loaded pixel dims. */
-function firstKeyframeDims(keyframes: FlowKeyframe[]): Dimensions | undefined {
-  const kf = keyframes.find((k) => k.naturalWidth && k.naturalHeight);
-  return kf ? { width: kf.naturalWidth!, height: kf.naturalHeight! } : undefined;
-}
-
 /**
- * Re-fit every keyframe's crop to a fresh center crop for the given output
- * ratio. Keyframes without loaded dimensions are left untouched (their crop is
- * computed lazily when the image loads). Changing the crop invalidates any
- * cached cropped-and-reuploaded Dream, so clear that cache too.
+ * Drop any user-defined crop + cached upload from every keyframe. Used when the
+ * output shape changes (explicit ratio pick) — a crop chosen for the old shape
+ * is meaningless for the new one, so we fall back to the derived center crop.
  */
-function refitKeyframeCrops(
-  keyframes: FlowKeyframe[],
-  setting: AspectRatioSetting,
-): FlowKeyframe[] {
-  const ratio = parseAspectRatio(setting, firstKeyframeDims(keyframes));
-  return keyframes.map((kf) => {
-    if (!kf.naturalWidth || !kf.naturalHeight) return kf;
-    return {
-      ...kf,
-      crop: defaultCenterCrop(kf.naturalWidth, kf.naturalHeight, ratio),
-      croppedDreamUuid: undefined,
-      croppedSignature: undefined,
-    };
-  });
+function clearKeyframeCrops(keyframes: FlowKeyframe[]): FlowKeyframe[] {
+  return keyframes.map((kf) =>
+    kf.crop || kf.croppedDreamUuid
+      ? {
+          ...kf,
+          crop: undefined,
+          croppedDreamUuid: undefined,
+          croppedSignature: undefined,
+        }
+      : kf,
+  );
 }
 
 /** Derive the display keyframes list, appending a synthetic loop frame when enabled. */
@@ -319,32 +306,22 @@ export const useFlowStore = create<FlowStoreState>()(
       setGlobalAspectRatio: (ratio) =>
         set((s) => ({
           globalAspectRatio: ratio,
-          // Re-derive dependent state (crops) in the same set() — a ratio
-          // change means every crop must re-fit to the new output shape.
-          keyframes: refitKeyframeCrops(s.keyframes, ratio),
+          // A new output shape invalidates crops picked for the old one — drop
+          // them so every frame falls back to a fresh derived center crop.
+          keyframes: clearKeyframeCrops(s.keyframes),
         })),
 
+      // Record a keyframe's source pixel dimensions. Crops are derived from
+      // dims + the (majority) output ratio at render/generation time, so there
+      // is nothing to seed here.
       setKeyframeDimensions: (id, width, height) =>
-        set((s) => {
-          const ratio = parseAspectRatio(
-            s.globalAspectRatio,
-            firstKeyframeDims(s.keyframes) ?? { width, height },
-          );
-          return {
-            keyframes: s.keyframes.map((kf) => {
-              if (kf.id !== id) return kf;
-              const next: FlowKeyframe = {
-                ...kf,
-                naturalWidth: width,
-                naturalHeight: height,
-              };
-              if (!next.crop) {
-                next.crop = defaultCenterCrop(width, height, ratio);
-              }
-              return next;
-            }),
-          };
-        }),
+        set((s) => ({
+          keyframes: s.keyframes.map((kf) =>
+            kf.id === id
+              ? { ...kf, naturalWidth: width, naturalHeight: height }
+              : kf,
+          ),
+        })),
 
       setKeyframeCrop: (id, crop) =>
         set((s) => ({
