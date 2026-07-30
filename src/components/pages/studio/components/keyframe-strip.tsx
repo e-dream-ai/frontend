@@ -161,6 +161,10 @@ export const KeyframeStrip: React.FC<Props> = ({
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
+          // Horizontal-only auto-scroll: reveal off-screen keyframes when a
+          // dragged card nears the strip's left/right edge, without hijacking
+          // vertical page scroll. y: 0 disables the vertical axis.
+          autoScroll={{ threshold: { x: 0.2, y: 0 } }}
         >
           <SortableContext
             items={sortableIds}
