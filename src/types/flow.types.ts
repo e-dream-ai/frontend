@@ -1,4 +1,5 @@
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
+import type { CropRegion } from "@/utils/aspect-crop";
 
 export type StudioMode = "flow" | "batch";
 
@@ -14,6 +15,19 @@ export interface FlowKeyframe {
   imageUrl: string; // presigned URL or local objectURL while uploading
   name: string; // display name
   isLoopKeyframe?: boolean; // true for auto-generated loop frame
+
+  // Source image pixel dimensions, captured on <img> load. Used to compute a
+  // default center crop and to render the crop honestly in the strip.
+  naturalWidth?: number;
+  naturalHeight?: number;
+  // User-selected crop region (normalized to the source image), aspect-locked
+  // to the flow's output ratio. Undefined = fall back to a center crop.
+  crop?: CropRegion;
+  // Cache of the cropped-and-reuploaded image Dream used for generation, plus
+  // the signature that produced it (source uuid + crop + ratio). When the
+  // signature still matches, generation reuses this instead of re-uploading.
+  croppedDreamUuid?: string;
+  croppedSignature?: string;
 
   // Local-only upload state — never persisted to backend.
   uploadStatus?: "uploading" | "failed";

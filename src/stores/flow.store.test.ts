@@ -22,7 +22,7 @@ beforeAll(() => {
 });
 
 // Dynamic import after localStorage is set up (persist middleware needs it)
-const { useFlowStore } = await import("./flow.store");
+const { useFlowStore, flowPartialize } = await import("./flow.store");
 
 // Reset store between tests
 beforeEach(() => {
@@ -407,6 +407,104 @@ describe("Phase 1: transitions", () => {
       expect(useFlowStore.getState().settingsExpanded).toBe(true);
       store.setSettingsExpanded(false);
       expect(useFlowStore.getState().settingsExpanded).toBe(false);
+    });
+  });
+
+  describe("aspect ratio / crop (#668)", () => {
+    it("defaults globalAspectRatio to auto", () => {
+      expect(useFlowStore.getState().globalAspectRatio).toBe("auto");
+    });
+
+    it("seeds a default center crop when dimensions load", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe({
+        id: "kf-1",
+        dreamUuid: "dream-1",
+        imageUrl: "https://cdn.example.com/1.jpg",
+        name: "portrait",
+      });
+      // auto ratio resolves from this image (1080x1920 -> 9:16)
+      store.setKeyframeDimensions("kf-1", 1080, 1920);
+      const kf = useFlowStore.getState().keyframes[0];
+      expect(kf.naturalWidth).toBe(1080);
+      expect(kf.naturalHeight).toBe(1920);
+      // 9:16 output from a 9:16 source is a full frame
+      expect(kf.crop?.width).toBeCloseTo(1, 3);
+      expect(kf.crop?.height).toBeCloseTo(1, 3);
+    });
+
+    it("re-fits crops and clears the reupload cache when the ratio changes", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe({
+        id: "kf-1",
+        dreamUuid: "dream-1",
+        imageUrl: "https://cdn.example.com/1.jpg",
+        name: "square",
+      });
+      store.setKeyframeDimensions("kf-1", 1000, 1000);
+      // pretend a cropped Dream was cached
+      store.updateKeyframe("kf-1", {
+        croppedDreamUuid: "cropped-1",
+        croppedSignature: "sig-1",
+      });
+
+      store.setGlobalAspectRatio("16:9");
+
+      const kf = useFlowStore.getState().keyframes[0];
+      expect(useFlowStore.getState().globalAspectRatio).toBe("16:9");
+      // square source -> 16:9 crop is a centered horizontal band
+      expect(kf.crop?.width).toBeCloseTo(1, 3);
+      expect(kf.crop?.height).toBeCloseTo(9 / 16, 3);
+      expect(kf.croppedDreamUuid).toBeUndefined();
+      expect(kf.croppedSignature).toBeUndefined();
+    });
+
+    it("setKeyframeCrop stores the crop and invalidates the cache", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe({
+        id: "kf-1",
+        dreamUuid: "dream-1",
+        imageUrl: "https://cdn.example.com/1.jpg",
+        name: "square",
+        croppedDreamUuid: "cropped-1",
+        croppedSignature: "sig-1",
+      });
+      const crop = { x: 0.1, y: 0.2, width: 0.5, height: 0.5 };
+      store.setKeyframeCrop("kf-1", crop);
+      const kf = useFlowStore.getState().keyframes[0];
+      expect(kf.crop).toEqual(crop);
+      expect(kf.croppedDreamUuid).toBeUndefined();
+      expect(kf.croppedSignature).toBeUndefined();
+    });
+
+    it("persists crop fields only for settled keyframes", () => {
+      const store = useFlowStore.getState();
+      store.addKeyframe({
+        id: "kf-settled",
+        dreamUuid: "dream-1",
+        imageUrl: "https://cdn.example.com/1.jpg",
+        name: "settled",
+        naturalWidth: 1000,
+        naturalHeight: 1000,
+        crop: { x: 0, y: 0.2, width: 1, height: 0.5625 },
+      });
+      store.addKeyframe({
+        id: "kf-uploading",
+        imageUrl: "blob:local",
+        name: "ghost",
+        uploadStatus: "uploading",
+      });
+
+      const persisted = flowPartialize(useFlowStore.getState());
+      expect(persisted.globalAspectRatio).toBe("auto");
+      expect(persisted.keyframes).toHaveLength(1);
+      expect(persisted.keyframes[0].id).toBe("kf-settled");
+      expect(persisted.keyframes[0].crop).toEqual({
+        x: 0,
+        y: 0.2,
+        width: 1,
+        height: 0.5625,
+      });
     });
   });
 

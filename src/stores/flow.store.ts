@@ -6,8 +6,43 @@ import type {
   TransitionStatus,
 } from "@/types/flow.types";
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
+import {
+  type AspectRatioSetting,
+  type CropRegion,
+  type Dimensions,
+  defaultCenterCrop,
+  parseAspectRatio,
+} from "@/utils/aspect-crop";
 
 export const LOOP_KEYFRAME_ID = "__loop__";
+
+/** Dimensions of the first keyframe (in order) that has loaded pixel dims. */
+function firstKeyframeDims(keyframes: FlowKeyframe[]): Dimensions | undefined {
+  const kf = keyframes.find((k) => k.naturalWidth && k.naturalHeight);
+  return kf ? { width: kf.naturalWidth!, height: kf.naturalHeight! } : undefined;
+}
+
+/**
+ * Re-fit every keyframe's crop to a fresh center crop for the given output
+ * ratio. Keyframes without loaded dimensions are left untouched (their crop is
+ * computed lazily when the image loads). Changing the crop invalidates any
+ * cached cropped-and-reuploaded Dream, so clear that cache too.
+ */
+function refitKeyframeCrops(
+  keyframes: FlowKeyframe[],
+  setting: AspectRatioSetting,
+): FlowKeyframe[] {
+  const ratio = parseAspectRatio(setting, firstKeyframeDims(keyframes));
+  return keyframes.map((kf) => {
+    if (!kf.naturalWidth || !kf.naturalHeight) return kf;
+    return {
+      ...kf,
+      crop: defaultCenterCrop(kf.naturalWidth, kf.naturalHeight, ratio),
+      croppedDreamUuid: undefined,
+      croppedSignature: undefined,
+    };
+  });
+}
 
 /** Derive the display keyframes list, appending a synthetic loop frame when enabled. */
 function buildKeyframesWithLoop(
@@ -40,6 +75,14 @@ type FlowStoreState = {
   setLoop: (loop: boolean) => void;
   keyframesWithLoop: () => FlowKeyframe[];
   resetFlow: () => void;
+
+  // Aspect ratio / crop (#668)
+  globalAspectRatio: AspectRatioSetting;
+  setGlobalAspectRatio: (ratio: AspectRatioSetting) => void;
+  // Record a keyframe's source pixel dimensions and seed a default center crop.
+  setKeyframeDimensions: (id: string, width: number, height: number) => void;
+  // Persist a user-selected crop (from the crop editor) and invalidate its cache.
+  setKeyframeCrop: (id: string, crop: CropRegion) => void;
 
   // Phase 1 — global transition settings
   globalPresetId: string;
@@ -98,6 +141,7 @@ type FlowStoreState = {
 };
 
 const PHASE_1_DEFAULTS = {
+  globalAspectRatio: "auto" as AspectRatioSetting,
   globalPresetId: "Abstract",
   globalPrompt: "",
   globalNegativePrompt: "",
@@ -164,8 +208,14 @@ export const flowPartialize = (state: FlowStoreState) => ({
       imageUrl: kf.imageUrl,
       name: kf.name,
       isLoopKeyframe: kf.isLoopKeyframe,
+      naturalWidth: kf.naturalWidth,
+      naturalHeight: kf.naturalHeight,
+      crop: kf.crop,
+      croppedDreamUuid: kf.croppedDreamUuid,
+      croppedSignature: kf.croppedSignature,
     })),
   loop: state.loop,
+  globalAspectRatio: state.globalAspectRatio,
   transitions: state.transitions,
   savedPlaylistUuid: state.savedPlaylistUuid,
   syncedPlaylistDreamUuids: state.syncedPlaylistDreamUuids,
@@ -265,6 +315,50 @@ export const useFlowStore = create<FlowStoreState>()(
         set({ globalNumInferenceSteps: steps }),
       setGlobalGuidance: (guidance) => set({ globalGuidance: guidance }),
       setGlobalLora: (lora) => set({ globalLora: lora }),
+
+      setGlobalAspectRatio: (ratio) =>
+        set((s) => ({
+          globalAspectRatio: ratio,
+          // Re-derive dependent state (crops) in the same set() — a ratio
+          // change means every crop must re-fit to the new output shape.
+          keyframes: refitKeyframeCrops(s.keyframes, ratio),
+        })),
+
+      setKeyframeDimensions: (id, width, height) =>
+        set((s) => {
+          const ratio = parseAspectRatio(
+            s.globalAspectRatio,
+            firstKeyframeDims(s.keyframes) ?? { width, height },
+          );
+          return {
+            keyframes: s.keyframes.map((kf) => {
+              if (kf.id !== id) return kf;
+              const next: FlowKeyframe = {
+                ...kf,
+                naturalWidth: width,
+                naturalHeight: height,
+              };
+              if (!next.crop) {
+                next.crop = defaultCenterCrop(width, height, ratio);
+              }
+              return next;
+            }),
+          };
+        }),
+
+      setKeyframeCrop: (id, crop) =>
+        set((s) => ({
+          keyframes: s.keyframes.map((kf) =>
+            kf.id === id
+              ? {
+                  ...kf,
+                  crop,
+                  croppedDreamUuid: undefined,
+                  croppedSignature: undefined,
+                }
+              : kf,
+          ),
+        })),
 
       // Phase 1 — transition actions
       setTransitionOverride: (index, overrides) =>
@@ -382,7 +476,7 @@ export const useFlowStore = create<FlowStoreState>()(
     }),
     {
       name: "flow-session",
-      version: 4,
+      version: 5,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as Record<string, unknown>;
         if (version < 2) {
@@ -404,6 +498,14 @@ export const useFlowStore = create<FlowStoreState>()(
             ...state,
             globalModel: "kling-25-i2v",
             globalDuration: 5,
+          };
+        }
+        if (version < 5) {
+          // Aspect-ratio crop feature (#668): default to auto; crops recompute
+          // lazily as keyframe images load.
+          return {
+            ...state,
+            globalAspectRatio: "auto",
           };
         }
         return state;
