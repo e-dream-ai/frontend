@@ -8,7 +8,18 @@ const mocks = vi.hoisted(() => {
   );
   const setTransitionDream = vi.fn();
   const updateTransitionStatus = vi.fn();
+  const updateKeyframe = vi.fn();
+  const uploadImage = vi.fn();
+  const buildVideoAlgoParams = vi.fn(() => ({
+    infinidream_algorithm: "ltx-i2v",
+  }));
+  const cropImageToFile = vi.fn(async () => ({ name: "crop.jpg" }));
+  const loadImageDimensions = vi.fn(async () => ({
+    width: 1080,
+    height: 1920,
+  }));
   const store = {
+    globalAspectRatio: "auto",
     transitions: [
       {
         fromKeyframeId: "frame-1",
@@ -41,6 +52,11 @@ const mocks = vi.hoisted(() => {
     ensureFlowKeyframe,
     setTransitionDream,
     updateTransitionStatus,
+    updateKeyframe,
+    uploadImage,
+    buildVideoAlgoParams,
+    cropImageToFile,
+    loadImageDimensions,
     store,
   };
 });
@@ -74,6 +90,7 @@ vi.mock("../../../../stores/flow.store", () => ({
         state: typeof mocks.store & {
           setTransitionDream: typeof mocks.setTransitionDream;
           updateTransitionStatus: typeof mocks.updateTransitionStatus;
+          updateKeyframe: typeof mocks.updateKeyframe;
         },
       ) => unknown,
     ) =>
@@ -81,13 +98,23 @@ vi.mock("../../../../stores/flow.store", () => ({
         ...mocks.store,
         setTransitionDream: mocks.setTransitionDream,
         updateTransitionStatus: mocks.updateTransitionStatus,
+        updateKeyframe: mocks.updateKeyframe,
       }),
     { getState: () => mocks.store },
   ),
 }));
 
+vi.mock("../../../../api/dream/mutation/useUploadImageDream", () => ({
+  useUploadImageDream: () => ({ mutateAsync: mocks.uploadImage }),
+}));
+
 vi.mock("../utils/build-video-algo-params", () => ({
-  buildVideoAlgoParams: () => ({ infinidream_algorithm: "ltx-i2v" }),
+  buildVideoAlgoParams: mocks.buildVideoAlgoParams,
+}));
+
+vi.mock("../../../../utils/crop-image", () => ({
+  cropImageToFile: mocks.cropImageToFile,
+  loadImageDimensions: mocks.loadImageDimensions,
 }));
 
 vi.mock("../utils/resolve-flow-settings", () => ({
@@ -122,5 +149,60 @@ describe("useFlowGeneration", () => {
 
     expect(mocks.post).toHaveBeenCalledTimes(2);
     expect(mocks.invalidateQueries).toHaveBeenCalledWith(["getUser"]);
+  });
+
+  it("crops portrait keyframes to the output ratio and feeds the cropped Dream to generation", async () => {
+    // Override the shared store: portrait frames + a landscape output override.
+    const prevKeyframes = mocks.store.keyframes;
+    const prevRatio = mocks.store.globalAspectRatio;
+    const prevTransitions = mocks.store.transitions;
+    mocks.store.globalAspectRatio = "16:9";
+    mocks.store.keyframes = [
+      {
+        id: "frame-1",
+        dreamUuid: "dream-1",
+        name: "One",
+        imageUrl: "https://cdn.example.com/1.jpg",
+        naturalWidth: 1080,
+        naturalHeight: 1920,
+      },
+      {
+        id: "frame-2",
+        dreamUuid: "dream-2",
+        name: "Two",
+        imageUrl: "https://cdn.example.com/2.jpg",
+        naturalWidth: 1080,
+        naturalHeight: 1920,
+      },
+    ];
+    mocks.store.transitions = [
+      { fromKeyframeId: "frame-1", toKeyframeId: "frame-2", status: "idle" },
+    ];
+    mocks.uploadImage
+      .mockResolvedValueOnce({ dreamUuid: "cropped-1" })
+      .mockResolvedValueOnce({ dreamUuid: "cropped-2" });
+
+    try {
+      const { generateOne } = useFlowGeneration();
+      await generateOne(0);
+
+      // Both frames were cropped and re-uploaded.
+      expect(mocks.cropImageToFile).toHaveBeenCalledTimes(2);
+      expect(mocks.uploadImage).toHaveBeenCalledTimes(2);
+      // The cache was written with the new cropped Dream UUID.
+      expect(mocks.updateKeyframe).toHaveBeenCalledWith(
+        "frame-1",
+        expect.objectContaining({ croppedDreamUuid: "cropped-1" }),
+      );
+      // Generation used the cropped Dreams, not the originals.
+      const call = mocks.buildVideoAlgoParams.mock.calls[0][0];
+      expect(call.imageUuid).toBe("cropped-1");
+      expect(call.endImageUuid).toBe("cropped-2");
+      expect(call.imageSize).toBe("1280*720");
+    } finally {
+      mocks.store.keyframes = prevKeyframes;
+      mocks.store.globalAspectRatio = prevRatio;
+      mocks.store.transitions = prevTransitions;
+    }
   });
 });

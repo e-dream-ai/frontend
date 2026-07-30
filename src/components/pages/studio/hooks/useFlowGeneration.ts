@@ -5,13 +5,36 @@ import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { buildVideoAlgoParams } from "@/components/pages/studio/utils/build-video-algo-params";
 import { resolveEffectiveSettings } from "@/components/pages/studio/utils/resolve-flow-settings";
-import type { FlowTransition } from "@/types/flow.types";
+import type { FlowKeyframe, FlowTransition } from "@/types/flow.types";
 import queryClient from "@/api/query-client";
 import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import { ensureFlowKeyframe } from "@/components/pages/studio/utils/flow-keyframes";
+import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
+import {
+  type AspectRatioSetting,
+  type Dimensions,
+  cropSignature,
+  defaultCenterCrop,
+  isFullFrameCrop,
+  parseAspectRatio,
+  sizeStringForRatio,
+} from "@/utils/aspect-crop";
+import { cropImageToFile, loadImageDimensions } from "@/utils/crop-image";
 
 // Cap concurrent dream creations so "Generate All" doesn't fan out 50+ requests at once.
 const GENERATE_CONCURRENCY = 4;
+
+/** Resolve the flow's numeric output ratio from the setting + first sized keyframe. */
+function resolveOutputRatio(
+  keyframes: FlowKeyframe[],
+  setting: AspectRatioSetting,
+): number {
+  const sized = keyframes.find((k) => k.naturalWidth && k.naturalHeight);
+  const fallback: Dimensions | undefined = sized
+    ? { width: sized.naturalWidth!, height: sized.naturalHeight! }
+    : undefined;
+  return parseAspectRatio(setting, fallback);
+}
 
 export function useFlowGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -20,6 +43,8 @@ export function useFlowGeneration() {
   // Actions are stable refs — subscribe individually, not via useShallow.
   const setTransitionDream = useFlowStore((s) => s.setTransitionDream);
   const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
+  const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
+  const { mutateAsync: uploadImage } = useUploadImageDream();
 
   const generateTransition = useCallback(
     async (index: number, transition: FlowTransition) => {
@@ -48,8 +73,6 @@ export function useFlowGeneration() {
         return;
       }
 
-      const imageRef = fromKf.dreamUuid || fromKf.imageUrl;
-
       const toKf = store.keyframes.find(
         (kf) => kf.id === transition.toKeyframeId,
       );
@@ -60,14 +83,69 @@ export function useFlowGeneration() {
         updateTransitionStatus(index, "failed");
         return;
       }
-      const endImageRef = toKf.dreamUuid || toKf.imageUrl;
+
+      const targetRatio = resolveOutputRatio(
+        store.keyframes,
+        store.globalAspectRatio,
+      );
+
+      // Crop each keyframe to the flow's output ratio and re-upload it as an
+      // image Dream, so the i2v model receives a correctly-shaped source and
+      // the video isn't distorted (#668). Returns the UUID/URL to feed the job;
+      // falls back to the original reference on any crop/upload failure so a
+      // CORS or network hiccup degrades gracefully rather than blocking.
+      const ensureCroppedDream = async (
+        kf: FlowKeyframe,
+      ): Promise<string> => {
+        const original = kf.dreamUuid || kf.imageUrl;
+        if (!kf.imageUrl) return original;
+        try {
+          let { naturalWidth, naturalHeight } = kf;
+          if (!naturalWidth || !naturalHeight) {
+            const dims = await loadImageDimensions(kf.imageUrl);
+            naturalWidth = dims.width;
+            naturalHeight = dims.height;
+          }
+          const crop =
+            kf.crop ??
+            defaultCenterCrop(naturalWidth, naturalHeight, targetRatio);
+
+          // Source already matches the output shape — no crop needed.
+          if (isFullFrameCrop(crop)) return original;
+
+          const sig = cropSignature(original, crop, targetRatio);
+          if (kf.croppedSignature === sig && kf.croppedDreamUuid) {
+            return kf.croppedDreamUuid;
+          }
+
+          const file = await cropImageToFile(
+            kf.imageUrl,
+            crop,
+            kf.name || "frame",
+          );
+          const result = await uploadImage({ file });
+          updateKeyframe(kf.id, {
+            naturalWidth,
+            naturalHeight,
+            croppedDreamUuid: result.dreamUuid,
+            croppedSignature: sig,
+          });
+          return result.dreamUuid;
+        } catch (error) {
+          Bugsnag.notify(error as Error);
+          return original;
+        }
+      };
+
+      const imageRef = await ensureCroppedDream(fromKf);
+      const endImageRef = await ensureCroppedDream(toKf);
 
       const algoParams = buildVideoAlgoParams({
         model: settings.model,
         action: settings.action,
         imageUuid: imageRef,
         endImageUuid: endImageRef,
-        imageSize: undefined,
+        imageSize: sizeStringForRatio(targetRatio),
         duration: settings.duration,
         numInferenceSteps: settings.numInferenceSteps,
         guidance: settings.guidance,
@@ -104,7 +182,7 @@ export function useFlowGeneration() {
         updateTransitionStatus(index, "failed");
       }
     },
-    [setTransitionDream, updateTransitionStatus],
+    [setTransitionDream, updateTransitionStatus, updateKeyframe, uploadImage],
   );
 
   const startGenerating = useCallback(() => {
