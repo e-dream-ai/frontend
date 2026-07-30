@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Crop } from "lucide-react";
 import type { FlowKeyframe } from "@/types/flow.types";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { useFlowStore } from "@/stores/flow.store";
+import type { CropRegion } from "@/utils/aspect-crop";
 import {
   CardWrapper,
   CardImage,
@@ -13,6 +14,7 @@ import {
   CardLabel,
   LoopBadge,
   DeleteButton,
+  CropButton,
   UploadOverlay,
   UploadRing,
   UploadRingTrack,
@@ -24,13 +26,31 @@ import {
 interface Props {
   keyframe: FlowKeyframe;
   index: number;
+  /** Output aspect ratio (width / height); drives the card shape. */
+  outputRatio: number;
   onDelete?: (id: string) => void;
+  onEditCrop?: (id: string) => void;
+}
+
+/** Position/scale an <img> so its stored crop region fills the card (undistorted). */
+function cropStyle(crop: CropRegion): React.CSSProperties {
+  return {
+    position: "absolute",
+    width: `${100 / crop.width}%`,
+    height: `${100 / crop.height}%`,
+    left: `${(-100 * crop.x) / crop.width}%`,
+    top: `${(-100 * crop.y) / crop.height}%`,
+    maxWidth: "none",
+    objectFit: "fill",
+  };
 }
 
 export const KeyframeCard: React.FC<Props> = ({
   keyframe,
   index,
+  outputRatio,
   onDelete,
+  onEditCrop,
 }) => {
   const isLoop = keyframe.isLoopKeyframe ?? false;
   const isUploading = keyframe.uploadStatus === "uploading";
@@ -38,6 +58,7 @@ export const KeyframeCard: React.FC<Props> = ({
   const isBusy = isUploading || isFailed;
 
   const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
+  const setKeyframeDimensions = useFlowStore((s) => s.setKeyframeDimensions);
   const [imgSrc, setImgSrc] = useState(keyframe.imageUrl);
 
   useEffect(() => {
@@ -104,6 +125,26 @@ export const KeyframeCard: React.FC<Props> = ({
     window.open(navigateTarget, "_blank");
   };
 
+  const handleImgLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    if (isLoop) return; // loop card mirrors the first frame; dims live on the real one
+    const { naturalWidth, naturalHeight } = e.currentTarget;
+    if (
+      naturalWidth &&
+      naturalHeight &&
+      (keyframe.naturalWidth !== naturalWidth ||
+        keyframe.naturalHeight !== naturalHeight)
+    ) {
+      setKeyframeDimensions(keyframe.id, naturalWidth, naturalHeight);
+    }
+  };
+
+  const imageStyle: React.CSSProperties = {
+    ...(keyframe.crop ? cropStyle(keyframe.crop) : {}),
+    ...(isClickable ? { cursor: "pointer" } : {}),
+  };
+
+  const canEditCrop = !isLoop && !isBusy && !!imgSrc && !!onEditCrop;
+
   return (
     <CardWrapper
       ref={setNodeRef}
@@ -112,6 +153,7 @@ export const KeyframeCard: React.FC<Props> = ({
       $isDragging={isDragging}
       $uploading={isUploading}
       $failed={isFailed}
+      $ratio={outputRatio}
       {...(isLoop || isBusy ? {} : { ...attributes, ...listeners })}
     >
       {imgSrc ? (
@@ -120,7 +162,8 @@ export const KeyframeCard: React.FC<Props> = ({
           alt={keyframe.name}
           $uploading={isUploading}
           onClick={isClickable ? handleOpen : undefined}
-          style={isClickable ? { cursor: "pointer" } : undefined}
+          style={imageStyle}
+          onLoad={handleImgLoad}
           onError={keyframe.dreamUuid ? handleImgError : undefined}
         />
       ) : (
@@ -169,6 +212,20 @@ export const KeyframeCard: React.FC<Props> = ({
         >
           &times;
         </DeleteButton>
+      )}
+
+      {canEditCrop && (
+        <CropButton
+          aria-label={`Crop ${keyframe.name}`}
+          title="Adjust crop"
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.stopPropagation();
+            onEditCrop?.(keyframe.id);
+          }}
+        >
+          <Crop size={12} strokeWidth={2.2} />
+        </CropButton>
       )}
     </CardWrapper>
   );

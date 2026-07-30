@@ -15,6 +15,11 @@ import {
 } from "@/components/pages/studio/constants/duration-options";
 import { resolvePresetAction } from "@/components/pages/studio/utils/resolve-flow-settings";
 import {
+  ASPECT_RATIO_OPTIONS,
+  type AspectRatioSetting,
+  nearestPresetRatio,
+} from "@/utils/aspect-crop";
+import {
   PanelContainer,
   PanelHeader,
   PanelTitle,
@@ -61,6 +66,7 @@ export function TransitionSettingsPanel({
     globalNumInferenceSteps,
     globalGuidance,
     globalLora,
+    globalAspectRatio,
   } = useFlowStore(
     useShallow((s) => ({
       transitions: s.transitions,
@@ -75,8 +81,18 @@ export function TransitionSettingsPanel({
       globalNumInferenceSteps: s.globalNumInferenceSteps,
       globalGuidance: s.globalGuidance,
       globalLora: s.globalLora,
+      globalAspectRatio: s.globalAspectRatio,
     })),
   );
+
+  // Aspect ratio is a per-flow setting (not per-transition). The `auto` option
+  // shows the ratio it resolves to, derived from the first sized keyframe.
+  const autoRatioLabel = useMemo(() => {
+    const sized = keyframes.find((k) => k.naturalWidth && k.naturalHeight);
+    return sized
+      ? `Auto (${nearestPresetRatio(sized.naturalWidth!, sized.naturalHeight!)})`
+      : "Auto";
+  }, [keyframes]);
 
   const { data: modelsData } = useModels({ mediaType: "video" });
   const modelOptions = modelsData?.data?.models ?? [];
@@ -428,6 +444,25 @@ export function TransitionSettingsPanel({
             {allowedDurations.map((d) => (
               <option key={d} value={d}>
                 {d}s
+              </option>
+            ))}
+          </Select>
+        </FieldGroup>
+
+        <FieldGroup>
+          <FieldLabel>Aspect</FieldLabel>
+          <Select
+            value={globalAspectRatio}
+            onChange={(e) =>
+              useFlowStore
+                .getState()
+                .setGlobalAspectRatio(e.target.value as AspectRatioSetting)
+            }
+            title="Output aspect ratio. Keyframes are cropped to this shape."
+          >
+            {ASPECT_RATIO_OPTIONS.map((r) => (
+              <option key={r} value={r}>
+                {r === "auto" ? autoRatioLabel : r}
               </option>
             ))}
           </Select>

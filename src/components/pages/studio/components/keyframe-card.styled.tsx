@@ -11,10 +11,13 @@ export const CardWrapper = styled.div<{
   $isDragging?: boolean;
   $uploading?: boolean;
   $failed?: boolean;
+  $ratio?: number;
 }>`
   flex-shrink: 0;
-  width: 140px;
-  height: 100px;
+  /* Width tracks the output aspect ratio at a fixed height, so the strip shows
+     each keyframe's true shape (#668). Falls back to ~140x100 when unknown. */
+  height: 104px;
+  width: ${(p) => Math.round(104 * (p.$ratio ?? 1.4))}px;
   border-radius: ${FLOW.radiusSm};
   overflow: hidden;
   isolation: isolate;
@@ -203,6 +206,34 @@ export const DeleteButton = styled.button`
   cursor: pointer;
   opacity: 0;
   transition: opacity 0.2s;
+
+  ${CardWrapper}:hover & {
+    opacity: 1;
+  }
+`;
+
+export const CropButton = styled.button`
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  color: ${FLOW.text};
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  cursor: pointer;
+  opacity: 0;
+  transition:
+    opacity 0.2s,
+    color 0.15s;
+
+  &:hover {
+    color: ${FLOW.accent};
+  }
 
   ${CardWrapper}:hover & {
     opacity: 1;
