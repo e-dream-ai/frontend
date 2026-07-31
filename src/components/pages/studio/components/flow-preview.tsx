@@ -93,8 +93,11 @@ export function FlowPreview() {
         .filter(
           (
             s,
-          ): s is { dreamUuid: string; url: string; poster: string | undefined } =>
-            s !== null,
+          ): s is {
+            dreamUuid: string;
+            url: string;
+            poster: string | undefined;
+          } => s !== null,
         ),
     [dreamQueries, completedUuids],
   );
