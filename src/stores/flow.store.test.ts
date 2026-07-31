@@ -449,3 +449,55 @@ describe("Phase 1: transitions", () => {
     });
   });
 });
+
+describe("keyframe lightbox (#694)", () => {
+  beforeEach(() => {
+    useFlowStore.getState().resetFlow();
+  });
+
+  it("is closed by default", () => {
+    expect(useFlowStore.getState().keyframeLightboxIndex).toBeNull();
+  });
+
+  it("opens at a valid keyframe index", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.addKeyframe(makeKf("b"));
+    store.openKeyframeLightbox(1);
+    expect(useFlowStore.getState().keyframeLightboxIndex).toBe(1);
+  });
+
+  it("ignores an out-of-range open (stays closed)", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.openKeyframeLightbox(5);
+    expect(useFlowStore.getState().keyframeLightboxIndex).toBeNull();
+  });
+
+  it("steps forward and clamps at the last keyframe", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.addKeyframe(makeKf("b"));
+    store.openKeyframeLightbox(0);
+    store.stepKeyframeLightbox(1);
+    expect(useFlowStore.getState().keyframeLightboxIndex).toBe(1);
+    store.stepKeyframeLightbox(1);
+    expect(useFlowStore.getState().keyframeLightboxIndex).toBe(1);
+  });
+
+  it("closes", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.openKeyframeLightbox(0);
+    store.closeKeyframeLightbox();
+    expect(useFlowStore.getState().keyframeLightboxIndex).toBeNull();
+  });
+
+  it("resetFlow closes the lightbox", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.openKeyframeLightbox(0);
+    store.resetFlow();
+    expect(useFlowStore.getState().keyframeLightboxIndex).toBeNull();
+  });
+});

@@ -92,16 +92,11 @@ export const KeyframeCard: React.FC<Props> = ({
 
   const percent = Math.round(keyframe.uploadProgress ?? 0);
 
-  const navigateTarget = keyframe.dreamUuid
-    ? `/dream/${keyframe.dreamUuid}`
-    : keyframe.keyframeUuid
-      ? `/keyframe/${keyframe.keyframeUuid}`
-      : null;
-  const isClickable = !isLoop && !isBusy && !!navigateTarget;
+  const openKeyframeLightbox = useFlowStore((s) => s.openKeyframeLightbox);
+  const isClickable = !isLoop && !isBusy && !!imgSrc;
   const handleOpen = (e: React.MouseEvent) => {
-    if (!navigateTarget) return;
     e.stopPropagation();
-    window.open(navigateTarget, "_blank");
+    openKeyframeLightbox(index);
   };
 
   return (
