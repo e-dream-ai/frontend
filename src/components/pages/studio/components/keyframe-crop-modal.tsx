@@ -58,9 +58,7 @@ export const KeyframeCropModal: React.FC<Props> = ({
   const [offset, setOffset] = useState({ x: 0, y: 0 }); // image top-left vs frame
   const initialized = useRef(false);
 
-  const coverScale = dims
-    ? Math.max(frame.w / dims.w, frame.h / dims.h)
-    : 1;
+  const coverScale = dims ? Math.max(frame.w / dims.w, frame.h / dims.h) : 1;
 
   const clampOffset = useCallback(
     (x: number, y: number, s: number, d: { w: number; h: number }) => {
@@ -85,20 +83,18 @@ export const KeyframeCropModal: React.FC<Props> = ({
     const dispW = frame.w / crop.width;
     const s = Math.max(cover, dispW / dims.w);
     const dispH = dims.h * s;
-    const next = clampOffset(
-      -crop.x * (dims.w * s),
-      -crop.y * dispH,
-      s,
-      dims,
-    );
+    const next = clampOffset(-crop.x * (dims.w * s), -crop.y * dispH, s, dims);
     setScale(s);
     setOffset(next);
   }, [dims, keyframe.crop, outputRatio, frame.w, frame.h, clampOffset]);
 
   // Pointer drag to pan.
-  const drag = useRef<{ px: number; py: number; ox: number; oy: number } | null>(
-    null,
-  );
+  const drag = useRef<{
+    px: number;
+    py: number;
+    ox: number;
+    oy: number;
+  } | null>(null);
   const onPointerDown = (e: React.PointerEvent) => {
     (e.target as Element).setPointerCapture?.(e.pointerId);
     drag.current = { px: e.clientX, py: e.clientY, ox: offset.x, oy: offset.y };

@@ -155,7 +155,8 @@ export const KeyframeCard: React.FC<Props> = ({
           outputRatio,
         )
       : undefined;
-  const isCropped = !isLoop && !!effectiveCrop && !isFullFrameCrop(effectiveCrop);
+  const isCropped =
+    !isLoop && !!effectiveCrop && !isFullFrameCrop(effectiveCrop);
 
   const imageStyle: React.CSSProperties = {
     ...(effectiveCrop ? cropStyle(effectiveCrop) : {}),

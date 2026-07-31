@@ -54,7 +54,10 @@ export const aspectRatioFromDimensions = (
 ): number => width / height;
 
 /** Snap arbitrary source dimensions to the closest preset ratio. */
-export const nearestPresetRatio = (width: number, height: number): PresetRatio => {
+export const nearestPresetRatio = (
+  width: number,
+  height: number,
+): PresetRatio => {
   const ratio = aspectRatioFromDimensions(width, height);
   let best: PresetRatio = "16:9";
   let bestDist = Infinity;

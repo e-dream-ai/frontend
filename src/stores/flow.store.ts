@@ -6,10 +6,7 @@ import type {
   TransitionStatus,
 } from "@/types/flow.types";
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
-import type {
-  AspectRatioSetting,
-  CropRegion,
-} from "@/utils/aspect-crop";
+import type { AspectRatioSetting, CropRegion } from "@/utils/aspect-crop";
 
 export const LOOP_KEYFRAME_ID = "__loop__";
 

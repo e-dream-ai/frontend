@@ -440,7 +440,12 @@ describe("Phase 1: transitions", () => {
         name: "square",
       });
       store.setKeyframeDimensions("kf-1", 1000, 1000);
-      store.setKeyframeCrop("kf-1", { x: 0.1, y: 0.1, width: 0.5, height: 0.5 });
+      store.setKeyframeCrop("kf-1", {
+        x: 0.1,
+        y: 0.1,
+        width: 0.5,
+        height: 0.5,
+      });
       store.updateKeyframe("kf-1", {
         croppedDreamUuid: "cropped-1",
         croppedSignature: "sig-1",

@@ -34,9 +34,7 @@ const canvasToBlob = (
   new Promise((resolve, reject) => {
     canvas.toBlob(
       (blob) =>
-        blob
-          ? resolve(blob)
-          : reject(new Error("Canvas toBlob returned null")),
+        blob ? resolve(blob) : reject(new Error("Canvas toBlob returned null")),
       type,
       quality,
     );

@@ -243,9 +243,9 @@ describe("isFullFrameCrop", () => {
   });
 
   it("is false when the region is a sub-rect", () => {
-    expect(
-      isFullFrameCrop({ x: 0, y: 0.2, width: 1, height: 0.5625 }),
-    ).toBe(false);
+    expect(isFullFrameCrop({ x: 0, y: 0.2, width: 1, height: 0.5625 })).toBe(
+      false,
+    );
   });
 });
 

@@ -96,9 +96,7 @@ export function useFlowGeneration() {
       // the video isn't distorted (#668). Returns the UUID/URL to feed the job;
       // falls back to the original reference on any crop/upload failure so a
       // CORS or network hiccup degrades gracefully rather than blocking.
-      const ensureCroppedDream = async (
-        kf: FlowKeyframe,
-      ): Promise<string> => {
+      const ensureCroppedDream = async (kf: FlowKeyframe): Promise<string> => {
         const original = kf.dreamUuid || kf.imageUrl;
         if (!kf.imageUrl) return original;
         try {
