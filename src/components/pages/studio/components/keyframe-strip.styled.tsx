@@ -24,7 +24,10 @@ export const SectionLabel = styled.div`
 export const StripContainer = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
+  /* "safe" centers when the strip fits, but falls back to start-alignment when
+     it overflows — otherwise the start-side overflow is unreachable by scrolling
+     (and by drag auto-scroll) once there are enough keyframes. */
+  justify-content: safe center;
   gap: 0;
   overflow-x: auto;
   padding-bottom: 8px;
@@ -48,7 +51,7 @@ export const GapLine = styled.div`
 export const StripControls = styled.div`
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: safe center;
   gap: 12px;
   margin-top: 20px;
   overflow-x: auto;
