@@ -48,6 +48,29 @@ export const PromptTextarea = styled.textarea`
   }
 `;
 
+export const AdvancedToggle = styled.button`
+  background: none;
+  border: none;
+  color: ${(props) => props.theme.textBodyColor};
+  font-family: inherit;
+  font-size: 0.8125rem;
+  cursor: pointer;
+  padding: 0;
+  margin: -0.25rem 0 0.75rem;
+  text-align: left;
+
+  &:hover {
+    color: ${(props) => props.theme.textPrimaryColor};
+  }
+`;
+
+export const AdvancedFieldLabel = styled.label`
+  display: block;
+  font-size: 0.8125rem;
+  color: ${(props) => props.theme.textBodyColor};
+  margin-bottom: 0.4rem;
+`;
+
 export const FormRow = styled.div`
   display: flex;
   align-items: center;

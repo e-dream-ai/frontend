@@ -15,11 +15,14 @@ import {
   IMAGE_COUNT_OPTIONS,
   clampSizeToAllowed,
 } from "../constants/size-options";
+import { buildImageAlgoParams } from "../utils/build-image-algo-params";
 import { SizeSelect } from "./size-select";
 import {
   GenerateSection,
   SectionTitle,
   PromptTextarea,
+  AdvancedToggle,
+  AdvancedFieldLabel,
   FormRow,
   FormField,
   FieldLabel,
@@ -65,6 +68,7 @@ export const ImagesTab: React.FC = () => {
   const isGenerating = useStudioStore((s) => s.isGenerating);
   const setIsGenerating = useStudioStore((s) => s.setIsGenerating);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [expandedImageUuid, setExpandedImageUuid] = useState<string | null>(
     null,
   );
@@ -114,12 +118,13 @@ export const ImagesTab: React.FC = () => {
       { length: imageGenParams.seedCount },
       (_, i) => {
         const seed = baseSeed + i;
-        const algoParams = {
-          infinidream_algorithm: imageGenParams.model,
+        const algoParams = buildImageAlgoParams({
+          model: imageGenParams.model,
           prompt: imagePrompt,
           size: imageGenParams.size,
           seed,
-        };
+          negativePrompt: imageGenParams.negativePrompt,
+        });
 
         return axiosClient
           .post("/v1/dream", {
@@ -213,6 +218,24 @@ export const ImagesTab: React.FC = () => {
           value={imagePrompt}
           onChange={(e) => setImagePrompt(e.target.value)}
         />
+        <AdvancedToggle
+          type="button"
+          onClick={() => setAdvancedOpen((o) => !o)}
+        >
+          {advancedOpen ? "▾" : "▸"} Advanced
+        </AdvancedToggle>
+        {advancedOpen && (
+          <>
+            <AdvancedFieldLabel>Negative prompt</AdvancedFieldLabel>
+            <PromptTextarea
+              placeholder="Describe what to avoid (optional)..."
+              value={imageGenParams.negativePrompt}
+              onChange={(e) =>
+                setImageGenParams({ negativePrompt: e.target.value })
+              }
+            />
+          </>
+        )}
         <FormRow>
           <FormField>
             <FieldLabel>Model:</FieldLabel>

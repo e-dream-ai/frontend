@@ -121,6 +121,7 @@ describe("studio.store", () => {
         model: "z-image-turbo",
         seedCount: 8,
         size: "1280*720",
+        negativePrompt: "",
       });
       expect(migrated.qwenParams).toBeUndefined();
     });
@@ -274,6 +275,7 @@ describe("studio.store", () => {
         model: "z-image-turbo",
         seedCount: 8,
         size: "1280*720",
+        negativePrompt: "",
       });
       expect(migrated.videoGenParams).toEqual({
         model: "ltx-i2v",

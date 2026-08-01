@@ -64,6 +64,7 @@ export interface ImageGenParams {
   model: ImageModel;
   seedCount: number;
   size: string;
+  negativePrompt: string;
 }
 
 export const createComboKey = (
