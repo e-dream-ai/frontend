@@ -4,6 +4,7 @@ export interface ModelConstraints {
   durationsSec?: number[];
   imageSizes?: string[];
   supportsSteps?: boolean;
+  supportsNegativePrompt?: boolean;
 }
 
 export type ModelPricing =

@@ -46,6 +46,12 @@ export const PromptTextarea = styled.textarea`
     outline: none;
     border-color: ${(props) => props.theme.colorPrimary};
   }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    resize: none;
+  }
 `;
 
 export const AdvancedToggle = styled.button`
@@ -69,6 +75,13 @@ export const AdvancedFieldLabel = styled.label`
   font-size: 0.8125rem;
   color: ${(props) => props.theme.textBodyColor};
   margin-bottom: 0.4rem;
+`;
+
+export const AdvancedFieldHint = styled.p`
+  font-size: 0.75rem;
+  color: ${(props) => props.theme.textBodyColor};
+  opacity: 0.75;
+  margin: -0.75rem 0 1rem;
 `;
 
 export const FormRow = styled.div`

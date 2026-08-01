@@ -15,6 +15,7 @@ import {
   clampSizeToAllowed,
 } from "../constants/size-options";
 import { buildImageAlgoParams } from "../utils/build-image-algo-params";
+import { resolveNegativePromptSupport } from "../utils/negative-prompt-support";
 import { SizeSelect } from "./size-select";
 import {
   Overlay,
@@ -32,6 +33,7 @@ import {
   FieldRow,
   FieldGroup,
   FieldLabel,
+  FieldHint,
   Select,
   PromptTextarea,
   AdvancedToggle,
@@ -63,6 +65,9 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
   const sizeOptions =
     modelConstraints.get(imageGenParams.model)?.imageSizes ?? [];
 
+  const { enabled: negativePromptEnabled, hint: negativePromptHint } =
+    resolveNegativePromptSupport(modelOptions, imageGenParams.model);
+
   const { totalCostUsd, costBreakdown } = useCostEstimate({
     model: modelOptions.find((m) => m.id === imageGenParams.model),
     params: { imageSize: imageGenParams.size },
@@ -92,7 +97,9 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
           prompt,
           size: imageGenParams.size,
           seed,
-          negativePrompt: imageGenParams.negativePrompt,
+          negativePrompt: negativePromptEnabled
+            ? imageGenParams.negativePrompt
+            : undefined,
         });
 
         return axiosClient
@@ -139,6 +146,7 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
     isSubmitting,
     guardOverBudget,
     imageGenParams,
+    negativePromptEnabled,
     modelOptions,
     addImage,
     addKeyframe,
@@ -214,16 +222,31 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
           </AdvancedToggle>
           {advancedOpen && (
             <>
-              <FieldLabel style={{ display: "block", marginTop: 10 }}>
+              <FieldLabel
+                htmlFor="keyframe-negative-prompt"
+                style={{ display: "block", marginTop: 10, marginBottom: 8 }}
+              >
                 Negative prompt
               </FieldLabel>
               <PromptTextarea
+                id="keyframe-negative-prompt"
                 placeholder="Describe what to avoid (optional)..."
                 value={imageGenParams.negativePrompt}
+                disabled={!negativePromptEnabled}
+                aria-describedby={
+                  negativePromptHint
+                    ? "keyframe-negative-prompt-hint"
+                    : undefined
+                }
                 onChange={(e) =>
                   setImageGenParams({ negativePrompt: e.target.value })
                 }
               />
+              {negativePromptHint && (
+                <FieldHint id="keyframe-negative-prompt-hint">
+                  {negativePromptHint}
+                </FieldHint>
+              )}
             </>
           )}
           <CreditLimitNotice

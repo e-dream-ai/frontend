@@ -16,6 +16,7 @@ import {
   clampSizeToAllowed,
 } from "../constants/size-options";
 import { buildImageAlgoParams } from "../utils/build-image-algo-params";
+import { resolveNegativePromptSupport } from "../utils/negative-prompt-support";
 import { SizeSelect } from "./size-select";
 import {
   GenerateSection,
@@ -23,6 +24,7 @@ import {
   PromptTextarea,
   AdvancedToggle,
   AdvancedFieldLabel,
+  AdvancedFieldHint,
   FormRow,
   FormField,
   FieldLabel,
@@ -82,6 +84,9 @@ export const ImagesTab: React.FC = () => {
   const sizeOptions =
     modelConstraints.get(imageGenParams.model)?.imageSizes ?? [];
 
+  const { enabled: negativePromptEnabled, hint: negativePromptHint } =
+    resolveNegativePromptSupport(modelOptions, imageGenParams.model);
+
   const { totalCostUsd, costBreakdown } = useCostEstimate({
     model: modelOptions.find((m) => m.id === imageGenParams.model),
     params: { imageSize: imageGenParams.size },
@@ -123,7 +128,9 @@ export const ImagesTab: React.FC = () => {
           prompt: imagePrompt,
           size: imageGenParams.size,
           seed,
-          negativePrompt: imageGenParams.negativePrompt,
+          negativePrompt: negativePromptEnabled
+            ? imageGenParams.negativePrompt
+            : undefined,
         });
 
         return axiosClient
@@ -156,6 +163,7 @@ export const ImagesTab: React.FC = () => {
   }, [
     imagePrompt,
     imageGenParams,
+    negativePromptEnabled,
     modelOptions,
     addImage,
     setIsGenerating,
@@ -226,14 +234,26 @@ export const ImagesTab: React.FC = () => {
         </AdvancedToggle>
         {advancedOpen && (
           <>
-            <AdvancedFieldLabel>Negative prompt</AdvancedFieldLabel>
+            <AdvancedFieldLabel htmlFor="image-negative-prompt">
+              Negative prompt
+            </AdvancedFieldLabel>
             <PromptTextarea
+              id="image-negative-prompt"
               placeholder="Describe what to avoid (optional)..."
               value={imageGenParams.negativePrompt}
+              disabled={!negativePromptEnabled}
+              aria-describedby={
+                negativePromptHint ? "image-negative-prompt-hint" : undefined
+              }
               onChange={(e) =>
                 setImageGenParams({ negativePrompt: e.target.value })
               }
             />
+            {negativePromptHint && (
+              <AdvancedFieldHint id="image-negative-prompt-hint">
+                {negativePromptHint}
+              </AdvancedFieldHint>
+            )}
           </>
         )}
         <FormRow>
