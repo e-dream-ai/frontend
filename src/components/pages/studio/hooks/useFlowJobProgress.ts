@@ -14,6 +14,11 @@ import {
   shouldApplyStatus,
   isPendingStatus,
 } from "./mapSocketStatus";
+import { findTransitionIndexByDream } from "../utils/flow-progress.util";
+
+// How often to re-check pending transition dreams as a fallback for missed
+// socket events. Fast enough to feel live, slow enough to avoid hammering.
+const RECONCILE_POLL_MS = 5000;
 
 export function useFlowJobProgress() {
   const { socket, isConnected } = useSocket();
@@ -139,36 +144,63 @@ export function useFlowJobProgress() {
 
   const activeSessionId = useSessionStore((s) => s.activeSessionId);
 
+  // Fallback reconciliation. A generated transition only advances
+  // queue -> processing -> processed via live socket `job:progress` events. If a
+  // completion event is ever missed — the dream room is joined after the worker
+  // already emitted, a reconnect gap, a dropped event — the edge would otherwise
+  // stay stuck at queue/processing until a full page reload. So while anything
+  // is pending, poll the backend on an interval and apply the real status. This
+  // self-heals within a session (issue #696).
   useEffect(() => {
     if (pendingUuids.length === 0) return;
 
-    for (const entry of pendingEntriesRef.current) {
-      fetchDream(entry.uuid)
-        .then((dream) => {
-          if (!dream) return;
+    let cancelled = false;
 
-          const mappedStatus = mapSocketStatus(dream.status);
-          if (!mappedStatus) return;
+    const reconcileOnce = () => {
+      for (const entry of pendingEntriesRef.current) {
+        fetchDream(entry.uuid)
+          .then((dream) => {
+            if (cancelled || !dream) return;
 
-          if (mappedStatus === "failed") toastFailure(entry.uuid, dream.error);
+            const mappedStatus = mapSocketStatus(dream.status);
+            if (!mappedStatus) return;
 
-          const transition = useFlowStore.getState().transitions[entry.index];
-          const current = entry.isUprez
-            ? transition?.uprezStatus
-            : transition?.status;
-          if (!shouldApplyStatus(current, mappedStatus)) return;
+            if (mappedStatus === "failed")
+              toastFailure(entry.uuid, dream.error);
 
-          if (entry.isUprez) {
-            useFlowStore
-              .getState()
-              .updateTransitionUprezStatus(entry.index, mappedStatus);
-          } else {
-            useFlowStore
-              .getState()
-              .updateTransitionStatus(entry.index, mappedStatus);
-          }
-        })
-        .catch(() => {});
-    }
+            // Re-resolve the transition by dream UUID (not the captured index):
+            // a reorder/insert can shift positions, and routing the update by
+            // index would land it on the wrong edge.
+            const { transitions: current } = useFlowStore.getState();
+            const idx = findTransitionIndexByDream(
+              current,
+              entry.uuid,
+              entry.isUprez,
+            );
+            if (idx === -1) return;
+
+            const currentStatus = entry.isUprez
+              ? current[idx].uprezStatus
+              : current[idx].status;
+            if (!shouldApplyStatus(currentStatus, mappedStatus)) return;
+
+            if (entry.isUprez) {
+              useFlowStore
+                .getState()
+                .updateTransitionUprezStatus(idx, mappedStatus);
+            } else {
+              useFlowStore.getState().updateTransitionStatus(idx, mappedStatus);
+            }
+          })
+          .catch(() => {});
+      }
+    };
+
+    reconcileOnce();
+    const timer = setInterval(reconcileOnce, RECONCILE_POLL_MS);
+    return () => {
+      cancelled = true;
+      clearInterval(timer);
+    };
   }, [pendingUuids.length, activeSessionId, isConnected, toastFailure]);
 }
