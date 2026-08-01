@@ -4,11 +4,8 @@ import { useQueries, type QueryFunctionContext } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
-import { axiosClient } from "@/client/axios.client";
-import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
-import { DREAM_QUERY_KEY } from "@/api/dream/query/useDream";
+import { DREAM_QUERY_KEY, getDream } from "@/api/dream/query/useDream";
 import type { Dream } from "@/types/dream.types";
-import type { ApiResponse } from "@/types/api.types";
 import {
   PreviewContainer,
   PreviewLabel,
@@ -29,17 +26,6 @@ import {
   ready,
   type Layer,
 } from "../utils/preview-buffer";
-
-async function fetchDream(
-  uuid: string,
-  signal?: AbortSignal,
-): Promise<Dream | undefined> {
-  const res = await axiosClient.get<ApiResponse<{ dream: Dream }>>(
-    `/v1/dream/${uuid}`,
-    { headers: getRequestHeaders({ contentType: ContentType.json }), signal },
-  );
-  return res.data?.data?.dream;
-}
 
 function pad(n: number) {
   return n.toString().padStart(2, "0");
@@ -68,7 +54,7 @@ export function FlowPreview() {
   const dreamQueries = useQueries({
     queries: completedUuids.map((uuid) => ({
       queryKey: [DREAM_QUERY_KEY, uuid],
-      queryFn: ({ signal }: QueryFunctionContext) => fetchDream(uuid, signal),
+      queryFn: ({ signal }: QueryFunctionContext) => getDream(uuid, signal),
       staleTime: Infinity,
       refetchInterval: (data: unknown) =>
         (data as Dream | undefined)?.video ? false : 3000,
