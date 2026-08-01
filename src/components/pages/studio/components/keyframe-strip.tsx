@@ -15,6 +15,7 @@ import {
 } from "@dnd-kit/sortable";
 import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { KeyframeCard } from "./keyframe-card";
+import { KeyframeLightbox } from "./keyframe-lightbox";
 import { TransitionGapEnhanced } from "./transition-gap";
 import { FlowReset } from "./flow-reset";
 import {
@@ -202,6 +203,8 @@ export const KeyframeStrip: React.FC<Props> = ({
           </LoopToggle>
         )}
       </StripControls>
+
+      <KeyframeLightbox />
     </StripSection>
   );
 };

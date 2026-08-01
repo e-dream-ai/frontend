@@ -6,6 +6,7 @@ import type {
   TransitionStatus,
 } from "@/types/flow.types";
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
+import { stepLightboxIndex } from "@/components/pages/studio/utils/keyframe-lightbox.util";
 
 export const LOOP_KEYFRAME_ID = "__loop__";
 
@@ -58,6 +59,8 @@ type FlowStoreState = {
   selectedTransitionIndex: number | null;
   settingsExpanded: boolean;
   previewLightboxOpen: boolean;
+  // Index of the keyframe shown in the lightbox (#694); null = closed.
+  keyframeLightboxIndex: number | null;
 
   // Phase 1 — actions
   setGlobalPreset: (id: string) => void;
@@ -76,6 +79,9 @@ type FlowStoreState = {
   selectTransition: (index: number | null) => void;
   setSettingsExpanded: (expanded: boolean) => void;
   setPreviewLightboxOpen: (open: boolean) => void;
+  openKeyframeLightbox: (index: number) => void;
+  closeKeyframeLightbox: () => void;
+  stepKeyframeLightbox: (delta: number) => void;
   updateTransitionStatus: (
     index: number,
     status: TransitionStatus,
@@ -110,6 +116,7 @@ const PHASE_1_DEFAULTS = {
   selectedTransitionIndex: null as number | null,
   settingsExpanded: false,
   previewLightboxOpen: false,
+  keyframeLightboxIndex: null as number | null,
   savedPlaylistUuid: null as string | null,
   syncedPlaylistDreamUuids: [] as string[],
 };
@@ -296,6 +303,21 @@ export const useFlowStore = create<FlowStoreState>()(
       selectTransition: (index) => set({ selectedTransitionIndex: index }),
       setSettingsExpanded: (expanded) => set({ settingsExpanded: expanded }),
       setPreviewLightboxOpen: (open) => set({ previewLightboxOpen: open }),
+
+      openKeyframeLightbox: (index) =>
+        set((s) => ({
+          keyframeLightboxIndex:
+            index >= 0 && index < s.keyframes.length ? index : null,
+        })),
+      closeKeyframeLightbox: () => set({ keyframeLightboxIndex: null }),
+      stepKeyframeLightbox: (delta) =>
+        set((s) => ({
+          keyframeLightboxIndex: stepLightboxIndex(
+            s.keyframeLightboxIndex,
+            delta,
+            s.keyframes.length,
+          ),
+        })),
 
       updateTransitionStatus: (index, status, progress) =>
         set((s) => {
