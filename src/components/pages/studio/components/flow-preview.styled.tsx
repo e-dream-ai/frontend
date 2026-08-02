@@ -39,22 +39,6 @@ export const VideoWrapper = styled.div`
   }
 `;
 
-// One of two stacked <video> layers. The visible layer sits on top at full
-// opacity; the other preloads the next segment underneath. Swapping which layer
-// is visible crossfades between them — and because we only reveal a layer after
-// its first frame has decoded, the outgoing frame stays painted throughout, so
-// no blank/black frame is ever shown between segments (issue #670).
-export const VideoLayer = styled.video<{ $visible: boolean }>`
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  opacity: ${(p) => (p.$visible ? 1 : 0)};
-  transition: opacity 0.45s ease;
-  z-index: ${(p) => (p.$visible ? 1 : 0)};
-`;
-
 // Hover-revealed nav arrows on the left/right edge of the video.
 export const NavButton = styled.button<{ $side: "left" | "right" }>`
   position: absolute;
@@ -179,6 +163,7 @@ export const LightboxVideo = styled.div`
   aspect-ratio: 16 / 9;
   border-radius: ${FLOW.radius};
   overflow: hidden;
+  position: relative;
 
   video {
     width: 100%;

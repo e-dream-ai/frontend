@@ -68,7 +68,7 @@ export const NavButton = styled.button<{ $side: "left" | "right" }>`
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  border: none;
+  border: 1px solid rgba(255, 255, 255, 0.18);
   background: rgba(12, 12, 14, 0.6);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
@@ -80,17 +80,20 @@ export const NavButton = styled.button<{ $side: "left" | "right" }>`
   z-index: 1;
   transition:
     background 0.18s ease,
+    border-color 0.18s ease,
     opacity 0.18s ease;
 
   &:hover {
     background: rgba(212, 168, 83, 0.85);
+    border-color: rgba(212, 168, 83, 0.85);
     color: ${FLOW.bg};
   }
 
   &:disabled {
     opacity: 0.2;
     cursor: default;
-    pointer-events: none;
+    /* Not pointer-events: none — that would let the click fall through to the
+       overlay behind it and close the lightbox instead of doing nothing. */
   }
 `;
 

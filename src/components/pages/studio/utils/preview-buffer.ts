@@ -1,78 +1,95 @@
 /**
- * Double-buffer state machine for the flow-preview carousel.
+ * Double-buffer state machine for the flow-preview carousel (issue #670): a back
+ * layer preloads the next segment while the front stays visible, and only swaps
+ * once its first frame has decoded, so no blank frame is ever shown.
  *
- * Two stacked <video> layers share the frame. The layer in `front` is visible;
- * the other preloads the next segment off-screen. We only reveal the back layer
- * once its first frame has decoded, so the outgoing frame stays painted the whole
- * time and no blank/black frame is ever shown between segments (issue #670).
- *
- * This module is pure — no React, no DOM — so the swap logic can be unit-tested
- * in isolation. The component maps `front`/`loaded` onto opacity and the two
- * <video> `src`s, and dispatches `ready()` from each layer's `loadeddata` event.
+ * Segments are tracked by key (dream uuid), not position — a retried transition
+ * can complete out of order and shift every later index.
  */
 
 export type Layer = 0 | 1;
 
+export type SegmentKey = string;
+
 export interface PreviewBufferState {
   /** Which layer is currently visible (front). */
   front: Layer;
-  /** Segment index each layer has loaded as its <video> src (null = empty). */
-  loaded: [number | null, number | null];
+  /** Segment key each layer has loaded as its <video> src (null = empty). */
+  loaded: [SegmentKey | null, SegmentKey | null];
   /** Whether each layer's current src has decoded a displayable frame. */
   ready: [boolean, boolean];
 }
 
 export const backLayer = (front: Layer): Layer => (front === 0 ? 1 : 0);
 
-export const initialPreviewBuffer = (startIndex = 0): PreviewBufferState => ({
+export const initialPreviewBuffer = (
+  startKey: SegmentKey | null = null,
+): PreviewBufferState => ({
   front: 0,
-  loaded: [startIndex, null],
+  loaded: [startKey, null],
   ready: [false, false],
 });
 
-/**
- * Request that `index` becomes the visible segment.
- * - Already in front → no change.
- * - Already buffered AND ready on the back layer → reveal it now (instant crossfade).
- * - Otherwise → assign it to the back layer so its <video> starts loading; the
- *   swap happens later via `ready()`, keeping the current frame up until then.
- */
-export function requestIndex(
+/** Request that `key` becomes visible: instant if the back layer already has it ready, otherwise assigns it to the back layer to load. */
+export function requestSegment(
   state: PreviewBufferState,
-  index: number,
+  key: SegmentKey,
 ): PreviewBufferState {
-  if (index === state.loaded[state.front]) return state;
+  if (key === state.loaded[state.front]) return state;
 
   const back = backLayer(state.front);
-  if (state.loaded[back] === index && state.ready[back]) {
-    return { ...state, front: back };
+  if (state.loaded[back] === key) {
+    return state.ready[back] ? { ...state, front: back } : state;
   }
 
-  const loaded: [number | null, number | null] = [...state.loaded];
-  loaded[back] = index;
+  const loaded: [SegmentKey | null, SegmentKey | null] = [...state.loaded];
+  loaded[back] = key;
   const ready: [boolean, boolean] = [...state.ready];
-  // New (or not-yet-ready) src on the back layer: it must re-prove readiness.
   ready[back] = false;
   return { front: state.front, loaded, ready };
 }
 
 /**
- * A layer reported its first frame decoded (loadeddata) for `index`.
- * Records readiness, then swaps that layer to the front only if it's the back
- * layer, still holds that index (not superseded), and isn't already showing.
+ * A layer decoded its first frame for `key`; swaps it to front unless superseded.
+ * `key` must come from the DOM event itself, not read back out of `state.loaded` —
+ * that would make the staleness check below unfalsifiable.
  */
-export function ready(
+export function markReady(
   state: PreviewBufferState,
   layer: Layer,
-  index: number,
+  key: SegmentKey,
 ): PreviewBufferState {
-  if (state.loaded[layer] !== index) return state; // stale / superseded event
+  if (state.loaded[layer] !== key) return state; // stale / superseded event
+  if (state.ready[layer] && state.front === layer) return state; // no-op
 
-  const readyArr: [boolean, boolean] = [...state.ready];
-  readyArr[layer] = true;
-  const marked: PreviewBufferState = { ...state, ready: readyArr };
+  const ready: [boolean, boolean] = [...state.ready];
+  ready[layer] = true;
+  const marked: PreviewBufferState = { ...state, ready };
 
   if (layer === state.front) return marked; // front readiness never swaps
-  if (state.loaded[state.front] === index) return marked; // front already shows it
+  if (state.loaded[state.front] === key) return marked; // front already shows it
   return { ...marked, front: layer };
+}
+
+export function pruneSegments(
+  state: PreviewBufferState,
+  validKeys: ReadonlySet<SegmentKey>,
+): PreviewBufferState {
+  const keep = (key: SegmentKey | null) =>
+    key !== null && validKeys.has(key) ? key : null;
+  const loaded: [SegmentKey | null, SegmentKey | null] = [
+    keep(state.loaded[0]),
+    keep(state.loaded[1]),
+  ];
+  if (loaded[0] === state.loaded[0] && loaded[1] === state.loaded[1]) {
+    return state;
+  }
+  const ready: [boolean, boolean] = [
+    loaded[0] === null ? false : state.ready[0],
+    loaded[1] === null ? false : state.ready[1],
+  ];
+  const back = backLayer(state.front);
+  const front =
+    loaded[state.front] === null && loaded[back] !== null ? back : state.front;
+  return { front, loaded, ready };
 }
