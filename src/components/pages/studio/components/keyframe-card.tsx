@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AlertTriangle } from "lucide-react";
 import type { FlowKeyframe } from "@/types/flow.types";
-import { axiosClient } from "@/client/axios.client";
-import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { useFlowStore } from "@/stores/flow.store";
+import { useKeyframeImage } from "../hooks/useKeyframeImage";
 import {
   CardWrapper,
   CardImage,
@@ -37,39 +36,7 @@ export const KeyframeCard: React.FC<Props> = ({
   const isFailed = keyframe.uploadStatus === "failed";
   const isBusy = isUploading || isFailed;
 
-  const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
-  const [imgSrc, setImgSrc] = useState(keyframe.imageUrl);
-
-  useEffect(() => {
-    setImgSrc(keyframe.imageUrl);
-  }, [keyframe.imageUrl]);
-
-  const handleImgError = useCallback(async () => {
-    if (!keyframe.dreamUuid) return;
-    try {
-      const headers = getRequestHeaders({ contentType: ContentType.json });
-      const { data } = await axiosClient.get(
-        `/v1/dream/${keyframe.dreamUuid}`,
-        { headers },
-      );
-      const dream = data?.data?.dream;
-      const freshUrl: string =
-        dream?.video || dream?.original_video || dream?.thumbnail || "";
-      if (freshUrl) {
-        setImgSrc(freshUrl);
-        if (!keyframe.isLoopKeyframe) {
-          updateKeyframe(keyframe.id, { imageUrl: freshUrl });
-        }
-      }
-    } catch {
-      // Leave broken image rather than crashing
-    }
-  }, [
-    keyframe.dreamUuid,
-    keyframe.id,
-    keyframe.isLoopKeyframe,
-    updateKeyframe,
-  ]);
+  const { src: imgSrc, onError: handleImgError } = useKeyframeImage(keyframe);
 
   const {
     attributes,
@@ -96,7 +63,7 @@ export const KeyframeCard: React.FC<Props> = ({
   const isClickable = !isLoop && !isBusy && !!imgSrc;
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
-    openKeyframeLightbox(index);
+    openKeyframeLightbox(keyframe.id);
   };
 
   return (
@@ -116,7 +83,7 @@ export const KeyframeCard: React.FC<Props> = ({
           $uploading={isUploading}
           onClick={isClickable ? handleOpen : undefined}
           style={isClickable ? { cursor: "pointer" } : undefined}
-          onError={keyframe.dreamUuid ? handleImgError : undefined}
+          onError={handleImgError}
         />
       ) : (
         <CardPlaceholder>{keyframe.name}</CardPlaceholder>

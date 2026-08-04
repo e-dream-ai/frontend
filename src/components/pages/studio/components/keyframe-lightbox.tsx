@@ -1,8 +1,11 @@
 import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import type { FlowKeyframe } from "@/types/flow.types";
 import { useFlowStore } from "@/stores/flow.store";
-import { canStep } from "../utils/keyframe-lightbox.util";
+import { canStep } from "@/utils/keyframe-lightbox.util";
+import { useLightboxA11y } from "../hooks/useLightboxA11y";
+import { useKeyframeImage } from "../hooks/useKeyframeImage";
 import {
   Overlay,
   ImageFrame,
@@ -15,56 +18,45 @@ import {
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-/**
- * Full-screen lightbox for a flow keyframe (#694). Click a keyframe card to
- * open it here; ←/→ (or the on-screen arrows) move between keyframes, Escape /
- * backdrop / × closes. Navigation clamps at the ends. The synthetic loop frame
- * is never clickable, so this only ever shows real keyframes.
- */
-export const KeyframeLightbox: React.FC = () => {
+function KeyframeLightboxDialog({ openId }: { openId: string }) {
   const keyframes = useFlowStore((s) => s.keyframes);
-  const index = useFlowStore((s) => s.keyframeLightboxIndex);
   const close = useFlowStore((s) => s.closeKeyframeLightbox);
   const step = useFlowStore((s) => s.stepKeyframeLightbox);
 
   const count = keyframes.length;
-  const isOpen = index !== null;
+  const index = keyframes.findIndex((kf) => kf.id === openId);
+  const keyframe: FlowKeyframe | undefined = keyframes[index];
+  const prevUrl = keyframes[index - 1]?.imageUrl;
+  const nextUrl = keyframes[index + 1]?.imageUrl;
 
-  // Keyboard: Escape closes, arrows navigate (only while open).
+  const overlayRef = useLightboxA11y<HTMLDivElement>(close);
+  const { src, onError } = useKeyframeImage(keyframe);
+
+  // Warm the adjacent full-size images (not the thumbnails the strip loaded).
   useEffect(() => {
-    if (!isOpen) return;
+    for (const url of [prevUrl, nextUrl]) {
+      if (!url) continue;
+      const img = new Image();
+      img.src = url;
+    }
+  }, [prevUrl, nextUrl]);
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") close();
-      else if (e.key === "ArrowRight") step(1);
-      else if (e.key === "ArrowLeft") step(-1);
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+      e.preventDefault();
+      step(e.key === "ArrowRight" ? 1 : -1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [isOpen, close, step]);
+  }, [step]);
 
-  // Lock body scroll while the lightbox is open.
-  useEffect(() => {
-    if (!isOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, [isOpen]);
-
-  // If the underlying keyframe vanished (deleted while open), close.
-  const keyframe = index !== null ? keyframes[index] : undefined;
-  useEffect(() => {
-    if (isOpen && !keyframe) close();
-  }, [isOpen, keyframe, close]);
-
-  if (index === null || !keyframe) return null;
-
-  const canPrev = canStep(index, -1, count);
-  const canNext = canStep(index, 1, count);
+  if (!keyframe) return null;
 
   return createPortal(
     <Overlay
+      ref={overlayRef}
+      tabIndex={-1}
       onClick={close}
       role="dialog"
       aria-modal="true"
@@ -82,7 +74,7 @@ export const KeyframeLightbox: React.FC = () => {
 
       <NavButton
         $side="left"
-        disabled={!canPrev}
+        disabled={!canStep(index, -1, count)}
         onClick={(e) => {
           e.stopPropagation();
           step(-1);
@@ -93,7 +85,7 @@ export const KeyframeLightbox: React.FC = () => {
       </NavButton>
 
       <ImageFrame onClick={(e) => e.stopPropagation()}>
-        <img src={keyframe.imageUrl} alt={keyframe.name} />
+        <img src={src} alt={keyframe.name} onError={onError} />
       </ImageFrame>
 
       <Caption onClick={(e) => e.stopPropagation()}>
@@ -107,7 +99,7 @@ export const KeyframeLightbox: React.FC = () => {
 
       <NavButton
         $side="right"
-        disabled={!canNext}
+        disabled={!canStep(index, 1, count)}
         onClick={(e) => {
           e.stopPropagation();
           step(1);
@@ -119,4 +111,9 @@ export const KeyframeLightbox: React.FC = () => {
     </Overlay>,
     document.body,
   );
+}
+
+export const KeyframeLightbox: React.FC = () => {
+  const openId = useFlowStore((s) => s.keyframeLightboxId);
+  return openId === null ? null : <KeyframeLightboxDialog openId={openId} />;
 };
