@@ -6,6 +6,7 @@ import type {
   TransitionStatus,
 } from "@/types/flow.types";
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
+import { stepLightboxIndex } from "@/utils/keyframe-lightbox.util";
 
 export const LOOP_KEYFRAME_ID = "__loop__";
 
@@ -58,6 +59,8 @@ type FlowStoreState = {
   selectedTransitionIndex: number | null;
   settingsExpanded: boolean;
   previewLightboxOpen: boolean;
+  // Id (not index) of the keyframe shown in the lightbox; null = closed.
+  keyframeLightboxId: string | null;
 
   // Phase 1 — actions
   setGlobalPreset: (id: string) => void;
@@ -76,6 +79,9 @@ type FlowStoreState = {
   selectTransition: (index: number | null) => void;
   setSettingsExpanded: (expanded: boolean) => void;
   setPreviewLightboxOpen: (open: boolean) => void;
+  openKeyframeLightbox: (id: string) => void;
+  closeKeyframeLightbox: () => void;
+  stepKeyframeLightbox: (delta: number) => void;
   updateTransitionStatus: (
     index: number,
     status: TransitionStatus,
@@ -110,6 +116,7 @@ const PHASE_1_DEFAULTS = {
   selectedTransitionIndex: null as number | null,
   settingsExpanded: false,
   previewLightboxOpen: false,
+  keyframeLightboxId: null as string | null,
   savedPlaylistUuid: null as string | null,
   syncedPlaylistDreamUuids: [] as string[],
 };
@@ -210,6 +217,8 @@ export const useFlowStore = create<FlowStoreState>()(
           const keyframes = s.keyframes.filter((kf) => kf.id !== id);
           return {
             keyframes,
+            keyframeLightboxId:
+              s.keyframeLightboxId === id ? null : s.keyframeLightboxId,
             transitions: deriveTransitions(
               buildKeyframesWithLoop(keyframes, s.loop),
               s.transitions,
@@ -296,6 +305,25 @@ export const useFlowStore = create<FlowStoreState>()(
       selectTransition: (index) => set({ selectedTransitionIndex: index }),
       setSettingsExpanded: (expanded) => set({ settingsExpanded: expanded }),
       setPreviewLightboxOpen: (open) => set({ previewLightboxOpen: open }),
+
+      openKeyframeLightbox: (id) =>
+        set((s) => ({
+          keyframeLightboxId: s.keyframes.some((kf) => kf.id === id)
+            ? id
+            : null,
+        })),
+      closeKeyframeLightbox: () => set({ keyframeLightboxId: null }),
+      stepKeyframeLightbox: (delta) =>
+        set((s) => {
+          const current = s.keyframes.findIndex(
+            (kf) => kf.id === s.keyframeLightboxId,
+          );
+          if (current === -1) return { keyframeLightboxId: null };
+          const next = stepLightboxIndex(current, delta, s.keyframes.length);
+          return {
+            keyframeLightboxId: next === null ? null : s.keyframes[next].id,
+          };
+        }),
 
       updateTransitionStatus: (index, status, progress) =>
         set((s) => {

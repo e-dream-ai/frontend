@@ -14,6 +14,8 @@ import {
   IMAGE_COUNT_OPTIONS,
   clampSizeToAllowed,
 } from "../constants/size-options";
+import { buildImageAlgoParams } from "../utils/build-image-algo-params";
+import { resolveNegativePromptSupport } from "../utils/negative-prompt-support";
 import { SizeSelect } from "./size-select";
 import {
   Overlay,
@@ -31,8 +33,10 @@ import {
   FieldRow,
   FieldGroup,
   FieldLabel,
+  FieldHint,
   Select,
   PromptTextarea,
+  AdvancedToggle,
 } from "./transition-settings-panel.styled";
 
 interface Props {
@@ -50,6 +54,7 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
   const prompt = useStudioStore((s) => s.imagePrompt);
   const setPrompt = useStudioStore((s) => s.setImagePrompt);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const { data: modelsData } = useModels({ mediaType: "image" });
   const modelOptions = useMemo(
@@ -59,6 +64,9 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
   const modelConstraints = useModelConstraints({ mediaType: "image" });
   const sizeOptions =
     modelConstraints.get(imageGenParams.model)?.imageSizes ?? [];
+
+  const { enabled: negativePromptEnabled, hint: negativePromptHint } =
+    resolveNegativePromptSupport(modelOptions, imageGenParams.model);
 
   const { totalCostUsd, costBreakdown } = useCostEstimate({
     model: modelOptions.find((m) => m.id === imageGenParams.model),
@@ -84,12 +92,15 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
     await Promise.all(
       Array.from({ length: imageGenParams.seedCount }, (_, i) => {
         const seed = baseSeed + i;
-        const algoParams = {
-          infinidream_algorithm: imageGenParams.model,
+        const algoParams = buildImageAlgoParams({
+          model: imageGenParams.model,
           prompt,
           size: imageGenParams.size,
           seed,
-        };
+          negativePrompt: negativePromptEnabled
+            ? imageGenParams.negativePrompt
+            : undefined,
+        });
 
         return axiosClient
           .post("/v1/dream", {
@@ -135,6 +146,7 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
     isSubmitting,
     guardOverBudget,
     imageGenParams,
+    negativePromptEnabled,
     modelOptions,
     addImage,
     addKeyframe,
@@ -201,6 +213,42 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
               />
             </FieldGroup>
           </FieldRow>
+          <AdvancedToggle
+            type="button"
+            onClick={() => setAdvancedOpen((o) => !o)}
+            style={{ display: "block", marginTop: 12 }}
+          >
+            {advancedOpen ? "▾" : "▸"} Advanced
+          </AdvancedToggle>
+          {advancedOpen && (
+            <>
+              <FieldLabel
+                htmlFor="keyframe-negative-prompt"
+                style={{ display: "block", marginTop: 10, marginBottom: 8 }}
+              >
+                Negative prompt
+              </FieldLabel>
+              <PromptTextarea
+                id="keyframe-negative-prompt"
+                placeholder="Describe what to avoid (optional)..."
+                value={imageGenParams.negativePrompt}
+                disabled={!negativePromptEnabled}
+                aria-describedby={
+                  negativePromptHint
+                    ? "keyframe-negative-prompt-hint"
+                    : undefined
+                }
+                onChange={(e) =>
+                  setImageGenParams({ negativePrompt: e.target.value })
+                }
+              />
+              {negativePromptHint && (
+                <FieldHint id="keyframe-negative-prompt-hint">
+                  {negativePromptHint}
+                </FieldHint>
+              )}
+            </>
+          )}
           <CreditLimitNotice
             overBudget={overBudget}
             canManageKey={canManageKey}

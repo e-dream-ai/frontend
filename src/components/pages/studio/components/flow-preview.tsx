@@ -1,14 +1,11 @@
-import { useRef, useState, useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useQueries, type QueryFunctionContext } from "@tanstack/react-query";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
-import { axiosClient } from "@/client/axios.client";
-import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
-import { DREAM_QUERY_KEY } from "@/api/dream/query/useDream";
+import { DREAM_QUERY_KEY, getDream } from "@/api/dream/query/useDream";
 import type { Dream } from "@/types/dream.types";
-import type { ApiResponse } from "@/types/api.types";
 import {
   PreviewContainer,
   PreviewLabel,
@@ -21,31 +18,67 @@ import {
   ChipRail,
   SegmentChip,
 } from "./flow-preview.styled";
-
-async function fetchDream(
-  uuid: string,
-  signal?: AbortSignal,
-): Promise<Dream | undefined> {
-  const res = await axiosClient.get<ApiResponse<{ dream: Dream }>>(
-    `/v1/dream/${uuid}`,
-    { headers: getRequestHeaders({ contentType: ContentType.json }), signal },
-  );
-  return res.data?.data?.dream;
-}
+import { CrossfadeVideo, type CrossfadeSegment } from "./crossfade-video";
+import { useLightboxA11y } from "../hooks/useLightboxA11y";
 
 function pad(n: number) {
   return n.toString().padStart(2, "0");
 }
 
+interface PreviewLightboxProps {
+  segments: readonly CrossfadeSegment[];
+  index: number;
+  loop: boolean;
+  onClose: () => void;
+  onEnded: () => void;
+}
+
+function PreviewLightbox({
+  segments,
+  index,
+  loop,
+  onClose,
+  onEnded,
+}: PreviewLightboxProps) {
+  const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
+
+  return createPortal(
+    <LightboxOverlay
+      ref={overlayRef}
+      tabIndex={-1}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Video preview"
+    >
+      <LightboxVideo onClick={(e) => e.stopPropagation()}>
+        <CrossfadeVideo
+          segments={segments}
+          index={index}
+          controls
+          loop={loop}
+          onEnded={onEnded}
+        />
+      </LightboxVideo>
+    </LightboxOverlay>,
+    document.body,
+  );
+}
+
 export function FlowPreview() {
-  const { transitions, previewLightboxOpen, setPreviewLightboxOpen } =
-    useFlowStore(
-      useShallow((s) => ({
-        transitions: s.transitions,
-        previewLightboxOpen: s.previewLightboxOpen,
-        setPreviewLightboxOpen: s.setPreviewLightboxOpen,
-      })),
-    );
+  const {
+    transitions,
+    previewLightboxOpen,
+    setPreviewLightboxOpen,
+    keyframeLightboxOpen,
+  } = useFlowStore(
+    useShallow((s) => ({
+      transitions: s.transitions,
+      previewLightboxOpen: s.previewLightboxOpen,
+      setPreviewLightboxOpen: s.setPreviewLightboxOpen,
+      keyframeLightboxOpen: s.keyframeLightboxId !== null,
+    })),
+  );
 
   const completedUuids = useMemo(
     () =>
@@ -58,7 +91,7 @@ export function FlowPreview() {
   const dreamQueries = useQueries({
     queries: completedUuids.map((uuid) => ({
       queryKey: [DREAM_QUERY_KEY, uuid],
-      queryFn: ({ signal }: QueryFunctionContext) => fetchDream(uuid, signal),
+      queryFn: ({ signal }: QueryFunctionContext) => getDream(uuid, signal),
       staleTime: Infinity,
       refetchInterval: (data: unknown) =>
         (data as Dream | undefined)?.video ? false : 3000,
@@ -66,64 +99,57 @@ export function FlowPreview() {
     })),
   });
 
-  const completedSegments = useMemo(
-    () =>
-      dreamQueries
-        .map((q, i) => {
-          const url = q.data?.video;
-          if (!url) return null;
-          return { dreamUuid: completedUuids[i], url };
-        })
-        .filter((s): s is { dreamUuid: string; url: string } => s !== null),
-    [dreamQueries, completedUuids],
-  );
+  // Not memoized: `useQueries` returns a fresh array every render, so a useMemo
+  // keyed on it would never hit.
+  const segments: CrossfadeSegment[] = dreamQueries.flatMap((q, i) => {
+    const url = q.data?.video;
+    if (!url) return [];
+    return [{ key: completedUuids[i], url, poster: q.data?.thumbnail }];
+  });
 
-  const [rawIndex, setCurrentIndex] = useState(0);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const [rawTarget, setTargetIndex] = useState(0);
   const wrapperRef = useRef<HTMLDivElement>(null);
-  const currentIndexRef = useRef(0);
 
-  // Clamp during render so segment churn never points at a dead index.
-  const segmentCount = completedSegments.length;
-  const currentIndex = rawIndex >= segmentCount ? 0 : rawIndex;
-  currentIndexRef.current = currentIndex;
+  const segmentCount = segments.length;
+  // Clamped during render so segment churn never points at a dead index.
+  const targetIndex = rawTarget >= segmentCount ? 0 : rawTarget;
 
   const goTo = useCallback(
     (next: number) => {
       if (segmentCount === 0) return;
-      const wrapped = ((next % segmentCount) + segmentCount) % segmentCount;
-      setCurrentIndex(wrapped);
+      setTargetIndex(((next % segmentCount) + segmentCount) % segmentCount);
     },
     [segmentCount],
   );
 
-  const handleEnded = useCallback(() => {
-    // Single segment: just loop. Multi: advance to next.
-    if (segmentCount > 1) goTo(currentIndex + 1);
-    else videoRef.current?.play().catch(() => undefined);
-  }, [currentIndex, segmentCount, goTo]);
+  const advance = useCallback(() => {
+    if (segmentCount > 1) goTo(targetIndex + 1);
+  }, [goTo, targetIndex, segmentCount]);
 
-  // Escape closes the lightbox; ←/→ navigate when the preview is focused.
   useEffect(() => {
+    if (segmentCount < 2) return;
+    if (keyframeLightboxOpen) return;
+
     const onKey = (e: KeyboardEvent) => {
-      if (previewLightboxOpen && e.key === "Escape") {
-        setPreviewLightboxOpen(false);
-        return;
-      }
-      if (segmentCount < 2) return;
+      if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
       const active = document.activeElement;
       const inWrapper = active && wrapperRef.current?.contains(active as Node);
       if (!inWrapper && !previewLightboxOpen) return;
-      if (e.key === "ArrowRight") goTo(currentIndexRef.current + 1);
-      else if (e.key === "ArrowLeft") goTo(currentIndexRef.current - 1);
+      e.preventDefault();
+      goTo(targetIndex + (e.key === "ArrowRight" ? 1 : -1));
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [previewLightboxOpen, segmentCount, goTo]);
+  }, [
+    segmentCount,
+    keyframeLightboxOpen,
+    previewLightboxOpen,
+    targetIndex,
+    goTo,
+  ]);
 
   if (segmentCount === 0) return null;
 
-  const currentUrl = completedSegments[currentIndex]?.url;
   const showNav = segmentCount > 1;
 
   return (
@@ -136,15 +162,13 @@ export function FlowPreview() {
           tabIndex={0}
           onClick={() => setPreviewLightboxOpen(true)}
         >
-          <video
-            key={currentUrl}
-            ref={videoRef}
-            src={currentUrl}
-            autoPlay
+          <CrossfadeVideo
+            segments={segments}
+            index={targetIndex}
+            active={!previewLightboxOpen}
             muted
-            // Only loop when there's a single segment; otherwise advance to next on end.
             loop={segmentCount === 1}
-            onEnded={handleEnded}
+            onEnded={advance}
           />
 
           {showNav && (
@@ -153,7 +177,7 @@ export function FlowPreview() {
                 $side="left"
                 onClick={(e) => {
                   e.stopPropagation();
-                  goTo(currentIndex - 1);
+                  goTo(targetIndex - 1);
                 }}
                 aria-label="Previous segment"
               >
@@ -163,14 +187,14 @@ export function FlowPreview() {
                 $side="right"
                 onClick={(e) => {
                   e.stopPropagation();
-                  goTo(currentIndex + 1);
+                  goTo(targetIndex + 1);
                 }}
                 aria-label="Next segment"
               >
                 <ChevronRight size={16} strokeWidth={2.4} />
               </NavButton>
               <SegmentCounter>
-                {pad(currentIndex + 1)} / {pad(segmentCount)}
+                {pad(targetIndex + 1)} / {pad(segmentCount)}
               </SegmentCounter>
             </>
           )}
@@ -178,13 +202,13 @@ export function FlowPreview() {
 
         {showNav && (
           <ChipRail role="tablist" aria-label="Segments">
-            {completedSegments.map((_, i) => (
+            {segments.map((segment, i) => (
               <SegmentChip
-                key={i}
-                $active={i === currentIndex}
+                key={segment.key}
+                $active={i === targetIndex}
                 onClick={() => goTo(i)}
                 role="tab"
-                aria-selected={i === currentIndex}
+                aria-selected={i === targetIndex}
                 aria-label={`Segment ${i + 1}`}
               >
                 {pad(i + 1)}
@@ -196,20 +220,15 @@ export function FlowPreview() {
         <ClickHint>Click to expand</ClickHint>
       </PreviewContainer>
 
-      {previewLightboxOpen &&
-        createPortal(
-          <LightboxOverlay
-            onClick={() => setPreviewLightboxOpen(false)}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Video preview"
-          >
-            <LightboxVideo onClick={(e) => e.stopPropagation()}>
-              <video key={currentUrl} src={currentUrl} autoPlay controls />
-            </LightboxVideo>
-          </LightboxOverlay>,
-          document.body,
-        )}
+      {previewLightboxOpen && (
+        <PreviewLightbox
+          segments={segments}
+          index={targetIndex}
+          loop={segmentCount === 1}
+          onClose={() => setPreviewLightboxOpen(false)}
+          onEnded={advance}
+        />
+      )}
     </>
   );
 }

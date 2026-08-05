@@ -163,6 +163,7 @@ export const LightboxVideo = styled.div`
   aspect-ratio: 16 / 9;
   border-radius: ${FLOW.radius};
   overflow: hidden;
+  position: relative;
 
   video {
     width: 100%;

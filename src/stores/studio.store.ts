@@ -64,6 +64,7 @@ const DEFAULT_IMAGE_GEN_PARAMS: ImageGenParams = {
   model: "z-image-turbo",
   seedCount: 8,
   size: "1280*720",
+  negativePrompt: "",
 };
 const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
   model: "ltx-i2v",
@@ -234,7 +235,7 @@ export const useStudioStore = create<StudioState>()(
     }),
     {
       name: "studio-session",
-      version: 5,
+      version: 6,
       partialize: studioPartialize,
       storage: {
         getItem: (name) => {
@@ -318,6 +319,15 @@ export const useStudioStore = create<StudioState>()(
             videoGenParams?.guidance === 5.0
           ) {
             state.videoGenParams = { ...DEFAULT_VIDEO_GEN_PARAMS };
+          }
+        }
+        if (version < 6) {
+          // negativePrompt added to image generation (#699); backfill so the
+          // controlled textarea always has a string.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const imageGenParams = state.imageGenParams as any;
+          if (imageGenParams && imageGenParams.negativePrompt == null) {
+            imageGenParams.negativePrompt = "";
           }
         }
         return state as Record<string, unknown>;

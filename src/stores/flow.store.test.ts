@@ -449,3 +449,99 @@ describe("Phase 1: transitions", () => {
     });
   });
 });
+
+describe("keyframe lightbox (#694)", () => {
+  beforeEach(() => {
+    useFlowStore.getState().resetFlow();
+  });
+
+  it("is closed by default", () => {
+    expect(useFlowStore.getState().keyframeLightboxId).toBeNull();
+  });
+
+  it("opens on an existing keyframe", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.addKeyframe(makeKf("b"));
+    store.openKeyframeLightbox("b");
+    expect(useFlowStore.getState().keyframeLightboxId).toBe("b");
+  });
+
+  it("ignores an unknown keyframe id (stays closed)", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.openKeyframeLightbox("nope");
+    expect(useFlowStore.getState().keyframeLightboxId).toBeNull();
+  });
+
+  it("steps forward and clamps at the last keyframe", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.addKeyframe(makeKf("b"));
+    store.openKeyframeLightbox("a");
+    store.stepKeyframeLightbox(1);
+    expect(useFlowStore.getState().keyframeLightboxId).toBe("b");
+    store.stepKeyframeLightbox(1);
+    expect(useFlowStore.getState().keyframeLightboxId).toBe("b");
+  });
+
+  it("steps backward and clamps at the first keyframe", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.addKeyframe(makeKf("b"));
+    store.openKeyframeLightbox("b");
+    store.stepKeyframeLightbox(-1);
+    expect(useFlowStore.getState().keyframeLightboxId).toBe("a");
+    store.stepKeyframeLightbox(-1);
+    expect(useFlowStore.getState().keyframeLightboxId).toBe("a");
+  });
+
+  it("closes", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.openKeyframeLightbox("a");
+    store.closeKeyframeLightbox();
+    expect(useFlowStore.getState().keyframeLightboxId).toBeNull();
+  });
+
+  it("keeps showing the same keyframe when an earlier one is deleted", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.addKeyframe(makeKf("b"));
+    store.openKeyframeLightbox("b");
+    store.removeKeyframe("a");
+    // Index-keyed state would now be pointing at a different image.
+    expect(useFlowStore.getState().keyframeLightboxId).toBe("b");
+  });
+
+  it("closes when the keyframe it is showing is deleted", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.addKeyframe(makeKf("b"));
+    store.openKeyframeLightbox("b");
+    store.removeKeyframe("b");
+    expect(useFlowStore.getState().keyframeLightboxId).toBeNull();
+  });
+
+  it("survives a reorder without changing the shown keyframe", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.addKeyframe(makeKf("b"));
+    store.openKeyframeLightbox("a");
+    store.reorderKeyframes(["b", "a"]);
+    expect(useFlowStore.getState().keyframeLightboxId).toBe("a");
+    // "a" is last now, so forward navigation is exhausted.
+    store.stepKeyframeLightbox(1);
+    expect(useFlowStore.getState().keyframeLightboxId).toBe("a");
+    store.stepKeyframeLightbox(-1);
+    expect(useFlowStore.getState().keyframeLightboxId).toBe("b");
+  });
+
+  it("resetFlow closes the lightbox", () => {
+    const store = useFlowStore.getState();
+    store.addKeyframe(makeKf("a"));
+    store.openKeyframeLightbox("a");
+    store.resetFlow();
+    expect(useFlowStore.getState().keyframeLightboxId).toBeNull();
+  });
+});

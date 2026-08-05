@@ -116,6 +116,23 @@ export const PromptTextarea = styled.textarea<{ $invalid?: boolean }>`
   &::placeholder {
     color: ${FLOW.textMuted};
   }
+
+  &:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+
+    &:hover {
+      border-color: ${FLOW.border};
+    }
+  }
+`;
+
+export const FieldHint = styled.p`
+  margin: 6px 0 0;
+  font-family: ${FLOW.fontFamily};
+  font-size: 11px;
+  line-height: 1.45;
+  color: ${FLOW.textMuted};
 `;
 
 export const RequiredMark = styled.span`

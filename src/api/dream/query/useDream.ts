@@ -19,6 +19,17 @@ type DreamResponse = {
   dream?: Dream;
 };
 
+export const getDream = async (
+  uuid: string,
+  signal?: AbortSignal,
+): Promise<Dream | undefined> => {
+  const res = await axiosClient.get<ApiResponse<{ dream: Dream }>>(
+    `/v1/dream/${uuid}`,
+    { headers: getRequestHeaders({ contentType: ContentType.json }), signal },
+  );
+  return res.data?.data?.dream;
+};
+
 export const fetchDream = async (uuid?: string) => {
   const data = await queryClient.fetchQuery<ApiResponse<{ dream: Dream }>>({
     queryKey: [DREAM_QUERY_KEY, uuid],

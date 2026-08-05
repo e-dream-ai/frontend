@@ -1,9 +1,14 @@
 import { useEffect, useCallback, useMemo, useRef } from "react";
+import { useQueries, type QueryFunctionContext } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useFlowStore } from "@/stores/flow.store";
-import { useSessionStore } from "@/stores/session.store";
 import { useSocket } from "@/hooks/useSocket";
-import { fetchDream } from "@/api/dream/query/useDream";
+import {
+  DREAM_QUERY_KEY,
+  fetchDream,
+  getDream,
+} from "@/api/dream/query/useDream";
+import type { Dream } from "@/types/dream.types";
 import {
   JOB_PROGRESS_EVENT,
   JOIN_DREAM_ROOM_EVENT,
@@ -14,12 +19,17 @@ import {
   shouldApplyStatus,
   isPendingStatus,
 } from "./mapSocketStatus";
+import { findTransitionIndexByDream } from "../utils/flow-progress.util";
+
+// Safety net only. Joining a dream room replays the dream's real status, so a
+// pending edge recovers on join/reconnect without polling; this covers an event
+// dropped mid-session, which is rare enough not to warrant a tight loop.
+const RECONCILE_POLL_MS = 30_000;
 
 export function useFlowJobProgress() {
-  const { socket, isConnected } = useSocket();
+  const { socket } = useSocket();
 
   const transitions = useFlowStore((s) => s.transitions);
-  const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
 
   const toastedFailuresRef = useRef<Set<string>>(new Set());
   const toastFailure = useCallback((uuid: string, error?: string | null) => {
@@ -46,6 +56,37 @@ export function useFlowJobProgress() {
     return { pendingEntries: entries, pendingUuids: uuids, uuidMap: map };
   }, [transitions]);
 
+  const applyStatus = useCallback(
+    (uuid: string, isUprez: boolean, rawStatus?: string, progress?: number) => {
+      const { transitions: current } = useFlowStore.getState();
+      const idx = findTransitionIndexByDream(current, uuid, isUprez);
+      if (idx === -1) return;
+
+      const currentStatus = isUprez
+        ? current[idx].uprezStatus
+        : current[idx].status;
+      const mappedStatus = mapSocketStatus(rawStatus);
+
+      const currentTracked =
+        currentStatus === "queue" || currentStatus === "processing"
+          ? currentStatus
+          : undefined;
+      const nextStatus = shouldApplyStatus(currentStatus, mappedStatus)
+        ? mappedStatus
+        : currentTracked;
+      if (!nextStatus) return;
+
+      const store = useFlowStore.getState();
+      if (isUprez) {
+        store.updateTransitionUprezStatus(idx, nextStatus, progress);
+      } else {
+        store.updateTransitionStatus(idx, nextStatus, progress);
+      }
+      return nextStatus;
+    },
+    [],
+  );
+
   const handleProgress = useCallback(
     (data: {
       dreamUuid?: string;
@@ -59,29 +100,12 @@ export function useFlowJobProgress() {
       const entry = uuidMap.get(uuid);
       if (!entry) return;
 
-      const transition = useFlowStore.getState().transitions[entry.index];
-      if (!transition) return;
-
-      const current = entry.isUprez
-        ? transition.uprezStatus
-        : transition.status;
-      const mappedStatus = mapSocketStatus(data.status);
-
-      const currentTracked =
-        current === "queue" || current === "processing" ? current : undefined;
-      const nextStatus = shouldApplyStatus(current, mappedStatus)
-        ? mappedStatus
-        : currentTracked;
-
-      if (!nextStatus) return;
-
-      if (entry.isUprez) {
-        useFlowStore
-          .getState()
-          .updateTransitionUprezStatus(entry.index, nextStatus, data.progress);
-      } else {
-        updateTransitionStatus(entry.index, nextStatus, data.progress);
-      }
+      const nextStatus = applyStatus(
+        uuid,
+        entry.isUprez,
+        data.status,
+        data.progress,
+      );
 
       if (nextStatus === "failed") {
         fetchDream(uuid)
@@ -89,7 +113,7 @@ export function useFlowJobProgress() {
           .catch(() => {});
       }
     },
-    [uuidMap, updateTransitionStatus, toastFailure],
+    [uuidMap, applyStatus, toastFailure],
   );
 
   useEffect(() => {
@@ -134,41 +158,20 @@ export function useFlowJobProgress() {
     };
   }, [socket]);
 
-  const pendingEntriesRef = useRef(pendingEntries);
-  pendingEntriesRef.current = pendingEntries;
-
-  const activeSessionId = useSessionStore((s) => s.activeSessionId);
-
-  useEffect(() => {
-    if (pendingUuids.length === 0) return;
-
-    for (const entry of pendingEntriesRef.current) {
-      fetchDream(entry.uuid)
-        .then((dream) => {
-          if (!dream) return;
-
-          const mappedStatus = mapSocketStatus(dream.status);
-          if (!mappedStatus) return;
-
-          if (mappedStatus === "failed") toastFailure(entry.uuid, dream.error);
-
-          const transition = useFlowStore.getState().transitions[entry.index];
-          const current = entry.isUprez
-            ? transition?.uprezStatus
-            : transition?.status;
-          if (!shouldApplyStatus(current, mappedStatus)) return;
-
-          if (entry.isUprez) {
-            useFlowStore
-              .getState()
-              .updateTransitionUprezStatus(entry.index, mappedStatus);
-          } else {
-            useFlowStore
-              .getState()
-              .updateTransitionStatus(entry.index, mappedStatus);
-          }
-        })
-        .catch(() => {});
-    }
-  }, [pendingUuids.length, activeSessionId, isConnected, toastFailure]);
+  useQueries({
+    queries: pendingEntries.map((entry) => ({
+      queryKey: [DREAM_QUERY_KEY, entry.uuid],
+      queryFn: ({ signal }: QueryFunctionContext) =>
+        getDream(entry.uuid, signal),
+      refetchInterval: RECONCILE_POLL_MS,
+      refetchIntervalInBackground: false,
+      onSuccess: (dream: Dream | undefined) => {
+        if (!dream) return;
+        if (mapSocketStatus(dream.status) === "failed") {
+          toastFailure(entry.uuid, dream.error);
+        }
+        applyStatus(entry.uuid, entry.isUprez, dream.status);
+      },
+    })),
+  });
 }
