@@ -163,8 +163,13 @@ export const FactorToggle = styled.button<{ $active: boolean }>`
   cursor: pointer;
   transition: all 0.15s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     color: ${(p) => (p.$active ? FLOW.bg : FLOW.text)};
+  }
+
+  &:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
   }
 `;
 

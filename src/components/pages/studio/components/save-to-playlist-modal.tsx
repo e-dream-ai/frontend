@@ -43,31 +43,43 @@ type UpscaleFactor = (typeof UPSCALE_FACTOR_OPTIONS)[number];
 type InterpolationFactor = (typeof INTERPOLATION_FACTOR_OPTIONS)[number];
 type Factor = UpscaleFactor | InterpolationFactor;
 
+const NO_OP_HINT =
+  "1x on both upscale and interpolation would be a no-op — pick 1x on only one of them.";
+
 function FactorRow<T extends Factor>({
   label,
   options,
   value,
   onChange,
+  disabledFactor,
+  disabledHint,
 }: {
   label: string;
   options: readonly T[];
   value: T;
   onChange: (factor: T) => void;
+  disabledFactor?: T;
+  disabledHint?: string;
 }) {
   return (
     <UprezParamRow>
       <UprezParamLabel>{label}</UprezParamLabel>
       <FactorToggleGroup>
-        {options.map((factor) => (
-          <FactorToggle
-            key={factor}
-            type="button"
-            $active={value === factor}
-            onClick={() => onChange(factor)}
-          >
-            {factor}×
-          </FactorToggle>
-        ))}
+        {options.map((factor) => {
+          const disabled = factor === disabledFactor;
+          return (
+            <FactorToggle
+              key={factor}
+              type="button"
+              $active={value === factor}
+              disabled={disabled}
+              title={disabled ? disabledHint : undefined}
+              onClick={() => onChange(factor)}
+            >
+              {factor}×
+            </FactorToggle>
+          );
+        })}
       </FactorToggleGroup>
     </UprezParamRow>
   );
@@ -291,12 +303,16 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
                     options={UPSCALE_FACTOR_OPTIONS}
                     value={upscaleFactor}
                     onChange={setUpscaleFactor}
+                    disabledFactor={interpolationFactor === 1 ? 1 : undefined}
+                    disabledHint={NO_OP_HINT}
                   />
                   <FactorRow
                     label="Interpolation factor"
                     options={INTERPOLATION_FACTOR_OPTIONS}
                     value={interpolationFactor}
                     onChange={setInterpolationFactor}
+                    disabledFactor={upscaleFactor === 1 ? 1 : undefined}
+                    disabledHint={NO_OP_HINT}
                   />
                 </UprezParams>
               )}
