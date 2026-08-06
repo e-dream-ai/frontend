@@ -138,23 +138,28 @@ export const ImageGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 0.75rem;
+  /* Don't stretch a short thumbnail to its row's tallest neighbour — each card
+     hugs its own image so mixed aspect ratios render true. */
+  align-items: start;
 `;
 
-export const ImageCard = styled.div<{ $selected?: boolean }>`
+export const ImageCard = styled.div<{ $selected?: boolean; $ratio?: string }>`
   position: relative;
   border-radius: 8px;
   overflow: hidden;
   border: 2px solid
     ${(props) => (props.$selected ? props.theme.colorPrimary : "transparent")};
   cursor: pointer;
-  aspect-ratio: 16 / 9;
   background: ${(props) => props.theme.colorBackgroundQuaternary};
+  /* Only image-less placeholders (queue / failed) get a fixed box; cards with a
+     real image take their height from the image, showing its true aspect ratio. */
+  ${(props) => props.$ratio && `aspect-ratio: ${props.$ratio};`}
 `;
 
 export const ImageThumbnail = styled.img`
+  display: block;
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
 `;
 
 export const StarBadge = styled.button<{ $active?: boolean }>`

@@ -13,6 +13,7 @@ import { useCostEstimate } from "@/hooks/useCostEstimate";
 import { useCreditGuard } from "@/hooks/useCreditGuard";
 import {
   IMAGE_COUNT_OPTIONS,
+  aspectRatioFromSize,
   clampSizeToAllowed,
 } from "../constants/size-options";
 import { buildImageAlgoParams } from "../utils/build-image-algo-params";
@@ -334,50 +335,63 @@ export const ImagesTab: React.FC = () => {
           </EmptyStateText>
         ) : (
           <ImageGrid>
-            {images.map((img) => (
-              <ImageCard key={img.uuid} $selected={img.selected}>
-                {img.status === "processed" ? (
-                  img.url.startsWith("http") ? (
+            {images.map((img) => {
+              // A processed image (http url or presigned-by-uuid) or a
+              // processing image with a preview url shows a real thumbnail, so
+              // the card takes its shape from the image. Otherwise it's an
+              // image-less placeholder that needs a box to occupy.
+              const hasImage =
+                img.status === "processed" ||
+                (img.status === "processing" && !!img.url);
+              return (
+                <ImageCard
+                  key={img.uuid}
+                  $selected={img.selected}
+                  $ratio={hasImage ? undefined : aspectRatioFromSize(img.size)}
+                >
+                  {img.status === "processed" ? (
+                    img.url.startsWith("http") ? (
+                      <ImageThumbnail
+                        src={img.url}
+                        alt={img.name}
+                        onClick={() => setExpandedImageUuid(img.uuid)}
+                        style={{ cursor: "zoom-in" }}
+                      />
+                    ) : (
+                      <ImageThumbnail
+                        as={PresignedImage}
+                        dreamUuid={img.uuid}
+                        alt={img.name}
+                        onClick={() => setExpandedImageUuid(img.uuid)}
+                        style={{ cursor: "zoom-in" }}
+                      />
+                    )
+                  ) : img.status === "processing" && img.url ? (
                     <ImageThumbnail
                       src={img.url}
                       alt={img.name}
-                      onClick={() => setExpandedImageUuid(img.uuid)}
-                      style={{ cursor: "zoom-in" }}
+                      style={{ opacity: 0.5 }}
                     />
                   ) : (
-                    <ImageThumbnail
-                      as={PresignedImage}
-                      dreamUuid={img.uuid}
-                      alt={img.name}
-                      onClick={() => setExpandedImageUuid(img.uuid)}
-                      style={{ cursor: "zoom-in" }}
-                    />
-                  )
-                ) : img.status === "processing" && img.url ? (
-                  <ImageThumbnail
-                    src={img.url}
-                    alt={img.name}
-                    style={{ opacity: 0.5 }}
-                  />
-                ) : (
-                  <ImageStatus>
-                    {img.status === "queue" && "Queued..."}
-                    {img.status === "processing" && `${img.progress ?? 0}%`}
-                    {img.status === "failed" && "Failed"}
-                  </ImageStatus>
-                )}
-                {img.seed != null && <SeedLabel>#{img.seed}</SeedLabel>}
-                <StarBadge
-                  $active={img.selected}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    toggleImageSelected(img.uuid);
-                  }}
-                >
-                  {img.selected ? "\u2605" : "\u2606"}
-                </StarBadge>
-              </ImageCard>
-            ))}
+                    <ImageStatus>
+                      {img.status === "queue" && "Queued..."}
+                      {img.status === "processing" && `${img.progress ?? 0}%`}
+                      {img.status === "failed" && "Failed"}
+                    </ImageStatus>
+                  )}
+                  {img.seed != null && <SeedLabel>#{img.seed}</SeedLabel>}
+                  <StarBadge
+                    $active={img.selected}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleImageSelected(img.uuid);
+                    }}
+                  >
+                    {img.selected ? "\u2605" : "\u2606"}
+                  </StarBadge>
+                </ImageCard>
+              );
+            })}
           </ImageGrid>
         )}
         <BottomRow>

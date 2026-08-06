@@ -17,6 +17,14 @@ export const parseSize = (
 
 export const formatSizeLabel = (size: string): string => size.replace("*", "x");
 
+// CSS `aspect-ratio` string ("w / h") derived from a size like "1280*720".
+// Falls back to a square when the size is absent or unparseable — used to give
+// image-less gallery placeholders a sensible box before the real image loads.
+export const aspectRatioFromSize = (size?: string): string => {
+  const parsed = size ? parseSize(size) : null;
+  return parsed ? `${parsed.width} / ${parsed.height}` : "1 / 1";
+};
+
 export const clampSizeToAllowed = (
   currentSize: string,
   sizes: readonly string[],

@@ -1,5 +1,10 @@
 import { describe, it, expect } from "vitest";
-import { clampSizeToAllowed, formatSizeLabel, parseSize } from "./size-options";
+import {
+  aspectRatioFromSize,
+  clampSizeToAllowed,
+  formatSizeLabel,
+  parseSize,
+} from "./size-options";
 
 const QWEN_SIZES = ["1280*720", "1024*1024", "720*1280", "512*512"];
 
@@ -38,6 +43,21 @@ describe("parseSize", () => {
     expect(parseSize("nonsense")).toBeNull();
     expect(parseSize("")).toBeNull();
     expect(parseSize("0*720")).toBeNull();
+  });
+});
+
+describe("aspectRatioFromSize", () => {
+  it("derives a CSS aspect-ratio from a parseable size", () => {
+    expect(aspectRatioFromSize("1280*720")).toBe("1280 / 720");
+    expect(aspectRatioFromSize("720x1280")).toBe("720 / 1280");
+    expect(aspectRatioFromSize("512×512")).toBe("512 / 512");
+  });
+
+  it("falls back to 1 / 1 when the size is missing or unparseable", () => {
+    expect(aspectRatioFromSize(undefined)).toBe("1 / 1");
+    expect(aspectRatioFromSize("")).toBe("1 / 1");
+    expect(aspectRatioFromSize("nonsense")).toBe("1 / 1");
+    expect(aspectRatioFromSize("0*720")).toBe("1 / 1");
   });
 });
 
