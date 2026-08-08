@@ -3,13 +3,13 @@ import { axiosClient } from "@/client/axios.client";
 import { useStudioStore } from "@/stores/studio.store";
 import type { StudioImage } from "@/types/studio.types";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
+import { mediaAspectRatio } from "../utils/media-aspect-ratio";
 import {
   StyledSelect,
   NavButton,
   SecondaryNavButton,
 } from "./images-tab.styled";
 import { PresignedImage } from "@/components/shared/presigned-image";
-import { ImageThumbnail } from "./images-tab.styled";
 import {
   ModalOverlay,
   ModalContent,
@@ -20,6 +20,7 @@ import {
   ModalFooter,
   ImageSelectGrid,
   ImageSelectCard,
+  ImageSelectThumbnail,
 } from "./add-from-playlist-modal.styled";
 
 interface Props {
@@ -32,6 +33,10 @@ interface PlaylistItem {
     name: string;
     thumbnail: string;
     mediaType?: string;
+    /* Present because /v1/playlist/:uuid/items leftJoinAndSelects the whole
+       dream; nullable for dreams processed before the field existed. */
+    processedMediaWidth?: number | null;
+    processedMediaHeight?: number | null;
   };
 }
 
@@ -170,10 +175,14 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
                     onClick={() => !alreadyAdded && toggleSelected(dream.uuid)}
                     style={{ opacity: alreadyAdded ? 0.4 : 1 }}
                   >
-                    <ImageThumbnail
+                    <ImageSelectThumbnail
                       as={PresignedImage}
                       dreamUuid={dream.uuid}
                       alt={dream.name}
+                      $ratio={mediaAspectRatio(
+                        dream.processedMediaWidth,
+                        dream.processedMediaHeight,
+                      )}
                     />
                   </ImageSelectCard>
                 );

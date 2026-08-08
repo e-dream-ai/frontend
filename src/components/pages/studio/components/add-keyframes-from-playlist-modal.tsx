@@ -9,7 +9,6 @@ import {
   StyledSelect,
   NavButton,
   SecondaryNavButton,
-  ImageThumbnail,
 } from "./images-tab.styled";
 import {
   ModalOverlay,
@@ -21,6 +20,7 @@ import {
   ModalFooter,
   ImageSelectGrid,
   ImageSelectCard,
+  ImageSelectThumbnail,
 } from "./add-from-playlist-modal.styled";
 
 interface Props {
@@ -125,7 +125,7 @@ export const AddKeyframesFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
                   $selected={selectedUuids.has(item.keyframe!.uuid)}
                   onClick={() => toggleSelected(item.keyframe!.uuid)}
                 >
-                  <ImageThumbnail
+                  <ImageSelectThumbnail
                     src={item.keyframe!.image}
                     alt={item.keyframe!.name}
                   />

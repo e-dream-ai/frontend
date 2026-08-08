@@ -61,6 +61,9 @@ export const ImageSelectGrid = styled.div`
   grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
   gap: 0.5rem;
   margin-top: 1rem;
+  /* Cards vary in height now that each takes its image's shape, so don't
+     stretch a short one to match the tallest in its row. */
+  align-items: start;
 `;
 
 export const ImageSelectCard = styled.div<{ $selected?: boolean }>`
@@ -70,6 +73,21 @@ export const ImageSelectCard = styled.div<{ $selected?: boolean }>`
   border: 2px solid
     ${(props) => (props.$selected ? props.theme.colorPrimary : "transparent")};
   cursor: pointer;
-  aspect-ratio: 16 / 9;
+  /* No fixed aspect-ratio: the image inside sets the height, so the card is
+     the image's true shape. The floor only keeps a card whose image hasn't
+     resolved from collapsing to nothing. */
+  min-height: 60px;
   background: ${(props) => props.theme.colorBackgroundQuaternary};
+`;
+
+/* Local to this picker on purpose: images-tab's ImageThumbnail fills a fixed
+   box (height: 100%), which would measure zero inside an auto-height card. */
+export const ImageSelectThumbnail = styled.img<{ $ratio?: string }>`
+  width: 100%;
+  height: auto;
+  display: block;
+  /* Reserve the real box before the bitmap arrives when dimensions are known,
+     so the grid doesn't reflow as thumbnails load. Optional: keyframes carry no
+     dimensions, and those fall back to the intrinsic ratio. */
+  ${(p) => p.$ratio && `aspect-ratio: ${p.$ratio};`}
 `;
