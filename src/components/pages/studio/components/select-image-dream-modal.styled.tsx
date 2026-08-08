@@ -122,6 +122,9 @@ export const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 10px;
+  /* Cards vary in height now that each takes its image's shape, so don't
+     stretch a short one to match the tallest in its row. */
+  align-items: start;
 `;
 
 const shimmer = keyframes`
@@ -142,12 +145,17 @@ export const SkeletonCard = styled.div`
   animation: ${shimmer} 1.4s infinite;
 `;
 
-export const Card = styled.div<{ $selected: boolean }>`
+export const Card = styled.div<{ $selected: boolean; $disabled?: boolean }>`
   position: relative;
-  aspect-ratio: 1;
+  /* No fixed aspect-ratio: the image inside sets the height, so the card is
+     the image's true shape. The floor only keeps a card that has no image yet
+     from collapsing to nothing (which would also starve InfiniteScroll of a
+     scrollable height); it sits below every common ratio at this column width. */
+  min-height: 60px;
   border-radius: 10px;
   overflow: hidden;
-  cursor: pointer;
+  cursor: ${(p) => (p.$disabled ? "default" : "pointer")};
+  opacity: ${(p) => (p.$disabled ? 0.4 : 1)};
   border: 2px solid ${(p) => (p.$selected ? FLOW.accent : "transparent")};
   transition:
     border-color 0.15s,
@@ -155,16 +163,22 @@ export const Card = styled.div<{ $selected: boolean }>`
   background: ${FLOW.bgElevated};
 
   &:hover {
-    transform: scale(1.03);
+    transform: ${(p) => (p.$disabled ? "none" : "scale(1.03)")};
     border-color: ${(p) => (p.$selected ? FLOW.accent : FLOW.borderHover)};
   }
 `;
 
-export const CardImg = styled.img`
+export const CardImg = styled.img<{ $ratio?: string }>`
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  /* height follows the intrinsic ratio instead of filling a fixed box, so
+     nothing is cropped. */
+  height: auto;
   display: block;
+  /* When the dream's dimensions are known, reserve the exact box before the
+     bitmap arrives so the grid doesn't reflow on load. Same value the intrinsic
+     ratio resolves to, so the two agree once it does. Sits on the image rather
+     than the card to keep the card's 2px border out of the ratio math. */
+  ${(p) => p.$ratio && `aspect-ratio: ${p.$ratio};`}
 `;
 
 export const CardCheckmark = styled.div`

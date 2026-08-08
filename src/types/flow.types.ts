@@ -4,12 +4,12 @@ export type StudioMode = "flow" | "batch";
 
 export interface FlowKeyframe {
   id: string; // local UUID for drag/drop identity
-  // Backend Keyframe.uuid — only present when the frame was added from a
-  // playlist (playlist items reference a Keyframe entity). Uploaded frames
-  // are saved as image-type Dreams instead and have no Keyframe row.
+  // Backend Keyframe.uuid — assigned by ensureFlowKeyframe when the flow is
+  // saved to a playlist. Frames are not added as Keyframe entities: those rows
+  // carry no image, so they can't be browsed or displayed (see #716).
   keyframeUuid?: string;
-  // Source image Dream UUID. Set for uploaded frames and for playlist frames
-  // whose Keyframe has an associated image Dream.
+  // Source image Dream UUID. Set for uploaded frames and for frames picked
+  // from the image library or a playlist — every path adds image Dreams.
   dreamUuid?: string;
   imageUrl: string; // presigned URL or local objectURL while uploading
   name: string; // display name

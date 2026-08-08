@@ -1,15 +1,16 @@
-import React, { useEffect, useState, useCallback, useMemo } from "react";
-import { axiosClient } from "@/client/axios.client";
+import React, { useState, useMemo, useCallback } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import type { StudioImage } from "@/types/studio.types";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
+import { usePlaylistImageDreams } from "../hooks/usePlaylistImageDreams";
+import { useUuidSelection } from "../hooks/useUuidSelection";
+import { mediaAspectRatio } from "../utils/media-aspect-ratio";
 import {
   StyledSelect,
   NavButton,
   SecondaryNavButton,
 } from "./images-tab.styled";
 import { PresignedImage } from "@/components/shared/presigned-image";
-import { ImageThumbnail } from "./images-tab.styled";
 import {
   ModalOverlay,
   ModalContent,
@@ -20,19 +21,12 @@ import {
   ModalFooter,
   ImageSelectGrid,
   ImageSelectCard,
+  ImageSelectThumbnail,
+  StatusMessage,
 } from "./add-from-playlist-modal.styled";
 
 interface Props {
   onClose: () => void;
-}
-
-interface PlaylistItem {
-  dreamItem?: {
-    uuid: string;
-    name: string;
-    thumbnail: string;
-    mediaType?: string;
-  };
 }
 
 export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
@@ -44,75 +38,38 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
   );
 
   const { playlists } = useUserPlaylists();
+  const { selectedUuids, toggle, clear, replace } = useUuidSelection();
 
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
-  const [items, setItems] = useState<PlaylistItem[]>([]);
-  const [selectedUuids, setSelectedUuids] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!selectedPlaylistId) {
-      setItems([]);
-      return;
-    }
-    let ignore = false;
-    setLoading(true);
-    axiosClient
-      .get(`/v1/playlist/${selectedPlaylistId}/items?take=100&skip=0`)
-      .then(({ data }) => {
-        if (!ignore) {
-          setItems(
-            data.data.items.filter(
-              (item: PlaylistItem) =>
-                item.dreamItem?.thumbnail &&
-                (!item.dreamItem.mediaType ||
-                  item.dreamItem.mediaType === "image"),
-            ),
-          );
-        }
-      })
-      .catch(() => {})
-      .finally(() => {
-        if (!ignore) setLoading(false);
-      });
-    return () => {
-      ignore = true;
-    };
-  }, [selectedPlaylistId]);
+  const {
+    dreams,
+    isLoading,
+    isError,
+    hasMore,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = usePlaylistImageDreams(selectedPlaylistId);
 
   const selectableUuids = useMemo(
     () =>
-      items
-        .map((item) => item.dreamItem?.uuid)
-        .filter((uuid): uuid is string => !!uuid && !existingUuids.has(uuid)),
-    [items, existingUuids],
+      dreams
+        .map((dream) => dream.uuid)
+        .filter((uuid) => !existingUuids.has(uuid)),
+    [dreams, existingUuids],
   );
   const allSelectableSelected =
     selectableUuids.length > 0 &&
     selectableUuids.every((uuid) => selectedUuids.has(uuid));
 
   const toggleSelectAll = useCallback(() => {
-    if (allSelectableSelected) {
-      setSelectedUuids(new Set());
-    } else {
-      setSelectedUuids(new Set(selectableUuids));
-    }
-  }, [allSelectableSelected, selectableUuids]);
-
-  const toggleSelected = useCallback((uuid: string) => {
-    setSelectedUuids((prev) => {
-      const next = new Set(prev);
-      if (next.has(uuid)) next.delete(uuid);
-      else next.add(uuid);
-      return next;
-    });
-  }, []);
+    if (allSelectableSelected) clear();
+    else replace(selectableUuids);
+  }, [allSelectableSelected, selectableUuids, clear, replace]);
 
   const handleAdd = useCallback(() => {
-    items.forEach((item) => {
-      const dream = item.dreamItem;
-      if (!dream || !selectedUuids.has(dream.uuid)) return;
-      if (existingUuids.has(dream.uuid)) return;
+    for (const dream of dreams) {
+      if (!selectedUuids.has(dream.uuid) || existingUuids.has(dream.uuid))
+        continue;
 
       const studioImage: StudioImage = {
         uuid: dream.uuid,
@@ -122,9 +79,15 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
         selected: true,
       };
       addImage(studioImage);
-    });
+    }
     onClose();
-  }, [items, selectedUuids, existingUuids, addImage, onClose]);
+  }, [dreams, selectedUuids, existingUuids, addImage, onClose]);
+
+  const showEmpty =
+    Boolean(selectedPlaylistId) &&
+    !isLoading &&
+    !isError &&
+    dreams.length === 0;
 
   return (
     <ModalOverlay onClick={onClose}>
@@ -139,7 +102,7 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
             value={selectedPlaylistId}
             onChange={(e) => {
               setSelectedPlaylistId(e.target.value);
-              setSelectedUuids(new Set());
+              clear();
             }}
             style={{ width: "100%" }}
           >
@@ -151,34 +114,52 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
             ))}
           </StyledSelect>
 
-          {loading && (
-            <p style={{ marginTop: "1rem", color: "#888" }}>Loading...</p>
+          {isLoading && <StatusMessage>Loading...</StatusMessage>}
+
+          {isError && (
+            <StatusMessage>Couldn&apos;t load this playlist.</StatusMessage>
           )}
 
-          {items.length > 0 && (
-            <ImageSelectGrid>
-              {items.map((item) => {
-                const dream = item.dreamItem;
-                if (!dream) return null;
-                const isSelected = selectedUuids.has(dream.uuid);
-                const alreadyAdded = existingUuids.has(dream.uuid);
+          {showEmpty && (
+            <StatusMessage>No images in this playlist.</StatusMessage>
+          )}
 
-                return (
-                  <ImageSelectCard
-                    key={dream.uuid}
-                    $selected={isSelected}
-                    onClick={() => !alreadyAdded && toggleSelected(dream.uuid)}
-                    style={{ opacity: alreadyAdded ? 0.4 : 1 }}
-                  >
-                    <ImageThumbnail
-                      as={PresignedImage}
-                      dreamUuid={dream.uuid}
-                      alt={dream.name}
-                    />
-                  </ImageSelectCard>
-                );
-              })}
-            </ImageSelectGrid>
+          {dreams.length > 0 && (
+            <>
+              <ImageSelectGrid>
+                {dreams.map((dream) => {
+                  const alreadyAdded = existingUuids.has(dream.uuid);
+                  return (
+                    <ImageSelectCard
+                      key={dream.uuid}
+                      $selected={selectedUuids.has(dream.uuid)}
+                      $disabled={alreadyAdded}
+                      onClick={() => !alreadyAdded && toggle(dream.uuid)}
+                      title={alreadyAdded ? "Already added" : dream.name}
+                    >
+                      <ImageSelectThumbnail
+                        as={PresignedImage}
+                        dreamUuid={dream.uuid}
+                        alt={dream.name}
+                        $ratio={mediaAspectRatio(
+                          dream.processedMediaWidth,
+                          dream.processedMediaHeight,
+                        )}
+                      />
+                    </ImageSelectCard>
+                  );
+                })}
+              </ImageSelectGrid>
+              {hasMore && (
+                <SecondaryNavButton
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  style={{ marginTop: "1rem" }}
+                >
+                  {isFetchingNextPage ? "Loading..." : "Load more"}
+                </SecondaryNavButton>
+              )}
+            </>
           )}
         </ModalBody>
 

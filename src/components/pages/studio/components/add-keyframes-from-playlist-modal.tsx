@@ -1,15 +1,15 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useCallback, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
-import { axiosClient } from "@/client/axios.client";
-import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { useFlowStore } from "@/stores/flow.store";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
-import type { PlaylistKeyframe } from "@/types/playlist.types";
+import { usePlaylistImageDreams } from "../hooks/usePlaylistImageDreams";
+import { useExistingDreamUuids } from "../hooks/useExistingDreamUuids";
+import { useUuidSelection } from "../hooks/useUuidSelection";
+import { mediaAspectRatio } from "../utils/media-aspect-ratio";
 import {
   StyledSelect,
   NavButton,
   SecondaryNavButton,
-  ImageThumbnail,
 } from "./images-tab.styled";
 import {
   ModalOverlay,
@@ -21,6 +21,8 @@ import {
   ModalFooter,
   ImageSelectGrid,
   ImageSelectCard,
+  ImageSelectThumbnail,
+  StatusMessage,
 } from "./add-from-playlist-modal.styled";
 
 interface Props {
@@ -29,69 +31,41 @@ interface Props {
 
 export const AddKeyframesFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
   const addKeyframe = useFlowStore((s) => s.addKeyframe);
-  const existingKeyframes = useFlowStore((s) => s.keyframes);
   const { playlists } = useUserPlaylists();
+  const existingDreamUuids = useExistingDreamUuids();
+  const { selectedUuids, toggle, clear } = useUuidSelection();
+
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
-  const [playlistKeyframes, setPlaylistKeyframes] = useState<
-    PlaylistKeyframe[]
-  >([]);
-  const [selectedUuids, setSelectedUuids] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    if (!selectedPlaylistId) {
-      setPlaylistKeyframes([]);
-      return;
-    }
-    setLoading(true);
-    axiosClient
-      .get(`/v1/playlist/${selectedPlaylistId}/keyframes`, {
-        headers: getRequestHeaders({ contentType: ContentType.json }),
-      })
-      .then((res) => {
-        const items: PlaylistKeyframe[] = res.data.data?.keyframes ?? [];
-        setPlaylistKeyframes(items);
-      })
-      .catch(() => setPlaylistKeyframes([]))
-      .finally(() => setLoading(false));
-  }, [selectedPlaylistId]);
-
-  const toggleSelected = useCallback((uuid: string) => {
-    setSelectedUuids((prev) => {
-      const next = new Set(prev);
-      if (next.has(uuid)) next.delete(uuid);
-      else next.add(uuid);
-      return next;
-    });
-  }, []);
+  const {
+    dreams,
+    isLoading,
+    isError,
+    hasMore,
+    fetchNextPage,
+    isFetchingNextPage,
+  } = usePlaylistImageDreams(selectedPlaylistId);
 
   const handleAdd = useCallback(() => {
-    const existingUuids = new Set(
-      existingKeyframes.map((kf) => kf.keyframeUuid),
-    );
-    for (const item of playlistKeyframes) {
-      const kf = item.keyframe;
-      if (!kf) continue;
-      if (selectedUuids.has(kf.uuid) && !existingUuids.has(kf.uuid)) {
-        addKeyframe({
-          id: uuidv4(),
-          keyframeUuid: kf.uuid,
-          imageUrl: kf.image,
-          name: kf.name,
-          dreamUuid: kf.dreams?.[0]?.uuid,
-        });
-      }
+    for (const dream of dreams) {
+      if (!selectedUuids.has(dream.uuid) || existingDreamUuids.has(dream.uuid))
+        continue;
+      addKeyframe({
+        id: uuidv4(),
+        dreamUuid: dream.uuid,
+        // Prefer the full-resolution source over the thumbnail, matching
+        // "+ My Images" — the keyframe feeds generation, not just display.
+        imageUrl: dream.video || dream.original_video || dream.thumbnail,
+        name: dream.name,
+      });
     }
     onClose();
-  }, [
-    playlistKeyframes,
-    selectedUuids,
-    existingKeyframes,
-    addKeyframe,
-    onClose,
-  ]);
+  }, [dreams, selectedUuids, existingDreamUuids, addKeyframe, onClose]);
 
-  const validItems = playlistKeyframes.filter((pk) => pk.keyframe);
+  const showEmpty =
+    Boolean(selectedPlaylistId) &&
+    !isLoading &&
+    !isError &&
+    dreams.length === 0;
 
   return (
     <ModalOverlay onClick={onClose}>
@@ -103,7 +77,10 @@ export const AddKeyframesFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
         <ModalBody>
           <StyledSelect
             value={selectedPlaylistId}
-            onChange={(e) => setSelectedPlaylistId(e.target.value)}
+            onChange={(e) => {
+              setSelectedPlaylistId(e.target.value);
+              clear();
+            }}
           >
             <option value="">Select a playlist...</option>
             {playlists.map((pl) => (
@@ -113,25 +90,51 @@ export const AddKeyframesFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
             ))}
           </StyledSelect>
 
-          {loading && (
-            <p style={{ color: "#999", marginTop: "1rem" }}>Loading...</p>
+          {isLoading && <StatusMessage>Loading...</StatusMessage>}
+
+          {isError && (
+            <StatusMessage>Couldn&apos;t load this playlist.</StatusMessage>
           )}
 
-          {validItems.length > 0 && (
-            <ImageSelectGrid>
-              {validItems.map((item) => (
-                <ImageSelectCard
-                  key={item.keyframe!.uuid}
-                  $selected={selectedUuids.has(item.keyframe!.uuid)}
-                  onClick={() => toggleSelected(item.keyframe!.uuid)}
+          {showEmpty && (
+            <StatusMessage>No images in this playlist.</StatusMessage>
+          )}
+
+          {dreams.length > 0 && (
+            <>
+              <ImageSelectGrid>
+                {dreams.map((dream) => {
+                  const alreadyAdded = existingDreamUuids.has(dream.uuid);
+                  return (
+                    <ImageSelectCard
+                      key={dream.uuid}
+                      $selected={selectedUuids.has(dream.uuid)}
+                      $disabled={alreadyAdded}
+                      onClick={() => !alreadyAdded && toggle(dream.uuid)}
+                      title={alreadyAdded ? "Already in strip" : dream.name}
+                    >
+                      <ImageSelectThumbnail
+                        src={dream.thumbnail}
+                        alt={dream.name}
+                        $ratio={mediaAspectRatio(
+                          dream.processedMediaWidth,
+                          dream.processedMediaHeight,
+                        )}
+                      />
+                    </ImageSelectCard>
+                  );
+                })}
+              </ImageSelectGrid>
+              {hasMore && (
+                <SecondaryNavButton
+                  onClick={() => fetchNextPage()}
+                  disabled={isFetchingNextPage}
+                  style={{ marginTop: "1rem" }}
                 >
-                  <ImageThumbnail
-                    src={item.keyframe!.image}
-                    alt={item.keyframe!.name}
-                  />
-                </ImageSelectCard>
-              ))}
-            </ImageSelectGrid>
+                  {isFetchingNextPage ? "Loading..." : "Load more"}
+                </SecondaryNavButton>
+              )}
+            </>
           )}
         </ModalBody>
         <ModalFooter>
