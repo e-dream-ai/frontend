@@ -66,13 +66,17 @@ export const ImageSelectGrid = styled.div`
   align-items: start;
 `;
 
-export const ImageSelectCard = styled.div<{ $selected?: boolean }>`
+export const ImageSelectCard = styled.div<{
+  $selected?: boolean;
+  $disabled?: boolean;
+}>`
   position: relative;
   border-radius: 6px;
   overflow: hidden;
   border: 2px solid
     ${(props) => (props.$selected ? props.theme.colorPrimary : "transparent")};
-  cursor: pointer;
+  cursor: ${(props) => (props.$disabled ? "default" : "pointer")};
+  opacity: ${(props) => (props.$disabled ? 0.4 : 1)};
   /* No fixed aspect-ratio: the image inside sets the height, so the card is
      the image's true shape. The floor only keeps a card whose image hasn't
      resolved from collapsing to nothing. */
@@ -90,4 +94,9 @@ export const ImageSelectThumbnail = styled.img<{ $ratio?: string }>`
      so the grid doesn't reflow as thumbnails load. Optional: keyframes carry no
      dimensions, and those fall back to the intrinsic ratio. */
   ${(p) => p.$ratio && `aspect-ratio: ${p.$ratio};`}
+`;
+
+export const StatusMessage = styled.p`
+  margin-top: 1rem;
+  color: ${(props) => props.theme.textBodyColor};
 `;

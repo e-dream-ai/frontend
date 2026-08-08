@@ -145,7 +145,7 @@ export const SkeletonCard = styled.div`
   animation: ${shimmer} 1.4s infinite;
 `;
 
-export const Card = styled.div<{ $selected: boolean }>`
+export const Card = styled.div<{ $selected: boolean; $disabled?: boolean }>`
   position: relative;
   /* No fixed aspect-ratio: the image inside sets the height, so the card is
      the image's true shape. The floor only keeps a card that has no image yet
@@ -154,7 +154,8 @@ export const Card = styled.div<{ $selected: boolean }>`
   min-height: 60px;
   border-radius: 10px;
   overflow: hidden;
-  cursor: pointer;
+  cursor: ${(p) => (p.$disabled ? "default" : "pointer")};
+  opacity: ${(p) => (p.$disabled ? 0.4 : 1)};
   border: 2px solid ${(p) => (p.$selected ? FLOW.accent : "transparent")};
   transition:
     border-color 0.15s,
@@ -162,7 +163,7 @@ export const Card = styled.div<{ $selected: boolean }>`
   background: ${FLOW.bgElevated};
 
   &:hover {
-    transform: scale(1.03);
+    transform: ${(p) => (p.$disabled ? "none" : "scale(1.03)")};
     border-color: ${(p) => (p.$selected ? FLOW.accent : FLOW.borderHover)};
   }
 `;

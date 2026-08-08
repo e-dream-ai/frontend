@@ -4,6 +4,8 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { useMyImageDreams } from "@/api/dream/query/useMyImageDreams";
 import { useFlowStore } from "@/stores/flow.store";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useExistingDreamUuids } from "../hooks/useExistingDreamUuids";
+import { useUuidSelection } from "../hooks/useUuidSelection";
 import { mediaAspectRatio } from "../utils/media-aspect-ratio";
 import {
   Overlay,
@@ -37,16 +39,7 @@ interface Props {
 
 export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
   const addKeyframe = useFlowStore((s) => s.addKeyframe);
-  const keyframes = useFlowStore((s) => s.keyframes);
-  const existingDreamUuids = useMemo(
-    () =>
-      new Set(
-        keyframes
-          .map((kf) => kf.dreamUuid)
-          .filter((v): v is string => Boolean(v)),
-      ),
-    [keyframes],
-  );
+  const existingDreamUuids = useExistingDreamUuids();
 
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 350);
@@ -60,16 +53,7 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
     [data],
   );
 
-  const [selectedUuids, setSelectedUuids] = useState<Set<string>>(new Set());
-
-  const toggle = useCallback((uuid: string) => {
-    setSelectedUuids((prev) => {
-      const next = new Set(prev);
-      if (next.has(uuid)) next.delete(uuid);
-      else next.add(uuid);
-      return next;
-    });
-  }, []);
+  const { selectedUuids, toggle } = useUuidSelection();
 
   const handleAdd = useCallback(() => {
     for (const dream of dreams) {
@@ -148,12 +132,8 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
                     <Card
                       key={dream.uuid}
                       $selected={isSelected}
+                      $disabled={alreadyAdded}
                       onClick={() => !alreadyAdded && toggle(dream.uuid)}
-                      style={
-                        alreadyAdded
-                          ? { opacity: 0.4, cursor: "default" }
-                          : undefined
-                      }
                       title={alreadyAdded ? "Already in strip" : dream.name}
                     >
                       {imageUrl && (
