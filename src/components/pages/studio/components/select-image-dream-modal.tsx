@@ -4,6 +4,7 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { useMyImageDreams } from "@/api/dream/query/useMyImageDreams";
 import { useFlowStore } from "@/stores/flow.store";
 import { useDebounce } from "@/hooks/useDebounce";
+import { mediaAspectRatio } from "../utils/media-aspect-ratio";
 import {
   Overlay,
   Panel,
@@ -155,7 +156,16 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
                       }
                       title={alreadyAdded ? "Already in strip" : dream.name}
                     >
-                      {imageUrl && <CardImg src={imageUrl} alt={dream.name} />}
+                      {imageUrl && (
+                        <CardImg
+                          src={imageUrl}
+                          alt={dream.name}
+                          $ratio={mediaAspectRatio(
+                            dream.processedMediaWidth,
+                            dream.processedMediaHeight,
+                          )}
+                        />
+                      )}
                       {isSelected && <CardCheckmark>✓</CardCheckmark>}
                       <CardName>{dream.name}</CardName>
                     </Card>
