@@ -1,10 +1,9 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { axiosClient } from "@/client/axios.client";
-import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { useFlowStore } from "@/stores/flow.store";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
-import type { PlaylistKeyframe } from "@/types/playlist.types";
+import { mediaAspectRatio } from "../utils/media-aspect-ratio";
 import {
   StyledSelect,
   NavButton,
@@ -27,33 +26,80 @@ interface Props {
   onClose: () => void;
 }
 
+/**
+ * The dream fields this picker needs from /v1/playlist/:uuid/items, which
+ * leftJoinAndSelects the whole dream and signs its media URLs.
+ */
+interface PlaylistDream {
+  uuid: string;
+  name: string;
+  thumbnail?: string | null;
+  video?: string | null;
+  original_video?: string | null;
+  mediaType?: string;
+  processedMediaWidth?: number | null;
+  processedMediaHeight?: number | null;
+}
+
+interface PlaylistItem {
+  dreamItem?: PlaylistDream;
+}
+
+/**
+ * Playlists mix video and still dreams; a flow keyframe is a still, so this
+ * picker shows the same subset "+ My Images" does. Older dreams predate
+ * mediaType and are images.
+ */
+const isImageDream = (dream?: PlaylistDream): dream is PlaylistDream =>
+  !!dream?.thumbnail && (!dream.mediaType || dream.mediaType === "image");
+
 export const AddKeyframesFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
   const addKeyframe = useFlowStore((s) => s.addKeyframe);
   const existingKeyframes = useFlowStore((s) => s.keyframes);
   const { playlists } = useUserPlaylists();
   const [selectedPlaylistId, setSelectedPlaylistId] = useState("");
-  const [playlistKeyframes, setPlaylistKeyframes] = useState<
-    PlaylistKeyframe[]
-  >([]);
+  const [dreams, setDreams] = useState<PlaylistDream[]>([]);
   const [selectedUuids, setSelectedUuids] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(false);
 
+  const existingDreamUuids = useMemo(
+    () =>
+      new Set(
+        existingKeyframes
+          .map((kf) => kf.dreamUuid)
+          .filter((v): v is string => Boolean(v)),
+      ),
+    [existingKeyframes],
+  );
+
   useEffect(() => {
     if (!selectedPlaylistId) {
-      setPlaylistKeyframes([]);
+      setDreams([]);
       return;
     }
+    let ignore = false;
     setLoading(true);
+    setSelectedUuids(new Set());
     axiosClient
-      .get(`/v1/playlist/${selectedPlaylistId}/keyframes`, {
-        headers: getRequestHeaders({ contentType: ContentType.json }),
+      .get(`/v1/playlist/${selectedPlaylistId}/items?take=100&skip=0`)
+      .then(({ data }) => {
+        if (ignore) return;
+        const items: PlaylistItem[] = data?.data?.items ?? [];
+        setDreams(
+          items
+            .map((item) => item.dreamItem)
+            .filter((dream): dream is PlaylistDream => isImageDream(dream)),
+        );
       })
-      .then((res) => {
-        const items: PlaylistKeyframe[] = res.data.data?.keyframes ?? [];
-        setPlaylistKeyframes(items);
+      .catch(() => {
+        if (!ignore) setDreams([]);
       })
-      .catch(() => setPlaylistKeyframes([]))
-      .finally(() => setLoading(false));
+      .finally(() => {
+        if (!ignore) setLoading(false);
+      });
+    return () => {
+      ignore = true;
+    };
   }, [selectedPlaylistId]);
 
   const toggleSelected = useCallback((uuid: string) => {
@@ -66,32 +112,22 @@ export const AddKeyframesFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
   }, []);
 
   const handleAdd = useCallback(() => {
-    const existingUuids = new Set(
-      existingKeyframes.map((kf) => kf.keyframeUuid),
-    );
-    for (const item of playlistKeyframes) {
-      const kf = item.keyframe;
-      if (!kf) continue;
-      if (selectedUuids.has(kf.uuid) && !existingUuids.has(kf.uuid)) {
-        addKeyframe({
-          id: uuidv4(),
-          keyframeUuid: kf.uuid,
-          imageUrl: kf.image,
-          name: kf.name,
-          dreamUuid: kf.dreams?.[0]?.uuid,
-        });
-      }
+    for (const dream of dreams) {
+      if (!selectedUuids.has(dream.uuid) || existingDreamUuids.has(dream.uuid))
+        continue;
+      addKeyframe({
+        id: uuidv4(),
+        dreamUuid: dream.uuid,
+        // Prefer the full-resolution source over the thumbnail, matching
+        // "+ My Images" — the keyframe feeds generation, not just display.
+        imageUrl: dream.video || dream.original_video || dream.thumbnail || "",
+        name: dream.name,
+      });
     }
     onClose();
-  }, [
-    playlistKeyframes,
-    selectedUuids,
-    existingKeyframes,
-    addKeyframe,
-    onClose,
-  ]);
+  }, [dreams, selectedUuids, existingDreamUuids, addKeyframe, onClose]);
 
-  const validItems = playlistKeyframes.filter((pk) => pk.keyframe);
+  const showEmpty = !loading && selectedPlaylistId && dreams.length === 0;
 
   return (
     <ModalOverlay onClick={onClose}>
@@ -117,20 +153,39 @@ export const AddKeyframesFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
             <p style={{ color: "#999", marginTop: "1rem" }}>Loading...</p>
           )}
 
-          {validItems.length > 0 && (
+          {showEmpty && (
+            <p style={{ color: "#999", marginTop: "1rem" }}>
+              No images in this playlist.
+            </p>
+          )}
+
+          {dreams.length > 0 && (
             <ImageSelectGrid>
-              {validItems.map((item) => (
-                <ImageSelectCard
-                  key={item.keyframe!.uuid}
-                  $selected={selectedUuids.has(item.keyframe!.uuid)}
-                  onClick={() => toggleSelected(item.keyframe!.uuid)}
-                >
-                  <ImageSelectThumbnail
-                    src={item.keyframe!.image}
-                    alt={item.keyframe!.name}
-                  />
-                </ImageSelectCard>
-              ))}
+              {dreams.map((dream) => {
+                const alreadyAdded = existingDreamUuids.has(dream.uuid);
+                return (
+                  <ImageSelectCard
+                    key={dream.uuid}
+                    $selected={selectedUuids.has(dream.uuid)}
+                    onClick={() => !alreadyAdded && toggleSelected(dream.uuid)}
+                    style={
+                      alreadyAdded
+                        ? { opacity: 0.4, cursor: "default" }
+                        : undefined
+                    }
+                    title={alreadyAdded ? "Already in strip" : dream.name}
+                  >
+                    <ImageSelectThumbnail
+                      src={dream.thumbnail ?? undefined}
+                      alt={dream.name}
+                      $ratio={mediaAspectRatio(
+                        dream.processedMediaWidth,
+                        dream.processedMediaHeight,
+                      )}
+                    />
+                  </ImageSelectCard>
+                );
+              })}
             </ImageSelectGrid>
           )}
         </ModalBody>
