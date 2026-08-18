@@ -7,6 +7,10 @@ import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
 } from "../constants/duration-options";
+import {
+  guidanceForModel,
+  resolveGuidanceConstraint,
+} from "../constants/guidance-options";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 
@@ -82,6 +86,13 @@ export const useBatchSubmit = () => {
         videoGenParams.duration,
         allowedDurations,
       );
+      const guidance = guidanceForModel(
+        videoGenParams.guidance,
+        resolveGuidanceConstraint(
+          videoGenParams.model,
+          modelConstraints.get(videoGenParams.model),
+        ),
+      );
       let jobsAdded = 0;
 
       for (let i = 0; i < combos.length; i += BATCH_SIZE) {
@@ -98,7 +109,7 @@ export const useBatchSubmit = () => {
               imageSize: image.size,
               duration,
               numInferenceSteps: videoGenParams.numInferenceSteps,
-              guidance: videoGenParams.guidance,
+              guidance,
             });
 
             const response = await createDream.mutateAsync({

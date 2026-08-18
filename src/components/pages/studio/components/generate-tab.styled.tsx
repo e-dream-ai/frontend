@@ -89,3 +89,9 @@ export const HintText = styled.p`
   color: #c9a84c;
   margin-bottom: 0.75rem;
 `;
+
+export const ActionGroup = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+`;

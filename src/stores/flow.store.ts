@@ -110,7 +110,7 @@ const PHASE_1_DEFAULTS = {
   globalDuration: 5,
   globalModel: "kling-25-i2v" as VideoModel,
   globalNumInferenceSteps: 30,
-  globalGuidance: 5.0,
+  globalGuidance: 0.5,
   globalLora: undefined as LoRAConfig[] | undefined,
   transitions: [] as FlowTransition[],
   selectedTransitionIndex: null as number | null,
@@ -410,7 +410,7 @@ export const useFlowStore = create<FlowStoreState>()(
     }),
     {
       name: "flow-session",
-      version: 4,
+      version: 5,
       migrate: (persisted: unknown, version: number) => {
         const state = persisted as Record<string, unknown>;
         if (version < 2) {
@@ -432,6 +432,19 @@ export const useFlowStore = create<FlowStoreState>()(
             ...state,
             globalModel: "kling-25-i2v",
             globalDuration: 5,
+          };
+        }
+        if (version < 5) {
+          return {
+            ...state,
+            globalGuidance: PHASE_1_DEFAULTS.globalGuidance,
+            transitions: (
+              (state.transitions as FlowTransition[] | undefined) ?? []
+            ).map((transition) => {
+              const next = { ...transition };
+              delete next.guidanceOverride;
+              return next;
+            }),
           };
         }
         return state;

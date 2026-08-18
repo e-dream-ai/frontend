@@ -1,25 +1,24 @@
-import { describe, it, expect, beforeEach, beforeAll } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 
-// Polyfill localStorage for Node environment (must run before store import)
-beforeAll(() => {
-  const store: Record<string, string> = {};
-  globalThis.localStorage = {
-    getItem: (key: string) => store[key] ?? null,
-    setItem: (key: string, value: string) => {
-      store[key] = value;
-    },
-    removeItem: (key: string) => {
-      delete store[key];
-    },
-    clear: () => {
-      Object.keys(store).forEach((k) => delete store[k]);
-    },
-    get length() {
-      return Object.keys(store).length;
-    },
-    key: (index: number) => Object.keys(store)[index] ?? null,
-  };
-});
+const localStorageBacking: Record<string, string> = {};
+globalThis.localStorage = {
+  getItem: (key: string) => localStorageBacking[key] ?? null,
+  setItem: (key: string, value: string) => {
+    localStorageBacking[key] = value;
+  },
+  removeItem: (key: string) => {
+    delete localStorageBacking[key];
+  },
+  clear: () => {
+    Object.keys(localStorageBacking).forEach(
+      (k) => delete localStorageBacking[k],
+    );
+  },
+  get length() {
+    return Object.keys(localStorageBacking).length;
+  },
+  key: (index: number) => Object.keys(localStorageBacking)[index] ?? null,
+};
 
 // Dynamic import after localStorage is set up (persist middleware needs it)
 const { useFlowStore } = await import("./flow.store");
@@ -357,6 +356,27 @@ describe("Phase 1: transitions", () => {
     });
   });
 
+  describe("migration v4 → v5", () => {
+    it("resets Wan-scaled guidance and drops per-transition overrides", () => {
+      const v4State = {
+        globalGuidance: 5.0,
+        transitions: [
+          { fromKeyframeId: "a", toKeyframeId: "b", guidanceOverride: 6.5 },
+          { fromKeyframeId: "b", toKeyframeId: "c", durationOverride: 10 },
+        ],
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useFlowStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v4State, 4) as Record<string, unknown>;
+
+      expect(migrated.globalGuidance).toBe(0.5);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const transitions = migrated.transitions as any[];
+      expect(transitions[0]).not.toHaveProperty("guidanceOverride");
+      expect(transitions[1].durationOverride).toBe(10);
+    });
+  });
+
   describe("global settings", () => {
     it("has correct defaults", () => {
       const s = useFlowStore.getState();
@@ -366,7 +386,7 @@ describe("Phase 1: transitions", () => {
       expect(s.globalDuration).toBe(5);
       expect(s.globalModel).toBe("kling-25-i2v");
       expect(s.globalNumInferenceSteps).toBe(30);
-      expect(s.globalGuidance).toBe(5.0);
+      expect(s.globalGuidance).toBe(0.5);
       expect(s.selectedTransitionIndex).toBeNull();
       expect(s.settingsExpanded).toBe(false);
     });

@@ -1,5 +1,6 @@
 import type { StudioAction, VideoModel } from "@/types/studio.types";
 import { hasActionLoras } from "../constants/duration-options";
+import { GUIDANCE_PARAM } from "../constants/guidance-options";
 
 interface BuildVideoAlgoParamsInput {
   model: VideoModel;
@@ -12,6 +13,15 @@ interface BuildVideoAlgoParamsInput {
   guidance: number;
   negativePrompt?: string;
 }
+
+const setGuidance = (
+  params: Record<string, unknown>,
+  model: VideoModel,
+  guidance: number,
+): void => {
+  if (!Number.isFinite(guidance)) return;
+  params[GUIDANCE_PARAM[model]] = guidance;
+};
 
 export const buildVideoAlgoParams = ({
   model,
@@ -40,11 +50,13 @@ export const buildVideoAlgoParams = ({
     if (endImageUuid) {
       params.end_source_uuid = endImageUuid;
     }
+    setGuidance(params, model, guidance);
     return params;
   }
 
   if (model === "ltx-i2v") {
-    // Worker handles steps/guidance internally (8+3 steps, cfg 1.0).
+    // Worker fixes the step schedule internally (8+3 steps, LCM). Guidance is
+    // ours to set — the worker defaults it to 1.0 when absent.
     // Only high_noise_loras[0] is used (single LoRA via Power Lora Loader).
     const params: Record<string, unknown> = {
       infinidream_algorithm: "ltx-i2v",
@@ -61,6 +73,7 @@ export const buildVideoAlgoParams = ({
     if (hasLoras && action.highNoiseLoras?.length) {
       params.high_noise_loras = action.highNoiseLoras;
     }
+    setGuidance(params, model, guidance);
     return params;
   }
 
@@ -71,7 +84,6 @@ export const buildVideoAlgoParams = ({
       image: imageUuid,
       duration,
       num_inference_steps: numInferenceSteps,
-      guidance,
       seed: -1,
       high_noise_loras: action.highNoiseLoras ?? [],
       low_noise_loras: action.lowNoiseLoras ?? [],
@@ -79,6 +91,7 @@ export const buildVideoAlgoParams = ({
     if (trimmedNegative) {
       params.negative_prompt = trimmedNegative;
     }
+    setGuidance(params, model, guidance);
     return params;
   }
 
@@ -89,10 +102,10 @@ export const buildVideoAlgoParams = ({
     size: imageSize || "1280*720",
     duration,
     num_inference_steps: numInferenceSteps,
-    guidance,
   };
   if (trimmedNegative) {
     params.negative_prompt = trimmedNegative;
   }
+  setGuidance(params, model, guidance);
   return params;
 };

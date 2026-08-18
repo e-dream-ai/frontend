@@ -206,26 +206,34 @@ export const ExpandedSection = styled.div`
   border-top: 1px solid ${FLOW.border};
 `;
 
-export const AdvancedToggle = styled.button`
-  background: none;
-  border: none;
-  color: ${FLOW.textMuted};
-  font-family: ${FLOW.fontFamily};
-  font-size: 12px;
-  cursor: pointer;
-  padding: 0;
-  text-align: left;
-
-  &:hover {
-    color: ${FLOW.textDim};
-  }
+export const ParamFields = styled.div`
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  padding: 4px 0 0;
 `;
 
-export const AdvancedFields = styled.div`
+export const ParamGroup = styled.div`
   display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 8px 0;
+  flex-direction: column;
+  gap: 4px;
+`;
+
+export const ParamTitle = styled.span`
+  font-family: ${FLOW.fontFamily};
+  font-size: 11px;
+  line-height: 1.3;
+  color: ${FLOW.textDim};
+  margin-bottom: 8px;
+`;
+
+export const ParamName = styled.label`
+  font-family: ${FLOW.fontFamilyMono};
+  font-size: 10px;
+  line-height: 18px;
+  letter-spacing: 0.02em;
+  color: ${FLOW.textMuted};
 `;
 
 export const NumberInput = styled.input`
