@@ -56,6 +56,7 @@ export interface VideoGenParams {
   duration: number;
   numInferenceSteps: number;
   guidance: number;
+  seed: number;
 }
 
 export type ImageModel = "qwen-image" | "z-image-turbo" | "flux-schnell";

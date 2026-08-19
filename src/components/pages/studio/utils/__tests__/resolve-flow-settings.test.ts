@@ -31,6 +31,7 @@ describe("resolveEffectiveSettings", () => {
     globalModel: "wan-i2v" as const,
     globalNumInferenceSteps: 30,
     globalGuidance: 5.0,
+    globalSeed: -1,
     globalLora: undefined,
   };
 
@@ -48,6 +49,7 @@ describe("resolveEffectiveSettings", () => {
     expect(settings.model).toBe("wan-i2v");
     expect(settings.numInferenceSteps).toBe(30);
     expect(settings.guidance).toBe(5.0);
+    expect(settings.seed).toBe(-1);
   });
 
   it("overrides with per-transition values", () => {
@@ -60,6 +62,7 @@ describe("resolveEffectiveSettings", () => {
       negativePromptOverride: "override negative",
       durationOverride: 10,
       modelOverride: "ltx-i2v",
+      seedOverride: 42,
     };
     const settings = resolveEffectiveSettings(transition, globalSettings);
     expect(settings.presetId).toBe("Organic");
@@ -69,6 +72,7 @@ describe("resolveEffectiveSettings", () => {
     expect(settings.model).toBe("ltx-i2v");
     expect(settings.numInferenceSteps).toBe(30);
     expect(settings.guidance).toBe(5.0);
+    expect(settings.seed).toBe(42);
   });
 
   it("builds a bare action when no preset is selected", () => {

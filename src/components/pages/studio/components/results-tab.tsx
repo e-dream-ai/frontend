@@ -281,6 +281,7 @@ export const ResultsTab: React.FC = () => {
               duration,
               numInferenceSteps: videoGenParams.numInferenceSteps,
               guidance: videoGenParams.guidance,
+              seed: videoGenParams.seed,
             });
 
             const response = await createDream.mutateAsync({

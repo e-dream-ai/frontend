@@ -45,6 +45,7 @@ export interface FlowTransition {
   modelOverride?: VideoModel;
   numInferenceStepsOverride?: number;
   guidanceOverride?: number;
+  seedOverride?: number;
   loraOverride?: LoRAConfig[];
 
   // Generation state

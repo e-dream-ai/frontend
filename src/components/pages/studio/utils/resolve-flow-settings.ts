@@ -31,6 +31,7 @@ interface GlobalSettings {
   globalModel: VideoModel;
   globalNumInferenceSteps: number;
   globalGuidance: number;
+  globalSeed: number;
   globalLora: LoRAConfig[] | undefined;
 }
 
@@ -42,6 +43,7 @@ interface EffectiveSettings {
   model: VideoModel;
   numInferenceSteps: number;
   guidance: number;
+  seed: number;
   action: Pick<StudioAction, "prompt" | "highNoiseLoras" | "lowNoiseLoras">;
 }
 
@@ -62,6 +64,7 @@ export function resolveEffectiveSettings(
   const numInferenceSteps =
     transition.numInferenceStepsOverride ?? global.globalNumInferenceSteps;
   const guidance = transition.guidanceOverride ?? global.globalGuidance;
+  const seed = transition.seedOverride ?? global.globalSeed;
 
   // Resolve LoRAs: per-transition override > global override > preset > none
   let action: Pick<StudioAction, "prompt" | "highNoiseLoras" | "lowNoiseLoras">;
@@ -98,6 +101,7 @@ export function resolveEffectiveSettings(
     model,
     numInferenceSteps,
     guidance,
+    seed,
     action,
   };
 }

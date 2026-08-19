@@ -36,6 +36,7 @@ export function useFlowGeneration() {
         globalModel: store.globalModel,
         globalNumInferenceSteps: store.globalNumInferenceSteps,
         globalGuidance: store.globalGuidance,
+        globalSeed: store.globalSeed,
         globalLora: store.globalLora,
       });
 
@@ -73,6 +74,7 @@ export function useFlowGeneration() {
         duration: settings.duration,
         numInferenceSteps: settings.numInferenceSteps,
         guidance: settings.guidance,
+        seed: settings.seed,
         negativePrompt: settings.negativePrompt,
       });
       const name = `${fromKf.name || "frame"} → ${toKf.name || "frame"}`;

@@ -20,6 +20,8 @@ import {
   guidanceForModel,
   resolveGuidanceConstraint,
 } from "@/components/pages/studio/constants/guidance-options";
+import { SEED_HINT } from "@/components/pages/studio/constants/seed-options";
+import { useSeedInput } from "@/components/pages/studio/hooks/useSeedInput";
 import { GuidanceField } from "./guidance-field";
 import { resolvePresetAction } from "@/components/pages/studio/utils/resolve-flow-settings";
 import {
@@ -70,6 +72,7 @@ export function TransitionSettingsPanel({
     globalModel,
     globalNumInferenceSteps,
     globalGuidance,
+    globalSeed,
     globalLora,
   } = useFlowStore(
     useShallow((s) => ({
@@ -84,6 +87,7 @@ export function TransitionSettingsPanel({
       globalModel: s.globalModel,
       globalNumInferenceSteps: s.globalNumInferenceSteps,
       globalGuidance: s.globalGuidance,
+      globalSeed: s.globalSeed,
       globalLora: s.globalLora,
     })),
   );
@@ -119,10 +123,12 @@ export function TransitionSettingsPanel({
     selectedTransition?.numInferenceStepsOverride ?? globalNumInferenceSteps;
   const currentGuidance =
     selectedTransition?.guidanceOverride ?? globalGuidance;
+  const currentSeed = selectedTransition?.seedOverride ?? globalSeed;
   const guidanceConstraint = resolveGuidanceConstraint(
     currentModel,
     currentConstraints,
   );
+  const guidanceParam = GUIDANCE_PARAM[currentModel];
 
   // Filter presets by model
   const filteredPresets = useMemo(
@@ -195,6 +201,7 @@ export function TransitionSettingsPanel({
     modelOverride: VideoModel;
     numInferenceStepsOverride: number;
     guidanceOverride: number;
+    seedOverride: number;
   };
   const setValue = useCallback(
     <K extends keyof FieldMap>(field: K, value: FieldMap[K]) => {
@@ -227,9 +234,16 @@ export function TransitionSettingsPanel({
         case "guidanceOverride":
           store.setGlobalGuidance(value as number);
           break;
+        case "seedOverride":
+          store.setGlobalSeed(value as number);
+          break;
       }
     },
     [isPerTransition, selectedTransitionIndex],
+  );
+
+  const seedInput = useSeedInput(currentSeed, (seed) =>
+    setValue("seedOverride", seed),
   );
 
   const handlePresetChange = useCallback(
@@ -582,9 +596,16 @@ export function TransitionSettingsPanel({
                   />
                 </ParamGroup>
               )}
-              {guidanceConstraint && (
+              {currentModel === "ltx-i2v" && (
+                <ParamGroup>
+                  <ParamTitle>Seed</ParamTitle>
+                  <ParamName htmlFor="transition-seed">{SEED_HINT}</ParamName>
+                  <NumberInput id="transition-seed" {...seedInput} />
+                </ParamGroup>
+              )}
+              {guidanceConstraint && guidanceParam && (
                 <GuidanceField
-                  param={GUIDANCE_PARAM[currentModel]}
+                  param={guidanceParam}
                   constraint={guidanceConstraint}
                   value={currentGuidance}
                   onChange={(guidance) =>

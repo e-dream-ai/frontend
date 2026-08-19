@@ -110,6 +110,7 @@ export const useBatchSubmit = () => {
               duration,
               numInferenceSteps: videoGenParams.numInferenceSteps,
               guidance,
+              seed: videoGenParams.seed,
             });
 
             const response = await createDream.mutateAsync({

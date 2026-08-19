@@ -50,6 +50,7 @@ type FlowStoreState = {
   globalModel: VideoModel;
   globalNumInferenceSteps: number;
   globalGuidance: number;
+  globalSeed: number;
   globalLora: LoRAConfig[] | undefined;
 
   // Phase 1 — transitions
@@ -70,6 +71,7 @@ type FlowStoreState = {
   setGlobalModel: (model: VideoModel) => void;
   setGlobalNumInferenceSteps: (steps: number) => void;
   setGlobalGuidance: (guidance: number) => void;
+  setGlobalSeed: (seed: number) => void;
   setGlobalLora: (lora: LoRAConfig[] | undefined) => void;
   setTransitionOverride: (
     index: number,
@@ -111,6 +113,7 @@ const PHASE_1_DEFAULTS = {
   globalModel: "kling-25-i2v" as VideoModel,
   globalNumInferenceSteps: 30,
   globalGuidance: 0.5,
+  globalSeed: -1,
   globalLora: undefined as LoRAConfig[] | undefined,
   transitions: [] as FlowTransition[],
   selectedTransitionIndex: null as number | null,
@@ -187,6 +190,7 @@ export const flowPartialize = (state: FlowStoreState) => ({
   globalModel: state.globalModel,
   globalNumInferenceSteps: state.globalNumInferenceSteps,
   globalGuidance: state.globalGuidance,
+  globalSeed: state.globalSeed,
   globalLora: state.globalLora,
 });
 
@@ -277,6 +281,7 @@ export const useFlowStore = create<FlowStoreState>()(
       setGlobalNumInferenceSteps: (steps) =>
         set({ globalNumInferenceSteps: steps }),
       setGlobalGuidance: (guidance) => set({ globalGuidance: guidance }),
+      setGlobalSeed: (seed) => set({ globalSeed: seed }),
       setGlobalLora: (lora) => set({ globalLora: lora }),
 
       // Phase 1 — transition actions

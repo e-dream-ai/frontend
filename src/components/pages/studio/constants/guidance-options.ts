@@ -1,25 +1,19 @@
 import type { GuidanceConstraint, ModelConstraints } from "@/types/model.types";
 import type { VideoModel } from "@/types/studio.types";
 
-export const GUIDANCE_PARAM = {
-  "wan-i2v": "guidance",
+export const GUIDANCE_PARAM: Partial<
+  Record<VideoModel, "guidance" | "cfg_scale">
+> = {
   "ltx-i2v": "guidance",
   "kling-i2v": "cfg_scale",
   "kling-25-i2v": "cfg_scale",
-} satisfies Record<VideoModel, "guidance" | "cfg_scale">;
-
-const WAN_GUIDANCE = {
-  min: 0,
-  max: 10,
-  step: 0.5,
-  default: 5,
-} satisfies GuidanceConstraint;
+};
 
 export const resolveGuidanceConstraint = (
   model: VideoModel,
   constraints?: ModelConstraints,
 ): GuidanceConstraint | undefined =>
-  constraints?.guidance ?? (model === "wan-i2v" ? WAN_GUIDANCE : undefined);
+  model in GUIDANCE_PARAM ? constraints?.guidance : undefined;
 
 export const clampGuidance = (
   guidance: number,

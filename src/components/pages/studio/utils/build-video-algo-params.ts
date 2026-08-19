@@ -11,6 +11,7 @@ interface BuildVideoAlgoParamsInput {
   duration: number;
   numInferenceSteps: number;
   guidance: number;
+  seed?: number;
   negativePrompt?: string;
 }
 
@@ -19,8 +20,9 @@ const setGuidance = (
   model: VideoModel,
   guidance: number,
 ): void => {
-  if (!Number.isFinite(guidance)) return;
-  params[GUIDANCE_PARAM[model]] = guidance;
+  const param = GUIDANCE_PARAM[model];
+  if (!param || !Number.isFinite(guidance)) return;
+  params[param] = guidance;
 };
 
 export const buildVideoAlgoParams = ({
@@ -32,6 +34,7 @@ export const buildVideoAlgoParams = ({
   duration,
   numInferenceSteps,
   guidance,
+  seed,
   negativePrompt,
 }: BuildVideoAlgoParamsInput): Record<string, unknown> => {
   const hasLoras = hasActionLoras(action);
@@ -72,6 +75,9 @@ export const buildVideoAlgoParams = ({
     }
     if (hasLoras && action.highNoiseLoras?.length) {
       params.high_noise_loras = action.highNoiseLoras;
+    }
+    if (Number.isFinite(seed)) {
+      params.seed = seed;
     }
     setGuidance(params, model, guidance);
     return params;

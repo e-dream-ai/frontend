@@ -10,7 +10,7 @@ const makeAction = (overrides: Partial<StudioAction> = {}): StudioAction => ({
 });
 
 describe("buildVideoAlgoParams", () => {
-  it("builds wan-i2v params without LoRAs", () => {
+  it("builds wan-i2v params without LoRAs (guidance never sent — ignored by the sampler)", () => {
     const result = buildVideoAlgoParams({
       model: "wan-i2v",
       action: makeAction(),
@@ -28,8 +28,8 @@ describe("buildVideoAlgoParams", () => {
       size: "1280*720",
       duration: 5,
       num_inference_steps: 30,
-      guidance: 5.0,
     });
+    expect(result).not.toHaveProperty("guidance");
   });
 
   it("builds wan-i2v-lora params with LoRAs", () => {
@@ -54,11 +54,11 @@ describe("buildVideoAlgoParams", () => {
       image: "img-uuid",
       duration: 5,
       num_inference_steps: 30,
-      guidance: 5.0,
       seed: -1,
       high_noise_loras: [{ path: "zoom.safetensors", scale: 1.0 }],
       low_noise_loras: [{ path: "detail.safetensors", scale: 0.5 }],
     });
+    expect(result).not.toHaveProperty("guidance");
   });
 
   it("builds ltx-i2v params without LoRAs (guidance sent, steps worker-controlled)", () => {
@@ -140,6 +140,61 @@ describe("buildVideoAlgoParams", () => {
     expect(result).not.toHaveProperty("low_noise_loras");
   });
 
+  it("sends an explicit seed for ltx-i2v", () => {
+    const result = buildVideoAlgoParams({
+      model: "ltx-i2v",
+      action: makeAction(),
+      imageUuid: "img-uuid",
+      imageSize: "1280*720",
+      duration: 5,
+      numInferenceSteps: 30,
+      guidance: 1.0,
+      seed: 42,
+    });
+
+    expect(result.seed).toBe(42);
+  });
+
+  it("omits seed for ltx-i2v when not provided", () => {
+    const result = buildVideoAlgoParams({
+      model: "ltx-i2v",
+      action: makeAction(),
+      imageUuid: "img-uuid",
+      imageSize: "1280*720",
+      duration: 5,
+      numInferenceSteps: 30,
+      guidance: 1.0,
+    });
+
+    expect(result).not.toHaveProperty("seed");
+  });
+
+  it("does not send seed for kling or wan", () => {
+    const klingResult = buildVideoAlgoParams({
+      model: "kling-i2v",
+      action: makeAction(),
+      imageUuid: "img-uuid",
+      imageSize: "1280*720",
+      duration: 5,
+      numInferenceSteps: 30,
+      guidance: 0.5,
+      seed: 42,
+    });
+    expect(klingResult).not.toHaveProperty("seed");
+
+    const wanResult = buildVideoAlgoParams({
+      model: "wan-i2v",
+      action: makeAction(),
+      imageUuid: "img-uuid",
+      imageSize: "1280*720",
+      duration: 5,
+      numInferenceSteps: 30,
+      guidance: 5.0,
+      seed: 42,
+    });
+    expect(wanResult).not.toHaveProperty("seed");
+  });
+
   it("includes negative_prompt for ltx-i2v when provided", () => {
     const result = buildVideoAlgoParams({
       model: "ltx-i2v",
@@ -205,7 +260,7 @@ describe("buildVideoAlgoParams", () => {
 
   it("omits guidance when it is not a finite number", () => {
     const result = buildVideoAlgoParams({
-      model: "wan-i2v",
+      model: "ltx-i2v",
       action: makeAction(),
       imageUuid: "img-uuid",
       imageSize: "1280*720",
