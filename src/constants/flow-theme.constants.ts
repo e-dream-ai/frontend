@@ -15,6 +15,10 @@ export const FLOW = {
   // Borders
   border: "#2a2a30",
   borderHover: "#3a3a42",
+  // Connector lines between keyframes. Deliberately brighter than
+  // `border`: these carry meaning (the flow reads left to right) and
+  // have to be legible on their own, not recede like a container edge.
+  connector: "#6f6d78",
 
   // Text
   text: "#e8e6e3",

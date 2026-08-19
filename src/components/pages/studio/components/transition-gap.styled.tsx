@@ -44,13 +44,24 @@ export const GapContainer = styled.div<{ $expanded: boolean }>`
 export const GapLine = styled.div<{
   $configured: boolean;
   $failed: boolean;
+  $mismatched?: boolean;
 }>`
   width: 36px;
-  border-top: 1.5px dashed
+  /* Thicker and solid: at 1.5px dashed in FLOW.border (#2a2a30) the connector
+     was nearly invisible against the dark strip, so a healthy flow read as a
+     row of unconnected cards. */
+  border-top: 3px solid
     ${(p) =>
-      p.$failed ? FLOW.error : p.$configured ? FLOW.accent : FLOW.border};
-  opacity: ${(p) => (p.$failed ? 0.55 : 1)};
-  transition: border-color 0.3s ease;
+      p.$mismatched || p.$failed
+        ? FLOW.error
+        : p.$configured
+          ? FLOW.accent
+          : FLOW.connector};
+  border-radius: 2px;
+  opacity: ${(p) => (p.$failed && !p.$mismatched ? 0.55 : 1)};
+  transition:
+    border-color 0.3s ease,
+    opacity 0.3s ease;
 `;
 
 const nodeBase = css`

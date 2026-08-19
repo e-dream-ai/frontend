@@ -12,6 +12,10 @@ import {
 interface TransitionGapProps {
   transition: FlowTransition;
   effectiveDuration: number;
+  /** Joins two images of different shapes — cannot be generated. */
+  mismatched?: boolean;
+  /** Explains the mismatch, e.g. "1280x720 to 720x1280". */
+  mismatchDetail?: string;
   onClick: () => void;
 }
 
@@ -31,16 +35,34 @@ function hasOverrides(t: FlowTransition): boolean {
 export function TransitionGapEnhanced({
   transition,
   effectiveDuration,
+  mismatched = false,
+  mismatchDetail,
   onClick,
 }: TransitionGapProps) {
   const { status, progress } = transition;
   const configured = hasOverrides(transition);
 
+  // Aspect-ratio mismatch outranks the other idle states: it's the reason this
+  // transition will be skipped by Generate All, so it has to be visible before
+  // the user presses it. Live statuses below still win, so a transition already
+  // rendering or rendered keeps reporting its real progress.
+  if (mismatched && (status === "idle" || status === "failed")) {
+    const title = mismatchDetail
+      ? `Aspect ratio mismatch: ${mismatchDetail}. This transition will be skipped by Generate All.`
+      : "Aspect ratio mismatch. This transition will be skipped by Generate All.";
+    return (
+      <GapContainer $expanded onClick={onClick} title={title}>
+        <GapLine $configured={configured} $failed={false} $mismatched />
+        <GapStatusLabel $status="failed">mismatch</GapStatusLabel>
+      </GapContainer>
+    );
+  }
+
   // Idle, no config — just the connecting line.
   if (status === "idle" && !configured) {
     return (
       <GapContainer $expanded={false} onClick={onClick}>
-        <GapLine $configured={false} $failed={false} />
+        <GapLine $configured={false} $failed={false} $mismatched={false} />
       </GapContainer>
     );
   }
@@ -49,7 +71,7 @@ export function TransitionGapEnhanced({
   if (status === "idle" && configured) {
     return (
       <GapContainer $expanded={false} onClick={onClick}>
-        <GapLine $configured $failed={false} />
+        <GapLine $configured $failed={false} $mismatched={false} />
         <DurationLabel>{effectiveDuration}s</DurationLabel>
       </GapContainer>
     );

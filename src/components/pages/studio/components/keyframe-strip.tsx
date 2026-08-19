@@ -17,6 +17,10 @@ import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { KeyframeCard } from "./keyframe-card";
 import { KeyframeLightbox } from "./keyframe-lightbox";
 import { TransitionGapEnhanced } from "./transition-gap";
+import {
+  isTransitionMismatched,
+  dimensionsLabel,
+} from "../utils/keyframe-aspect";
 import { FlowReset } from "./flow-reset";
 import {
   StripSection,
@@ -73,6 +77,10 @@ export const KeyframeStrip: React.FC<Props> = ({
         dreamUuid: first.dreamUuid,
         imageUrl: first.imageUrl,
         name: first.name,
+        // Carried over so the closing transition is judged like any other;
+        // this frame renders the same image as the first.
+        naturalWidth: first.naturalWidth,
+        naturalHeight: first.naturalHeight,
         isLoopKeyframe: true,
       },
     ];
@@ -112,11 +120,18 @@ export const KeyframeStrip: React.FC<Props> = ({
       const transition = transitions[transitionIndex];
       if (transition) {
         const effectiveDuration = transition.durationOverride ?? globalDuration;
+        const fromKf = displayKeyframes[i - 1];
+        const mismatched = isTransitionMismatched(fromKf, kf);
+        const mismatchDetail = mismatched
+          ? `${dimensionsLabel(fromKf)} to ${dimensionsLabel(kf)}`
+          : undefined;
         stripItems.push(
           <TransitionGapEnhanced
             key={`gap-${transitionIndex}`}
             transition={transition}
             effectiveDuration={effectiveDuration}
+            mismatched={mismatched}
+            mismatchDetail={mismatchDetail}
             onClick={() => {
               if (transition.status === "failed") {
                 onRetry(transitionIndex);

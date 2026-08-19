@@ -45,7 +45,10 @@ export const TransitionGap = styled.div`
 
 export const GapLine = styled.div`
   width: 32px;
-  border-top: 2px dashed ${FLOW.border};
+  /* Matches the real connector in transition-gap.styled so the placeholder
+     shown before transitions are derived doesn't read as a different thing. */
+  border-top: 3px solid ${FLOW.connector};
+  border-radius: 2px;
 `;
 
 export const StripControls = styled.div`
