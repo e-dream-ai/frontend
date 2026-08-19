@@ -138,9 +138,6 @@ export function FlowPreview() {
     );
   }, []);
 
-  const ratioFor = (segment?: CrossfadeSegment) =>
-    segment ? measuredRatios[segment.key] ?? segment.ratio : undefined;
-
   const [rawTarget, setTargetIndex] = useState(0);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
@@ -185,6 +182,8 @@ export function FlowPreview() {
   if (segmentCount === 0) return null;
 
   const showNav = segmentCount > 1;
+  const targetSegment = segments[targetIndex];
+  const targetRatio = measuredRatios[targetSegment.key] ?? targetSegment.ratio;
 
   return (
     <>
@@ -194,7 +193,7 @@ export function FlowPreview() {
         <VideoWrapper
           ref={wrapperRef}
           tabIndex={0}
-          $ratio={ratioFor(segments[targetIndex])}
+          $ratio={targetRatio}
           onClick={() => setPreviewLightboxOpen(true)}
         >
           <CrossfadeVideo
@@ -261,7 +260,7 @@ export function FlowPreview() {
           segments={segments}
           index={targetIndex}
           loop={segmentCount === 1}
-          ratio={ratioFor(segments[targetIndex])}
+          ratio={targetRatio}
           onMeasured={handleMeasured}
           onClose={() => setPreviewLightboxOpen(false)}
           onEnded={advance}

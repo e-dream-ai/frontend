@@ -14,11 +14,9 @@ export const CardWrapper = styled.div<{
   $ratio?: number;
 }>`
   flex-shrink: 0;
-  /* Height is fixed so the strip stays one clean row; width follows the
-     image's own ratio, which is what makes a portrait frame read as portrait.
-     140px is the fallback until the image loads and reports its size. */
+
   height: 100px;
-  width: ${(p) => (p.$ratio ? `${(p.$ratio * 100).toFixed(2)}px` : "140px")};
+  aspect-ratio: ${(p) => p.$ratio ?? 1.4};
   border-radius: ${FLOW.radiusSm};
   overflow: hidden;
   isolation: isolate;

@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from "react";
 import Bugsnag from "@bugsnag/js";
+import { toast } from "react-toastify";
 import { useFlowStore } from "@/stores/flow.store";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
@@ -9,10 +10,9 @@ import type { FlowTransition } from "@/types/flow.types";
 import queryClient from "@/api/query-client";
 import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import { ensureFlowKeyframe } from "@/components/pages/studio/utils/flow-keyframes";
+import { resolveGenerationTargets } from "@/components/pages/studio/utils/flow-generation-targets";
 
 // Cap concurrent dream creations so "Generate All" doesn't fan out 50+ requests at once.
-import { isTransitionMismatched } from "../utils/keyframe-aspect";
-
 const GENERATE_CONCURRENCY = 4;
 
 export function useFlowGeneration() {
@@ -127,39 +127,26 @@ export function useFlowGeneration() {
   const generateAll = useCallback(async () => {
     startGenerating();
     try {
-      const { transitions: currentTransitions, keyframes } =
-        useFlowStore.getState();
-      const byId = new Map(keyframes.map((kf) => [kf.id, kf]));
-      const targets: Array<{ index: number; t: FlowTransition }> = [];
-      currentTransitions.forEach((t, index) => {
-        if (
-          t.status === "processed" ||
-          t.status === "processing" ||
-          t.status === "queue"
-        ) {
-          return;
-        }
-        // A transition between two differently-shaped images can't be rendered
-        // without distorting or cropping an end, so Generate All skips it and
-        // leaves it flagged in the strip. generateOne still honours an explicit
-        // click on that transition.
-        if (
-          isTransitionMismatched(
-            byId.get(t.fromKeyframeId),
-            byId.get(t.toKeyframeId),
-          )
-        ) {
-          return;
-        }
-        targets.push({ index, t });
-      });
+      const { transitions, keyframes } = useFlowStore.getState();
+      const { targets, skippedForMismatch } = resolveGenerationTargets(
+        transitions,
+        keyframes,
+      );
+
+      if (skippedForMismatch > 0) {
+        toast.info(
+          `Skipped ${skippedForMismatch} transition${
+            skippedForMismatch === 1 ? "" : "s"
+          } with mismatched aspect ratios. Open one to generate it anyway.`,
+        );
+      }
 
       // Worker-pool style concurrency cap.
       let cursor = 0;
       const worker = async () => {
         while (cursor < targets.length) {
           const next = targets[cursor++];
-          await generateTransition(next.index, next.t);
+          await generateTransition(next.index, next.transition);
         }
       };
       await Promise.all(

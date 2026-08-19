@@ -41,24 +41,23 @@ export const GapContainer = styled.div<{ $expanded: boolean }>`
   transition: width 0.3s ease;
 `;
 
-export const GapLine = styled.div<{
-  $configured: boolean;
-  $failed: boolean;
-  $mismatched?: boolean;
-}>`
+export type GapLineVariant = "idle" | "configured" | "failed" | "mismatched";
+
+const GAP_LINE: Record<GapLineVariant, { color: string; opacity: number }> = {
+  idle: { color: FLOW.connector, opacity: 1 },
+  configured: { color: FLOW.accent, opacity: 1 },
+  failed: { color: FLOW.error, opacity: 0.55 },
+  mismatched: { color: FLOW.error, opacity: 1 },
+};
+
+export const GapLine = styled.div<{ $variant: GapLineVariant }>`
   width: 36px;
   /* Thicker and solid: at 1.5px dashed in FLOW.border (#2a2a30) the connector
      was nearly invisible against the dark strip, so a healthy flow read as a
      row of unconnected cards. */
-  border-top: 3px solid
-    ${(p) =>
-      p.$mismatched || p.$failed
-        ? FLOW.error
-        : p.$configured
-          ? FLOW.accent
-          : FLOW.connector};
+  border-top: 3px solid ${(p) => GAP_LINE[p.$variant].color};
   border-radius: 2px;
-  opacity: ${(p) => (p.$failed && !p.$mismatched ? 0.55 : 1)};
+  opacity: ${(p) => GAP_LINE[p.$variant].opacity};
   transition:
     border-color 0.3s ease,
     opacity 0.3s ease;

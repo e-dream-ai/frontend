@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { FLOW, flowFadeIn } from "@/constants/flow-theme.constants";
 
 export const PreviewContainer = styled.div`
@@ -21,12 +21,21 @@ export const PreviewLabel = styled.span`
   align-self: flex-start;
 `;
 
+const ratioBox = (
+  ratio: string | undefined,
+  widthCaps: readonly string[],
+  maxHeight: string,
+) => {
+  const r = ratio ?? "16 / 9";
+  const caps = [...widthCaps, `calc(${maxHeight} * (${r}))`];
+  return css`
+    width: min(${caps.join(", ")});
+    aspect-ratio: ${r};
+  `;
+};
+
 export const VideoWrapper = styled.div<{ $ratio?: string }>`
-  width: 100%;
-  max-width: 480px;
-  /* Follows the shape of the video being played. 16 / 9 is only the fallback
-     for a segment whose dimensions the backend hasn't recorded. */
-  aspect-ratio: ${(p) => p.$ratio ?? "16 / 9"};
+  ${(p) => ratioBox(p.$ratio, ["100%", "480px"], "60vh")}
   border-radius: ${FLOW.radiusSm};
   overflow: hidden;
   background: ${FLOW.bg};
@@ -160,12 +169,7 @@ export const LightboxOverlay = styled.div`
 `;
 
 export const LightboxVideo = styled.div<{ $ratio?: string }>`
-  width: 90vw;
-  max-width: 960px;
-  /* Tall videos would otherwise overflow the viewport once the box stops
-     being 16 / 9, so cap the height and let width follow the ratio. */
-  max-height: 85vh;
-  aspect-ratio: ${(p) => p.$ratio ?? "16 / 9"};
+  ${(p) => ratioBox(p.$ratio, ["90vw", "960px"], "85vh")}
   border-radius: ${FLOW.radius};
   overflow: hidden;
   position: relative;

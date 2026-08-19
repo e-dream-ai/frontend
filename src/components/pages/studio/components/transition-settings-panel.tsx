@@ -24,6 +24,7 @@ import { SEED_HINT } from "@/components/pages/studio/constants/seed-options";
 import { useSeedInput } from "@/components/pages/studio/hooks/useSeedInput";
 import { GuidanceField } from "./guidance-field";
 import { resolvePresetAction } from "@/components/pages/studio/utils/resolve-flow-settings";
+import { resolveGenerationTargets } from "@/components/pages/studio/utils/flow-generation-targets";
 import {
   PanelContainer,
   PanelHeader,
@@ -364,22 +365,17 @@ export function TransitionSettingsPanel({
   // so it becomes required. With a preset, the preset supplies a prompt.
   const needsPrompt = !currentPresetId && !currentPrompt.trim();
 
-  // Generate All disabled?
+  const { targets: generateAllTargets } = useMemo(
+    () => resolveGenerationTargets(transitions, keyframes),
+    [transitions, keyframes],
+  );
+
   const generateAllDisabled =
-    isGenerating ||
-    transitions.length === 0 ||
-    transitions.every((t) =>
-      ["processed", "queue", "processing"].includes(t.status),
-    ) ||
-    needsPrompt;
+    isGenerating || generateAllTargets.length === 0 || needsPrompt;
 
   const generateOneDisabled = isGenerating || needsPrompt;
 
-  const generateCount = isPerTransition
-    ? 1
-    : transitions.filter(
-        (tr) => !["processed", "processing", "queue"].includes(tr.status),
-      ).length;
+  const generateCount = isPerTransition ? 1 : generateAllTargets.length;
   const { totalCostUsd, costBreakdown } = useCostEstimate({
     model: modelOptions.find((m) => m.id === currentModel),
     params: { durationSec: currentDuration },

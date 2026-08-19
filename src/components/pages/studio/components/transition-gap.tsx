@@ -1,3 +1,4 @@
+import type { KeyboardEvent } from "react";
 import { Check, Loader2, AlertTriangle, RotateCcw } from "lucide-react";
 import type { FlowTransition } from "@/types/flow.types";
 import {
@@ -12,10 +13,7 @@ import {
 interface TransitionGapProps {
   transition: FlowTransition;
   effectiveDuration: number;
-  /** Joins two images of different shapes — cannot be generated. */
-  mismatched?: boolean;
-  /** Explains the mismatch, e.g. "1280x720 to 720x1280". */
-  mismatchDetail?: string;
+  mismatch?: string;
   onClick: () => void;
 }
 
@@ -35,24 +33,32 @@ function hasOverrides(t: FlowTransition): boolean {
 export function TransitionGapEnhanced({
   transition,
   effectiveDuration,
-  mismatched = false,
-  mismatchDetail,
+  mismatch,
   onClick,
 }: TransitionGapProps) {
   const { status, progress } = transition;
   const configured = hasOverrides(transition);
 
-  // Aspect-ratio mismatch outranks the other idle states: it's the reason this
-  // transition will be skipped by Generate All, so it has to be visible before
-  // the user presses it. Live statuses below still win, so a transition already
-  // rendering or rendered keeps reporting its real progress.
-  if (mismatched && (status === "idle" || status === "failed")) {
-    const title = mismatchDetail
-      ? `Aspect ratio mismatch: ${mismatchDetail}. This transition will be skipped by Generate All.`
-      : "Aspect ratio mismatch. This transition will be skipped by Generate All.";
+  const activate = {
+    role: "button" as const,
+    tabIndex: 0,
+    onClick,
+    onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      e.preventDefault();
+      onClick();
+    },
+  };
+
+  if (mismatch && status === "idle") {
     return (
-      <GapContainer $expanded onClick={onClick} title={title}>
-        <GapLine $configured={configured} $failed={false} $mismatched />
+      <GapContainer
+        $expanded
+        {...activate}
+        title={`Aspect ratio mismatch: ${mismatch}. Generate All will skip this transition - open it to generate it anyway.`}
+        aria-label={`Transition with mismatched aspect ratios, ${mismatch}. Generate All will skip it. Activate to open its settings.`}
+      >
+        <GapLine $variant="mismatched" />
         <GapStatusLabel $status="failed">mismatch</GapStatusLabel>
       </GapContainer>
     );
@@ -61,8 +67,12 @@ export function TransitionGapEnhanced({
   // Idle, no config — just the connecting line.
   if (status === "idle" && !configured) {
     return (
-      <GapContainer $expanded={false} onClick={onClick}>
-        <GapLine $configured={false} $failed={false} $mismatched={false} />
+      <GapContainer
+        $expanded={false}
+        {...activate}
+        aria-label="Transition, not yet generated. Activate to open its settings."
+      >
+        <GapLine $variant="idle" />
       </GapContainer>
     );
   }
@@ -70,8 +80,12 @@ export function TransitionGapEnhanced({
   // Idle but configured — solid line + duration pill.
   if (status === "idle" && configured) {
     return (
-      <GapContainer $expanded={false} onClick={onClick}>
-        <GapLine $configured $failed={false} $mismatched={false} />
+      <GapContainer
+        $expanded={false}
+        {...activate}
+        aria-label={`Transition with custom settings, ${effectiveDuration} seconds. Activate to open its settings.`}
+      >
+        <GapLine $variant="configured" />
         <DurationLabel>{effectiveDuration}s</DurationLabel>
       </GapContainer>
     );
@@ -80,7 +94,7 @@ export function TransitionGapEnhanced({
   // Queued — soft pulsing dot.
   if (status === "queue") {
     return (
-      <GapContainer $expanded onClick={onClick}>
+      <GapContainer $expanded {...activate} aria-label="Transition queued">
         <StatusNode $variant="queued" />
         <GapStatusLabel $status="queued">queued</GapStatusLabel>
       </GapContainer>
@@ -91,7 +105,13 @@ export function TransitionGapEnhanced({
   if (status === "processing") {
     const pct = Math.max(0, Math.min(100, progress ?? 0));
     return (
-      <GapContainer $expanded onClick={onClick}>
+      <GapContainer
+        $expanded
+        {...activate}
+        aria-label={`Transition rendering${
+          pct > 0 ? `, ${Math.round(pct)}%` : ""
+        }`}
+      >
         <StatusNode $variant="processing">
           {pct > 0 && <ProgressRing $percent={pct} />}
           <Loader2 size={14} strokeWidth={2.4} />
@@ -106,7 +126,11 @@ export function TransitionGapEnhanced({
   // Success — filled gold disc with a check, soft halo, duration below.
   if (status === "processed") {
     return (
-      <GapContainer $expanded onClick={onClick}>
+      <GapContainer
+        $expanded
+        {...activate}
+        aria-label={`Transition rendered, ${effectiveDuration} seconds. Activate to open its settings.`}
+      >
         <StatusNode $variant="processed">
           <Check size={14} strokeWidth={3} />
         </StatusNode>
@@ -115,14 +139,23 @@ export function TransitionGapEnhanced({
     );
   }
 
-  // Failed — red ring with warning icon. Whole node is "click to retry".
+  // Failed — red ring with warning icon. Whole node is "click to retry". A
+  // mismatch here is the likely cause, so name it rather than just offering the
+  // retry that will fail the same way.
   return (
     <GapContainer
       $expanded
-      onClick={onClick}
-      title="Click to retry"
-      role="button"
-      tabIndex={0}
+      {...activate}
+      title={
+        mismatch
+          ? `Aspect ratio mismatch: ${mismatch}. Click to retry anyway.`
+          : "Click to retry"
+      }
+      aria-label={
+        mismatch
+          ? `Transition failed, aspect ratios mismatched, ${mismatch}. Activate to retry.`
+          : "Transition failed. Activate to retry."
+      }
     >
       <StatusNode $variant="failed">
         <AlertTriangle size={13} strokeWidth={2.4} />

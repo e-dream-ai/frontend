@@ -10,8 +10,7 @@ import { stepLightboxIndex } from "@/utils/keyframe-lightbox.util";
 
 export const LOOP_KEYFRAME_ID = "__loop__";
 
-/** Derive the display keyframes list, appending a synthetic loop frame when enabled. */
-function buildKeyframesWithLoop(
+export function buildKeyframesWithLoop(
   keyframes: FlowKeyframe[],
   loop: boolean,
 ): FlowKeyframe[] {
@@ -20,12 +19,11 @@ function buildKeyframesWithLoop(
   return [
     ...keyframes,
     {
+      ...first,
       id: LOOP_KEYFRAME_ID,
-      keyframeUuid: first.keyframeUuid,
-      dreamUuid: first.dreamUuid,
-      imageUrl: first.imageUrl,
-      name: first.name,
       isLoopKeyframe: true,
+      uploadStatus: undefined,
+      uploadProgress: undefined,
     },
   ];
 }
