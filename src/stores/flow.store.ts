@@ -170,6 +170,10 @@ export const flowPartialize = (state: FlowStoreState) => ({
       dreamUuid: kf.dreamUuid,
       imageUrl: kf.imageUrl,
       name: kf.name,
+      // Persisted so a reloaded flow renders at the right shape, and flags
+      // mismatches, without waiting for every thumbnail to load again.
+      naturalWidth: kf.naturalWidth,
+      naturalHeight: kf.naturalHeight,
       isLoopKeyframe: kf.isLoopKeyframe,
     })),
   loop: state.loop,

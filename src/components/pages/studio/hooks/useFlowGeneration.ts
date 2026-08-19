@@ -11,6 +11,8 @@ import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import { ensureFlowKeyframe } from "@/components/pages/studio/utils/flow-keyframes";
 
 // Cap concurrent dream creations so "Generate All" doesn't fan out 50+ requests at once.
+import { isTransitionMismatched } from "../utils/keyframe-aspect";
+
 const GENERATE_CONCURRENCY = 4;
 
 export function useFlowGeneration() {
@@ -123,13 +125,27 @@ export function useFlowGeneration() {
   const generateAll = useCallback(async () => {
     startGenerating();
     try {
-      const { transitions: currentTransitions } = useFlowStore.getState();
+      const { transitions: currentTransitions, keyframes } =
+        useFlowStore.getState();
+      const byId = new Map(keyframes.map((kf) => [kf.id, kf]));
       const targets: Array<{ index: number; t: FlowTransition }> = [];
       currentTransitions.forEach((t, index) => {
         if (
           t.status === "processed" ||
           t.status === "processing" ||
           t.status === "queue"
+        ) {
+          return;
+        }
+        // A transition between two differently-shaped images can't be rendered
+        // without distorting or cropping an end, so Generate All skips it and
+        // leaves it flagged in the strip. generateOne still honours an explicit
+        // click on that transition.
+        if (
+          isTransitionMismatched(
+            byId.get(t.fromKeyframeId),
+            byId.get(t.toKeyframeId),
+          )
         ) {
           return;
         }

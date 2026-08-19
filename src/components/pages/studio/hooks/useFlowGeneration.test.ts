@@ -110,6 +110,12 @@ import { useFlowGeneration } from "./useFlowGeneration";
 describe("useFlowGeneration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Restore the default same-shape frames; individual tests reshape them.
+    mocks.store.keyframes = [
+      { id: "frame-1", dreamUuid: "dream-1", name: "One" },
+      { id: "frame-2", dreamUuid: "dream-2", name: "Two" },
+      { id: "frame-3", dreamUuid: "dream-3", name: "Three" },
+    ];
     mocks.post
       .mockResolvedValueOnce({ data: { data: { dream: { uuid: "new-1" } } } })
       .mockResolvedValueOnce({ data: { data: { dream: { uuid: "new-2" } } } });
@@ -122,5 +128,70 @@ describe("useFlowGeneration", () => {
 
     expect(mocks.post).toHaveBeenCalledTimes(2);
     expect(mocks.invalidateQueries).toHaveBeenCalledWith(["getUser"]);
+  });
+
+  it("skips a transition whose two frames have different aspect ratios", async () => {
+    // frame-3 is portrait, so frame-2 → frame-3 cannot be rendered.
+    mocks.store.keyframes = [
+      {
+        id: "frame-1",
+        dreamUuid: "dream-1",
+        name: "One",
+        naturalWidth: 1280,
+        naturalHeight: 720,
+      },
+      {
+        id: "frame-2",
+        dreamUuid: "dream-2",
+        name: "Two",
+        naturalWidth: 1920,
+        naturalHeight: 1080,
+      },
+      {
+        id: "frame-3",
+        dreamUuid: "dream-3",
+        name: "Three",
+        naturalWidth: 720,
+        naturalHeight: 1280,
+      },
+    ];
+
+    const { generateAll } = useFlowGeneration();
+    await generateAll();
+
+    // Only frame-1 → frame-2 is generated; the differing resolutions there are
+    // the same 16:9 shape and must not be treated as a mismatch.
+    expect(mocks.post).toHaveBeenCalledTimes(1);
+  });
+
+  it("generates every transition when all frames share a shape", async () => {
+    mocks.store.keyframes = [
+      {
+        id: "frame-1",
+        dreamUuid: "dream-1",
+        name: "One",
+        naturalWidth: 1024,
+        naturalHeight: 1024,
+      },
+      {
+        id: "frame-2",
+        dreamUuid: "dream-2",
+        name: "Two",
+        naturalWidth: 512,
+        naturalHeight: 512,
+      },
+      {
+        id: "frame-3",
+        dreamUuid: "dream-3",
+        name: "Three",
+        naturalWidth: 768,
+        naturalHeight: 768,
+      },
+    ];
+
+    const { generateAll } = useFlowGeneration();
+    await generateAll();
+
+    expect(mocks.post).toHaveBeenCalledTimes(2);
   });
 });

@@ -4,6 +4,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { AlertTriangle } from "lucide-react";
 import type { FlowKeyframe } from "@/types/flow.types";
 import { useFlowStore } from "@/stores/flow.store";
+import { aspectRatioOf } from "../utils/keyframe-aspect";
 import { useKeyframeImage } from "../hooks/useKeyframeImage";
 import {
   CardWrapper,
@@ -60,7 +61,25 @@ export const KeyframeCard: React.FC<Props> = ({
   const percent = Math.round(keyframe.uploadProgress ?? 0);
 
   const openKeyframeLightbox = useFlowStore((s) => s.openKeyframeLightbox);
+  const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
   const isClickable = !isLoop && !isBusy && !!imgSrc;
+
+  // The image is the only place the source's true shape is known: uploads are
+  // local blobs and library picks carry no dimensions on the flow keyframe.
+  // The loop frame is a synthetic copy of the first, so it has no store row to
+  // write back to — the frame it mirrors reports its own size.
+  const handleImgLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
+    if (isLoop) return;
+    const { naturalWidth, naturalHeight } = e.currentTarget;
+    if (!naturalWidth || !naturalHeight) return;
+    if (
+      keyframe.naturalWidth === naturalWidth &&
+      keyframe.naturalHeight === naturalHeight
+    ) {
+      return;
+    }
+    updateKeyframe(keyframe.id, { naturalWidth, naturalHeight });
+  };
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
     openKeyframeLightbox(keyframe.id);
@@ -74,6 +93,7 @@ export const KeyframeCard: React.FC<Props> = ({
       $isDragging={isDragging}
       $uploading={isUploading}
       $failed={isFailed}
+      $ratio={aspectRatioOf(keyframe)}
       {...(isLoop || isBusy ? {} : { ...attributes, ...listeners })}
     >
       {imgSrc ? (
@@ -83,6 +103,7 @@ export const KeyframeCard: React.FC<Props> = ({
           $uploading={isUploading}
           onClick={isClickable ? handleOpen : undefined}
           style={isClickable ? { cursor: "pointer" } : undefined}
+          onLoad={handleImgLoad}
           onError={handleImgError}
         />
       ) : (
