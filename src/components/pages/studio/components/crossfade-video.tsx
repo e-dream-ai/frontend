@@ -14,7 +14,10 @@ export interface CrossfadeSegment {
   key: string;
   url: string;
   poster?: string;
-  /** CSS aspect-ratio of the source video ("1920 / 1080"), when known. */
+  /**
+   * CSS aspect-ratio of the segment's source ("1440 / 1440"), when known.
+   * Used to size the box before the file's header has been read.
+   */
   ratio?: string;
 }
 
@@ -26,6 +29,13 @@ interface Props {
   controls?: boolean;
   loop?: boolean;
   onEnded?: () => void;
+  /**
+   * Reports a segment's true shape once the browser has read the file header,
+   * correcting the `ratio` hint. Covers dreams whose dimensions were never
+   * recorded, and any case where the file played is not the one those
+   * dimensions describe.
+   */
+  onMeasured?: (key: string, ratio: string) => void;
 }
 
 const LAYERS = [0, 1] as const satisfies readonly Layer[];
@@ -46,6 +56,7 @@ export function CrossfadeVideo({
   controls = false,
   loop = false,
   onEnded,
+  onMeasured,
 }: Props) {
   const targetKey = segments[index]?.key ?? null;
 
@@ -113,6 +124,13 @@ export function CrossfadeVideo({
             controls={controls && isFront}
             aria-hidden={!isFront}
             tabIndex={isFront ? undefined : -1}
+            onLoadedMetadata={(e) => {
+              const { currentSrc, videoWidth, videoHeight } = e.currentTarget;
+              if (!videoWidth || !videoHeight) return;
+              const measuredKey = lookups.keyByResolvedUrl.get(currentSrc);
+              if (measuredKey === undefined) return;
+              onMeasured?.(measuredKey, `${videoWidth} / ${videoHeight}`);
+            }}
             onLoadedData={(e) => {
               // From the element's own resource, not `buf.loaded` — see markReady.
               const decodedKey = lookups.keyByResolvedUrl.get(

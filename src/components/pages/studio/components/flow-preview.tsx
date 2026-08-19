@@ -30,6 +30,8 @@ interface PreviewLightboxProps {
   segments: readonly CrossfadeSegment[];
   index: number;
   loop: boolean;
+  ratio?: string;
+  onMeasured: (key: string, ratio: string) => void;
   onClose: () => void;
   onEnded: () => void;
 }
@@ -38,6 +40,8 @@ function PreviewLightbox({
   segments,
   index,
   loop,
+  ratio,
+  onMeasured,
   onClose,
   onEnded,
 }: PreviewLightboxProps) {
@@ -52,15 +56,13 @@ function PreviewLightbox({
       aria-modal="true"
       aria-label="Video preview"
     >
-      <LightboxVideo
-        $ratio={segments[index]?.ratio}
-        onClick={(e) => e.stopPropagation()}
-      >
+      <LightboxVideo $ratio={ratio} onClick={(e) => e.stopPropagation()}>
         <CrossfadeVideo
           segments={segments}
           index={index}
           controls
           loop={loop}
+          onMeasured={onMeasured}
           onEnded={onEnded}
         />
       </LightboxVideo>
@@ -106,7 +108,11 @@ export function FlowPreview() {
   // Not memoized: `useQueries` returns a fresh array every render, so a useMemo
   // keyed on it would never hit.
   const segments: CrossfadeSegment[] = dreamQueries.flatMap((q, i) => {
-    const url = q.data?.video;
+    // Prefer the original over the processed file. Processing normalises every
+    // video to 1920x1080, so the processed copy of a square render is 16:9 and
+    // would show the flow in the wrong shape. The original keeps the shape the
+    // model produced, and is what processedMediaWidth/Height measures.
+    const url = q.data?.original_video || q.data?.video;
     if (!url) return [];
     return [
       {
@@ -120,6 +126,20 @@ export function FlowPreview() {
       },
     ];
   });
+
+  // A file's header is the last word on its shape; the recorded dimensions are
+  // only a hint used until it arrives.
+  const [measuredRatios, setMeasuredRatios] = useState<Record<string, string>>(
+    {},
+  );
+  const handleMeasured = useCallback((key: string, ratio: string) => {
+    setMeasuredRatios((prev) =>
+      prev[key] === ratio ? prev : { ...prev, [key]: ratio },
+    );
+  }, []);
+
+  const ratioFor = (segment?: CrossfadeSegment) =>
+    segment ? measuredRatios[segment.key] ?? segment.ratio : undefined;
 
   const [rawTarget, setTargetIndex] = useState(0);
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -174,12 +194,13 @@ export function FlowPreview() {
         <VideoWrapper
           ref={wrapperRef}
           tabIndex={0}
-          $ratio={segments[targetIndex]?.ratio}
+          $ratio={ratioFor(segments[targetIndex])}
           onClick={() => setPreviewLightboxOpen(true)}
         >
           <CrossfadeVideo
             segments={segments}
             index={targetIndex}
+            onMeasured={handleMeasured}
             active={!previewLightboxOpen}
             muted
             loop={segmentCount === 1}
@@ -240,6 +261,8 @@ export function FlowPreview() {
           segments={segments}
           index={targetIndex}
           loop={segmentCount === 1}
+          ratio={ratioFor(segments[targetIndex])}
+          onMeasured={handleMeasured}
           onClose={() => setPreviewLightboxOpen(false)}
           onEnded={advance}
         />
