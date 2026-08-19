@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useMemo, useCallback } from "react";
 import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import type { LoRAConfig, VideoModel } from "@/types/studio.types";
@@ -13,6 +13,14 @@ import {
   getAllowedDurationsForActions,
   clampDurationToAllowed,
 } from "@/components/pages/studio/constants/duration-options";
+import {
+  GUIDANCE_PARAM,
+  STEPS_PARAM,
+  STEPS_TITLE,
+  guidanceForModel,
+  resolveGuidanceConstraint,
+} from "@/components/pages/studio/constants/guidance-options";
+import { GuidanceField } from "./guidance-field";
 import { resolvePresetAction } from "@/components/pages/studio/utils/resolve-flow-settings";
 import {
   PanelContainer,
@@ -29,8 +37,10 @@ import {
   ToggleLink,
   ResetLink,
   ExpandedSection,
-  AdvancedToggle,
-  AdvancedFields,
+  ParamFields,
+  ParamGroup,
+  ParamTitle,
+  ParamName,
   NumberInput,
   ValidationHint,
   RequiredMark,
@@ -82,8 +92,6 @@ export function TransitionSettingsPanel({
   const modelOptions = modelsData?.data?.models ?? [];
   const modelConstraints = useModelConstraints({ mediaType: "video" });
 
-  const [advancedOpen, setAdvancedOpen] = useState(false);
-
   // Per-transition mode?
   const isPerTransition = selectedTransitionIndex !== null;
   const selectedTransition =
@@ -111,6 +119,10 @@ export function TransitionSettingsPanel({
     selectedTransition?.numInferenceStepsOverride ?? globalNumInferenceSteps;
   const currentGuidance =
     selectedTransition?.guidanceOverride ?? globalGuidance;
+  const guidanceConstraint = resolveGuidanceConstraint(
+    currentModel,
+    currentConstraints,
+  );
 
   // Filter presets by model
   const filteredPresets = useMemo(
@@ -273,8 +285,23 @@ export function TransitionSettingsPanel({
       if (clamped !== currentDuration) {
         setValue("durationOverride", clamped);
       }
+
+      const nextConstraint = resolveGuidanceConstraint(
+        model,
+        modelConstraints.get(model),
+      );
+      const clampedGuidance = guidanceForModel(currentGuidance, nextConstraint);
+      if (clampedGuidance !== currentGuidance) {
+        setValue("guidanceOverride", clampedGuidance);
+      }
     },
-    [currentPresetId, currentDuration, setValue, modelConstraints],
+    [
+      currentPresetId,
+      currentDuration,
+      currentGuidance,
+      setValue,
+      modelConstraints,
+    ],
   );
 
   const handleLoraChange = useCallback(
@@ -533,45 +560,39 @@ export function TransitionSettingsPanel({
               )}
             </FieldRow>
 
-            <AdvancedToggle onClick={() => setAdvancedOpen(!advancedOpen)}>
-              {advancedOpen ? "\u25BE" : "\u25B8"} Advanced
-              {supportsSteps ? " (steps, guidance)" : " (guidance)"}
-            </AdvancedToggle>
-
-            {advancedOpen && (
-              <AdvancedFields>
-                {supportsSteps && (
-                  <FieldGroup>
-                    <FieldLabel>Steps</FieldLabel>
-                    <NumberInput
-                      type="number"
-                      min={1}
-                      max={100}
-                      value={currentSteps}
-                      onChange={(e) =>
-                        setValue(
-                          "numInferenceStepsOverride",
-                          Number(e.target.value),
-                        )
-                      }
-                    />
-                  </FieldGroup>
-                )}
-                <FieldGroup>
-                  <FieldLabel>Guidance</FieldLabel>
+            <ParamFields>
+              {supportsSteps && (
+                <ParamGroup>
+                  <ParamTitle>{STEPS_TITLE}</ParamTitle>
+                  <ParamName htmlFor="transition-steps">
+                    {STEPS_PARAM}
+                  </ParamName>
                   <NumberInput
+                    id="transition-steps"
                     type="number"
-                    min={0}
-                    max={20}
-                    step={0.5}
-                    value={currentGuidance}
+                    min={1}
+                    max={100}
+                    value={currentSteps}
                     onChange={(e) =>
-                      setValue("guidanceOverride", Number(e.target.value))
+                      setValue(
+                        "numInferenceStepsOverride",
+                        Number(e.target.value),
+                      )
                     }
                   />
-                </FieldGroup>
-              </AdvancedFields>
-            )}
+                </ParamGroup>
+              )}
+              {guidanceConstraint && (
+                <GuidanceField
+                  param={GUIDANCE_PARAM[currentModel]}
+                  constraint={guidanceConstraint}
+                  value={currentGuidance}
+                  onChange={(guidance) =>
+                    setValue("guidanceOverride", guidance)
+                  }
+                />
+              )}
+            </ParamFields>
           </ExpandedSection>
         </>
       )}

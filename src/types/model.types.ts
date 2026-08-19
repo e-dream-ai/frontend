@@ -1,10 +1,18 @@
 export type ModelProvider = "fal" | "runpod";
 
+export interface GuidanceConstraint {
+  readonly min: number;
+  readonly max: number;
+  readonly step: number;
+  readonly default: number;
+}
+
 export interface ModelConstraints {
   durationsSec?: number[];
   imageSizes?: string[];
   supportsSteps?: boolean;
   supportsNegativePrompt?: boolean;
+  guidance?: GuidanceConstraint;
 }
 
 export type ModelPricing =

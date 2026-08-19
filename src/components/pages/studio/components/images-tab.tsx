@@ -22,7 +22,6 @@ import {
   GenerateSection,
   SectionTitle,
   PromptTextarea,
-  AdvancedToggle,
   AdvancedFieldLabel,
   AdvancedFieldHint,
   FormRow,
@@ -70,7 +69,6 @@ export const ImagesTab: React.FC = () => {
   const isGenerating = useStudioStore((s) => s.isGenerating);
   const setIsGenerating = useStudioStore((s) => s.setIsGenerating);
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [expandedImageUuid, setExpandedImageUuid] = useState<string | null>(
     null,
   );
@@ -226,35 +224,25 @@ export const ImagesTab: React.FC = () => {
           value={imagePrompt}
           onChange={(e) => setImagePrompt(e.target.value)}
         />
-        <AdvancedToggle
-          type="button"
-          onClick={() => setAdvancedOpen((o) => !o)}
-        >
-          {advancedOpen ? "▾" : "▸"} Advanced
-        </AdvancedToggle>
-        {advancedOpen && (
-          <>
-            <AdvancedFieldLabel htmlFor="image-negative-prompt">
-              Negative prompt
-            </AdvancedFieldLabel>
-            <PromptTextarea
-              id="image-negative-prompt"
-              placeholder="Describe what to avoid (optional)..."
-              value={imageGenParams.negativePrompt}
-              disabled={!negativePromptEnabled}
-              aria-describedby={
-                negativePromptHint ? "image-negative-prompt-hint" : undefined
-              }
-              onChange={(e) =>
-                setImageGenParams({ negativePrompt: e.target.value })
-              }
-            />
-            {negativePromptHint && (
-              <AdvancedFieldHint id="image-negative-prompt-hint">
-                {negativePromptHint}
-              </AdvancedFieldHint>
-            )}
-          </>
+        <AdvancedFieldLabel htmlFor="image-negative-prompt">
+          Negative prompt
+        </AdvancedFieldLabel>
+        <PromptTextarea
+          id="image-negative-prompt"
+          placeholder="Describe what to avoid (optional)..."
+          value={imageGenParams.negativePrompt}
+          disabled={!negativePromptEnabled}
+          aria-describedby={
+            negativePromptHint ? "image-negative-prompt-hint" : undefined
+          }
+          onChange={(e) =>
+            setImageGenParams({ negativePrompt: e.target.value })
+          }
+        />
+        {negativePromptHint && (
+          <AdvancedFieldHint id="image-negative-prompt-hint">
+            {negativePromptHint}
+          </AdvancedFieldHint>
         )}
         <FormRow>
           <FormField>

@@ -139,7 +139,7 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
-        guidance: 5.0,
+        guidance: 1.0,
       });
       expect(migrated.wanParams).toBeUndefined();
     });
@@ -235,7 +235,7 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(8);
       expect(params.numInferenceSteps).toBe(30); // from defaults
-      expect(params.guidance).toBe(5.0); // from defaults
+      expect(params.guidance).toBe(1.0); // LTX default, from defaults
     });
 
     it("supplies defaults when wanParams is absent", () => {
@@ -248,7 +248,41 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(5);
       expect(params.numInferenceSteps).toBe(30);
-      expect(params.guidance).toBe(5.0);
+      expect(params.guidance).toBe(1.0);
+    });
+  });
+
+  describe("migration v6 to v7", () => {
+    it("resets LTX guidance, which the worker previously hardcoded to 1.0", () => {
+      const v6State = {
+        videoGenParams: {
+          model: "ltx-i2v",
+          duration: 5,
+          numInferenceSteps: 30,
+          guidance: 7.0,
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v6State, 6) as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((migrated.videoGenParams as any).guidance).toBe(1.0);
+    });
+
+    it("leaves a Wan guidance value alone — Wan already honoured it", () => {
+      const v6State = {
+        videoGenParams: {
+          model: "wan-i2v",
+          duration: 5,
+          numInferenceSteps: 30,
+          guidance: 7.0,
+        },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v6State, 6) as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((migrated.videoGenParams as any).guidance).toBe(7.0);
     });
   });
 
@@ -281,7 +315,7 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
-        guidance: 5.0,
+        guidance: 1.0,
       });
     });
 

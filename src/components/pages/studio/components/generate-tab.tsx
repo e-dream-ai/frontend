@@ -9,7 +9,18 @@ import {
   getAllowedDurationsForActions,
   hasActionLoras,
 } from "../constants/duration-options";
+import {
+  GUIDANCE_PARAM,
+  guidanceForModel,
+  resolveGuidanceConstraint,
+} from "../constants/guidance-options";
+import { GuidanceField } from "./guidance-field";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
+import { useModels } from "@/api/model/query/useModels";
+import { CostEstimate } from "@/components/shared/cost-estimate/cost-estimate";
+import { CreditLimitNotice } from "@/components/shared/credit-limit-notice/credit-limit-notice";
+import { useCostEstimate } from "@/hooks/useCostEstimate";
+import { useCreditGuard } from "@/hooks/useCreditGuard";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import {
   GenerateSection,
@@ -18,6 +29,7 @@ import {
   FieldLabel,
   StyledSelect,
   NavButton,
+  SecondaryNavButton,
   BottomRow,
 } from "./images-tab.styled";
 import {
@@ -34,6 +46,7 @@ import {
   SubmittedLabel,
   ComboCountText,
   HintText,
+  ActionGroup,
 } from "./generate-tab.styled";
 
 const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
@@ -43,10 +56,14 @@ const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
   "kling-25-i2v": "Kling 2.5 Turbo Pro",
 };
 
-const VIDEO_MODELS: VideoModel[] = ["ltx-i2v", "wan-i2v"];
+const VIDEO_MODELS: VideoModel[] = [
+  "ltx-i2v",
+  "wan-i2v",
+  "kling-25-i2v",
+  "kling-i2v",
+];
 
 const STEPS_OPTIONS = [20, 25, 30, 40];
-const GUIDANCE_OPTIONS = [3.0, 4.0, 5.0, 6.0, 7.0];
 
 export const GenerateTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
@@ -86,6 +103,26 @@ export const GenerateTab: React.FC = () => {
     [newCombos, videoGenParams.model, modelConstraints],
   );
 
+  const { data: modelsData } = useModels({ mediaType: "video" });
+  const modelOptions = modelsData?.data?.models ?? [];
+
+  const { totalCostUsd, costBreakdown } = useCostEstimate({
+    model: modelOptions.find((m) => m.id === videoGenParams.model),
+    params: { durationSec: videoGenParams.duration },
+    count: newCombos.length,
+    breakdownKey: "components.cost_estimate.clips",
+  });
+
+  const { overBudget, canManageKey, resetIn, guardOverBudget } =
+    useCreditGuard(totalCostUsd);
+
+  const supportsSteps =
+    modelConstraints.get(videoGenParams.model)?.supportsSteps ?? true;
+
+  const guidanceConstraint = resolveGuidanceConstraint(
+    videoGenParams.model,
+    modelConstraints.get(videoGenParams.model),
+  );
   const showLtxHint = useMemo(() => {
     if (videoGenParams.model !== "ltx-i2v") return false;
     return (
@@ -103,6 +140,16 @@ export const GenerateTab: React.FC = () => {
       setVideoGenParams({ duration: nextDuration });
     }
   }, [durationOptions, videoGenParams.duration, setVideoGenParams]);
+
+  const handleModelChange = (model: VideoModel) => {
+    setVideoGenParams({
+      model,
+      guidance: guidanceForModel(
+        videoGenParams.guidance,
+        resolveGuidanceConstraint(model, modelConstraints.get(model)),
+      ),
+    });
+  };
 
   const totalPossible = selectedImages.length * enabledActions.length;
 
@@ -207,9 +254,7 @@ export const GenerateTab: React.FC = () => {
             <FieldLabel>Model:</FieldLabel>
             <StyledSelect
               value={videoGenParams.model}
-              onChange={(e) =>
-                setVideoGenParams({ model: e.target.value as VideoModel })
-              }
+              onChange={(e) => handleModelChange(e.target.value as VideoModel)}
             >
               {VIDEO_MODELS.map((m) => (
                 <option key={m} value={m}>
@@ -233,36 +278,33 @@ export const GenerateTab: React.FC = () => {
               ))}
             </StyledSelect>
           </FormField>
-          <FormField>
-            <FieldLabel>Steps:</FieldLabel>
-            <StyledSelect
-              value={videoGenParams.numInferenceSteps}
-              onChange={(e) =>
-                setVideoGenParams({ numInferenceSteps: Number(e.target.value) })
-              }
-            >
-              {STEPS_OPTIONS.map((s) => (
-                <option key={s} value={s}>
-                  {s}
-                </option>
-              ))}
-            </StyledSelect>
-          </FormField>
-          <FormField>
-            <FieldLabel>Guidance:</FieldLabel>
-            <StyledSelect
+          {supportsSteps && (
+            <FormField>
+              <FieldLabel>Steps:</FieldLabel>
+              <StyledSelect
+                value={videoGenParams.numInferenceSteps}
+                onChange={(e) =>
+                  setVideoGenParams({
+                    numInferenceSteps: Number(e.target.value),
+                  })
+                }
+              >
+                {STEPS_OPTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </StyledSelect>
+            </FormField>
+          )}
+          {guidanceConstraint && (
+            <GuidanceField
+              param={GUIDANCE_PARAM[videoGenParams.model]}
+              constraint={guidanceConstraint}
               value={videoGenParams.guidance}
-              onChange={(e) =>
-                setVideoGenParams({ guidance: Number(e.target.value) })
-              }
-            >
-              {GUIDANCE_OPTIONS.map((g) => (
-                <option key={g} value={g}>
-                  {g}
-                </option>
-              ))}
-            </StyledSelect>
-          </FormField>
+              onChange={(guidance) => setVideoGenParams({ guidance })}
+            />
+          )}
         </SettingsGrid>
 
         <PlaylistRow>
@@ -282,21 +324,34 @@ export const GenerateTab: React.FC = () => {
         </PlaylistRow>
       </GenerateSection>
 
+      <CreditLimitNotice
+        overBudget={overBudget}
+        canManageKey={canManageKey}
+        resetIn={resetIn}
+      />
+
       <BottomRow>
-        <NavButton onClick={() => setActiveTab("actions")}>
+        <SecondaryNavButton onClick={() => setActiveTab("actions")}>
           &larr; Back to Actions
-        </NavButton>
-        <NavButton
-          onClick={submit}
-          disabled={isSubmitting || newCombos.length === 0}
-          style={{
-            background: newCombos.length === 0 ? "#555" : undefined,
-          }}
-        >
-          {isSubmitting
-            ? "Submitting..."
-            : `Generate ${newCombos.length} Videos \u2192`}
-        </NavButton>
+        </SecondaryNavButton>
+        <ActionGroup>
+          <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
+          <NavButton
+            onClick={() => {
+              if (guardOverBudget()) return;
+              submit();
+            }}
+            disabled={isSubmitting || newCombos.length === 0 || overBudget}
+            style={{
+              background:
+                newCombos.length === 0 || overBudget ? "#555" : undefined,
+            }}
+          >
+            {isSubmitting
+              ? "Submitting..."
+              : `Generate ${newCombos.length} Videos \u2192`}
+          </NavButton>
+        </ActionGroup>
       </BottomRow>
     </>
   );

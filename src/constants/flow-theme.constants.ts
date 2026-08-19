@@ -42,6 +42,8 @@ export const FLOW = {
   // Typography — match the rest of the app
   fontFamily: "'Comfortaa', sans-serif",
   fontFamilySerif: "'Comfortaa', sans-serif",
+  fontFamilyMono:
+    "ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace",
 } as const;
 
 /**

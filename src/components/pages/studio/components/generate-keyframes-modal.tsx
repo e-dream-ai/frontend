@@ -36,7 +36,6 @@ import {
   FieldHint,
   Select,
   PromptTextarea,
-  AdvancedToggle,
 } from "./transition-settings-panel.styled";
 
 interface Props {
@@ -54,7 +53,6 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
   const prompt = useStudioStore((s) => s.imagePrompt);
   const setPrompt = useStudioStore((s) => s.setImagePrompt);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [advancedOpen, setAdvancedOpen] = useState(false);
 
   const { data: modelsData } = useModels({ mediaType: "image" });
   const modelOptions = useMemo(
@@ -213,41 +211,28 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
               />
             </FieldGroup>
           </FieldRow>
-          <AdvancedToggle
-            type="button"
-            onClick={() => setAdvancedOpen((o) => !o)}
-            style={{ display: "block", marginTop: 12 }}
+          <FieldLabel
+            htmlFor="keyframe-negative-prompt"
+            style={{ display: "block", marginTop: 14, marginBottom: 8 }}
           >
-            {advancedOpen ? "▾" : "▸"} Advanced
-          </AdvancedToggle>
-          {advancedOpen && (
-            <>
-              <FieldLabel
-                htmlFor="keyframe-negative-prompt"
-                style={{ display: "block", marginTop: 10, marginBottom: 8 }}
-              >
-                Negative prompt
-              </FieldLabel>
-              <PromptTextarea
-                id="keyframe-negative-prompt"
-                placeholder="Describe what to avoid (optional)..."
-                value={imageGenParams.negativePrompt}
-                disabled={!negativePromptEnabled}
-                aria-describedby={
-                  negativePromptHint
-                    ? "keyframe-negative-prompt-hint"
-                    : undefined
-                }
-                onChange={(e) =>
-                  setImageGenParams({ negativePrompt: e.target.value })
-                }
-              />
-              {negativePromptHint && (
-                <FieldHint id="keyframe-negative-prompt-hint">
-                  {negativePromptHint}
-                </FieldHint>
-              )}
-            </>
+            Negative prompt
+          </FieldLabel>
+          <PromptTextarea
+            id="keyframe-negative-prompt"
+            placeholder="Describe what to avoid (optional)..."
+            value={imageGenParams.negativePrompt}
+            disabled={!negativePromptEnabled}
+            aria-describedby={
+              negativePromptHint ? "keyframe-negative-prompt-hint" : undefined
+            }
+            onChange={(e) =>
+              setImageGenParams({ negativePrompt: e.target.value })
+            }
+          />
+          {negativePromptHint && (
+            <FieldHint id="keyframe-negative-prompt-hint">
+              {negativePromptHint}
+            </FieldHint>
           )}
           <CreditLimitNotice
             overBudget={overBudget}

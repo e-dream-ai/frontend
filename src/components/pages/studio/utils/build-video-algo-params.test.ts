@@ -61,7 +61,7 @@ describe("buildVideoAlgoParams", () => {
     });
   });
 
-  it("builds ltx-i2v params without LoRAs (no steps/guidance — worker controls these)", () => {
+  it("builds ltx-i2v params without LoRAs (guidance sent, steps worker-controlled)", () => {
     const result = buildVideoAlgoParams({
       model: "ltx-i2v",
       action: makeAction(),
@@ -69,18 +69,18 @@ describe("buildVideoAlgoParams", () => {
       imageSize: "1280*720",
       duration: 10,
       numInferenceSteps: 25,
-      guidance: 4.0,
+      guidance: 2.5,
     });
 
-    // LTX worker handles steps/guidance internally
+    // The LTX worker fixes the step schedule; guidance is ours to set.
     expect(result).toEqual({
       infinidream_algorithm: "ltx-i2v",
       prompt: "slow zoom in",
       source_dream_uuid: "img-uuid",
       duration: 10,
+      guidance: 2.5,
     });
     expect(result).not.toHaveProperty("num_inference_steps");
-    expect(result).not.toHaveProperty("guidance");
   });
 
   it("builds ltx-i2v params WITH high_noise_loras (worker uses first LoRA only)", () => {
@@ -108,6 +108,7 @@ describe("buildVideoAlgoParams", () => {
       prompt: "slow zoom in",
       source_dream_uuid: "img-uuid",
       duration: 10,
+      guidance: 4.0,
       high_noise_loras: [
         {
           path: "ltx-2-19b-lora-camera-control-static.safetensors",
@@ -156,6 +157,7 @@ describe("buildVideoAlgoParams", () => {
       prompt: "slow zoom in",
       source_dream_uuid: "img-uuid",
       duration: 5,
+      guidance: 5.0,
       negative_prompt: "blurry, distorted, watermark",
     });
   });
@@ -173,6 +175,46 @@ describe("buildVideoAlgoParams", () => {
     });
 
     expect(result).not.toHaveProperty("negative_prompt");
+  });
+
+  it.each(["kling-i2v", "kling-25-i2v"] as const)(
+    "sends guidance as cfg_scale for %s",
+    (model) => {
+      const result = buildVideoAlgoParams({
+        model,
+        action: makeAction(),
+        imageUuid: "img-uuid",
+        endImageUuid: "end-uuid",
+        imageSize: "1280*720",
+        duration: 5,
+        numInferenceSteps: 30,
+        guidance: 0.35,
+      });
+
+      expect(result).toEqual({
+        infinidream_algorithm: model,
+        prompt: "slow zoom in",
+        source_dream_uuid: "img-uuid",
+        end_source_uuid: "end-uuid",
+        duration: 5,
+        cfg_scale: 0.35,
+      });
+      expect(result).not.toHaveProperty("guidance");
+    },
+  );
+
+  it("omits guidance when it is not a finite number", () => {
+    const result = buildVideoAlgoParams({
+      model: "wan-i2v",
+      action: makeAction(),
+      imageUuid: "img-uuid",
+      imageSize: "1280*720",
+      duration: 5,
+      numInferenceSteps: 30,
+      guidance: Number.NaN,
+    });
+
+    expect(result).not.toHaveProperty("guidance");
   });
 
   it("defaults imageSize to 1280*720 when empty for wan-i2v", () => {
