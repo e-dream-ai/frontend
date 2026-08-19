@@ -21,10 +21,12 @@ export const PreviewLabel = styled.span`
   align-self: flex-start;
 `;
 
-export const VideoWrapper = styled.div`
+export const VideoWrapper = styled.div<{ $ratio?: string }>`
   width: 100%;
   max-width: 480px;
-  aspect-ratio: 16 / 9;
+  /* Follows the shape of the video being played. 16 / 9 is only the fallback
+     for a segment whose dimensions the backend hasn't recorded. */
+  aspect-ratio: ${(p) => p.$ratio ?? "16 / 9"};
   border-radius: ${FLOW.radiusSm};
   overflow: hidden;
   background: ${FLOW.bg};
@@ -157,10 +159,13 @@ export const LightboxOverlay = styled.div`
   cursor: pointer;
 `;
 
-export const LightboxVideo = styled.div`
+export const LightboxVideo = styled.div<{ $ratio?: string }>`
   width: 90vw;
   max-width: 960px;
-  aspect-ratio: 16 / 9;
+  /* Tall videos would otherwise overflow the viewport once the box stops
+     being 16 / 9, so cap the height and let width follow the ratio. */
+  max-height: 85vh;
+  aspect-ratio: ${(p) => p.$ratio ?? "16 / 9"};
   border-radius: ${FLOW.radius};
   overflow: hidden;
   position: relative;

@@ -20,6 +20,7 @@ import {
 } from "./flow-preview.styled";
 import { CrossfadeVideo, type CrossfadeSegment } from "./crossfade-video";
 import { useLightboxA11y } from "../hooks/useLightboxA11y";
+import { mediaAspectRatio } from "../utils/media-aspect-ratio";
 
 function pad(n: number) {
   return n.toString().padStart(2, "0");
@@ -51,7 +52,10 @@ function PreviewLightbox({
       aria-modal="true"
       aria-label="Video preview"
     >
-      <LightboxVideo onClick={(e) => e.stopPropagation()}>
+      <LightboxVideo
+        $ratio={segments[index]?.ratio}
+        onClick={(e) => e.stopPropagation()}
+      >
         <CrossfadeVideo
           segments={segments}
           index={index}
@@ -104,7 +108,17 @@ export function FlowPreview() {
   const segments: CrossfadeSegment[] = dreamQueries.flatMap((q, i) => {
     const url = q.data?.video;
     if (!url) return [];
-    return [{ key: completedUuids[i], url, poster: q.data?.thumbnail }];
+    return [
+      {
+        key: completedUuids[i],
+        url,
+        poster: q.data?.thumbnail,
+        ratio: mediaAspectRatio(
+          q.data?.processedMediaWidth,
+          q.data?.processedMediaHeight,
+        ),
+      },
+    ];
   });
 
   const [rawTarget, setTargetIndex] = useState(0);
@@ -160,6 +174,7 @@ export function FlowPreview() {
         <VideoWrapper
           ref={wrapperRef}
           tabIndex={0}
+          $ratio={segments[targetIndex]?.ratio}
           onClick={() => setPreviewLightboxOpen(true)}
         >
           <CrossfadeVideo

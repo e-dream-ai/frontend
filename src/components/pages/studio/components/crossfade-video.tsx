@@ -14,6 +14,8 @@ export interface CrossfadeSegment {
   key: string;
   url: string;
   poster?: string;
+  /** CSS aspect-ratio of the source video ("1920 / 1080"), when known. */
+  ratio?: string;
 }
 
 interface Props {
