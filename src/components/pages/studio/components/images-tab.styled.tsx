@@ -95,6 +95,13 @@ export const FormField = styled.div`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.375rem;
+  }
 `;
 
 export const FieldLabel = styled.label`
@@ -111,6 +118,8 @@ export const StyledSelect = styled.select`
   color: ${(props) => props.theme.textPrimaryColor};
   font-size: 0.8125rem;
   cursor: pointer;
+  min-width: 0;
+  max-width: 100%;
 `;
 
 export const GenerateButton = styled.button`
@@ -201,7 +210,15 @@ export const BottomRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
   margin-top: 1rem;
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.875rem;
+  }
 `;
 
 export const SelectionCount = styled.span`
@@ -218,6 +235,7 @@ export const NavButton = styled.button`
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
+  white-space: nowrap;
 
   &:hover {
     filter: brightness(120%);

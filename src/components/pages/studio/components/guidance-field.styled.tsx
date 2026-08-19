@@ -1,8 +1,9 @@
 import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 
-const THUMB = 14;
+export const THUMB = 16;
 const TRACK_INSET = THUMB / 2;
+const HIT_HEIGHT = 32;
 
 export const Field = styled.div`
   display: flex;
@@ -36,7 +37,7 @@ export const Param = styled.label`
   color: ${FLOW.textMuted};
 `;
 
-export const Value = styled.output`
+export const Value = styled.span`
   font-family: ${FLOW.fontFamilyMono};
   font-size: 13px;
   font-variant-numeric: tabular-nums;
@@ -45,7 +46,9 @@ export const Value = styled.output`
 
 export const Rail = styled.div`
   position: relative;
-  height: ${THUMB}px;
+  height: ${HIT_HEIGHT}px;
+  margin: -${(HIT_HEIGHT - THUMB) / 2 - 2}px 0;
+  touch-action: none;
 `;
 
 export const Track = styled.div<{ $notches: number }>`
@@ -80,7 +83,7 @@ export const Slider = styled.input`
   inset: 0;
   z-index: 1;
   width: 100%;
-  height: 100%;
+  height: ${HIT_HEIGHT}px;
   margin: 0;
   padding: 0;
   appearance: none;
@@ -89,7 +92,7 @@ export const Slider = styled.input`
   cursor: pointer;
 
   &::-webkit-slider-runnable-track {
-    height: 100%;
+    height: ${HIT_HEIGHT}px;
     background: transparent;
   }
 
@@ -97,6 +100,7 @@ export const Slider = styled.input`
     -webkit-appearance: none;
     width: ${THUMB}px;
     height: ${THUMB}px;
+    margin-top: ${(HIT_HEIGHT - THUMB) / 2}px;
     border-radius: 50%;
     background: ${FLOW.accent};
     border: 2px solid ${FLOW.bg};
@@ -105,7 +109,7 @@ export const Slider = styled.input`
   }
 
   &::-moz-range-track {
-    height: 100%;
+    height: ${HIT_HEIGHT}px;
     background: transparent;
   }
 

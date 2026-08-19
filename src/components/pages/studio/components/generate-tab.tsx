@@ -29,6 +29,7 @@ import {
   FieldLabel,
   StyledSelect,
   NavButton,
+  SecondaryNavButton,
   BottomRow,
 } from "./images-tab.styled";
 import {
@@ -330,9 +331,9 @@ export const GenerateTab: React.FC = () => {
       />
 
       <BottomRow>
-        <NavButton onClick={() => setActiveTab("actions")}>
+        <SecondaryNavButton onClick={() => setActiveTab("actions")}>
           &larr; Back to Actions
-        </NavButton>
+        </SecondaryNavButton>
         <ActionGroup>
           <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
           <NavButton

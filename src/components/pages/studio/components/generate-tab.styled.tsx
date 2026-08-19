@@ -56,7 +56,7 @@ export const CellCheckbox = styled.input.attrs({ type: "checkbox" })`
 
 export const SettingsGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(200px, 100%), 1fr));
   gap: 1rem;
 `;
 
@@ -65,6 +65,21 @@ export const PlaylistRow = styled.div`
   align-items: center;
   gap: 0.75rem;
   margin-top: 1rem;
+  flex-wrap: wrap;
+
+  > select {
+    flex: 1 1 12rem;
+  }
+
+  @media (max-width: 480px) {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+
+    > select {
+      flex: 0 0 auto;
+    }
+  }
 `;
 
 export const DescriptionText = styled.p`
@@ -94,4 +109,11 @@ export const ActionGroup = styled.div`
   display: flex;
   align-items: center;
   gap: 1rem;
+
+  @media (max-width: 480px) {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.625rem;
+  }
 `;
