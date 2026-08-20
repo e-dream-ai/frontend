@@ -164,7 +164,11 @@ function deriveTransitions(
 
 export const flowPartialize = (state: FlowStoreState) => ({
   keyframes: state.keyframes
-    .filter((kf) => (kf.keyframeUuid || kf.dreamUuid) && !kf.uploadStatus)
+    .filter((kf) => {
+      if (kf.uploadStatus === "uploading") return Boolean(kf.dreamUuid);
+      if (kf.uploadStatus === "failed") return false;
+      return Boolean(kf.keyframeUuid || kf.dreamUuid);
+    })
     .map((kf) => ({
       id: kf.id,
       keyframeUuid: kf.keyframeUuid,
@@ -176,6 +180,8 @@ export const flowPartialize = (state: FlowStoreState) => ({
       naturalWidth: kf.naturalWidth,
       naturalHeight: kf.naturalHeight,
       isLoopKeyframe: kf.isLoopKeyframe,
+      uploadStatus: kf.uploadStatus,
+      uploadProgress: kf.uploadProgress,
     })),
   loop: state.loop,
   transitions: state.transitions,
