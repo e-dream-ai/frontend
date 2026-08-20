@@ -113,18 +113,16 @@ describe("resolveEffectiveSettings", () => {
     expect(settings.action.prompt).toBeTruthy();
   });
 
-  it("falls back to the preset negative prompt when none is stored", () => {
+  it("keeps a cleared negative prompt cleared", () => {
     const transition: FlowTransition = {
       fromKeyframeId: "a",
       toKeyframeId: "b",
       status: "idle",
       presetOverride: "Morph",
+      negativePromptOverride: "",
     };
-    const settings = resolveEffectiveSettings(transition, {
-      ...globalSettings,
-      globalNegativePrompt: "",
-    });
-    expect(settings.negativePrompt).toContain("hard cut");
+    const settings = resolveEffectiveSettings(transition, globalSettings);
+    expect(settings.negativePrompt).toBe("");
   });
 
   it("a stored negative prompt wins over the preset's", () => {

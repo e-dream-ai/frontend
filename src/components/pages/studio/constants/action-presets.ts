@@ -1,18 +1,4 @@
-import type { StudioAction } from "@/types/studio.types";
-import { v4 as uuidv4 } from "uuid";
-
-/**
- * Which section of the flow Preset dropdown a pack belongs to.
- * "camera" = how the shot moves, "transformations" = how the scene changes.
- */
-export type PresetGroup = "transformations" | "camera";
-
-export interface PresetPack {
-  name: string;
-  model: "wan-i2v" | "ltx-i2v" | "all";
-  group: PresetGroup;
-  actions: Omit<StudioAction, "id">[];
-}
+import type { PresetPack } from "./preset-packs";
 
 const OSTRIS_BASE = "https://huggingface.co/ostris/wan22_i2v_14b";
 
@@ -241,6 +227,3 @@ export const ACTION_PRESETS: PresetPack[] = [
     ],
   },
 ];
-
-export const createActionsFromPreset = (preset: PresetPack): StudioAction[] =>
-  preset.actions.map((a) => ({ ...a, id: uuidv4() }));

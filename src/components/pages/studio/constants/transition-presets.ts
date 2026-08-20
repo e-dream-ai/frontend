@@ -1,4 +1,4 @@
-import type { PresetGroup, PresetPack } from "./action-presets";
+import type { PresetGroup, PresetPack } from "./preset-packs";
 
 /**
  * Named transition prompts for the flow app (see e-dream-ai/frontend#722).
