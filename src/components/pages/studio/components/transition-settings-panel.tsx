@@ -138,17 +138,26 @@ export function TransitionSettingsPanel({
   );
   const guidanceParam = GUIDANCE_PARAM[currentModel];
 
-  // Filter presets by model
-  const filteredPresets = useMemo(
-    () =>
-      ACTION_PRESETS.filter(
+  // Menu sections. Action packs are model-specific (LoRA paths differ per
+  // model); transition packs are prompt-only, so every model runs all of them.
+  const presetGroups = useMemo(() => {
+    const available = [
+      ...ACTION_PRESETS.filter(
         (p) => p.model === currentModel || p.model === "all",
       ),
-    [currentModel],
-  );
-
-  // Transition presets are prompt-only, so every model can run all of them.
-  const transitionPresets = TRANSITION_PRESETS;
+      ...TRANSITION_PRESETS,
+    ];
+    return [
+      {
+        label: "Transformations",
+        presets: available.filter((p) => p.group === "transformations"),
+      },
+      {
+        label: "Camera",
+        presets: available.filter((p) => p.group === "camera"),
+      },
+    ];
+  }, [currentModel]);
 
   // Compute allowed durations
   const allowedDurations = useMemo(() => {
@@ -459,20 +468,15 @@ export function TransitionSettingsPanel({
             onChange={(e) => handlePresetChange(e.target.value)}
           >
             <option value="">No preset</option>
-            <optgroup label="Camera">
-              {filteredPresets.map((p) => (
-                <option key={p.name} value={p.name}>
-                  {p.name}
-                </option>
-              ))}
-            </optgroup>
-            <optgroup label="Transitions">
-              {transitionPresets.map((p) => (
-                <option key={p.name} value={p.name}>
-                  {p.name}
-                </option>
-              ))}
-            </optgroup>
+            {presetGroups.map((group) => (
+              <optgroup key={group.label} label={group.label}>
+                {group.presets.map((p) => (
+                  <option key={p.name} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </optgroup>
+            ))}
           </Select>
         </FieldGroup>
 

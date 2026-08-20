@@ -21,11 +21,24 @@ describe("TRANSITION_PRESETS", () => {
     const withNegative = TRANSITION_PRESETS.filter(
       (p) => p.actions[0].negativePrompt,
     ).map((p) => p.name);
-    expect(withNegative).toEqual([
-      "Morph / Transformation",
-      "Liquid / Particle Dissolve",
-      "Kaleidoscope / Fractal Transition",
+    expect(withNegative).toEqual(["Morph", "Kaleidoscope", "Liquid"]);
+  });
+
+  it("groups the transformations ahead of the camera moves", () => {
+    const transformations = TRANSITION_PRESETS.filter(
+      (p) => p.group === "transformations",
+    ).map((p) => p.name);
+    expect(transformations).toEqual([
+      "Morph",
+      "Kaleidoscope",
+      "Liquid",
+      "Time-Lapse",
+      "Match Cut",
     ]);
+    // Every remaining pack lands in the camera section.
+    expect(TRANSITION_PRESETS.filter((p) => p.group === "camera")).toHaveLength(
+      TRANSITION_PRESETS.length - transformations.length,
+    );
   });
 
   it("does not collide with action preset names", () => {

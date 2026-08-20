@@ -63,7 +63,7 @@ export function resolveEffectiveSettings(
   const presetId = transition.presetOverride ?? global.globalPresetId;
   const prompt = transition.promptOverride ?? global.globalPrompt;
   // An empty negative prompt falls back to the preset's, mirroring how the
-  // prompt falls back below — presets like "Morph / Transformation" ship one.
+  // prompt falls back below — presets like "Morph" ship one.
   const storedNegativePrompt =
     transition.negativePromptOverride ?? global.globalNegativePrompt;
   const negativePrompt =

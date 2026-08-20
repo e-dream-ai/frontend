@@ -21,7 +21,7 @@ describe("resolvePresetAction", () => {
   });
 
   it("carries the negative prompt of a transition preset that defines one", () => {
-    const action = resolvePresetAction("Morph / Transformation");
+    const action = resolvePresetAction("Morph");
     expect(action!.negativePrompt).toContain("hard cut");
   });
 
@@ -118,7 +118,7 @@ describe("resolveEffectiveSettings", () => {
       fromKeyframeId: "a",
       toKeyframeId: "b",
       status: "idle",
-      presetOverride: "Morph / Transformation",
+      presetOverride: "Morph",
     };
     const settings = resolveEffectiveSettings(transition, {
       ...globalSettings,
@@ -132,7 +132,7 @@ describe("resolveEffectiveSettings", () => {
       fromKeyframeId: "a",
       toKeyframeId: "b",
       status: "idle",
-      presetOverride: "Morph / Transformation",
+      presetOverride: "Morph",
       negativePromptOverride: "my negative",
     };
     const settings = resolveEffectiveSettings(transition, globalSettings);
