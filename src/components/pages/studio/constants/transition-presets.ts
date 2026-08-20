@@ -62,6 +62,16 @@ export const TRANSITION_PRESETS: PresetPack[] = [
     "A central shape or silhouette holds its exact position and outline in frame while its surface, color, and material shift and transform continuously, the background transforms in sync with it, camera holds static or performs a slow push-in throughout.",
   ),
   transitionPack(
+    "transformations",
+    "Match on Action",
+    "The subject performs a single continuous physical motion, such as a jump, turn, dive, or fall, the surrounding environment shifts seamlessly at the peak of the motion, camera tracks or holds the subject throughout, natural physics.",
+  ),
+  transitionPack(
+    "transformations",
+    "Light Flash Whiteout",
+    "A light source within the frame intensifies gradually, the screen brightens smoothly to a near white overexposure without cutting, the following scene emerges out of the light as exposure settles back to normal, one continuous exposure ramp.",
+  ),
+  transitionPack(
     "camera",
     "Zoom-Through",
     "Camera performs a rapid crash zoom into a central point of the frame, the zoomed detail fills the entire frame, motion accelerates smoothly and carries directly into the following scene, one unbroken continuous zoom, tracking shot, cinematic pacing.",
@@ -95,16 +105,6 @@ export const TRANSITION_PRESETS: PresetPack[] = [
     "camera",
     "360 Rotation",
     "Camera orbits smoothly around a fixed central point in a full or partial rotation, the background transforms gradually over the course of the rotation, constant rotation speed throughout.",
-  ),
-  transitionPack(
-    "camera",
-    "Match on Action",
-    "The subject performs a single continuous physical motion, such as a jump, turn, dive, or fall, the surrounding environment shifts seamlessly at the peak of the motion, camera tracks or holds the subject throughout, natural physics.",
-  ),
-  transitionPack(
-    "camera",
-    "Light Flash Whiteout",
-    "A light source within the frame intensifies gradually, the screen brightens smoothly to a near white overexposure without cutting, the following scene emerges out of the light as exposure settles back to normal, one continuous exposure ramp.",
   ),
   transitionPack(
     "camera",

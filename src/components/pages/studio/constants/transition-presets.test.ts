@@ -34,6 +34,8 @@ describe("TRANSITION_PRESETS", () => {
       "Liquid",
       "Time-Lapse",
       "Match Cut",
+      "Match on Action",
+      "Light Flash Whiteout",
     ]);
     // Every remaining pack lands in the camera section.
     expect(TRANSITION_PRESETS.filter((p) => p.group === "camera")).toHaveLength(
