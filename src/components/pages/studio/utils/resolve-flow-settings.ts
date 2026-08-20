@@ -8,16 +8,21 @@ import {
   ACTION_PRESETS,
   createActionsFromPreset,
 } from "@/components/pages/studio/constants/action-presets";
+import { TRANSITION_PRESETS } from "@/components/pages/studio/constants/transition-presets";
 
 /**
  * Resolve a PresetPack name to a single StudioAction (the first action in the pack).
+ * Looks through the action packs and the transition packs, which share a
+ * namespace because a stored presetOverride is just a pack name.
  * Returns undefined if the preset name is empty or not found.
  */
 export function resolvePresetAction(
   presetName: string,
 ): StudioAction | undefined {
   if (!presetName) return undefined;
-  const pack = ACTION_PRESETS.find((p) => p.name === presetName);
+  const pack =
+    ACTION_PRESETS.find((p) => p.name === presetName) ??
+    TRANSITION_PRESETS.find((p) => p.name === presetName);
   if (!pack) return undefined;
   const actions = createActionsFromPreset(pack);
   return actions[0];
@@ -57,8 +62,12 @@ export function resolveEffectiveSettings(
 ): EffectiveSettings {
   const presetId = transition.presetOverride ?? global.globalPresetId;
   const prompt = transition.promptOverride ?? global.globalPrompt;
-  const negativePrompt =
+  // An empty negative prompt falls back to the preset's, mirroring how the
+  // prompt falls back below — presets like "Morph / Transformation" ship one.
+  const storedNegativePrompt =
     transition.negativePromptOverride ?? global.globalNegativePrompt;
+  const negativePrompt =
+    storedNegativePrompt || resolvePresetAction(presetId)?.negativePrompt || "";
   const duration = transition.durationOverride ?? global.globalDuration;
   const model = transition.modelOverride ?? global.globalModel;
   const numInferenceSteps =

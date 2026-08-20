@@ -9,6 +9,7 @@ import { CreditLimitNotice } from "@/components/shared/credit-limit-notice/credi
 import { useCostEstimate } from "@/hooks/useCostEstimate";
 import { useCreditGuard } from "@/hooks/useCreditGuard";
 import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
+import { TRANSITION_PRESETS } from "@/components/pages/studio/constants/transition-presets";
 import {
   getAllowedDurationsForActions,
   clampDurationToAllowed,
@@ -112,8 +113,14 @@ export function TransitionSettingsPanel({
     [currentPresetId],
   );
   const currentPrompt = storedPrompt || currentPresetFallbackPrompt;
-  const currentNegativePrompt =
+  const storedNegativePrompt =
     selectedTransition?.negativePromptOverride ?? globalNegativePrompt;
+  const currentPresetFallbackNegativePrompt = useMemo(
+    () => resolvePresetAction(currentPresetId)?.negativePrompt ?? "",
+    [currentPresetId],
+  );
+  const currentNegativePrompt =
+    storedNegativePrompt || currentPresetFallbackNegativePrompt;
   const currentDuration =
     selectedTransition?.durationOverride ?? globalDuration;
   const currentModel = selectedTransition?.modelOverride ?? globalModel;
@@ -139,6 +146,9 @@ export function TransitionSettingsPanel({
       ),
     [currentModel],
   );
+
+  // Transition presets are prompt-only, so every model can run all of them.
+  const transitionPresets = TRANSITION_PRESETS;
 
   // Compute allowed durations
   const allowedDurations = useMemo(() => {
@@ -251,10 +261,13 @@ export function TransitionSettingsPanel({
     (presetName: string) => {
       setValue("presetOverride", presetName || "");
 
-      // Fill prompt from preset
+      // Fill prompt (and negative prompt) from preset. The negative is cleared
+      // for presets that don't define one, so a previous preset's negative
+      // never silently rides along on the next transition.
       const action = resolvePresetAction(presetName);
       if (action) {
         setValue("promptOverride", action.prompt);
+        setValue("negativePromptOverride", action.negativePrompt ?? "");
       }
 
       // Clear any explicit LoRA override so the preset's LoRA takes effect
@@ -446,11 +459,20 @@ export function TransitionSettingsPanel({
             onChange={(e) => handlePresetChange(e.target.value)}
           >
             <option value="">No preset</option>
-            {filteredPresets.map((p) => (
-              <option key={p.name} value={p.name}>
-                {p.name}
-              </option>
-            ))}
+            <optgroup label="Camera">
+              {filteredPresets.map((p) => (
+                <option key={p.name} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+            </optgroup>
+            <optgroup label="Transitions">
+              {transitionPresets.map((p) => (
+                <option key={p.name} value={p.name}>
+                  {p.name}
+                </option>
+              ))}
+            </optgroup>
           </Select>
         </FieldGroup>
 

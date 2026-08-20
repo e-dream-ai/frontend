@@ -20,6 +20,9 @@ export interface LoRAConfig {
 export interface StudioAction {
   id: string;
   prompt: string;
+  // Prompt-level negative, supplied by presets that need one (transitions).
+  // Undefined means "no opinion" — the user's negative prompt stands.
+  negativePrompt?: string;
   enabled: boolean;
   highNoiseLoras?: LoRAConfig[];
   lowNoiseLoras?: LoRAConfig[];
