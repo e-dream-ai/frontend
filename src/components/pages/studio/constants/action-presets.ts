@@ -1,11 +1,4 @@
-import type { StudioAction } from "@/types/studio.types";
-import { v4 as uuidv4 } from "uuid";
-
-export interface PresetPack {
-  name: string;
-  model: "wan-i2v" | "ltx-i2v" | "all";
-  actions: Omit<StudioAction, "id">[];
-}
+import type { PresetPack } from "./preset-packs";
 
 const OSTRIS_BASE = "https://huggingface.co/ostris/wan22_i2v_14b";
 
@@ -16,6 +9,7 @@ export const ACTION_PRESETS: PresetPack[] = [
   {
     name: "Camera Basics",
     model: "wan-i2v",
+    group: "camera",
     actions: [
       {
         prompt: "slow zoom in, camera gently pushing forward",
@@ -96,6 +90,7 @@ export const ACTION_PRESETS: PresetPack[] = [
   {
     name: "Cinematic",
     model: "wan-i2v",
+    group: "camera",
     actions: [
       { prompt: "dolly forward, smooth cinematic approach", enabled: true },
       {
@@ -131,6 +126,7 @@ export const ACTION_PRESETS: PresetPack[] = [
   {
     name: "LTX Camera",
     model: "ltx-i2v",
+    group: "camera",
     actions: [
       {
         prompt: "static camera, subtle ambient movement",
@@ -207,6 +203,7 @@ export const ACTION_PRESETS: PresetPack[] = [
   {
     name: "Organic",
     model: "all",
+    group: "transformations",
     actions: [
       { prompt: "gentle breathing motion, subtle life", enabled: true },
       { prompt: "subtle sway, natural wind movement", enabled: true },
@@ -217,6 +214,7 @@ export const ACTION_PRESETS: PresetPack[] = [
   {
     name: "Abstract",
     model: "all",
+    group: "transformations",
     actions: [
       {
         prompt:
@@ -229,6 +227,3 @@ export const ACTION_PRESETS: PresetPack[] = [
     ],
   },
 ];
-
-export const createActionsFromPreset = (preset: PresetPack): StudioAction[] =>
-  preset.actions.map((a) => ({ ...a, id: uuidv4() }));

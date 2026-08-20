@@ -23,7 +23,11 @@ import {
 import { SEED_HINT } from "@/components/pages/studio/constants/seed-options";
 import { useSeedInput } from "@/components/pages/studio/hooks/useSeedInput";
 import { GuidanceField } from "./guidance-field";
-import { resolvePresetAction } from "@/components/pages/studio/utils/resolve-flow-settings";
+import {
+  getPresetGroups,
+  resolvePresetAction,
+} from "@/components/pages/studio/utils/resolve-flow-settings";
+import { resolveNegativePromptSupport } from "@/components/pages/studio/utils/negative-prompt-support";
 import { resolveGenerationTargets } from "@/components/pages/studio/utils/flow-generation-targets";
 import {
   PanelContainer,
@@ -34,6 +38,7 @@ import {
   FieldRow,
   FieldGroup,
   FieldLabel,
+  FieldHint,
   Select,
   PromptTextarea,
   GenerateButton,
@@ -106,12 +111,12 @@ export function TransitionSettingsPanel({
 
   // Effective values (override > global > preset fallback)
   const currentPresetId = selectedTransition?.presetOverride ?? globalPresetId;
-  const storedPrompt = selectedTransition?.promptOverride ?? globalPrompt;
-  const currentPresetFallbackPrompt = useMemo(
-    () => resolvePresetAction(currentPresetId)?.prompt ?? "",
+  const presetAction = useMemo(
+    () => resolvePresetAction(currentPresetId),
     [currentPresetId],
   );
-  const currentPrompt = storedPrompt || currentPresetFallbackPrompt;
+  const storedPrompt = selectedTransition?.promptOverride ?? globalPrompt;
+  const currentPrompt = storedPrompt || presetAction?.prompt || "";
   const currentNegativePrompt =
     selectedTransition?.negativePromptOverride ?? globalNegativePrompt;
   const currentDuration =
@@ -130,26 +135,23 @@ export function TransitionSettingsPanel({
     currentConstraints,
   );
   const guidanceParam = GUIDANCE_PARAM[currentModel];
+  const { enabled: negativePromptEnabled, hint: negativePromptHint } =
+    resolveNegativePromptSupport(modelOptions, currentModel);
 
-  // Filter presets by model
-  const filteredPresets = useMemo(
-    () =>
-      ACTION_PRESETS.filter(
-        (p) => p.model === currentModel || p.model === "all",
-      ),
+  const presetGroups = useMemo(
+    () => getPresetGroups(currentModel),
     [currentModel],
   );
 
   // Compute allowed durations
-  const allowedDurations = useMemo(() => {
-    if (!currentPresetId) {
-      return getAllowedDurationsForActions([], currentModelDurations);
-    }
-    const action = resolvePresetAction(currentPresetId);
-    if (!action)
-      return getAllowedDurationsForActions([], currentModelDurations);
-    return getAllowedDurationsForActions([action], currentModelDurations);
-  }, [currentPresetId, currentModelDurations]);
+  const allowedDurations = useMemo(
+    () =>
+      getAllowedDurationsForActions(
+        presetAction ? [presetAction] : [],
+        currentModelDurations,
+      ),
+    [presetAction, currentModelDurations],
+  );
 
   // Extract available LoRA options for the current model from preset packs.
   // Each unique LoRA (by path) becomes a selectable option.
@@ -187,12 +189,11 @@ export function TransitionSettingsPanel({
   const currentLoraKey = useMemo(() => {
     const override = selectedTransition?.loraOverride ?? globalLora;
     if (override !== undefined) return override[0]?.path ?? "";
-    const presetAction = resolvePresetAction(currentPresetId);
     if (presetAction?.highNoiseLoras?.length) {
       return presetAction.highNoiseLoras[0].path;
     }
     return "";
-  }, [selectedTransition?.loraOverride, globalLora, currentPresetId]);
+  }, [selectedTransition?.loraOverride, globalLora, presetAction]);
 
   type FieldMap = {
     presetOverride: string;
@@ -251,10 +252,13 @@ export function TransitionSettingsPanel({
     (presetName: string) => {
       setValue("presetOverride", presetName || "");
 
-      // Fill prompt from preset
+      // Fill prompt (and negative prompt) from preset. The negative is cleared
+      // for presets that don't define one, so a previous preset's negative
+      // never silently rides along on the next transition.
       const action = resolvePresetAction(presetName);
       if (action) {
         setValue("promptOverride", action.prompt);
+        setValue("negativePromptOverride", action.negativePrompt ?? "");
       }
 
       // Clear any explicit LoRA override so the preset's LoRA takes effect
@@ -290,10 +294,9 @@ export function TransitionSettingsPanel({
     (model: VideoModel) => {
       setValue("modelOverride", model);
 
-      const action = resolvePresetAction(currentPresetId);
       const fixedDurations = modelConstraints.get(model)?.durationsSec;
       const newAllowed = getAllowedDurationsForActions(
-        action ? [action] : [],
+        presetAction ? [presetAction] : [],
         fixedDurations,
       );
       const clamped = clampDurationToAllowed(currentDuration, newAllowed);
@@ -311,7 +314,7 @@ export function TransitionSettingsPanel({
       }
     },
     [
-      currentPresetId,
+      presetAction,
       currentDuration,
       currentGuidance,
       setValue,
@@ -336,9 +339,8 @@ export function TransitionSettingsPanel({
       }
 
       // Re-clamp duration against the new LoRA, since LoRAs can restrict durations.
-      const baseAction = resolvePresetAction(currentPresetId);
       const clampAction = {
-        prompt: baseAction?.prompt ?? "",
+        prompt: presetAction?.prompt ?? "",
         highNoiseLoras: nextLora,
       };
       const newAllowed = getAllowedDurationsForActions(
@@ -354,7 +356,7 @@ export function TransitionSettingsPanel({
       isPerTransition,
       selectedTransitionIndex,
       loraOptions,
-      currentPresetId,
+      presetAction,
       currentModelDurations,
       currentDuration,
       setValue,
@@ -363,7 +365,7 @@ export function TransitionSettingsPanel({
 
   // When no preset is selected, the prompt drives the generation —
   // so it becomes required. With a preset, the preset supplies a prompt.
-  const needsPrompt = !currentPresetId && !currentPrompt.trim();
+  const needsPrompt = !presetAction && !currentPrompt.trim();
 
   const { targets: generateAllTargets } = useMemo(
     () => resolveGenerationTargets(transitions, keyframes),
@@ -446,10 +448,14 @@ export function TransitionSettingsPanel({
             onChange={(e) => handlePresetChange(e.target.value)}
           >
             <option value="">No preset</option>
-            {filteredPresets.map((p) => (
-              <option key={p.name} value={p.name}>
-                {p.name}
-              </option>
+            {presetGroups.map((group) => (
+              <optgroup key={group.id} label={group.label}>
+                {group.presets.map((p) => (
+                  <option key={p.name} value={p.name}>
+                    {p.name}
+                  </option>
+                ))}
+              </optgroup>
             ))}
           </Select>
         </FieldGroup>
@@ -541,14 +547,28 @@ export function TransitionSettingsPanel({
             </FieldGroup>
 
             <FieldGroup>
-              <FieldLabel>Negative Prompt</FieldLabel>
+              <FieldLabel htmlFor="transition-negative-prompt">
+                Negative Prompt
+              </FieldLabel>
               <PromptTextarea
+                id="transition-negative-prompt"
                 value={currentNegativePrompt}
                 placeholder="Describe what to avoid..."
+                disabled={!negativePromptEnabled}
+                aria-describedby={
+                  negativePromptHint
+                    ? "transition-negative-prompt-hint"
+                    : undefined
+                }
                 onChange={(e) =>
                   setValue("negativePromptOverride", e.target.value)
                 }
               />
+              {negativePromptHint && (
+                <FieldHint id="transition-negative-prompt-hint">
+                  {negativePromptHint}
+                </FieldHint>
+              )}
             </FieldGroup>
 
             <FieldRow>
