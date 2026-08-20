@@ -3,6 +3,8 @@ import { useStudioStore } from "@/stores/studio.store";
 import { useFlowStore } from "@/stores/flow.store";
 import { fetchDream } from "@/api/dream/query/useDream";
 import type { StudioImage } from "@/types/studio.types";
+import { dreamMediaUrl } from "../utils/resolve-dream-media";
+import { useDreamMediaResolver } from "./useDreamMediaResolver";
 
 const FAILED_CLEANUP_MS = 6000;
 
@@ -18,6 +20,7 @@ const FAILED_CLEANUP_MS = 6000;
 export const useGeneratedKeyframeSync = () => {
   const images = useStudioStore((s) => s.images);
   const resolving = useRef(new Set<string>());
+  const resolveMedia = useDreamMediaResolver();
 
   useEffect(() => {
     const { keyframes, updateKeyframe, removeKeyframe } =
@@ -26,10 +29,15 @@ export const useGeneratedKeyframeSync = () => {
     const finalize = (id: string, dreamUuid: string) => {
       if (resolving.current.has(id)) return;
       resolving.current.add(id);
-      fetchDream(dreamUuid)
+      updateKeyframe(id, { uploadProgress: 100 });
+      resolveMedia(dreamUuid)
         .then((dream) => {
-          const url =
-            dream?.thumbnail || dream?.video || dream?.original_video || "";
+          const url = dreamMediaUrl(dream);
+          if (!url) {
+            fail(id);
+            return;
+          }
+          useStudioStore.getState().updateImage(dreamUuid, { url });
           useFlowStore.getState().updateKeyframe(id, {
             imageUrl: url,
             name: dream?.name ?? undefined,
@@ -94,5 +102,5 @@ export const useGeneratedKeyframeSync = () => {
         updateKeyframe(kf.id, { uploadProgress: img.progress ?? 0 });
       }
     }
-  }, [images]);
+  }, [images, resolveMedia]);
 };

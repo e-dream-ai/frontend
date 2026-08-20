@@ -11,10 +11,12 @@ export const CardWrapper = styled.div<{
   $isDragging?: boolean;
   $uploading?: boolean;
   $failed?: boolean;
+  $ratio?: number;
 }>`
   flex-shrink: 0;
-  width: 140px;
+
   height: 100px;
+  aspect-ratio: ${(p) => p.$ratio ?? 1.4};
   border-radius: ${FLOW.radiusSm};
   overflow: hidden;
   isolation: isolate;
@@ -72,7 +74,10 @@ export const CardWrapper = styled.div<{
 export const CardImage = styled.img<{ $uploading?: boolean }>`
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  /* The wrapper is sized to this image's ratio, so contain and cover agree.
+     contain is the safer of the two: if the box is ever slightly off, the
+     frame letterboxes instead of silently cropping. */
+  object-fit: contain;
   display: block;
   transition: filter 0.4s ease;
   ${(p) =>

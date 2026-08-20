@@ -4,10 +4,44 @@ import type {
   LoRAConfig,
 } from "@/types/studio.types";
 import type { FlowTransition } from "@/types/flow.types";
+import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
+import { TRANSITION_PRESETS } from "@/components/pages/studio/constants/transition-presets";
 import {
-  ACTION_PRESETS,
+  PRESET_GROUPS,
   createActionsFromPreset,
-} from "@/components/pages/studio/constants/action-presets";
+  type PresetGroup,
+  type PresetPack,
+} from "@/components/pages/studio/constants/preset-packs";
+
+const ALL_PRESET_PACKS: PresetPack[] = [
+  ...ACTION_PRESETS,
+  ...TRANSITION_PRESETS,
+];
+
+const PACKS_BY_NAME = ALL_PRESET_PACKS.reduce((index, pack) => {
+  if (!index.has(pack.name)) index.set(pack.name, pack);
+  return index;
+}, new Map<string, PresetPack>());
+
+export interface PresetGroupOption {
+  id: PresetGroup;
+  label: string;
+  presets: PresetPack[];
+}
+
+export function getPresetGroups(model: VideoModel): PresetGroupOption[] {
+  const groups: PresetGroupOption[] = PRESET_GROUPS.map((group) => ({
+    id: group.id,
+    label: group.label,
+    presets: [],
+  }));
+  const byId = new Map(groups.map((group) => [group.id, group]));
+  for (const pack of ALL_PRESET_PACKS) {
+    if (pack.model !== "all" && pack.model !== model) continue;
+    byId.get(pack.group)?.presets.push(pack);
+  }
+  return groups;
+}
 
 /**
  * Resolve a PresetPack name to a single StudioAction (the first action in the pack).
@@ -17,10 +51,9 @@ export function resolvePresetAction(
   presetName: string,
 ): StudioAction | undefined {
   if (!presetName) return undefined;
-  const pack = ACTION_PRESETS.find((p) => p.name === presetName);
+  const pack = PACKS_BY_NAME.get(presetName);
   if (!pack) return undefined;
-  const actions = createActionsFromPreset(pack);
-  return actions[0];
+  return createActionsFromPreset(pack)[0];
 }
 
 interface GlobalSettings {
@@ -31,6 +64,7 @@ interface GlobalSettings {
   globalModel: VideoModel;
   globalNumInferenceSteps: number;
   globalGuidance: number;
+  globalSeed: number;
   globalLora: LoRAConfig[] | undefined;
 }
 
@@ -42,6 +76,7 @@ interface EffectiveSettings {
   model: VideoModel;
   numInferenceSteps: number;
   guidance: number;
+  seed: number;
   action: Pick<StudioAction, "prompt" | "highNoiseLoras" | "lowNoiseLoras">;
 }
 
@@ -62,6 +97,7 @@ export function resolveEffectiveSettings(
   const numInferenceSteps =
     transition.numInferenceStepsOverride ?? global.globalNumInferenceSteps;
   const guidance = transition.guidanceOverride ?? global.globalGuidance;
+  const seed = transition.seedOverride ?? global.globalSeed;
 
   // Resolve LoRAs: per-transition override > global override > preset > none
   let action: Pick<StudioAction, "prompt" | "highNoiseLoras" | "lowNoiseLoras">;
@@ -98,6 +134,7 @@ export function resolveEffectiveSettings(
     model,
     numInferenceSteps,
     guidance,
+    seed,
     action,
   };
 }

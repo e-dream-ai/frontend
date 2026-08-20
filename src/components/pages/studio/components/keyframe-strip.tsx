@@ -13,10 +13,11 @@ import {
   horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
+import { useFlowStore, buildKeyframesWithLoop } from "@/stores/flow.store";
 import { KeyframeCard } from "./keyframe-card";
 import { KeyframeLightbox } from "./keyframe-lightbox";
 import { TransitionGapEnhanced } from "./transition-gap";
+import { describeMismatch } from "../utils/keyframe-aspect";
 import { FlowReset } from "./flow-reset";
 import {
   StripSection,
@@ -61,22 +62,10 @@ export const KeyframeStrip: React.FC<Props> = ({
   const transitions = useFlowStore((s) => s.transitions);
   const globalDuration = useFlowStore((s) => s.globalDuration);
 
-  // Derive display keyframes from raw data to avoid new-array-every-render
-  const displayKeyframes = useMemo(() => {
-    if (!loop || rawKeyframes.length < 2) return rawKeyframes;
-    const first = rawKeyframes[0];
-    return [
-      ...rawKeyframes,
-      {
-        id: LOOP_KEYFRAME_ID,
-        keyframeUuid: first.keyframeUuid,
-        dreamUuid: first.dreamUuid,
-        imageUrl: first.imageUrl,
-        name: first.name,
-        isLoopKeyframe: true,
-      },
-    ];
-  }, [rawKeyframes, loop]);
+  const displayKeyframes = useMemo(
+    () => buildKeyframesWithLoop(rawKeyframes, loop),
+    [rawKeyframes, loop],
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -117,6 +106,7 @@ export const KeyframeStrip: React.FC<Props> = ({
             key={`gap-${transitionIndex}`}
             transition={transition}
             effectiveDuration={effectiveDuration}
+            mismatch={describeMismatch(displayKeyframes[i - 1], kf)}
             onClick={() => {
               if (transition.status === "failed") {
                 onRetry(transitionIndex);

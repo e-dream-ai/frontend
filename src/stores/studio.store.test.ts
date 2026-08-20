@@ -140,6 +140,7 @@ describe("studio.store", () => {
         duration: 5,
         numInferenceSteps: 30,
         guidance: 1.0,
+        seed: -1,
       });
       expect(migrated.wanParams).toBeUndefined();
     });
@@ -236,6 +237,7 @@ describe("studio.store", () => {
       expect(params.duration).toBe(8);
       expect(params.numInferenceSteps).toBe(30); // from defaults
       expect(params.guidance).toBe(1.0); // LTX default, from defaults
+      expect(params.seed).toBe(-1);
     });
 
     it("supplies defaults when wanParams is absent", () => {
@@ -249,6 +251,7 @@ describe("studio.store", () => {
       expect(params.duration).toBe(5);
       expect(params.numInferenceSteps).toBe(30);
       expect(params.guidance).toBe(1.0);
+      expect(params.seed).toBe(-1);
     });
   });
 
@@ -267,6 +270,8 @@ describe("studio.store", () => {
       const migrated = migrate(v6State, 6) as Record<string, unknown>;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((migrated.videoGenParams as any).guidance).toBe(1.0);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((migrated.videoGenParams as any).seed).toBe(-1);
     });
 
     it("leaves a Wan guidance value alone — Wan already honoured it", () => {
@@ -283,6 +288,8 @@ describe("studio.store", () => {
       const migrated = migrate(v6State, 6) as Record<string, unknown>;
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((migrated.videoGenParams as any).guidance).toBe(7.0);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((migrated.videoGenParams as any).seed).toBe(-1);
     });
   });
 
@@ -316,6 +323,7 @@ describe("studio.store", () => {
         duration: 5,
         numInferenceSteps: 30,
         guidance: 1.0,
+        seed: -1,
       });
     });
 

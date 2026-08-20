@@ -10,8 +10,7 @@ import { stepLightboxIndex } from "@/utils/keyframe-lightbox.util";
 
 export const LOOP_KEYFRAME_ID = "__loop__";
 
-/** Derive the display keyframes list, appending a synthetic loop frame when enabled. */
-function buildKeyframesWithLoop(
+export function buildKeyframesWithLoop(
   keyframes: FlowKeyframe[],
   loop: boolean,
 ): FlowKeyframe[] {
@@ -20,12 +19,11 @@ function buildKeyframesWithLoop(
   return [
     ...keyframes,
     {
+      ...first,
       id: LOOP_KEYFRAME_ID,
-      keyframeUuid: first.keyframeUuid,
-      dreamUuid: first.dreamUuid,
-      imageUrl: first.imageUrl,
-      name: first.name,
       isLoopKeyframe: true,
+      uploadStatus: undefined,
+      uploadProgress: undefined,
     },
   ];
 }
@@ -50,6 +48,7 @@ type FlowStoreState = {
   globalModel: VideoModel;
   globalNumInferenceSteps: number;
   globalGuidance: number;
+  globalSeed: number;
   globalLora: LoRAConfig[] | undefined;
 
   // Phase 1 — transitions
@@ -70,6 +69,7 @@ type FlowStoreState = {
   setGlobalModel: (model: VideoModel) => void;
   setGlobalNumInferenceSteps: (steps: number) => void;
   setGlobalGuidance: (guidance: number) => void;
+  setGlobalSeed: (seed: number) => void;
   setGlobalLora: (lora: LoRAConfig[] | undefined) => void;
   setTransitionOverride: (
     index: number,
@@ -111,6 +111,7 @@ const PHASE_1_DEFAULTS = {
   globalModel: "kling-25-i2v" as VideoModel,
   globalNumInferenceSteps: 30,
   globalGuidance: 0.5,
+  globalSeed: -1,
   globalLora: undefined as LoRAConfig[] | undefined,
   transitions: [] as FlowTransition[],
   selectedTransitionIndex: null as number | null,
@@ -163,14 +164,24 @@ function deriveTransitions(
 
 export const flowPartialize = (state: FlowStoreState) => ({
   keyframes: state.keyframes
-    .filter((kf) => (kf.keyframeUuid || kf.dreamUuid) && !kf.uploadStatus)
+    .filter((kf) => {
+      if (kf.uploadStatus === "uploading") return Boolean(kf.dreamUuid);
+      if (kf.uploadStatus === "failed") return false;
+      return Boolean(kf.keyframeUuid || kf.dreamUuid);
+    })
     .map((kf) => ({
       id: kf.id,
       keyframeUuid: kf.keyframeUuid,
       dreamUuid: kf.dreamUuid,
       imageUrl: kf.imageUrl,
       name: kf.name,
+      // Persisted so a reloaded flow renders at the right shape, and flags
+      // mismatches, without waiting for every thumbnail to load again.
+      naturalWidth: kf.naturalWidth,
+      naturalHeight: kf.naturalHeight,
       isLoopKeyframe: kf.isLoopKeyframe,
+      uploadStatus: kf.uploadStatus,
+      uploadProgress: kf.uploadProgress,
     })),
   loop: state.loop,
   transitions: state.transitions,
@@ -183,6 +194,7 @@ export const flowPartialize = (state: FlowStoreState) => ({
   globalModel: state.globalModel,
   globalNumInferenceSteps: state.globalNumInferenceSteps,
   globalGuidance: state.globalGuidance,
+  globalSeed: state.globalSeed,
   globalLora: state.globalLora,
 });
 
@@ -273,6 +285,7 @@ export const useFlowStore = create<FlowStoreState>()(
       setGlobalNumInferenceSteps: (steps) =>
         set({ globalNumInferenceSteps: steps }),
       setGlobalGuidance: (guidance) => set({ globalGuidance: guidance }),
+      setGlobalSeed: (seed) => set({ globalSeed: seed }),
       setGlobalLora: (lora) => set({ globalLora: lora }),
 
       // Phase 1 — transition actions

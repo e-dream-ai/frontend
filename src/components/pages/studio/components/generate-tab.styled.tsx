@@ -105,6 +105,17 @@ export const HintText = styled.p`
   margin-bottom: 0.75rem;
 `;
 
+export const SeedInput = styled.input`
+  padding: 0.5rem 0.75rem;
+  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
+  border-radius: 6px;
+  background: ${(props) =>
+    props.theme.colorBackgroundSecondary || "transparent"};
+  color: ${(props) => props.theme.textPrimaryColor};
+  font-size: 0.8125rem;
+  width: 6rem;
+`;
+
 export const ActionGroup = styled.div`
   display: flex;
   align-items: center;

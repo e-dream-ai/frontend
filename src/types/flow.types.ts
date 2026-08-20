@@ -15,6 +15,12 @@ export interface FlowKeyframe {
   name: string; // display name
   isLoopKeyframe?: boolean; // true for auto-generated loop frame
 
+  // Source image pixel dimensions, captured from the <img> once it loads.
+  // Used to render each frame at its true shape and to detect transitions
+  // that join two different shapes. Undefined until the image has loaded.
+  naturalWidth?: number;
+  naturalHeight?: number;
+
   // Local-only upload state — never persisted to backend.
   uploadStatus?: "uploading" | "failed";
   uploadProgress?: number; // 0-100
@@ -39,6 +45,7 @@ export interface FlowTransition {
   modelOverride?: VideoModel;
   numInferenceStepsOverride?: number;
   guidanceOverride?: number;
+  seedOverride?: number;
   loraOverride?: LoRAConfig[];
 
   // Generation state

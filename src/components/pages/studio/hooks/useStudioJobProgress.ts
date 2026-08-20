@@ -12,6 +12,8 @@ import {
   JOIN_DREAM_ROOM_EVENT,
   LEAVE_DREAM_ROOM_EVENT,
 } from "@/constants/remote-control.constants";
+import { dreamMediaUrl } from "../utils/resolve-dream-media";
+import { useDreamMediaResolver } from "./useDreamMediaResolver";
 import {
   mapSocketStatus,
   shouldApplyStatus,
@@ -23,6 +25,7 @@ const RECONCILE_POLL_MS = 5000;
 
 export const useStudioJobProgress = () => {
   const { socket, isConnected } = useSocket();
+  const resolveMedia = useDreamMediaResolver();
 
   const pendingUuids = useStudioStore(
     useShallow((s) => {
@@ -57,6 +60,22 @@ export const useStudioJobProgress = () => {
           previewFrame: preview_frame,
           ...(applyStatus && mappedStatus ? { status: mappedStatus } : {}),
         });
+
+        if (
+          applyStatus &&
+          mappedStatus === "processed" &&
+          !image.url?.startsWith("http")
+        ) {
+          queryClient.invalidateQueries([DREAM_QUERY_KEY, dream_uuid]);
+          resolveMedia(dream_uuid)
+            .then((dream) => {
+              const url = dreamMediaUrl(dream);
+              if (url) {
+                useStudioStore.getState().updateImage(dream_uuid, { url });
+              }
+            })
+            .catch(() => {});
+        }
       }
 
       const job = state.jobs.find((j) => j.dreamUuid === dream_uuid);
@@ -107,7 +126,7 @@ export const useStudioJobProgress = () => {
     return () => {
       socket.off(JOB_PROGRESS_EVENT, handleProgress);
     };
-  }, [socket]);
+  }, [socket, resolveMedia]);
 
   useEffect(() => {
     if (!socket || pendingUuids.length === 0) return;

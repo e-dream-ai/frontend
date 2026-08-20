@@ -14,6 +14,8 @@ import {
   guidanceForModel,
   resolveGuidanceConstraint,
 } from "../constants/guidance-options";
+import { SEED_HINT } from "../constants/seed-options";
+import { useSeedInput } from "../hooks/useSeedInput";
 import { GuidanceField } from "./guidance-field";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { useModels } from "@/api/model/query/useModels";
@@ -47,6 +49,7 @@ import {
   ComboCountText,
   HintText,
   ActionGroup,
+  SeedInput,
 } from "./generate-tab.styled";
 
 const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
@@ -122,6 +125,10 @@ export const GenerateTab: React.FC = () => {
   const guidanceConstraint = resolveGuidanceConstraint(
     videoGenParams.model,
     modelConstraints.get(videoGenParams.model),
+  );
+  const guidanceParam = GUIDANCE_PARAM[videoGenParams.model];
+  const seedInput = useSeedInput(videoGenParams.seed, (seed) =>
+    setVideoGenParams({ seed }),
   );
   const showLtxHint = useMemo(() => {
     if (videoGenParams.model !== "ltx-i2v") return false;
@@ -297,9 +304,17 @@ export const GenerateTab: React.FC = () => {
               </StyledSelect>
             </FormField>
           )}
-          {guidanceConstraint && (
+          {videoGenParams.model === "ltx-i2v" && (
+            <FormField>
+              <FieldLabel htmlFor="batch-seed" title={SEED_HINT}>
+                Seed:
+              </FieldLabel>
+              <SeedInput id="batch-seed" title={SEED_HINT} {...seedInput} />
+            </FormField>
+          )}
+          {guidanceConstraint && guidanceParam && (
             <GuidanceField
-              param={GUIDANCE_PARAM[videoGenParams.model]}
+              param={guidanceParam}
               constraint={guidanceConstraint}
               value={videoGenParams.guidance}
               onChange={(guidance) => setVideoGenParams({ guidance })}

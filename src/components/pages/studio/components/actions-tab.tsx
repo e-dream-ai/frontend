@@ -1,10 +1,8 @@
 import React, { useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useStudioStore } from "@/stores/studio.store";
-import {
-  ACTION_PRESETS,
-  createActionsFromPreset,
-} from "../constants/action-presets";
+import { ACTION_PRESETS } from "../constants/action-presets";
+import { createActionsFromPreset } from "../constants/preset-packs";
 import {
   GenerateSection,
   SectionTitle,

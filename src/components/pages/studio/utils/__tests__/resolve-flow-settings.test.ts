@@ -13,6 +13,18 @@ describe("resolvePresetAction", () => {
     expect(action!.highNoiseLoras).toBeDefined();
   });
 
+  it("resolves a transition preset pack by name", () => {
+    const action = resolvePresetAction("Whip Pan");
+    expect(action).toBeDefined();
+    expect(action!.prompt).toContain("whip pan");
+    expect(action!.negativePrompt).toBeUndefined();
+  });
+
+  it("carries the negative prompt of a transition preset that defines one", () => {
+    const action = resolvePresetAction("Morph");
+    expect(action!.negativePrompt).toContain("hard cut");
+  });
+
   it("returns undefined for unknown preset name", () => {
     expect(resolvePresetAction("Nonexistent Pack")).toBeUndefined();
   });
@@ -31,6 +43,7 @@ describe("resolveEffectiveSettings", () => {
     globalModel: "wan-i2v" as const,
     globalNumInferenceSteps: 30,
     globalGuidance: 5.0,
+    globalSeed: -1,
     globalLora: undefined,
   };
 
@@ -48,6 +61,7 @@ describe("resolveEffectiveSettings", () => {
     expect(settings.model).toBe("wan-i2v");
     expect(settings.numInferenceSteps).toBe(30);
     expect(settings.guidance).toBe(5.0);
+    expect(settings.seed).toBe(-1);
   });
 
   it("overrides with per-transition values", () => {
@@ -60,6 +74,7 @@ describe("resolveEffectiveSettings", () => {
       negativePromptOverride: "override negative",
       durationOverride: 10,
       modelOverride: "ltx-i2v",
+      seedOverride: 42,
     };
     const settings = resolveEffectiveSettings(transition, globalSettings);
     expect(settings.presetId).toBe("Organic");
@@ -69,6 +84,7 @@ describe("resolveEffectiveSettings", () => {
     expect(settings.model).toBe("ltx-i2v");
     expect(settings.numInferenceSteps).toBe(30);
     expect(settings.guidance).toBe(5.0);
+    expect(settings.seed).toBe(42);
   });
 
   it("builds a bare action when no preset is selected", () => {
@@ -95,6 +111,59 @@ describe("resolveEffectiveSettings", () => {
     const settings = resolveEffectiveSettings(transition, globalSettings);
     expect(settings.action).toBeDefined();
     expect(settings.action.prompt).toBeTruthy();
+  });
+
+  it("keeps a cleared negative prompt cleared", () => {
+    const transition: FlowTransition = {
+      fromKeyframeId: "a",
+      toKeyframeId: "b",
+      status: "idle",
+      presetOverride: "Morph",
+      negativePromptOverride: "",
+    };
+    const settings = resolveEffectiveSettings(transition, globalSettings);
+    expect(settings.negativePrompt).toBe("");
+  });
+
+  it("a stored negative prompt wins over the preset's", () => {
+    const transition: FlowTransition = {
+      fromKeyframeId: "a",
+      toKeyframeId: "b",
+      status: "idle",
+      presetOverride: "Morph",
+      negativePromptOverride: "my negative",
+    };
+    const settings = resolveEffectiveSettings(transition, globalSettings);
+    expect(settings.negativePrompt).toBe("my negative");
+  });
+
+  it("leaves the negative prompt empty for a preset without one", () => {
+    const transition: FlowTransition = {
+      fromKeyframeId: "a",
+      toKeyframeId: "b",
+      status: "idle",
+      presetOverride: "Whip Pan",
+    };
+    const settings = resolveEffectiveSettings(transition, {
+      ...globalSettings,
+      globalNegativePrompt: "",
+    });
+    expect(settings.negativePrompt).toBe("");
+  });
+
+  it("resolves a transition preset's prompt into the action", () => {
+    const transition: FlowTransition = {
+      fromKeyframeId: "a",
+      toKeyframeId: "b",
+      status: "idle",
+      presetOverride: "Dolly Zoom",
+    };
+    const settings = resolveEffectiveSettings(transition, {
+      ...globalSettings,
+      globalPrompt: "",
+    });
+    expect(settings.action.prompt).toContain("dollies forward");
+    expect(settings.action.highNoiseLoras).toEqual([]);
   });
 
   it("applies prompt override on top of preset action", () => {
