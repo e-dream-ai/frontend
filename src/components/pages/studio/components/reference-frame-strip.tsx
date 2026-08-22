@@ -144,15 +144,15 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
 
       {displayFrames.length === 0 ? (
         <EmptyState>
-          Add referenceFrames to get started. Generate, upload, or import from a
-          playlist.
+          Add reference frames to get started. Generate, upload, or import from
+          a playlist.
         </EmptyState>
       ) : (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
-          // Horizontal-only auto-scroll: reveal off-screen referenceFrames when a
+          // Horizontal-only auto-scroll: reveal off-screen reference frames when a
           // dragged card nears the strip's left/right edge, without hijacking
           // vertical page scroll. y: 0 disables the vertical axis.
           autoScroll={{ threshold: { x: 0.2, y: 0 } }}

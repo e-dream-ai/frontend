@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, beforeAll } from "vitest";
+import type { PersistedStudioSession } from "@/types/session.types";
 
 beforeAll(() => {
   const store: Record<string, string> = {};
@@ -156,18 +157,17 @@ describe("session store", () => {
 
 describe("legacy session migration (#719, #729)", () => {
   it("maps batchState onto actionState and batch mode onto action", () => {
-    const [migrated] = migrateSessions([
-      {
-        id: "s1",
-        name: "Session 1",
-        createdAt: "2026-01-01T00:00:00.000Z",
-        updatedAt: "2026-01-01T00:00:00.000Z",
-        mode: "batch",
-        flowState: {},
-        batchState: { images: [{ uuid: "d1", url: "u1" }] },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
-    ]);
+    const legacySession: PersistedStudioSession = {
+      id: "s1",
+      name: "Session 1",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      mode: "batch",
+      flowState: {},
+      batchState: { images: [{ uuid: "d1", url: "u1" }] },
+    };
+
+    const [migrated] = migrateSessions([legacySession]);
 
     expect(migrated.mode).toBe("action");
     expect(migrated.actionState).toEqual({
@@ -179,24 +179,25 @@ describe("legacy session migration (#719, #729)", () => {
   it("renames the keyframe keys inside a session's flowState", () => {
     // Sessions snapshot the flow store, so the zustand migrate hook never
     // sees them — without this they would restore an empty flow.
-    const [migrated] = migrateSessions([
-      {
-        id: "s1",
-        name: "Session 1",
-        createdAt: "2026-01-01T00:00:00.000Z",
-        updatedAt: "2026-01-01T00:00:00.000Z",
-        mode: "flow",
-        flowState: {
-          keyframes: [{ id: "a", dreamUuid: "d1", isLoopKeyframe: true }],
-          transitions: [{ fromKeyframeId: "a", toKeyframeId: "b" }],
-        },
-        batchState: {},
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any,
-    ]);
+    const legacySession: PersistedStudioSession = {
+      id: "s1",
+      name: "Session 1",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      mode: "flow",
+      flowState: {
+        keyframes: [{ id: "a", dreamUuid: "d1", isLoopKeyframe: true }],
+        transitions: [{ fromKeyframeId: "a", toKeyframeId: "b" }],
+      },
+      batchState: {},
+    };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const flowState = migrated.flowState as any;
+    const [migrated] = migrateSessions([legacySession]);
+
+    const flowState = migrated.flowState as {
+      referenceFrames: Array<{ isLoopFrame?: boolean }>;
+      transitions: Array<{ fromFrameId?: string; toFrameId?: string }>;
+    };
     expect(flowState).not.toHaveProperty("keyframes");
     expect(flowState.referenceFrames).toHaveLength(1);
     expect(flowState.referenceFrames[0].isLoopFrame).toBe(true);
@@ -219,8 +220,13 @@ describe("legacy session migration (#719, #729)", () => {
 
     expect(migrated.mode).toBe("action");
     expect(migrated.actionState).toEqual({ images: [] });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect((migrated.flowState as any).referenceFrames).toHaveLength(1);
+    expect(
+      (
+        migrated.flowState as {
+          referenceFrames: Array<Record<string, unknown>>;
+        }
+      ).referenceFrames,
+    ).toHaveLength(1);
   });
 });
 

@@ -11,6 +11,15 @@ export interface StudioSession {
   thumbnail?: string;
 }
 
+export type PersistedStudioSession = Omit<
+  StudioSession,
+  "mode" | "actionState"
+> & {
+  mode: StudioMode | "batch";
+  actionState?: Record<string, unknown>;
+  batchState?: Record<string, unknown>;
+};
+
 export const MAX_SESSIONS = 20;
 export const SESSIONS_STORAGE_KEY = "studio-sessions";
 export const ACTIVE_SESSION_KEY = "studio-active-session-id";

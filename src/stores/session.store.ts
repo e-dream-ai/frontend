@@ -8,7 +8,10 @@ import {
 import { useStudioStore, studioPartialize } from "./studio.store";
 import { useStudioModeStore } from "./studio-mode.store";
 import type { StudioMode } from "@/types/flow.types";
-import type { StudioSession } from "@/types/session.types";
+import type {
+  PersistedStudioSession,
+  StudioSession,
+} from "@/types/session.types";
 import {
   MAX_SESSIONS,
   SESSIONS_STORAGE_KEY,
@@ -46,19 +49,17 @@ function persistActiveId(id: string | null): void {
  *   - `batchState` -> `actionState`, `mode: "batch"` -> `"action"` (#729)
  *   - the keyframe keys inside `flowState`                        (#719)
  */
-export function migrateSessions(sessions: StudioSession[]): StudioSession[] {
-  return sessions.map((session) => {
-    const raw = session as unknown as Record<string, unknown>;
-    const { batchState, ...rest } = raw;
-    return {
-      ...rest,
-      mode: raw.mode === "batch" ? "action" : raw.mode,
-      actionState: raw.actionState ?? batchState ?? {},
-      flowState: renameLegacyKeyframeKeys(
-        (raw.flowState as Record<string, unknown>) ?? {},
-      ),
-    } as StudioSession;
-  });
+export function migrateSessions(
+  sessions: readonly PersistedStudioSession[],
+): StudioSession[] {
+  return sessions.map(
+    ({ batchState, ...session }): StudioSession => ({
+      ...session,
+      mode: session.mode === "batch" ? "action" : session.mode,
+      actionState: session.actionState ?? batchState ?? {},
+      flowState: renameLegacyKeyframeKeys(session.flowState),
+    }),
+  );
 }
 
 function loadInitialState(): {
@@ -70,7 +71,7 @@ function loadInitialState(): {
     const activeId = localStorage.getItem(ACTIVE_SESSION_KEY);
     if (raw) {
       return {
-        sessions: migrateSessions(JSON.parse(raw) as StudioSession[]),
+        sessions: migrateSessions(JSON.parse(raw) as PersistedStudioSession[]),
         activeSessionId: activeId,
       };
     }
