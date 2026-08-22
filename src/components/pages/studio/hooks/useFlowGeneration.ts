@@ -6,21 +6,42 @@ import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { buildVideoAlgoParams } from "@/components/pages/studio/utils/build-video-algo-params";
 import { resolveEffectiveSettings } from "@/components/pages/studio/utils/resolve-flow-settings";
-import type { FlowTransition } from "@/types/flow.types";
+import type { FlowTransition, TransitionRunSettings } from "@/types/flow.types";
 import queryClient from "@/api/query-client";
 import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import { ensureFlowKeyframe } from "@/components/pages/studio/utils/flow-keyframes";
 import { resolveGenerationTargets } from "@/components/pages/studio/utils/flow-generation-targets";
+import { isTransitionMismatched } from "@/components/pages/studio/utils/frame-aspect";
 
 // Cap concurrent dream creations so "Generate All" doesn't fan out 50+ requests at once.
 const GENERATE_CONCURRENCY = 4;
+
+/** Worker-pool style concurrency cap over a list of transition targets. */
+async function runWithConcurrency(
+  targets: ReadonlyArray<{ index: number; transition: FlowTransition }>,
+  run: (index: number, transition: FlowTransition) => Promise<void>,
+): Promise<void> {
+  let cursor = 0;
+  const worker = async () => {
+    while (cursor < targets.length) {
+      const next = targets[cursor++];
+      await run(next.index, next.transition);
+    }
+  };
+  await Promise.all(
+    Array.from(
+      { length: Math.min(GENERATE_CONCURRENCY, targets.length) },
+      worker,
+    ),
+  );
+}
 
 export function useFlowGeneration() {
   const [isGenerating, setIsGenerating] = useState(false);
   const generatingCount = useRef(0);
 
   // Actions are stable refs — subscribe individually, not via useShallow.
-  const setTransitionDream = useFlowStore((s) => s.setTransitionDream);
+  const recordTransitionRun = useFlowStore((s) => s.recordTransitionRun);
   const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
 
   const generateTransition = useCallback(
@@ -101,14 +122,28 @@ export function useFlowGeneration() {
           { headers },
         );
 
-        setTransitionDream(index, dreamUuid);
+        // Snapshot the *resolved* settings, not the overrides: this is what
+        // lets the history strip restore this take later, after the globals
+        // it fell back to have moved on.
+        const runSettings: TransitionRunSettings = {
+          presetOverride: settings.presetId,
+          promptOverride: settings.prompt,
+          negativePromptOverride: settings.negativePrompt,
+          durationOverride: settings.duration,
+          modelOverride: settings.model,
+          numInferenceStepsOverride: settings.numInferenceSteps,
+          guidanceOverride: settings.guidance,
+          seedOverride: settings.seed,
+          loraOverride: settings.action.highNoiseLoras ?? [],
+        };
+        recordTransitionRun(index, dreamUuid, runSettings, Date.now());
         updateTransitionStatus(index, "queue");
       } catch (error) {
         Bugsnag.notify(error as Error);
         updateTransitionStatus(index, "failed");
       }
     },
-    [setTransitionDream, updateTransitionStatus],
+    [recordTransitionRun, updateTransitionStatus],
   );
 
   const startGenerating = useCallback(() => {
@@ -141,20 +176,7 @@ export function useFlowGeneration() {
         );
       }
 
-      // Worker-pool style concurrency cap.
-      let cursor = 0;
-      const worker = async () => {
-        while (cursor < targets.length) {
-          const next = targets[cursor++];
-          await generateTransition(next.index, next.transition);
-        }
-      };
-      await Promise.all(
-        Array.from(
-          { length: Math.min(GENERATE_CONCURRENCY, targets.length) },
-          worker,
-        ),
-      );
+      await runWithConcurrency(targets, generateTransition);
       if (targets.length > 0) {
         await queryClient.invalidateQueries([USER_QUERY_KEY]);
       }
@@ -178,5 +200,55 @@ export function useFlowGeneration() {
     [generateTransition, startGenerating, stopGenerating],
   );
 
-  return { generateAll, generateOne, isGenerating };
+  /**
+   * Regenerate an explicit selection. Unlike Generate All this does not skip
+   * already-processed transitions — asking for a rerun of the ones you picked
+   * is the whole point — but it still refuses aspect-ratio mismatches, which
+   * would only fail the same way they did before.
+   */
+  const generateMany = useCallback(
+    async (indices: readonly number[]) => {
+      startGenerating();
+      try {
+        const { transitions, referenceFrames } = useFlowStore.getState();
+        const byId = new Map(referenceFrames.map((frame) => [frame.id, frame]));
+        const targets: Array<{ index: number; transition: FlowTransition }> =
+          [];
+        let skippedForMismatch = 0;
+
+        for (const index of indices) {
+          const transition = transitions[index];
+          if (!transition) continue;
+          if (
+            isTransitionMismatched(
+              byId.get(transition.fromFrameId),
+              byId.get(transition.toFrameId),
+            )
+          ) {
+            skippedForMismatch += 1;
+            continue;
+          }
+          targets.push({ index, transition });
+        }
+
+        if (skippedForMismatch > 0) {
+          toast.info(
+            `Skipped ${skippedForMismatch} transition${
+              skippedForMismatch === 1 ? "" : "s"
+            } with mismatched aspect ratios.`,
+          );
+        }
+
+        await runWithConcurrency(targets, generateTransition);
+        if (targets.length > 0) {
+          await queryClient.invalidateQueries([USER_QUERY_KEY]);
+        }
+      } finally {
+        stopGenerating();
+      }
+    },
+    [generateTransition, startGenerating, stopGenerating],
+  );
+
+  return { generateAll, generateOne, generateMany, isGenerating };
 }

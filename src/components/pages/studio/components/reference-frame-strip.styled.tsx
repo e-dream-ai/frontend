@@ -12,6 +12,46 @@ export const SectionHeader = styled.div`
   margin-bottom: 20px;
 `;
 
+export const SectionActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+export const SelectionCount = styled.span`
+  font-family: ${FLOW.fontFamily};
+  font-size: 12px;
+  font-weight: 600;
+  color: ${FLOW.selected};
+  white-space: nowrap;
+`;
+
+export const SelectionButton = styled.button`
+  background: none;
+  border: 1px solid ${FLOW.border};
+  border-radius: ${FLOW.radiusSm};
+  color: ${FLOW.textDim};
+  cursor: pointer;
+  font-family: ${FLOW.fontFamily};
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  padding: 4px 10px;
+  white-space: nowrap;
+  transition:
+    color 0.18s ease,
+    border-color 0.18s ease;
+
+  &:hover:not(:disabled) {
+    color: ${FLOW.text};
+    border-color: ${FLOW.selected};
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+`;
+
 export const SectionLabel = styled.div`
   font-size: 11px;
   font-weight: 600;

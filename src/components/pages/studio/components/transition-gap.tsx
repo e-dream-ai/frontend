@@ -1,4 +1,4 @@
-import type { KeyboardEvent } from "react";
+import type { KeyboardEvent, MouseEvent } from "react";
 import { Check, Loader2, AlertTriangle, RotateCcw } from "lucide-react";
 import type { FlowTransition } from "@/types/flow.types";
 import {
@@ -10,11 +10,17 @@ import {
   DurationLabel,
 } from "./transition-gap.styled";
 
+/** Click selects; shift-click (or ctrl/cmd-click) toggles this one in or out. */
+export interface TransitionClickModifiers {
+  toggle: boolean;
+}
+
 interface TransitionGapProps {
   transition: FlowTransition;
   effectiveDuration: number;
   mismatch?: string;
-  onClick: () => void;
+  selected: boolean;
+  onClick: (modifiers: TransitionClickModifiers) => void;
 }
 
 function hasOverrides(t: FlowTransition): boolean {
@@ -34,19 +40,34 @@ export function TransitionGapEnhanced({
   transition,
   effectiveDuration,
   mismatch,
+  selected,
   onClick,
 }: TransitionGapProps) {
   const { status, progress } = transition;
   const configured = hasOverrides(transition);
 
+  const selectedSuffix = selected ? " Selected." : "";
+
   const activate = {
     role: "button" as const,
     tabIndex: 0,
-    onClick,
+    $selected: selected,
+    "aria-pressed": selected,
+    // Swallow the mousedown default for every click, which does two jobs.
+    // It stops a shift-click extending the browser's text selection from
+    // wherever the last click landed, which painted a range highlight across
+    // the reference frame between two gaps. And it keeps mouse clicks from
+    // focusing the gap at all: a focused gap starts matching :focus-visible
+    // the moment Chrome sees any key, so merely *pressing shift* — before any
+    // click — lit up a second blue ring on top of the selection. Keyboard
+    // users still Tab here and still get the ring, which is the case it is for.
+    onMouseDown: (e: MouseEvent<HTMLDivElement>) => e.preventDefault(),
+    onClick: (e: MouseEvent<HTMLDivElement>) =>
+      onClick({ toggle: e.shiftKey || e.metaKey || e.ctrlKey }),
     onKeyDown: (e: KeyboardEvent<HTMLDivElement>) => {
       if (e.key !== "Enter" && e.key !== " ") return;
       e.preventDefault();
-      onClick();
+      onClick({ toggle: e.shiftKey || e.metaKey || e.ctrlKey });
     },
   };
 
@@ -55,8 +76,8 @@ export function TransitionGapEnhanced({
       <GapContainer
         $expanded
         {...activate}
-        title={`Aspect ratio mismatch: ${mismatch}. Generate All will skip this transition - open it to generate it anyway.`}
-        aria-label={`Transition with mismatched aspect ratios, ${mismatch}. Generate All will skip it. Activate to open its settings.`}
+        title={`Aspect ratio mismatch: ${mismatch}. Generate All will skip this transition - select it to generate it anyway.`}
+        aria-label={`Transition with mismatched aspect ratios, ${mismatch}. Generate All will skip it. Activate to select it.${selectedSuffix}`}
       >
         <GapLine $variant="mismatched" />
         <GapStatusLabel $status="failed">mismatch</GapStatusLabel>
@@ -70,7 +91,7 @@ export function TransitionGapEnhanced({
       <GapContainer
         $expanded={false}
         {...activate}
-        aria-label="Transition, not yet generated. Activate to open its settings."
+        aria-label={`Transition, not yet generated. Activate to select it.${selectedSuffix}`}
       >
         <GapLine $variant="idle" />
       </GapContainer>
@@ -83,7 +104,7 @@ export function TransitionGapEnhanced({
       <GapContainer
         $expanded={false}
         {...activate}
-        aria-label={`Transition with custom settings, ${effectiveDuration} seconds. Activate to open its settings.`}
+        aria-label={`Transition with custom settings, ${effectiveDuration} seconds. Activate to select it.${selectedSuffix}`}
       >
         <GapLine $variant="configured" />
         <DurationLabel>{effectiveDuration}s</DurationLabel>
@@ -94,7 +115,11 @@ export function TransitionGapEnhanced({
   // Queued — soft pulsing dot.
   if (status === "queue") {
     return (
-      <GapContainer $expanded {...activate} aria-label="Transition queued">
+      <GapContainer
+        $expanded
+        {...activate}
+        aria-label={`Transition queued.${selectedSuffix}`}
+      >
         <StatusNode $variant="queued" />
         <GapStatusLabel $status="queued">queued</GapStatusLabel>
       </GapContainer>
@@ -110,7 +135,7 @@ export function TransitionGapEnhanced({
         {...activate}
         aria-label={`Transition rendering${
           pct > 0 ? `, ${Math.round(pct)}%` : ""
-        }`}
+        }.${selectedSuffix}`}
       >
         <StatusNode $variant="processing">
           {pct > 0 && <ProgressRing $percent={pct} />}
@@ -129,7 +154,7 @@ export function TransitionGapEnhanced({
       <GapContainer
         $expanded
         {...activate}
-        aria-label={`Transition rendered, ${effectiveDuration} seconds. Activate to open its settings.`}
+        aria-label={`Transition rendered, ${effectiveDuration} seconds. Activate to select it.${selectedSuffix}`}
       >
         <StatusNode $variant="processed">
           <Check size={14} strokeWidth={3} />
@@ -139,22 +164,22 @@ export function TransitionGapEnhanced({
     );
   }
 
-  // Failed — red ring with warning icon. Whole node is "click to retry". A
-  // mismatch here is the likely cause, so name it rather than just offering the
-  // retry that will fail the same way.
+  // Failed — red ring with warning icon. Selecting it loads its settings into
+  // the panel, where Retry regenerates. A mismatch here is the likely cause, so
+  // name it rather than just offering the retry that will fail the same way.
   return (
     <GapContainer
       $expanded
       {...activate}
       title={
         mismatch
-          ? `Aspect ratio mismatch: ${mismatch}. Click to retry anyway.`
-          : "Click to retry"
+          ? `Aspect ratio mismatch: ${mismatch}. Select it and use Retry to run it anyway.`
+          : "Select it, then use Retry"
       }
       aria-label={
         mismatch
-          ? `Transition failed, aspect ratios mismatched, ${mismatch}. Activate to retry.`
-          : "Transition failed. Activate to retry."
+          ? `Transition failed, aspect ratios mismatched, ${mismatch}. Activate to select it.${selectedSuffix}`
+          : `Transition failed. Activate to select it.${selectedSuffix}`
       }
     >
       <StatusNode $variant="failed">

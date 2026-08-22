@@ -23,6 +23,9 @@ import {
   StripSection,
   SectionHeader,
   SectionLabel,
+  SectionActions,
+  SelectionButton,
+  SelectionCount,
   StripContainer,
   TransitionGap,
   GapLine,
@@ -40,7 +43,6 @@ interface Props {
   onAddGenerate: () => void;
   onAddFromPlaylist: () => void;
   onAddFromLibrary: () => void;
-  onRetry: (index: number) => void;
 }
 
 export const ReferenceFrameStrip: React.FC<Props> = ({
@@ -48,19 +50,26 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
   onAddGenerate,
   onAddFromPlaylist,
   onAddFromLibrary,
-  onRetry,
 }) => {
   // Actions (stable refs)
   const removeReferenceFrame = useFlowStore((s) => s.removeReferenceFrame);
   const reorderReferenceFrames = useFlowStore((s) => s.reorderReferenceFrames);
   const setLoop = useFlowStore((s) => s.setLoop);
   const selectTransition = useFlowStore((s) => s.selectTransition);
+  const toggleTransitionSelection = useFlowStore(
+    (s) => s.toggleTransitionSelection,
+  );
+  const selectAllTransitions = useFlowStore((s) => s.selectAllTransitions);
+  const clearTransitionSelection = useFlowStore(
+    (s) => s.clearTransitionSelection,
+  );
 
   // Data
   const rawFrames = useFlowStore((s) => s.referenceFrames);
   const loop = useFlowStore((s) => s.loop);
   const transitions = useFlowStore((s) => s.transitions);
   const globalDuration = useFlowStore((s) => s.globalDuration);
+  const selectedIndices = useFlowStore((s) => s.selectedTransitionIndices);
 
   const displayFrames = useMemo(
     () => buildFramesWithLoop(rawFrames, loop),
@@ -107,11 +116,22 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
             transition={transition}
             effectiveDuration={effectiveDuration}
             mismatch={describeMismatch(displayFrames[i - 1], frame)}
-            onClick={() => {
-              if (transition.status === "failed") {
-                onRetry(transitionIndex);
-              } else {
-                selectTransition(transitionIndex);
+            selected={selectedIndices.includes(transitionIndex)}
+            onClick={({ toggle }) => {
+              if (toggle) toggleTransitionSelection(transitionIndex);
+              else selectTransition(transitionIndex);
+              // Clicking a transition plays it, every time — including when it
+              // was already the selected one, where nothing about the
+              // selection changes and there is no state transition to react
+              // to. A shift-click that removed it is the one exception:
+              // playing what you just deselected is not what was asked for.
+              const store = useFlowStore.getState();
+              if (!store.selectedTransitionIndices.includes(transitionIndex)) {
+                return;
+              }
+              const clicked = store.transitions[transitionIndex];
+              if (clicked?.status === "processed" && clicked.dreamUuid) {
+                store.requestPreviewPlay(clicked.dreamUuid);
               }
             }}
           />,
@@ -139,7 +159,30 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
     <StripSection>
       <SectionHeader>
         <SectionLabel>Reference Frames</SectionLabel>
-        <FlowReset />
+        <SectionActions>
+          {selectedIndices.length > 1 && (
+            <SelectionCount>{selectedIndices.length} selected</SelectionCount>
+          )}
+          {transitions.length > 0 && (
+            <>
+              <SelectionButton
+                type="button"
+                disabled={selectedIndices.length === transitions.length}
+                onClick={() => selectAllTransitions()}
+              >
+                Select all
+              </SelectionButton>
+              <SelectionButton
+                type="button"
+                disabled={selectedIndices.length === 0}
+                onClick={() => clearTransitionSelection()}
+              >
+                Clear all
+              </SelectionButton>
+            </>
+          )}
+          <FlowReset />
+        </SectionActions>
       </SectionHeader>
 
       {displayFrames.length === 0 ? (
