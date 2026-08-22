@@ -2,6 +2,7 @@ import React, { useCallback, useRef, useState } from "react";
 import { ChevronDown, Plus, Pencil, Copy, Trash2, Film } from "lucide-react";
 import { useSessionStore } from "@/stores/session.store";
 import useOutsideClick from "@/hooks/useOutsideClick";
+import { STUDIO_MODE_LABELS } from "../constants/studio-modes";
 import {
   SwitcherContainer,
   Trigger,
@@ -136,7 +137,7 @@ export const SessionSwitcher: React.FC = () => {
                         <SessionMeta>
                           {formatDate(session.updatedAt)}
                           <ModeBadge $mode={session.mode}>
-                            {session.mode}
+                            {STUDIO_MODE_LABELS[session.mode]}
                           </ModeBadge>
                         </SessionMeta>
                       </>

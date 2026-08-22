@@ -1,7 +1,7 @@
 import { axiosClient } from "@/client/axios.client";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { useFlowStore } from "@/stores/flow.store";
-import type { FlowKeyframe, FlowTransition } from "@/types/flow.types";
+import type { FlowReferenceFrame, FlowTransition } from "@/types/flow.types";
 import type { ApiResponse } from "@/types/api.types";
 import type { PlaylistKeyframe } from "@/types/playlist.types";
 
@@ -18,18 +18,18 @@ export type DreamKeyframeState = {
 };
 
 export const ensureFlowKeyframe = async (
-  keyframe: FlowKeyframe,
+  frame: FlowReferenceFrame,
 ): Promise<string> => {
   const current = useFlowStore
     .getState()
-    .keyframes.find((candidate) => candidate.id === keyframe.id);
-  const existingUuid = current?.keyframeUuid ?? keyframe.keyframeUuid;
+    .referenceFrames.find((candidate) => candidate.id === frame.id);
+  const existingUuid = current?.keyframeUuid ?? frame.keyframeUuid;
   if (existingUuid) return existingUuid;
 
-  const pending = pendingKeyframes.get(keyframe.id);
+  const pending = pendingKeyframes.get(frame.id);
   if (pending) return pending;
 
-  const name = keyframe.name.trim() || "Flow keyframe";
+  const name = frame.name.trim() || "Flow keyframe";
   const request = axiosClient
     .post(
       "/v1/keyframe",
@@ -41,16 +41,16 @@ export const ensureFlowKeyframe = async (
     .then(({ data }) => {
       const uuid = data?.data?.keyframe?.uuid;
       if (!uuid) throw new Error("No keyframe UUID returned from API");
-      useFlowStore.getState().updateKeyframe(keyframe.id, {
+      useFlowStore.getState().updateReferenceFrame(frame.id, {
         keyframeUuid: uuid,
       });
       return uuid as string;
     })
     .finally(() => {
-      pendingKeyframes.delete(keyframe.id);
+      pendingKeyframes.delete(frame.id);
     });
 
-  pendingKeyframes.set(keyframe.id, request);
+  pendingKeyframes.set(frame.id, request);
   return request;
 };
 
@@ -68,12 +68,12 @@ const fetchPlaylistKeyframes = async (
 
 export const syncFlowPlaylistKeyframes = async ({
   playlistUuid,
-  keyframes,
+  referenceFrames,
   transitions,
   currentDreamKeyframes,
 }: {
   playlistUuid: string;
-  keyframes: FlowKeyframe[];
+  referenceFrames: FlowReferenceFrame[];
   transitions: FlowTransition[];
   currentDreamKeyframes?: Map<string, DreamKeyframeState>;
 }): Promise<void> => {
@@ -83,8 +83,8 @@ export const syncFlowPlaylistKeyframes = async ({
   if (linkedTransitions.length === 0) return;
 
   const uuidEntries = await Promise.all(
-    keyframes.map(async (keyframe) => {
-      return [keyframe.id, await ensureFlowKeyframe(keyframe)] as const;
+    referenceFrames.map(async (frame) => {
+      return [frame.id, await ensureFlowKeyframe(frame)] as const;
     }),
   );
   const keyframeUuidById = new Map(uuidEntries);
@@ -124,8 +124,8 @@ export const syncFlowPlaylistKeyframes = async ({
 
   await Promise.all(
     linkedTransitions.map(async (transition) => {
-      const startKeyframe = keyframeUuidById.get(transition.fromKeyframeId);
-      const endKeyframe = keyframeUuidById.get(transition.toKeyframeId);
+      const startKeyframe = keyframeUuidById.get(transition.fromFrameId);
+      const endKeyframe = keyframeUuidById.get(transition.toFrameId);
       if (!startKeyframe || !endKeyframe) {
         throw new Error("Flow transition keyframes could not be resolved");
       }

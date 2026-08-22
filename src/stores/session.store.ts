@@ -1,6 +1,10 @@
 import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
-import { useFlowStore, flowPartialize } from "./flow.store";
+import {
+  useFlowStore,
+  flowPartialize,
+  renameLegacyKeyframeKeys,
+} from "./flow.store";
 import { useStudioStore, studioPartialize } from "./studio.store";
 import { useStudioModeStore } from "./studio-mode.store";
 import type { StudioMode } from "@/types/flow.types";
@@ -33,6 +37,30 @@ function persistActiveId(id: string | null): void {
   }
 }
 
+/**
+ * Sessions are hand-rolled JSON with no version field, and each one holds a
+ * snapshot of the flow/studio stores taken at save time. So the zustand
+ * `migrate` hooks never see them — a session saved before #719/#729 keeps the
+ * old shape and would restore an empty flow in a mode nothing renders.
+ * Normalise on load instead:
+ *   - `batchState` -> `actionState`, `mode: "batch"` -> `"action"` (#729)
+ *   - the keyframe keys inside `flowState`                        (#719)
+ */
+export function migrateSessions(sessions: StudioSession[]): StudioSession[] {
+  return sessions.map((session) => {
+    const raw = session as unknown as Record<string, unknown>;
+    const { batchState, ...rest } = raw;
+    return {
+      ...rest,
+      mode: raw.mode === "batch" ? "action" : raw.mode,
+      actionState: raw.actionState ?? batchState ?? {},
+      flowState: renameLegacyKeyframeKeys(
+        (raw.flowState as Record<string, unknown>) ?? {},
+      ),
+    } as StudioSession;
+  });
+}
+
 function loadInitialState(): {
   sessions: StudioSession[];
   activeSessionId: string | null;
@@ -42,7 +70,7 @@ function loadInitialState(): {
     const activeId = localStorage.getItem(ACTIVE_SESSION_KEY);
     if (raw) {
       return {
-        sessions: JSON.parse(raw) as StudioSession[],
+        sessions: migrateSessions(JSON.parse(raw) as StudioSession[]),
         activeSessionId: activeId,
       };
     }
@@ -74,7 +102,7 @@ function makeSession(name: string, mode: StudioMode): StudioSession {
     updatedAt: now,
     mode,
     flowState: {},
-    batchState: {},
+    actionState: {},
   };
 }
 
@@ -86,17 +114,17 @@ function capSessions(sessions: StudioSession[]): StudioSession[] {
 
 function extractThumbnail(
   flowState: Record<string, unknown>,
-  batchState: Record<string, unknown>,
+  actionState: Record<string, unknown>,
   mode: StudioMode,
 ): string | undefined {
   if (mode === "flow") {
-    const keyframes = flowState.keyframes;
-    if (Array.isArray(keyframes) && keyframes.length > 0) {
-      const first = keyframes[0] as { imageUrl?: string };
+    const referenceFrames = flowState.referenceFrames;
+    if (Array.isArray(referenceFrames) && referenceFrames.length > 0) {
+      const first = referenceFrames[0] as { imageUrl?: string };
       return first.imageUrl ?? undefined;
     }
   } else {
-    const images = batchState.images;
+    const images = actionState.images;
     if (Array.isArray(images) && images.length > 0) {
       const first = images[0] as { url?: string; imageUrl?: string };
       return first.url ?? first.imageUrl ?? undefined;
@@ -131,15 +159,15 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
 
     const mode = useStudioModeStore.getState().mode;
     const flowState = clone(flowPartialize(useFlowStore.getState()));
-    const batchState = clone(studioPartialize(useStudioStore.getState()));
-    const thumbnail = extractThumbnail(flowState, batchState, mode);
+    const actionState = clone(studioPartialize(useStudioStore.getState()));
+    const thumbnail = extractThumbnail(flowState, actionState, mode);
 
     const updated: StudioSession = {
       ...sessions[idx],
       updatedAt: new Date().toISOString(),
       mode,
       flowState,
-      batchState,
+      actionState,
       thumbnail,
     };
 
@@ -210,11 +238,11 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
       useFlowStore.getState().resetFlow();
     }
 
-    if (Object.keys(session.batchState).length > 0) {
-      const batch = session.batchState as Record<string, unknown>;
+    if (Object.keys(session.actionState).length > 0) {
+      const action = session.actionState as Record<string, unknown>;
       useStudioStore.setState({
-        ...batch,
-        excludedCombos: new Set((batch.excludedCombos as string[]) ?? []),
+        ...action,
+        excludedCombos: new Set((action.excludedCombos as string[]) ?? []),
       } as Parameters<typeof useStudioStore.setState>[0]);
     } else {
       useStudioStore.getState().resetSession();

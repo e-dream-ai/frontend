@@ -29,78 +29,80 @@ beforeEach(() => {
 });
 
 describe("flow store", () => {
-  describe("keyframes", () => {
-    it("starts with empty keyframes", () => {
-      expect(useFlowStore.getState().keyframes).toEqual([]);
+  describe("reference frames", () => {
+    it("starts with no reference frames", () => {
+      expect(useFlowStore.getState().referenceFrames).toEqual([]);
     });
 
-    it("adds a keyframe", () => {
-      useFlowStore.getState().addKeyframe({
-        id: "kf-1",
+    it("adds a frame", () => {
+      useFlowStore.getState().addReferenceFrame({
+        id: "frame-1",
         keyframeUuid: "uuid-1",
         imageUrl: "https://example.com/img.jpg",
         name: "nebula",
       });
-      expect(useFlowStore.getState().keyframes).toHaveLength(1);
-      expect(useFlowStore.getState().keyframes[0].name).toBe("nebula");
+      expect(useFlowStore.getState().referenceFrames).toHaveLength(1);
+      expect(useFlowStore.getState().referenceFrames[0].name).toBe("nebula");
     });
 
-    it("removes a keyframe by id", () => {
+    it("removes a frame by id", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe({
-        id: "kf-1",
+      store.addReferenceFrame({
+        id: "frame-1",
         keyframeUuid: "uuid-1",
         imageUrl: "https://example.com/1.jpg",
         name: "nebula",
       });
-      store.addKeyframe({
-        id: "kf-2",
+      store.addReferenceFrame({
+        id: "frame-2",
         keyframeUuid: "uuid-2",
         imageUrl: "https://example.com/2.jpg",
         name: "crystal",
       });
-      useFlowStore.getState().removeKeyframe("kf-1");
-      const kfs = useFlowStore.getState().keyframes;
-      expect(kfs).toHaveLength(1);
-      expect(kfs[0].id).toBe("kf-2");
+      useFlowStore.getState().removeReferenceFrame("frame-1");
+      const frames = useFlowStore.getState().referenceFrames;
+      expect(frames).toHaveLength(1);
+      expect(frames[0].id).toBe("frame-2");
     });
 
-    it("removes loop keyframes when filtering (loop keyframes are derived)", () => {
+    it("removes loop frames when filtering (loop frames are derived)", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe({
-        id: "kf-1",
+      store.addReferenceFrame({
+        id: "frame-1",
         keyframeUuid: "uuid-1",
         imageUrl: "https://example.com/1.jpg",
         name: "nebula",
-        isLoopKeyframe: true,
+        isLoopFrame: true,
       });
-      useFlowStore.getState().removeKeyframe("kf-1");
-      expect(useFlowStore.getState().keyframes).toHaveLength(0);
+      useFlowStore.getState().removeReferenceFrame("frame-1");
+      expect(useFlowStore.getState().referenceFrames).toHaveLength(0);
     });
 
-    it("reorders keyframes", () => {
+    it("reorders reference frames", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe({
-        id: "kf-1",
+      store.addReferenceFrame({
+        id: "frame-1",
         keyframeUuid: "uuid-1",
         imageUrl: "https://example.com/1.jpg",
         name: "first",
       });
-      store.addKeyframe({
-        id: "kf-2",
+      store.addReferenceFrame({
+        id: "frame-2",
         keyframeUuid: "uuid-2",
         imageUrl: "https://example.com/2.jpg",
         name: "second",
       });
-      store.addKeyframe({
-        id: "kf-3",
+      store.addReferenceFrame({
+        id: "frame-3",
         keyframeUuid: "uuid-3",
         imageUrl: "https://example.com/3.jpg",
         name: "third",
       });
-      useFlowStore.getState().reorderKeyframes(["kf-3", "kf-1", "kf-2"]);
-      const ids = useFlowStore.getState().keyframes.map((k) => k.id);
-      expect(ids).toEqual(["kf-3", "kf-1", "kf-2"]);
+      useFlowStore
+        .getState()
+        .reorderReferenceFrames(["frame-3", "frame-1", "frame-2"]);
+      const ids = useFlowStore.getState().referenceFrames.map((k) => k.id);
+      expect(ids).toEqual(["frame-3", "frame-1", "frame-2"]);
     });
   });
 
@@ -114,64 +116,64 @@ describe("flow store", () => {
     });
   });
 
-  describe("derived: keyframesWithLoop", () => {
-    it("returns keyframes as-is when loop is off", () => {
+  describe("derived: referenceFramesWithLoop", () => {
+    it("returns reference frames as-is when loop is off", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe({
-        id: "kf-1",
+      store.addReferenceFrame({
+        id: "frame-1",
         keyframeUuid: "uuid-1",
         imageUrl: "https://example.com/1.jpg",
         name: "nebula",
       });
-      store.addKeyframe({
-        id: "kf-2",
+      store.addReferenceFrame({
+        id: "frame-2",
         keyframeUuid: "uuid-2",
         imageUrl: "https://example.com/2.jpg",
         name: "crystal",
       });
-      const result = useFlowStore.getState().keyframesWithLoop();
+      const result = useFlowStore.getState().referenceFramesWithLoop();
       expect(result).toHaveLength(2);
-      expect(result.every((k) => !k.isLoopKeyframe)).toBe(true);
+      expect(result.every((k) => !k.isLoopFrame)).toBe(true);
     });
 
-    it("appends loop keyframe mirroring first when loop is on", () => {
+    it("appends loop frame mirroring first when loop is on", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe({
-        id: "kf-1",
+      store.addReferenceFrame({
+        id: "frame-1",
         keyframeUuid: "uuid-1",
         imageUrl: "https://example.com/1.jpg",
         name: "nebula",
       });
-      store.addKeyframe({
-        id: "kf-2",
+      store.addReferenceFrame({
+        id: "frame-2",
         keyframeUuid: "uuid-2",
         imageUrl: "https://example.com/2.jpg",
         name: "crystal",
       });
       store.setLoop(true);
-      const result = useFlowStore.getState().keyframesWithLoop();
+      const result = useFlowStore.getState().referenceFramesWithLoop();
       expect(result).toHaveLength(3);
-      expect(result[2].isLoopKeyframe).toBe(true);
+      expect(result[2].isLoopFrame).toBe(true);
       expect(result[2].keyframeUuid).toBe("uuid-1");
       expect(result[2].imageUrl).toBe("https://example.com/1.jpg");
       expect(result[2].name).toBe("nebula");
     });
 
-    it("returns empty when no keyframes even with loop on", () => {
+    it("returns empty when no reference frames even with loop on", () => {
       useFlowStore.getState().setLoop(true);
-      expect(useFlowStore.getState().keyframesWithLoop()).toEqual([]);
+      expect(useFlowStore.getState().referenceFramesWithLoop()).toEqual([]);
     });
 
-    it("returns single keyframe without loop frame when only one keyframe", () => {
+    it("returns single frame without loop frame when only one frame", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe({
-        id: "kf-1",
+      store.addReferenceFrame({
+        id: "frame-1",
         keyframeUuid: "uuid-1",
         imageUrl: "https://example.com/1.jpg",
         name: "nebula",
       });
       store.setLoop(true);
-      const result = useFlowStore.getState().keyframesWithLoop();
+      const result = useFlowStore.getState().referenceFramesWithLoop();
       expect(result).toHaveLength(1);
     });
   });
@@ -179,15 +181,15 @@ describe("flow store", () => {
   describe("resetFlow", () => {
     it("resets to initial state", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe({
-        id: "kf-1",
+      store.addReferenceFrame({
+        id: "frame-1",
         keyframeUuid: "uuid-1",
         imageUrl: "https://example.com/1.jpg",
         name: "nebula",
       });
       store.setLoop(true);
       store.resetFlow();
-      expect(useFlowStore.getState().keyframes).toEqual([]);
+      expect(useFlowStore.getState().referenceFrames).toEqual([]);
       expect(useFlowStore.getState().loop).toBe(false);
     });
   });
@@ -207,33 +209,33 @@ describe("Phase 1: transitions", () => {
   });
 
   describe("recomputeTransitions", () => {
-    it("creates transitions from adjacent keyframe pairs", () => {
+    it("creates transitions from adjacent frame pairs", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
-      store.addKeyframe(makeKf("b"));
-      store.addKeyframe(makeKf("c"));
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
+      store.addReferenceFrame(makeKf("c"));
       store.recomputeTransitions();
 
       const { transitions } = useFlowStore.getState();
       expect(transitions).toHaveLength(2);
-      expect(transitions[0].fromKeyframeId).toBe("a");
-      expect(transitions[0].toKeyframeId).toBe("b");
+      expect(transitions[0].fromFrameId).toBe("a");
+      expect(transitions[0].toFrameId).toBe("b");
       expect(transitions[0].status).toBe("idle");
-      expect(transitions[1].fromKeyframeId).toBe("b");
-      expect(transitions[1].toKeyframeId).toBe("c");
+      expect(transitions[1].fromFrameId).toBe("b");
+      expect(transitions[1].toFrameId).toBe("c");
     });
 
-    it("creates no transitions with fewer than 2 keyframes", () => {
+    it("creates no transitions with fewer than 2 reference frames", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
+      store.addReferenceFrame(makeKf("a"));
       store.recomputeTransitions();
       expect(useFlowStore.getState().transitions).toHaveLength(0);
     });
 
     it("preserves existing transition state when pairs still match", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
-      store.addKeyframe(makeKf("b"));
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
       store.recomputeTransitions();
 
       // Simulate generation completing
@@ -249,26 +251,26 @@ describe("Phase 1: transitions", () => {
       expect(transitions[0].promptOverride).toBe("custom prompt");
     });
 
-    it("adds loop transition with real keyframe IDs when loop enabled", () => {
+    it("adds loop transition with real frame IDs when loop enabled", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
-      store.addKeyframe(makeKf("b"));
-      store.addKeyframe(makeKf("c"));
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
+      store.addReferenceFrame(makeKf("c"));
       store.setLoop(true);
       store.recomputeTransitions();
 
       const { transitions } = useFlowStore.getState();
       expect(transitions).toHaveLength(3);
       // Loop transition: last → first, using real IDs
-      expect(transitions[2].fromKeyframeId).toBe("c");
-      expect(transitions[2].toKeyframeId).toBe("a");
+      expect(transitions[2].fromFrameId).toBe("c");
+      expect(transitions[2].toFrameId).toBe("a");
     });
 
     it("removes loop transition when loop disabled", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
-      store.addKeyframe(makeKf("b"));
-      store.addKeyframe(makeKf("c"));
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
+      store.addReferenceFrame(makeKf("c"));
       store.setLoop(true);
       store.recomputeTransitions();
       expect(useFlowStore.getState().transitions).toHaveLength(3);
@@ -282,8 +284,8 @@ describe("Phase 1: transitions", () => {
   describe("transition overrides", () => {
     it("sets per-transition overrides", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
-      store.addKeyframe(makeKf("b"));
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
       store.recomputeTransitions();
       store.setTransitionOverride(0, {
         presetOverride: "Camera Basics",
@@ -297,8 +299,8 @@ describe("Phase 1: transitions", () => {
 
     it("clears all overrides on a transition", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
-      store.addKeyframe(makeKf("b"));
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
       store.recomputeTransitions();
       store.setTransitionOverride(0, {
         presetOverride: "Organic",
@@ -320,8 +322,8 @@ describe("Phase 1: transitions", () => {
   describe("transition status and dream tracking", () => {
     it("updates transition status and progress", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
-      store.addKeyframe(makeKf("b"));
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
       store.recomputeTransitions();
       store.updateTransitionStatus(0, "processing", 50);
 
@@ -332,8 +334,8 @@ describe("Phase 1: transitions", () => {
 
     it("stores dream UUID on a transition", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
-      store.addKeyframe(makeKf("b"));
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
       store.recomputeTransitions();
       store.setTransitionDream(0, "dream-xyz");
       expect(useFlowStore.getState().transitions[0].dreamUuid).toBe(
@@ -343,8 +345,8 @@ describe("Phase 1: transitions", () => {
 
     it("stores uprez dream UUID and updates uprez status", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
-      store.addKeyframe(makeKf("b"));
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
       store.recomputeTransitions();
       store.setTransitionUprez(0, "uprez-789");
       store.updateTransitionUprezStatus(0, "processing", 30);
@@ -374,6 +376,85 @@ describe("Phase 1: transitions", () => {
       const transitions = migrated.transitions as any[];
       expect(transitions[0]).not.toHaveProperty("guidanceOverride");
       expect(transitions[1].durationOverride).toBe(10);
+    });
+  });
+
+  describe("migration v5 → v6 (keyframe → reference frame, #719)", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const migrate = (useFlowStore as any).persist?.getOptions?.()?.migrate;
+
+    it("renames keyframes onto referenceFrames and maps isLoopKeyframe", () => {
+      const migrated = migrate(
+        {
+          keyframes: [
+            { id: "a", dreamUuid: "d1", imageUrl: "u1", name: "one" },
+            { id: "b", dreamUuid: "d2", imageUrl: "u2", isLoopKeyframe: true },
+          ],
+        },
+        5,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ) as any;
+
+      expect(migrated).not.toHaveProperty("keyframes");
+      expect(migrated.referenceFrames).toHaveLength(2);
+      expect(migrated.referenceFrames[0].id).toBe("a");
+      expect(migrated.referenceFrames[1].isLoopFrame).toBe(true);
+      expect(migrated.referenceFrames[1]).not.toHaveProperty("isLoopKeyframe");
+    });
+
+    it("keeps keyframeUuid — it still points at a backend Keyframe", () => {
+      const migrated = migrate(
+        { keyframes: [{ id: "a", keyframeUuid: "kf-uuid", dreamUuid: "d1" }] },
+        5,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ) as any;
+
+      expect(migrated.referenceFrames[0].keyframeUuid).toBe("kf-uuid");
+    });
+
+    it("renames the transition endpoint ids", () => {
+      const migrated = migrate(
+        {
+          transitions: [
+            { fromKeyframeId: "a", toKeyframeId: "b", status: "processed" },
+          ],
+        },
+        5,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ) as any;
+
+      expect(migrated.transitions[0].fromFrameId).toBe("a");
+      expect(migrated.transitions[0].toFrameId).toBe("b");
+      expect(migrated.transitions[0]).not.toHaveProperty("fromKeyframeId");
+      expect(migrated.transitions[0].status).toBe("processed");
+    });
+
+    it("runs the rename for stores several versions behind", () => {
+      // The version chain below returns early per version, so a v2 store would
+      // otherwise keep the legacy keys and rehydrate with an empty flow.
+      const migrated = migrate(
+        { keyframes: [{ id: "a", dreamUuid: "d1" }] },
+        2,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ) as any;
+
+      expect(migrated.referenceFrames).toHaveLength(1);
+      expect(migrated).not.toHaveProperty("keyframes");
+    });
+
+    it("is a no-op on state already using the new keys", () => {
+      const migrated = migrate(
+        {
+          referenceFrames: [{ id: "a", isLoopFrame: true }],
+          transitions: [{ fromFrameId: "a", toFrameId: "b", status: "idle" }],
+        },
+        6,
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      ) as any;
+
+      expect(migrated.referenceFrames[0].isLoopFrame).toBe(true);
+      expect(migrated.transitions[0].fromFrameId).toBe("a");
+      expect(migrated.transitions[0].toFrameId).toBe("b");
     });
   });
 
@@ -433,9 +514,9 @@ describe("Phase 1: transitions", () => {
   describe("hydration", () => {
     it("resets stale processing/queue transitions to failed on recompute", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
-      store.addKeyframe(makeKf("b"));
-      store.addKeyframe(makeKf("c"));
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
+      store.addReferenceFrame(makeKf("c"));
       store.recomputeTransitions();
 
       // Simulate in-flight states (as if persisted mid-generation)
@@ -453,9 +534,9 @@ describe("Phase 1: transitions", () => {
 
     it("does not reset processed or idle transitions", () => {
       const store = useFlowStore.getState();
-      store.addKeyframe(makeKf("a"));
-      store.addKeyframe(makeKf("b"));
-      store.addKeyframe(makeKf("c"));
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
+      store.addReferenceFrame(makeKf("c"));
       store.recomputeTransitions();
 
       store.updateTransitionStatus(0, "processed");
@@ -470,98 +551,98 @@ describe("Phase 1: transitions", () => {
   });
 });
 
-describe("keyframe lightbox (#694)", () => {
+describe("frame lightbox (#694)", () => {
   beforeEach(() => {
     useFlowStore.getState().resetFlow();
   });
 
   it("is closed by default", () => {
-    expect(useFlowStore.getState().keyframeLightboxId).toBeNull();
+    expect(useFlowStore.getState().frameLightboxId).toBeNull();
   });
 
-  it("opens on an existing keyframe", () => {
+  it("opens on an existing frame", () => {
     const store = useFlowStore.getState();
-    store.addKeyframe(makeKf("a"));
-    store.addKeyframe(makeKf("b"));
-    store.openKeyframeLightbox("b");
-    expect(useFlowStore.getState().keyframeLightboxId).toBe("b");
+    store.addReferenceFrame(makeKf("a"));
+    store.addReferenceFrame(makeKf("b"));
+    store.openFrameLightbox("b");
+    expect(useFlowStore.getState().frameLightboxId).toBe("b");
   });
 
-  it("ignores an unknown keyframe id (stays closed)", () => {
+  it("ignores an unknown frame id (stays closed)", () => {
     const store = useFlowStore.getState();
-    store.addKeyframe(makeKf("a"));
-    store.openKeyframeLightbox("nope");
-    expect(useFlowStore.getState().keyframeLightboxId).toBeNull();
+    store.addReferenceFrame(makeKf("a"));
+    store.openFrameLightbox("nope");
+    expect(useFlowStore.getState().frameLightboxId).toBeNull();
   });
 
-  it("steps forward and clamps at the last keyframe", () => {
+  it("steps forward and clamps at the last frame", () => {
     const store = useFlowStore.getState();
-    store.addKeyframe(makeKf("a"));
-    store.addKeyframe(makeKf("b"));
-    store.openKeyframeLightbox("a");
-    store.stepKeyframeLightbox(1);
-    expect(useFlowStore.getState().keyframeLightboxId).toBe("b");
-    store.stepKeyframeLightbox(1);
-    expect(useFlowStore.getState().keyframeLightboxId).toBe("b");
+    store.addReferenceFrame(makeKf("a"));
+    store.addReferenceFrame(makeKf("b"));
+    store.openFrameLightbox("a");
+    store.stepFrameLightbox(1);
+    expect(useFlowStore.getState().frameLightboxId).toBe("b");
+    store.stepFrameLightbox(1);
+    expect(useFlowStore.getState().frameLightboxId).toBe("b");
   });
 
-  it("steps backward and clamps at the first keyframe", () => {
+  it("steps backward and clamps at the first frame", () => {
     const store = useFlowStore.getState();
-    store.addKeyframe(makeKf("a"));
-    store.addKeyframe(makeKf("b"));
-    store.openKeyframeLightbox("b");
-    store.stepKeyframeLightbox(-1);
-    expect(useFlowStore.getState().keyframeLightboxId).toBe("a");
-    store.stepKeyframeLightbox(-1);
-    expect(useFlowStore.getState().keyframeLightboxId).toBe("a");
+    store.addReferenceFrame(makeKf("a"));
+    store.addReferenceFrame(makeKf("b"));
+    store.openFrameLightbox("b");
+    store.stepFrameLightbox(-1);
+    expect(useFlowStore.getState().frameLightboxId).toBe("a");
+    store.stepFrameLightbox(-1);
+    expect(useFlowStore.getState().frameLightboxId).toBe("a");
   });
 
   it("closes", () => {
     const store = useFlowStore.getState();
-    store.addKeyframe(makeKf("a"));
-    store.openKeyframeLightbox("a");
-    store.closeKeyframeLightbox();
-    expect(useFlowStore.getState().keyframeLightboxId).toBeNull();
+    store.addReferenceFrame(makeKf("a"));
+    store.openFrameLightbox("a");
+    store.closeFrameLightbox();
+    expect(useFlowStore.getState().frameLightboxId).toBeNull();
   });
 
-  it("keeps showing the same keyframe when an earlier one is deleted", () => {
+  it("keeps showing the same frame when an earlier one is deleted", () => {
     const store = useFlowStore.getState();
-    store.addKeyframe(makeKf("a"));
-    store.addKeyframe(makeKf("b"));
-    store.openKeyframeLightbox("b");
-    store.removeKeyframe("a");
+    store.addReferenceFrame(makeKf("a"));
+    store.addReferenceFrame(makeKf("b"));
+    store.openFrameLightbox("b");
+    store.removeReferenceFrame("a");
     // Index-keyed state would now be pointing at a different image.
-    expect(useFlowStore.getState().keyframeLightboxId).toBe("b");
+    expect(useFlowStore.getState().frameLightboxId).toBe("b");
   });
 
-  it("closes when the keyframe it is showing is deleted", () => {
+  it("closes when the frame it is showing is deleted", () => {
     const store = useFlowStore.getState();
-    store.addKeyframe(makeKf("a"));
-    store.addKeyframe(makeKf("b"));
-    store.openKeyframeLightbox("b");
-    store.removeKeyframe("b");
-    expect(useFlowStore.getState().keyframeLightboxId).toBeNull();
+    store.addReferenceFrame(makeKf("a"));
+    store.addReferenceFrame(makeKf("b"));
+    store.openFrameLightbox("b");
+    store.removeReferenceFrame("b");
+    expect(useFlowStore.getState().frameLightboxId).toBeNull();
   });
 
-  it("survives a reorder without changing the shown keyframe", () => {
+  it("survives a reorder without changing the shown frame", () => {
     const store = useFlowStore.getState();
-    store.addKeyframe(makeKf("a"));
-    store.addKeyframe(makeKf("b"));
-    store.openKeyframeLightbox("a");
-    store.reorderKeyframes(["b", "a"]);
-    expect(useFlowStore.getState().keyframeLightboxId).toBe("a");
+    store.addReferenceFrame(makeKf("a"));
+    store.addReferenceFrame(makeKf("b"));
+    store.openFrameLightbox("a");
+    store.reorderReferenceFrames(["b", "a"]);
+    expect(useFlowStore.getState().frameLightboxId).toBe("a");
     // "a" is last now, so forward navigation is exhausted.
-    store.stepKeyframeLightbox(1);
-    expect(useFlowStore.getState().keyframeLightboxId).toBe("a");
-    store.stepKeyframeLightbox(-1);
-    expect(useFlowStore.getState().keyframeLightboxId).toBe("b");
+    store.stepFrameLightbox(1);
+    expect(useFlowStore.getState().frameLightboxId).toBe("a");
+    store.stepFrameLightbox(-1);
+    expect(useFlowStore.getState().frameLightboxId).toBe("b");
   });
 
   it("resetFlow closes the lightbox", () => {
     const store = useFlowStore.getState();
-    store.addKeyframe(makeKf("a"));
-    store.openKeyframeLightbox("a");
+    store.addReferenceFrame(makeKf("a"));
+    store.openFrameLightbox("a");
     store.resetFlow();
-    expect(useFlowStore.getState().keyframeLightboxId).toBeNull();
+    expect(useFlowStore.getState().frameLightboxId).toBeNull();
   });
 });

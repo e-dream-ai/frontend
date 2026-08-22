@@ -6,7 +6,7 @@
  * grid would reflow as each thumbnail loads. `processedMediaWidth`/`Height`
  * (set by the video service — see video/utils/process_image.py) let us reserve
  * the correct box up front. They are nullable for older dreams, dreams still
- * processing, and keyframes, so callers must tolerate undefined: the image's
+ * processing, and referenceFrames, so callers must tolerate undefined: the image's
  * intrinsic ratio still takes over once it loads.
  */
 export const mediaAspectRatio = (

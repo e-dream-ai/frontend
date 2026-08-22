@@ -76,13 +76,13 @@ export function FlowPreview() {
     transitions,
     previewLightboxOpen,
     setPreviewLightboxOpen,
-    keyframeLightboxOpen,
+    frameLightboxOpen,
   } = useFlowStore(
     useShallow((s) => ({
       transitions: s.transitions,
       previewLightboxOpen: s.previewLightboxOpen,
       setPreviewLightboxOpen: s.setPreviewLightboxOpen,
-      keyframeLightboxOpen: s.keyframeLightboxId !== null,
+      frameLightboxOpen: s.frameLightboxId !== null,
     })),
   );
 
@@ -159,7 +159,7 @@ export function FlowPreview() {
 
   useEffect(() => {
     if (segmentCount < 2) return;
-    if (keyframeLightboxOpen) return;
+    if (frameLightboxOpen) return;
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
@@ -171,13 +171,7 @@ export function FlowPreview() {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [
-    segmentCount,
-    keyframeLightboxOpen,
-    previewLightboxOpen,
-    targetIndex,
-    goTo,
-  ]);
+  }, [segmentCount, frameLightboxOpen, previewLightboxOpen, targetIndex, goTo]);
 
   if (segmentCount === 0) return null;
 

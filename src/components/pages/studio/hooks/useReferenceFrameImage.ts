@@ -1,17 +1,17 @@
 import { useCallback, useState } from "react";
-import type { FlowKeyframe } from "@/types/flow.types";
+import type { FlowReferenceFrame } from "@/types/flow.types";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { useFlowStore } from "@/stores/flow.store";
 
-export function useKeyframeImage(keyframe: FlowKeyframe | undefined) {
-  const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
+export function useReferenceFrameImage(frame: FlowReferenceFrame | undefined) {
+  const updateReferenceFrame = useFlowStore((s) => s.updateReferenceFrame);
   const [override, setOverride] = useState<{
     replaces: string;
     url: string;
   } | null>(null);
 
-  const { id, imageUrl, dreamUuid, isLoopKeyframe } = keyframe ?? {};
+  const { id, imageUrl, dreamUuid, isLoopFrame } = frame ?? {};
   const src =
     override !== null && override.replaces === imageUrl
       ? override.url
@@ -29,12 +29,12 @@ export function useKeyframeImage(keyframe: FlowKeyframe | undefined) {
         dream?.video || dream?.original_video || dream?.thumbnail || "";
       if (!freshUrl) return;
       setOverride({ replaces: imageUrl, url: freshUrl });
-      // The loop keyframe mirrors keyframe 0 and isn't a real store entry.
-      if (!isLoopKeyframe) updateKeyframe(id, { imageUrl: freshUrl });
+      // The loop frame mirrors frame 0 and isn't a real store entry.
+      if (!isLoopFrame) updateReferenceFrame(id, { imageUrl: freshUrl });
     } catch {
       // ignore
     }
-  }, [dreamUuid, id, imageUrl, isLoopKeyframe, updateKeyframe]);
+  }, [dreamUuid, id, imageUrl, isLoopFrame, updateReferenceFrame]);
 
   return { src, onError: dreamUuid ? refresh : undefined };
 }

@@ -7,6 +7,7 @@ import { useStudioStore } from "@/stores/studio.store";
 import { useStudioModeStore } from "@/stores/studio-mode.store";
 import { useFlowStore } from "@/stores/flow.store";
 import { ROUTES } from "@/constants/routes.constants";
+import { STUDIO_MODE_LABELS } from "./constants/studio-modes";
 import { StudioTabs } from "./components/studio-tabs";
 import { SessionSwitcher } from "./components/session-switcher";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
@@ -71,7 +72,7 @@ export const StudioPage: React.FC = () => {
 
   const addImage = useStudioStore((s) => s.addImage);
   const updateImage = useStudioStore((s) => s.updateImage);
-  const addKeyframe = useFlowStore((s) => s.addKeyframe);
+  const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
   const uploadDream = useUploadImageDream();
 
   const handleBack = useCallback(() => {
@@ -87,7 +88,7 @@ export const StudioPage: React.FC = () => {
       const currentMode = useStudioModeStore.getState().mode;
 
       for (const file of files) {
-        if (currentMode === "batch") {
+        if (currentMode === "action") {
           const placeholderUuid = uuidv4();
           const blobUrl = URL.createObjectURL(file);
           addImage({
@@ -115,7 +116,7 @@ export const StudioPage: React.FC = () => {
         } else {
           try {
             const result = await uploadDream.mutateAsync({ file });
-            addKeyframe({
+            addReferenceFrame({
               id: uuidv4(),
               dreamUuid: result.dreamUuid,
               imageUrl: result.imageUrl,
@@ -127,7 +128,7 @@ export const StudioPage: React.FC = () => {
         }
       }
     },
-    [addImage, updateImage, addKeyframe, uploadDream],
+    [addImage, updateImage, addReferenceFrame, uploadDream],
   );
 
   const { isDragOver, dropHandlers } = useFileDropUpload({
@@ -149,13 +150,13 @@ export const StudioPage: React.FC = () => {
         </TitleGroup>
         <ModeToggle>
           <ModeButton $active={mode === "flow"} onClick={() => setMode("flow")}>
-            Flow
+            {STUDIO_MODE_LABELS.flow}
           </ModeButton>
           <ModeButton
-            $active={mode === "batch"}
-            onClick={() => setMode("batch")}
+            $active={mode === "action"}
+            onClick={() => setMode("action")}
           >
-            Batch (Advanced)
+            {STUDIO_MODE_LABELS.action}
           </ModeButton>
         </ModeToggle>
         <HeaderSpacer />
@@ -165,10 +166,10 @@ export const StudioPage: React.FC = () => {
         <SessionSwitcher />
       </StudioHeader>
 
-      <StudioBody $constrain={mode === "batch"}>
+      <StudioBody $constrain={mode === "action"}>
         <Suspense fallback={null}>
           {mode === "flow" && <FlowBuilder />}
-          {mode === "batch" && (
+          {mode === "action" && (
             <>
               <StudioTabs />
               {activeTab === "images" && <ImagesTab />}
