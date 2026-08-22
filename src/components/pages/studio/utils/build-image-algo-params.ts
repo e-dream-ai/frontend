@@ -10,7 +10,7 @@ interface BuildImageAlgoParamsInput {
 
 /**
  * Build the `algoParams` payload for a still-image generation dream. Shared by
- * the batch Images tab and the flow "Generate Keyframes" modal so both send an
+ * the batch Images tab and the flow "Generate Reference Frames" modal so both send an
  * identical shape. `negative_prompt` is included only when a non-empty value is
  * given (same convention as buildVideoAlgoParams).
  */

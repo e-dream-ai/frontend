@@ -2,10 +2,10 @@ import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { AlertTriangle } from "lucide-react";
-import type { FlowKeyframe } from "@/types/flow.types";
+import type { FlowReferenceFrame } from "@/types/flow.types";
 import { useFlowStore } from "@/stores/flow.store";
-import { aspectRatioOf } from "../utils/keyframe-aspect";
-import { useKeyframeImage } from "../hooks/useKeyframeImage";
+import { aspectRatioOf } from "../utils/frame-aspect";
+import { useReferenceFrameImage } from "../hooks/useReferenceFrameImage";
 import {
   CardWrapper,
   CardImage,
@@ -19,25 +19,26 @@ import {
   UploadRingFill,
   UploadPercent,
   FailedOverlay,
-} from "./keyframe-card.styled";
+} from "./reference-frame-card.styled";
 
 interface Props {
-  keyframe: FlowKeyframe;
+  frame: FlowReferenceFrame;
   index: number;
   onDelete?: (id: string) => void;
 }
 
-export const KeyframeCard: React.FC<Props> = ({
-  keyframe,
+export const ReferenceFrameCard: React.FC<Props> = ({
+  frame,
   index,
   onDelete,
 }) => {
-  const isLoop = keyframe.isLoopKeyframe ?? false;
-  const isUploading = keyframe.uploadStatus === "uploading";
-  const isFailed = keyframe.uploadStatus === "failed";
+  const isLoop = frame.isLoopFrame ?? false;
+  const isUploading = frame.uploadStatus === "uploading";
+  const isFailed = frame.uploadStatus === "failed";
   const isBusy = isUploading || isFailed;
 
-  const { src: imgSrc, onError: handleImgError } = useKeyframeImage(keyframe);
+  const { src: imgSrc, onError: handleImgError } =
+    useReferenceFrameImage(frame);
 
   const {
     attributes,
@@ -47,7 +48,7 @@ export const KeyframeCard: React.FC<Props> = ({
     transition,
     isDragging,
   } = useSortable({
-    id: keyframe.id,
+    id: frame.id,
     // Dragging a card mid-upload would re-key React and abort the visual
     // continuity of the preview, so lock it until the upload settles.
     disabled: isLoop || isBusy,
@@ -58,14 +59,14 @@ export const KeyframeCard: React.FC<Props> = ({
     transition,
   };
 
-  const percent = Math.round(keyframe.uploadProgress ?? 0);
+  const percent = Math.round(frame.uploadProgress ?? 0);
 
-  const openKeyframeLightbox = useFlowStore((s) => s.openKeyframeLightbox);
-  const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
+  const openFrameLightbox = useFlowStore((s) => s.openFrameLightbox);
+  const updateReferenceFrame = useFlowStore((s) => s.updateReferenceFrame);
   const isClickable = !isLoop && !isBusy && !!imgSrc;
 
   // The image is the only place the source's true shape is known: uploads are
-  // local blobs and library picks carry no dimensions on the flow keyframe.
+  // local blobs and library picks carry no dimensions on the flow frame.
   // The loop frame is a synthetic copy of the first, so it has no store row to
   // write back to — the frame it mirrors reports its own size.
   const handleImgLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -73,16 +74,16 @@ export const KeyframeCard: React.FC<Props> = ({
     const { naturalWidth, naturalHeight } = e.currentTarget;
     if (!naturalWidth || !naturalHeight) return;
     if (
-      keyframe.naturalWidth === naturalWidth &&
-      keyframe.naturalHeight === naturalHeight
+      frame.naturalWidth === naturalWidth &&
+      frame.naturalHeight === naturalHeight
     ) {
       return;
     }
-    updateKeyframe(keyframe.id, { naturalWidth, naturalHeight });
+    updateReferenceFrame(frame.id, { naturalWidth, naturalHeight });
   };
   const handleOpen = (e: React.MouseEvent) => {
     e.stopPropagation();
-    openKeyframeLightbox(keyframe.id);
+    openFrameLightbox(frame.id);
   };
 
   return (
@@ -93,13 +94,13 @@ export const KeyframeCard: React.FC<Props> = ({
       $isDragging={isDragging}
       $uploading={isUploading}
       $failed={isFailed}
-      $ratio={aspectRatioOf(keyframe)}
+      $ratio={aspectRatioOf(frame)}
       {...(isLoop || isBusy ? {} : { ...attributes, ...listeners })}
     >
       {imgSrc ? (
         <CardImage
           src={imgSrc}
-          alt={keyframe.name}
+          alt={frame.name}
           $uploading={isUploading}
           onClick={isClickable ? handleOpen : undefined}
           style={isClickable ? { cursor: "pointer" } : undefined}
@@ -107,13 +108,13 @@ export const KeyframeCard: React.FC<Props> = ({
           onError={handleImgError}
         />
       ) : (
-        <CardPlaceholder>{keyframe.name}</CardPlaceholder>
+        <CardPlaceholder>{frame.name}</CardPlaceholder>
       )}
 
       {isUploading && (
         <UploadOverlay
           role="progressbar"
-          aria-label={`Uploading ${keyframe.name}`}
+          aria-label={`Uploading ${frame.name}`}
           aria-valuenow={percent}
           aria-valuemin={0}
           aria-valuemax={100}
@@ -136,7 +137,7 @@ export const KeyframeCard: React.FC<Props> = ({
       <CardLabel>
         {isLoop ? (
           <>
-            {keyframe.name} <LoopBadge>Loop</LoopBadge>
+            {frame.name} <LoopBadge>Loop</LoopBadge>
           </>
         ) : (
           `${index + 1}`
@@ -147,7 +148,7 @@ export const KeyframeCard: React.FC<Props> = ({
         <DeleteButton
           onClick={(e) => {
             e.stopPropagation();
-            onDelete(keyframe.id);
+            onDelete(frame.id);
           }}
         >
           &times;

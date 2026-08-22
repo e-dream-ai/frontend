@@ -3,8 +3,8 @@ import { findTransitionIndexByDream } from "./flow-progress.util";
 import type { FlowTransition } from "@/types/flow.types";
 
 const t = (over: Partial<FlowTransition>): FlowTransition => ({
-  fromKeyframeId: "a",
-  toKeyframeId: "b",
+  fromFrameId: "a",
+  toFrameId: "b",
   status: "queue",
   ...over,
 });

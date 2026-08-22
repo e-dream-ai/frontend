@@ -29,8 +29,10 @@ interface Props {
   onClose: () => void;
 }
 
-export const AddKeyframesFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
-  const addKeyframe = useFlowStore((s) => s.addKeyframe);
+export const AddReferenceFramesFromPlaylistModal: React.FC<Props> = ({
+  onClose,
+}) => {
+  const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
   const { playlists } = useUserPlaylists();
   const existingDreamUuids = useExistingDreamUuids();
   const { selectedUuids, toggle, clear } = useUuidSelection();
@@ -49,17 +51,17 @@ export const AddKeyframesFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
     for (const dream of dreams) {
       if (!selectedUuids.has(dream.uuid) || existingDreamUuids.has(dream.uuid))
         continue;
-      addKeyframe({
+      addReferenceFrame({
         id: uuidv4(),
         dreamUuid: dream.uuid,
         // Prefer the full-resolution source over the thumbnail, matching
-        // "+ My Images" — the keyframe feeds generation, not just display.
+        // "+ My Images" — the frame feeds generation, not just display.
         imageUrl: dream.video || dream.original_video || dream.thumbnail,
         name: dream.name,
       });
     }
     onClose();
-  }, [dreams, selectedUuids, existingDreamUuids, addKeyframe, onClose]);
+  }, [dreams, selectedUuids, existingDreamUuids, addReferenceFrame, onClose]);
 
   const showEmpty =
     Boolean(selectedPlaylistId) &&
@@ -71,7 +73,7 @@ export const AddKeyframesFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
     <ModalOverlay onClick={onClose}>
       <ModalContent onClick={(e) => e.stopPropagation()}>
         <ModalHeader>
-          <ModalTitle>Add Keyframes from Playlist</ModalTitle>
+          <ModalTitle>Add Reference Frames from Playlist</ModalTitle>
           <CloseButton onClick={onClose}>&times;</CloseButton>
         </ModalHeader>
         <ModalBody>

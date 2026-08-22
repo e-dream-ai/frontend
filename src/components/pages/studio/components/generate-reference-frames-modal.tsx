@@ -42,11 +42,11 @@ interface Props {
   onClose: () => void;
 }
 
-export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
+export const GenerateReferenceFramesModal: React.FC<Props> = ({ onClose }) => {
   const imageGenParams = useStudioStore((s) => s.imageGenParams);
   const setImageGenParams = useStudioStore((s) => s.setImageGenParams);
   const addImage = useStudioStore((s) => s.addImage);
-  const addKeyframe = useFlowStore((s) => s.addKeyframe);
+  const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
 
   // Shared with the batch Images tab so the prompt survives reopening the
   // dialog and carries over between the two generate UIs.
@@ -120,9 +120,9 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
               status: (dream.status as StudioImage["status"]) || "queue",
               selected: false,
             });
-            // Placeholder card in the strip; useGeneratedKeyframeSync fills
+            // Placeholder card in the strip; useGeneratedFrameSync fills
             // in progress and the final thumbnail.
-            addKeyframe({
+            addReferenceFrame({
               id: uuidv4(),
               dreamUuid: dream.uuid,
               imageUrl: "",
@@ -147,7 +147,7 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
     negativePromptEnabled,
     modelOptions,
     addImage,
-    addKeyframe,
+    addReferenceFrame,
     onClose,
   ]);
 
@@ -155,7 +155,7 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
     <Overlay>
       <Panel>
         <Header>
-          <Title>Generate Keyframes</Title>
+          <Title>Generate Reference Frames</Title>
           <CloseBtn onClick={onClose}>&times;</CloseBtn>
         </Header>
         <Body>
@@ -212,25 +212,27 @@ export const GenerateKeyframesModal: React.FC<Props> = ({ onClose }) => {
             </FieldGroup>
           </FieldRow>
           <FieldLabel
-            htmlFor="keyframe-negative-prompt"
+            htmlFor="reference-frame-negative-prompt"
             style={{ display: "block", marginTop: 14, marginBottom: 8 }}
           >
             Negative prompt
           </FieldLabel>
           <PromptTextarea
-            id="keyframe-negative-prompt"
+            id="reference-frame-negative-prompt"
             placeholder="Describe what to avoid (optional)..."
             value={imageGenParams.negativePrompt}
             disabled={!negativePromptEnabled}
             aria-describedby={
-              negativePromptHint ? "keyframe-negative-prompt-hint" : undefined
+              negativePromptHint
+                ? "reference-frame-negative-prompt-hint"
+                : undefined
             }
             onChange={(e) =>
               setImageGenParams({ negativePrompt: e.target.value })
             }
           />
           {negativePromptHint && (
-            <FieldHint id="keyframe-negative-prompt-hint">
+            <FieldHint id="reference-frame-negative-prompt-hint">
               {negativePromptHint}
             </FieldHint>
           )}

@@ -38,7 +38,7 @@ interface Props {
 }
 
 export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
-  const addKeyframe = useFlowStore((s) => s.addKeyframe);
+  const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
   const existingDreamUuids = useExistingDreamUuids();
 
   const [search, setSearch] = useState("");
@@ -61,7 +61,7 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
         continue;
       const imageUrl =
         dream.video || dream.original_video || dream.thumbnail || "";
-      addKeyframe({
+      addReferenceFrame({
         id: uuidv4(),
         dreamUuid: dream.uuid,
         imageUrl,
@@ -69,7 +69,7 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
       });
     }
     onClose();
-  }, [dreams, selectedUuids, existingDreamUuids, addKeyframe, onClose]);
+  }, [dreams, selectedUuids, existingDreamUuids, addReferenceFrame, onClose]);
 
   useEffect(() => {
     const prev = document.body.style.overflow;

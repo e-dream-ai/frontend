@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, beforeAll } from "vitest";
+import type { PersistedStudioSession } from "@/types/session.types";
 
 beforeAll(() => {
   const store: Record<string, string> = {};
@@ -20,8 +21,9 @@ beforeAll(() => {
   };
 });
 
-const { useSessionStore } = await import("./session.store");
+const { useSessionStore, migrateSessions } = await import("./session.store");
 const { useFlowStore } = await import("./flow.store");
+const { migrateStudioMode } = await import("./studio-mode.store");
 
 describe("session store", () => {
   beforeEach(() => {
@@ -150,5 +152,88 @@ describe("session store", () => {
     const count = useSessionStore.getState().sessions.length;
     useSessionStore.getState().ensureActiveSession();
     expect(useSessionStore.getState().sessions).toHaveLength(count);
+  });
+});
+
+describe("legacy session migration (#719, #729)", () => {
+  it("maps batchState onto actionState and batch mode onto action", () => {
+    const legacySession: PersistedStudioSession = {
+      id: "s1",
+      name: "Session 1",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      mode: "batch",
+      flowState: {},
+      batchState: { images: [{ uuid: "d1", url: "u1" }] },
+    };
+
+    const [migrated] = migrateSessions([legacySession]);
+
+    expect(migrated.mode).toBe("action");
+    expect(migrated.actionState).toEqual({
+      images: [{ uuid: "d1", url: "u1" }],
+    });
+    expect(migrated).not.toHaveProperty("batchState");
+  });
+
+  it("renames the keyframe keys inside a session's flowState", () => {
+    // Sessions snapshot the flow store, so the zustand migrate hook never
+    // sees them — without this they would restore an empty flow.
+    const legacySession: PersistedStudioSession = {
+      id: "s1",
+      name: "Session 1",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      mode: "flow",
+      flowState: {
+        keyframes: [{ id: "a", dreamUuid: "d1", isLoopKeyframe: true }],
+        transitions: [{ fromKeyframeId: "a", toKeyframeId: "b" }],
+      },
+      batchState: {},
+    };
+
+    const [migrated] = migrateSessions([legacySession]);
+
+    const flowState = migrated.flowState as {
+      referenceFrames: Array<{ isLoopFrame?: boolean }>;
+      transitions: Array<{ fromFrameId?: string; toFrameId?: string }>;
+    };
+    expect(flowState).not.toHaveProperty("keyframes");
+    expect(flowState.referenceFrames).toHaveLength(1);
+    expect(flowState.referenceFrames[0].isLoopFrame).toBe(true);
+    expect(flowState.transitions[0].fromFrameId).toBe("a");
+    expect(flowState.transitions[0].toFrameId).toBe("b");
+  });
+
+  it("leaves an already-migrated session untouched", () => {
+    const session = {
+      id: "s1",
+      name: "Session 1",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      mode: "action" as const,
+      flowState: { referenceFrames: [{ id: "a" }] },
+      actionState: { images: [] },
+    };
+
+    const [migrated] = migrateSessions([session]);
+
+    expect(migrated.mode).toBe("action");
+    expect(migrated.actionState).toEqual({ images: [] });
+    expect(
+      (
+        migrated.flowState as {
+          referenceFrames: Array<Record<string, unknown>>;
+        }
+      ).referenceFrames,
+    ).toHaveLength(1);
+  });
+});
+
+describe("studio-mode migration v1 → v2 (#729)", () => {
+  it("maps a stored batch mode onto action", () => {
+    expect(migrateStudioMode({ mode: "batch" })).toEqual({ mode: "action" });
+    expect(migrateStudioMode({ mode: "flow" })).toEqual({ mode: "flow" });
+    expect(migrateStudioMode({ mode: "action" })).toEqual({ mode: "action" });
   });
 });

@@ -13,11 +13,11 @@ import {
   horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { useFlowStore, buildKeyframesWithLoop } from "@/stores/flow.store";
-import { KeyframeCard } from "./keyframe-card";
-import { KeyframeLightbox } from "./keyframe-lightbox";
+import { useFlowStore, buildFramesWithLoop } from "@/stores/flow.store";
+import { ReferenceFrameCard } from "./reference-frame-card";
+import { ReferenceFrameLightbox } from "./reference-frame-lightbox";
 import { TransitionGapEnhanced } from "./transition-gap";
-import { describeMismatch } from "../utils/keyframe-aspect";
+import { describeMismatch } from "../utils/frame-aspect";
 import { FlowReset } from "./flow-reset";
 import {
   StripSection,
@@ -33,7 +33,7 @@ import {
   LoopToggle,
   LoopCheckbox,
   EmptyState,
-} from "./keyframe-strip.styled";
+} from "./reference-frame-strip.styled";
 
 interface Props {
   onAddUpload: () => void;
@@ -43,7 +43,7 @@ interface Props {
   onRetry: (index: number) => void;
 }
 
-export const KeyframeStrip: React.FC<Props> = ({
+export const ReferenceFrameStrip: React.FC<Props> = ({
   onAddUpload,
   onAddGenerate,
   onAddFromPlaylist,
@@ -51,20 +51,20 @@ export const KeyframeStrip: React.FC<Props> = ({
   onRetry,
 }) => {
   // Actions (stable refs)
-  const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
-  const reorderKeyframes = useFlowStore((s) => s.reorderKeyframes);
+  const removeReferenceFrame = useFlowStore((s) => s.removeReferenceFrame);
+  const reorderReferenceFrames = useFlowStore((s) => s.reorderReferenceFrames);
   const setLoop = useFlowStore((s) => s.setLoop);
   const selectTransition = useFlowStore((s) => s.selectTransition);
 
   // Data
-  const rawKeyframes = useFlowStore((s) => s.keyframes);
+  const rawFrames = useFlowStore((s) => s.referenceFrames);
   const loop = useFlowStore((s) => s.loop);
   const transitions = useFlowStore((s) => s.transitions);
   const globalDuration = useFlowStore((s) => s.globalDuration);
 
-  const displayKeyframes = useMemo(
-    () => buildKeyframesWithLoop(rawKeyframes, loop),
-    [rawKeyframes, loop],
+  const displayFrames = useMemo(
+    () => buildFramesWithLoop(rawFrames, loop),
+    [rawFrames, loop],
   );
 
   const sensors = useSensors(
@@ -79,23 +79,23 @@ export const KeyframeStrip: React.FC<Props> = ({
       const { active, over } = event;
       if (!over || active.id === over.id) return;
 
-      const oldIndex = rawKeyframes.findIndex((kf) => kf.id === active.id);
-      const newIndex = rawKeyframes.findIndex((kf) => kf.id === over.id);
+      const oldIndex = rawFrames.findIndex((frame) => frame.id === active.id);
+      const newIndex = rawFrames.findIndex((frame) => frame.id === over.id);
       if (oldIndex === -1 || newIndex === -1) return;
 
-      const newOrder = [...rawKeyframes];
+      const newOrder = [...rawFrames];
       const [moved] = newOrder.splice(oldIndex, 1);
       newOrder.splice(newIndex, 0, moved);
-      reorderKeyframes(newOrder.map((kf) => kf.id));
+      reorderReferenceFrames(newOrder.map((frame) => frame.id));
     },
-    [rawKeyframes, reorderKeyframes],
+    [rawFrames, reorderReferenceFrames],
   );
 
   // Build items with gaps interleaved
   const stripItems: React.ReactNode[] = [];
-  const sortableIds = rawKeyframes.map((kf) => kf.id);
+  const sortableIds = rawFrames.map((frame) => frame.id);
 
-  displayKeyframes.forEach((kf, i) => {
+  displayFrames.forEach((frame, i) => {
     if (i > 0) {
       const transitionIndex = i - 1;
       const transition = transitions[transitionIndex];
@@ -106,7 +106,7 @@ export const KeyframeStrip: React.FC<Props> = ({
             key={`gap-${transitionIndex}`}
             transition={transition}
             effectiveDuration={effectiveDuration}
-            mismatch={describeMismatch(displayKeyframes[i - 1], kf)}
+            mismatch={describeMismatch(displayFrames[i - 1], frame)}
             onClick={() => {
               if (transition.status === "failed") {
                 onRetry(transitionIndex);
@@ -126,11 +126,11 @@ export const KeyframeStrip: React.FC<Props> = ({
       }
     }
     stripItems.push(
-      <KeyframeCard
-        key={kf.id}
-        keyframe={kf}
+      <ReferenceFrameCard
+        key={frame.id}
+        frame={frame}
         index={i}
-        onDelete={removeKeyframe}
+        onDelete={removeReferenceFrame}
       />,
     );
   });
@@ -138,21 +138,21 @@ export const KeyframeStrip: React.FC<Props> = ({
   return (
     <StripSection>
       <SectionHeader>
-        <SectionLabel>Keyframes</SectionLabel>
+        <SectionLabel>Reference Frames</SectionLabel>
         <FlowReset />
       </SectionHeader>
 
-      {displayKeyframes.length === 0 ? (
+      {displayFrames.length === 0 ? (
         <EmptyState>
-          Add keyframes to get started. Generate, upload, or import from a
-          playlist.
+          Add reference frames to get started. Generate, upload, or import from
+          a playlist.
         </EmptyState>
       ) : (
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
-          // Horizontal-only auto-scroll: reveal off-screen keyframes when a
+          // Horizontal-only auto-scroll: reveal off-screen reference frames when a
           // dragged card nears the strip's left/right edge, without hijacking
           // vertical page scroll. y: 0 disables the vertical axis.
           autoScroll={{ threshold: { x: 0.2, y: 0 } }}
@@ -182,7 +182,7 @@ export const KeyframeStrip: React.FC<Props> = ({
           </AddButton>
         </AddButtons>
 
-        {rawKeyframes.length >= 2 && (
+        {rawFrames.length >= 2 && (
           <LoopToggle>
             <LoopCheckbox
               type="checkbox"
@@ -194,7 +194,7 @@ export const KeyframeStrip: React.FC<Props> = ({
         )}
       </StripControls>
 
-      <KeyframeLightbox />
+      <ReferenceFrameLightbox />
     </StripSection>
   );
 };

@@ -5,8 +5,8 @@ import { useFlowStore } from "@/stores/flow.store";
 export const useExistingDreamUuids = () => {
   const dreamUuids = useFlowStore(
     useShallow((s) =>
-      s.keyframes
-        .map((kf) => kf.dreamUuid)
+      s.referenceFrames
+        .map((frame) => frame.dreamUuid)
         .filter((uuid): uuid is string => Boolean(uuid)),
     ),
   );

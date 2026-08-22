@@ -5,14 +5,14 @@ import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
 import { FLOW } from "@/constants/flow-theme.constants";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
-import { KeyframeStrip } from "./keyframe-strip";
+import { ReferenceFrameStrip } from "./reference-frame-strip";
 import { TransitionSettingsPanel } from "./transition-settings-panel";
 import { FlowPreview } from "./flow-preview";
 import { FlowActionBar } from "./flow-action-bar";
-import { AddKeyframesFromPlaylistModal } from "./add-keyframes-from-playlist-modal";
+import { AddReferenceFramesFromPlaylistModal } from "./add-reference-frames-from-playlist-modal";
 import { SelectImageDreamModal } from "./select-image-dream-modal";
-import { GenerateKeyframesModal } from "./generate-keyframes-modal";
-import { useGeneratedKeyframeSync } from "@/components/pages/studio/hooks/useGeneratedKeyframeSync";
+import { GenerateReferenceFramesModal } from "./generate-reference-frames-modal";
+import { useGeneratedFrameSync } from "@/components/pages/studio/hooks/useGeneratedFrameSync";
 import { useFlowGeneration } from "@/components/pages/studio/hooks/useFlowGeneration";
 import { useFlowJobProgress } from "@/components/pages/studio/hooks/useFlowJobProgress";
 import { useSavedPlaylistSync } from "@/components/pages/studio/hooks/useSavedPlaylistSync";
@@ -38,17 +38,17 @@ const FlowContainer = styled.div<{ $dragOver?: boolean }>`
 `;
 
 export const FlowBuilder: React.FC = () => {
-  const addKeyframe = useFlowStore((s) => s.addKeyframe);
-  const updateKeyframe = useFlowStore((s) => s.updateKeyframe);
-  const removeKeyframe = useFlowStore((s) => s.removeKeyframe);
+  const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
+  const updateReferenceFrame = useFlowStore((s) => s.updateReferenceFrame);
+  const removeReferenceFrame = useFlowStore((s) => s.removeReferenceFrame);
 
   // Mount progress tracking
   useFlowJobProgress();
 
   useSavedPlaylistSync();
 
-  // Fill in progress/thumbnails for keyframes created by the Generate dialog
-  useGeneratedKeyframeSync();
+  // Fill in progress/thumbnails for referenceFrames created by the Generate dialog
+  useGeneratedFrameSync();
 
   // Generation controls
   const { generateAll, generateOne, isGenerating } = useFlowGeneration();
@@ -67,12 +67,12 @@ export const FlowBuilder: React.FC = () => {
     async (files: File[]) => {
       // Insert placeholder cards up-front so the user sees immediate feedback.
       // Each one carries a local objectURL preview + uploading state, then we
-      // patch it in place with the real keyframe data when the upload settles.
+      // patch it in place with the real frame data when the upload settles.
       await Promise.all(
         files.map(async (file) => {
           const id = uuidv4();
           const objectUrl = URL.createObjectURL(file);
-          addKeyframe({
+          addReferenceFrame({
             id,
             imageUrl: objectUrl,
             name: file.name.replace(/\.[^.]+$/, ""),
@@ -84,23 +84,23 @@ export const FlowBuilder: React.FC = () => {
             const result = await uploadDream.mutateAsync({
               file,
               onProgress: (percent) =>
-                updateKeyframe(id, { uploadProgress: percent }),
+                updateReferenceFrame(id, { uploadProgress: percent }),
               onUploadComplete: (dreamUuid) => {
-                updateKeyframe(id, {
+                updateReferenceFrame(id, {
                   dreamUuid,
                   uploadStatus: undefined,
                   uploadProgress: undefined,
                 });
               },
             });
-            updateKeyframe(id, {
+            updateReferenceFrame(id, {
               imageUrl: result.imageUrl,
               name: result.name,
             });
             URL.revokeObjectURL(objectUrl);
           } catch (err) {
             Bugsnag.notify(err as Error);
-            updateKeyframe(id, {
+            updateReferenceFrame(id, {
               uploadStatus: "failed",
               uploadProgress: undefined,
             });
@@ -108,14 +108,19 @@ export const FlowBuilder: React.FC = () => {
             // doesn't fill with orphans. The user has the option to dismiss
             // sooner via the card's delete button (visible on hover).
             window.setTimeout(() => {
-              removeKeyframe(id);
+              removeReferenceFrame(id);
               URL.revokeObjectURL(objectUrl);
             }, 6000);
           }
         }),
       );
     },
-    [addKeyframe, updateKeyframe, removeKeyframe, uploadDream],
+    [
+      addReferenceFrame,
+      updateReferenceFrame,
+      removeReferenceFrame,
+      uploadDream,
+    ],
   );
 
   const handleFileSelected = useCallback(
@@ -143,7 +148,7 @@ export const FlowBuilder: React.FC = () => {
 
   return (
     <FlowContainer $dragOver={isDragOver} {...dropHandlers}>
-      <KeyframeStrip
+      <ReferenceFrameStrip
         onAddUpload={handleAddUpload}
         onAddGenerate={() => setShowGenerateModal(true)}
         onAddFromPlaylist={handleAddFromPlaylist}
@@ -170,7 +175,7 @@ export const FlowBuilder: React.FC = () => {
       />
 
       {showPlaylistModal && (
-        <AddKeyframesFromPlaylistModal
+        <AddReferenceFramesFromPlaylistModal
           onClose={() => setShowPlaylistModal(false)}
         />
       )}
@@ -180,7 +185,9 @@ export const FlowBuilder: React.FC = () => {
       )}
 
       {showGenerateModal && (
-        <GenerateKeyframesModal onClose={() => setShowGenerateModal(false)} />
+        <GenerateReferenceFramesModal
+          onClose={() => setShowGenerateModal(false)}
+        />
       )}
     </FlowContainer>
   );

@@ -40,12 +40,12 @@ export function useFlowGeneration() {
         globalLora: store.globalLora,
       });
 
-      const fromKf = store.keyframes.find(
-        (kf) => kf.id === transition.fromKeyframeId,
+      const fromKf = store.referenceFrames.find(
+        (frame) => frame.id === transition.fromFrameId,
       );
       if (!fromKf) {
         Bugsnag.notify(
-          new Error(`Keyframe not found: ${transition.fromKeyframeId}`),
+          new Error(`Reference frame not found: ${transition.fromFrameId}`),
         );
         updateTransitionStatus(index, "failed");
         return;
@@ -53,12 +53,12 @@ export function useFlowGeneration() {
 
       const imageRef = fromKf.dreamUuid || fromKf.imageUrl;
 
-      const toKf = store.keyframes.find(
-        (kf) => kf.id === transition.toKeyframeId,
+      const toKf = store.referenceFrames.find(
+        (frame) => frame.id === transition.toFrameId,
       );
       if (!toKf) {
         Bugsnag.notify(
-          new Error(`Keyframe not found: ${transition.toKeyframeId}`),
+          new Error(`Reference frame not found: ${transition.toFrameId}`),
         );
         updateTransitionStatus(index, "failed");
         return;
@@ -127,10 +127,10 @@ export function useFlowGeneration() {
   const generateAll = useCallback(async () => {
     startGenerating();
     try {
-      const { transitions, keyframes } = useFlowStore.getState();
+      const { transitions, referenceFrames } = useFlowStore.getState();
       const { targets, skippedForMismatch } = resolveGenerationTargets(
         transitions,
-        keyframes,
+        referenceFrames,
       );
 
       if (skippedForMismatch > 0) {

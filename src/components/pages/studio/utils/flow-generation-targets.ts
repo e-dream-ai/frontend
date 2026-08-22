@@ -1,5 +1,5 @@
-import type { FlowKeyframe, FlowTransition } from "@/types/flow.types";
-import { isTransitionMismatched } from "./keyframe-aspect";
+import type { FlowReferenceFrame, FlowTransition } from "@/types/flow.types";
+import { isTransitionMismatched } from "./frame-aspect";
 
 export interface GenerationTargets {
   targets: Array<{ index: number; transition: FlowTransition }>;
@@ -8,19 +8,17 @@ export interface GenerationTargets {
 
 export const resolveGenerationTargets = (
   transitions: readonly FlowTransition[],
-  keyframes: readonly FlowKeyframe[],
+  referenceFrames: readonly FlowReferenceFrame[],
 ): GenerationTargets => {
-  const byId = new Map(keyframes.map((kf) => [kf.id, kf]));
+  const byId = new Map(referenceFrames.map((frame) => [frame.id, frame]));
   const targets: GenerationTargets["targets"] = [];
   let skippedForMismatch = 0;
 
   transitions.forEach((transition, index) => {
-    const { status, fromKeyframeId, toKeyframeId } = transition;
+    const { status, fromFrameId, toFrameId } = transition;
     if (status === "processed" || status === "processing" || status === "queue")
       return;
-    if (
-      isTransitionMismatched(byId.get(fromKeyframeId), byId.get(toKeyframeId))
-    ) {
+    if (isTransitionMismatched(byId.get(fromFrameId), byId.get(toFrameId))) {
       skippedForMismatch += 1;
       return;
     }

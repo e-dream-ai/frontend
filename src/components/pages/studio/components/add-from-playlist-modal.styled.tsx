@@ -91,7 +91,7 @@ export const ImageSelectThumbnail = styled.img<{ $ratio?: string }>`
   height: auto;
   display: block;
   /* Reserve the real box before the bitmap arrives when dimensions are known,
-     so the grid doesn't reflow as thumbnails load. Optional: keyframes carry no
+     so the grid doesn't reflow as thumbnails load. Optional: reference frames carry no
      dimensions, and those fall back to the intrinsic ratio. */
   ${(p) => p.$ratio && `aspect-ratio: ${p.$ratio};`}
 `;

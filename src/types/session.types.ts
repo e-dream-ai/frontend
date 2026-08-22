@@ -7,9 +7,18 @@ export interface StudioSession {
   updatedAt: string;
   mode: StudioMode;
   flowState: Record<string, unknown>;
-  batchState: Record<string, unknown>;
+  actionState: Record<string, unknown>;
   thumbnail?: string;
 }
+
+export type PersistedStudioSession = Omit<
+  StudioSession,
+  "mode" | "actionState"
+> & {
+  mode: StudioMode | "batch";
+  actionState?: Record<string, unknown>;
+  batchState?: Record<string, unknown>;
+};
 
 export const MAX_SESSIONS = 20;
 export const SESSIONS_STORAGE_KEY = "studio-sessions";

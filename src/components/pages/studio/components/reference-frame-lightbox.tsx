@@ -1,11 +1,11 @@
 import React, { useEffect } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import type { FlowKeyframe } from "@/types/flow.types";
+import type { FlowReferenceFrame } from "@/types/flow.types";
 import { useFlowStore } from "@/stores/flow.store";
-import { canStep } from "@/utils/keyframe-lightbox.util";
+import { canStep } from "@/utils/lightbox.util";
 import { useLightboxA11y } from "../hooks/useLightboxA11y";
-import { useKeyframeImage } from "../hooks/useKeyframeImage";
+import { useReferenceFrameImage } from "../hooks/useReferenceFrameImage";
 import {
   Overlay,
   ImageFrame,
@@ -14,23 +14,23 @@ import {
   Counter,
   NavButton,
   CloseButton,
-} from "./keyframe-lightbox.styled";
+} from "./reference-frame-lightbox.styled";
 
 const pad = (n: number) => String(n).padStart(2, "0");
 
-function KeyframeLightboxDialog({ openId }: { openId: string }) {
-  const keyframes = useFlowStore((s) => s.keyframes);
-  const close = useFlowStore((s) => s.closeKeyframeLightbox);
-  const step = useFlowStore((s) => s.stepKeyframeLightbox);
+function ReferenceFrameLightboxDialog({ openId }: { openId: string }) {
+  const referenceFrames = useFlowStore((s) => s.referenceFrames);
+  const close = useFlowStore((s) => s.closeFrameLightbox);
+  const step = useFlowStore((s) => s.stepFrameLightbox);
 
-  const count = keyframes.length;
-  const index = keyframes.findIndex((kf) => kf.id === openId);
-  const keyframe: FlowKeyframe | undefined = keyframes[index];
-  const prevUrl = keyframes[index - 1]?.imageUrl;
-  const nextUrl = keyframes[index + 1]?.imageUrl;
+  const count = referenceFrames.length;
+  const index = referenceFrames.findIndex((frame) => frame.id === openId);
+  const frame: FlowReferenceFrame | undefined = referenceFrames[index];
+  const prevUrl = referenceFrames[index - 1]?.imageUrl;
+  const nextUrl = referenceFrames[index + 1]?.imageUrl;
 
   const overlayRef = useLightboxA11y<HTMLDivElement>(close);
-  const { src, onError } = useKeyframeImage(keyframe);
+  const { src, onError } = useReferenceFrameImage(frame);
 
   // Warm the adjacent full-size images (not the thumbnails the strip loaded).
   useEffect(() => {
@@ -51,7 +51,7 @@ function KeyframeLightboxDialog({ openId }: { openId: string }) {
     return () => window.removeEventListener("keydown", onKey);
   }, [step]);
 
-  if (!keyframe) return null;
+  if (!frame) return null;
 
   return createPortal(
     <Overlay
@@ -60,7 +60,7 @@ function KeyframeLightboxDialog({ openId }: { openId: string }) {
       onClick={close}
       role="dialog"
       aria-modal="true"
-      aria-label="Keyframe preview"
+      aria-label="Reference frame preview"
     >
       <CloseButton
         onClick={(e) => {
@@ -79,17 +79,17 @@ function KeyframeLightboxDialog({ openId }: { openId: string }) {
           e.stopPropagation();
           step(-1);
         }}
-        aria-label="Previous keyframe"
+        aria-label="Previous reference frame"
       >
         <ChevronLeft size={22} strokeWidth={2.4} />
       </NavButton>
 
       <ImageFrame onClick={(e) => e.stopPropagation()}>
-        <img src={src} alt={keyframe.name} onError={onError} />
+        <img src={src} alt={frame.name} onError={onError} />
       </ImageFrame>
 
       <Caption onClick={(e) => e.stopPropagation()}>
-        <CaptionName>{keyframe.name}</CaptionName>
+        <CaptionName>{frame.name}</CaptionName>
         {count > 1 && (
           <Counter>
             {pad(index + 1)} / {pad(count)}
@@ -104,7 +104,7 @@ function KeyframeLightboxDialog({ openId }: { openId: string }) {
           e.stopPropagation();
           step(1);
         }}
-        aria-label="Next keyframe"
+        aria-label="Next reference frame"
       >
         <ChevronRight size={22} strokeWidth={2.4} />
       </NavButton>
@@ -113,7 +113,9 @@ function KeyframeLightboxDialog({ openId }: { openId: string }) {
   );
 }
 
-export const KeyframeLightbox: React.FC = () => {
-  const openId = useFlowStore((s) => s.keyframeLightboxId);
-  return openId === null ? null : <KeyframeLightboxDialog openId={openId} />;
+export const ReferenceFrameLightbox: React.FC = () => {
+  const openId = useFlowStore((s) => s.frameLightboxId);
+  return openId === null ? null : (
+    <ReferenceFrameLightboxDialog openId={openId} />
+  );
 };

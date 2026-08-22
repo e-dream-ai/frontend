@@ -27,14 +27,14 @@ export function useSavedPlaylistSync() {
 
   const {
     savedPlaylistUuid,
-    keyframes,
+    referenceFrames,
     transitions,
     syncedPlaylistDreamUuids,
     setPlaylistDreamsSynced,
   } = useFlowStore(
     useShallow((s) => ({
       savedPlaylistUuid: s.savedPlaylistUuid,
-      keyframes: s.keyframes,
+      referenceFrames: s.referenceFrames,
       transitions: s.transitions,
       syncedPlaylistDreamUuids: s.syncedPlaylistDreamUuids,
       setPlaylistDreamsSynced: s.setPlaylistDreamsSynced,
@@ -50,8 +50,8 @@ export function useSavedPlaylistSync() {
 
   const desiredKey = desiredUuids.join(",");
   const syncedKey = syncedPlaylistDreamUuids.join(",");
-  const keyframeKey = keyframes
-    .map((keyframe) => `${keyframe.id}:${keyframe.keyframeUuid ?? ""}`)
+  const frameKey = referenceFrames
+    .map((frame) => `${frame.id}:${frame.keyframeUuid ?? ""}`)
     .join(",");
 
   useEffect(() => {
@@ -159,7 +159,7 @@ export function useSavedPlaylistSync() {
           try {
             await syncFlowPlaylistKeyframes({
               playlistUuid: savedPlaylistUuid,
-              keyframes,
+              referenceFrames,
               transitions: transitions.filter(
                 (transition) =>
                   transition.status === "processed" && transition.dreamUuid,
@@ -195,5 +195,5 @@ export function useSavedPlaylistSync() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [savedPlaylistUuid, desiredKey, syncedKey, keyframeKey]);
+  }, [savedPlaylistUuid, desiredKey, syncedKey, frameKey]);
 }

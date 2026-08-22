@@ -1,13 +1,16 @@
 import { describe, it, expect } from "vitest";
-import type { FlowKeyframe } from "@/types/flow.types";
+import type { FlowReferenceFrame } from "@/types/flow.types";
 import {
   aspectRatioOf,
   ratiosMatch,
   isTransitionMismatched,
   dimensionsLabel,
-} from "./keyframe-aspect";
+} from "./frame-aspect";
 
-const kf = (naturalWidth?: number, naturalHeight?: number): FlowKeyframe => ({
+const frame = (
+  naturalWidth?: number,
+  naturalHeight?: number,
+): FlowReferenceFrame => ({
   id: "id",
   imageUrl: "http://example.test/i.png",
   name: "frame",
@@ -17,20 +20,20 @@ const kf = (naturalWidth?: number, naturalHeight?: number): FlowKeyframe => ({
 
 describe("aspectRatioOf", () => {
   it("derives the ratio from natural dimensions", () => {
-    expect(aspectRatioOf(kf(1280, 720))).toBeCloseTo(16 / 9);
-    expect(aspectRatioOf(kf(720, 1280))).toBeCloseTo(9 / 16);
-    expect(aspectRatioOf(kf(512, 512))).toBe(1);
+    expect(aspectRatioOf(frame(1280, 720))).toBeCloseTo(16 / 9);
+    expect(aspectRatioOf(frame(720, 1280))).toBeCloseTo(9 / 16);
+    expect(aspectRatioOf(frame(512, 512))).toBe(1);
   });
 
   it("is undefined until dimensions are known", () => {
-    expect(aspectRatioOf(kf())).toBeUndefined();
-    expect(aspectRatioOf(kf(1280, undefined))).toBeUndefined();
+    expect(aspectRatioOf(frame())).toBeUndefined();
+    expect(aspectRatioOf(frame(1280, undefined))).toBeUndefined();
     expect(aspectRatioOf(undefined)).toBeUndefined();
   });
 
   it("is undefined for degenerate dimensions rather than 0 or Infinity", () => {
-    expect(aspectRatioOf(kf(0, 720))).toBeUndefined();
-    expect(aspectRatioOf(kf(1280, 0))).toBeUndefined();
+    expect(aspectRatioOf(frame(0, 720))).toBeUndefined();
+    expect(aspectRatioOf(frame(1280, 0))).toBeUndefined();
   });
 });
 
@@ -50,28 +53,34 @@ describe("ratiosMatch", () => {
 
 describe("isTransitionMismatched", () => {
   it("flags a transition between different shapes", () => {
-    expect(isTransitionMismatched(kf(1280, 720), kf(720, 1280))).toBe(true);
-    expect(isTransitionMismatched(kf(1024, 1024), kf(1280, 720))).toBe(true);
+    expect(isTransitionMismatched(frame(1280, 720), frame(720, 1280))).toBe(
+      true,
+    );
+    expect(isTransitionMismatched(frame(1024, 1024), frame(1280, 720))).toBe(
+      true,
+    );
   });
 
   it("accepts matching shapes at different resolutions", () => {
-    expect(isTransitionMismatched(kf(1280, 720), kf(1920, 1080))).toBe(false);
+    expect(isTransitionMismatched(frame(1280, 720), frame(1920, 1080))).toBe(
+      false,
+    );
   });
 
   it("never flags a frame whose dimensions are not known yet", () => {
-    expect(isTransitionMismatched(kf(1280, 720), kf())).toBe(false);
-    expect(isTransitionMismatched(kf(), kf(720, 1280))).toBe(false);
-    expect(isTransitionMismatched(kf(), kf())).toBe(false);
-    expect(isTransitionMismatched(undefined, kf(1280, 720))).toBe(false);
+    expect(isTransitionMismatched(frame(1280, 720), frame())).toBe(false);
+    expect(isTransitionMismatched(frame(), frame(720, 1280))).toBe(false);
+    expect(isTransitionMismatched(frame(), frame())).toBe(false);
+    expect(isTransitionMismatched(undefined, frame(1280, 720))).toBe(false);
   });
 });
 
 describe("dimensionsLabel", () => {
   it("formats known dimensions", () => {
-    expect(dimensionsLabel(kf(1280, 720))).toBe("1280x720");
+    expect(dimensionsLabel(frame(1280, 720))).toBe("1280x720");
   });
 
   it("is undefined when dimensions are unknown", () => {
-    expect(dimensionsLabel(kf())).toBeUndefined();
+    expect(dimensionsLabel(frame())).toBeUndefined();
   });
 });
