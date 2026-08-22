@@ -30,6 +30,12 @@ export const FLOW = {
   accentDim: "rgba(212, 168, 83, 0.15)",
   accentGlow: "rgba(212, 168, 83, 0.08)",
 
+  // Selection (blue). Deliberately not `processing`: a selected transition and
+  // a rendering one have to stay tellable apart at a glance.
+  selected: "#6ea8fe",
+  selectedDim: "rgba(110, 168, 254, 0.18)",
+  selectedGlow: "rgba(110, 168, 254, 0.35)",
+
   // Status
   success: "#4ade80",
   successDim: "rgba(74, 222, 128, 0.18)",

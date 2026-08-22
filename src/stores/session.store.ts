@@ -227,9 +227,10 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
         session.flowState as Parameters<typeof useFlowStore.setState>[0],
       );
       useFlowStore.setState({
-        selectedTransitionIndex: null,
+        selectedTransitionIndices: [],
         settingsExpanded: false,
         previewLightboxOpen: false,
+        previewPlayRequest: null,
         savedPlaylistUuid: flowState.savedPlaylistUuid ?? null,
         syncedPlaylistDreamUuids: flowState.syncedPlaylistDreamUuids ?? [],
       });
