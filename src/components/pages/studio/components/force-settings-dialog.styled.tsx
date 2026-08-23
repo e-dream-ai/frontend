@@ -60,7 +60,12 @@ const DialogButtonBase = styled.button`
   }
 `;
 
-export const CancelButton = styled(DialogButtonBase)`
+/**
+ * Both buttons wear the same neutral treatment. Confirming forces settings onto
+ * transitions that disagree, so nothing here should read as the obvious answer
+ * — the only emphasis in the dialog is the focus ring, and it starts on Cancel.
+ */
+const DialogButton = styled(DialogButtonBase)`
   background: transparent;
   border: 1px solid ${FLOW.border};
   color: ${FLOW.textDim};
@@ -71,12 +76,5 @@ export const CancelButton = styled(DialogButtonBase)`
   }
 `;
 
-export const ConfirmButton = styled(DialogButtonBase)`
-  background: ${FLOW.accent};
-  border: 1px solid ${FLOW.accent};
-  color: ${FLOW.bg};
-
-  &:hover {
-    background: #e0b768;
-  }
-`;
+export const CancelButton = DialogButton;
+export const ConfirmButton = DialogButton;

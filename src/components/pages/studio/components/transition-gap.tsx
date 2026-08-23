@@ -7,7 +7,7 @@ import {
   StatusNode,
   ProgressRing,
   GapStatusLabel,
-  DurationLabel,
+  StaleDot,
 } from "./transition-gap.styled";
 
 /** Click selects; shift-click (or ctrl/cmd-click) toggles this one in or out. */
@@ -20,6 +20,8 @@ interface TransitionGapProps {
   effectiveDuration: number;
   mismatch?: string;
   selected: boolean;
+  /** Rendered, then edited: the video on screen is behind the settings. */
+  stale?: boolean;
   onClick: (modifiers: TransitionClickModifiers) => void;
 }
 
@@ -41,12 +43,16 @@ export function TransitionGapEnhanced({
   effectiveDuration,
   mismatch,
   selected,
+  stale = false,
   onClick,
 }: TransitionGapProps) {
   const { status, progress } = transition;
   const configured = hasOverrides(transition);
 
   const selectedSuffix = selected ? " Selected." : "";
+  // Spelled out for anyone not seeing the dot: the marker is the only thing
+  // separating a rendered transition from a rendered-then-edited one.
+  const staleSuffix = stale ? " Edited since it was rendered." : "";
 
   const activate = {
     role: "button" as const,
@@ -98,7 +104,8 @@ export function TransitionGapEnhanced({
     );
   }
 
-  // Idle but configured — solid line + duration pill.
+  // Idle but configured — solid line, no marker: nothing has been rendered
+  // here, so there is no gap between what is on screen and these settings.
   if (status === "idle" && configured) {
     return (
       <GapContainer
@@ -107,7 +114,6 @@ export function TransitionGapEnhanced({
         aria-label={`Transition with custom settings, ${effectiveDuration} seconds. Activate to select it.${selectedSuffix}`}
       >
         <GapLine $variant="configured" />
-        <DurationLabel>{effectiveDuration}s</DurationLabel>
       </GapContainer>
     );
   }
@@ -148,18 +154,24 @@ export function TransitionGapEnhanced({
     );
   }
 
-  // Success — filled gold disc with a check, soft halo, duration below.
+  // Success — filled gold disc with a check and a soft halo, and a dot below it
+  // when the settings have moved on since this render.
   if (status === "processed") {
     return (
       <GapContainer
         $expanded
         {...activate}
-        aria-label={`Transition rendered, ${effectiveDuration} seconds. Activate to select it.${selectedSuffix}`}
+        title={
+          stale
+            ? "Edited since it was rendered — generate to bring the video up to date"
+            : undefined
+        }
+        aria-label={`Transition rendered, ${effectiveDuration} seconds.${staleSuffix} Activate to select it.${selectedSuffix}`}
       >
         <StatusNode $variant="processed">
           <Check size={14} strokeWidth={3} />
         </StatusNode>
-        <DurationLabel>{effectiveDuration}s</DurationLabel>
+        {stale && <StaleDot aria-hidden="true" />}
       </GapContainer>
     );
   }

@@ -30,9 +30,11 @@ import {
   resolvePresetAction,
 } from "@/components/pages/studio/utils/resolve-flow-settings";
 import { resolveNegativePromptSupport } from "@/components/pages/studio/utils/negative-prompt-support";
-import { resolveGenerationTargets } from "@/components/pages/studio/utils/flow-generation-targets";
 import {
-  TRANSITION_FIELD_LABELS,
+  resolveGenerationTargets,
+  resolveSelectedTargets,
+} from "@/components/pages/studio/utils/flow-generation-targets";
+import {
   selectionHasMismatch,
   type TransitionField,
   type TransitionGlobals,
@@ -69,10 +71,15 @@ interface TransitionSettingsPanelProps {
   isGenerating: boolean;
 }
 
-/** An edit held back until the user confirms flattening a mismatched field. */
+/**
+ * An edit held back until the user confirms flattening a mismatched field.
+ *
+ * A selection is unified when it is made (see reference-frame-strip), so this
+ * is a backstop, not the usual path: rebuilding the transition list — a
+ * reference frame reordered or removed — can leave already-selected indices
+ * pointing at transitions that no longer agree.
+ */
 interface PendingEdit {
-  fieldLabel: string;
-  count: number;
   run: () => void;
 }
 
@@ -310,11 +317,7 @@ export function TransitionSettingsPanel({
           selectionHasMismatch(selected, globals, field),
         );
         if (clash) {
-          setPendingEdit({
-            fieldLabel: TRANSITION_FIELD_LABELS[clash],
-            count: selected.length,
-            run: () => run(indices),
-          });
+          setPendingEdit({ run: () => run(indices) });
           return;
         }
       }
@@ -463,19 +466,47 @@ export function TransitionSettingsPanel({
   // so it becomes required. With a preset, the preset supplies a prompt.
   const needsPrompt = !presetAction && !currentPrompt.trim();
 
+  // What each mode would actually start. This count drives the cost estimate
+  // sitting beside the button, so the clips it prices are the dreams the click
+  // produces — not the number of things on screen.
   const { targets: generateAllTargets } = useMemo(
-    () => resolveGenerationTargets(transitions, referenceFrames),
-    [transitions, referenceFrames],
+    () =>
+      resolveGenerationTargets(transitions, referenceFrames, {
+        globalPresetId,
+        globalPrompt,
+        globalNegativePrompt,
+        globalDuration,
+        globalModel,
+        globalNumInferenceSteps,
+        globalGuidance,
+        globalSeed,
+        globalLora,
+      }),
+    [
+      transitions,
+      referenceFrames,
+      globalPresetId,
+      globalPrompt,
+      globalNegativePrompt,
+      globalDuration,
+      globalModel,
+      globalNumInferenceSteps,
+      globalGuidance,
+      globalSeed,
+      globalLora,
+    ],
   );
 
-  const generateAllDisabled =
-    isGenerating || generateAllTargets.length === 0 || needsPrompt;
-
-  const generateSelectedDisabled = isGenerating || needsPrompt;
+  const { targets: generateSelectedTargets } = useMemo(
+    () => resolveSelectedTargets(selectedIndices, transitions, referenceFrames),
+    [selectedIndices, transitions, referenceFrames],
+  );
 
   const generateCount = isPerTransition
-    ? selectionCount
+    ? generateSelectedTargets.length
     : generateAllTargets.length;
+
+  const generateDisabled = isGenerating || generateCount === 0 || needsPrompt;
   const { totalCostUsd, costBreakdown } = useCostEstimate({
     model: modelOptions.find((m) => m.id === currentModel),
     params: { durationSec: currentDuration },
@@ -497,16 +528,6 @@ export function TransitionSettingsPanel({
     selectedTransition && findName(selectedTransition.fromFrameId);
   const toName = selectedTransition && findName(selectedTransition.toFrameId);
   const extraCount = selectionCount - 1;
-
-  const generateLabel = !isPerTransition
-    ? "Generate All"
-    : selectionCount > 1
-      ? `Generate ${selectionCount} selected`
-      : selectedTransition?.status === "processed"
-        ? "Regenerate"
-        : selectedTransition?.status === "failed"
-          ? "Retry"
-          : "Generate";
 
   return (
     <PanelContainer>
@@ -582,16 +603,14 @@ export function TransitionSettingsPanel({
         <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
 
         <GenerateButton
-          $disabled={
-            isPerTransition ? generateSelectedDisabled : generateAllDisabled
-          }
-          disabled={
-            isPerTransition ? generateSelectedDisabled : generateAllDisabled
-          }
+          $disabled={generateDisabled}
+          disabled={generateDisabled}
           title={
             needsPrompt
               ? "Add a prompt or pick a preset to generate"
-              : undefined
+              : isPerTransition
+                ? "Generate the selected transitions, edited or not"
+                : "Generate every transition whose video is behind its settings"
           }
           onClick={() => {
             if (guardOverBudget()) return;
@@ -602,7 +621,7 @@ export function TransitionSettingsPanel({
             }
           }}
         >
-          {generateLabel}
+          Generate
         </GenerateButton>
       </FieldRow>
 
@@ -753,8 +772,6 @@ export function TransitionSettingsPanel({
 
       {pendingEdit && (
         <ForceSettingsDialog
-          fieldLabel={pendingEdit.fieldLabel}
-          count={pendingEdit.count}
           onConfirm={() => {
             pendingEdit.run();
             setPendingEdit(null);

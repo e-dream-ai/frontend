@@ -1,5 +1,6 @@
 import type { FlowTransition } from "@/types/flow.types";
 import type { LoRAConfig, VideoModel } from "@/types/studio.types";
+import { resolvePresetAction } from "./resolve-flow-settings";
 
 /**
  * The override keys the settings panel can write. Each one has a global
@@ -56,14 +57,28 @@ const GLOBAL_KEY: Record<TransitionField, keyof TransitionGlobals> = {
 /**
  * Effective value of one field for one transition: override, else global.
  * `undefined` and a missing key are the same thing here — that is what "no
- * override" means — so `?? global` is the whole rule.
+ * override" means — so `?? global` is the base rule.
+ *
+ * Prompt and LoRA have one more step, because the settings panel resolves them
+ * that way for display: with nothing stored, the effective preset supplies
+ * them. Stopping at the global would call two transitions equal while the panel
+ * showed each a different preset's prompt.
  */
 export function effectiveFieldValue(
   transition: FlowTransition,
   globals: TransitionGlobals,
   field: TransitionField,
 ): unknown {
-  return transition[field] ?? globals[GLOBAL_KEY[field]];
+  const stored = transition[field] ?? globals[GLOBAL_KEY[field]];
+  if (field !== "promptOverride" && field !== "loraOverride") return stored;
+
+  const preset = resolvePresetAction(
+    transition.presetOverride ?? globals.globalPresetId ?? "",
+  );
+  if (field === "promptOverride") {
+    return (stored as string | undefined) || preset?.prompt || "";
+  }
+  return stored ?? preset?.highNoiseLoras;
 }
 
 /**
@@ -97,6 +112,25 @@ export function selectionHasMismatch(
       fieldComparisonKey(effectiveFieldValue(transition, globals, field)) !==
       first,
   );
+}
+
+/**
+ * The patch that forces `fields` onto another transition: the source's
+ * effective value for each, written as an explicit override. Only the fields
+ * that actually clash belong here — a field the selection already agrees about
+ * agrees because both sides resolve the same way, and pinning it would freeze
+ * a value that is currently free to follow the globals.
+ */
+export function forcedFieldPatch(
+  source: FlowTransition,
+  globals: TransitionGlobals,
+  fields: readonly TransitionField[],
+): Partial<FlowTransition> {
+  const patch: Record<string, unknown> = {};
+  for (const field of fields) {
+    patch[field] = effectiveFieldValue(source, globals, field);
+  }
+  return patch as Partial<FlowTransition>;
 }
 
 /** Every field the given transitions disagree about, in panel order. */

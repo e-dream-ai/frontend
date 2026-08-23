@@ -196,10 +196,15 @@ export const GapStatusLabel = styled.span<{ $status: string }>`
   gap: 3px;
 `;
 
-export const DurationLabel = styled.span`
-  font-size: 11px;
-  font-family: ${FLOW.fontFamily};
-  font-weight: 600;
-  color: ${FLOW.accent};
-  letter-spacing: 0.04em;
+/**
+ * Marks a rendered transition whose settings have been edited since — the video
+ * on screen is not what these settings would produce. Sits where the duration
+ * used to, so a gap keeps its height whether or not it is marked.
+ */
+export const StaleDot = styled.span`
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: ${FLOW.accent};
+  box-shadow: 0 0 0 3px ${FLOW.accentGlow};
 `;

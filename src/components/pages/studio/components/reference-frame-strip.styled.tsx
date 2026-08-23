@@ -26,6 +26,19 @@ export const SelectionCount = styled.span`
   white-space: nowrap;
 `;
 
+/**
+ * How many rendered transitions have been edited since. Kept beside the
+ * selection count so work waiting outside the current scope stays visible —
+ * with a selection active, Generate runs the selection, not these.
+ */
+export const StaleCount = styled.span`
+  font-family: ${FLOW.fontFamily};
+  font-size: 12px;
+  font-weight: 600;
+  color: ${FLOW.accent};
+  white-space: nowrap;
+`;
+
 export const SelectionButton = styled.button`
   background: none;
   border: 1px solid ${FLOW.border};

@@ -3,10 +3,12 @@ import type { FlowTransition } from "@/types/flow.types";
 import {
   effectiveFieldValue,
   fieldComparisonKey,
+  forcedFieldPatch,
   mismatchedFields,
   selectionHasMismatch,
   type TransitionGlobals,
 } from "./transition-field-values";
+import { resolvePresetAction } from "./resolve-flow-settings";
 
 const GLOBALS: TransitionGlobals = {
   globalPresetId: "Abstract",
@@ -130,5 +132,95 @@ describe("mismatchedFields", () => {
 
   it("is empty for an aligned selection", () => {
     expect(mismatchedFields([t(), t()], GLOBALS)).toEqual([]);
+  });
+});
+
+describe("preset-derived values", () => {
+  // With no prompt stored anywhere, the panel shows the effective preset's
+  // prompt — so two transitions on different presets are showing different
+  // prompts, and comparing the (identical, absent) overrides would miss it.
+  const NO_PROMPT: TransitionGlobals = { ...GLOBALS, globalPrompt: "" };
+
+  it("falls back to the preset's prompt when nothing is stored", () => {
+    expect(
+      effectiveFieldValue(
+        t({ presetOverride: "Morph" }),
+        NO_PROMPT,
+        "promptOverride",
+      ),
+    ).toBe(resolvePresetAction("Morph")?.prompt);
+  });
+
+  it("prefers a stored prompt over the preset's", () => {
+    expect(
+      effectiveFieldValue(
+        t({ presetOverride: "Morph", promptOverride: "swirl" }),
+        NO_PROMPT,
+        "promptOverride",
+      ),
+    ).toBe("swirl");
+  });
+
+  it("reports a prompt mismatch between two presets that carry different ones", () => {
+    const selection = [
+      t({ presetOverride: "Morph" }),
+      t({ presetOverride: "Kaleidoscope" }),
+    ];
+    expect(selectionHasMismatch(selection, NO_PROMPT, "promptOverride")).toBe(
+      true,
+    );
+    expect(mismatchedFields(selection, NO_PROMPT)).toEqual([
+      "presetOverride",
+      "promptOverride",
+    ]);
+  });
+
+  it("falls back to the preset's LoRA when nothing is stored", () => {
+    const preset = "Camera Basics";
+    expect(
+      effectiveFieldValue(
+        t({ presetOverride: preset }),
+        GLOBALS,
+        "loraOverride",
+      ),
+    ).toEqual(resolvePresetAction(preset)?.highNoiseLoras);
+  });
+
+  it("reports a LoRA mismatch driven by the preset alone", () => {
+    const selection = [t({ presetOverride: "Camera Basics" }), t()];
+    expect(selectionHasMismatch(selection, GLOBALS, "loraOverride")).toBe(true);
+  });
+});
+
+describe("forcedFieldPatch", () => {
+  it("writes the source's effective value for each clashing field", () => {
+    const source = t({ promptOverride: "swirl", durationOverride: 10 });
+    expect(
+      forcedFieldPatch(source, GLOBALS, ["promptOverride", "durationOverride"]),
+    ).toEqual({ promptOverride: "swirl", durationOverride: 10 });
+  });
+
+  it("resolves a field the source only inherits", () => {
+    expect(forcedFieldPatch(t(), GLOBALS, ["durationOverride"])).toEqual({
+      durationOverride: GLOBALS.globalDuration,
+    });
+  });
+
+  it("touches nothing outside the fields it is given", () => {
+    const patch = forcedFieldPatch(
+      t({ promptOverride: "swirl", modelOverride: "ltx-i2v" }),
+      GLOBALS,
+      ["promptOverride"],
+    );
+    expect(Object.keys(patch)).toEqual(["promptOverride"]);
+  });
+
+  it("leaves the selection agreeing about every field it forced", () => {
+    const globals = { ...GLOBALS, globalPrompt: "" };
+    const source = t({ presetOverride: "Morph" });
+    const other = t({ presetOverride: "Kaleidoscope" });
+    const clashes = mismatchedFields([source, other], globals);
+    const aligned = { ...other, ...forcedFieldPatch(source, globals, clashes) };
+    expect(mismatchedFields([source, aligned], globals)).toEqual([]);
   });
 });

@@ -6,12 +6,15 @@ import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { buildVideoAlgoParams } from "@/components/pages/studio/utils/build-video-algo-params";
 import { resolveEffectiveSettings } from "@/components/pages/studio/utils/resolve-flow-settings";
-import type { FlowTransition, TransitionRunSettings } from "@/types/flow.types";
+import { runSettingsFromEffective } from "@/components/pages/studio/utils/transition-staleness";
+import type { FlowTransition } from "@/types/flow.types";
 import queryClient from "@/api/query-client";
 import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import { ensureFlowKeyframe } from "@/components/pages/studio/utils/flow-keyframes";
-import { resolveGenerationTargets } from "@/components/pages/studio/utils/flow-generation-targets";
-import { isTransitionMismatched } from "@/components/pages/studio/utils/frame-aspect";
+import {
+  resolveGenerationTargets,
+  resolveSelectedTargets,
+} from "@/components/pages/studio/utils/flow-generation-targets";
 
 // Cap concurrent dream creations so "Generate All" doesn't fan out 50+ requests at once.
 const GENERATE_CONCURRENCY = 4;
@@ -125,18 +128,12 @@ export function useFlowGeneration() {
         // Snapshot the *resolved* settings, not the overrides: this is what
         // lets the history strip restore this take later, after the globals
         // it fell back to have moved on.
-        const runSettings: TransitionRunSettings = {
-          presetOverride: settings.presetId,
-          promptOverride: settings.prompt,
-          negativePromptOverride: settings.negativePrompt,
-          durationOverride: settings.duration,
-          modelOverride: settings.model,
-          numInferenceStepsOverride: settings.numInferenceSteps,
-          guidanceOverride: settings.guidance,
-          seedOverride: settings.seed,
-          loraOverride: settings.action.highNoiseLoras ?? [],
-        };
-        recordTransitionRun(index, dreamUuid, runSettings, Date.now());
+        recordTransitionRun(
+          index,
+          dreamUuid,
+          runSettingsFromEffective(settings),
+          Date.now(),
+        );
         updateTransitionStatus(index, "queue");
       } catch (error) {
         Bugsnag.notify(error as Error);
@@ -162,10 +159,21 @@ export function useFlowGeneration() {
   const generateAll = useCallback(async () => {
     startGenerating();
     try {
-      const { transitions, referenceFrames } = useFlowStore.getState();
+      const store = useFlowStore.getState();
       const { targets, skippedForMismatch } = resolveGenerationTargets(
-        transitions,
-        referenceFrames,
+        store.transitions,
+        store.referenceFrames,
+        {
+          globalPresetId: store.globalPresetId,
+          globalPrompt: store.globalPrompt,
+          globalNegativePrompt: store.globalNegativePrompt,
+          globalDuration: store.globalDuration,
+          globalModel: store.globalModel,
+          globalNumInferenceSteps: store.globalNumInferenceSteps,
+          globalGuidance: store.globalGuidance,
+          globalSeed: store.globalSeed,
+          globalLora: store.globalLora,
+        },
       );
 
       if (skippedForMismatch > 0) {
@@ -211,25 +219,11 @@ export function useFlowGeneration() {
       startGenerating();
       try {
         const { transitions, referenceFrames } = useFlowStore.getState();
-        const byId = new Map(referenceFrames.map((frame) => [frame.id, frame]));
-        const targets: Array<{ index: number; transition: FlowTransition }> =
-          [];
-        let skippedForMismatch = 0;
-
-        for (const index of indices) {
-          const transition = transitions[index];
-          if (!transition) continue;
-          if (
-            isTransitionMismatched(
-              byId.get(transition.fromFrameId),
-              byId.get(transition.toFrameId),
-            )
-          ) {
-            skippedForMismatch += 1;
-            continue;
-          }
-          targets.push({ index, transition });
-        }
+        const { targets, skippedForMismatch } = resolveSelectedTargets(
+          indices,
+          transitions,
+          referenceFrames,
+        );
 
         if (skippedForMismatch > 0) {
           toast.info(

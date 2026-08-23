@@ -11,22 +11,17 @@ import {
 } from "./force-settings-dialog.styled";
 
 interface ForceSettingsDialogProps {
-  /** Human-readable name of the field being edited, e.g. "Prompt". */
-  fieldLabel: string;
-  /** How many transitions the edit would be forced onto. */
-  count: number;
   onConfirm: () => void;
   onCancel: () => void;
 }
 
 /**
- * Shown when an edit would overwrite a setting the selected transitions
- * currently disagree about. Editing them as a group means picking one value,
- * so the choice is made explicit rather than silently flattening the others.
+ * Shown when transitions that disagree about a setting are about to be edited
+ * as one group. A group with mixed settings has no honest thing to show in the
+ * panel, so the disagreement is resolved up front: OK forces one value on all
+ * of them, Cancel leaves them apart.
  */
 export function ForceSettingsDialog({
-  fieldLabel,
-  count,
   onConfirm,
   onCancel,
 }: ForceSettingsDialogProps) {
@@ -37,6 +32,16 @@ export function ForceSettingsDialog({
       ref={overlayRef}
       tabIndex={-1}
       onClick={onCancel}
+      // Return cancels: forcing settings is the destructive answer, so it is
+      // never what a blind keypress does. Cancel holds focus from the moment
+      // the dialog opens (it is the first focusable thing in it), so a keypress
+      // that reaches a button is that button's to handle — this is only for the
+      // ones that land on the dialog itself.
+      onKeyDown={(e) => {
+        if (e.key !== "Enter" || e.target instanceof HTMLButtonElement) return;
+        e.preventDefault();
+        onCancel();
+      }}
       role="dialog"
       aria-modal="true"
       aria-labelledby="force-settings-title"
@@ -44,11 +49,11 @@ export function ForceSettingsDialog({
     >
       <DialogCard onClick={(e) => e.stopPropagation()}>
         <DialogTitle id="force-settings-title">
-          Can&rsquo;t edit mismatched settings
+          Transitions have different settings
         </DialogTitle>
         <DialogBody id="force-settings-body">
-          The {count} selected transitions don&rsquo;t share the same{" "}
-          <strong>{fieldLabel}</strong>. Force them all to the same value?
+          Editing them together forces one value on all of them &mdash; the
+          settings shown now. Cancel leaves them as they are.
         </DialogBody>
         <DialogActions>
           <CancelButton type="button" onClick={onCancel}>
