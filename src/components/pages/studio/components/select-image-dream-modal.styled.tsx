@@ -271,6 +271,11 @@ export const AddBtn = styled.button`
   }
 `;
 
+/** Marks the end of the grid; pagination triggers when it comes into view. */
+export const Sentinel = styled.div`
+  height: 1px;
+`;
+
 export const LoadingMore = styled.p`
   font-family: ${FLOW.fontFamily};
   font-size: 12px;

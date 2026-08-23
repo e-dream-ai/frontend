@@ -1,10 +1,18 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, {
+  useState,
+  useMemo,
+  useCallback,
+  useEffect,
+  useRef,
+} from "react";
 import { v4 as uuidv4 } from "uuid";
-import InfiniteScroll from "react-infinite-scroll-component";
+import moment from "moment";
 import { useMyImageDreams } from "@/api/dream/query/useMyImageDreams";
 import { useFlowStore } from "@/stores/flow.store";
 import { useDebounce } from "@/hooks/useDebounce";
+import { FORMAT } from "@/constants/moment.constants";
 import { useExistingDreamUuids } from "../hooks/useExistingDreamUuids";
+import { useLightboxA11y } from "../hooks/useLightboxA11y";
 import { useUuidSelection } from "../hooks/useUuidSelection";
 import { mediaAspectRatio } from "../utils/media-aspect-ratio";
 import {
@@ -29,9 +37,8 @@ import {
   CancelBtn,
   AddBtn,
   LoadingMore,
+  Sentinel,
 } from "./select-image-dream-modal.styled";
-
-const SCROLL_TARGET_ID = "image-dream-modal-body";
 
 interface Props {
   onClose: () => void;
@@ -44,9 +51,36 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 350);
 
-  const { data, isLoading, hasNextPage, fetchNextPage } = useMyImageDreams(
-    debouncedSearch || undefined,
-  );
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useMyImageDreams(debouncedSearch || undefined);
+
+  // Load the next page when the end of the grid is in view. Not on scroll:
+  // one page of results fits inside the modal (cards take their image's shape,
+  // so a row is short), and a list that cannot be scrolled would never ask for
+  // page two. Visibility covers both — it fills the modal on open, then keeps
+  // up as you scroll.
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [endOfGrid, setEndOfGrid] = useState<HTMLDivElement | null>(null);
+  // Read through a ref so the observer is built once. Rebuilding it per fetch
+  // re-reports a sentinel that never moved as a fresh sighting, which walks the
+  // whole library in one go.
+  const paging = useRef({ hasNextPage, isFetchingNextPage, fetchNextPage });
+  paging.current = { hasNextPage, isFetchingNextPage, fetchNextPage };
+
+  useEffect(() => {
+    if (!endOfGrid) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const { hasNextPage, isFetchingNextPage, fetchNextPage } =
+          paging.current;
+        if (!entries.some((e) => e.isIntersecting)) return;
+        if (hasNextPage && !isFetchingNextPage) fetchNextPage();
+      },
+      { root: bodyRef.current, rootMargin: "150px" },
+    );
+    observer.observe(endOfGrid);
+    return () => observer.disconnect();
+  }, [endOfGrid]);
 
   const dreams = useMemo(
     () => data?.pages.flatMap((p) => p.data?.dreams ?? []) ?? [],
@@ -71,18 +105,20 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
     onClose();
   }, [dreams, selectedUuids, existingDreamUuids, addReferenceFrame, onClose]);
 
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
-
   const isEmpty = !isLoading && dreams.length === 0;
 
+  // Escape closes, Tab stays inside, the page behind stops scrolling.
+  const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
+
   return (
-    <Overlay onClick={onClose}>
+    <Overlay
+      ref={overlayRef}
+      tabIndex={-1}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="My Image Library"
+    >
       <Panel onClick={(e) => e.stopPropagation()}>
         <Header>
           <Title>My Image Library</Title>
@@ -98,7 +134,7 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
           />
         </SearchRow>
 
-        <Body id={SCROLL_TARGET_ID}>
+        <Body ref={bodyRef}>
           {isLoading ? (
             <Grid>
               {Array.from({ length: 12 }).map((_, i) => (
@@ -112,17 +148,18 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
                 : "No image dreams yet. Upload images in the studio to see them here."}
             </EmptyMsg>
           ) : (
-            <InfiniteScroll
-              dataLength={dreams.length}
-              next={fetchNextPage}
-              hasMore={hasNextPage ?? false}
-              loader={<LoadingMore>Loading more...</LoadingMore>}
-              scrollableTarget={SCROLL_TARGET_ID}
-            >
+            <>
               <Grid>
                 {dreams.map((dream) => {
                   const isSelected = selectedUuids.has(dream.uuid);
                   const alreadyAdded = existingDreamUuids.has(dream.uuid);
+                  // Generated names repeat ("FLUX.1 [schnell] 27" many times
+                  // over), so when telling two cards apart the time they were
+                  // made is the part that differs. The name is already printed
+                  // under the image.
+                  const made = dream.created_at
+                    ? moment(dream.created_at).format(FORMAT)
+                    : dream.name;
                   const imageUrl =
                     dream.thumbnail ||
                     dream.video ||
@@ -134,7 +171,7 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
                       $selected={isSelected}
                       $disabled={alreadyAdded}
                       onClick={() => !alreadyAdded && toggle(dream.uuid)}
-                      title={alreadyAdded ? "Already in strip" : dream.name}
+                      title={alreadyAdded ? `${made} — already in strip` : made}
                     >
                       {imageUrl && (
                         <CardImg
@@ -152,7 +189,9 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
                   );
                 })}
               </Grid>
-            </InfiniteScroll>
+              <Sentinel ref={setEndOfGrid} />
+              {isFetchingNextPage && <LoadingMore>Loading more...</LoadingMore>}
+            </>
           )}
         </Body>
 

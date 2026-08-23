@@ -37,8 +37,13 @@ export function useLightboxA11y<T extends HTMLElement>(onClose: () => void) {
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const container = containerRef.current;
-    const first = container?.querySelector<HTMLElement>(FOCUSABLE);
-    (first ?? container)?.focus();
+    // Leave focus alone when the dialog already has it: a field that asked for
+    // focus itself (autoFocus on a search box) knows better than "first
+    // focusable", which is usually the close button.
+    if (!container?.contains(document.activeElement)) {
+      const first = container?.querySelector<HTMLElement>(FOCUSABLE);
+      (first ?? container)?.focus();
+    }
     return () => previouslyFocused?.focus?.();
   }, []);
 
