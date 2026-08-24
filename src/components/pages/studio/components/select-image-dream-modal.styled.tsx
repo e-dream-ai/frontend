@@ -145,12 +145,20 @@ export const SkeletonCard = styled.div`
   animation: ${shimmer} 1.4s infinite;
 `;
 
-export const Card = styled.div<{ $selected: boolean; $disabled?: boolean }>`
+export const Card = styled.button<{ $selected: boolean; $disabled?: boolean }>`
   position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  appearance: none;
   /* No fixed aspect-ratio: the image inside sets the height, so the card is
      the image's true shape. The floor only keeps a card that has no image yet
-     from collapsing to nothing (which would also starve InfiniteScroll of a
-     scrollable height); it sits below every common ratio at this column width. */
+     from collapsing to nothing; it sits below every common ratio at this
+     column width. */
   min-height: 60px;
   border-radius: 10px;
   overflow: hidden;
@@ -161,6 +169,11 @@ export const Card = styled.div<{ $selected: boolean; $disabled?: boolean }>`
     border-color 0.15s,
     transform 0.12s;
   background: ${FLOW.bgElevated};
+
+  &:focus-visible {
+    outline: 2px solid ${FLOW.accent};
+    outline-offset: 2px;
+  }
 
   &:hover {
     transform: ${(p) => (p.$disabled ? "none" : "scale(1.03)")};
@@ -181,7 +194,7 @@ export const CardImg = styled.img<{ $ratio?: string }>`
   ${(p) => p.$ratio && `aspect-ratio: ${p.$ratio};`}
 `;
 
-export const CardCheckmark = styled.div`
+export const CardCheckmark = styled.span`
   position: absolute;
   top: 6px;
   right: 6px;
@@ -197,7 +210,7 @@ export const CardCheckmark = styled.div`
   font-weight: 700;
 `;
 
-export const CardName = styled.div`
+export const CardName = styled.span`
   position: absolute;
   bottom: 0;
   left: 0;
