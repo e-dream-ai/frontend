@@ -1,12 +1,15 @@
-import React, { useState, useMemo, useCallback, useEffect } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { v4 as uuidv4 } from "uuid";
-import InfiniteScroll from "react-infinite-scroll-component";
+import moment from "moment";
 import { useMyImageDreams } from "@/api/dream/query/useMyImageDreams";
 import { useFlowStore } from "@/stores/flow.store";
 import { useDebounce } from "@/hooks/useDebounce";
+import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
+import { FORMAT } from "@/constants/moment.constants";
 import { useExistingDreamUuids } from "../hooks/useExistingDreamUuids";
+import { useLightboxA11y } from "../hooks/useLightboxA11y";
 import { useUuidSelection } from "../hooks/useUuidSelection";
-import { mediaAspectRatio } from "../utils/media-aspect-ratio";
+import { SelectImageDreamCard } from "./select-image-dream-card";
 import {
   Overlay,
   Panel,
@@ -19,19 +22,14 @@ import {
   EmptyMsg,
   Grid,
   SkeletonCard,
-  Card,
-  CardImg,
-  CardCheckmark,
-  CardName,
   Footer,
   CountLabel,
   FooterButtons,
   CancelBtn,
   AddBtn,
   LoadingMore,
+  Sentinel,
 } from "./select-image-dream-modal.styled";
-
-const SCROLL_TARGET_ID = "image-dream-modal-body";
 
 interface Props {
   onClose: () => void;
@@ -44,13 +42,29 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 350);
 
-  const { data, isLoading, hasNextPage, fetchNextPage } = useMyImageDreams(
-    debouncedSearch || undefined,
-  );
+  const { data, isLoading, isFetchingNextPage, hasNextPage, fetchNextPage } =
+    useMyImageDreams(debouncedSearch || undefined);
+
+  const { rootRef, sentinelRef } = useInfiniteScrollSentinel<HTMLDivElement>({
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  });
 
   const dreams = useMemo(
     () => data?.pages.flatMap((p) => p.data?.dreams ?? []) ?? [],
     [data],
+  );
+
+  const madeByUuid = useMemo(
+    () =>
+      new Map(
+        dreams.map((d): [string, string] => [
+          d.uuid,
+          d.created_at ? moment(d.created_at).format(FORMAT) : d.name,
+        ]),
+      ),
+    [dreams],
   );
 
   const { selectedUuids, toggle } = useUuidSelection();
@@ -71,34 +85,40 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
     onClose();
   }, [dreams, selectedUuids, existingDreamUuids, addReferenceFrame, onClose]);
 
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prev;
-    };
-  }, []);
-
   const isEmpty = !isLoading && dreams.length === 0;
+  const totalCount = data?.pages[0]?.data?.count ?? dreams.length;
+
+  // Escape closes, Tab stays inside, the page behind stops scrolling.
+  const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
 
   return (
-    <Overlay onClick={onClose}>
+    <Overlay
+      ref={overlayRef}
+      tabIndex={-1}
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-label="My Image Library"
+    >
       <Panel onClick={(e) => e.stopPropagation()}>
         <Header>
           <Title>My Image Library</Title>
-          <CloseBtn onClick={onClose}>&times;</CloseBtn>
+          <CloseBtn onClick={onClose} aria-label="Close">
+            &times;
+          </CloseBtn>
         </Header>
 
         <SearchRow>
           <SearchInput
             placeholder="Search images..."
+            aria-label="Search images"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            autoFocus
+            data-autofocus
           />
         </SearchRow>
 
-        <Body id={SCROLL_TARGET_ID}>
+        <Body ref={rootRef}>
           {isLoading ? (
             <Grid>
               {Array.from({ length: 12 }).map((_, i) => (
@@ -112,47 +132,22 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
                 : "No image dreams yet. Upload images in the studio to see them here."}
             </EmptyMsg>
           ) : (
-            <InfiniteScroll
-              dataLength={dreams.length}
-              next={fetchNextPage}
-              hasMore={hasNextPage ?? false}
-              loader={<LoadingMore>Loading more...</LoadingMore>}
-              scrollableTarget={SCROLL_TARGET_ID}
-            >
+            <>
               <Grid>
-                {dreams.map((dream) => {
-                  const isSelected = selectedUuids.has(dream.uuid);
-                  const alreadyAdded = existingDreamUuids.has(dream.uuid);
-                  const imageUrl =
-                    dream.thumbnail ||
-                    dream.video ||
-                    dream.original_video ||
-                    "";
-                  return (
-                    <Card
-                      key={dream.uuid}
-                      $selected={isSelected}
-                      $disabled={alreadyAdded}
-                      onClick={() => !alreadyAdded && toggle(dream.uuid)}
-                      title={alreadyAdded ? "Already in strip" : dream.name}
-                    >
-                      {imageUrl && (
-                        <CardImg
-                          src={imageUrl}
-                          alt={dream.name}
-                          $ratio={mediaAspectRatio(
-                            dream.processedMediaWidth,
-                            dream.processedMediaHeight,
-                          )}
-                        />
-                      )}
-                      {isSelected && <CardCheckmark>✓</CardCheckmark>}
-                      <CardName>{dream.name}</CardName>
-                    </Card>
-                  );
-                })}
+                {dreams.map((dream) => (
+                  <SelectImageDreamCard
+                    key={dream.uuid}
+                    dream={dream}
+                    made={madeByUuid.get(dream.uuid) ?? dream.name}
+                    isSelected={selectedUuids.has(dream.uuid)}
+                    alreadyAdded={existingDreamUuids.has(dream.uuid)}
+                    onToggle={toggle}
+                  />
+                ))}
               </Grid>
-            </InfiniteScroll>
+              <Sentinel ref={sentinelRef} aria-hidden="true" />
+              {isFetchingNextPage && <LoadingMore>Loading more...</LoadingMore>}
+            </>
           )}
         </Body>
 
@@ -160,7 +155,7 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
           <CountLabel>
             {selectedUuids.size > 0
               ? `${selectedUuids.size} selected`
-              : `${dreams.length} image${dreams.length !== 1 ? "s" : ""}`}
+              : `${totalCount} image${totalCount !== 1 ? "s" : ""}`}
           </CountLabel>
           <FooterButtons>
             <CancelBtn onClick={onClose}>Cancel</CancelBtn>
