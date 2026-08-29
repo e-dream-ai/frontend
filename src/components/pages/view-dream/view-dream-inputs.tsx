@@ -16,7 +16,12 @@ import {
 import { Controller, useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { UpdateDreamFormValues } from "@/schemas/update-dream.schema";
-import { Dream, DreamMediaType, DreamStatusType } from "@/types/dream.types";
+import {
+  Dream,
+  DreamMediaType,
+  DreamProcessingPhase,
+  DreamStatusType,
+} from "@/types/dream.types";
 import { HandleChangeFile, type MultiMediaState } from "@/types/media.types";
 import {
   handleFileUploaderSizeError,
@@ -88,7 +93,7 @@ export interface JobProgressData {
 
 type ViewDreamInputsProps = {
   dream?: Dream;
-  isProcessing?: boolean;
+  processingPhase?: DreamProcessingPhase;
   // values: UpdateDreamFormValues;
   // register: UseFormRegister<UpdateDreamFormValues>;
   // errors: FieldErrors<UpdateDreamFormValues>;
@@ -102,7 +107,6 @@ type ViewDreamInputsProps = {
   handleRemoveThumbnail: () => void;
   onPromptValidationRequest?: (validate: () => boolean) => void;
   onPromptResetRequest?: (reset: () => void) => void;
-  jobStatus?: string;
 };
 
 const resolveDreamSourceLink = (value: string): string | null =>
@@ -110,7 +114,7 @@ const resolveDreamSourceLink = (value: string): string | null =>
 
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   dream,
-  isProcessing,
+  processingPhase,
   editMode,
   // thumbnail
   thumbnailState,
@@ -119,7 +123,6 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   handleRemoveThumbnail,
   onPromptValidationRequest,
   onPromptResetRequest,
-  jobStatus,
 }) => {
   const { t } = useTranslation();
   const { user } = useAuth();
@@ -205,8 +208,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
               localMultimedia={thumbnailState}
               thumbnail={thumbnailUrl}
               editMode={editMode}
-              isProcessing={isProcessing}
-              jobStatus={jobStatus}
+              processingPhase={processingPhase}
               isRemoved={isThumbnailRemoved}
               handleChange={handleThumbnailChange}
               handleRemove={handleRemoveThumbnail}
