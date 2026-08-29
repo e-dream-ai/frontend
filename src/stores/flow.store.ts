@@ -37,6 +37,8 @@ type FlowStoreState = {
   removeKeyframe: (id: string) => void;
   reorderKeyframes: (orderedIds: string[]) => void;
   setLoop: (loop: boolean) => void;
+  seamlessChaining: boolean;
+  setSeamlessChaining: (seamless: boolean) => void;
   keyframesWithLoop: () => FlowKeyframe[];
   resetFlow: () => void;
 
@@ -113,6 +115,7 @@ const PHASE_1_DEFAULTS = {
   globalGuidance: 0.5,
   globalSeed: -1,
   globalLora: undefined as LoRAConfig[] | undefined,
+  seamlessChaining: true,
   transitions: [] as FlowTransition[],
   selectedTransitionIndex: null as number | null,
   settingsExpanded: false,
@@ -196,6 +199,7 @@ export const flowPartialize = (state: FlowStoreState) => ({
   globalGuidance: state.globalGuidance,
   globalSeed: state.globalSeed,
   globalLora: state.globalLora,
+  seamlessChaining: state.seamlessChaining,
 });
 
 export const useFlowStore = create<FlowStoreState>()(
@@ -281,6 +285,7 @@ export const useFlowStore = create<FlowStoreState>()(
       setGlobalNegativePrompt: (prompt) =>
         set({ globalNegativePrompt: prompt }),
       setGlobalDuration: (duration) => set({ globalDuration: duration }),
+      setSeamlessChaining: (seamless) => set({ seamlessChaining: seamless }),
       setGlobalModel: (model) => set({ globalModel: model }),
       setGlobalNumInferenceSteps: (steps) =>
         set({ globalNumInferenceSteps: steps }),

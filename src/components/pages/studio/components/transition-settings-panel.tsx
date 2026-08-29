@@ -52,6 +52,9 @@ import {
   NumberInput,
   ValidationHint,
   RequiredMark,
+  SeamlessToggle,
+  SeamlessCheckbox,
+  SeamlessHint,
 } from "./transition-settings-panel.styled";
 
 interface TransitionSettingsPanelProps {
@@ -80,6 +83,7 @@ export function TransitionSettingsPanel({
     globalGuidance,
     globalSeed,
     globalLora,
+    seamlessChaining,
   } = useFlowStore(
     useShallow((s) => ({
       transitions: s.transitions,
@@ -95,8 +99,12 @@ export function TransitionSettingsPanel({
       globalGuidance: s.globalGuidance,
       globalSeed: s.globalSeed,
       globalLora: s.globalLora,
+      seamlessChaining: s.seamlessChaining,
     })),
   );
+
+  // Action is a stable ref — subscribe on its own, not via useShallow.
+  const setSeamlessChaining = useFlowStore((s) => s.setSeamlessChaining);
 
   const { data: modelsData } = useModels({ mediaType: "video" });
   const modelOptions = modelsData?.data?.models ?? [];
@@ -477,6 +485,21 @@ export function TransitionSettingsPanel({
         </FieldGroup>
 
         <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
+
+        <SeamlessToggle>
+          <SeamlessCheckbox
+            type="checkbox"
+            checked={seamlessChaining}
+            onChange={(e) => setSeamlessChaining(e.target.checked)}
+          />
+          <span>
+            Seamless cuts
+            <SeamlessHint>
+              Each clip starts on the previous clip&rsquo;s final frame, so cuts
+              match exactly. Clips render one at a time.
+            </SeamlessHint>
+          </span>
+        </SeamlessToggle>
 
         <GenerateButton
           $disabled={

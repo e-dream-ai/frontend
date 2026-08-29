@@ -11,6 +11,7 @@ import queryClient from "@/api/query-client";
 import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import { ensureFlowKeyframe } from "@/components/pages/studio/utils/flow-keyframes";
 import { resolveGenerationTargets } from "@/components/pages/studio/utils/flow-generation-targets";
+import { waitForRenderedClip } from "@/components/pages/studio/utils/wait-for-rendered-clip";
 
 // Cap concurrent dream creations so "Generate All" doesn't fan out 50+ requests at once.
 const GENERATE_CONCURRENCY = 4;
@@ -24,7 +25,17 @@ export function useFlowGeneration() {
   const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
 
   const generateTransition = useCallback(
-    async (index: number, transition: FlowTransition) => {
+    async (
+      index: number,
+      transition: FlowTransition,
+      /**
+       * Dream UUID of the previous clip, when this one should open on that
+       * clip's rendered final frame instead of on the shared keyframe. The
+       * worker resolves a video dream to its last frame; see
+       * resolveFinalFrameFromVideoDream.
+       */
+      chainFromDreamUuid?: string,
+    ) => {
       // Read latest store state directly — keeps the callback identity stable
       // and avoids re-creating it on every settings keystroke.
       const store = useFlowStore.getState();
@@ -51,7 +62,8 @@ export function useFlowGeneration() {
         return;
       }
 
-      const imageRef = fromKf.dreamUuid || fromKf.imageUrl;
+      const imageRef =
+        chainFromDreamUuid || fromKf.dreamUuid || fromKf.imageUrl;
 
       const toKf = store.keyframes.find(
         (kf) => kf.id === transition.toKeyframeId,
@@ -111,6 +123,32 @@ export function useFlowGeneration() {
     [setTransitionDream, updateTransitionStatus],
   );
 
+  /**
+   * The dream to open this transition on, when the clip before it in the flow
+   * has rendered and ends where this one begins.
+   *
+   * A generation reproduces its start image exactly but only approximates its
+   * tail image, so a chain built on the shared keyframe leaves every cut at the
+   * mercy of how well the model landed that tail. Starting from the previous
+   * clip's own final frame makes the seam exact by construction. Returns
+   * undefined whenever that frame isn't available — a failed or missing
+   * predecessor, or a pair that doesn't actually share a keyframe — and the
+   * caller falls back to the keyframe.
+   */
+  const resolveChainSource = useCallback(
+    async (index: number, transition: FlowTransition) => {
+      if (!useFlowStore.getState().seamlessChaining) return undefined;
+
+      const previous = useFlowStore.getState().transitions[index - 1];
+      if (!previous?.dreamUuid) return undefined;
+      if (previous.toKeyframeId !== transition.fromKeyframeId) return undefined;
+
+      const rendered = await waitForRenderedClip(previous.dreamUuid);
+      return rendered ? previous.dreamUuid : undefined;
+    },
+    [],
+  );
+
   const startGenerating = useCallback(() => {
     generatingCount.current += 1;
     setIsGenerating(true);
@@ -141,27 +179,41 @@ export function useFlowGeneration() {
         );
       }
 
-      // Worker-pool style concurrency cap.
-      let cursor = 0;
-      const worker = async () => {
-        while (cursor < targets.length) {
-          const next = targets[cursor++];
-          await generateTransition(next.index, next.transition);
+      if (useFlowStore.getState().seamlessChaining) {
+        // Each clip opens on the previous clip's rendered final frame, so it
+        // cannot be submitted until that one exists: chaining is inherently
+        // sequential. Trading throughput for seams is the whole point of the
+        // setting, and turning it off restores the parallel path below.
+        for (const target of targets) {
+          await generateTransition(
+            target.index,
+            target.transition,
+            await resolveChainSource(target.index, target.transition),
+          );
         }
-      };
-      await Promise.all(
-        Array.from(
-          { length: Math.min(GENERATE_CONCURRENCY, targets.length) },
-          worker,
-        ),
-      );
+      } else {
+        // Worker-pool style concurrency cap.
+        let cursor = 0;
+        const worker = async () => {
+          while (cursor < targets.length) {
+            const next = targets[cursor++];
+            await generateTransition(next.index, next.transition);
+          }
+        };
+        await Promise.all(
+          Array.from(
+            { length: Math.min(GENERATE_CONCURRENCY, targets.length) },
+            worker,
+          ),
+        );
+      }
       if (targets.length > 0) {
         await queryClient.invalidateQueries([USER_QUERY_KEY]);
       }
     } finally {
       stopGenerating();
     }
-  }, [generateTransition, startGenerating, stopGenerating]);
+  }, [generateTransition, resolveChainSource, startGenerating, stopGenerating]);
 
   const generateOne = useCallback(
     async (index: number) => {
@@ -169,13 +221,17 @@ export function useFlowGeneration() {
       try {
         const t = useFlowStore.getState().transitions[index];
         if (t) {
-          await generateTransition(index, t);
+          await generateTransition(
+            index,
+            t,
+            await resolveChainSource(index, t),
+          );
         }
       } finally {
         stopGenerating();
       }
     },
-    [generateTransition, startGenerating, stopGenerating],
+    [generateTransition, resolveChainSource, startGenerating, stopGenerating],
   );
 
   return { generateAll, generateOne, isGenerating };

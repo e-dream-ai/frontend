@@ -8,6 +8,10 @@ const mocks = vi.hoisted(() => {
   );
   const setTransitionDream = vi.fn();
   const updateTransitionStatus = vi.fn();
+  const buildVideoAlgoParams = vi.fn(() => ({
+    infinidream_algorithm: "ltx-i2v",
+  }));
+  const waitForRenderedClip = vi.fn(async () => true);
   const store = {
     transitions: [
       {
@@ -34,6 +38,7 @@ const mocks = vi.hoisted(() => {
     globalNumInferenceSteps: 20,
     globalGuidance: 3,
     globalLora: undefined,
+    seamlessChaining: false,
   };
   return {
     invalidateQueries,
@@ -41,6 +46,8 @@ const mocks = vi.hoisted(() => {
     ensureFlowKeyframe,
     setTransitionDream,
     updateTransitionStatus,
+    buildVideoAlgoParams,
+    waitForRenderedClip,
     store,
   };
 });
@@ -87,7 +94,11 @@ vi.mock("../../../../stores/flow.store", () => ({
 }));
 
 vi.mock("../utils/build-video-algo-params", () => ({
-  buildVideoAlgoParams: () => ({ infinidream_algorithm: "ltx-i2v" }),
+  buildVideoAlgoParams: mocks.buildVideoAlgoParams,
+}));
+
+vi.mock("../utils/wait-for-rendered-clip", () => ({
+  waitForRenderedClip: mocks.waitForRenderedClip,
 }));
 
 vi.mock("../utils/resolve-flow-settings", () => ({
@@ -110,6 +121,15 @@ import { useFlowGeneration } from "./useFlowGeneration";
 describe("useFlowGeneration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mocks.buildVideoAlgoParams.mockReturnValue({
+      infinidream_algorithm: "ltx-i2v",
+    });
+    mocks.waitForRenderedClip.mockResolvedValue(true);
+    mocks.store.seamlessChaining = false;
+    mocks.store.transitions = [
+      { fromKeyframeId: "frame-1", toKeyframeId: "frame-2", status: "idle" },
+      { fromKeyframeId: "frame-2", toKeyframeId: "frame-3", status: "idle" },
+    ];
     // Restore the default same-shape frames; individual tests reshape them.
     mocks.store.keyframes = [
       { id: "frame-1", dreamUuid: "dream-1", name: "One" },
@@ -193,5 +213,90 @@ describe("useFlowGeneration", () => {
     await generateAll();
 
     expect(mocks.post).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("useFlowGeneration — seamless chaining", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.buildVideoAlgoParams.mockReturnValue({
+      infinidream_algorithm: "ltx-i2v",
+    });
+    mocks.waitForRenderedClip.mockResolvedValue(true);
+    mocks.store.seamlessChaining = true;
+    mocks.store.keyframes = [
+      { id: "frame-1", dreamUuid: "dream-1", name: "One" },
+      { id: "frame-2", dreamUuid: "dream-2", name: "Two" },
+      { id: "frame-3", dreamUuid: "dream-3", name: "Three" },
+    ];
+    // Clip 1 has already rendered, so clip 2 can open on its final frame.
+    mocks.store.transitions = [
+      {
+        fromKeyframeId: "frame-1",
+        toKeyframeId: "frame-2",
+        status: "processed",
+        dreamUuid: "clip-1",
+      },
+      { fromKeyframeId: "frame-2", toKeyframeId: "frame-3", status: "idle" },
+    ];
+    mocks.post.mockResolvedValue({
+      data: { data: { dream: { uuid: "new-2" } } },
+    });
+  });
+
+  const sourceOfLastCall = () =>
+    mocks.buildVideoAlgoParams.mock.calls.at(-1)?.[0] as unknown as {
+      imageUuid: string;
+      endImageUuid: string;
+    };
+
+  it("opens the next clip on the previous clip's rendered final frame", async () => {
+    const { generateAll } = useFlowGeneration();
+
+    await generateAll();
+
+    expect(mocks.waitForRenderedClip).toHaveBeenCalledWith("clip-1");
+    // The video dream, not the shared keyframe: the worker resolves it to the
+    // clip's last frame, which is what the previous clip actually ends on.
+    expect(sourceOfLastCall().imageUuid).toBe("clip-1");
+    // The tail is still the flow's own keyframe — only the seam changes.
+    expect(sourceOfLastCall().endImageUuid).toBe("dream-3");
+  });
+
+  it("falls back to the keyframe when the previous clip never rendered", async () => {
+    mocks.waitForRenderedClip.mockResolvedValue(false);
+
+    const { generateAll } = useFlowGeneration();
+    await generateAll();
+
+    expect(sourceOfLastCall().imageUuid).toBe("dream-2");
+  });
+
+  it("does not chain across a gap where the clips share no keyframe", async () => {
+    mocks.store.transitions = [
+      {
+        fromKeyframeId: "frame-1",
+        toKeyframeId: "frame-1",
+        status: "processed",
+        dreamUuid: "clip-1",
+      },
+      { fromKeyframeId: "frame-2", toKeyframeId: "frame-3", status: "idle" },
+    ];
+
+    const { generateAll } = useFlowGeneration();
+    await generateAll();
+
+    expect(mocks.waitForRenderedClip).not.toHaveBeenCalled();
+    expect(sourceOfLastCall().imageUuid).toBe("dream-2");
+  });
+
+  it("keeps the keyframe as the source when chaining is off", async () => {
+    mocks.store.seamlessChaining = false;
+
+    const { generateAll } = useFlowGeneration();
+    await generateAll();
+
+    expect(mocks.waitForRenderedClip).not.toHaveBeenCalled();
+    expect(sourceOfLastCall().imageUuid).toBe("dream-2");
   });
 });

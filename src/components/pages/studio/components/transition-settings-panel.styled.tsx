@@ -255,3 +255,29 @@ export const NumberInput = styled.input`
     border-color: ${FLOW.accent};
   }
 `;
+
+export const SeamlessToggle = styled.label`
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-bottom: 12px;
+  font-size: 13px;
+  color: ${FLOW.textDim};
+  cursor: pointer;
+  user-select: none;
+  font-family: ${FLOW.fontFamily};
+`;
+
+export const SeamlessCheckbox = styled.input`
+  accent-color: ${FLOW.accent};
+  cursor: pointer;
+  margin-top: 2px;
+  flex-shrink: 0;
+`;
+
+export const SeamlessHint = styled.span`
+  display: block;
+  margin-top: 2px;
+  font-size: 11px;
+  opacity: 0.7;
+`;
