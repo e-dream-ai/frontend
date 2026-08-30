@@ -26,7 +26,7 @@ export const StripContainer = styled.div`
   align-items: center;
   /* "safe" centers when the strip fits, but falls back to start-alignment when
      it overflows — otherwise the start-side overflow is unreachable by scrolling
-     (and by drag auto-scroll) once there are enough keyframes. */
+     (and by drag auto-scroll) once there are enough reference frames. */
   justify-content: safe center;
   gap: 0;
   overflow-x: auto;

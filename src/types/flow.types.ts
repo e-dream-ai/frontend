@@ -1,8 +1,8 @@
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
 
-export type StudioMode = "flow" | "batch";
+export type StudioMode = "flow" | "action";
 
-export interface FlowKeyframe {
+export interface FlowReferenceFrame {
   id: string; // local UUID for drag/drop identity
   // Backend Keyframe.uuid — assigned by ensureFlowKeyframe when the flow is
   // saved to a playlist. Frames are not added as Keyframe entities: those rows
@@ -13,7 +13,7 @@ export interface FlowKeyframe {
   dreamUuid?: string;
   imageUrl: string; // presigned URL or local objectURL while uploading
   name: string; // display name
-  isLoopKeyframe?: boolean; // true for auto-generated loop frame
+  isLoopFrame?: boolean; // true for auto-generated loop frame
 
   // Source image pixel dimensions, captured from the <img> once it loads.
   // Used to render each frame at its true shape and to detect transitions
@@ -34,8 +34,8 @@ export type TransitionStatus =
   | "failed";
 
 export interface FlowTransition {
-  fromKeyframeId: string; // FlowKeyframe.id
-  toKeyframeId: string; // FlowKeyframe.id
+  fromFrameId: string; // FlowReferenceFrame.id
+  toFrameId: string; // FlowReferenceFrame.id
 
   // Per-transition overrides (undefined = use global)
   presetOverride?: string; // PresetPack name

@@ -165,7 +165,7 @@ export const SessionMeta = styled.div`
   color: ${FLOW.textMuted};
 `;
 
-export const ModeBadge = styled.span<{ $mode?: "flow" | "batch" }>`
+export const ModeBadge = styled.span<{ $mode?: "flow" | "action" }>`
   font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;

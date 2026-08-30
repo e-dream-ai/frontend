@@ -4,24 +4,24 @@ const mocks = vi.hoisted(() => {
   const invalidateQueries = vi.fn();
   const post = vi.fn();
   const ensureFlowKeyframe = vi.fn(
-    async (keyframe: { id: string }) => `keyframe-${keyframe.id}`,
+    async (frame: { id: string }) => `frame-${frame.id}`,
   );
   const setTransitionDream = vi.fn();
   const updateTransitionStatus = vi.fn();
   const store = {
     transitions: [
       {
-        fromKeyframeId: "frame-1",
-        toKeyframeId: "frame-2",
+        fromFrameId: "frame-1",
+        toFrameId: "frame-2",
         status: "idle",
       },
       {
-        fromKeyframeId: "frame-2",
-        toKeyframeId: "frame-3",
+        fromFrameId: "frame-2",
+        toFrameId: "frame-3",
         status: "idle",
       },
     ],
-    keyframes: [
+    referenceFrames: [
       { id: "frame-1", dreamUuid: "dream-1", name: "One" },
       { id: "frame-2", dreamUuid: "dream-2", name: "Two" },
       { id: "frame-3", dreamUuid: "dream-3", name: "Three" },
@@ -111,7 +111,7 @@ describe("useFlowGeneration", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Restore the default same-shape frames; individual tests reshape them.
-    mocks.store.keyframes = [
+    mocks.store.referenceFrames = [
       { id: "frame-1", dreamUuid: "dream-1", name: "One" },
       { id: "frame-2", dreamUuid: "dream-2", name: "Two" },
       { id: "frame-3", dreamUuid: "dream-3", name: "Three" },
@@ -132,7 +132,7 @@ describe("useFlowGeneration", () => {
 
   it("skips a transition whose two frames have different aspect ratios", async () => {
     // frame-3 is portrait, so frame-2 → frame-3 cannot be rendered.
-    mocks.store.keyframes = [
+    mocks.store.referenceFrames = [
       {
         id: "frame-1",
         dreamUuid: "dream-1",
@@ -165,7 +165,7 @@ describe("useFlowGeneration", () => {
   });
 
   it("generates every transition when all frames share a shape", async () => {
-    mocks.store.keyframes = [
+    mocks.store.referenceFrames = [
       {
         id: "frame-1",
         dreamUuid: "dream-1",

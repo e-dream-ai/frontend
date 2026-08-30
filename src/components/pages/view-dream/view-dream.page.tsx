@@ -97,6 +97,7 @@ import { NotFound } from "@/components/shared/not-found/not-found";
 import {
   formatDreamForm,
   formatDreamRequest,
+  getDreamProcessingPhase,
   serializeDreamPrompt,
 } from "@/utils/dream.util";
 import { ReportDreamModal } from "@/components/modals/report-dream.modal";
@@ -135,6 +136,10 @@ type DreamModal =
 const SectionID = "dream";
 
 const FALLBACK_ERROR_MESSAGE = "An error occurred while processing this dream.";
+
+const FINISHED_JOB_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED"]);
+
+const PREVIEW_FRAME_ALGORITHMS = new Set(["deforum", "uprez", "nvidia-uprez"]);
 
 const formatDreamError = (error?: string | null): string => {
   if (!error) {
@@ -395,19 +400,23 @@ const ViewDreamPage: React.FC = () => {
     mode: "onChange",
   });
 
-  const isDreamProcessing: boolean = useMemo(
-    () =>
-      (dream?.status === DreamStatusType.QUEUE ||
-        dream?.status === DreamStatusType.PROCESSING) &&
-      jobStatus?.toUpperCase() !== "COMPLETED",
-    [dream, jobStatus],
-  );
-
   const isDreamProcessingRaw: boolean = useMemo(
     () =>
       dream?.status === DreamStatusType.QUEUE ||
       dream?.status === DreamStatusType.PROCESSING,
     [dream],
+  );
+
+  const isDreamProcessing: boolean = useMemo(
+    () =>
+      isDreamProcessingRaw &&
+      !FINISHED_JOB_STATUSES.has((jobStatus ?? "").toUpperCase()),
+    [isDreamProcessingRaw, jobStatus],
+  );
+
+  const dreamProcessingPhase = useMemo(
+    () => getDreamProcessingPhase(isDreamProcessingRaw, jobStatus),
+    [isDreamProcessingRaw, jobStatus],
   );
 
   const isDreamFailed: boolean = useMemo(
@@ -469,15 +478,12 @@ const ViewDreamPage: React.FC = () => {
 
   const { guardOverBudget } = useCreditGuard(rerunCostUsd);
 
-  const isCancellableAlgorithm = useMemo(() => {
-    const cancellableAlgorithms = [
-      "animatediff",
-      "deforum",
-      "uprez",
-      "nvidia-uprez",
-    ];
-    return cancellableAlgorithms.includes(dreamAlgorithm);
-  }, [dreamAlgorithm]);
+  const isCancellableDream = hasPrompt;
+
+  const supportsPreviewFrame = useMemo(
+    () => PREVIEW_FRAME_ALGORITHMS.has(dreamAlgorithm ?? ""),
+    [dreamAlgorithm],
+  );
 
   const showRerunButton = useMemo(
     () =>
@@ -807,40 +813,42 @@ const ViewDreamPage: React.FC = () => {
   const onConfirmCancelDream = async () => {
     try {
       const response = await cancelDreamMutation.mutateAsync();
-      if (response?.success) {
-        toast.success(`${t("page.view_dream.dream_cancelled_successfully")}`);
+      if (!response?.success) {
+        toast.error(`${t("page.view_dream.error_cancelling_dream")}`);
+        return;
+      }
 
-        setTumbnail(undefined);
-        setProgress(undefined);
-        setJobStatus(undefined);
-        setCountdownMs(undefined);
+      setTumbnail(undefined);
+      setProgress(undefined);
+      setJobStatus(undefined);
+      setCountdownMs(undefined);
+      closeModal();
 
+      if (!response.data?.jobFound) {
+        toast.success(`${t("page.view_dream.dream_job_already_finished")}`);
+        refetch();
+        return;
+      }
+
+      toast.success(`${t("page.view_dream.dream_cancelled_successfully")}`);
+
+      const cancelledStatus = response.data.dream?.status;
+      if (cancelledStatus) {
         queryClient.setQueryData<ApiResponse<{ dream: Dream }>>(
           [DREAM_QUERY_KEY, uuid],
-          (oldData) => {
-            if (!oldData?.data?.dream) return oldData;
-            const dream = oldData.data.dream;
-            const newStatus = dream.video
-              ? DreamStatusType.PROCESSED
-              : DreamStatusType.NONE;
-
-            return {
-              ...oldData,
-              data: {
-                ...oldData.data,
-                dream: {
-                  ...dream,
-                  status: newStatus,
-                },
-              },
-            };
-          },
+          (oldData) =>
+            oldData?.data?.dream
+              ? {
+                  ...oldData,
+                  data: {
+                    ...oldData.data,
+                    dream: { ...oldData.data.dream, status: cancelledStatus },
+                  },
+                }
+              : oldData,
         );
-
-        refetch();
-        closeModal();
       } else {
-        toast.error(`${t("page.view_dream.error_cancelling_dream")}`);
+        refetch();
       }
     } catch {
       toast.error(`${t("page.view_dream.error_cancelling_dream")}`);
@@ -1274,9 +1282,9 @@ const ViewDreamPage: React.FC = () => {
                     <React.Fragment>
                       {showRerunButton &&
                         (isDreamProcessing ? (
-                          isCancellableAlgorithm && (
+                          isCancellableDream && (
                             <React.Fragment>
-                              {dreamAlgorithm !== "animatediff" && (
+                              {supportsPreviewFrame && (
                                 <Button
                                   type="button"
                                   mx="2"
@@ -1367,7 +1375,7 @@ const ViewDreamPage: React.FC = () => {
 
               <ViewDreamInputs
                 dream={displayDream}
-                isProcessing={isDreamProcessingRaw}
+                processingPhase={dreamProcessingPhase}
                 editMode={editMode}
                 // thumbnail props
                 thumbnailState={thumbnail}
@@ -1380,7 +1388,6 @@ const ViewDreamPage: React.FC = () => {
                 onPromptResetRequest={(reset) => {
                   resetPromptRef.current = reset;
                 }}
-                jobStatus={jobStatus}
               />
 
               {!isDreamProcessing ? (

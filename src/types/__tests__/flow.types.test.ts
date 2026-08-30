@@ -4,8 +4,8 @@ import type { FlowTransition, TransitionStatus } from "@/types/flow.types";
 describe("FlowTransition type", () => {
   it("accepts a valid idle transition", () => {
     const t: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
     };
     expect(t.status).toBe("idle");
@@ -13,8 +13,8 @@ describe("FlowTransition type", () => {
 
   it("accepts a transition with all overrides and generation state", () => {
     const t: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       presetOverride: "Camera Basics",
       promptOverride: "zoom in",
       durationOverride: 8,

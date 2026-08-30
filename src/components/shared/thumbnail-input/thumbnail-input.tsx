@@ -17,6 +17,7 @@ import {
 } from "@/constants/file.constants";
 import { useTranslation } from "react-i18next";
 import { HandleChangeFile, MultiMediaState } from "@/types/media.types";
+import { DreamProcessingPhase } from "@/types/dream.types";
 import {
   handleFileUploaderSizeError,
   handleFileUploaderTypeError,
@@ -33,11 +34,36 @@ type ThumbnailInputProps = {
   thumbnail?: string;
   localMultimedia: MultiMediaState;
   editMode: boolean;
-  isProcessing?: boolean;
-  jobStatus?: string;
+  processingPhase?: DreamProcessingPhase;
   isRemoved: boolean;
   handleChange: HandleChangeFile;
   handleRemove?: () => void;
+};
+
+const PROCESSING_PHASE_LABEL_KEYS: Record<DreamProcessingPhase, string> = {
+  QUEUED: "components.thumbnail_input.queued",
+  RENDERING: "components.thumbnail_input.rendering",
+  INGESTING: "components.thumbnail_input.ingesting",
+};
+
+const ProcessingThumbnail: React.FC<{ phase: DreamProcessingPhase }> = ({
+  phase,
+}) => {
+  const { t } = useTranslation();
+  const theme = useTheme();
+
+  return (
+    <ThumbnailPlaceholder fontSize="1.2rem">
+      <Row width="100%" px="2rem" mb="0">
+        <Column alignItems="center" width="100%">
+          <Spinner />
+          <Text color={theme.textBodyColor} mt="1rem">
+            {t(PROCESSING_PHASE_LABEL_KEYS[phase])}
+          </Text>
+        </Column>
+      </Row>
+    </ThumbnailPlaceholder>
+  );
 };
 
 export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
@@ -45,49 +71,20 @@ export const ThumbnailInput: React.FC<ThumbnailInputProps> = ({
   thumbnail,
   localMultimedia,
   editMode,
-  isProcessing,
-  jobStatus,
+  processingPhase,
   isRemoved,
   handleChange,
   handleRemove,
 }) => {
   const { t } = useTranslation();
-  const theme = useTheme();
   const hasThumbnail = Boolean(thumbnail) || localMultimedia;
   const localUrl = useImage(localMultimedia?.url);
 
-  if (isProcessing && !isLoading && !localMultimedia) {
-    const normalizedJobStatus = (jobStatus ?? "").toUpperCase();
-
-    const uiPhase =
-      normalizedJobStatus === "IN_PROGRESS"
-        ? "RENDERING"
-        : normalizedJobStatus === "IN_QUEUE"
-          ? "QUEUED"
-          : "INGESTING";
-
-    const statusText =
-      uiPhase === "QUEUED"
-        ? t("components.thumbnail_input.queued")
-        : uiPhase === "RENDERING"
-          ? t("components.thumbnail_input.rendering")
-          : t("components.thumbnail_input.ingesting");
-
-    return (
-      <ThumbnailPlaceholder fontSize="1.2rem">
-        <Row width="100%" px="2rem" mb="0">
-          <Column alignItems="center" width="100%">
-            <Spinner />
-            <Text color={theme.textBodyColor} mt="1rem">
-              {statusText}
-            </Text>
-          </Column>
-        </Row>
-      </ThumbnailPlaceholder>
-    );
+  if (processingPhase && !isLoading && !localMultimedia) {
+    return <ProcessingThumbnail phase={processingPhase} />;
   }
 
-  if (isProcessing && !isLoading && localMultimedia) {
+  if (processingPhase && !isLoading && localMultimedia) {
     return (
       <ThumbnailContainer editMode={false}>
         <Thumbnail src={localUrl || thumbnail || "/images/blank.gif"} />

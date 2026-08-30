@@ -7,7 +7,7 @@ export function FlowReset() {
   const resetFlow = useFlowStore((s) => s.resetFlow);
   const hasAnything = useFlowStore(
     (s) =>
-      s.keyframes.length > 0 ||
+      s.referenceFrames.length > 0 ||
       s.transitions.length > 0 ||
       s.globalPresetId !== "" ||
       s.globalPrompt !== "",

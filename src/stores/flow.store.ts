@@ -1,27 +1,27 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type {
-  FlowKeyframe,
+  FlowReferenceFrame,
   FlowTransition,
   TransitionStatus,
 } from "@/types/flow.types";
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
-import { stepLightboxIndex } from "@/utils/keyframe-lightbox.util";
+import { stepLightboxIndex } from "@/utils/lightbox.util";
 
-export const LOOP_KEYFRAME_ID = "__loop__";
+export const LOOP_FRAME_ID = "__loop__";
 
-export function buildKeyframesWithLoop(
-  keyframes: FlowKeyframe[],
+export function buildFramesWithLoop(
+  referenceFrames: FlowReferenceFrame[],
   loop: boolean,
-): FlowKeyframe[] {
-  if (!loop || keyframes.length < 2) return keyframes;
-  const first = keyframes[0];
+): FlowReferenceFrame[] {
+  if (!loop || referenceFrames.length < 2) return referenceFrames;
+  const first = referenceFrames[0];
   return [
-    ...keyframes,
+    ...referenceFrames,
     {
       ...first,
-      id: LOOP_KEYFRAME_ID,
-      isLoopKeyframe: true,
+      id: LOOP_FRAME_ID,
+      isLoopFrame: true,
       uploadStatus: undefined,
       uploadProgress: undefined,
     },
@@ -30,14 +30,17 @@ export function buildKeyframesWithLoop(
 
 type FlowStoreState = {
   // Phase 0
-  keyframes: FlowKeyframe[];
+  referenceFrames: FlowReferenceFrame[];
   loop: boolean;
-  addKeyframe: (keyframe: FlowKeyframe) => void;
-  updateKeyframe: (id: string, patch: Partial<FlowKeyframe>) => void;
-  removeKeyframe: (id: string) => void;
-  reorderKeyframes: (orderedIds: string[]) => void;
+  addReferenceFrame: (frame: FlowReferenceFrame) => void;
+  updateReferenceFrame: (
+    id: string,
+    patch: Partial<FlowReferenceFrame>,
+  ) => void;
+  removeReferenceFrame: (id: string) => void;
+  reorderReferenceFrames: (orderedIds: string[]) => void;
   setLoop: (loop: boolean) => void;
-  keyframesWithLoop: () => FlowKeyframe[];
+  referenceFramesWithLoop: () => FlowReferenceFrame[];
   resetFlow: () => void;
 
   // Phase 1 — global transition settings
@@ -58,8 +61,8 @@ type FlowStoreState = {
   selectedTransitionIndex: number | null;
   settingsExpanded: boolean;
   previewLightboxOpen: boolean;
-  // Id (not index) of the keyframe shown in the lightbox; null = closed.
-  keyframeLightboxId: string | null;
+  // Id (not index) of the frame shown in the lightbox; null = closed.
+  frameLightboxId: string | null;
 
   // Phase 1 — actions
   setGlobalPreset: (id: string) => void;
@@ -79,9 +82,9 @@ type FlowStoreState = {
   selectTransition: (index: number | null) => void;
   setSettingsExpanded: (expanded: boolean) => void;
   setPreviewLightboxOpen: (open: boolean) => void;
-  openKeyframeLightbox: (id: string) => void;
-  closeKeyframeLightbox: () => void;
-  stepKeyframeLightbox: (delta: number) => void;
+  openFrameLightbox: (id: string) => void;
+  closeFrameLightbox: () => void;
+  stepFrameLightbox: (delta: number) => void;
   updateTransitionStatus: (
     index: number,
     status: TransitionStatus,
@@ -117,37 +120,37 @@ const PHASE_1_DEFAULTS = {
   selectedTransitionIndex: null as number | null,
   settingsExpanded: false,
   previewLightboxOpen: false,
-  keyframeLightboxId: null as string | null,
+  frameLightboxId: null as string | null,
   savedPlaylistUuid: null as string | null,
   syncedPlaylistDreamUuids: [] as string[],
 };
 
 /**
- * Build transitions from adjacent keyframe pairs.
+ * Build transitions from adjacent frame pairs.
  * Preserves existing transition state when pairs still match.
  */
 function deriveTransitions(
-  keyframesWithLoop: FlowKeyframe[],
+  referenceFramesWithLoop: FlowReferenceFrame[],
   existing: FlowTransition[],
 ): FlowTransition[] {
   const pairs: Array<{ fromId: string; toId: string }> = [];
-  for (let i = 0; i < keyframesWithLoop.length - 1; i++) {
-    const from = keyframesWithLoop[i];
-    const to = keyframesWithLoop[i + 1];
-    // Use real keyframe IDs — map __loop__ back to the first keyframe's ID
+  for (let i = 0; i < referenceFramesWithLoop.length - 1; i++) {
+    const from = referenceFramesWithLoop[i];
+    const to = referenceFramesWithLoop[i + 1];
+    // Use real frame IDs — map __loop__ back to the first frame's ID
     const fromId =
-      from.id === LOOP_KEYFRAME_ID
-        ? keyframesWithLoop[0]?.id ?? from.id
+      from.id === LOOP_FRAME_ID
+        ? referenceFramesWithLoop[0]?.id ?? from.id
         : from.id;
     const toId =
-      to.id === LOOP_KEYFRAME_ID ? keyframesWithLoop[0]?.id ?? to.id : to.id;
+      to.id === LOOP_FRAME_ID ? referenceFramesWithLoop[0]?.id ?? to.id : to.id;
     pairs.push({ fromId, toId });
   }
 
   // Build index of existing transitions for O(1) lookup
   const existingMap = new Map<string, FlowTransition>();
   for (const t of existing) {
-    existingMap.set(`${t.fromKeyframeId}:${t.toKeyframeId}`, t);
+    existingMap.set(`${t.fromFrameId}:${t.toFrameId}`, t);
   }
 
   return pairs.map(({ fromId, toId }) => {
@@ -155,33 +158,33 @@ function deriveTransitions(
     const prev = existingMap.get(key);
     if (prev) return prev;
     return {
-      fromKeyframeId: fromId,
-      toKeyframeId: toId,
+      fromFrameId: fromId,
+      toFrameId: toId,
       status: "idle" as const,
     };
   });
 }
 
 export const flowPartialize = (state: FlowStoreState) => ({
-  keyframes: state.keyframes
-    .filter((kf) => {
-      if (kf.uploadStatus === "uploading") return Boolean(kf.dreamUuid);
-      if (kf.uploadStatus === "failed") return false;
-      return Boolean(kf.keyframeUuid || kf.dreamUuid);
+  referenceFrames: state.referenceFrames
+    .filter((frame) => {
+      if (frame.uploadStatus === "uploading") return Boolean(frame.dreamUuid);
+      if (frame.uploadStatus === "failed") return false;
+      return Boolean(frame.keyframeUuid || frame.dreamUuid);
     })
-    .map((kf) => ({
-      id: kf.id,
-      keyframeUuid: kf.keyframeUuid,
-      dreamUuid: kf.dreamUuid,
-      imageUrl: kf.imageUrl,
-      name: kf.name,
+    .map((frame) => ({
+      id: frame.id,
+      keyframeUuid: frame.keyframeUuid,
+      dreamUuid: frame.dreamUuid,
+      imageUrl: frame.imageUrl,
+      name: frame.name,
       // Persisted so a reloaded flow renders at the right shape, and flags
       // mismatches, without waiting for every thumbnail to load again.
-      naturalWidth: kf.naturalWidth,
-      naturalHeight: kf.naturalHeight,
-      isLoopKeyframe: kf.isLoopKeyframe,
-      uploadStatus: kf.uploadStatus,
-      uploadProgress: kf.uploadProgress,
+      naturalWidth: frame.naturalWidth,
+      naturalHeight: frame.naturalHeight,
+      isLoopFrame: frame.isLoopFrame,
+      uploadStatus: frame.uploadStatus,
+      uploadProgress: frame.uploadProgress,
     })),
   loop: state.loop,
   transitions: state.transitions,
@@ -198,56 +201,101 @@ export const flowPartialize = (state: FlowStoreState) => ({
   globalLora: state.globalLora,
 });
 
+/**
+ * Map the pre-#719 persisted shape onto the current one: `keyframes` ->
+ * `referenceFrames`, `isLoopKeyframe` -> `isLoopFrame`, and the transition
+ * endpoint ids. `keyframeUuid` is untouched — it still points at a backend
+ * Keyframe entity. A no-op once the stored state is already on the new keys.
+ */
+export function renameLegacyKeyframeKeys(
+  state: Record<string, unknown>,
+): Record<string, unknown> {
+  const next = { ...state };
+
+  if (next.referenceFrames === undefined && Array.isArray(next.keyframes)) {
+    next.referenceFrames = (next.keyframes as Record<string, unknown>[]).map(
+      (frame) => {
+        const { isLoopKeyframe, ...rest } = frame;
+        return isLoopKeyframe === undefined
+          ? rest
+          : { ...rest, isLoopFrame: isLoopKeyframe };
+      },
+    );
+  }
+  delete next.keyframes;
+
+  if (Array.isArray(next.transitions)) {
+    next.transitions = (next.transitions as Record<string, unknown>[]).map(
+      (transition) => {
+        const { fromKeyframeId, toKeyframeId, ...rest } = transition;
+        return {
+          ...rest,
+          fromFrameId: rest.fromFrameId ?? fromKeyframeId,
+          toFrameId: rest.toFrameId ?? toKeyframeId,
+        };
+      },
+    );
+  }
+
+  return next;
+}
+
 export const useFlowStore = create<FlowStoreState>()(
   persist(
     (set, get) => ({
       // Phase 0 state
-      keyframes: [],
+      referenceFrames: [],
       loop: false,
 
-      addKeyframe: (keyframe) =>
+      addReferenceFrame: (frame) =>
         set((s) => {
-          const keyframes = [...s.keyframes, keyframe];
+          const referenceFrames = [...s.referenceFrames, frame];
           return {
-            keyframes,
+            referenceFrames,
             transitions: deriveTransitions(
-              buildKeyframesWithLoop(keyframes, s.loop),
+              buildFramesWithLoop(referenceFrames, s.loop),
               s.transitions,
             ),
           };
         }),
 
-      updateKeyframe: (id, patch) =>
+      updateReferenceFrame: (id, patch) =>
         set((s) => ({
-          keyframes: s.keyframes.map((kf) =>
-            kf.id === id ? { ...kf, ...patch } : kf,
+          referenceFrames: s.referenceFrames.map((frame) =>
+            frame.id === id ? { ...frame, ...patch } : frame,
           ),
         })),
 
-      removeKeyframe: (id) =>
+      removeReferenceFrame: (id) =>
         set((s) => {
-          const keyframes = s.keyframes.filter((kf) => kf.id !== id);
+          const referenceFrames = s.referenceFrames.filter(
+            (frame) => frame.id !== id,
+          );
           return {
-            keyframes,
-            keyframeLightboxId:
-              s.keyframeLightboxId === id ? null : s.keyframeLightboxId,
+            referenceFrames,
+            frameLightboxId:
+              s.frameLightboxId === id ? null : s.frameLightboxId,
             transitions: deriveTransitions(
-              buildKeyframesWithLoop(keyframes, s.loop),
+              buildFramesWithLoop(referenceFrames, s.loop),
               s.transitions,
             ),
           };
         }),
 
-      reorderKeyframes: (orderedIds) =>
+      reorderReferenceFrames: (orderedIds) =>
         set((s) => {
-          const map = new Map(s.keyframes.map((kf) => [kf.id, kf]));
-          const keyframes = orderedIds
+          const map = new Map(
+            s.referenceFrames.map((frame) => [frame.id, frame]),
+          );
+          const referenceFrames = orderedIds
             .map((id) => map.get(id))
-            .filter((kf): kf is FlowKeyframe => kf !== undefined);
+            .filter(
+              (frame): frame is FlowReferenceFrame => frame !== undefined,
+            );
           return {
-            keyframes,
+            referenceFrames,
             transitions: deriveTransitions(
-              buildKeyframesWithLoop(keyframes, s.loop),
+              buildFramesWithLoop(referenceFrames, s.loop),
               s.transitions,
             ),
           };
@@ -257,19 +305,19 @@ export const useFlowStore = create<FlowStoreState>()(
         set((s) => ({
           loop,
           transitions: deriveTransitions(
-            buildKeyframesWithLoop(s.keyframes, loop),
+            buildFramesWithLoop(s.referenceFrames, loop),
             s.transitions,
           ),
         })),
 
-      keyframesWithLoop: () => {
-        const { keyframes, loop } = get();
-        return buildKeyframesWithLoop(keyframes, loop);
+      referenceFramesWithLoop: () => {
+        const { referenceFrames, loop } = get();
+        return buildFramesWithLoop(referenceFrames, loop);
       },
 
       resetFlow: () =>
         set({
-          keyframes: [],
+          referenceFrames: [],
           loop: false,
           ...PHASE_1_DEFAULTS,
         }),
@@ -303,8 +351,8 @@ export const useFlowStore = create<FlowStoreState>()(
           if (!transitions[index]) return s;
           const t = transitions[index];
           transitions[index] = {
-            fromKeyframeId: t.fromKeyframeId,
-            toKeyframeId: t.toKeyframeId,
+            fromFrameId: t.fromFrameId,
+            toFrameId: t.toFrameId,
             status: t.status,
             progress: t.progress,
             dreamUuid: t.dreamUuid,
@@ -319,22 +367,26 @@ export const useFlowStore = create<FlowStoreState>()(
       setSettingsExpanded: (expanded) => set({ settingsExpanded: expanded }),
       setPreviewLightboxOpen: (open) => set({ previewLightboxOpen: open }),
 
-      openKeyframeLightbox: (id) =>
+      openFrameLightbox: (id) =>
         set((s) => ({
-          keyframeLightboxId: s.keyframes.some((kf) => kf.id === id)
+          frameLightboxId: s.referenceFrames.some((frame) => frame.id === id)
             ? id
             : null,
         })),
-      closeKeyframeLightbox: () => set({ keyframeLightboxId: null }),
-      stepKeyframeLightbox: (delta) =>
+      closeFrameLightbox: () => set({ frameLightboxId: null }),
+      stepFrameLightbox: (delta) =>
         set((s) => {
-          const current = s.keyframes.findIndex(
-            (kf) => kf.id === s.keyframeLightboxId,
+          const current = s.referenceFrames.findIndex(
+            (frame) => frame.id === s.frameLightboxId,
           );
-          if (current === -1) return { keyframeLightboxId: null };
-          const next = stepLightboxIndex(current, delta, s.keyframes.length);
+          if (current === -1) return { frameLightboxId: null };
+          const next = stepLightboxIndex(
+            current,
+            delta,
+            s.referenceFrames.length,
+          );
           return {
-            keyframeLightboxId: next === null ? null : s.keyframes[next].id,
+            frameLightboxId: next === null ? null : s.referenceFrames[next].id,
           };
         }),
 
@@ -381,7 +433,7 @@ export const useFlowStore = create<FlowStoreState>()(
       recomputeTransitions: () =>
         set((s) => ({
           transitions: deriveTransitions(
-            buildKeyframesWithLoop(s.keyframes, s.loop),
+            buildFramesWithLoop(s.referenceFrames, s.loop),
             s.transitions,
           ),
         })),
@@ -423,9 +475,15 @@ export const useFlowStore = create<FlowStoreState>()(
     }),
     {
       name: "flow-session",
-      version: 5,
+      version: 6,
       migrate: (persisted: unknown, version: number) => {
-        const state = persisted as Record<string, unknown>;
+        // v6 renamed the "keyframe" concept to "reference frame" (#719). Run
+        // the key rename before the version chain below: that chain returns
+        // early per version, so a store several versions behind would
+        // otherwise keep the legacy keys and rehydrate with an empty flow.
+        const state = renameLegacyKeyframeKeys(
+          persisted as Record<string, unknown>,
+        );
         if (version < 2) {
           return {
             ...state,

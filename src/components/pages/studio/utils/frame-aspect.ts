@@ -1,4 +1,4 @@
-import type { FlowKeyframe } from "@/types/flow.types";
+import type { FlowReferenceFrame } from "@/types/flow.types";
 
 /**
  * Two ratios count as equal when they differ by less than this fraction of the
@@ -14,29 +14,31 @@ interface Dimensions {
   ratio: number;
 }
 
-const dimensionsOf = (kf?: FlowKeyframe): Dimensions | undefined => {
-  const width = kf?.naturalWidth;
-  const height = kf?.naturalHeight;
+const dimensionsOf = (frame?: FlowReferenceFrame): Dimensions | undefined => {
+  const width = frame?.naturalWidth;
+  const height = frame?.naturalHeight;
   if (typeof width !== "number" || typeof height !== "number") return undefined;
   if (width <= 0 || height <= 0) return undefined;
   return { width, height, ratio: width / height };
 };
 
-export const aspectRatioOf = (kf?: FlowKeyframe): number | undefined =>
-  dimensionsOf(kf)?.ratio;
+export const aspectRatioOf = (frame?: FlowReferenceFrame): number | undefined =>
+  dimensionsOf(frame)?.ratio;
 
 /** True when two ratios are the same shape within RATIO_TOLERANCE. */
 export const ratiosMatch = (a: number, b: number): boolean =>
   Math.abs(a - b) <= RATIO_TOLERANCE * Math.max(a, b);
 
-export const dimensionsLabel = (kf?: FlowKeyframe): string | undefined => {
-  const d = dimensionsOf(kf);
+export const dimensionsLabel = (
+  frame?: FlowReferenceFrame,
+): string | undefined => {
+  const d = dimensionsOf(frame);
   return d && `${d.width}x${d.height}`;
 };
 
 export const describeMismatch = (
-  from?: FlowKeyframe,
-  to?: FlowKeyframe,
+  from?: FlowReferenceFrame,
+  to?: FlowReferenceFrame,
 ): string | undefined => {
   const a = dimensionsOf(from);
   const b = dimensionsOf(to);
@@ -46,6 +48,6 @@ export const describeMismatch = (
 };
 
 export const isTransitionMismatched = (
-  from?: FlowKeyframe,
-  to?: FlowKeyframe,
+  from?: FlowReferenceFrame,
+  to?: FlowReferenceFrame,
 ): boolean => describeMismatch(from, to) !== undefined;

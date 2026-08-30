@@ -49,8 +49,8 @@ describe("resolveEffectiveSettings", () => {
 
   it("uses global settings when transition has no overrides", () => {
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
     };
     const settings = resolveEffectiveSettings(transition, globalSettings);
@@ -66,8 +66,8 @@ describe("resolveEffectiveSettings", () => {
 
   it("overrides with per-transition values", () => {
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
       presetOverride: "Organic",
       promptOverride: "override prompt",
@@ -89,8 +89,8 @@ describe("resolveEffectiveSettings", () => {
 
   it("builds a bare action when no preset is selected", () => {
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
     };
     const settings = resolveEffectiveSettings(transition, {
@@ -104,8 +104,8 @@ describe("resolveEffectiveSettings", () => {
 
   it("resolves action from preset pack using first action", () => {
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
     };
     const settings = resolveEffectiveSettings(transition, globalSettings);
@@ -115,8 +115,8 @@ describe("resolveEffectiveSettings", () => {
 
   it("keeps a cleared negative prompt cleared", () => {
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
       presetOverride: "Morph",
       negativePromptOverride: "",
@@ -127,8 +127,8 @@ describe("resolveEffectiveSettings", () => {
 
   it("a stored negative prompt wins over the preset's", () => {
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
       presetOverride: "Morph",
       negativePromptOverride: "my negative",
@@ -139,8 +139,8 @@ describe("resolveEffectiveSettings", () => {
 
   it("leaves the negative prompt empty for a preset without one", () => {
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
       presetOverride: "Whip Pan",
     };
@@ -153,8 +153,8 @@ describe("resolveEffectiveSettings", () => {
 
   it("resolves a transition preset's prompt into the action", () => {
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
       presetOverride: "Dolly Zoom",
     };
@@ -168,8 +168,8 @@ describe("resolveEffectiveSettings", () => {
 
   it("applies prompt override on top of preset action", () => {
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
       promptOverride: "my custom prompt",
     };
@@ -180,8 +180,8 @@ describe("resolveEffectiveSettings", () => {
   it("globalLora overrides preset LoRAs", () => {
     const customLora = [{ path: "custom-lora.safetensors", scale: 0.8 }];
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
     };
     const settings = resolveEffectiveSettings(transition, {
@@ -197,8 +197,8 @@ describe("resolveEffectiveSettings", () => {
       { path: "transition-lora.safetensors", scale: 1.0 },
     ];
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
       loraOverride: transitionLoraConfig,
     };
@@ -211,8 +211,8 @@ describe("resolveEffectiveSettings", () => {
 
   it("falls through to preset LoRAs when globalLora is undefined", () => {
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
     };
     const settings = resolveEffectiveSettings(transition, {
@@ -226,8 +226,8 @@ describe("resolveEffectiveSettings", () => {
 
   it("an explicit empty globalLora strips the preset's LoRA (None)", () => {
     const transition: FlowTransition = {
-      fromKeyframeId: "a",
-      toKeyframeId: "b",
+      fromFrameId: "a",
+      toFrameId: "b",
       status: "idle",
     };
     const settings = resolveEffectiveSettings(transition, {

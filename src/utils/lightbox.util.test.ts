@@ -3,11 +3,11 @@ import {
   clampLightboxIndex,
   stepLightboxIndex,
   canStep,
-} from "./keyframe-lightbox.util";
+} from "./lightbox.util";
 
-describe("keyframe-lightbox.util", () => {
+describe("lightbox.util", () => {
   describe("clampLightboxIndex", () => {
-    it("returns null when there are no keyframes", () => {
+    it("returns null when there are no reference frames", () => {
       expect(clampLightboxIndex(0, 0)).toBeNull();
       expect(clampLightboxIndex(3, 0)).toBeNull();
     });
@@ -65,7 +65,7 @@ describe("keyframe-lightbox.util", () => {
       expect(canStep(2, -1, 5)).toBe(true);
     });
 
-    it("is false with a single keyframe", () => {
+    it("is false with a single reference frame", () => {
       expect(canStep(0, 1, 1)).toBe(false);
       expect(canStep(0, -1, 1)).toBe(false);
     });

@@ -90,9 +90,9 @@ interface Props {
 }
 
 export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
-  const { keyframes, transitions, linkSavedPlaylist } = useFlowStore(
+  const { referenceFrames, transitions, linkSavedPlaylist } = useFlowStore(
     useShallow((s) => ({
-      keyframes: s.keyframes,
+      referenceFrames: s.referenceFrames,
       transitions: s.transitions,
       linkSavedPlaylist: s.linkSavedPlaylist,
     })),
@@ -165,7 +165,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
 
       await syncFlowPlaylistKeyframes({
         playlistUuid: playlistUUID,
-        keyframes,
+        referenceFrames,
         transitions: completedTransitions,
       });
 
@@ -243,7 +243,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     mode,
     playlistName,
     selectedPlaylistId,
-    keyframes,
+    referenceFrames,
     completedTransitions,
     createPlaylist,
     addPlaylistItem,

@@ -1,5 +1,5 @@
 import { useMemo, useCallback } from "react";
-import { useFlowStore, LOOP_KEYFRAME_ID } from "@/stores/flow.store";
+import { useFlowStore, LOOP_FRAME_ID } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import type { LoRAConfig, VideoModel } from "@/types/studio.types";
 import { useModels } from "@/api/model/query/useModels";
@@ -68,7 +68,7 @@ export function TransitionSettingsPanel({
   // Data via useShallow (re-renders when any selected value changes).
   const {
     transitions,
-    keyframes,
+    referenceFrames,
     selectedTransitionIndex,
     settingsExpanded,
     globalPresetId,
@@ -83,7 +83,7 @@ export function TransitionSettingsPanel({
   } = useFlowStore(
     useShallow((s) => ({
       transitions: s.transitions,
-      keyframes: s.keyframes,
+      referenceFrames: s.referenceFrames,
       selectedTransitionIndex: s.selectedTransitionIndex,
       settingsExpanded: s.settingsExpanded,
       globalPresetId: s.globalPresetId,
@@ -368,8 +368,8 @@ export function TransitionSettingsPanel({
   const needsPrompt = !presetAction && !currentPrompt.trim();
 
   const { targets: generateAllTargets } = useMemo(
-    () => resolveGenerationTargets(transitions, keyframes),
-    [transitions, keyframes],
+    () => resolveGenerationTargets(transitions, referenceFrames),
+    [transitions, referenceFrames],
   );
 
   const generateAllDisabled =
@@ -387,18 +387,17 @@ export function TransitionSettingsPanel({
   const { overBudget, canManageKey, resetIn, guardOverBudget } =
     useCreditGuard(totalCostUsd);
 
-  // Don't show if fewer than 2 keyframes
-  if (keyframes.length < 2) return null;
+  // Don't show if fewer than 2 referenceFrames
+  if (referenceFrames.length < 2) return null;
 
-  // Transition header info — __loop__ maps back to the first keyframe
+  // Transition header info — __loop__ maps back to the first frame
   const findName = (id: string | undefined) =>
-    id === LOOP_KEYFRAME_ID
-      ? keyframes[0]?.name
-      : keyframes.find((kf) => kf.id === id)?.name;
+    id === LOOP_FRAME_ID
+      ? referenceFrames[0]?.name
+      : referenceFrames.find((frame) => frame.id === id)?.name;
   const fromName =
-    selectedTransition && findName(selectedTransition.fromKeyframeId);
-  const toName =
-    selectedTransition && findName(selectedTransition.toKeyframeId);
+    selectedTransition && findName(selectedTransition.fromFrameId);
+  const toName = selectedTransition && findName(selectedTransition.toFrameId);
 
   const isComplete = selectedTransition?.status === "processed";
 

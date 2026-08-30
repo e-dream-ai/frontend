@@ -22,6 +22,8 @@ export enum DreamMediaType {
   IMAGE = "image",
 }
 
+export type DreamProcessingPhase = "QUEUED" | "RENDERING" | "INGESTING";
+
 export type Dream = {
   id: number;
   uuid: string;
