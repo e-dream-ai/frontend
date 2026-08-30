@@ -269,6 +269,7 @@
       "error_processing_dream": "Error processing dream.",
       "dream_cancelled_successfully": "Dream cancelled successfully.",
       "dream_job_already_finished": "No render was in flight for this dream — nothing to cancel.",
+      "dream_stale_state_cleared": "No render was in flight — cleared the stale queued state.",
       "error_cancelling_dream": "Error cancelling dream.",
       "error_fetching_preview": "Error fetching preview.",
       "rendering_hasnt_started_yet": "Rendering hasn't started yet.",

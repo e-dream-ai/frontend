@@ -825,7 +825,11 @@ const ViewDreamPage: React.FC = () => {
       closeModal();
 
       if (!response.data?.jobFound) {
-        toast.success(`${t("page.view_dream.dream_job_already_finished")}`);
+        toast.success(
+          response.data?.statusRestored
+            ? `${t("page.view_dream.dream_stale_state_cleared")}`
+            : `${t("page.view_dream.dream_job_already_finished")}`,
+        );
         refetch();
         return;
       }
