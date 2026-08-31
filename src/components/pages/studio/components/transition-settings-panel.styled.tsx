@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { FLOW, flowSlideIn } from "@/constants/flow-theme.constants";
+import { HISTORY_ROW_HEIGHT } from "./transition-history.styled";
 
 export const PanelContainer = styled.div`
   padding: 24px 28px;
@@ -11,7 +12,16 @@ export const PanelHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 20px;
+  gap: 16px;
+  /* Reserved once, so the row is the same height whether or not the history
+     strip on its right has anything in it. Without this the panel grew and
+     shrank as takes completed, shoving the preview below it up and down. */
+  min-height: ${HISTORY_ROW_HEIGHT}px;
+  margin-bottom: 12px;
+`;
+
+export const PanelHeaderMain = styled.div`
+  min-width: 0;
 `;
 
 export const PanelTitle = styled.span`
@@ -29,18 +39,11 @@ export const PanelSubtitle = styled.span`
   color: ${FLOW.textDim};
 `;
 
-export const CloseButton = styled.button`
-  background: none;
-  border: none;
-  color: ${FLOW.textDim};
-  cursor: pointer;
-  font-size: 16px;
-  padding: 4px;
-  line-height: 1;
-
-  &:hover {
-    color: ${FLOW.text};
-  }
+export const HeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
 `;
 
 export const FieldRow = styled.div`

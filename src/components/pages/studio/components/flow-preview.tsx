@@ -34,6 +34,7 @@ interface PreviewLightboxProps {
   onMeasured: (key: string, ratio: string) => void;
   onClose: () => void;
   onEnded: () => void;
+  replayToken?: number;
 }
 
 function PreviewLightbox({
@@ -44,6 +45,7 @@ function PreviewLightbox({
   onMeasured,
   onClose,
   onEnded,
+  replayToken,
 }: PreviewLightboxProps) {
   const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
 
@@ -64,6 +66,7 @@ function PreviewLightbox({
           loop={loop}
           onMeasured={onMeasured}
           onEnded={onEnded}
+          replayToken={replayToken}
         />
       </LightboxVideo>
     </LightboxOverlay>,
@@ -85,6 +88,15 @@ export function FlowPreview() {
       frameLightboxOpen: s.frameLightboxId !== null,
     })),
   );
+
+  // The dream of the last-clicked transition. Selecting a transition should
+  // play it, so the preview follows this rather than only advancing on its own.
+  const primaryDreamUuid = useFlowStore((s) => {
+    const selected = s.selectedTransitionIndices;
+    if (selected.length === 0) return undefined;
+    return s.transitions[selected[selected.length - 1]]?.dreamUuid;
+  });
+  const playRequest = useFlowStore((s) => s.previewPlayRequest);
 
   const completedUuids = useMemo(
     () =>
@@ -157,6 +169,29 @@ export function FlowPreview() {
     if (segmentCount > 1) goTo(targetIndex + 1);
   }, [goTo, targetIndex, segmentCount]);
 
+  // Depend on the joined keys, not the array: `segments` is rebuilt every
+  // render, so an array dep would re-run this effect forever.
+  const segmentKeys = segments.map((segment) => segment.key).join(",");
+
+  useEffect(() => {
+    if (!primaryDreamUuid) return;
+    const next = segmentKeys.split(",").indexOf(primaryDreamUuid);
+    // A selected transition that hasn't rendered yet has no segment to show —
+    // leave whatever is playing alone rather than jumping to an unrelated clip.
+    if (next >= 0) setTargetIndex(next);
+  }, [primaryDreamUuid, segmentKeys]);
+
+  // An explicit play request seeks to the segment and, via replayToken,
+  // restarts it even when it is already the one on screen.
+  const [replayToken, setReplayToken] = useState(0);
+  useEffect(() => {
+    if (!playRequest) return;
+    const next = segmentKeys.split(",").indexOf(playRequest.dreamUuid);
+    if (next < 0) return;
+    setTargetIndex(next);
+    setReplayToken(playRequest.seq);
+  }, [playRequest, segmentKeys]);
+
   useEffect(() => {
     if (segmentCount < 2) return;
     if (frameLightboxOpen) return;
@@ -198,6 +233,7 @@ export function FlowPreview() {
             muted
             loop={segmentCount === 1}
             onEnded={advance}
+            replayToken={replayToken}
           />
 
           {showNav && (
@@ -258,6 +294,7 @@ export function FlowPreview() {
           onMeasured={handleMeasured}
           onClose={() => setPreviewLightboxOpen(false)}
           onEnded={advance}
+          replayToken={replayToken}
         />
       )}
     </>

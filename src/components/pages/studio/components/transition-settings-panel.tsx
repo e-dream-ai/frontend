@@ -1,4 +1,4 @@
-import { useMemo, useCallback } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { useFlowStore, LOOP_FRAME_ID } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import type { LoRAConfig, VideoModel } from "@/types/studio.types";
@@ -23,18 +23,29 @@ import {
 import { SEED_HINT } from "@/components/pages/studio/constants/seed-options";
 import { useSeedInput } from "@/components/pages/studio/hooks/useSeedInput";
 import { GuidanceField } from "./guidance-field";
+import { ForceSettingsDialog } from "./force-settings-dialog";
+import { TransitionHistory } from "./transition-history";
 import {
   getPresetGroups,
   resolvePresetAction,
 } from "@/components/pages/studio/utils/resolve-flow-settings";
 import { resolveNegativePromptSupport } from "@/components/pages/studio/utils/negative-prompt-support";
-import { resolveGenerationTargets } from "@/components/pages/studio/utils/flow-generation-targets";
+import {
+  resolveGenerationTargets,
+  resolveSelectedTargets,
+} from "@/components/pages/studio/utils/flow-generation-targets";
+import {
+  selectionHasMismatch,
+  type TransitionField,
+  type TransitionGlobals,
+} from "@/components/pages/studio/utils/transition-field-values";
 import {
   PanelContainer,
   PanelHeader,
   PanelTitle,
   PanelSubtitle,
-  CloseButton,
+  PanelHeaderMain,
+  HeaderActions,
   FieldRow,
   FieldGroup,
   FieldLabel,
@@ -56,20 +67,32 @@ import {
 
 interface TransitionSettingsPanelProps {
   onGenerateAll: () => void;
-  onGenerateOne: (index: number) => void;
+  onGenerateSelected: (indices: readonly number[]) => void;
   isGenerating: boolean;
+}
+
+/**
+ * An edit held back until the user confirms flattening a mismatched field.
+ *
+ * A selection is unified when it is made (see reference-frame-strip), so this
+ * is a backstop, not the usual path: rebuilding the transition list — a
+ * reference frame reordered or removed — can leave already-selected indices
+ * pointing at transitions that no longer agree.
+ */
+interface PendingEdit {
+  run: () => void;
 }
 
 export function TransitionSettingsPanel({
   onGenerateAll,
-  onGenerateOne,
+  onGenerateSelected,
   isGenerating,
 }: TransitionSettingsPanelProps) {
   // Data via useShallow (re-renders when any selected value changes).
   const {
     transitions,
     referenceFrames,
-    selectedTransitionIndex,
+    selectedIndices,
     settingsExpanded,
     globalPresetId,
     globalPrompt,
@@ -84,7 +107,7 @@ export function TransitionSettingsPanel({
     useShallow((s) => ({
       transitions: s.transitions,
       referenceFrames: s.referenceFrames,
-      selectedTransitionIndex: s.selectedTransitionIndex,
+      selectedIndices: s.selectedTransitionIndices,
       settingsExpanded: s.settingsExpanded,
       globalPresetId: s.globalPresetId,
       globalPrompt: s.globalPrompt,
@@ -98,16 +121,21 @@ export function TransitionSettingsPanel({
     })),
   );
 
+  const [pendingEdit, setPendingEdit] = useState<PendingEdit | null>(null);
+
   const { data: modelsData } = useModels({ mediaType: "video" });
   const modelOptions = modelsData?.data?.models ?? [];
   const modelConstraints = useModelConstraints({ mediaType: "video" });
 
-  // Per-transition mode?
-  const isPerTransition = selectedTransitionIndex !== null;
+  // Per-transition mode? The last-clicked index is the "primary": the one the
+  // panel names and whose values it displays when several are selected.
+  const isPerTransition = selectedIndices.length > 0;
+  const selectionCount = selectedIndices.length;
+  const primaryIndex = isPerTransition
+    ? selectedIndices[selectedIndices.length - 1]
+    : null;
   const selectedTransition =
-    selectedTransitionIndex !== null
-      ? transitions[selectedTransitionIndex]
-      : null;
+    primaryIndex !== null ? transitions[primaryIndex] : null;
 
   // Effective values (override > global > preset fallback)
   const currentPresetId = selectedTransition?.presetOverride ?? globalPresetId;
@@ -205,13 +233,22 @@ export function TransitionSettingsPanel({
     guidanceOverride: number;
     seedOverride: number;
   };
-  const setValue = useCallback(
-    <K extends keyof FieldMap>(field: K, value: FieldMap[K]) => {
+
+  /**
+   * Write one field to every target. `indices` empty means global mode — the
+   * same edit lands on the flow-wide defaults instead.
+   */
+  const writeField = useCallback(
+    <K extends keyof FieldMap>(
+      indices: readonly number[],
+      field: K,
+      value: FieldMap[K],
+    ) => {
       const store = useFlowStore.getState();
-      if (isPerTransition && selectedTransitionIndex !== null) {
-        store.setTransitionOverride(selectedTransitionIndex, {
-          [field]: value,
-        });
+      if (indices.length > 0) {
+        for (const index of indices) {
+          store.setTransitionOverride(index, { [field]: value });
+        }
         return;
       }
       switch (field) {
@@ -241,7 +278,62 @@ export function TransitionSettingsPanel({
           break;
       }
     },
-    [isPerTransition, selectedTransitionIndex],
+    [],
+  );
+
+  /**
+   * Run an edit against the current selection, first checking whether it would
+   * flatten a field the selected transitions disagree about. `gatedFields` are
+   * the ones the user is directly editing — knock-on clamps (a duration the new
+   * model can't do, say) follow the edit and aren't gated separately, or a
+   * single interaction could raise several dialogs in a row.
+   *
+   * Store state is read via getState() inside the callback so this identity
+   * stays stable across settings keystrokes.
+   */
+  const applyEdit = useCallback(
+    (
+      gatedFields: TransitionField[],
+      run: (indices: readonly number[]) => void,
+    ) => {
+      const state = useFlowStore.getState();
+      const indices = state.selectedTransitionIndices;
+      if (indices.length > 1) {
+        const selected = indices
+          .map((i) => state.transitions[i])
+          .filter((t): t is NonNullable<typeof t> => Boolean(t));
+        const globals: TransitionGlobals = {
+          globalPresetId: state.globalPresetId,
+          globalPrompt: state.globalPrompt,
+          globalNegativePrompt: state.globalNegativePrompt,
+          globalDuration: state.globalDuration,
+          globalModel: state.globalModel,
+          globalNumInferenceSteps: state.globalNumInferenceSteps,
+          globalGuidance: state.globalGuidance,
+          globalSeed: state.globalSeed,
+          globalLora: state.globalLora,
+        };
+        const clash = gatedFields.find((field) =>
+          selectionHasMismatch(selected, globals, field),
+        );
+        if (clash) {
+          setPendingEdit({ run: () => run(indices) });
+          return;
+        }
+      }
+      run(indices);
+    },
+    [],
+  );
+
+  /** Edit a single field, gated on that same field. */
+  const setValue = useCallback(
+    <K extends keyof FieldMap>(field: K, value: FieldMap[K]) => {
+      applyEdit([field as TransitionField], (indices) =>
+        writeField(indices, field, value),
+      );
+    },
+    [applyEdit, writeField],
   );
 
   const seedInput = useSeedInput(currentSeed, (seed) =>
@@ -250,116 +342,123 @@ export function TransitionSettingsPanel({
 
   const handlePresetChange = useCallback(
     (presetName: string) => {
-      setValue("presetOverride", presetName || "");
+      applyEdit(["presetOverride"], (indices) => {
+        writeField(indices, "presetOverride", presetName || "");
 
-      // Fill prompt (and negative prompt) from preset. The negative is cleared
-      // for presets that don't define one, so a previous preset's negative
-      // never silently rides along on the next transition.
-      const action = resolvePresetAction(presetName);
-      if (action) {
-        setValue("promptOverride", action.prompt);
-        setValue("negativePromptOverride", action.negativePrompt ?? "");
-      }
+        // Fill prompt (and negative prompt) from preset. The negative is cleared
+        // for presets that don't define one, so a previous preset's negative
+        // never silently rides along on the next transition.
+        const action = resolvePresetAction(presetName);
+        if (action) {
+          writeField(indices, "promptOverride", action.prompt);
+          writeField(
+            indices,
+            "negativePromptOverride",
+            action.negativePrompt ?? "",
+          );
+        }
 
-      // Clear any explicit LoRA override so the preset's LoRA takes effect
-      const store = useFlowStore.getState();
-      if (isPerTransition && selectedTransitionIndex !== null) {
-        store.setTransitionOverride(selectedTransitionIndex, {
-          loraOverride: undefined,
-        });
-      } else {
-        store.setGlobalLora(undefined);
-      }
+        // Clear any explicit LoRA override so the preset's LoRA takes effect
+        const store = useFlowStore.getState();
+        if (indices.length > 0) {
+          for (const index of indices) {
+            store.setTransitionOverride(index, { loraOverride: undefined });
+          }
+        } else {
+          store.setGlobalLora(undefined);
+        }
 
-      // Clamp duration if needed
-      const newAllowed = getAllowedDurationsForActions(
-        action ? [action] : [],
-        currentModelDurations,
-      );
-      const clamped = clampDurationToAllowed(currentDuration, newAllowed);
-      if (clamped !== currentDuration) {
-        setValue("durationOverride", clamped);
-      }
+        // Clamp duration if needed
+        const newAllowed = getAllowedDurationsForActions(
+          action ? [action] : [],
+          currentModelDurations,
+        );
+        const clamped = clampDurationToAllowed(currentDuration, newAllowed);
+        if (clamped !== currentDuration) {
+          writeField(indices, "durationOverride", clamped);
+        }
+      });
     },
-    [
-      setValue,
-      currentModelDurations,
-      currentDuration,
-      isPerTransition,
-      selectedTransitionIndex,
-    ],
+    [applyEdit, writeField, currentModelDurations, currentDuration],
   );
 
   const handleModelChange = useCallback(
     (model: VideoModel) => {
-      setValue("modelOverride", model);
+      applyEdit(["modelOverride"], (indices) => {
+        writeField(indices, "modelOverride", model);
 
-      const fixedDurations = modelConstraints.get(model)?.durationsSec;
-      const newAllowed = getAllowedDurationsForActions(
-        presetAction ? [presetAction] : [],
-        fixedDurations,
-      );
-      const clamped = clampDurationToAllowed(currentDuration, newAllowed);
-      if (clamped !== currentDuration) {
-        setValue("durationOverride", clamped);
-      }
+        const fixedDurations = modelConstraints.get(model)?.durationsSec;
+        const newAllowed = getAllowedDurationsForActions(
+          presetAction ? [presetAction] : [],
+          fixedDurations,
+        );
+        const clamped = clampDurationToAllowed(currentDuration, newAllowed);
+        if (clamped !== currentDuration) {
+          writeField(indices, "durationOverride", clamped);
+        }
 
-      const nextConstraint = resolveGuidanceConstraint(
-        model,
-        modelConstraints.get(model),
-      );
-      const clampedGuidance = guidanceForModel(currentGuidance, nextConstraint);
-      if (clampedGuidance !== currentGuidance) {
-        setValue("guidanceOverride", clampedGuidance);
-      }
+        const nextConstraint = resolveGuidanceConstraint(
+          model,
+          modelConstraints.get(model),
+        );
+        const clampedGuidance = guidanceForModel(
+          currentGuidance,
+          nextConstraint,
+        );
+        if (clampedGuidance !== currentGuidance) {
+          writeField(indices, "guidanceOverride", clampedGuidance);
+        }
+      });
     },
     [
+      applyEdit,
+      writeField,
       presetAction,
       currentDuration,
       currentGuidance,
-      setValue,
       modelConstraints,
     ],
   );
 
   const handleLoraChange = useCallback(
     (loraKey: string) => {
-      const loraOption = loraKey
-        ? loraOptions.find((o) => o.key === loraKey)
-        : undefined;
-      const nextLora = loraOption?.highNoiseLoras ?? [];
+      applyEdit(["loraOverride"], (indices) => {
+        const loraOption = loraKey
+          ? loraOptions.find((o) => o.key === loraKey)
+          : undefined;
+        const nextLora = loraOption?.highNoiseLoras ?? [];
 
-      const store = useFlowStore.getState();
-      if (isPerTransition && selectedTransitionIndex !== null) {
-        store.setTransitionOverride(selectedTransitionIndex, {
-          loraOverride: nextLora,
-        });
-      } else {
-        store.setGlobalLora(nextLora);
-      }
+        const store = useFlowStore.getState();
+        if (indices.length > 0) {
+          for (const index of indices) {
+            store.setTransitionOverride(index, { loraOverride: nextLora });
+          }
+        } else {
+          store.setGlobalLora(nextLora);
+        }
 
-      // Re-clamp duration against the new LoRA, since LoRAs can restrict durations.
-      const clampAction = {
-        prompt: presetAction?.prompt ?? "",
-        highNoiseLoras: nextLora,
-      };
-      const newAllowed = getAllowedDurationsForActions(
-        [clampAction],
-        currentModelDurations,
-      );
-      const clamped = clampDurationToAllowed(currentDuration, newAllowed);
-      if (clamped !== currentDuration) {
-        setValue("durationOverride", clamped);
-      }
+        // Re-clamp duration against the new LoRA, since LoRAs can restrict durations.
+        const clampAction = {
+          prompt: presetAction?.prompt ?? "",
+          highNoiseLoras: nextLora,
+        };
+        const newAllowed = getAllowedDurationsForActions(
+          [clampAction],
+          currentModelDurations,
+        );
+        const clamped = clampDurationToAllowed(currentDuration, newAllowed);
+        if (clamped !== currentDuration) {
+          writeField(indices, "durationOverride", clamped);
+        }
+      });
     },
     [
-      isPerTransition,
-      selectedTransitionIndex,
+      applyEdit,
+      writeField,
       loraOptions,
       presetAction,
       currentModelDurations,
       currentDuration,
-      setValue,
     ],
   );
 
@@ -367,17 +466,47 @@ export function TransitionSettingsPanel({
   // so it becomes required. With a preset, the preset supplies a prompt.
   const needsPrompt = !presetAction && !currentPrompt.trim();
 
+  // What each mode would actually start. This count drives the cost estimate
+  // sitting beside the button, so the clips it prices are the dreams the click
+  // produces — not the number of things on screen.
   const { targets: generateAllTargets } = useMemo(
-    () => resolveGenerationTargets(transitions, referenceFrames),
-    [transitions, referenceFrames],
+    () =>
+      resolveGenerationTargets(transitions, referenceFrames, {
+        globalPresetId,
+        globalPrompt,
+        globalNegativePrompt,
+        globalDuration,
+        globalModel,
+        globalNumInferenceSteps,
+        globalGuidance,
+        globalSeed,
+        globalLora,
+      }),
+    [
+      transitions,
+      referenceFrames,
+      globalPresetId,
+      globalPrompt,
+      globalNegativePrompt,
+      globalDuration,
+      globalModel,
+      globalNumInferenceSteps,
+      globalGuidance,
+      globalSeed,
+      globalLora,
+    ],
   );
 
-  const generateAllDisabled =
-    isGenerating || generateAllTargets.length === 0 || needsPrompt;
+  const { targets: generateSelectedTargets } = useMemo(
+    () => resolveSelectedTargets(selectedIndices, transitions, referenceFrames),
+    [selectedIndices, transitions, referenceFrames],
+  );
 
-  const generateOneDisabled = isGenerating || needsPrompt;
+  const generateCount = isPerTransition
+    ? generateSelectedTargets.length
+    : generateAllTargets.length;
 
-  const generateCount = isPerTransition ? 1 : generateAllTargets.length;
+  const generateDisabled = isGenerating || generateCount === 0 || needsPrompt;
   const { totalCostUsd, costBreakdown } = useCostEstimate({
     model: modelOptions.find((m) => m.id === currentModel),
     params: { durationSec: currentDuration },
@@ -398,28 +527,24 @@ export function TransitionSettingsPanel({
   const fromName =
     selectedTransition && findName(selectedTransition.fromFrameId);
   const toName = selectedTransition && findName(selectedTransition.toFrameId);
-
-  const isComplete = selectedTransition?.status === "processed";
+  const extraCount = selectionCount - 1;
 
   return (
     <PanelContainer>
       <PanelHeader>
-        <div>
+        <PanelHeaderMain>
           <PanelTitle>Transition Settings</PanelTitle>
           {isPerTransition && fromName && toName && (
             <PanelSubtitle>
               {" "}
               &mdash; Editing: {fromName} &rarr; {toName}
+              {extraCount > 0 && ` and ${extraCount} more`}
             </PanelSubtitle>
           )}
-        </div>
-        {isPerTransition && (
-          <CloseButton
-            onClick={() => useFlowStore.getState().selectTransition(null)}
-          >
-            &times;
-          </CloseButton>
-        )}
+        </PanelHeaderMain>
+        <HeaderActions>
+          <TransitionHistory />
+        </HeaderActions>
       </PanelHeader>
 
       {/* Collapsed view */}
@@ -478,29 +603,25 @@ export function TransitionSettingsPanel({
         <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
 
         <GenerateButton
-          $disabled={
-            isPerTransition ? generateOneDisabled : generateAllDisabled
-          }
-          disabled={isPerTransition ? generateOneDisabled : generateAllDisabled}
+          $disabled={generateDisabled}
+          disabled={generateDisabled}
           title={
             needsPrompt
               ? "Add a prompt or pick a preset to generate"
-              : undefined
+              : isPerTransition
+                ? "Generate the selected transitions, edited or not"
+                : "Generate every transition whose video is behind its settings"
           }
           onClick={() => {
             if (guardOverBudget()) return;
-            if (isPerTransition && selectedTransitionIndex !== null) {
-              onGenerateOne(selectedTransitionIndex);
+            if (isPerTransition) {
+              onGenerateSelected(selectedIndices);
             } else {
               onGenerateAll();
             }
           }}
         >
-          {isPerTransition
-            ? isComplete
-              ? "Regenerate"
-              : "Generate"
-            : "Generate All"}
+          Generate
         </GenerateButton>
       </FieldRow>
 
@@ -634,16 +755,29 @@ export function TransitionSettingsPanel({
       )}
 
       {/* Per-transition extras */}
-      {isPerTransition && selectedTransitionIndex !== null && (
+      {isPerTransition && (
         <ResetLink
-          onClick={() =>
-            useFlowStore
-              .getState()
-              .clearTransitionOverride(selectedTransitionIndex)
-          }
+          onClick={() => {
+            const store = useFlowStore.getState();
+            for (const index of store.selectedTransitionIndices) {
+              store.clearTransitionOverride(index);
+            }
+          }}
         >
-          Reset to defaults
+          {selectionCount > 1
+            ? `Reset ${selectionCount} transitions to defaults`
+            : "Reset to defaults"}
         </ResetLink>
+      )}
+
+      {pendingEdit && (
+        <ForceSettingsDialog
+          onConfirm={() => {
+            pendingEdit.run();
+            setPendingEdit(null);
+          }}
+          onCancel={() => setPendingEdit(null)}
+        />
       )}
     </PanelContainer>
   );

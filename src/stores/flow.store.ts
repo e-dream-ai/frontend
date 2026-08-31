@@ -3,6 +3,8 @@ import { persist } from "zustand/middleware";
 import type {
   FlowReferenceFrame,
   FlowTransition,
+  TransitionHistoryEntry,
+  TransitionRunSettings,
   TransitionStatus,
 } from "@/types/flow.types";
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
@@ -58,9 +60,15 @@ type FlowStoreState = {
   transitions: FlowTransition[];
 
   // Phase 1 — UI state
-  selectedTransitionIndex: number | null;
+  // Selected transition indices in click order; the last one is the "primary"
+  // (the one the panel names and the preview plays). Empty = global mode.
+  selectedTransitionIndices: number[];
   settingsExpanded: boolean;
   previewLightboxOpen: boolean;
+  // Explicit "play this dream now" request. Carries a sequence number because
+  // clicking the same transition twice must replay it — a bare uuid would be
+  // an unchanged value the preview could not tell apart from no request.
+  previewPlayRequest: { dreamUuid: string; seq: number } | null;
   // Id (not index) of the frame shown in the lightbox; null = closed.
   frameLightboxId: string | null;
 
@@ -80,8 +88,13 @@ type FlowStoreState = {
   ) => void;
   clearTransitionOverride: (index: number) => void;
   selectTransition: (index: number | null) => void;
+  toggleTransitionSelection: (index: number) => void;
+  selectAllTransitions: () => void;
+  clearTransitionSelection: () => void;
+  pruneTransitionSelection: () => void;
   setSettingsExpanded: (expanded: boolean) => void;
   setPreviewLightboxOpen: (open: boolean) => void;
+  requestPreviewPlay: (dreamUuid: string) => void;
   openFrameLightbox: (id: string) => void;
   closeFrameLightbox: () => void;
   stepFrameLightbox: (delta: number) => void;
@@ -91,6 +104,13 @@ type FlowStoreState = {
     progress?: number,
   ) => void;
   setTransitionDream: (index: number, dreamUuid: string) => void;
+  recordTransitionRun: (
+    index: number,
+    dreamUuid: string,
+    settings: TransitionRunSettings,
+    createdAt: number,
+  ) => void;
+  restoreTransitionRun: (index: number, dreamUuid: string) => void;
   setTransitionUprez: (index: number, uprezDreamUuid: string) => void;
   updateTransitionUprezStatus: (
     index: number,
@@ -117,13 +137,39 @@ const PHASE_1_DEFAULTS = {
   globalSeed: -1,
   globalLora: undefined as LoRAConfig[] | undefined,
   transitions: [] as FlowTransition[],
-  selectedTransitionIndex: null as number | null,
+  selectedTransitionIndices: [] as number[],
   settingsExpanded: false,
   previewLightboxOpen: false,
+  previewPlayRequest: null as { dreamUuid: string; seq: number } | null,
   frameLightboxId: null as string | null,
   savedPlaylistUuid: null as string | null,
   syncedPlaylistDreamUuids: [] as string[],
 };
+
+// Past runs are cheap to keep but not free — each one is a persisted settings
+// snapshot and a dream the history strip may fetch. 20 is well past the point
+// where a user is still comparing takes.
+export const MAX_TRANSITION_HISTORY = 20;
+
+/** Drop selected indices that the new transition list no longer has. */
+function pruneSelection(indices: number[], length: number): number[] {
+  const next = indices.filter((i) => i >= 0 && i < length);
+  return next.length === indices.length ? indices : next;
+}
+
+function markHistoryCompleted(
+  history: TransitionHistoryEntry[] | undefined,
+  dreamUuid: string,
+): TransitionHistoryEntry[] | undefined {
+  if (!history) return history;
+  let changed = false;
+  const next = history.map((entry) => {
+    if (entry.dreamUuid !== dreamUuid || entry.completed) return entry;
+    changed = true;
+    return { ...entry, completed: true };
+  });
+  return changed ? next : history;
+}
 
 /**
  * Build transitions from adjacent frame pairs.
@@ -271,13 +317,18 @@ export const useFlowStore = create<FlowStoreState>()(
           const referenceFrames = s.referenceFrames.filter(
             (frame) => frame.id !== id,
           );
+          const transitions = deriveTransitions(
+            buildFramesWithLoop(referenceFrames, s.loop),
+            s.transitions,
+          );
           return {
             referenceFrames,
             frameLightboxId:
               s.frameLightboxId === id ? null : s.frameLightboxId,
-            transitions: deriveTransitions(
-              buildFramesWithLoop(referenceFrames, s.loop),
-              s.transitions,
+            transitions,
+            selectedTransitionIndices: pruneSelection(
+              s.selectedTransitionIndices,
+              transitions.length,
             ),
           };
         }),
@@ -302,13 +353,20 @@ export const useFlowStore = create<FlowStoreState>()(
         }),
 
       setLoop: (loop) =>
-        set((s) => ({
-          loop,
-          transitions: deriveTransitions(
+        set((s) => {
+          const transitions = deriveTransitions(
             buildFramesWithLoop(s.referenceFrames, loop),
             s.transitions,
-          ),
-        })),
+          );
+          return {
+            loop,
+            transitions,
+            selectedTransitionIndices: pruneSelection(
+              s.selectedTransitionIndices,
+              transitions.length,
+            ),
+          };
+        }),
 
       referenceFramesWithLoop: () => {
         const { referenceFrames, loop } = get();
@@ -356,6 +414,9 @@ export const useFlowStore = create<FlowStoreState>()(
             status: t.status,
             progress: t.progress,
             dreamUuid: t.dreamUuid,
+            // Past runs are results, not settings — clearing overrides must not
+            // throw them away, or "Reset to defaults" silently drops history.
+            history: t.history,
             uprezDreamUuid: t.uprezDreamUuid,
             uprezStatus: t.uprezStatus,
             uprezProgress: t.uprezProgress,
@@ -363,9 +424,53 @@ export const useFlowStore = create<FlowStoreState>()(
           return { transitions };
         }),
 
-      selectTransition: (index) => set({ selectedTransitionIndex: index }),
+      selectTransition: (index) =>
+        set((s) => ({
+          selectedTransitionIndices:
+            index === null || index < 0 || index >= s.transitions.length
+              ? []
+              : [index],
+        })),
+
+      toggleTransitionSelection: (index) =>
+        set((s) => {
+          if (index < 0 || index >= s.transitions.length) return s;
+          const current = s.selectedTransitionIndices;
+          const without = current.filter((i) => i !== index);
+          // Re-append rather than sort: the newest click is the primary, which
+          // is what the panel names and the preview plays.
+          return {
+            selectedTransitionIndices:
+              without.length === current.length ? [...current, index] : without,
+          };
+        }),
+
+      selectAllTransitions: () =>
+        set((s) => ({
+          selectedTransitionIndices: s.transitions.map((_, i) => i),
+        })),
+
+      clearTransitionSelection: () => set({ selectedTransitionIndices: [] }),
+
+      pruneTransitionSelection: () =>
+        set((s) => {
+          const valid = s.selectedTransitionIndices.filter(
+            (i) => i >= 0 && i < s.transitions.length,
+          );
+          return valid.length === s.selectedTransitionIndices.length
+            ? s
+            : { selectedTransitionIndices: valid };
+        }),
       setSettingsExpanded: (expanded) => set({ settingsExpanded: expanded }),
       setPreviewLightboxOpen: (open) => set({ previewLightboxOpen: open }),
+
+      requestPreviewPlay: (dreamUuid) =>
+        set((s) => ({
+          previewPlayRequest: {
+            dreamUuid,
+            seq: (s.previewPlayRequest?.seq ?? 0) + 1,
+          },
+        })),
 
       openFrameLightbox: (id) =>
         set((s) => ({
@@ -393,11 +498,18 @@ export const useFlowStore = create<FlowStoreState>()(
       updateTransitionStatus: (index, status, progress) =>
         set((s) => {
           const transitions = [...s.transitions];
-          if (!transitions[index]) return s;
+          const prev = transitions[index];
+          if (!prev) return s;
+          // A run only earns a history thumbnail once it has actually rendered.
+          const history =
+            status === "processed" && prev.dreamUuid
+              ? markHistoryCompleted(prev.history, prev.dreamUuid)
+              : prev.history;
           transitions[index] = {
-            ...transitions[index],
+            ...prev,
             status,
             progress,
+            history,
           };
           return { transitions };
         }),
@@ -407,6 +519,61 @@ export const useFlowStore = create<FlowStoreState>()(
           const transitions = [...s.transitions];
           if (!transitions[index]) return s;
           transitions[index] = { ...transitions[index], dreamUuid };
+          return { transitions };
+        }),
+
+      recordTransitionRun: (index, dreamUuid, settings, createdAt) =>
+        set((s) => {
+          const transitions = [...s.transitions];
+          const prev = transitions[index];
+          if (!prev) return s;
+          const history = [...(prev.history ?? [])];
+          // Regenerating an entry that is already in history (restore, then
+          // Generate without changing anything) must not duplicate the row.
+          const existing = history.findIndex((e) => e.dreamUuid === dreamUuid);
+          const entry: TransitionHistoryEntry = {
+            dreamUuid,
+            createdAt,
+            settings,
+          };
+          if (existing === -1) history.push(entry);
+          else history[existing] = { ...history[existing], ...entry };
+          const replacesDream = prev.dreamUuid !== dreamUuid;
+          transitions[index] = {
+            ...prev,
+            dreamUuid,
+            history: history.slice(-MAX_TRANSITION_HISTORY),
+            // The uprez was derived from the dream being replaced; carrying it
+            // over would attach an upscale of one take to a different one.
+            ...(replacesDream && {
+              uprezDreamUuid: undefined,
+              uprezStatus: undefined,
+              uprezProgress: undefined,
+            }),
+          };
+          return { transitions };
+        }),
+
+      restoreTransitionRun: (index, dreamUuid) =>
+        set((s) => {
+          const transitions = [...s.transitions];
+          const prev = transitions[index];
+          if (!prev) return s;
+          const entry = prev.history?.find((e) => e.dreamUuid === dreamUuid);
+          if (!entry || !entry.completed) return s;
+          transitions[index] = {
+            ...prev,
+            // The snapshot is a full override set, so the panel shows exactly
+            // the values this run used regardless of how globals have drifted.
+            ...entry.settings,
+            dreamUuid,
+            status: "processed",
+            progress: undefined,
+            // The uprez belonged to the run being replaced, not to this one.
+            uprezDreamUuid: undefined,
+            uprezStatus: undefined,
+            uprezProgress: undefined,
+          };
           return { transitions };
         }),
 
@@ -431,12 +598,19 @@ export const useFlowStore = create<FlowStoreState>()(
         }),
 
       recomputeTransitions: () =>
-        set((s) => ({
-          transitions: deriveTransitions(
+        set((s) => {
+          const transitions = deriveTransitions(
             buildFramesWithLoop(s.referenceFrames, s.loop),
             s.transitions,
-          ),
-        })),
+          );
+          return {
+            transitions,
+            selectedTransitionIndices: pruneSelection(
+              s.selectedTransitionIndices,
+              transitions.length,
+            ),
+          };
+        }),
 
       reconcileStaleTransitions: () =>
         set((s) => ({
@@ -524,10 +698,9 @@ export const useFlowStore = create<FlowStoreState>()(
         if (!state) return;
         state.reconcileStaleTransitions();
         state.recomputeTransitions();
-        const idx = state.selectedTransitionIndex;
-        if (idx !== null && (idx < 0 || idx >= state.transitions.length)) {
-          state.selectTransition(null);
-        }
+        // Selection is UI state and isn't persisted, but a session restore can
+        // hand one over — drop indices that no longer name a transition.
+        state.pruneTransitionSelection();
       },
       partialize: flowPartialize,
     },

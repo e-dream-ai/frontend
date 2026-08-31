@@ -21,12 +21,37 @@ globalThis.localStorage = {
 };
 
 // Dynamic import after localStorage is set up (persist middleware needs it)
-const { useFlowStore } = await import("./flow.store");
+const { useFlowStore, MAX_TRANSITION_HISTORY } = await import("./flow.store");
 
 // Reset store between tests
 beforeEach(() => {
   useFlowStore.getState().resetFlow();
 });
+
+/** Add `count + 1` frames so the store derives exactly `count` transitions. */
+function seedTransitions(count: number) {
+  useFlowStore.getState().resetFlow();
+  for (let i = 0; i <= count; i++) {
+    useFlowStore.getState().addReferenceFrame({
+      id: `frame-${i}`,
+      dreamUuid: `dream-${i}`,
+      imageUrl: `url-${i}`,
+      name: `frame ${i}`,
+    });
+  }
+}
+
+const RUN_SETTINGS = {
+  presetOverride: "Abstract",
+  promptOverride: "drift",
+  negativePromptOverride: "",
+  durationOverride: 5,
+  modelOverride: "kling-25-i2v" as const,
+  numInferenceStepsOverride: 30,
+  guidanceOverride: 0.5,
+  seedOverride: -1,
+  loraOverride: [],
+};
 
 describe("flow store", () => {
   describe("reference frames", () => {
@@ -468,7 +493,7 @@ describe("Phase 1: transitions", () => {
       expect(s.globalModel).toBe("kling-25-i2v");
       expect(s.globalNumInferenceSteps).toBe(30);
       expect(s.globalGuidance).toBe(0.5);
-      expect(s.selectedTransitionIndex).toBeNull();
+      expect(s.selectedTransitionIndices).toEqual([]);
       expect(s.settingsExpanded).toBe(false);
     });
 
@@ -495,11 +520,85 @@ describe("Phase 1: transitions", () => {
 
   describe("UI state", () => {
     it("selects and deselects transitions", () => {
+      seedTransitions(4);
       const store = useFlowStore.getState();
       store.selectTransition(2);
-      expect(useFlowStore.getState().selectedTransitionIndex).toBe(2);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([2]);
       store.selectTransition(null);
-      expect(useFlowStore.getState().selectedTransitionIndex).toBeNull();
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
+    });
+
+    it("ignores selection of an index with no transition", () => {
+      seedTransitions(2);
+      useFlowStore.getState().selectTransition(9);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
+    });
+
+    it("toggles indices in and out, keeping click order", () => {
+      seedTransitions(4);
+      const store = () => useFlowStore.getState();
+      store().selectTransition(1);
+      store().toggleTransitionSelection(3);
+      store().toggleTransitionSelection(0);
+      // Newest click stays last — it is the primary the panel names.
+      expect(store().selectedTransitionIndices).toEqual([1, 3, 0]);
+
+      store().toggleTransitionSelection(3);
+      expect(store().selectedTransitionIndices).toEqual([1, 0]);
+    });
+
+    it("selects all and clears all", () => {
+      seedTransitions(3);
+      useFlowStore.getState().selectAllTransitions();
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
+        0, 1, 2,
+      ]);
+      useFlowStore.getState().clearTransitionSelection();
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
+    });
+
+    it("drops selected indices when deleting a frame shortens the flow", () => {
+      seedTransitions(4);
+      useFlowStore.getState().selectAllTransitions();
+      expect(useFlowStore.getState().selectedTransitionIndices).toHaveLength(4);
+
+      useFlowStore.getState().removeReferenceFrame("frame-4");
+      useFlowStore.getState().removeReferenceFrame("frame-3");
+
+      expect(useFlowStore.getState().transitions).toHaveLength(2);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0, 1]);
+    });
+
+    it("prunes on demand for state handed over by a session restore", () => {
+      seedTransitions(2);
+      useFlowStore.setState({ selectedTransitionIndices: [0, 1, 7] });
+      useFlowStore.getState().pruneTransitionSelection();
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0, 1]);
+    });
+
+    it("replays on every play request, including a repeat of the same dream", () => {
+      const store = () => useFlowStore.getState();
+      expect(store().previewPlayRequest).toBeNull();
+
+      store().requestPreviewPlay("dream-a");
+      expect(store().previewPlayRequest).toEqual({
+        dreamUuid: "dream-a",
+        seq: 1,
+      });
+
+      // Same dream again: the uuid is unchanged, so the sequence number is the
+      // only thing telling the preview a fresh replay was asked for.
+      store().requestPreviewPlay("dream-a");
+      expect(store().previewPlayRequest).toEqual({
+        dreamUuid: "dream-a",
+        seq: 2,
+      });
+
+      store().requestPreviewPlay("dream-b");
+      expect(store().previewPlayRequest).toEqual({
+        dreamUuid: "dream-b",
+        seq: 3,
+      });
     });
 
     it("toggles settings expanded", () => {
@@ -644,5 +743,128 @@ describe("frame lightbox (#694)", () => {
     store.openFrameLightbox("a");
     store.resetFlow();
     expect(useFlowStore.getState().frameLightboxId).toBeNull();
+  });
+});
+
+describe("transition run history", () => {
+  const store = () => useFlowStore.getState();
+
+  it("records a run and marks it completed only once it renders", () => {
+    seedTransitions(1);
+    store().recordTransitionRun(0, "dream-a", RUN_SETTINGS, 1000);
+
+    let t = store().transitions[0];
+    expect(t.dreamUuid).toBe("dream-a");
+    expect(t.history).toHaveLength(1);
+    expect(t.history?.[0].completed).toBeUndefined();
+
+    store().updateTransitionStatus(0, "processed");
+    t = store().transitions[0];
+    expect(t.history?.[0].completed).toBe(true);
+  });
+
+  it("keeps every take at a position across regenerations", () => {
+    seedTransitions(1);
+    store().recordTransitionRun(0, "dream-a", RUN_SETTINGS, 1000);
+    store().updateTransitionStatus(0, "processed");
+    store().recordTransitionRun(
+      0,
+      "dream-b",
+      { ...RUN_SETTINGS, promptOverride: "swirl" },
+      2000,
+    );
+    store().updateTransitionStatus(0, "processed");
+
+    const t = store().transitions[0];
+    expect(t.history?.map((e) => e.dreamUuid)).toEqual(["dream-a", "dream-b"]);
+    expect(t.dreamUuid).toBe("dream-b");
+  });
+
+  it("does not duplicate a row when the same dream is re-recorded", () => {
+    seedTransitions(1);
+    store().recordTransitionRun(0, "dream-a", RUN_SETTINGS, 1000);
+    store().recordTransitionRun(0, "dream-a", RUN_SETTINGS, 3000);
+
+    const history = store().transitions[0].history;
+    expect(history).toHaveLength(1);
+    expect(history?.[0].createdAt).toBe(3000);
+  });
+
+  it("drops the uprez when a new run replaces the dream", () => {
+    seedTransitions(1);
+    store().recordTransitionRun(0, "dream-a", RUN_SETTINGS, 1000);
+    store().setTransitionUprez(0, "uprez-a");
+    store().updateTransitionUprezStatus(0, "processed");
+
+    store().recordTransitionRun(0, "dream-b", RUN_SETTINGS, 2000);
+    const t = store().transitions[0];
+    expect(t.uprezDreamUuid).toBeUndefined();
+    expect(t.uprezStatus).toBeUndefined();
+  });
+
+  it("restores a completed take with the settings it ran under", () => {
+    seedTransitions(1);
+    store().recordTransitionRun(
+      0,
+      "dream-a",
+      { ...RUN_SETTINGS, promptOverride: "first take", durationOverride: 5 },
+      1000,
+    );
+    store().updateTransitionStatus(0, "processed");
+    store().recordTransitionRun(
+      0,
+      "dream-b",
+      { ...RUN_SETTINGS, promptOverride: "second take", durationOverride: 8 },
+      2000,
+    );
+    store().updateTransitionStatus(0, "processed");
+
+    store().restoreTransitionRun(0, "dream-a");
+
+    const t = store().transitions[0];
+    expect(t.dreamUuid).toBe("dream-a");
+    expect(t.status).toBe("processed");
+    expect(t.promptOverride).toBe("first take");
+    expect(t.durationOverride).toBe(5);
+    // Both takes stay available — restoring is not destructive.
+    expect(t.history).toHaveLength(2);
+  });
+
+  it("refuses to restore a take that never completed", () => {
+    seedTransitions(1);
+    store().recordTransitionRun(0, "dream-a", RUN_SETTINGS, 1000);
+    store().updateTransitionStatus(0, "processed");
+    store().recordTransitionRun(0, "dream-b", RUN_SETTINGS, 2000);
+    store().updateTransitionStatus(0, "failed");
+
+    store().restoreTransitionRun(0, "dream-b");
+    expect(store().transitions[0].dreamUuid).toBe("dream-b");
+    expect(store().transitions[0].status).toBe("failed");
+  });
+
+  it("keeps history when overrides are reset to defaults", () => {
+    seedTransitions(1);
+    store().recordTransitionRun(0, "dream-a", RUN_SETTINGS, 1000);
+    store().updateTransitionStatus(0, "processed");
+    store().setTransitionOverride(0, { promptOverride: "custom" });
+
+    store().clearTransitionOverride(0);
+
+    const t = store().transitions[0];
+    expect(t.promptOverride).toBeUndefined();
+    expect(t.history).toHaveLength(1);
+  });
+
+  it("caps history growth", () => {
+    seedTransitions(1);
+    for (let i = 0; i < MAX_TRANSITION_HISTORY + 5; i++) {
+      store().recordTransitionRun(0, `dream-${i}`, RUN_SETTINGS, 1000 + i);
+    }
+    const history = store().transitions[0].history;
+    expect(history).toHaveLength(MAX_TRANSITION_HISTORY);
+    // The oldest takes fall off the front, not the newest off the back.
+    expect(history?.[history.length - 1].dreamUuid).toBe(
+      `dream-${MAX_TRANSITION_HISTORY + 4}`,
+    );
   });
 });
