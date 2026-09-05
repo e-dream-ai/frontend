@@ -184,7 +184,7 @@ export const ViewKeyframePage = () => {
           }`,
         );
       }
-    } catch (_) {
+    } catch {
       toast.error(t("page.view_keyframe.error_updating_keyframe"));
     }
   };
@@ -389,7 +389,11 @@ export const ViewKeyframePage = () => {
                       placeholder={t("page.view_keyframe.owner")}
                       type="text"
                       before={<FontAwesomeIcon icon={faSave} />}
-                      to={`${ROUTES.PROFILE}/${keyframe?.user.uuid}`}
+                      to={
+                        keyframe?.user?.uuid
+                          ? `${ROUTES.PROFILE}/${keyframe.user.uuid}`
+                          : undefined
+                      }
                       {...formMethods.register("user")}
                     />
                   </Restricted>
