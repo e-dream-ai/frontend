@@ -1,9 +1,41 @@
-import type { PresetPack } from "./preset-packs";
+import type { PresetAction, PresetPack } from "./preset-packs";
 
 const OSTRIS_BASE = "https://huggingface.co/ostris/wan22_i2v_14b";
 
 const loraUrl = (repo: string, file: string) =>
   `${OSTRIS_BASE}_${repo}/resolve/main/${file}`;
+
+export type LtxCameraDirection =
+  | "static"
+  | "dolly-in"
+  | "dolly-out"
+  | "dolly-left"
+  | "dolly-right"
+  | "jib-up"
+  | "jib-down";
+
+export type LtxCameraLoraFile =
+  `ltx-2-19b-lora-camera-control-${LtxCameraDirection}.safetensors`;
+
+export const ltxCameraLoraFile = (
+  direction: LtxCameraDirection,
+): LtxCameraLoraFile =>
+  `ltx-2-19b-lora-camera-control-${direction}.safetensors`;
+
+export const LTX_CAMERA_LORA_SCALE = 0.4;
+
+const ltxCameraAction = (
+  direction: LtxCameraDirection,
+  loraLabel: string,
+  prompt: string,
+): PresetAction => ({
+  prompt,
+  enabled: true,
+  loraLabel,
+  highNoiseLoras: [
+    { path: ltxCameraLoraFile(direction), scale: LTX_CAMERA_LORA_SCALE },
+  ],
+});
 
 export const ACTION_PRESETS: PresetPack[] = [
   {
@@ -14,6 +46,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "slow zoom in, camera gently pushing forward",
         enabled: false,
+        loraLabel: "Zoom In",
         highNoiseLoras: [
           {
             path: loraUrl("zoom_in_lora", "wan22_14b_i2v_zoom_in.safetensors"),
@@ -24,6 +57,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "slow zoom out, camera pulling back to reveal",
         enabled: false,
+        loraLabel: "Zoom Out",
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -37,6 +71,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "pan left to right, smooth motion",
         enabled: false,
+        loraLabel: "Pan Right",
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -50,6 +85,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "pan right to left, smooth motion",
         enabled: false,
+        loraLabel: "Pan Left",
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -63,6 +99,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "pan upward, revealing sky",
         enabled: false,
+        loraLabel: "Tilt Up",
         highNoiseLoras: [
           {
             path: loraUrl("tilt_up_lora", "wan22_14b_i2v_tilt_up.safetensors"),
@@ -73,6 +110,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "pan downward, descending",
         enabled: false,
+        loraLabel: "Tilt Down",
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -96,6 +134,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "orbit around subject, 180 degrees, smooth motion",
         enabled: false,
+        loraLabel: "Orbit",
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -128,76 +167,41 @@ export const ACTION_PRESETS: PresetPack[] = [
     model: "ltx-i2v",
     group: "camera",
     actions: [
-      {
-        prompt: "static camera, subtle ambient movement",
-        enabled: true,
-        highNoiseLoras: [
-          {
-            path: "ltx-2-19b-lora-camera-control-static.safetensors",
-            scale: 0.4,
-          },
-        ],
-      },
-      {
-        prompt: "slow dolly in, camera pushing forward into the scene",
-        enabled: true,
-        highNoiseLoras: [
-          {
-            path: "ltx-2-19b-lora-camera-control-dolly-in.safetensors",
-            scale: 0.4,
-          },
-        ],
-      },
-      {
-        prompt: "slow dolly out, camera pulling back to reveal",
-        enabled: true,
-        highNoiseLoras: [
-          {
-            path: "ltx-2-19b-lora-camera-control-dolly-out.safetensors",
-            scale: 0.4,
-          },
-        ],
-      },
-      {
-        prompt: "dolly left, camera sliding to the left",
-        enabled: true,
-        highNoiseLoras: [
-          {
-            path: "ltx-2-19b-lora-camera-control-dolly-left.safetensors",
-            scale: 0.4,
-          },
-        ],
-      },
-      {
-        prompt: "dolly right, camera sliding to the right",
-        enabled: true,
-        highNoiseLoras: [
-          {
-            path: "ltx-2-19b-lora-camera-control-dolly-right.safetensors",
-            scale: 0.4,
-          },
-        ],
-      },
-      {
-        prompt: "jib up, camera rising above the scene",
-        enabled: true,
-        highNoiseLoras: [
-          {
-            path: "ltx-2-19b-lora-camera-control-jib-up.safetensors",
-            scale: 0.4,
-          },
-        ],
-      },
-      {
-        prompt: "jib down, camera descending into the scene",
-        enabled: true,
-        highNoiseLoras: [
-          {
-            path: "ltx-2-19b-lora-camera-control-jib-down.safetensors",
-            scale: 0.4,
-          },
-        ],
-      },
+      ltxCameraAction(
+        "static",
+        "Static",
+        "static camera, subtle ambient movement",
+      ),
+      ltxCameraAction(
+        "dolly-in",
+        "Dolly In",
+        "slow dolly in, camera pushing forward into the scene",
+      ),
+      ltxCameraAction(
+        "dolly-out",
+        "Dolly Out",
+        "slow dolly out, camera pulling back to reveal",
+      ),
+      ltxCameraAction(
+        "dolly-left",
+        "Dolly Left",
+        "dolly left, camera sliding to the left",
+      ),
+      ltxCameraAction(
+        "dolly-right",
+        "Dolly Right",
+        "dolly right, camera sliding to the right",
+      ),
+      ltxCameraAction(
+        "jib-up",
+        "Jib Up",
+        "jib up, camera rising above the scene",
+      ),
+      ltxCameraAction(
+        "jib-down",
+        "Jib Down",
+        "jib down, camera descending into the scene",
+      ),
     ],
   },
   {

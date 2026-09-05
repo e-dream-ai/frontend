@@ -24,6 +24,14 @@ beforeAll(() => {
 // Dynamic import after localStorage is set up
 const { useStudioStore } = await import("./studio.store");
 
+const DEFAULT_VIDEO_PARAMS = {
+  model: "ltx-i2v",
+  duration: 5,
+  numInferenceSteps: 30,
+  guidance: 1.0,
+  seed: -1,
+};
+
 describe("studio.store", () => {
   beforeEach(() => {
     useStudioStore.getState().resetSession();
@@ -192,6 +200,101 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(5); // preserved
       expect(params.numInferenceSteps).toBe(30); // preserved
+    });
+
+    it("clears per-action LoRAs the newly selected model cannot run", () => {
+      useStudioStore.getState().addAction({
+        id: "a1",
+        prompt: "dolly in",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-dolly-in.safetensors",
+            scale: 0.4,
+          },
+        ],
+      });
+
+      useStudioStore.getState().setVideoGenParams({ model: "wan-i2v" });
+
+      const [action] = useStudioStore.getState().actions;
+      expect(action.highNoiseLoras).toEqual([]);
+      expect(action.lowNoiseLoras).toEqual([]);
+      expect(action.prompt).toBe("dolly in");
+    });
+
+    it("leaves LoRAs alone when the model does not change", () => {
+      const loras = [
+        {
+          path: "ltx-2-19b-lora-camera-control-jib-up.safetensors",
+          scale: 0.4,
+        },
+      ];
+      useStudioStore.getState().addAction({
+        id: "a1",
+        prompt: "",
+        enabled: true,
+        highNoiseLoras: loras,
+      });
+
+      useStudioStore.getState().setVideoGenParams({ duration: 8 });
+
+      expect(useStudioStore.getState().actions[0].highNoiseLoras).toEqual(
+        loras,
+      );
+    });
+  });
+
+  describe("migration v8 → v9", () => {
+    it("clears persisted LoRAs the persisted model cannot run", () => {
+      const v8State = {
+        videoGenParams: { ...DEFAULT_VIDEO_PARAMS, model: "wan-i2v" },
+        actions: [
+          {
+            id: "a1",
+            prompt: "dolly in",
+            enabled: true,
+            highNoiseLoras: [
+              {
+                path: "ltx-2-19b-lora-camera-control-dolly-in.safetensors",
+                scale: 0.4,
+              },
+            ],
+          },
+        ],
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v8State, 8) as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const actions = migrated.actions as any[];
+      expect(actions[0].highNoiseLoras).toEqual([]);
+      expect(actions[0].prompt).toBe("dolly in");
+    });
+
+    it("keeps persisted LoRAs the persisted model can run", () => {
+      const lora = {
+        path: "ltx-2-19b-lora-camera-control-dolly-in.safetensors",
+        scale: 0.4,
+      };
+      const v8State = {
+        videoGenParams: { ...DEFAULT_VIDEO_PARAMS, model: "ltx-i2v" },
+        actions: [
+          { id: "a1", prompt: "", enabled: true, highNoiseLoras: [lora] },
+        ],
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v8State, 8) as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const actions = migrated.actions as any[];
+      expect(actions[0].highNoiseLoras).toEqual([lora]);
+    });
+
+    it("tolerates a persisted session with no actions", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      expect(() => migrate({}, 8)).not.toThrow();
     });
   });
 
