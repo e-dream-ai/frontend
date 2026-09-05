@@ -1,13 +1,14 @@
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useStudioStore } from "@/stores/studio.store";
-import { ACTION_PRESETS } from "../constants/action-presets";
-import { createActionsFromPreset } from "../constants/preset-packs";
+import {
+  getLoraOptionsForModel,
+  NO_LORA_OPTION,
+} from "../constants/lora-options";
 import {
   GenerateSection,
   SectionTitle,
   FormRow,
-  StyledSelect,
   NavButton,
   BottomRow,
 } from "./images-tab.styled";
@@ -15,6 +16,7 @@ import {
   ActionList,
   ActionRow,
   ActionCheckbox,
+  ActionLoraSelect,
   ActionInput,
   DeleteButton,
   SummaryBox,
@@ -27,16 +29,12 @@ export const ActionsTab: React.FC = () => {
   const updateAction = useStudioStore((s) => s.updateAction);
   const removeAction = useStudioStore((s) => s.removeAction);
   const toggleActionEnabled = useStudioStore((s) => s.toggleActionEnabled);
-  const loadPresetPack = useStudioStore((s) => s.loadPresetPack);
   const images = useStudioStore((s) => s.images);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const videoGenParams = useStudioStore((s) => s.videoGenParams);
 
-  const filteredPresets = useMemo(
-    () =>
-      ACTION_PRESETS.filter(
-        (p) => p.model === videoGenParams.model || p.model === "all",
-      ),
+  const loraOptions = useMemo(
+    () => getLoraOptionsForModel(videoGenParams.model),
     [videoGenParams.model],
   );
 
@@ -55,15 +53,16 @@ export const ActionsTab: React.FC = () => {
     addAction({ id: uuidv4(), prompt: "", enabled: true });
   };
 
-  const handleLoadPreset = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const presetName = e.target.value;
-    if (!presetName) return;
-    const preset = ACTION_PRESETS.find((p) => p.name === presetName);
-    if (preset) {
-      loadPresetPack(createActionsFromPreset(preset));
-    }
-    e.target.value = "";
-  };
+  const handleLoraChange = useCallback(
+    (actionId: string, key: string) => {
+      const option = loraOptions.find((o) => o.key === key) ?? NO_LORA_OPTION;
+      updateAction(actionId, {
+        highNoiseLoras: option.highNoiseLoras,
+        lowNoiseLoras: option.lowNoiseLoras,
+      });
+    },
+    [loraOptions, updateAction],
+  );
 
   return (
     <>
@@ -88,6 +87,19 @@ export const ActionsTab: React.FC = () => {
                   checked={action.enabled}
                   onChange={() => toggleActionEnabled(action.id)}
                 />
+                <ActionLoraSelect
+                  value={action.highNoiseLoras?.[0]?.path ?? ""}
+                  onChange={(e) => handleLoraChange(action.id, e.target.value)}
+                  disabled={loraOptions.length === 0}
+                  title="Camera-control LoRA applied to this action"
+                >
+                  <option value="">{NO_LORA_OPTION.label}</option>
+                  {loraOptions.map((option) => (
+                    <option key={option.key} value={option.key}>
+                      {option.label}
+                    </option>
+                  ))}
+                </ActionLoraSelect>
                 <ActionInput
                   value={action.prompt}
                   placeholder="Describe motion or transformation..."
@@ -105,16 +117,6 @@ export const ActionsTab: React.FC = () => {
 
         <FormRow>
           <NavButton onClick={handleAddAction}>+ Add Action</NavButton>
-          <StyledSelect onChange={handleLoadPreset} defaultValue="">
-            <option value="" disabled>
-              Load Preset Pack...
-            </option>
-            {filteredPresets.map((preset) => (
-              <option key={preset.name} value={preset.name}>
-                {preset.name}
-              </option>
-            ))}
-          </StyledSelect>
         </FormRow>
       </GenerateSection>
 
