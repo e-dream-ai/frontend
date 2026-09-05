@@ -1,37 +1,22 @@
-import { useRef, useState } from "react";
-import { Trans, useTranslation } from "react-i18next";
+import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
-import {
-  DELETE_ACCOUNT_CONFIRMATION,
-  useDeleteAccount,
-} from "@/api/user/mutation/useDeleteAccount";
+import { useDeleteAccount } from "@/api/user/mutation/useDeleteAccount";
 import { Avatar } from "@/components/shared/avatar/avatar";
 import { Button } from "@/components/shared/button/button";
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import {
   AccountIdentity,
-  CancelButton,
   ConfirmationDialog,
-  ConfirmationInput,
-  ConfirmationLabel,
-  Consequences,
-  DeleteAccountTrigger,
   DialogBody,
   DialogFooter,
   DialogTitle,
   ErrorMessage,
   IdentityText,
-  Lead,
 } from "./delete-account.styled";
-
-const CONSEQUENCE_KEYS = [
-  "consequence_access",
-  "consequence_email",
-  "consequence_data",
-] as const;
 
 export const DeleteAccount = () => {
   const { t } = useTranslation();
@@ -41,13 +26,10 @@ export const DeleteAccount = () => {
   const deletion = useDeleteAccount();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const cancelRef = useRef<HTMLButtonElement>(null);
-  const [confirmation, setConfirmation] = useState("");
 
   const isDeleting = deletion.isLoading;
-  const isConfirmed = confirmation === DELETE_ACCOUNT_CONFIRMATION;
 
   const openConfirmation = () => {
-    setConfirmation("");
     deletion.reset();
     dialogRef.current?.showModal();
     cancelRef.current?.focus();
@@ -55,10 +37,10 @@ export const DeleteAccount = () => {
 
   const handleDelete = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!isConfirmed || isDeleting) return;
+    if (isDeleting) return;
 
     try {
-      await deletion.mutateAsync(confirmation);
+      await deletion.mutateAsync();
     } catch {
       return;
     }
@@ -73,18 +55,17 @@ export const DeleteAccount = () => {
 
   return (
     <>
-      <DeleteAccountTrigger
-        type="button"
+      <Button
+        buttonType="danger"
         aria-haspopup="dialog"
         onClick={openConfirmation}
       >
-        <span>{t("page.profile.delete_account.title")}</span>
-      </DeleteAccountTrigger>
+        {t("page.profile.delete_account.title")}
+      </Button>
 
       <ConfirmationDialog
         ref={dialogRef}
         aria-labelledby="delete-account-dialog-title"
-        aria-describedby="delete-account-description"
         onCancel={(event) => {
           if (isDeleting) event.preventDefault();
         }}
@@ -94,9 +75,6 @@ export const DeleteAccount = () => {
             <DialogTitle id="delete-account-dialog-title">
               {t("page.profile.delete_account.confirm_title")}
             </DialogTitle>
-            <Lead id="delete-account-description">
-              {t("page.profile.delete_account.confirm_description")}
-            </Lead>
 
             <AccountIdentity>
               <Avatar size="sm" url={user?.avatar} />
@@ -106,34 +84,6 @@ export const DeleteAccount = () => {
               </IdentityText>
             </AccountIdentity>
 
-            <Consequences>
-              {CONSEQUENCE_KEYS.map((key) => (
-                <li key={key}>
-                  <Trans
-                    i18nKey={`page.profile.delete_account.${key}`}
-                    components={{ strong: <b /> }}
-                  />
-                </li>
-              ))}
-            </Consequences>
-
-            <ConfirmationLabel htmlFor="delete-account-confirmation">
-              <Trans
-                i18nKey="page.profile.delete_account.confirm_label"
-                values={{ keyword: DELETE_ACCOUNT_CONFIRMATION }}
-                components={{ keyword: <code /> }}
-              />
-            </ConfirmationLabel>
-            <ConfirmationInput
-              id="delete-account-confirmation"
-              value={confirmation}
-              onChange={(event) => setConfirmation(event.target.value)}
-              autoComplete="off"
-              autoCorrect="off"
-              spellCheck={false}
-              disabled={isDeleting}
-            />
-
             {deletion.isError ? (
               <ErrorMessage role="alert">
                 {t("page.profile.delete_account.error")}
@@ -142,21 +92,22 @@ export const DeleteAccount = () => {
           </DialogBody>
 
           <DialogFooter>
-            <CancelButton
+            <Button
               ref={cancelRef}
               type="button"
+              buttonType="primary"
               disabled={isDeleting}
               onClick={() => dialogRef.current?.close()}
             >
               {t("page.profile.delete_account.cancel")}
-            </CancelButton>
+            </Button>
             <Button
               type="submit"
               buttonType="danger"
-              disabled={!isConfirmed || isDeleting}
+              disabled={isDeleting}
               isLoading={isDeleting}
             >
-              {t("page.profile.delete_account.title")}
+              {t("page.profile.delete_account.confirm_button")}
             </Button>
           </DialogFooter>
         </form>

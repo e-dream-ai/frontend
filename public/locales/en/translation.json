@@ -395,12 +395,8 @@
       "delete_account": {
         "title": "Delete account",
         "confirm_title": "Delete your account?",
-        "confirm_description": "This closes the account below and switches off every email we send you.",
-        "consequence_access": "You are <strong>signed out on every device</strong> and lose access to your dreams.",
-        "consequence_email": "App emails stop right away.",
-        "consequence_data": "Your data and email address are kept, and this email cannot be used to sign up again.",
-        "confirm_label": "Type <keyword>{{keyword}}</keyword> to confirm.",
-        "cancel": "Keep my account",
+        "cancel": "Cancel",
+        "confirm_button": "Confirm delete",
         "success": "Account deleted. App emails are turned off.",
         "error": "We could not delete your account. Try again. If you were signed out, sign in first."
       }

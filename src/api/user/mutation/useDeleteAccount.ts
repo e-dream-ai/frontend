@@ -5,14 +5,14 @@ export const DELETE_ACCOUNT_MUTATION_KEY = "deleteAccount";
 
 export const DELETE_ACCOUNT_CONFIRMATION = "DELETE";
 
-const deleteAccount = async (confirmation: string): Promise<void> => {
+const deleteAccount = async (): Promise<void> => {
   await axiosClient.delete<void>("/v1/user/me", {
-    data: { confirmation },
+    data: { confirmation: DELETE_ACCOUNT_CONFIRMATION },
   });
 };
 
 export const useDeleteAccount = () =>
-  useMutation<void, Error, string>(deleteAccount, {
+  useMutation<void, Error>(deleteAccount, {
     mutationKey: [DELETE_ACCOUNT_MUTATION_KEY],
     retry: false,
   });
