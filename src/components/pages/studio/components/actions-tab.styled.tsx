@@ -35,8 +35,7 @@ export const ActionLoraSelect = styled.select`
   padding: 0.5rem 0.5rem;
   border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
   border-radius: 4px;
-  background: ${(props) =>
-    props.theme.colorBackgroundSecondary || "transparent"};
+  background: ${(props) => props.theme.colorBackgroundSecondary};
   color: ${(props) => props.theme.textPrimaryColor};
   font-size: 0.8125rem;
   cursor: pointer;
@@ -53,8 +52,7 @@ export const ActionInput = styled.input`
   padding: 0.5rem;
   border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
   border-radius: 4px;
-  background: ${(props) =>
-    props.theme.colorBackgroundSecondary || "transparent"};
+  background: ${(props) => props.theme.colorBackgroundSecondary};
   color: ${(props) => props.theme.textPrimaryColor};
   font-size: 0.875rem;
 
