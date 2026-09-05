@@ -25,6 +25,7 @@ import Row, { Column } from "../row/row";
 import TextArea from "../text-area/text-area";
 import Text from "../text/text";
 import { Avatar } from "@/components/shared/avatar/avatar";
+import { DeleteAccount } from "@/components/shared/delete-account/delete-account";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faAlignJustify,
@@ -702,7 +703,13 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               to={PROFILE_PERMISSIONS.CAN_EDIT_PROFILE}
               isOwner={authUser?.id === user?.id}
             >
-              <Row justifyContent="flex-end">
+              <Row
+                justifyContent="flex-end"
+                alignItems="center"
+                flexWrap="wrap"
+                gridGap="0.75rem"
+              >
+                {authUser && authUser.id === user?.id && <DeleteAccount />}
                 <Button
                   size="md"
                   onClick={onEnableEditMode}

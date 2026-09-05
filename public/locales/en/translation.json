@@ -76,11 +76,11 @@
       "or": "OR",
       "dont_have_account": "Don't have an account?",
       "forgot_your_password": "Forgot your password?",
-      "subtitle": "Enter your email and we'll send you a one-time sign-in code.",
+      "subtitle": "Enter your email to request a one-time sign-in code.",
       "user_logged_successfully": "{{role}} signed in successfully.",
       "welcome_user": "Welcome {{username}}",
       "error_logging_in": "Error signing in.",
-      "email_code_sent": "Email verification code sent. Please check your email.",
+      "email_code_sent": "If this email is eligible to sign in, you'll receive a code.",
       "error_sending_code": "Error sending code."
     },
     "signup": {
@@ -103,7 +103,7 @@
     "magic": {
       "title_signin": "Check your email",
       "title_verification": "Verify your email",
-      "sent_to": "Enter the 6-digit code we sent to {{email}}.",
+      "sent_to": "If {{email}} is eligible to sign in, you'll receive a 6-digit code. Enter it below when it arrives.",
       "instructions_signin": "Find the one-time code in your email and enter it below.",
       "instructions_verification": "Find the code in your email and enter it below.",
       "email": "Email",
@@ -124,8 +124,8 @@
       "resend_code": "Resend code",
       "resend_in": "Resend available in {{seconds}}s",
       "resend_too_soon": "Please wait {{seconds}}s before requesting another code.",
-      "code_resent_title": "New code sent",
-      "code_resent_message": "Check your inbox — your previous code no longer works.",
+      "code_resent_title": "Code requested",
+      "code_resent_message": "If this email is eligible to sign in, you'll receive a new code. Check your inbox and spam folder, and use the latest code you receive.",
       "start_over": "Wrong email? Start over",
       "go_to_signin": "Go to sign in",
       "go_to_signup": "Create an account",
@@ -391,7 +391,19 @@
     "profile": {
       "title": "Profile",
       "my_profile": "My Profile",
-      "dreams": "Dreams"
+      "dreams": "Dreams",
+      "delete_account": {
+        "title": "Delete account",
+        "confirm_title": "Delete your account?",
+        "confirm_description": "This closes the account below and switches off every email we send you.",
+        "consequence_access": "You are <strong>signed out on every device</strong> and lose access to your dreams.",
+        "consequence_email": "App emails stop right away.",
+        "consequence_data": "Your data and email address are kept, and this email cannot be used to sign up again.",
+        "confirm_label": "Type <keyword>{{keyword}}</keyword> to confirm.",
+        "cancel": "Keep my account",
+        "success": "Account deleted. App emails are turned off.",
+        "error": "We could not delete your account. Try again. If you were signed out, sign in first."
+      }
     },
     "user_feed": {
       "title": "Dreams"
