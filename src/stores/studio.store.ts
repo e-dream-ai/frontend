@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { reconcileActionLoras } from "@/components/pages/studio/constants/lora-options";
 import type {
   StudioTab,
   StudioImage,
@@ -157,7 +158,16 @@ export const useStudioStore = create<StudioState>()(
 
       videoGenParams: DEFAULT_VIDEO_GEN_PARAMS,
       setVideoGenParams: (params: Partial<VideoGenParams>) =>
-        set((s) => ({ videoGenParams: { ...s.videoGenParams, ...params } })),
+        set((s) => {
+          const videoGenParams = { ...s.videoGenParams, ...params };
+          if (videoGenParams.model === s.videoGenParams.model) {
+            return { videoGenParams };
+          }
+          return {
+            videoGenParams,
+            actions: reconcileActionLoras(s.actions, videoGenParams.model),
+          };
+        }),
       outputPlaylistId: null,
       setOutputPlaylistId: (id: string | null) => set({ outputPlaylistId: id }),
       uprezPlaylistId: null,
@@ -236,7 +246,7 @@ export const useStudioStore = create<StudioState>()(
     }),
     {
       name: "studio-session",
-      version: 8,
+      version: 9,
       partialize: studioPartialize,
       storage: {
         getItem: (name) => {
@@ -343,6 +353,16 @@ export const useStudioStore = create<StudioState>()(
           const videoGenParams = state.videoGenParams as any;
           if (videoGenParams && videoGenParams.seed == null) {
             videoGenParams.seed = DEFAULT_VIDEO_GEN_PARAMS.seed;
+          }
+        }
+        if (version < 9) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const model = (state.videoGenParams as any)?.model;
+          if (Array.isArray(state.actions) && model) {
+            state.actions = reconcileActionLoras(
+              state.actions as StudioAction[],
+              model,
+            );
           }
         }
         return state as Record<string, unknown>;
