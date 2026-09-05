@@ -74,10 +74,6 @@ export const DialogBody = styled.div`
   padding: 1.75rem 1.75rem 1.5rem;
 `;
 
-/**
- * The house display face (Comfortaa, lowercased) is deliberately withheld here.
- * This is the one dialog in the app that should not sound friendly.
- */
 export const DialogTitle = styled.h2`
   && {
     margin: 0 0 0.625rem;
@@ -97,7 +93,6 @@ export const Lead = styled.p`
   line-height: 1.6;
 `;
 
-/** Names the thing being deleted, so it is never an abstract action. */
 export const AccountIdentity = styled.div`
   display: flex;
   align-items: center;
@@ -212,11 +207,6 @@ export const ErrorMessage = styled.p`
   color: ${({ theme }) => theme.colorDanger};
 `;
 
-/**
- * Cancel and delete sit at opposite ends: consequential options should never be
- * adjacent to benign ones (NN/G), and the two carry different shapes as well as
- * different colours.
- */
 export const DialogFooter = styled.div`
   display: flex;
   align-items: center;
