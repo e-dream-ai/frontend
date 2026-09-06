@@ -1,13 +1,16 @@
 import React, { useMemo } from "react";
 import { v4 as uuidv4 } from "uuid";
+import type { StudioAction } from "@/types/studio.types";
 import { useStudioStore } from "@/stores/studio.store";
-import { ACTION_PRESETS } from "../constants/action-presets";
-import { createActionsFromPreset } from "../constants/preset-packs";
+import {
+  getLoraOptionsForModel,
+  NO_LORA_OPTION,
+  type LoraOption,
+} from "../constants/lora-options";
 import {
   GenerateSection,
   SectionTitle,
   FormRow,
-  StyledSelect,
   NavButton,
   BottomRow,
 } from "./images-tab.styled";
@@ -15,11 +18,65 @@ import {
   ActionList,
   ActionRow,
   ActionCheckbox,
+  ActionLoraSelect,
   ActionInput,
   DeleteButton,
   SummaryBox,
   SummaryHighlight,
 } from "./actions-tab.styled";
+
+interface ActionRowItemProps {
+  action: StudioAction;
+  loraOptions: readonly LoraOption[];
+  onToggleEnabled: (id: string) => void;
+  onUpdate: (id: string, updates: Partial<StudioAction>) => void;
+  onRemove: (id: string) => void;
+}
+
+const ActionRowItem = React.memo(function ActionRowItem({
+  action,
+  loraOptions,
+  onToggleEnabled,
+  onUpdate,
+  onRemove,
+}: ActionRowItemProps) {
+  const handleLoraChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const option =
+      loraOptions.find((o) => o.key === e.target.value) ?? NO_LORA_OPTION;
+    onUpdate(action.id, {
+      highNoiseLoras: [...option.highNoiseLoras],
+      lowNoiseLoras: [...option.lowNoiseLoras],
+    });
+  };
+
+  return (
+    <ActionRow>
+      <ActionCheckbox
+        checked={action.enabled}
+        onChange={() => onToggleEnabled(action.id)}
+      />
+      <ActionLoraSelect
+        value={action.highNoiseLoras?.[0]?.path ?? NO_LORA_OPTION.key}
+        onChange={handleLoraChange}
+        disabled={loraOptions.length === 0}
+        title="Camera-control LoRA applied to this action"
+      >
+        <option value={NO_LORA_OPTION.key}>{NO_LORA_OPTION.label}</option>
+        {loraOptions.map((option) => (
+          <option key={option.key} value={option.key}>
+            {option.label}
+          </option>
+        ))}
+      </ActionLoraSelect>
+      <ActionInput
+        value={action.prompt}
+        placeholder="Describe motion or transformation..."
+        onChange={(e) => onUpdate(action.id, { prompt: e.target.value })}
+      />
+      <DeleteButton onClick={() => onRemove(action.id)}>&times;</DeleteButton>
+    </ActionRow>
+  );
+});
 
 export const ActionsTab: React.FC = () => {
   const actions = useStudioStore((s) => s.actions);
@@ -27,18 +84,11 @@ export const ActionsTab: React.FC = () => {
   const updateAction = useStudioStore((s) => s.updateAction);
   const removeAction = useStudioStore((s) => s.removeAction);
   const toggleActionEnabled = useStudioStore((s) => s.toggleActionEnabled);
-  const loadPresetPack = useStudioStore((s) => s.loadPresetPack);
   const images = useStudioStore((s) => s.images);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
-  const videoGenParams = useStudioStore((s) => s.videoGenParams);
+  const model = useStudioStore((s) => s.videoGenParams.model);
 
-  const filteredPresets = useMemo(
-    () =>
-      ACTION_PRESETS.filter(
-        (p) => p.model === videoGenParams.model || p.model === "all",
-      ),
-    [videoGenParams.model],
-  );
+  const loraOptions = getLoraOptionsForModel(model);
 
   const selectedImageCount = useMemo(
     () =>
@@ -53,16 +103,6 @@ export const ActionsTab: React.FC = () => {
 
   const handleAddAction = () => {
     addAction({ id: uuidv4(), prompt: "", enabled: true });
-  };
-
-  const handleLoadPreset = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const presetName = e.target.value;
-    if (!presetName) return;
-    const preset = ACTION_PRESETS.find((p) => p.name === presetName);
-    if (preset) {
-      loadPresetPack(createActionsFromPreset(preset));
-    }
-    e.target.value = "";
   };
 
   return (
@@ -83,38 +123,20 @@ export const ActionsTab: React.FC = () => {
         {actions.length > 0 && (
           <ActionList>
             {actions.map((action) => (
-              <ActionRow key={action.id}>
-                <ActionCheckbox
-                  checked={action.enabled}
-                  onChange={() => toggleActionEnabled(action.id)}
-                />
-                <ActionInput
-                  value={action.prompt}
-                  placeholder="Describe motion or transformation..."
-                  onChange={(e) =>
-                    updateAction(action.id, { prompt: e.target.value })
-                  }
-                />
-                <DeleteButton onClick={() => removeAction(action.id)}>
-                  &times;
-                </DeleteButton>
-              </ActionRow>
+              <ActionRowItem
+                key={action.id}
+                action={action}
+                loraOptions={loraOptions}
+                onToggleEnabled={toggleActionEnabled}
+                onUpdate={updateAction}
+                onRemove={removeAction}
+              />
             ))}
           </ActionList>
         )}
 
         <FormRow>
           <NavButton onClick={handleAddAction}>+ Add Action</NavButton>
-          <StyledSelect onChange={handleLoadPreset} defaultValue="">
-            <option value="" disabled>
-              Load Preset Pack...
-            </option>
-            {filteredPresets.map((preset) => (
-              <option key={preset.name} value={preset.name}>
-                {preset.name}
-              </option>
-            ))}
-          </StyledSelect>
         </FormRow>
       </GenerateSection>
 

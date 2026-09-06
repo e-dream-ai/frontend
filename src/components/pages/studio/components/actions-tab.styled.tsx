@@ -29,20 +29,36 @@ export const ActionCheckbox = styled.input.attrs({ type: "checkbox" })`
   flex-shrink: 0;
 `;
 
+export const ActionLoraSelect = styled.select`
+  flex-shrink: 0;
+  max-width: 11rem;
+  padding: 0.5rem 0.5rem;
+  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
+  border-radius: 4px;
+  background: ${(props) => props.theme.colorBackgroundSecondary};
+  color: ${(props) => props.theme.textPrimaryColor};
+  font-size: 0.8125rem;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: ${(props) => props.theme.colorPrimary};
+  }
+`;
+
 export const ActionInput = styled.input`
   flex: 1;
+  min-width: 0;
   padding: 0.5rem;
-  border: 1px solid transparent;
+  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
   border-radius: 4px;
-  background: transparent;
+  background: ${(props) => props.theme.colorBackgroundSecondary};
   color: ${(props) => props.theme.textPrimaryColor};
   font-size: 0.875rem;
 
   &:focus {
     outline: none;
     border-color: ${(props) => props.theme.colorPrimary};
-    background: ${(props) =>
-      props.theme.colorBackgroundSecondary || "transparent"};
   }
 `;
 

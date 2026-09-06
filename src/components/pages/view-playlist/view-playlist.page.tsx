@@ -935,7 +935,11 @@ export const ViewPlaylistPage = () => {
                           <Avatar size="xs" url={ownerAvatarUrl} />
                         )
                       }
-                      to={`${ROUTES.PROFILE}/${playlist?.user.uuid}`}
+                      to={
+                        playlist?.user?.uuid
+                          ? `${ROUTES.PROFILE}/${playlist.user.uuid}`
+                          : undefined
+                      }
                       {...formMethods.register("user")}
                     />
                   </Restricted>
