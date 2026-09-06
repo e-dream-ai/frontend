@@ -302,7 +302,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
         <Row
           mt="2"
           width="100%"
-          justifyContent="center"
+          justifyContent="flex-start"
           display={["flex", "none", "none"]}
         >
           <ApiKeyCard user={user} />
@@ -709,7 +709,6 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
                 flexWrap="wrap"
                 gridGap="0.75rem"
               >
-                {authUser && authUser.id === user?.id && <DeleteAccount />}
                 <Button
                   size="md"
                   onClick={onEnableEditMode}
@@ -732,6 +731,16 @@ export const ProfileCard: React.FC<ProfileCardProps> = ({
               )}
             </Column>
           </Row>
+          {!editMode && authUser && authUser.id === user?.id && (
+            <Restricted
+              to={PROFILE_PERMISSIONS.CAN_EDIT_PROFILE}
+              isOwner={authUser?.id === user?.id}
+            >
+              <Row justifyContent="flex-end" mt="2rem">
+                <DeleteAccount />
+              </Row>
+            </Restricted>
+          )}
         </Column>
       </Row>
     </>
