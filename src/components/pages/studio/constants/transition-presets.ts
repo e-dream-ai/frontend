@@ -29,7 +29,7 @@ const transitionPack = (
   name,
   model: "all",
   group,
-  actions: [{ prompt, enabled: true, negativePrompt }],
+  actions: [{ prompt, negativePrompt }],
 });
 
 export const TRANSITION_PRESETS: PresetPack[] = [

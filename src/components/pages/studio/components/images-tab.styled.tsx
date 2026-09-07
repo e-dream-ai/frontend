@@ -1,56 +1,34 @@
 import styled from "styled-components";
-import { PresignedImage } from "@/components/shared/presigned-image";
+import { FLOW } from "@/constants/flow-theme.constants";
 
 export const GenerateSection = styled.div`
-  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
-  border-radius: 8px;
-  padding: 1.25rem;
-  margin-bottom: 1.5rem;
+  padding: 24px 28px;
+
+  & + & {
+    border-top: 1px solid ${FLOW.border};
+  }
 `;
 
 export const SectionTitle = styled.h3`
-  font-size: 0.875rem;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: ${(props) => props.theme.textBodyColor};
-  margin-bottom: 1rem;
+  letter-spacing: 0.12em;
+  color: ${FLOW.textMuted};
+  font-family: ${FLOW.fontFamily};
+  margin-bottom: 20px;
 `;
 
 export const SectionHeaderRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 1rem;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
 
   ${SectionTitle} {
     margin-bottom: 0;
-  }
-`;
-
-export const PromptTextarea = styled.textarea`
-  width: 100%;
-  min-height: 80px;
-  padding: 0.75rem;
-  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
-  border-radius: 6px;
-  background: ${(props) =>
-    props.theme.colorBackgroundSecondary || "transparent"};
-  color: ${(props) => props.theme.textPrimaryColor};
-  font-family: inherit;
-  font-size: 0.875rem;
-  resize: vertical;
-  margin-bottom: 1rem;
-
-  &:focus {
-    outline: none;
-    border-color: ${(props) => props.theme.colorPrimary};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-    resize: none;
   }
 `;
 
@@ -68,20 +46,6 @@ export const AdvancedToggle = styled.button`
   &:hover {
     color: ${(props) => props.theme.textPrimaryColor};
   }
-`;
-
-export const AdvancedFieldLabel = styled.label`
-  display: block;
-  font-size: 0.8125rem;
-  color: ${(props) => props.theme.textBodyColor};
-  margin-bottom: 0.4rem;
-`;
-
-export const AdvancedFieldHint = styled.p`
-  font-size: 0.75rem;
-  color: ${(props) => props.theme.textBodyColor};
-  opacity: 0.75;
-  margin: -0.75rem 0 1rem;
 `;
 
 export const FormRow = styled.div`
@@ -122,42 +86,19 @@ export const StyledSelect = styled.select`
   max-width: 100%;
 `;
 
-export const GenerateButton = styled.button`
-  padding: 0.625rem 1.25rem;
-  background: ${(props) => props.theme.colorPrimary};
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  margin-left: auto;
-
-  &:hover {
-    filter: brightness(120%);
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
 export const ImageGrid = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
   gap: 0.75rem;
 `;
 
-export const ImageCard = styled.div<{ $selected?: boolean }>`
+export const ImageCard = styled.div`
   position: relative;
-  border-radius: 8px;
+  border-radius: ${FLOW.radiusSm};
   overflow: hidden;
-  border: 2px solid
-    ${(props) => (props.$selected ? props.theme.colorPrimary : "transparent")};
-  cursor: pointer;
+  border: 1px solid ${FLOW.border};
   aspect-ratio: 16 / 9;
-  background: ${(props) => props.theme.colorBackgroundQuaternary};
+  background: ${FLOW.bgElevated};
 `;
 
 export const ImageThumbnail = styled.img`
@@ -166,21 +107,40 @@ export const ImageThumbnail = styled.img`
   object-fit: cover;
 `;
 
-export const StarBadge = styled.button<{ $active?: boolean }>`
+export const DeleteButton = styled.button`
   position: absolute;
-  top: 0.375rem;
-  right: 0.375rem;
-  background: rgba(0, 0, 0, 0.6);
-  border: none;
+  top: 4px;
+  right: 4px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
-  width: 1.75rem;
-  height: 1.75rem;
+  background: rgba(0, 0, 0, 0.7);
+  color: ${FLOW.textMuted};
+  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border: none;
   cursor: pointer;
-  font-size: 0.875rem;
-  color: ${(props) => (props.$active ? "#f5c542" : "#888")};
+  opacity: 0;
+  transition: opacity 0.2s;
+
+  ${ImageCard}:hover & {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: ${FLOW.error};
+  }
+
+  /* Touch and keyboard users never get :hover on the card. */
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  @media (hover: none) {
+    opacity: 1;
+  }
 `;
 
 export const ImageStatus = styled.div`
@@ -206,39 +166,51 @@ export const SeedLabel = styled.div`
   border-top-right-radius: 4px;
 `;
 
+/**
+ * Bottom bar of a tab. Sits flush inside StudioFrame, so it carries the same
+ * 28px inset as GenerateSection and separates itself with a rule — matching
+ * the flow app's ActionBarContainer.
+ */
 export const BottomRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  margin-top: 1rem;
+  padding: 20px 28px;
+  border-top: 1px solid ${FLOW.border};
 
   @media (max-width: 480px) {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.875rem;
+    padding: 16px 20px;
   }
 `;
 
-export const SelectionCount = styled.span`
+export const ImageCount = styled.span`
   font-size: 0.8125rem;
   color: ${(props) => props.theme.textBodyColor};
 `;
 
 export const NavButton = styled.button`
-  padding: 0.625rem 1.25rem;
-  background: ${(props) => props.theme.colorPrimary};
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 0.875rem;
-  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: ${FLOW.accentDim};
+  color: ${FLOW.accent};
+  border: 1px solid ${FLOW.accent};
+  border-radius: ${FLOW.radiusSm};
+  font-family: ${FLOW.fontFamily};
+  font-size: 13px;
   cursor: pointer;
   white-space: nowrap;
+  transition: all 0.2s ease;
 
   &:hover {
-    filter: brightness(120%);
+    background: ${FLOW.accent};
+    color: ${FLOW.bg};
   }
 
   &:disabled {
@@ -248,13 +220,35 @@ export const NavButton = styled.button`
 `;
 
 export const SecondaryNavButton = styled(NavButton)`
-  background: transparent;
-  border: 1px solid #555;
+  background: ${FLOW.bgElevated};
+  color: ${FLOW.textDim};
+  border-color: ${FLOW.border};
+
+  &:hover {
+    background: ${FLOW.borderHover};
+    color: ${FLOW.text};
+  }
+`;
+
+/**
+ * The "+ Upload / + Generate / ..." row. Same treatment as the flow app's
+ * AddButton so both studios read as one product.
+ */
+export const AddButton = styled(SecondaryNavButton)`
+  padding: 8px 14px;
+  flex-shrink: 0;
+`;
+
+export const AddButtonPlus = styled.span`
+  font-size: 15px;
+  color: ${FLOW.accent};
 `;
 
 export const EmptyStateText = styled.p`
-  color: #888;
-  font-size: 0.875rem;
+  text-align: center;
+  padding: 48px 16px;
+  color: ${FLOW.textDim};
+  font-size: 14px;
 `;
 
 export const ButtonRow = styled.div`
@@ -263,40 +257,12 @@ export const ButtonRow = styled.div`
   gap: 0.5rem;
 `;
 
-export const LightboxOverlay = styled.div`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.85);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  cursor: zoom-out;
-`;
-
-export const LightboxImage = styled(PresignedImage)`
-  max-width: 90vw;
-  max-height: 90vh;
-  object-fit: contain;
-  border-radius: 8px;
-`;
-
 export const ImagesTabContainer = styled.div<{ $dragOver?: boolean }>`
-  transition: border-color 0.2s;
-  border: 2px solid transparent;
-  border-radius: 10px;
-  padding: 2px;
+  transition: background-color 0.2s;
 
   ${(props) =>
     props.$dragOver &&
     `
-    border-color: ${props.theme.colorPrimary};
+    background-color: ${FLOW.accentDim};
   `}
-`;
-
-export const LightboxUploadedImage = styled.img`
-  max-width: 90vw;
-  max-height: 90vh;
-  object-fit: contain;
-  border-radius: 8px;
 `;

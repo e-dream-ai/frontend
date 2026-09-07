@@ -21,9 +21,6 @@ type StudioState = {
   images: StudioImage[];
   addImage: (image: StudioImage) => void;
   updateImage: (uuid: string, updates: Partial<StudioImage>) => void;
-  toggleImageSelected: (uuid: string) => void;
-  selectAllImages: () => void;
-  deselectAllImages: () => void;
   removeImage: (uuid: string) => void;
 
   isGenerating: boolean;
@@ -33,7 +30,6 @@ type StudioState = {
   addAction: (action: StudioAction) => void;
   updateAction: (id: string, updates: Partial<StudioAction>) => void;
   removeAction: (id: string) => void;
-  toggleActionEnabled: (id: string) => void;
   loadPresetPack: (actions: StudioAction[]) => void;
 
   videoGenParams: VideoGenParams;
@@ -114,22 +110,6 @@ export const useStudioStore = create<StudioState>()(
             img.uuid === uuid ? { ...img, ...updates } : img,
           ),
         })),
-      toggleImageSelected: (uuid: string) =>
-        set((s) => ({
-          images: s.images.map((img) =>
-            img.uuid === uuid ? { ...img, selected: !img.selected } : img,
-          ),
-        })),
-      selectAllImages: () =>
-        set((s) => ({
-          images: s.images.map((img) =>
-            img.status === "processed" ? { ...img, selected: true } : img,
-          ),
-        })),
-      deselectAllImages: () =>
-        set((s) => ({
-          images: s.images.map((img) => ({ ...img, selected: false })),
-        })),
       removeImage: (uuid: string) =>
         set((s) => ({ images: s.images.filter((img) => img.uuid !== uuid) })),
 
@@ -147,12 +127,6 @@ export const useStudioStore = create<StudioState>()(
         })),
       removeAction: (id: string) =>
         set((s) => ({ actions: s.actions.filter((a) => a.id !== id) })),
-      toggleActionEnabled: (id: string) =>
-        set((s) => ({
-          actions: s.actions.map((a) =>
-            a.id === id ? { ...a, enabled: !a.enabled } : a,
-          ),
-        })),
       loadPresetPack: (newActions: StudioAction[]) =>
         set((s) => ({ actions: [...s.actions, ...newActions] })),
 

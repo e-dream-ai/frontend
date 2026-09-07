@@ -84,11 +84,11 @@ export const GenerateTab: React.FC = () => {
   const { playlists, addPlaylistToCache } = useUserPlaylists();
 
   const selectedImages = useMemo(
-    () => images.filter((img) => img.selected && img.status === "processed"),
+    () => images.filter((img) => img.status === "processed"),
     [images],
   );
   const enabledActions = useMemo(
-    () => actions.filter((a) => a.enabled && a.prompt.trim()),
+    () => actions.filter((a) => a.prompt.trim()),
     [actions],
   );
 

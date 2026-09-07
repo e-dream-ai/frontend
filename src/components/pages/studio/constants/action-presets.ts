@@ -30,7 +30,6 @@ const ltxCameraAction = (
   prompt: string,
 ): PresetAction => ({
   prompt,
-  enabled: true,
   loraLabel,
   highNoiseLoras: [
     { path: ltxCameraLoraFile(direction), scale: LTX_CAMERA_LORA_SCALE },
@@ -45,7 +44,6 @@ export const ACTION_PRESETS: PresetPack[] = [
     actions: [
       {
         prompt: "slow zoom in, camera gently pushing forward",
-        enabled: false,
         loraLabel: "Zoom In",
         highNoiseLoras: [
           {
@@ -56,7 +54,6 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "slow zoom out, camera pulling back to reveal",
-        enabled: false,
         loraLabel: "Zoom Out",
         highNoiseLoras: [
           {
@@ -70,7 +67,6 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan left to right, smooth motion",
-        enabled: false,
         loraLabel: "Pan Right",
         highNoiseLoras: [
           {
@@ -84,7 +80,6 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan right to left, smooth motion",
-        enabled: false,
         loraLabel: "Pan Left",
         highNoiseLoras: [
           {
@@ -98,7 +93,6 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan upward, revealing sky",
-        enabled: false,
         loraLabel: "Tilt Up",
         highNoiseLoras: [
           {
@@ -109,7 +103,6 @@ export const ACTION_PRESETS: PresetPack[] = [
       },
       {
         prompt: "pan downward, descending",
-        enabled: false,
         loraLabel: "Tilt Down",
         highNoiseLoras: [
           {
@@ -121,8 +114,8 @@ export const ACTION_PRESETS: PresetPack[] = [
           },
         ],
       },
-      { prompt: "push in, dramatic approach", enabled: true },
-      { prompt: "pull out, widening perspective", enabled: true },
+      { prompt: "push in, dramatic approach" },
+      { prompt: "pull out, widening perspective" },
     ],
   },
   {
@@ -130,10 +123,9 @@ export const ACTION_PRESETS: PresetPack[] = [
     model: "wan-i2v",
     group: "camera",
     actions: [
-      { prompt: "dolly forward, smooth cinematic approach", enabled: true },
+      { prompt: "dolly forward, smooth cinematic approach" },
       {
         prompt: "orbit around subject, 180 degrees, smooth motion",
-        enabled: false,
         loraLabel: "Orbit",
         highNoiseLoras: [
           {
@@ -154,12 +146,11 @@ export const ACTION_PRESETS: PresetPack[] = [
           },
         ],
       },
-      { prompt: "crane up, rising above the scene", enabled: true },
+      { prompt: "crane up, rising above the scene" },
       {
         prompt: "tracking shot, following motion left to right",
-        enabled: false,
       },
-      { prompt: "rack focus, shifting depth of field", enabled: true },
+      { prompt: "rack focus, shifting depth of field" },
     ],
   },
   {
@@ -209,10 +200,10 @@ export const ACTION_PRESETS: PresetPack[] = [
     model: "all",
     group: "transformations",
     actions: [
-      { prompt: "gentle breathing motion, subtle life", enabled: true },
-      { prompt: "subtle sway, natural wind movement", enabled: true },
-      { prompt: "floating drift, weightless motion", enabled: true },
-      { prompt: "heartbeat pulse, rhythmic expansion", enabled: true },
+      { prompt: "gentle breathing motion, subtle life" },
+      { prompt: "subtle sway, natural wind movement" },
+      { prompt: "floating drift, weightless motion" },
+      { prompt: "heartbeat pulse, rhythmic expansion" },
     ],
   },
   {
@@ -223,11 +214,10 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt:
           "The scene transitions through a continuous, viscous metamorphosis, forms dissolving and rebuilding from within as though the material itself is alive. Shape bleeds into shape with cellular fluidity - no cut, no dissolve, no opacity ramp - only the slow-pressure pull of one state becoming another. Camera holds locked and still throughout. The transformation drives forward with organic inevitability, each intermediate state a coherent world briefly passing through.",
-        enabled: true,
       },
-      { prompt: "color shift, gradual hue rotation", enabled: true },
-      { prompt: "kaleidoscope spin, symmetrical rotation", enabled: true },
-      { prompt: "fractal zoom, infinite recursive detail", enabled: true },
+      { prompt: "color shift, gradual hue rotation" },
+      { prompt: "kaleidoscope spin, symmetrical rotation" },
+      { prompt: "fractal zoom, infinite recursive detail" },
     ],
   },
 ];

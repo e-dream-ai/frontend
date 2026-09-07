@@ -40,9 +40,18 @@ import {
 
 interface Props {
   onClose: () => void;
+  /**
+   * The flow app also seeds a placeholder card in the reference-frame strip,
+   * which `useGeneratedFrameSync` then fills in. The action app tracks the
+   * same generated images through the studio store alone, so it opts out.
+   */
+  createFlowFrames?: boolean;
 }
 
-export const GenerateReferenceFramesModal: React.FC<Props> = ({ onClose }) => {
+export const GenerateReferenceFramesModal: React.FC<Props> = ({
+  onClose,
+  createFlowFrames = true,
+}) => {
   const imageGenParams = useStudioStore((s) => s.imageGenParams);
   const setImageGenParams = useStudioStore((s) => s.setImageGenParams);
   const addImage = useStudioStore((s) => s.addImage);
@@ -118,18 +127,19 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({ onClose }) => {
               seed,
               size: imageGenParams.size,
               status: (dream.status as StudioImage["status"]) || "queue",
-              selected: false,
             });
             // Placeholder card in the strip; useGeneratedFrameSync fills
             // in progress and the final thumbnail.
-            addReferenceFrame({
-              id: uuidv4(),
-              dreamUuid: dream.uuid,
-              imageUrl: "",
-              name: dream.name,
-              uploadStatus: "uploading",
-              uploadProgress: 0,
-            });
+            if (createFlowFrames) {
+              addReferenceFrame({
+                id: uuidv4(),
+                dreamUuid: dream.uuid,
+                imageUrl: "",
+                name: dream.name,
+                uploadStatus: "uploading",
+                uploadProgress: 0,
+              });
+            }
           })
           .catch((err) => {
             console.error("Failed to create image:", err);
@@ -148,6 +158,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({ onClose }) => {
     modelOptions,
     addImage,
     addReferenceFrame,
+    createFlowFrames,
     onClose,
   ]);
 

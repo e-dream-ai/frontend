@@ -101,17 +101,34 @@ export const NewSessionButton = styled.button`
   }
 `;
 
-export const StudioBody = styled.div<{ $constrain?: boolean }>`
+export const StudioBody = styled.div`
   flex: 1;
   overflow-y: auto;
   width: 100%;
   padding: 1.5rem 20px;
+`;
+
+/**
+ * The card both studios sit in. Flow used this shape already; the action app
+ * now shares it rather than the old max-width:1200px column, so the two modes
+ * fill the viewport identically and switching between them doesn't reflow.
+ */
+export const StudioFrame = styled.div<{ $dragOver?: boolean }>`
+  background: ${FLOW.bgCard};
+  border: 1px solid ${FLOW.border};
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+  min-height: 200px;
+  transition:
+    border-color 0.2s,
+    background-color 0.2s;
+
   ${(props) =>
-    props.$constrain &&
+    props.$dragOver &&
     `
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 1.5rem;
+    border-color: ${FLOW.accent};
+    background-color: ${FLOW.accentDim};
   `}
 `;
 

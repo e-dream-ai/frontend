@@ -460,7 +460,6 @@ describe("studio.store", () => {
         url: "http://example.com/img.jpg",
         name: "Test",
         status: "processed",
-        selected: false,
         previewFrame: "base64data",
       });
 

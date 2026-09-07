@@ -33,10 +33,8 @@ export const useBatchSubmit = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const getSelectedCombinations = useCallback(() => {
-    const selectedImages = images.filter(
-      (img) => img.selected && img.status === "processed",
-    );
-    const enabledActions = actions.filter((a) => a.enabled && a.prompt.trim());
+    const selectedImages = images.filter((img) => img.status === "processed");
+    const enabledActions = actions.filter((a) => a.prompt.trim());
 
     const existingJobKeys = new Set(
       jobs
