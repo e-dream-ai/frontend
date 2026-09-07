@@ -23,14 +23,12 @@ export const createActionsFromPreset = (preset: PresetPack): StudioAction[] =>
   preset.actions.map(
     ({
       prompt,
-      enabled,
       negativePrompt,
       highNoiseLoras,
       lowNoiseLoras,
     }): StudioAction => ({
       id: uuidv4(),
       prompt,
-      enabled,
       negativePrompt,
       highNoiseLoras,
       lowNoiseLoras,

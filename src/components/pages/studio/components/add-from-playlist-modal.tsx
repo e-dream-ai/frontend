@@ -76,7 +76,6 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
         url: dream.thumbnail,
         name: dream.name,
         status: "processed",
-        selected: true,
       };
       addImage(studioImage);
     }

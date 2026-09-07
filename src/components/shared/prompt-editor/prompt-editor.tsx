@@ -7,6 +7,8 @@ import { materialDark } from "@uiw/codemirror-theme-material";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
+import { useNavigate } from "react-router-dom";
 import {
   ControllerRenderProps,
   FieldValues,
@@ -21,11 +23,14 @@ import {
   TextAreaRow,
   TextAreaBefore,
 } from "@/components/shared/text-area/text-area.styled";
+import { PromptLinkTarget } from "@/utils/prompt-links.util";
+import { PROMPT_UUID_LINK_CLASS, promptUuidLinks } from "./prompt-uuid-links";
 
 const CodeMirrorWrapper = styled.div<{
   disabled?: boolean;
   height?: number;
   maxHeight?: number;
+  interactiveLinks?: boolean;
 }>`
   width: 100%;
   width: -moz-available;
@@ -68,6 +73,26 @@ const CodeMirrorWrapper = styled.div<{
 
   .cm-line {
     font-family: "Roboto Mono", monospace;
+  }
+
+  .${PROMPT_UUID_LINK_CLASS} {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: ${(props) => props.theme.colorPrimary};
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.18em;
+    cursor: ${(props) => (props.interactiveLinks ? "pointer" : "text")};
+    transition: text-decoration-color 120ms ease;
+
+    &:hover {
+      text-decoration-color: ${(props) => props.theme.textAccentColor};
+    }
+
+    &:focus-visible {
+      outline: 1px solid ${(props) => props.theme.textAccentColor};
+      outline-offset: 2px;
+      text-decoration-color: ${(props) => props.theme.textAccentColor};
+    }
   }
 
   &:disabled {
@@ -140,6 +165,8 @@ export function PromptEditor<T extends FieldValues>({
   setError,
   getValues,
 }: PromptEditorProps<T>) {
+  const { t } = useTranslation();
+  const navigate = useNavigate();
   const promptStringRef = useRef<string>(
     field.value ? JSON.stringify(field.value, null, 2) : "{}",
   );
@@ -334,6 +361,30 @@ export function PromptEditor<T extends FieldValues>({
     [editMode],
   );
 
+  const uuidLinkTitles = useMemo<Record<PromptLinkTarget, string>>(
+    () => ({
+      dream: t("components.prompt_editor.open_dream"),
+      playlist: t("components.prompt_editor.open_playlist"),
+      keyframe: t("components.prompt_editor.open_keyframe"),
+    }),
+    [t],
+  );
+
+  const uuidLinks = useMemo(
+    () =>
+      promptUuidLinks({
+        titles: uuidLinkTitles,
+        onFollow: (href) => navigate(href),
+        interactive: !editMode,
+      }),
+    [editMode, navigate, uuidLinkTitles],
+  );
+
+  const extensions = useMemo(
+    () => [json(), jsonLinter, uuidLinks],
+    [jsonLinter, uuidLinks],
+  );
+
   return (
     <TextAreaGroup>
       <TextAreaRow>
@@ -343,13 +394,14 @@ export function PromptEditor<T extends FieldValues>({
         <CodeMirrorWrapper
           ref={codeMirrorWrapperRef}
           disabled={!editMode}
+          interactiveLinks={!editMode}
           height={editorHeight}
           maxHeight={isManuallyResized ? 800 : 128}
         >
           <CodeMirror
             value={promptStringRef.current}
             onChange={handleChange}
-            extensions={[json(), jsonLinter]}
+            extensions={extensions}
             theme={materialDark}
             editable={editMode}
             readOnly={!editMode}

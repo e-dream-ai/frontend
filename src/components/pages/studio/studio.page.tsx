@@ -29,6 +29,7 @@ import {
   BackButton,
   HeaderSpacer,
   StudioBody,
+  StudioFrame,
   ModeToggle,
   ModeButton,
 } from "./studio.page.styled";
@@ -96,7 +97,6 @@ export const StudioPage: React.FC = () => {
             url: blobUrl,
             name: file.name.replace(/\.[^.]+$/, ""),
             status: "processing",
-            selected: false,
           });
 
           try {
@@ -166,17 +166,17 @@ export const StudioPage: React.FC = () => {
         <SessionSwitcher />
       </StudioHeader>
 
-      <StudioBody $constrain={mode === "action"}>
+      <StudioBody>
         <Suspense fallback={null}>
           {mode === "flow" && <FlowBuilder />}
           {mode === "action" && (
-            <>
+            <StudioFrame>
               <StudioTabs />
               {activeTab === "images" && <ImagesTab />}
               {activeTab === "actions" && <ActionsTab />}
               {activeTab === "generate" && <GenerateTab />}
               {activeTab === "results" && <ResultsTab />}
-            </>
+            </StudioFrame>
           )}
         </Suspense>
       </StudioBody>

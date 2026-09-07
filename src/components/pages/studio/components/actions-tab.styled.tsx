@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { FLOW } from "@/constants/flow-theme.constants";
 
 export const ActionList = styled.div`
   display: flex;
@@ -20,13 +21,6 @@ export const ActionRow = styled.div`
   &:last-child {
     border-bottom: none;
   }
-`;
-
-export const ActionCheckbox = styled.input.attrs({ type: "checkbox" })`
-  width: 1.125rem;
-  height: 1.125rem;
-  cursor: pointer;
-  flex-shrink: 0;
 `;
 
 export const ActionLoraSelect = styled.select`
@@ -78,13 +72,19 @@ export const DeleteButton = styled.button`
 `;
 
 export const SummaryBox = styled.div`
-  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
-  border-radius: 8px;
+  border: 1px solid ${FLOW.border};
+  border-radius: ${FLOW.radiusSm};
+  background: ${FLOW.bgElevated};
   padding: 1rem;
   text-align: center;
   font-size: 0.875rem;
-  color: ${(props) => props.theme.textBodyColor};
-  margin-top: 1rem;
+  color: ${FLOW.textDim};
+  /* Aligns with GenerateSection's 28px inset — it is a sibling, not a child. */
+  margin: 0 ${FLOW.inset} 24px;
+
+  @media (max-width: 480px) {
+    margin: 0 ${FLOW.insetNarrow} ${FLOW.insetNarrow};
+  }
 `;
 
 export const SummaryHighlight = styled.span`

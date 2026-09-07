@@ -57,7 +57,8 @@ export const ResultsTab: React.FC = () => {
   const [isUprezzing, setIsUprezzing] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
 
-  // Derive grid dimensions from jobs (not from selected/enabled filters)
+  // Derive grid dimensions from the jobs themselves, not from the current
+  // image/action lists — those can change after a batch is submitted.
   const gridImageIds = useMemo(() => {
     const ids = new Set<string>();
     jobs

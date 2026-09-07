@@ -1,12 +1,10 @@
 import React, { useState, useMemo, useCallback } from "react";
-import { v4 as uuidv4 } from "uuid";
 import moment from "moment";
+import type { Dream } from "@/types/dream.types";
 import { useMyImageDreams } from "@/api/dream/query/useMyImageDreams";
-import { useFlowStore } from "@/stores/flow.store";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
 import { FORMAT } from "@/constants/moment.constants";
-import { useExistingDreamUuids } from "../hooks/useExistingDreamUuids";
 import { useLightboxA11y } from "../hooks/useLightboxA11y";
 import { useUuidSelection } from "../hooks/useUuidSelection";
 import { SelectImageDreamCard } from "./select-image-dream-card";
@@ -33,12 +31,19 @@ import {
 
 interface Props {
   onClose: () => void;
+  /** Dream UUIDs already present in the caller's collection; shown as
+   *  "already added" and skipped on add. */
+  existingDreamUuids: Set<string>;
+  /** Receives the selected dreams that are not already present. The caller
+   *  owns the mapping into its own store shape (flow frame vs studio image). */
+  onAdd: (dreams: Dream[]) => void;
 }
 
-export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
-  const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
-  const existingDreamUuids = useExistingDreamUuids();
-
+export const SelectImageDreamModal: React.FC<Props> = ({
+  onClose,
+  existingDreamUuids,
+  onAdd,
+}) => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 350);
 
@@ -70,20 +75,13 @@ export const SelectImageDreamModal: React.FC<Props> = ({ onClose }) => {
   const { selectedUuids, toggle } = useUuidSelection();
 
   const handleAdd = useCallback(() => {
-    for (const dream of dreams) {
-      if (!selectedUuids.has(dream.uuid) || existingDreamUuids.has(dream.uuid))
-        continue;
-      const imageUrl =
-        dream.video || dream.original_video || dream.thumbnail || "";
-      addReferenceFrame({
-        id: uuidv4(),
-        dreamUuid: dream.uuid,
-        imageUrl,
-        name: dream.name,
-      });
-    }
+    const picked = dreams.filter(
+      (dream) =>
+        selectedUuids.has(dream.uuid) && !existingDreamUuids.has(dream.uuid),
+    );
+    if (picked.length > 0) onAdd(picked);
     onClose();
-  }, [dreams, selectedUuids, existingDreamUuids, addReferenceFrame, onClose]);
+  }, [dreams, selectedUuids, existingDreamUuids, onAdd, onClose]);
 
   const isEmpty = !isLoading && dreams.length === 0;
   const totalCount = data?.pages[0]?.data?.count ?? dreams.length;
