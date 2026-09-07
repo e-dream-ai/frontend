@@ -43,6 +43,10 @@ export const FLOW = {
   radius: "12px",
   radiusSm: "8px",
 
+  // Insets
+  inset: "28px",
+  insetNarrow: "20px",
+
   // Typography — match the rest of the app
   fontFamily: "'Comfortaa', sans-serif",
   fontFamilySerif: "'Comfortaa', sans-serif",

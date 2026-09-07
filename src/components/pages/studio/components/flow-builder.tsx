@@ -1,9 +1,8 @@
 import React, { useState, useCallback, useRef } from "react";
 import Bugsnag from "@bugsnag/js";
 import { v4 as uuidv4 } from "uuid";
-import styled from "styled-components";
 import { useFlowStore } from "@/stores/flow.store";
-import { FLOW } from "@/constants/flow-theme.constants";
+import { StudioFrame } from "../studio.page.styled";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import { ReferenceFrameStrip } from "./reference-frame-strip";
 import { TransitionSettingsPanel } from "./transition-settings-panel";
@@ -11,31 +10,17 @@ import { FlowPreview } from "./flow-preview";
 import { FlowActionBar } from "./flow-action-bar";
 import { AddReferenceFramesFromPlaylistModal } from "./add-reference-frames-from-playlist-modal";
 import { SelectImageDreamModal } from "./select-image-dream-modal";
-import { GenerateReferenceFramesModal } from "./generate-reference-frames-modal";
+import {
+  GenerateReferenceFramesModal,
+  type GeneratedFrameDream,
+} from "./generate-reference-frames-modal";
 import { useGeneratedFrameSync } from "@/components/pages/studio/hooks/useGeneratedFrameSync";
 import { useFlowGeneration } from "@/components/pages/studio/hooks/useFlowGeneration";
 import { useFlowJobProgress } from "@/components/pages/studio/hooks/useFlowJobProgress";
 import { useSavedPlaylistSync } from "@/components/pages/studio/hooks/useSavedPlaylistSync";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
-
-const FlowContainer = styled.div<{ $dragOver?: boolean }>`
-  background: ${FLOW.bgCard};
-  border: 1px solid ${FLOW.border};
-  border-radius: 16px;
-  overflow: hidden;
-  position: relative;
-  min-height: 200px;
-  transition:
-    border-color 0.2s,
-    background-color 0.2s;
-
-  ${(props) =>
-    props.$dragOver &&
-    `
-    border-color: ${FLOW.accent};
-    background-color: ${FLOW.accentDim};
-  `}
-`;
+import { useExistingDreamUuids } from "../hooks/useExistingDreamUuids";
+import type { Dream } from "@/types/dream.types";
 
 export const FlowBuilder: React.FC = () => {
   const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
@@ -141,13 +126,44 @@ export const FlowBuilder: React.FC = () => {
     setShowLibraryModal(true);
   }, []);
 
+  const existingDreamUuids = useExistingDreamUuids();
+
+  const handleAddDreamsFromLibrary = useCallback(
+    (dreams: Dream[]) => {
+      for (const dream of dreams) {
+        addReferenceFrame({
+          id: uuidv4(),
+          dreamUuid: dream.uuid,
+          imageUrl:
+            dream.video || dream.original_video || dream.thumbnail || "",
+          name: dream.name,
+        });
+      }
+    },
+    [addReferenceFrame],
+  );
+
+  const handleGeneratedFrame = useCallback(
+    (dream: GeneratedFrameDream) => {
+      addReferenceFrame({
+        id: uuidv4(),
+        dreamUuid: dream.uuid,
+        imageUrl: "",
+        name: dream.name,
+        uploadStatus: "uploading",
+        uploadProgress: 0,
+      });
+    },
+    [addReferenceFrame],
+  );
+
   const { isDragOver, dropHandlers } = useFileDropUpload({
     accept: ["image/jpeg", "image/png", "image/webp"],
     onFiles: uploadFiles,
   });
 
   return (
-    <FlowContainer $dragOver={isDragOver} {...dropHandlers}>
+    <StudioFrame $dragOver={isDragOver} {...dropHandlers}>
       <ReferenceFrameStrip
         onAddUpload={handleAddUpload}
         onAddGenerate={() => setShowGenerateModal(true)}
@@ -181,14 +197,19 @@ export const FlowBuilder: React.FC = () => {
       )}
 
       {showLibraryModal && (
-        <SelectImageDreamModal onClose={() => setShowLibraryModal(false)} />
+        <SelectImageDreamModal
+          onClose={() => setShowLibraryModal(false)}
+          existingDreamUuids={existingDreamUuids}
+          onAdd={handleAddDreamsFromLibrary}
+        />
       )}
 
       {showGenerateModal && (
         <GenerateReferenceFramesModal
           onClose={() => setShowGenerateModal(false)}
+          onCreated={handleGeneratedFrame}
         />
       )}
-    </FlowContainer>
+    </StudioFrame>
   );
 };

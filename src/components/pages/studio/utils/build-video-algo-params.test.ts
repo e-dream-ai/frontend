@@ -5,7 +5,6 @@ import type { StudioAction } from "@/types/studio.types";
 const makeAction = (overrides: Partial<StudioAction> = {}): StudioAction => ({
   id: "act1",
   prompt: "slow zoom in",
-  enabled: true,
   ...overrides,
 });
 

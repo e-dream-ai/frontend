@@ -91,7 +91,6 @@ export const useGeneratedFrameSync = () => {
                 url: "",
                 name: frame.name,
                 status: dream.status as StudioImage["status"],
-                selected: false,
               });
             }
           })
