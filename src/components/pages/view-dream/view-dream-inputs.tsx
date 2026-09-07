@@ -361,7 +361,7 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
           <FormInput
             linkify
             resolveInternalLink={resolveDreamSourceLink}
-            disabled={!editMode}
+            disabled={!editMode || isUuid(dream?.sourceUrl)}
             placeholder={t("page.view_dream.source_url")}
             type="text"
             before={<FontAwesomeIcon icon={faLink} />}
