@@ -1,8 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { axiosClient } from "@/client/axios.client";
 import { useStudioStore } from "@/stores/studio.store";
-import { useFlowStore } from "@/stores/flow.store";
 import type { ImageModel, StudioImage } from "@/types/studio.types";
 import { useModels } from "@/api/model/query/useModels";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
@@ -38,24 +36,23 @@ import {
   PromptTextarea,
 } from "./transition-settings-panel.styled";
 
+export interface GeneratedFrameDream {
+  uuid: string;
+  name: string;
+}
+
 interface Props {
   onClose: () => void;
-  /**
-   * The flow app also seeds a placeholder card in the reference-frame strip,
-   * which `useGeneratedFrameSync` then fills in. The action app tracks the
-   * same generated images through the studio store alone, so it opts out.
-   */
-  createFlowFrames?: boolean;
+  onCreated?: (dream: GeneratedFrameDream) => void;
 }
 
 export const GenerateReferenceFramesModal: React.FC<Props> = ({
   onClose,
-  createFlowFrames = true,
+  onCreated,
 }) => {
   const imageGenParams = useStudioStore((s) => s.imageGenParams);
   const setImageGenParams = useStudioStore((s) => s.setImageGenParams);
   const addImage = useStudioStore((s) => s.addImage);
-  const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
 
   // Shared with the batch Images tab so the prompt survives reopening the
   // dialog and carries over between the two generate UIs.
@@ -128,18 +125,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
               size: imageGenParams.size,
               status: (dream.status as StudioImage["status"]) || "queue",
             });
-            // Placeholder card in the strip; useGeneratedFrameSync fills
-            // in progress and the final thumbnail.
-            if (createFlowFrames) {
-              addReferenceFrame({
-                id: uuidv4(),
-                dreamUuid: dream.uuid,
-                imageUrl: "",
-                name: dream.name,
-                uploadStatus: "uploading",
-                uploadProgress: 0,
-              });
-            }
+            onCreated?.(dream);
           })
           .catch((err) => {
             console.error("Failed to create image:", err);
@@ -157,8 +143,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
     negativePromptEnabled,
     modelOptions,
     addImage,
-    addReferenceFrame,
-    createFlowFrames,
+    onCreated,
     onClose,
   ]);
 

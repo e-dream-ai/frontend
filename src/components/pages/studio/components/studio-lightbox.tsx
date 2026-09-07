@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { canStep } from "@/utils/lightbox.util";
@@ -24,7 +24,8 @@ interface Props {
   onClose: () => void;
   onStep: (delta: number) => void;
   /** Neighbouring full-size URLs to warm, when the caller knows them. */
-  preloadUrls?: (string | undefined)[];
+  prevUrl?: string;
+  nextUrl?: string;
   label?: string;
   /** The resolved image. Flow frames carry a URL; studio images may need a
    *  presigned fetch — so each caller renders its own <img>. */
@@ -43,31 +44,35 @@ export const StudioLightbox: React.FC<Props> = ({
   name,
   onClose,
   onStep,
-  preloadUrls,
+  prevUrl,
+  nextUrl,
   label = "Image preview",
   children,
 }) => {
   const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
 
-  const warm = preloadUrls?.join("|");
   useEffect(() => {
-    if (!warm) return;
-    for (const url of warm.split("|")) {
+    for (const url of [prevUrl, nextUrl]) {
       if (!url) continue;
       const img = new Image();
       img.src = url;
     }
-  }, [warm]);
+  }, [prevUrl, nextUrl]);
+
+  const onStepRef = useRef(onStep);
+  useEffect(() => {
+    onStepRef.current = onStep;
+  }, [onStep]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
       e.preventDefault();
-      onStep(e.key === "ArrowRight" ? 1 : -1);
+      onStepRef.current(e.key === "ArrowRight" ? 1 : -1);
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [onStep]);
+  }, []);
 
   return createPortal(
     <Overlay

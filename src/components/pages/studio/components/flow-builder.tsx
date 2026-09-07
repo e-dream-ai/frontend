@@ -10,7 +10,10 @@ import { FlowPreview } from "./flow-preview";
 import { FlowActionBar } from "./flow-action-bar";
 import { AddReferenceFramesFromPlaylistModal } from "./add-reference-frames-from-playlist-modal";
 import { SelectImageDreamModal } from "./select-image-dream-modal";
-import { GenerateReferenceFramesModal } from "./generate-reference-frames-modal";
+import {
+  GenerateReferenceFramesModal,
+  type GeneratedFrameDream,
+} from "./generate-reference-frames-modal";
 import { useGeneratedFrameSync } from "@/components/pages/studio/hooks/useGeneratedFrameSync";
 import { useFlowGeneration } from "@/components/pages/studio/hooks/useFlowGeneration";
 import { useFlowJobProgress } from "@/components/pages/studio/hooks/useFlowJobProgress";
@@ -140,6 +143,20 @@ export const FlowBuilder: React.FC = () => {
     [addReferenceFrame],
   );
 
+  const handleGeneratedFrame = useCallback(
+    (dream: GeneratedFrameDream) => {
+      addReferenceFrame({
+        id: uuidv4(),
+        dreamUuid: dream.uuid,
+        imageUrl: "",
+        name: dream.name,
+        uploadStatus: "uploading",
+        uploadProgress: 0,
+      });
+    },
+    [addReferenceFrame],
+  );
+
   const { isDragOver, dropHandlers } = useFileDropUpload({
     accept: ["image/jpeg", "image/png", "image/webp"],
     onFiles: uploadFiles,
@@ -190,6 +207,7 @@ export const FlowBuilder: React.FC = () => {
       {showGenerateModal && (
         <GenerateReferenceFramesModal
           onClose={() => setShowGenerateModal(false)}
+          onCreated={handleGeneratedFrame}
         />
       )}
     </StudioFrame>

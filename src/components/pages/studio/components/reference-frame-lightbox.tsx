@@ -25,10 +25,8 @@ function ReferenceFrameLightboxDialog({ openId }: { openId: string }) {
       onClose={close}
       onStep={step}
       label="Reference frame preview"
-      preloadUrls={[
-        referenceFrames[index - 1]?.imageUrl,
-        referenceFrames[index + 1]?.imageUrl,
-      ]}
+      prevUrl={referenceFrames[index - 1]?.imageUrl}
+      nextUrl={referenceFrames[index + 1]?.imageUrl}
     >
       <img src={src} alt={frame.name} onError={onError} />
     </StudioLightbox>

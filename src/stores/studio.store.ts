@@ -23,9 +23,6 @@ type StudioState = {
   updateImage: (uuid: string, updates: Partial<StudioImage>) => void;
   removeImage: (uuid: string) => void;
 
-  isGenerating: boolean;
-  setIsGenerating: (v: boolean) => void;
-
   actions: StudioAction[];
   addAction: (action: StudioAction) => void;
   updateAction: (id: string, updates: Partial<StudioAction>) => void;
@@ -71,6 +68,18 @@ const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
   seed: -1,
 };
 
+export const comboKeyOf = (imageUuid: string, actionId: string) =>
+  `${imageUuid}:${actionId}`;
+
+const pruneCombosForImage = (combos: Set<string>, imageUuid: string) => {
+  const prefix = `${imageUuid}:`;
+  const next = new Set<string>();
+  for (const key of combos) {
+    if (!key.startsWith(prefix)) next.add(key);
+  }
+  return next;
+};
+
 export const studioPartialize = (state: StudioState) => ({
   activeTab: state.activeTab,
   imagePrompt: state.imagePrompt,
@@ -111,10 +120,10 @@ export const useStudioStore = create<StudioState>()(
           ),
         })),
       removeImage: (uuid: string) =>
-        set((s) => ({ images: s.images.filter((img) => img.uuid !== uuid) })),
-
-      isGenerating: false,
-      setIsGenerating: (v: boolean) => set({ isGenerating: v }),
+        set((s) => ({
+          images: s.images.filter((img) => img.uuid !== uuid),
+          excludedCombos: pruneCombosForImage(s.excludedCombos, uuid),
+        })),
 
       actions: [] as StudioAction[],
       addAction: (action: StudioAction) =>
@@ -215,12 +224,11 @@ export const useStudioStore = create<StudioState>()(
           excludedCombos: new Set<string>(),
           jobs: [],
           newCompletedCount: 0,
-          isGenerating: false,
         }),
     }),
     {
       name: "studio-session",
-      version: 9,
+      version: 10,
       partialize: studioPartialize,
       storage: {
         getItem: (name) => {
@@ -337,6 +345,16 @@ export const useStudioStore = create<StudioState>()(
               state.actions as StudioAction[],
               model,
             );
+          }
+        }
+        if (version < 10) {
+          if (Array.isArray(state.images)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            for (const img of state.images as any[]) delete img.selected;
+          }
+          if (Array.isArray(state.actions)) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            for (const a of state.actions as any[]) delete a.enabled;
           }
         }
         return state as Record<string, unknown>;

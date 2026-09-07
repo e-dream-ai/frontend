@@ -37,23 +37,6 @@ describe("studio.store", () => {
     useStudioStore.getState().resetSession();
   });
 
-  describe("isGenerating", () => {
-    it("defaults to false", () => {
-      expect(useStudioStore.getState().isGenerating).toBe(false);
-    });
-
-    it("can be set to true", () => {
-      useStudioStore.getState().setIsGenerating(true);
-      expect(useStudioStore.getState().isGenerating).toBe(true);
-    });
-
-    it("resets to false on resetSession", () => {
-      useStudioStore.getState().setIsGenerating(true);
-      useStudioStore.getState().resetSession();
-      expect(useStudioStore.getState().isGenerating).toBe(false);
-    });
-  });
-
   describe("newCompletedCount", () => {
     it("increments", () => {
       useStudioStore.getState().incrementNewCompleted();

@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 
 export const GenerateSection = styled.div`
-  padding: 24px 28px;
+  padding: 24px ${FLOW.inset};
 
   & + & {
     border-top: 1px solid ${FLOW.border};
@@ -29,22 +29,6 @@ export const SectionHeaderRow = styled.div`
 
   ${SectionTitle} {
     margin-bottom: 0;
-  }
-`;
-
-export const AdvancedToggle = styled.button`
-  background: none;
-  border: none;
-  color: ${(props) => props.theme.textBodyColor};
-  font-family: inherit;
-  font-size: 0.8125rem;
-  cursor: pointer;
-  padding: 0;
-  margin: -0.25rem 0 0.75rem;
-  text-align: left;
-
-  &:hover {
-    color: ${(props) => props.theme.textPrimaryColor};
   }
 `;
 
@@ -101,10 +85,26 @@ export const ImageCard = styled.div`
   background: ${FLOW.bgElevated};
 `;
 
-export const ImageThumbnail = styled.img`
+export const ImageThumbnail = styled.img<{ $pending?: boolean }>`
   width: 100%;
   height: 100%;
   object-fit: cover;
+  opacity: ${(props) => (props.$pending ? 0.5 : 1)};
+`;
+
+export const ThumbnailButton = styled.button`
+  display: block;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid ${FLOW.accent};
+    outline-offset: -2px;
+  }
 `;
 
 export const DeleteButton = styled.button`
@@ -177,14 +177,14 @@ export const BottomRow = styled.div`
   justify-content: space-between;
   gap: 1rem;
   flex-wrap: wrap;
-  padding: 20px 28px;
+  padding: 20px ${FLOW.inset};
   border-top: 1px solid ${FLOW.border};
 
   @media (max-width: 480px) {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.875rem;
-    padding: 16px 20px;
+    padding: 16px ${FLOW.insetNarrow};
   }
 `;
 

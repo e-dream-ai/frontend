@@ -14,6 +14,7 @@ import {
   NavButton,
   BottomRow,
 } from "./images-tab.styled";
+import { isAnimatableFrame, isRunnableAction } from "../utils/batch-selectors";
 import {
   ActionList,
   ActionRow,
@@ -82,12 +83,15 @@ export const ActionsTab: React.FC = () => {
 
   const loraOptions = getLoraOptionsForModel(model);
 
-  const selectedImageCount = useMemo(
-    () => images.filter((img) => img.status === "processed").length,
+  const frameCount = useMemo(
+    () => images.filter(isAnimatableFrame).length,
     [images],
   );
-  const actionCount = actions.length;
-  const totalVideos = selectedImageCount * actionCount;
+  const actionCount = useMemo(
+    () => actions.filter(isRunnableAction).length,
+    [actions],
+  );
+  const totalVideos = frameCount * actionCount;
 
   const handleAddAction = () => {
     addAction({ id: uuidv4(), prompt: "" });
@@ -128,7 +132,7 @@ export const ActionsTab: React.FC = () => {
       </GenerateSection>
 
       <SummaryBox>
-        <SummaryHighlight>{selectedImageCount}</SummaryHighlight> frames &times;{" "}
+        <SummaryHighlight>{frameCount}</SummaryHighlight> frames &times;{" "}
         <SummaryHighlight>{actionCount}</SummaryHighlight> actions ={" "}
         <SummaryHighlight>{totalVideos}</SummaryHighlight> videos
       </SummaryBox>

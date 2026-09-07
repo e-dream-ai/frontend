@@ -11,6 +11,7 @@ import {
   ImageGrid,
   ImageCard,
   ImageThumbnail,
+  ThumbnailButton,
   DeleteButton,
   ImageStatus,
   SeedLabel,
@@ -152,28 +153,23 @@ export const ImagesTab: React.FC = () => {
             {images.map((img) => (
               <ImageCard key={img.uuid}>
                 {img.status === "processed" ? (
-                  img.url.startsWith("http") ? (
-                    <ImageThumbnail
-                      src={img.url}
-                      alt={img.name}
-                      onClick={() => setExpandedImageUuid(img.uuid)}
-                      style={{ cursor: "pointer" }}
-                    />
-                  ) : (
-                    <ImageThumbnail
-                      as={PresignedImage}
-                      dreamUuid={img.uuid}
-                      alt={img.name}
-                      onClick={() => setExpandedImageUuid(img.uuid)}
-                      style={{ cursor: "pointer" }}
-                    />
-                  )
+                  <ThumbnailButton
+                    type="button"
+                    aria-label={`Preview ${img.name}`}
+                    onClick={() => setExpandedImageUuid(img.uuid)}
+                  >
+                    {img.url.startsWith("http") ? (
+                      <ImageThumbnail src={img.url} alt={img.name} />
+                    ) : (
+                      <ImageThumbnail
+                        as={PresignedImage}
+                        dreamUuid={img.uuid}
+                        alt={img.name}
+                      />
+                    )}
+                  </ThumbnailButton>
                 ) : img.status === "processing" && img.url ? (
-                  <ImageThumbnail
-                    src={img.url}
-                    alt={img.name}
-                    style={{ opacity: 0.5 }}
-                  />
+                  <ImageThumbnail $pending src={img.url} alt={img.name} />
                 ) : (
                   <ImageStatus>
                     {img.status === "queue" && "Queued..."}
@@ -227,7 +223,6 @@ export const ImagesTab: React.FC = () => {
       {showGenerateModal && (
         <GenerateReferenceFramesModal
           onClose={() => setShowGenerateModal(false)}
-          createFlowFrames={false}
         />
       )}
 

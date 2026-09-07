@@ -10,6 +10,9 @@ interface Props {
   onOpenChange: (uuid: string) => void;
 }
 
+const directUrlOf = (image?: StudioImage) =>
+  image?.url.startsWith("http") ? image.url : undefined;
+
 /**
  * Action-studio lightbox. Shares all of its chrome with the flow app via
  * StudioLightbox; only image resolution differs — uploads keep a direct URL,
@@ -43,11 +46,10 @@ export const ImageLightbox: React.FC<Props> = ({
       onClose={onClose}
       onStep={handleStep}
       label="Reference frame preview"
-      preloadUrls={[images[index - 1]?.url, images[index + 1]?.url].map(
-        (url) => (url?.startsWith("http") ? url : undefined),
-      )}
+      prevUrl={directUrlOf(images[index - 1])}
+      nextUrl={directUrlOf(images[index + 1])}
     >
-      {image.url.startsWith("http") ? (
+      {directUrlOf(image) ? (
         <img src={image.url} alt={image.name} />
       ) : (
         <PresignedImage dreamUuid={image.uuid} alt={image.name} />

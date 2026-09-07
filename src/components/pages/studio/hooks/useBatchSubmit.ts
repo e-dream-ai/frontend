@@ -1,5 +1,5 @@
 import { useCallback, useState } from "react";
-import { useStudioStore } from "@/stores/studio.store";
+import { useStudioStore, comboKeyOf } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import { axiosClient } from "@/client/axios.client";
 import { createComboKey } from "@/types/studio.types";
@@ -13,6 +13,7 @@ import {
 } from "../constants/guidance-options";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
+import { isAnimatableFrame, isRunnableAction } from "../utils/batch-selectors";
 
 // Serialized to avoid concurrent auth refresh races (see fix/session-refresh-race on backend)
 const BATCH_SIZE = 1;
@@ -32,9 +33,9 @@ export const useBatchSubmit = () => {
   const modelConstraints = useModelConstraints({ mediaType: "video" });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const getSelectedCombinations = useCallback(() => {
-    const selectedImages = images.filter((img) => img.status === "processed");
-    const enabledActions = actions.filter((a) => a.prompt.trim());
+  const getPendingCombinations = useCallback(() => {
+    const frames = images.filter(isAnimatableFrame);
+    const runnableActions = actions.filter(isRunnableAction);
 
     const existingJobKeys = new Set(
       jobs
@@ -43,13 +44,13 @@ export const useBatchSubmit = () => {
     );
 
     const combos: Array<{
-      image: (typeof selectedImages)[0];
-      action: (typeof enabledActions)[0];
+      image: (typeof frames)[0];
+      action: (typeof runnableActions)[0];
     }> = [];
 
-    for (const image of selectedImages) {
-      for (const action of enabledActions) {
-        const comboKey = `${image.uuid}:${action.id}`;
+    for (const image of frames) {
+      for (const action of runnableActions) {
+        const comboKey = comboKeyOf(image.uuid, action.id);
         if (!excludedCombos.has(comboKey) && !existingJobKeys.has(comboKey)) {
           combos.push({ image, action });
         }
@@ -75,7 +76,7 @@ export const useBatchSubmit = () => {
         setOutputPlaylistId(playlistId);
       }
 
-      const combos = getSelectedCombinations();
+      const combos = getPendingCombinations();
       const allowedDurations = getAllowedDurationsForActions(
         combos.map(({ action }) => action),
         modelConstraints.get(videoGenParams.model)?.durationsSec,
@@ -170,7 +171,7 @@ export const useBatchSubmit = () => {
   }, [
     outputPlaylistId,
     setOutputPlaylistId,
-    getSelectedCombinations,
+    getPendingCombinations,
     videoGenParams,
     modelConstraints,
     createDream,
@@ -178,5 +179,5 @@ export const useBatchSubmit = () => {
     setActiveTab,
   ]);
 
-  return { submit, isSubmitting, getSelectedCombinations };
+  return { submit, isSubmitting, getPendingCombinations };
 };

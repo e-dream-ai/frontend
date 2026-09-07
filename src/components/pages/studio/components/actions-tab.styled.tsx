@@ -80,10 +80,10 @@ export const SummaryBox = styled.div`
   font-size: 0.875rem;
   color: ${FLOW.textDim};
   /* Aligns with GenerateSection's 28px inset — it is a sibling, not a child. */
-  margin: 0 28px 24px;
+  margin: 0 ${FLOW.inset} 24px;
 
   @media (max-width: 480px) {
-    margin: 0 20px 20px;
+    margin: 0 ${FLOW.insetNarrow} ${FLOW.insetNarrow};
   }
 `;
 
