@@ -57,7 +57,7 @@ export const CreateDream: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
-  const canMarkNsfw = hasOptedIntoNsfw(user as User);
+  const canMarkNsfw = hasOptedIntoNsfw(user);
   const canCreateProprietaryDreams = Boolean(
     user?.enableCreatingProprietaryDreams,
   );
@@ -72,7 +72,6 @@ export const CreateDream: React.FC = () => {
   } = useForm<CreateDreamFormValues>({
     resolver: yupResolver(CreateDreamSchema),
     defaultValues: {
-      nsfw: false,
       ccbyLicense: !canCreateProprietaryDreams,
     },
   });

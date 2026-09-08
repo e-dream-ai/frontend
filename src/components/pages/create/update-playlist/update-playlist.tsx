@@ -43,12 +43,11 @@ import Restricted from "@/components/shared/restricted/restricted";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import useAuth from "@/hooks/useAuth";
 import { hasOptedIntoNsfw } from "@/utils/user.util";
-import { User } from "@/types/auth.types";
 
 export const UpdatePlaylist: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
-  const canMarkNsfw = hasOptedIntoNsfw(user as User);
+  const canMarkNsfw = hasOptedIntoNsfw(user);
 
   const {
     handleSubmit,
@@ -59,9 +58,6 @@ export const UpdatePlaylist: React.FC = () => {
     register,
   } = useForm<UpdateVideoPlaylistFormValues>({
     resolver: yupResolver(UpdateVideoPlaylistSchema),
-    defaultValues: {
-      nsfw: false,
-    },
   });
 
   const {

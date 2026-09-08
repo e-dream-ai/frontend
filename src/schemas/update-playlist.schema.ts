@@ -83,7 +83,7 @@ export const UpdateVideoPlaylistSchema = yup
         value: yup.string().uuid().required(),
       })
       .required("Playlist is required."),
-    nsfw: yup.boolean().required(),
+    nsfw: yup.boolean().default(false).required(),
     hidden: yup.boolean(),
     ccbyLicense: yup.boolean().required(),
     description: yup.string(),

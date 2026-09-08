@@ -61,7 +61,7 @@ export const CreatePlaylist: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
-  const canMarkNsfw = hasOptedIntoNsfw(user as User);
+  const canMarkNsfw = hasOptedIntoNsfw(user);
   const [videos, setVideos] = useState<FileState[]>([]);
   const [currentUploadFile, setCurrentUploadFile] = useState(0);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
@@ -86,9 +86,6 @@ export const CreatePlaylist: React.FC = () => {
     formState: { errors },
   } = useForm<CreatePlaylistFormValues>({
     resolver: yupResolver(CreatePlaylistSchema),
-    defaultValues: {
-      nsfw: false,
-    },
   });
 
   const totalVideos: number = videos.length;
