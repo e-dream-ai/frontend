@@ -26,12 +26,7 @@ import React, {
 } from "react";
 import { FormProvider, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import {
-  Navigate,
-  useLocation,
-  useNavigate,
-  useParams,
-} from "react-router-dom";
+import { Navigate, useNavigate, useParams } from "react-router-dom";
 import { toast } from "react-toastify";
 import router from "@/routes/router";
 import UpdateDreamSchema, {
@@ -123,9 +118,8 @@ import { CostEstimate } from "@/components/shared/cost-estimate/cost-estimate";
 
 type Params = { uuid: string };
 
-type DreamNavState = { startInEditMode?: boolean };
-
 type DreamModal =
+  | "remix"
   | "process"
   | "cancel"
   | "delete"
@@ -220,10 +214,8 @@ const ViewDreamPage: React.FC = () => {
   const { uuid } = useParams<Params>();
   const { user } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const [editMode, setEditMode] = useState<boolean>(false);
-  const [showCopyConfirm, setShowCopyConfirm] = useState<boolean>(false);
+  const [editingDreamUuid, setEditingDreamUuid] = useState<string | null>(null);
+  const editMode = editingDreamUuid === uuid;
   const [video, setVideo] = useState<MultiMediaState>();
   const [originalImage, setOriginalImage] = useState<MultiMediaState>();
   const [thumbnail, setTumbnail] = useState<MultiMediaState>();
@@ -245,7 +237,7 @@ const ViewDreamPage: React.FC = () => {
   const upvoteMutation = useUpvoteDream(uuid);
   const downvoteMutation = useDownvoteDream(uuid);
   const unvoteMutation = useUnvoteDream(uuid);
-  const copyDreamMutation = useCreateDreamFromPrompt();
+  const remixDreamMutation = useCreateDreamFromPrompt();
 
   const {
     data,
@@ -495,7 +487,7 @@ const ViewDreamPage: React.FC = () => {
   const showEditButton = !editMode;
   const showSaveAndCancelButtons = editMode && !isDreamProcessingRaw;
 
-  const showCopyButton = isCreator && !isOwner && hasPrompt;
+  const showRemixButton = isCreator && !isOwner && hasPrompt;
   // Handlers
   const handleMutateVideoDream = async (data: UpdateDreamFormValues) => {
     if (isImageDream) {
@@ -563,7 +555,7 @@ const ViewDreamPage: React.FC = () => {
         if (data.success) {
           queryClient.setQueryData([DREAM_QUERY_KEY, dream?.uuid], data);
           toast.success(t("page.view_dream.dream_updated_successfully"));
-          setEditMode(false);
+          setEditingDreamUuid(null);
         } else {
           toast.error(
             `${t("page.view_dream.error_updating_dream")} ${data.message}`,
@@ -657,11 +649,18 @@ const ViewDreamPage: React.FC = () => {
 
   const handleEdit = (event: React.MouseEvent) => {
     event.preventDefault();
-    setEditMode(true);
+    setEditingDreamUuid(uuid ?? null);
   };
 
-  const handleCopyDream = async () => {
-    if (!dream) return;
+  const handleRemixDream = async () => {
+    if (
+      !dream ||
+      dream.uuid !== uuid ||
+      !showRemixButton ||
+      remixDreamMutation.isLoading
+    ) {
+      return;
+    }
     const prompt = serializeDreamPrompt(dream.prompt);
     if (!prompt) return;
 
@@ -670,7 +669,7 @@ const ViewDreamPage: React.FC = () => {
     )}`.trim();
 
     try {
-      const response = await copyDreamMutation.mutateAsync({
+      const response = await remixDreamMutation.mutateAsync({
         name,
         prompt,
         sourceUrl: dream.uuid,
@@ -683,10 +682,10 @@ const ViewDreamPage: React.FC = () => {
         return;
       }
 
-      setShowCopyConfirm(false);
-      navigate(`${ROUTES.VIEW_DREAM}/${newDream.uuid}`, {
-        state: { startInEditMode: true } satisfies DreamNavState,
-      });
+      queryClient.setQueryData([DREAM_QUERY_KEY, newDream.uuid], response);
+      closeModal();
+      setEditingDreamUuid(newDream.uuid);
+      navigate(`${ROUTES.VIEW_DREAM}/${newDream.uuid}`);
     } catch {
       toast.error(t("page.view_dream.error_remixing_dream"));
     }
@@ -704,7 +703,7 @@ const ViewDreamPage: React.FC = () => {
     setVideo(undefined);
     setOriginalImage(undefined);
     setTumbnail(undefined);
-    setEditMode(false);
+    setEditingDreamUuid(null);
   };
 
   const handleGetPreview = async (event: React.MouseEvent) => {
@@ -954,15 +953,6 @@ const ViewDreamPage: React.FC = () => {
     resetRemoteDreamForm();
   }, [resetRemoteDreamForm]);
 
-  useEffect(() => {
-    const startInEditMode = (location.state as DreamNavState | null)
-      ?.startInEditMode;
-    if (startInEditMode) {
-      setEditMode(true);
-      navigate(".", { replace: true, state: null });
-    }
-  }, [location.state, navigate]);
-
   if (!uuid) return <Navigate to={ROUTES.ROOT} replace />;
 
   /**
@@ -970,7 +960,7 @@ const ViewDreamPage: React.FC = () => {
    */
   if (isError) return <NotFound />;
 
-  if (isDreamLoading || !dream)
+  if (isDreamLoading || !dream || dream.uuid !== uuid)
     return (
       <Container>
         <Row justifyContent="center">
@@ -1001,10 +991,10 @@ const ViewDreamPage: React.FC = () => {
       />
 
       <ConfirmModal
-        isOpen={showCopyConfirm}
-        onCancel={() => setShowCopyConfirm(false)}
-        onConfirm={handleCopyDream}
-        isConfirming={copyDreamMutation.isLoading}
+        isOpen={activeModal === "remix"}
+        onCancel={closeModal}
+        onConfirm={handleRemixDream}
+        isConfirming={remixDreamMutation.isLoading}
         title={t("page.view_dream.remix")}
         confirmText={t("page.view_dream.remix")}
         text={<Text>{t("page.view_dream.remix_confirm")}</Text>}
@@ -1342,11 +1332,12 @@ const ViewDreamPage: React.FC = () => {
                           </Button>
                         </Restricted>
                       )}
-                      {showCopyButton && (
+                      {showRemixButton && (
                         <Button
                           type="button"
                           after={<FontAwesomeIcon icon={faCopy} />}
-                          onClick={() => setShowCopyConfirm(true)}
+                          isLoading={remixDreamMutation.isLoading}
+                          onClick={() => openModal("remix")}
                         >
                           {t("page.view_dream.remix")}
                         </Button>

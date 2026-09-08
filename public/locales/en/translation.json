@@ -210,7 +210,7 @@
       "edit": "Edit",
       "rerun": "Rerun",
       "remix": "Remix",
-      "remix_confirm": "Create a new dream by editing the prompt of this one and then rerunning it.",
+      "remix_confirm": "Create a new dream by copying the prompt of this one and editing your own version of it.",
       "save": "Save",
       "saving": "Saving",
       "cancel": "Cancel",
