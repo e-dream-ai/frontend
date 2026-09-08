@@ -247,7 +247,11 @@ export const CreatePlaylist: React.FC = () => {
                   content={t("page.create.ccby_license_dream_tooltip")}
                 />
                 {t("page.create.license_dream")}{" "}
-                <AnchorLink to={`${ROUTES.TERMS_OF_SERVICE}#${CCBY_ID}`}>
+                <AnchorLink
+                  to={`${ROUTES.TERMS_OF_SERVICE}#${CCBY_ID}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
                   {t("page.create.license_dream_ccby")}
                 </AnchorLink>
               </Checkbox>
