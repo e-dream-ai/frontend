@@ -16,7 +16,7 @@ export const CreateDreamSchema = yup
   .object({
     description: yup.string(),
     sourceUrl: yup.string(),
-    nsfw: yup.boolean().required(),
+    nsfw: yup.boolean().default(false).required(),
     hidden: yup.boolean(),
     ccbyLicense: yup.boolean().required(),
   })
