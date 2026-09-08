@@ -55,12 +55,13 @@ import { createAddFileHandler } from "@/utils/file.util";
 import { CCBY_ID } from "@/constants/terms-of-service";
 import { CreateDreamFormValues } from "@/schemas/dream.schema";
 import useAuth from "@/hooks/useAuth";
-import { isAdmin } from "@/utils/user.util";
+import { hasOptedIntoNsfw, isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
 export const CreatePlaylist: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
+  const canMarkNsfw = hasOptedIntoNsfw(user as User);
   const [videos, setVideos] = useState<FileState[]>([]);
   const [currentUploadFile, setCurrentUploadFile] = useState(0);
   const [isUploadingFiles, setIsUploadingFiles] = useState(false);
@@ -85,6 +86,9 @@ export const CreatePlaylist: React.FC = () => {
     formState: { errors },
   } = useForm<CreatePlaylistFormValues>({
     resolver: yupResolver(CreatePlaylistSchema),
+    defaultValues: {
+      nsfw: false,
+    },
   });
 
   const totalVideos: number = videos.length;
@@ -222,9 +226,11 @@ export const CreatePlaylist: React.FC = () => {
 
         <Row my={4} justifyContent="space-between">
           <Column flex="auto">
-            <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
-              {t("page.create.nsfw_playlist")}
-            </Checkbox>
+            {canMarkNsfw && (
+              <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
+                {t("page.create.nsfw_playlist")}
+              </Checkbox>
+            )}
             <Restricted to={PLAYLIST_PERMISSIONS.CAN_EDIT_VISIBILITY}>
               <Checkbox {...register("hidden")} error={errors.hidden?.message}>
                 {t("page.create.hidden_playlist")}
@@ -240,7 +246,7 @@ export const CreatePlaylist: React.FC = () => {
                   place="right-end"
                   content={t("page.create.ccby_license_dream_tooltip")}
                 />
-                {t("page.create.license_dream")}
+                {t("page.create.license_dream")}{" "}
                 <AnchorLink to={`${ROUTES.TERMS_OF_SERVICE}#${CCBY_ID}`}>
                   {t("page.create.license_dream_ccby")}
                 </AnchorLink>

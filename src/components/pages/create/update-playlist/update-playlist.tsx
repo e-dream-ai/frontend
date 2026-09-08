@@ -41,9 +41,14 @@ import { ROUTES } from "@/constants/routes.constants";
 import { CCBY_ID } from "@/constants/terms-of-service";
 import Restricted from "@/components/shared/restricted/restricted";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
+import useAuth from "@/hooks/useAuth";
+import { hasOptedIntoNsfw } from "@/utils/user.util";
+import { User } from "@/types/auth.types";
 
 export const UpdatePlaylist: React.FC = () => {
   const { t } = useTranslation();
+  const { user } = useAuth();
+  const canMarkNsfw = hasOptedIntoNsfw(user as User);
 
   const {
     handleSubmit,
@@ -54,6 +59,9 @@ export const UpdatePlaylist: React.FC = () => {
     register,
   } = useForm<UpdateVideoPlaylistFormValues>({
     resolver: yupResolver(UpdateVideoPlaylistSchema),
+    defaultValues: {
+      nsfw: false,
+    },
   });
 
   const {
@@ -171,9 +179,11 @@ export const UpdatePlaylist: React.FC = () => {
 
           <Row my={4} justifyContent="space-between">
             <Column flex="auto">
-              <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
-                {t("page.create.nsfw_dream")}
-              </Checkbox>
+              {canMarkNsfw && (
+                <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
+                  {t("page.create.nsfw_dream")}
+                </Checkbox>
+              )}
               <Restricted to={DREAM_PERMISSIONS.CAN_EDIT_VISIBILITY}>
                 <Checkbox
                   {...register("hidden")}

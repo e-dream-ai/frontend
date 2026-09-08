@@ -50,13 +50,14 @@ import { CCBY_ID } from "@/constants/terms-of-service";
 import Restricted from "@/components/shared/restricted/restricted";
 import { DREAM_PERMISSIONS } from "@/constants/permissions.constants";
 import useAuth from "@/hooks/useAuth";
-import { isAdmin } from "@/utils/user.util";
+import { hasOptedIntoNsfw, isAdmin } from "@/utils/user.util";
 import { User } from "@/types/auth.types";
 
 export const CreateDream: React.FC = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const isUserAdmin = useMemo(() => isAdmin(user as User), [user]);
+  const canMarkNsfw = hasOptedIntoNsfw(user as User);
   const canCreateProprietaryDreams = Boolean(
     user?.enableCreatingProprietaryDreams,
   );
@@ -71,6 +72,7 @@ export const CreateDream: React.FC = () => {
   } = useForm<CreateDreamFormValues>({
     resolver: yupResolver(CreateDreamSchema),
     defaultValues: {
+      nsfw: false,
       ccbyLicense: !canCreateProprietaryDreams,
     },
   });
@@ -166,9 +168,11 @@ export const CreateDream: React.FC = () => {
 
         <Row my={3}>
           <Column flex="auto">
-            <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
-              {t("page.create.nsfw_dream")}
-            </Checkbox>
+            {canMarkNsfw && (
+              <Checkbox {...register("nsfw")} error={errors.nsfw?.message}>
+                {t("page.create.nsfw_dream")}
+              </Checkbox>
+            )}
             <Restricted to={DREAM_PERMISSIONS.CAN_EDIT_VISIBILITY}>
               <Checkbox {...register("hidden")} error={errors.hidden?.message}>
                 {t("page.create.hidden_dream")}
