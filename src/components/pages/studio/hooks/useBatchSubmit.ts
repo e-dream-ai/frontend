@@ -144,7 +144,6 @@ export const useBatchSubmit = () => {
                   | "processing"
                   | "processed"
                   | "failed") || "queue",
-              selectedForUprez: false,
             });
             jobsAdded++;
 

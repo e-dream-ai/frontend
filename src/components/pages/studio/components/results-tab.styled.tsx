@@ -1,4 +1,5 @@
 import styled, { css } from "styled-components";
+import { FLOW } from "@/constants/flow-theme.constants";
 
 export const ProgressBar = styled.div`
   border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
@@ -30,7 +31,7 @@ export const ProgressFill = styled.div<{ $percent: number }>`
   transition: width 0.3s ease;
 `;
 
-export const ResultCell = styled.td<{ $status?: string }>`
+export const ResultCell = styled.td<{ $clickable?: boolean }>`
   padding: 0.5rem;
   text-align: center;
   border-bottom: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
@@ -38,7 +39,7 @@ export const ResultCell = styled.td<{ $status?: string }>`
   min-width: 120px;
 
   ${(props) =>
-    props.$status === "processed" &&
+    props.$clickable &&
     css`
       cursor: pointer;
       &:hover {
@@ -68,27 +69,21 @@ export const ResultCellStatus = styled.div<{ $color?: string }>`
   color: ${(props) => props.$color || props.theme.textBodyColor};
 `;
 
-export const UprezStarBadge = styled.button<{ $active?: boolean }>`
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  background: rgba(0, 0, 0, 0.6);
-  border: none;
-  border-radius: 50%;
-  width: 1.5rem;
-  height: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: 0.75rem;
-  color: ${(props) => (props.$active ? "#f5c542" : "#888")};
-`;
-
 export const ActionBar = styled.div`
   display: flex;
-  gap: 0.75rem;
-  margin-top: 1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 20px ${FLOW.inset};
+  flex-wrap: wrap;
+  border-top: 1px solid ${FLOW.border};
+`;
+
+// Buttons sit in two clusters so navigation anchors the corners: "back" bottom
+// left, "view playlist" bottom right, with any situational actions between.
+export const ActionGroup = styled.div`
+  display: flex;
+  gap: 10px;
   flex-wrap: wrap;
 `;
 
@@ -101,43 +96,20 @@ export const TimeEstimate = styled.span`
   color: #888;
 `;
 
-export const UprezSelect = styled.select`
-  padding: 0.5rem 0.75rem;
-  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
-  border-radius: 6px;
-  background: ${(props) =>
-    props.theme.colorBackgroundSecondary || "transparent"};
-  color: ${(props) => props.theme.textPrimaryColor};
-  font-size: 0.8125rem;
+export const ActionButton = styled.button<{ $accent?: boolean }>`
+  background: ${(p) => (p.$accent ? FLOW.accentDim : FLOW.bgElevated)};
+  color: ${(p) => (p.$accent ? FLOW.accent : FLOW.textDim)};
+  border: 1px solid ${(p) => (p.$accent ? FLOW.accent : FLOW.border)};
+  border-radius: ${FLOW.radiusSm};
+  font-family: ${FLOW.fontFamily};
+  font-size: 13px;
+  padding: 8px 16px;
   cursor: pointer;
-  width: auto;
-  min-width: 180px;
-`;
-
-export const ActionButton = styled.button<{
-  $variant?: "primary" | "secondary";
-}>`
-  padding: 0.5rem 1rem;
-  border-radius: 6px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
-
-  ${(props) =>
-    props.$variant === "primary"
-      ? css`
-          background: ${props.theme.colorPrimary};
-          color: white;
-          border-color: ${props.theme.colorPrimary};
-        `
-      : css`
-          background: transparent;
-          color: ${props.theme.textPrimaryColor};
-        `}
+  transition: all 0.2s ease;
 
   &:hover {
-    filter: brightness(120%);
+    background: ${(p) => (p.$accent ? FLOW.accent : FLOW.borderHover)};
+    color: ${(p) => (p.$accent ? FLOW.bg : FLOW.text)};
   }
 
   &:disabled {

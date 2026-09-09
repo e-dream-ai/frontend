@@ -33,8 +33,6 @@ type StudioState = {
   setVideoGenParams: (params: Partial<VideoGenParams>) => void;
   outputPlaylistId: string | null;
   setOutputPlaylistId: (id: string | null) => void;
-  uprezPlaylistId: string | null;
-  setUprezPlaylistId: (id: string | null) => void;
 
   excludedCombos: Set<string>;
   toggleComboExcluded: (key: string) => void;
@@ -43,9 +41,6 @@ type StudioState = {
   addJob: (job: StudioJob) => void;
   updateJob: (dreamUuid: string, updates: Partial<StudioJob>) => void;
   removeJob: (dreamUuid: string) => void;
-  toggleJobUprez: (dreamUuid: string) => void;
-  selectAllJobsForUprez: () => void;
-  deselectAllJobsForUprez: () => void;
 
   newCompletedCount: number;
   incrementNewCompleted: () => void;
@@ -91,7 +86,6 @@ export const studioPartialize = (state: StudioState) => ({
   actions: state.actions,
   videoGenParams: state.videoGenParams,
   outputPlaylistId: state.outputPlaylistId,
-  uprezPlaylistId: state.uprezPlaylistId,
   excludedCombos: [...(state.excludedCombos as Set<string>)],
   jobs: state.jobs.map((j) => ({ ...j, previewFrame: undefined })),
 });
@@ -153,8 +147,6 @@ export const useStudioStore = create<StudioState>()(
         }),
       outputPlaylistId: null,
       setOutputPlaylistId: (id: string | null) => set({ outputPlaylistId: id }),
-      uprezPlaylistId: null,
-      setUprezPlaylistId: (id: string | null) => set({ uprezPlaylistId: id }),
 
       excludedCombos: new Set<string>(),
       toggleComboExcluded: (key: string) =>
@@ -185,27 +177,6 @@ export const useStudioStore = create<StudioState>()(
         set((s) => ({
           jobs: s.jobs.filter((j) => j.dreamUuid !== dreamUuid),
         })),
-      toggleJobUprez: (dreamUuid: string) =>
-        set((s) => ({
-          jobs: s.jobs.map((j) =>
-            j.dreamUuid === dreamUuid
-              ? { ...j, selectedForUprez: !j.selectedForUprez }
-              : j,
-          ),
-        })),
-      selectAllJobsForUprez: () =>
-        set((s) => ({
-          jobs: s.jobs.map((j) =>
-            j.status === "processed" && j.jobType !== "uprez" && !j.uprezed
-              ? { ...j, selectedForUprez: true }
-              : j,
-          ),
-        })),
-      deselectAllJobsForUprez: () =>
-        set((s) => ({
-          jobs: s.jobs.map((j) => ({ ...j, selectedForUprez: false })),
-        })),
-
       newCompletedCount: 0,
       incrementNewCompleted: () =>
         set((s) => ({ newCompletedCount: s.newCompletedCount + 1 })),
@@ -220,7 +191,6 @@ export const useStudioStore = create<StudioState>()(
           actions: [],
           videoGenParams: DEFAULT_VIDEO_GEN_PARAMS,
           outputPlaylistId: null,
-          uprezPlaylistId: null,
           excludedCombos: new Set<string>(),
           jobs: [],
           newCompletedCount: 0,
