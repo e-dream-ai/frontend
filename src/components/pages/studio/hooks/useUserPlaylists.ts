@@ -3,9 +3,16 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { axiosClient } from "@/client/axios.client";
 import useAuth from "@/hooks/useAuth";
 
-interface PlaylistSummary {
+export interface PlaylistSummary {
   uuid: string;
   name: string;
+  /** Cover image for the picker grid. Empty when the playlist has no art. */
+  thumbnail?: string | null;
+  /**
+   * Raw playlist prompt. Carried so callers can tell a plain playlist from a
+   * derived uprez one (`parseUprezPlaylistPrompt`) without a second fetch.
+   */
+  prompt?: string | null;
 }
 
 const USER_PLAYLISTS_KEY = "studioUserPlaylists";
@@ -16,10 +23,19 @@ const fetchUserPlaylists = async (
   const { data } = await axiosClient.get(
     `/v1/playlist?userUUID=${userUuid}&take=200&skip=0`,
   );
-  return data.data.playlists.map((p: { uuid: string; name: string }) => ({
-    uuid: p.uuid,
-    name: p.name,
-  }));
+  return data.data.playlists.map(
+    (p: {
+      uuid: string;
+      name: string;
+      thumbnail?: string | null;
+      prompt?: string | null;
+    }) => ({
+      uuid: p.uuid,
+      name: p.name,
+      thumbnail: p.thumbnail ?? null,
+      prompt: p.prompt ?? null,
+    }),
+  );
 };
 
 export const useUserPlaylists = () => {

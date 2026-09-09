@@ -6,13 +6,14 @@ import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
-import { useRunPlaylist } from "@/api/playlist/mutation/useRunPlaylist";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
+import { useCreateUprezPlaylist } from "../hooks/useCreateUprezPlaylist";
 import { ROUTES } from "@/constants/routes.constants";
 import {
-  INTERPOLATION_FACTOR_OPTIONS,
-  UPSCALE_FACTOR_OPTIONS,
-} from "@/components/pages/studio/constants/uprez-factor-options";
+  UprezFactorFields,
+  type InterpolationFactor,
+  type UpscaleFactor,
+} from "./uprez-factor-row";
 import {
   ModalOverlay,
   ModalContent,
@@ -25,10 +26,6 @@ import {
   NameInput,
   CheckboxLabel,
   UprezParams,
-  UprezParamRow,
-  UprezParamLabel,
-  FactorToggleGroup,
-  FactorToggle,
   PlaylistList,
   PlaylistItem,
   Summary,
@@ -38,52 +35,6 @@ import {
   SpinningIcon,
 } from "./save-to-playlist-modal.styled";
 import { syncFlowPlaylistKeyframes } from "@/components/pages/studio/utils/flow-keyframes";
-
-type UpscaleFactor = (typeof UPSCALE_FACTOR_OPTIONS)[number];
-type InterpolationFactor = (typeof INTERPOLATION_FACTOR_OPTIONS)[number];
-type Factor = UpscaleFactor | InterpolationFactor;
-
-const NO_OP_HINT =
-  "1x on both upscale and interpolation would be a no-op — pick 1x on only one of them.";
-
-function FactorRow<T extends Factor>({
-  label,
-  options,
-  value,
-  onChange,
-  disabledFactor,
-  disabledHint,
-}: {
-  label: string;
-  options: readonly T[];
-  value: T;
-  onChange: (factor: T) => void;
-  disabledFactor?: T;
-  disabledHint?: string;
-}) {
-  return (
-    <UprezParamRow>
-      <UprezParamLabel>{label}</UprezParamLabel>
-      <FactorToggleGroup>
-        {options.map((factor) => {
-          const disabled = factor === disabledFactor;
-          return (
-            <FactorToggle
-              key={factor}
-              type="button"
-              $active={value === factor}
-              disabled={disabled}
-              title={disabled ? disabledHint : undefined}
-              onClick={() => onChange(factor)}
-            >
-              {factor}×
-            </FactorToggle>
-          );
-        })}
-      </FactorToggleGroup>
-    </UprezParamRow>
-  );
-}
 
 interface Props {
   onClose: () => void;
@@ -117,7 +68,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
   const { playlists, addPlaylistToCache } = useUserPlaylists();
   const createPlaylist = useCreatePlaylist();
   const addPlaylistItem = useAddPlaylistItem();
-  const runPlaylist = useRunPlaylist();
+  const { createAndRun: createUprezPlaylist } = useCreateUprezPlaylist();
 
   const canSave =
     completedTransitions.length > 0 &&
@@ -177,29 +128,24 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
 
       if (mode === "new" && createUprez) {
         try {
-          const uprezResult = await createPlaylist.mutateAsync({
+          const uprezPlaylist = await createUprezPlaylist({
             name: `${finalName} (uprez)`,
-            prompt: {
-              infinidream_algorithm: "uprez_playlist",
-              source_playlist_uuid: playlistUUID,
-              dream_algorithm: "uprez",
-              params: {
-                upscale_factor: upscaleFactor,
-                interpolation_factor: interpolationFactor,
-              },
-            },
+            sourcePlaylistUuid: playlistUUID,
+            upscaleFactor,
+            interpolationFactor,
           });
-          const uprezPlaylist = uprezResult.data?.playlist;
-          if (uprezPlaylist) {
-            addPlaylistToCache({
-              uuid: uprezPlaylist.uuid,
-              name: uprezPlaylist.name,
-            });
-            await runPlaylist.mutateAsync(uprezPlaylist.uuid);
-            createdUprez = {
-              uuid: uprezPlaylist.uuid,
-              name: uprezPlaylist.name,
-            };
+          addPlaylistToCache({
+            uuid: uprezPlaylist.uuid,
+            name: uprezPlaylist.name,
+          });
+          createdUprez = {
+            uuid: uprezPlaylist.uuid,
+            name: uprezPlaylist.name,
+          };
+          if (uprezPlaylist.runError) {
+            toast.error(
+              `${uprezPlaylist.name} was created but didn't start — run it from its playlist page.`,
+            );
           }
         } catch (uprezErr) {
           Bugsnag.notify(uprezErr as Error);
@@ -247,7 +193,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     completedTransitions,
     createPlaylist,
     addPlaylistItem,
-    runPlaylist,
+    createUprezPlaylist,
     createUprez,
     upscaleFactor,
     interpolationFactor,
@@ -298,21 +244,11 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
 
               {createUprez && (
                 <UprezParams>
-                  <FactorRow
-                    label="Upscale factor"
-                    options={UPSCALE_FACTOR_OPTIONS}
-                    value={upscaleFactor}
-                    onChange={setUpscaleFactor}
-                    disabledFactor={interpolationFactor === 1 ? 1 : undefined}
-                    disabledHint={NO_OP_HINT}
-                  />
-                  <FactorRow
-                    label="Interpolation factor"
-                    options={INTERPOLATION_FACTOR_OPTIONS}
-                    value={interpolationFactor}
-                    onChange={setInterpolationFactor}
-                    disabledFactor={upscaleFactor === 1 ? 1 : undefined}
-                    disabledHint={NO_OP_HINT}
+                  <UprezFactorFields
+                    upscaleFactor={upscaleFactor}
+                    interpolationFactor={interpolationFactor}
+                    onUpscaleChange={setUpscaleFactor}
+                    onInterpolationChange={setInterpolationFactor}
                   />
                 </UprezParams>
               )}

@@ -124,13 +124,14 @@ function extractThumbnail(
       const first = referenceFrames[0] as { imageUrl?: string };
       return first.imageUrl ?? undefined;
     }
-  } else {
+  } else if (mode === "action") {
     const images = actionState.images;
     if (Array.isArray(images) && images.length > 0) {
       const first = images[0] as { url?: string; imageUrl?: string };
       return first.url ?? first.imageUrl ?? undefined;
     }
   }
+  // "uprez" holds no image state of its own, so it has no thumbnail.
   return undefined;
 }
 
