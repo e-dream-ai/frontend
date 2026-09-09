@@ -1,9 +1,20 @@
 import styled, { css } from "styled-components";
 import { FLOW, flowFadeIn } from "@/constants/flow-theme.constants";
 
-export const PreviewContainer = styled.div`
+export const PreviewContainer = styled.div<{
+  $divider?: "top" | "bottom" | "none";
+}>`
   padding: 24px 28px;
-  border-top: 1px solid ${FLOW.border};
+  ${(p) =>
+    p.$divider === "bottom"
+      ? css`
+          border-bottom: 1px solid ${FLOW.border};
+        `
+      : p.$divider === "none"
+        ? ""
+        : css`
+            border-top: 1px solid ${FLOW.border};
+          `}
   display: flex;
   flex-direction: column;
   align-items: center;

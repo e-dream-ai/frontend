@@ -4,7 +4,6 @@ import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFro
 import { axiosClient } from "@/client/axios.client";
 import { createComboKey } from "@/types/studio.types";
 import type { StudioJob } from "@/types/studio.types";
-import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
@@ -14,6 +13,8 @@ import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import { GenerateSection, SectionTitle } from "./images-tab.styled";
 import { GridTable, GridHeader, GridRowHeader } from "./generate-tab.styled";
+import { SegmentPreview } from "./segment-preview";
+import { useDreamSegments } from "../hooks/useDreamSegments";
 import {
   ProgressBar,
   ProgressInfo,
@@ -23,8 +24,8 @@ import {
   ResultThumb,
   ResultThumbImg,
   ResultCellStatus,
-  UprezStarBadge,
   ActionBar,
+  ActionGroup,
   ActionButton,
   ScrollableGrid,
   TimeEstimate,
@@ -36,25 +37,16 @@ export const ResultsTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const actions = useStudioStore((s) => s.actions);
   const jobs = useStudioStore((s) => s.jobs);
-  const toggleJobUprez = useStudioStore((s) => s.toggleJobUprez);
-  const selectAllJobsForUprez = useStudioStore((s) => s.selectAllJobsForUprez);
-  const deselectAllJobsForUprez = useStudioStore(
-    (s) => s.deselectAllJobsForUprez,
-  );
   const addJob = useStudioStore((s) => s.addJob);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
   const uprezPlaylistId = useStudioStore((s) => s.uprezPlaylistId);
-  const setUprezPlaylistId = useStudioStore((s) => s.setUprezPlaylistId);
-  const updateJob = useStudioStore((s) => s.updateJob);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const createDream = useCreateDreamFromPrompt();
-  const { addPlaylistToCache } = useUserPlaylists();
 
   const videoGenParams = useStudioStore((s) => s.videoGenParams);
   const removeJob = useStudioStore((s) => s.removeJob);
   const modelConstraints = useModelConstraints({ mediaType: "video" });
 
-  const [isUprezzing, setIsUprezzing] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
 
   // Derive grid dimensions from the jobs themselves, not from the current
@@ -110,19 +102,6 @@ export const ResultsTab: React.FC = () => {
   const progressPercent =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  const uprezCount = useMemo(
-    () => jobs.filter((j) => j.selectedForUprez && !j.uprezed).length,
-    [jobs],
-  );
-
-  const uprezableWanJobs = useMemo(
-    () => wanJobs.filter((j) => j.status === "processed" && !j.uprezed),
-    [wanJobs],
-  );
-  const allUprezableSelectedForUprez =
-    uprezableWanJobs.length > 0 &&
-    uprezableWanJobs.every((j) => j.selectedForUprez);
-
   const timeEstimate = useMemo(() => {
     const done = wanJobs.filter((j) => j.startedAt && j.completedAt);
     if (done.length === 0) return null;
@@ -146,97 +125,36 @@ export const ResultsTab: React.FC = () => {
     return map;
   }, [jobs]);
 
-  const handleUprezSelected = useCallback(async () => {
-    const toUprez = jobs.filter(
-      (j) =>
-        j.selectedForUprez &&
-        j.status === "processed" &&
-        j.jobType !== "uprez" &&
-        !j.uprezed,
-    );
-    if (toUprez.length === 0) return;
-
-    setIsUprezzing(true);
-    try {
-      // Create a dedicated uprez playlist if we don't have one yet
-      let playlistId = uprezPlaylistId;
-      if (!playlistId) {
-        const now = new Date();
-        const name = `Studio Uprez ${now
-          .toISOString()
-          .slice(0, 16)
-          .replace("T", " ")}`;
-        const { data } = await axiosClient.post("/v1/playlist", { name });
-        const playlist = data.data.playlist;
-        playlistId = playlist.uuid;
-        setUprezPlaylistId(playlistId);
-        addPlaylistToCache({ uuid: playlist.uuid, name: playlist.name });
+  // Reading order of the matrix — row by row, left to right — so stepping
+  // through the preview walks the grid the way it looks on screen.
+  const completedUuids = useMemo(() => {
+    const uuids: string[] = [];
+    for (const image of gridImages) {
+      if (!image) continue;
+      for (const action of gridActions) {
+        if (!action) continue;
+        const job = jobMap.get(`${image.uuid}:${action.id}`);
+        if (job?.status === "processed") uuids.push(job.dreamUuid);
       }
-
-      for (let i = 0; i < toUprez.length; i += BATCH_SIZE) {
-        const batch = toUprez.slice(i, i + BATCH_SIZE);
-
-        const results = await Promise.allSettled(
-          batch.map(async (job) => {
-            const algoParams = {
-              infinidream_algorithm: "uprez",
-              video_uuid: job.dreamUuid,
-              upscale_factor: 2,
-              interpolation_factor: 2,
-            };
-
-            const response = await createDream.mutateAsync({
-              name: `Uprez - ${job.dreamUuid.slice(0, 8)}`,
-              prompt: JSON.stringify(algoParams),
-              description: `Uprez of ${job.dreamUuid}`,
-            });
-
-            const dream = response.data?.dream;
-            if (!dream) return;
-
-            addJob({
-              imageId: job.imageId,
-              actionId: `uprez-${job.actionId}`,
-              dreamUuid: dream.uuid,
-              jobType: "uprez",
-              status: (dream.status as StudioJob["status"]) || "queue",
-              selectedForUprez: false,
-            });
-
-            // Add to the dedicated uprez playlist
-            if (playlistId) {
-              await axiosClient.put(`/v1/playlist/${playlistId}/add-item`, {
-                type: "dream",
-                uuid: dream.uuid,
-              });
-            }
-
-            // Mark source job as uprezed and deselect it
-            updateJob(job.dreamUuid, {
-              selectedForUprez: false,
-              uprezed: true,
-            });
-          }),
-        );
-
-        for (const result of results) {
-          if (result.status === "rejected") {
-            console.error("Failed to create uprez job:", result.reason);
-          }
-        }
-      }
-    } finally {
-      setIsUprezzing(false);
     }
-  }, [
-    jobs,
-    createDream,
-    addJob,
-    updateJob,
-    uprezPlaylistId,
-    setUprezPlaylistId,
-    addPlaylistToCache,
-  ]);
+    return uuids;
+  }, [gridImages, gridActions, jobMap]);
+
+  const segments = useDreamSegments(completedUuids);
+
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+
+  // Segments only exist once a dream's video has resolved, so positions here
+  // don't line up with `completedUuids` — a cell has to look itself up.
+  // Not memoized: `useDreamSegments` returns a fresh array every render, so a
+  // useMemo keyed on it would never hit.
+  const segmentIndexByUuid = new Map(segments.map((s, i) => [s.key, i]));
+
+  const openPreviewAt = useCallback((index: number) => {
+    setPreviewIndex(index);
+    setLightboxOpen(true);
+  }, []);
 
   const handleRetryFailed = useCallback(async () => {
     // Only retry video generation jobs (uprez retries not yet supported)
@@ -339,6 +257,16 @@ export const ResultsTab: React.FC = () => {
 
   return (
     <>
+      <SegmentPreview
+        segments={segments}
+        index={previewIndex}
+        onIndexChange={setPreviewIndex}
+        lightboxOpen={lightboxOpen}
+        onLightboxOpenChange={setLightboxOpen}
+        label="Preview"
+        divider="bottom"
+      />
+
       <ProgressBar>
         <ProgressInfo>
           <span>
@@ -394,16 +322,22 @@ export const ResultsTab: React.FC = () => {
                           );
                         }
 
+                        const segmentIndex = segmentIndexByUuid.get(
+                          job.dreamUuid,
+                        );
+
                         return (
                           <ResultCell
                             key={job.dreamUuid}
-                            $status={job.status}
+                            $clickable={segmentIndex !== undefined}
+                            title={
+                              segmentIndex !== undefined
+                                ? "Open in preview"
+                                : undefined
+                            }
                             onClick={() => {
-                              if (job.status === "processed") {
-                                window.open(
-                                  `/dream/${job.dreamUuid}`,
-                                  "_blank",
-                                );
+                              if (segmentIndex !== undefined) {
+                                openPreviewAt(segmentIndex);
                               }
                             }}
                           >
@@ -420,34 +354,6 @@ export const ResultsTab: React.FC = () => {
                                   alt="thumbnail"
                                 />
                               ) : null}
-
-                              {job.status === "processed" && (
-                                <UprezStarBadge
-                                  $active={
-                                    job.selectedForUprez || !!job.uprezed
-                                  }
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (!job.uprezed) {
-                                      toggleJobUprez(job.dreamUuid);
-                                    }
-                                  }}
-                                  style={
-                                    job.uprezed
-                                      ? { opacity: 0.5, cursor: "default" }
-                                      : undefined
-                                  }
-                                  title={
-                                    job.uprezed ? "Already uprezed" : undefined
-                                  }
-                                >
-                                  {job.uprezed
-                                    ? "\u2713"
-                                    : job.selectedForUprez
-                                      ? "\u2605"
-                                      : "\u2606"}
-                                </UprezStarBadge>
-                              )}
                             </ResultThumb>
 
                             <ResultCellStatus
@@ -478,55 +384,38 @@ export const ResultsTab: React.FC = () => {
       </GenerateSection>
 
       <ActionBar>
-        {uprezableWanJobs.length > 0 && (
-          <ActionButton
-            onClick={
-              allUprezableSelectedForUprez
-                ? deselectAllJobsForUprez
-                : selectAllJobsForUprez
-            }
-          >
-            {allUprezableSelectedForUprez
-              ? "Deselect All for Uprez"
-              : "Select All for Uprez"}
+        <ActionGroup>
+          <ActionButton $accent onClick={() => setActiveTab("generate")}>
+            &larr; Back to Generate
           </ActionButton>
-        )}
-        <ActionButton
-          $variant="primary"
-          disabled={uprezCount === 0 || isUprezzing}
-          onClick={handleUprezSelected}
-        >
-          {isUprezzing ? "Uprezzing..." : `Uprez Selected (${uprezCount})`}
-        </ActionButton>
-        {failedCount > 0 && (
-          <ActionButton onClick={handleRetryFailed} disabled={isRetrying}>
-            {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
-          </ActionButton>
-        )}
-        {outputPlaylistId && (
-          <ActionButton
-            onClick={() =>
-              window.open(`/playlist/${outputPlaylistId}`, "_blank")
-            }
-          >
-            View Playlist
-          </ActionButton>
-        )}
-        {uprezPlaylistId && (
-          <ActionButton
-            onClick={() =>
-              window.open(`/playlist/${uprezPlaylistId}`, "_blank")
-            }
-          >
-            View Uprez Playlist
-          </ActionButton>
-        )}
-        <ActionButton
-          onClick={() => setActiveTab("generate")}
-          style={{ marginLeft: "auto" }}
-        >
-          &larr; Back to Generate
-        </ActionButton>
+        </ActionGroup>
+
+        <ActionGroup>
+          {failedCount > 0 && (
+            <ActionButton onClick={handleRetryFailed} disabled={isRetrying}>
+              {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
+            </ActionButton>
+          )}
+          {uprezPlaylistId && (
+            <ActionButton
+              onClick={() =>
+                window.open(`/playlist/${uprezPlaylistId}`, "_blank")
+              }
+            >
+              View Uprez Playlist
+            </ActionButton>
+          )}
+          {outputPlaylistId && (
+            <ActionButton
+              $accent
+              onClick={() =>
+                window.open(`/playlist/${outputPlaylistId}`, "_blank")
+              }
+            >
+              View Playlist
+            </ActionButton>
+          )}
+        </ActionGroup>
       </ActionBar>
     </>
   );
