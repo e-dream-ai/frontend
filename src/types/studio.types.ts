@@ -46,8 +46,6 @@ export interface StudioJob {
   progress?: number;
   previewFrame?: string;
   thumbnailUrl?: string;
-  selectedForUprez: boolean;
-  uprezed?: boolean;
   startedAt?: number;
   completedAt?: number;
 }
