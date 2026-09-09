@@ -65,7 +65,6 @@ describe("studio.store", () => {
         dreamUuid: "dream1",
         jobType: "wan-i2v",
         status: "queue",
-        selectedForUprez: false,
       });
 
       useStudioStore.getState().updateJob("dream1", { status: "processing" });
@@ -81,7 +80,6 @@ describe("studio.store", () => {
         dreamUuid: "dream1",
         jobType: "wan-i2v",
         status: "processing",
-        selectedForUprez: false,
       });
 
       useStudioStore.getState().updateJob("dream1", { status: "processed" });
@@ -134,35 +132,6 @@ describe("studio.store", () => {
         seed: -1,
       });
       expect(migrated.wanParams).toBeUndefined();
-    });
-  });
-
-  describe("selectAllJobsForUprez", () => {
-    it("does not select uprez jobs for uprezzing", () => {
-      useStudioStore.getState().addJob({
-        imageId: "img1",
-        actionId: "act1",
-        dreamUuid: "dream1",
-        jobType: "wan-i2v",
-        status: "processed",
-        selectedForUprez: false,
-      });
-      useStudioStore.getState().addJob({
-        imageId: "img1",
-        actionId: "uprez-act1",
-        dreamUuid: "dream2",
-        jobType: "uprez",
-        status: "processed",
-        selectedForUprez: false,
-      });
-
-      useStudioStore.getState().selectAllJobsForUprez();
-
-      const jobs = useStudioStore.getState().jobs;
-      // wan-i2v job should be selected
-      expect(jobs[0].selectedForUprez).toBe(true);
-      // uprez job should NOT be selected
-      expect(jobs[1].selectedForUprez).toBe(false);
     });
   });
 

@@ -39,7 +39,6 @@ export const ResultsTab: React.FC = () => {
   const jobs = useStudioStore((s) => s.jobs);
   const addJob = useStudioStore((s) => s.addJob);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
-  const uprezPlaylistId = useStudioStore((s) => s.uprezPlaylistId);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const createDream = useCreateDreamFromPrompt();
 
@@ -219,7 +218,6 @@ export const ResultsTab: React.FC = () => {
               dreamUuid: dream.uuid,
               jobType: retryModel,
               status: (dream.status as StudioJob["status"]) || "queue",
-              selectedForUprez: false,
             });
 
             if (outputPlaylistId) {
@@ -394,15 +392,6 @@ export const ResultsTab: React.FC = () => {
           {failedCount > 0 && (
             <ActionButton onClick={handleRetryFailed} disabled={isRetrying}>
               {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
-            </ActionButton>
-          )}
-          {uprezPlaylistId && (
-            <ActionButton
-              onClick={() =>
-                window.open(`/playlist/${uprezPlaylistId}`, "_blank")
-              }
-            >
-              View Uprez Playlist
             </ActionButton>
           )}
           {outputPlaylistId && (
