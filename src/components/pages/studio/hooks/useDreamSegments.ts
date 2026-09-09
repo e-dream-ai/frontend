@@ -1,8 +1,22 @@
-import { useQueries, type QueryFunctionContext } from "@tanstack/react-query";
+import { useMemo } from "react";
+import {
+  useQueries,
+  type QueryFunctionContext,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import { DREAM_QUERY_KEY, getDream } from "@/api/dream/query/useDream";
 import type { Dream } from "@/types/dream.types";
 import type { CrossfadeSegment } from "../components/crossfade-video";
-import { mediaAspectRatio } from "../utils/media-aspect-ratio";
+import { dreamsToSegments } from "../utils/dream-segments";
+
+const POLL_INTERVAL_MS = 3000;
+
+type DreamQueryOptions = UseQueryOptions<
+  Dream | undefined,
+  unknown,
+  Dream | undefined,
+  [string, string]
+>;
 
 /**
  * Resolves dream UUIDs into playable preview segments, polling each dream
@@ -15,35 +29,23 @@ import { mediaAspectRatio } from "../utils/media-aspect-ratio";
  */
 export function useDreamSegments(uuids: readonly string[]): CrossfadeSegment[] {
   const dreamQueries = useQueries({
-    queries: uuids.map((uuid) => ({
-      queryKey: [DREAM_QUERY_KEY, uuid],
-      queryFn: ({ signal }: QueryFunctionContext) => getDream(uuid, signal),
-      staleTime: Infinity,
-      refetchInterval: (data: unknown) =>
-        (data as Dream | undefined)?.video ? false : 3000,
-      refetchIntervalInBackground: false,
-    })),
+    queries: uuids.map(
+      (uuid): DreamQueryOptions => ({
+        queryKey: [DREAM_QUERY_KEY, uuid],
+        queryFn: ({ signal }: QueryFunctionContext) => getDream(uuid, signal),
+        staleTime: Infinity,
+        refetchInterval: (data) => (data?.video ? false : POLL_INTERVAL_MS),
+        refetchIntervalInBackground: false,
+      }),
+    ),
   });
 
-  // Not memoized: `useQueries` returns a fresh array every render, so a useMemo
-  // keyed on it would never hit.
-  return dreamQueries.flatMap((q, i) => {
-    // Prefer the original over the processed file. Processing normalises every
-    // video to 1920x1080, so the processed copy of a square render is 16:9 and
-    // would show the clip in the wrong shape. The original keeps the shape the
-    // model produced, and is what processedMediaWidth/Height measures.
-    const url = q.data?.original_video || q.data?.video;
-    if (!url) return [];
-    return [
-      {
-        key: uuids[i],
-        url,
-        poster: q.data?.thumbnail,
-        ratio: mediaAspectRatio(
-          q.data?.processedMediaWidth,
-          q.data?.processedMediaHeight,
-        ),
-      },
-    ];
-  });
+  const segments = dreamsToSegments(
+    uuids,
+    dreamQueries.map((q) => q.data),
+  );
+
+  const signature = JSON.stringify(segments);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on signature, not the churning array identity
+  return useMemo(() => segments, [signature]);
 }

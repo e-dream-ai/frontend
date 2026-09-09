@@ -12,7 +12,7 @@ import {
   SegmentCounter,
   ChipRail,
   SegmentChip,
-} from "./flow-preview.styled";
+} from "./segment-preview.styled";
 import { CrossfadeVideo, type CrossfadeSegment } from "./crossfade-video";
 import { useLightboxA11y } from "../hooks/useLightboxA11y";
 
@@ -81,7 +81,7 @@ export interface SegmentPreviewProps {
   keyboardDisabled?: boolean;
   /** Which edge carries the separating rule: the flow preview sits at the
    *  bottom of its panel, the results preview at the top of its tab. */
-  divider?: "top" | "bottom" | "none";
+  divider?: "top" | "bottom";
 }
 
 /**

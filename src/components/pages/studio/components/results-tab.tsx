@@ -3,7 +3,11 @@ import { useStudioStore } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import { axiosClient } from "@/client/axios.client";
 import { createComboKey } from "@/types/studio.types";
-import type { StudioJob } from "@/types/studio.types";
+import type {
+  StudioAction,
+  StudioImage,
+  StudioJob,
+} from "@/types/studio.types";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
@@ -33,6 +37,27 @@ import {
 
 const BATCH_SIZE = 5;
 
+const cellKey = (imageId: string, actionId: string) => `${imageId}:${actionId}`;
+
+function orderedByFirstJob<T>(
+  jobs: readonly StudioJob[],
+  idOf: (job: StudioJob) => string,
+  pool: readonly T[],
+  keyOf: (item: T) => string,
+): T[] {
+  const byKey = new Map(pool.map((item) => [keyOf(item), item]));
+  const seen = new Set<string>();
+  const ordered: T[] = [];
+  for (const job of jobs) {
+    const id = idOf(job);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const item = byKey.get(id);
+    if (item) ordered.push(item);
+  }
+  return ordered;
+}
+
 export const ResultsTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const actions = useStudioStore((s) => s.actions);
@@ -48,61 +73,51 @@ export const ResultsTab: React.FC = () => {
 
   const [isRetrying, setIsRetrying] = useState(false);
 
+  const videoJobs = useMemo(
+    () => jobs.filter((j) => j.jobType !== "uprez"),
+    [jobs],
+  );
+
   // Derive grid dimensions from the jobs themselves, not from the current
   // image/action lists — those can change after a batch is submitted.
-  const gridImageIds = useMemo(() => {
-    const ids = new Set<string>();
-    jobs
-      .filter((j) => j.jobType !== "uprez")
-      .forEach((j) => ids.add(j.imageId));
-    return [...ids];
-  }, [jobs]);
-
-  const gridActionIds = useMemo(() => {
-    const ids = new Set<string>();
-    jobs
-      .filter((j) => j.jobType !== "uprez")
-      .forEach((j) => ids.add(j.actionId));
-    return [...ids];
-  }, [jobs]);
-
   const gridImages = useMemo(
     () =>
-      gridImageIds
-        .map((id) => images.find((img) => img.uuid === id))
-        .filter(Boolean),
-    [gridImageIds, images],
+      orderedByFirstJob<StudioImage>(
+        videoJobs,
+        (j) => j.imageId,
+        images,
+        (i) => i.uuid,
+      ),
+    [videoJobs, images],
   );
 
   const gridActions = useMemo(
     () =>
-      gridActionIds
-        .map((id) => actions.find((a) => a.id === id))
-        .filter(Boolean),
-    [gridActionIds, actions],
-  );
-
-  const wanJobs = useMemo(
-    () => jobs.filter((j) => j.jobType !== "uprez"),
-    [jobs],
+      orderedByFirstJob<StudioAction>(
+        videoJobs,
+        (j) => j.actionId,
+        actions,
+        (a) => a.id,
+      ),
+    [videoJobs, actions],
   );
 
   const { completedCount, failedCount } = useMemo(() => {
     let completed = 0;
     let failed = 0;
-    for (const j of wanJobs) {
+    for (const j of videoJobs) {
       if (j.status === "processed") completed++;
       else if (j.status === "failed") failed++;
     }
     return { completedCount: completed, failedCount: failed };
-  }, [wanJobs]);
+  }, [videoJobs]);
 
-  const totalCount = wanJobs.length;
+  const totalCount = videoJobs.length;
   const progressPercent =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
   const timeEstimate = useMemo(() => {
-    const done = wanJobs.filter((j) => j.startedAt && j.completedAt);
+    const done = videoJobs.filter((j) => j.startedAt && j.completedAt);
     if (done.length === 0) return null;
     const avgMs =
       done.reduce((sum, j) => sum + (j.completedAt! - j.startedAt!), 0) /
@@ -112,27 +127,20 @@ export const ResultsTab: React.FC = () => {
     const estimateMs = avgMs * remaining;
     const minutes = Math.ceil(estimateMs / 60_000);
     return minutes <= 1 ? "~1 min remaining" : `~${minutes} min remaining`;
-  }, [wanJobs, totalCount, completedCount, failedCount]);
+  }, [videoJobs, totalCount, completedCount, failedCount]);
 
-  const jobMap = useMemo(() => {
-    const map = new Map<string, StudioJob>();
-    for (const j of jobs) {
-      if (j.jobType !== "uprez") {
-        map.set(`${j.imageId}:${j.actionId}`, j);
-      }
-    }
-    return map;
-  }, [jobs]);
+  const jobMap = useMemo(
+    () => new Map(videoJobs.map((j) => [cellKey(j.imageId, j.actionId), j])),
+    [videoJobs],
+  );
 
   // Reading order of the matrix — row by row, left to right — so stepping
   // through the preview walks the grid the way it looks on screen.
   const completedUuids = useMemo(() => {
     const uuids: string[] = [];
     for (const image of gridImages) {
-      if (!image) continue;
       for (const action of gridActions) {
-        if (!action) continue;
-        const job = jobMap.get(`${image.uuid}:${action.id}`);
+        const job = jobMap.get(cellKey(image.uuid, action.id));
         if (job?.status === "processed") uuids.push(job.dreamUuid);
       }
     }
@@ -146,9 +154,10 @@ export const ResultsTab: React.FC = () => {
 
   // Segments only exist once a dream's video has resolved, so positions here
   // don't line up with `completedUuids` — a cell has to look itself up.
-  // Not memoized: `useDreamSegments` returns a fresh array every render, so a
-  // useMemo keyed on it would never hit.
-  const segmentIndexByUuid = new Map(segments.map((s, i) => [s.key, i]));
+  const segmentIndexByUuid = useMemo(
+    () => new Map(segments.map((s, i) => [s.key, i])),
+    [segments],
+  );
 
   const openPreviewAt = useCallback((index: number) => {
     setPreviewIndex(index);
@@ -292,89 +301,91 @@ export const ResultsTab: React.FC = () => {
               <thead>
                 <tr>
                   <GridHeader />
-                  {gridActions.map((action) =>
-                    action ? (
-                      <GridHeader key={action.id} title={action.prompt}>
-                        {action.prompt.slice(0, 20)}...
-                      </GridHeader>
-                    ) : null,
-                  )}
+                  {gridActions.map((action) => (
+                    <GridHeader key={action.id} title={action.prompt}>
+                      {action.prompt.slice(0, 20)}...
+                    </GridHeader>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {gridImages.map((image) =>
-                  image ? (
-                    <tr key={image.uuid}>
-                      <GridRowHeader>{image.name}</GridRowHeader>
-                      {gridActions.map((action) => {
-                        if (!action) return null;
-                        const job = jobMap.get(`${image.uuid}:${action.id}`);
+                {gridImages.map((image) => (
+                  <tr key={image.uuid}>
+                    <GridRowHeader>{image.name}</GridRowHeader>
+                    {gridActions.map((action) => {
+                      const key = cellKey(image.uuid, action.id);
+                      const job = jobMap.get(key);
 
-                        if (!job) {
-                          return (
-                            <ResultCell key={`${image.uuid}:${action.id}`}>
-                              <ResultCellStatus $color="#555">
-                                --
-                              </ResultCellStatus>
-                            </ResultCell>
-                          );
-                        }
-
-                        const segmentIndex = segmentIndexByUuid.get(
-                          job.dreamUuid,
-                        );
-
+                      if (!job) {
                         return (
-                          <ResultCell
-                            key={job.dreamUuid}
-                            $clickable={segmentIndex !== undefined}
-                            title={
-                              segmentIndex !== undefined
-                                ? "Open in preview"
-                                : undefined
-                            }
-                            onClick={() => {
-                              if (segmentIndex !== undefined) {
-                                openPreviewAt(segmentIndex);
-                              }
-                            }}
-                          >
-                            <ResultThumb>
-                              {job.previewFrame ? (
-                                <ResultThumbImg
-                                  src={`data:image/jpeg;base64,${job.previewFrame}`}
-                                  alt="preview"
-                                />
-                              ) : job.status === "processed" ? (
-                                <ResultThumbImg
-                                  as={PresignedImage}
-                                  dreamUuid={job.dreamUuid}
-                                  alt="thumbnail"
-                                />
-                              ) : null}
-                            </ResultThumb>
-
-                            <ResultCellStatus
-                              $color={
-                                job.status === "processed"
-                                  ? "#6c6"
-                                  : job.status === "failed"
-                                    ? "#c66"
-                                    : undefined
-                              }
-                            >
-                              {job.status === "processed" && "done"}
-                              {job.status === "processing" &&
-                                `${job.progress ?? 0}%`}
-                              {job.status === "queue" && "queued"}
-                              {job.status === "failed" && "failed"}
+                          <ResultCell key={key}>
+                            <ResultCellStatus $color="#555">
+                              --
                             </ResultCellStatus>
                           </ResultCell>
                         );
-                      })}
-                    </tr>
-                  ) : null,
-                )}
+                      }
+
+                      const segmentIndex = segmentIndexByUuid.get(
+                        job.dreamUuid,
+                      );
+                      const openable = segmentIndex !== undefined;
+                      const open = () => {
+                        if (segmentIndex !== undefined) {
+                          openPreviewAt(segmentIndex);
+                        }
+                      };
+
+                      return (
+                        <ResultCell
+                          key={key}
+                          $clickable={openable}
+                          title={openable ? "Open in preview" : undefined}
+                          role={openable ? "button" : undefined}
+                          tabIndex={openable ? 0 : undefined}
+                          onClick={open}
+                          onKeyDown={(e) => {
+                            if (!openable) return;
+                            if (e.key !== "Enter" && e.key !== " ") return;
+                            e.preventDefault();
+                            open();
+                          }}
+                        >
+                          <ResultThumb>
+                            {job.previewFrame ? (
+                              <ResultThumbImg
+                                src={`data:image/jpeg;base64,${job.previewFrame}`}
+                                alt="preview"
+                              />
+                            ) : job.status === "processed" ? (
+                              <ResultThumbImg
+                                as={PresignedImage}
+                                dreamUuid={job.dreamUuid}
+                                alt="thumbnail"
+                              />
+                            ) : null}
+                          </ResultThumb>
+
+                          <ResultCellStatus
+                            $color={
+                              job.status === "processed"
+                                ? "#6c6"
+                                : job.status === "failed"
+                                  ? "#c66"
+                                  : undefined
+                            }
+                          >
+                            {job.status === "processed" && "done"}
+                            {job.status === "processing" &&
+                              `${job.progress ?? 0}%`}
+                            {job.status === "queue" && "queued"}
+                            {job.status === "failed" && "failed"}
+                          </ResultCellStatus>
+                        </ResultCell>
+                      );
+                    })}
+                  </tr>
+                ))}
               </tbody>
             </GridTable>
           </ScrollableGrid>
