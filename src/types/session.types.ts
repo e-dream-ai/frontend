@@ -8,16 +8,18 @@ export interface StudioSession {
   mode: StudioMode;
   flowState: Record<string, unknown>;
   actionState: Record<string, unknown>;
+  uprezState: Record<string, unknown>;
   thumbnail?: string;
 }
 
 export type PersistedStudioSession = Omit<
   StudioSession,
-  "mode" | "actionState"
+  "mode" | "actionState" | "uprezState"
 > & {
   mode: StudioMode | "batch";
   actionState?: Record<string, unknown>;
   batchState?: Record<string, unknown>;
+  uprezState?: Record<string, unknown>;
 };
 
 export const MAX_SESSIONS = 20;

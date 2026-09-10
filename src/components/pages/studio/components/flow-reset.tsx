@@ -1,7 +1,6 @@
 import { toast } from "react-toastify";
-import { RotateCcw } from "lucide-react";
 import { useFlowStore } from "@/stores/flow.store";
-import { ResetButton } from "./flow-reset.styled";
+import { StudioResetButton } from "./reset-button";
 
 export function FlowReset() {
   const resetFlow = useFlowStore((s) => s.resetFlow);
@@ -20,10 +19,5 @@ export function FlowReset() {
     toast.info("Flow reset");
   };
 
-  return (
-    <ResetButton type="button" onClick={handleReset} aria-label="Reset flow">
-      <RotateCcw size={11} strokeWidth={2.2} />
-      Reset
-    </ResetButton>
-  );
+  return <StudioResetButton label="Reset flow" onReset={handleReset} />;
 }
