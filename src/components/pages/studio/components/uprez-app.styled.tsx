@@ -47,6 +47,13 @@ export const AppHeader = styled.header`
   }
 `;
 
+export const TitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+`;
+
 export const AppTitle = styled.h2`
   margin: 0;
   color: ${FLOW.text};

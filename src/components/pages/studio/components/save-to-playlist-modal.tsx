@@ -1,12 +1,18 @@
 import React, { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
 import Bugsnag from "@bugsnag/js";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
-import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
+import {
+  useAddPlaylistItems,
+  ADD_PLAYLIST_ITEMS_BATCH_SIZE,
+} from "@/api/playlist/mutation/useAddPlaylistItems";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
+import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
+import { PLAYLIST_KEYFRAMES_QUERY_KEY } from "@/api/playlist/query/usePlaylistKeyframes";
 import {
   useCreateUprezPlaylist,
   type CreatedUprezPlaylist,
@@ -68,9 +74,10 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
+  const queryClient = useQueryClient();
   const { playlists, addPlaylistToCache } = useUserPlaylists();
   const createPlaylist = useCreatePlaylist();
-  const addPlaylistItem = useAddPlaylistItem();
+  const addPlaylistItems = useAddPlaylistItems();
   const { createAndRun: createUprezPlaylist } = useCreateUprezPlaylist();
 
   const canSave =
@@ -106,14 +113,22 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
           "playlist";
       }
 
-      for (let i = 0; i < completedTransitions.length; i++) {
-        setProgress({ current: i + 1, total });
-        await addPlaylistItem.mutateAsync({
+      for (
+        let offset = 0;
+        offset < completedTransitions.length;
+        offset += ADD_PLAYLIST_ITEMS_BATCH_SIZE
+      ) {
+        const batch = completedTransitions.slice(
+          offset,
+          offset + ADD_PLAYLIST_ITEMS_BATCH_SIZE,
+        );
+        setProgress({ current: offset + batch.length, total });
+        await addPlaylistItems.mutateAsync({
           playlistUUID,
-          values: {
+          items: batch.map((transition) => ({
             type: "dream",
-            uuid: completedTransitions[i].dreamUuid!,
-          },
+            uuid: transition.dreamUuid!,
+          })),
         });
       }
 
@@ -121,6 +136,12 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
         playlistUuid: playlistUUID,
         referenceFrames,
         transitions: completedTransitions,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: [PLAYLIST_QUERY_KEY, playlistUUID],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: [PLAYLIST_KEYFRAMES_QUERY_KEY, playlistUUID],
       });
 
       // Link this flow to the playlist so newly rendered dreams keep it in sync.
@@ -191,7 +212,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     referenceFrames,
     completedTransitions,
     createPlaylist,
-    addPlaylistItem,
+    addPlaylistItems,
     createUprezPlaylist,
     createUprez,
     upscaleFactor,
@@ -200,6 +221,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     addPlaylistToCache,
     playlists,
     onClose,
+    queryClient,
   ]);
 
   return (

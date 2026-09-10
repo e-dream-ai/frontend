@@ -6,6 +6,8 @@ import {
   renameLegacyKeyframeKeys,
 } from "./flow.store";
 import { useStudioStore, studioPartialize } from "./studio.store";
+import { useUprezStore, uprezPartialize } from "./uprez.store";
+import type { UprezFormState } from "./uprez.store";
 import { useStudioModeStore } from "./studio-mode.store";
 import type { StudioMode } from "@/types/flow.types";
 import type {
@@ -57,6 +59,7 @@ export function migrateSessions(
       ...session,
       mode: session.mode === "batch" ? "action" : session.mode,
       actionState: session.actionState ?? batchState ?? {},
+      uprezState: session.uprezState ?? {},
       flowState: renameLegacyKeyframeKeys(session.flowState),
     }),
   );
@@ -104,6 +107,7 @@ function makeSession(name: string, mode: StudioMode): StudioSession {
     mode,
     flowState: {},
     actionState: {},
+    uprezState: {},
   };
 }
 
@@ -116,6 +120,7 @@ function capSessions(sessions: StudioSession[]): StudioSession[] {
 function extractThumbnail(
   flowState: Record<string, unknown>,
   actionState: Record<string, unknown>,
+  uprezState: Record<string, unknown>,
   mode: StudioMode,
 ): string | undefined {
   if (mode === "flow") {
@@ -130,8 +135,10 @@ function extractThumbnail(
       const first = images[0] as { url?: string; imageUrl?: string };
       return first.url ?? first.imageUrl ?? undefined;
     }
+  } else if (mode === "uprez") {
+    const source = uprezState.sourcePlaylist as { thumbnail?: string | null };
+    return source?.thumbnail ?? undefined;
   }
-  // "uprez" holds no image state of its own, so it has no thumbnail.
   return undefined;
 }
 
@@ -162,7 +169,13 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
     const mode = useStudioModeStore.getState().mode;
     const flowState = clone(flowPartialize(useFlowStore.getState()));
     const actionState = clone(studioPartialize(useStudioStore.getState()));
-    const thumbnail = extractThumbnail(flowState, actionState, mode);
+    const uprezState = clone(uprezPartialize(useUprezStore.getState()));
+    const thumbnail = extractThumbnail(
+      flowState,
+      actionState,
+      uprezState,
+      mode,
+    );
 
     const updated: StudioSession = {
       ...sessions[idx],
@@ -170,6 +183,7 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
       mode,
       flowState,
       actionState,
+      uprezState,
       thumbnail,
     };
 
@@ -209,6 +223,7 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
 
     useFlowStore.getState().resetFlow();
     useStudioStore.getState().resetSession();
+    useUprezStore.getState().resetUprez();
   },
 
   switchSession: (id: string) => {
@@ -250,6 +265,10 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
       useStudioStore.getState().resetSession();
     }
 
+    useUprezStore
+      .getState()
+      .restoreUprez(session.uprezState as Partial<UprezFormState>);
+
     useStudioModeStore.getState().setMode(session.mode);
 
     set({ activeSessionId: id });
@@ -280,6 +299,7 @@ export const useSessionStore = create<SessionStoreState>()((set, get) => ({
         persistActiveId(null);
         useFlowStore.getState().resetFlow();
         useStudioStore.getState().resetSession();
+        useUprezStore.getState().resetUprez();
       }
     }
   },
