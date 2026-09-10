@@ -165,7 +165,7 @@ export const GenerateTab: React.FC = () => {
       const { data } = await axiosClient.post("/v1/playlist", { name });
       const playlist = data.data.playlist;
       setOutputPlaylistId(playlist.uuid);
-      addPlaylistToCache({ uuid: playlist.uuid, name: playlist.name });
+      await addPlaylistToCache(playlist);
     } catch (err) {
       console.error("Failed to create playlist:", err);
     }

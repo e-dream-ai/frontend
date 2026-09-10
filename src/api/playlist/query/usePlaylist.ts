@@ -31,7 +31,12 @@ export const fetchPlaylist = async (uuid?: string) => {
   return data?.data?.playlist;
 };
 
-export const usePlaylist = (uuid?: string) => {
+/**
+ * `enabled` defaults to true to preserve the behaviour of existing callers,
+ * which always have a uuid by the time they render. Pass false to hold the
+ * fetch — without it a missing uuid requests `/v1/playlist/`.
+ */
+export const usePlaylist = (uuid?: string, enabled = true) => {
   return useApiQuery<PlaylistResponse>(
     [PLAYLIST_QUERY_KEY, uuid],
     `/v1/playlist/${uuid ?? ""}`,
@@ -41,5 +46,6 @@ export const usePlaylist = (uuid?: string) => {
       }),
     },
     {},
+    enabled ? {} : { enabled: false },
   );
 };

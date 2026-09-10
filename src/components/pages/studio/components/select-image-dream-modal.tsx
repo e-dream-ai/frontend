@@ -18,7 +18,6 @@ import {
   SearchInput,
   Body,
   EmptyMsg,
-  Grid,
   SkeletonCard,
   Footer,
   CountLabel,
@@ -27,7 +26,8 @@ import {
   AddBtn,
   LoadingMore,
   Sentinel,
-} from "./select-image-dream-modal.styled";
+} from "./select-modal.styled";
+import { Grid } from "./select-image-dream-modal.styled";
 
 interface Props {
   onClose: () => void;

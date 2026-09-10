@@ -7,7 +7,7 @@ import { useStudioStore } from "@/stores/studio.store";
 import { useStudioModeStore } from "@/stores/studio-mode.store";
 import { useFlowStore } from "@/stores/flow.store";
 import { ROUTES } from "@/constants/routes.constants";
-import { STUDIO_MODE_LABELS } from "./constants/studio-modes";
+import { STUDIO_MODE_LABELS, STUDIO_MODES } from "./constants/studio-modes";
 import { StudioTabs } from "./components/studio-tabs";
 import { SessionSwitcher } from "./components/session-switcher";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
@@ -30,6 +30,7 @@ import {
   HeaderSpacer,
   StudioBody,
   StudioFrame,
+  UprezFrame,
   ModeToggle,
   ModeButton,
 } from "./studio.page.styled";
@@ -50,6 +51,9 @@ const FlowBuilder = lazy(() =>
   import("./components/flow-builder").then((m) => ({
     default: m.FlowBuilder,
   })),
+);
+const UprezApp = lazy(() =>
+  import("./components/uprez-app").then((m) => ({ default: m.UprezApp })),
 );
 
 export const StudioPage: React.FC = () => {
@@ -87,6 +91,8 @@ export const StudioPage: React.FC = () => {
   const handleStudioDrop = useCallback(
     async (files: File[]) => {
       const currentMode = useStudioModeStore.getState().mode;
+      // The uprez app takes a playlist, not files — nothing to drop onto.
+      if (currentMode === "uprez") return;
 
       for (const file of files) {
         if (currentMode === "action") {
@@ -149,15 +155,16 @@ export const StudioPage: React.FC = () => {
           <StudioTitle>Studio</StudioTitle>
         </TitleGroup>
         <ModeToggle>
-          <ModeButton $active={mode === "flow"} onClick={() => setMode("flow")}>
-            {STUDIO_MODE_LABELS.flow}
-          </ModeButton>
-          <ModeButton
-            $active={mode === "action"}
-            onClick={() => setMode("action")}
-          >
-            {STUDIO_MODE_LABELS.action}
-          </ModeButton>
+          {STUDIO_MODES.map((studioMode) => (
+            <ModeButton
+              key={studioMode}
+              $active={mode === studioMode}
+              aria-pressed={mode === studioMode}
+              onClick={() => setMode(studioMode)}
+            >
+              {STUDIO_MODE_LABELS[studioMode]}
+            </ModeButton>
+          ))}
         </ModeToggle>
         <HeaderSpacer />
         {canManageProviderKey ? (
@@ -177,6 +184,11 @@ export const StudioPage: React.FC = () => {
               {activeTab === "generate" && <GenerateTab />}
               {activeTab === "results" && <ResultsTab />}
             </StudioFrame>
+          )}
+          {mode === "uprez" && (
+            <UprezFrame>
+              <UprezApp />
+            </UprezFrame>
           )}
         </Suspense>
       </StudioBody>
