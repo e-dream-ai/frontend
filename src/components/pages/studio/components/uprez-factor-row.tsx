@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useId } from "react";
 import {
   INTERPOLATION_FACTOR_OPTIONS,
+  NO_OP_HINT,
   UPSCALE_FACTOR_OPTIONS,
+  type UpscaleFactor,
+  type InterpolationFactor,
 } from "../constants/uprez-factor-options";
 import {
   FactorToggle,
@@ -10,21 +13,7 @@ import {
   UprezParamRow,
 } from "./uprez-factor-row.styled";
 
-export type UpscaleFactor = (typeof UPSCALE_FACTOR_OPTIONS)[number];
-export type InterpolationFactor = (typeof INTERPOLATION_FACTOR_OPTIONS)[number];
 type Factor = UpscaleFactor | InterpolationFactor;
-
-export const NO_OP_HINT =
-  "1x on both upscale and interpolation would be a no-op — pick 1x on only one of them.";
-
-/**
- * 1x on both factors asks the uprez model to reproduce its input. Callers use
- * this to keep the submit disabled rather than queueing work that does nothing.
- */
-export const isNoOpUprez = (
-  upscaleFactor: UpscaleFactor,
-  interpolationFactor: InterpolationFactor,
-): boolean => upscaleFactor === 1 && interpolationFactor === 1;
 
 function FactorRow<T extends Factor>({
   label,
@@ -41,10 +30,12 @@ function FactorRow<T extends Factor>({
   disabledFactor?: T;
   disabledHint?: string;
 }) {
+  const labelId = useId();
+
   return (
     <UprezParamRow>
-      <UprezParamLabel>{label}</UprezParamLabel>
-      <FactorToggleGroup>
+      <UprezParamLabel id={labelId}>{label}</UprezParamLabel>
+      <FactorToggleGroup role="group" aria-labelledby={labelId}>
         {options.map((factor) => {
           const disabled = factor === disabledFactor;
           return (
@@ -52,6 +43,7 @@ function FactorRow<T extends Factor>({
               key={factor}
               type="button"
               $active={value === factor}
+              aria-pressed={value === factor}
               disabled={disabled}
               title={disabled ? disabledHint : undefined}
               onClick={() => onChange(factor)}

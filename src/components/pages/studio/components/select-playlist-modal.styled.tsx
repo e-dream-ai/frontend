@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { Footer, CountLabel, FooterButtons } from "./select-modal.styled";
 import { FLOW } from "@/constants/flow-theme.constants";
 
 /** Playlist tile styles for the select-playlist modal. The modal shell (overlay,
@@ -29,6 +30,7 @@ export const PlaylistTile = styled.button<{ $selected: boolean }>`
 `;
 
 export const TileThumb = styled.div<{ $selected: boolean }>`
+  width: 100%;
   position: relative;
   aspect-ratio: 16 / 9;
   background: ${FLOW.bg};
@@ -87,6 +89,7 @@ export const TileCheck = styled.span`
 `;
 
 export const TileName = styled.span<{ $selected: boolean }>`
+  max-width: 100%;
   padding: 7px 9px;
   font-size: 12px;
   font-family: ${FLOW.fontFamily};
@@ -94,4 +97,20 @@ export const TileName = styled.span<{ $selected: boolean }>`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+`;
+
+export const PlaylistFooter = styled(Footer)`
+  gap: 12px;
+  flex-wrap: wrap;
+
+  ${CountLabel} {
+    flex: 1 1 180px;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  ${FooterButtons} {
+    margin-left: auto;
+    flex-shrink: 0;
+  }
 `;

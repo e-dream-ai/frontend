@@ -1,6 +1,12 @@
 import styled, { keyframes } from "styled-components";
 import { Link } from "react-router-dom";
 import { FLOW, flowFadeSlideUp } from "@/constants/flow-theme.constants";
+import {
+  FactorToggle,
+  FactorToggleGroup,
+  UprezParamLabel,
+  UprezParamRow,
+} from "./uprez-factor-row.styled";
 
 const spin = keyframes`
   to { transform: rotate(360deg); }
@@ -17,25 +23,64 @@ export const AppBody = styled.div`
   padding: ${FLOW.inset};
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 24px;
+
+  button:focus-visible,
+  a:focus-visible {
+    outline: 2px solid ${FLOW.accent};
+    outline-offset: 3px;
+  }
+
+  @media (max-width: 480px) {
+    padding: 18px;
+    gap: 18px;
+  }
+`;
+
+export const AppHeader = styled.header`
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  @media (max-width: 480px) {
+    gap: 8px;
+  }
+`;
+
+export const AppTitle = styled.h2`
+  margin: 0;
+  color: ${FLOW.text};
+  font-family: ${FLOW.fontFamily};
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1.4;
+
+  @media (max-width: 480px) {
+    font-size: 18px;
+  }
 `;
 
 export const Intro = styled.p`
+  margin: 0;
   font-size: 13px;
   line-height: 1.5;
   color: ${FLOW.textMuted};
   font-family: ${FLOW.fontFamily};
-  max-width: 62ch;
 `;
 
 export const Section = styled.section`
   display: flex;
   flex-direction: column;
   gap: 10px;
-  max-width: 440px;
+  min-width: 0;
+
+  @media (max-width: 480px) {
+    gap: 8px;
+  }
 `;
 
 export const SectionLabel = styled.label`
+  margin: 0;
   font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.04em;
@@ -45,7 +90,9 @@ export const SectionLabel = styled.label`
 `;
 
 export const TextInput = styled.input`
+  box-sizing: border-box;
   width: 100%;
+  min-height: 44px;
   background: ${FLOW.bgInput};
   border: 1px solid ${FLOW.border};
   border-radius: 6px;
@@ -54,6 +101,11 @@ export const TextInput = styled.input`
   font-size: 13px;
   font-family: ${FLOW.fontFamily};
   transition: border-color 0.15s;
+
+  @media (max-width: 480px) {
+    min-height: 38px;
+    padding: 8px 10px;
+  }
 
   &::placeholder {
     color: ${FLOW.textMuted};
@@ -74,7 +126,7 @@ export const EmptySource = styled.button`
   display: flex;
   align-items: center;
   width: 100%;
-  max-width: 440px;
+  min-height: 52px;
   padding: 14px 14px;
   background: ${FLOW.bgInput};
   border: 1px dashed ${FLOW.border};
@@ -85,6 +137,11 @@ export const EmptySource = styled.button`
   text-align: left;
   cursor: pointer;
   transition: all 0.15s;
+
+  @media (max-width: 480px) {
+    min-height: 40px;
+    padding: 10px;
+  }
 
   &:hover {
     border-color: ${FLOW.accent};
@@ -100,7 +157,7 @@ export const SourceCard = styled.div`
   background: ${FLOW.bgElevated};
   border: 1px solid ${FLOW.border};
   border-radius: ${FLOW.radiusSm};
-  max-width: 440px;
+  min-width: 0;
 `;
 
 export const SourceThumb = styled.img`
@@ -155,17 +212,60 @@ export const LinkButton = styled.button`
 export const FactorFields = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 14px;
+
+  ${FactorToggleGroup} {
+    flex-shrink: 0;
+  }
+
+  ${FactorToggle} {
+    min-width: 40px;
+    min-height: 36px;
+  }
+
+  @media (max-width: 480px) {
+    gap: 10px;
+
+    ${UprezParamRow} {
+      gap: 8px;
+    }
+
+    ${UprezParamLabel} {
+      font-size: 12px;
+    }
+
+    ${FactorToggle} {
+      min-width: 32px;
+      min-height: 32px;
+      padding: 4px 6px;
+      font-size: 12px;
+    }
+  }
+
+  @media (max-width: 360px) {
+    ${UprezParamRow} {
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 6px;
+    }
+  }
 `;
 
 export const Footer = styled.div`
   display: flex;
-  align-items: center;
-  gap: 14px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid ${FLOW.border};
+
+  @media (max-width: 480px) {
+    gap: 10px;
+    padding-top: 14px;
+  }
 `;
 
 export const PrimaryButton = styled.button`
+  min-height: 44px;
   background: ${FLOW.accent};
   color: ${FLOW.bg};
   border: none;
@@ -176,6 +276,11 @@ export const PrimaryButton = styled.button`
   padding: 10px 22px;
   cursor: pointer;
   transition: all 0.2s;
+
+  @media (max-width: 480px) {
+    min-height: 40px;
+    padding: 8px 16px;
+  }
 
   &:hover:not(:disabled) {
     background: #e0b45e;
@@ -188,6 +293,8 @@ export const PrimaryButton = styled.button`
 `;
 
 export const Hint = styled.span`
+  text-align: center;
+  line-height: 1.5;
   font-size: 12px;
   color: ${FLOW.textMuted};
   font-family: ${FLOW.fontFamily};
@@ -201,8 +308,12 @@ export const ResultPanel = styled.div<{ $error?: boolean }>`
   display: flex;
   flex-direction: column;
   gap: 6px;
-  max-width: 440px;
+  overflow-wrap: anywhere;
   animation: ${flowFadeSlideUp} 0.2s ease-out;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+  }
 `;
 
 export const ResultTitle = styled.span`

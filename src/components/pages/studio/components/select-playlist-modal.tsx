@@ -1,11 +1,13 @@
-import React, { useMemo, useState } from "react";
-import { Check } from "lucide-react";
-import { parseUprezPlaylistPrompt } from "@/types/playlist.types";
-import { generateCloudflareImageURL } from "@/utils/image-handler";
-import { secondsToTimeFormat } from "@/utils/video.utils";
-import { usePlaylist } from "@/api/playlist/query/usePlaylist";
+import React, { useCallback, useMemo, useState } from "react";
+import { usePlaylistMetadata } from "../hooks/usePlaylistMetadata";
 import { useLightboxA11y } from "../hooks/useLightboxA11y";
-import { useUserPlaylists } from "../hooks/useUserPlaylists";
+import {
+  useInfiniteUserPlaylists,
+  type PlaylistSummary,
+} from "../hooks/useUserPlaylists";
+import { useDebounce } from "@/hooks/useDebounce";
+import { useInfiniteScrollSentinel } from "@/hooks/useInfiniteScrollSentinel";
+import { SelectPlaylistCard } from "./select-playlist-card";
 import {
   Overlay,
   Panel,
@@ -17,29 +19,20 @@ import {
   Body,
   EmptyMsg,
   SkeletonCard,
-  Footer,
   CountLabel,
   FooterButtons,
   CancelBtn,
   AddBtn,
+  LoadingMore,
+  Sentinel,
 } from "./select-modal.styled";
-import {
-  PlaylistGrid,
-  PlaylistTile,
-  TileBadge,
-  TileCheck,
-  TileName,
-  TilePlaceholder,
-  TileThumb,
-} from "./select-playlist-modal.styled";
-
-const THUMB_SIZE = { width: 320, fit: "cover" as const };
+import { PlaylistFooter, PlaylistGrid } from "./select-playlist-modal.styled";
 
 interface Props {
   onClose: () => void;
   /** Currently chosen playlist, pre-highlighted when the modal opens. */
-  selectedUuid?: string;
-  onSelect: (uuid: string) => void;
+  selectedPlaylist: PlaylistSummary | null;
+  onSelect: (playlist: PlaylistSummary) => void;
 }
 
 /**
@@ -49,68 +42,49 @@ interface Props {
  */
 export const SelectPlaylistModal: React.FC<Props> = ({
   onClose,
-  selectedUuid,
+  selectedPlaylist,
   onSelect,
 }) => {
-  const { playlists, isLoading } = useUserPlaylists();
   const [search, setSearch] = useState("");
-  const [highlighted, setHighlighted] = useState(selectedUuid ?? "");
-
-  const visible = useMemo(() => {
-    const term = search.trim().toLowerCase();
-    if (!term) return playlists;
-    return playlists.filter((p) => p.name.toLowerCase().includes(term));
-  }, [playlists, search]);
-
-  // The list endpoint carries no dream counts, so fetch just the highlighted
-  // one. Shares usePlaylist's query key, so the caller's card reads it warm.
-  const detailQuery = usePlaylist(highlighted, Boolean(highlighted));
-  const detail = useMemo(() => {
-    const playlist = detailQuery.data?.data?.playlist;
-    // keepPreviousData holds the last playlist's payload; match the uuid or
-    // we'd report the previous selection's dream count.
-    return playlist?.uuid === highlighted ? playlist : undefined;
-  }, [detailQuery.data, highlighted]);
-
-  const highlightedName = playlists.find((p) => p.uuid === highlighted)?.name;
-
-  const countLabel = useMemo(() => {
-    if (!highlighted) {
-      return `${playlists.length} playlist${playlists.length === 1 ? "" : "s"}`;
-    }
-    if (!detail) {
-      return detailQuery.isFetching
-        ? `${highlightedName} — counting dreams…`
-        : `${highlightedName}`;
-    }
-    const count = detail.totalDreamCount;
-    const dreams =
-      count === undefined
-        ? "dream count unavailable"
-        : `${count} dream${count === 1 ? "" : "s"}`;
-    // The API sends totalDurationSeconds, not a preformatted string.
-    return typeof detail.totalDurationSeconds === "number"
-      ? `${highlightedName} — ${dreams} · ${secondsToTimeFormat(
-          detail.totalDurationSeconds,
-        )}`
-      : `${highlightedName} — ${dreams}`;
-  }, [
-    highlighted,
-    highlightedName,
-    detail,
-    detailQuery.isFetching,
-    playlists.length,
-  ]);
+  const debouncedSearch = useDebounce(search.trim(), 350);
+  const [highlighted, setHighlighted] = useState(selectedPlaylist);
+  const {
+    data,
+    isLoading,
+    isError,
+    isFetching,
+    refetch,
+    hasNextPage,
+    isFetchingNextPage,
+    fetchNextPage,
+  } = useInfiniteUserPlaylists(debouncedSearch);
+  const { rootRef, sentinelRef } = useInfiniteScrollSentinel<HTMLDivElement>({
+    hasNextPage: hasNextPage && !isError,
+    isFetchingNextPage: isFetching,
+    fetchNextPage,
+  });
+  const playlists = useMemo(
+    () => data?.pages.flatMap((page) => page.playlists) ?? [],
+    [data?.pages],
+  );
+  const totalCount = data?.pages[0]?.count ?? 0;
+  const metadata = usePlaylistMetadata(highlighted?.uuid ?? "");
+  const countLabel = highlighted
+    ? `${highlighted.name} — ${metadata}`
+    : `${totalCount} playlist${totalCount === 1 ? "" : "s"}`;
 
   // Escape closes, Tab stays inside, the page behind stops scrolling.
   const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
 
-  const confirm = (uuid: string) => {
-    onSelect(uuid);
-    onClose();
-  };
+  const confirm = useCallback(
+    (playlist: PlaylistSummary) => {
+      onSelect(playlist);
+      onClose();
+    },
+    [onSelect, onClose],
+  );
 
-  const isEmpty = !isLoading && visible.length === 0;
+  const isEmpty = !isLoading && playlists.length === 0;
 
   return (
     <Overlay
@@ -139,8 +113,20 @@ export const SelectPlaylistModal: React.FC<Props> = ({
           />
         </SearchRow>
 
-        <Body>
-          {isLoading ? (
+        <Body key={debouncedSearch} ref={rootRef}>
+          {isError && !data ? (
+            <EmptyMsg role="alert">
+              Could not load your playlists.
+              <br />
+              <CancelBtn
+                type="button"
+                onClick={() => void refetch()}
+                disabled={isFetching}
+              >
+                {isFetching ? "Retrying…" : "Try again"}
+              </CancelBtn>
+            </EmptyMsg>
+          ) : isLoading ? (
             <PlaylistGrid>
               {Array.from({ length: 12 }).map((_, i) => (
                 <SkeletonCard key={i} />
@@ -148,61 +134,54 @@ export const SelectPlaylistModal: React.FC<Props> = ({
             </PlaylistGrid>
           ) : isEmpty ? (
             <EmptyMsg>
-              {playlists.length === 0
-                ? "No playlists yet."
-                : "No playlists match your search."}
+              {debouncedSearch
+                ? "No playlists match your search."
+                : "No playlists yet."}
             </EmptyMsg>
           ) : (
-            <PlaylistGrid>
-              {visible.map((playlist) => {
-                const isSelected = highlighted === playlist.uuid;
-                const thumb = playlist.thumbnail
-                  ? generateCloudflareImageURL(playlist.thumbnail, THUMB_SIZE)
-                  : undefined;
-                return (
-                  <PlaylistTile
+            <>
+              <PlaylistGrid>
+                {playlists.map((playlist) => (
+                  <SelectPlaylistCard
                     key={playlist.uuid}
+                    playlist={playlist}
+                    isSelected={highlighted?.uuid === playlist.uuid}
+                    onHighlight={setHighlighted}
+                    onConfirm={confirm}
+                  />
+                ))}
+              </PlaylistGrid>
+              <Sentinel ref={sentinelRef} aria-hidden="true" />
+              {isFetchingNextPage && <LoadingMore>Loading more…</LoadingMore>}
+              {isError && (
+                <EmptyMsg role="alert">
+                  Could not load more playlists.
+                  <br />
+                  <CancelBtn
                     type="button"
-                    $selected={isSelected}
-                    aria-pressed={isSelected}
-                    onClick={() => setHighlighted(playlist.uuid)}
-                    onDoubleClick={() => confirm(playlist.uuid)}
+                    onClick={() => void fetchNextPage()}
+                    disabled={isFetching}
                   >
-                    <TileThumb $selected={isSelected}>
-                      {thumb ? (
-                        <img src={thumb} alt="" loading="lazy" />
-                      ) : (
-                        <TilePlaceholder>No art</TilePlaceholder>
-                      )}
-                      {parseUprezPlaylistPrompt(playlist.prompt) && (
-                        <TileBadge>uprez</TileBadge>
-                      )}
-                      {isSelected && (
-                        <TileCheck>
-                          <Check size={12} strokeWidth={3} />
-                        </TileCheck>
-                      )}
-                    </TileThumb>
-                    <TileName $selected={isSelected}>{playlist.name}</TileName>
-                  </PlaylistTile>
-                );
-              })}
-            </PlaylistGrid>
+                    {isFetching ? "Retrying…" : "Try again"}
+                  </CancelBtn>
+                </EmptyMsg>
+              )}
+            </>
           )}
         </Body>
 
-        <Footer>
-          <CountLabel>{countLabel}</CountLabel>
+        <PlaylistFooter>
+          <CountLabel aria-live="polite">{countLabel}</CountLabel>
           <FooterButtons>
             <CancelBtn onClick={onClose}>Cancel</CancelBtn>
             <AddBtn
-              onClick={() => confirm(highlighted)}
+              onClick={() => highlighted && confirm(highlighted)}
               disabled={!highlighted}
             >
               Select
             </AddBtn>
           </FooterButtons>
-        </Footer>
+        </PlaylistFooter>
       </Panel>
     </Overlay>
   );

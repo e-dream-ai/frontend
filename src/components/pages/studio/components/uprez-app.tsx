@@ -1,26 +1,30 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
 import Bugsnag from "@bugsnag/js";
+import {
+  NO_OP_HINT,
+  type InterpolationFactor,
+  type UpscaleFactor,
+} from "../constants/uprez-factor-options";
 import { ROUTES } from "@/constants/routes.constants";
 import { generateCloudflareImageURL } from "@/utils/image-handler";
-import { secondsToTimeFormat } from "@/utils/video.utils";
-import { usePlaylist } from "@/api/playlist/query/usePlaylist";
-import { useUserPlaylists } from "../hooks/useUserPlaylists";
+import { usePlaylistMetadata } from "../hooks/usePlaylistMetadata";
+import {
+  useAddPlaylistToCache,
+  type PlaylistSummary,
+} from "../hooks/useUserPlaylists";
 import {
   useCreateUprezPlaylist,
   type CreatedUprezPlaylist,
 } from "../hooks/useCreateUprezPlaylist";
 import { SelectPlaylistModal } from "./select-playlist-modal";
-import {
-  isNoOpUprez,
-  NO_OP_HINT,
-  UprezFactorFields,
-  type InterpolationFactor,
-  type UpscaleFactor,
-} from "./uprez-factor-row";
+import { UprezFactorFields } from "./uprez-factor-row";
+import { isNoOpUprez } from "../utils/uprez-playlist-prompt";
 import {
   AppBody,
+  AppHeader,
+  AppTitle,
   EmptySource,
   FactorFields,
   Footer,
@@ -55,65 +59,37 @@ const CARD_THUMB = { width: 200, fit: "cover" as const };
  * playlist is deleted, and re-picking costs one click.
  */
 export const UprezApp: React.FC = () => {
-  const { playlists, addPlaylistToCache } = useUserPlaylists();
+  const addPlaylistToCache = useAddPlaylistToCache();
   const { createAndRun, isSubmitting } = useCreateUprezPlaylist();
 
   const [pickerOpen, setPickerOpen] = useState(false);
-  const [selectedUuid, setSelectedUuid] = useState("");
+  const [selected, setSelected] = useState<PlaylistSummary | null>(null);
   const [nameOverride, setNameOverride] = useState<string | null>(null);
   const [upscaleFactor, setUpscaleFactor] = useState<UpscaleFactor>(2);
   const [interpolationFactor, setInterpolationFactor] =
     useState<InterpolationFactor>(2);
   const [result, setResult] = useState<CreatedUprezPlaylist | null>(null);
 
-  const selected = useMemo(
-    () => playlists.find((p) => p.uuid === selectedUuid) ?? null,
-    [playlists, selectedUuid],
-  );
-
-  // The list endpoint carries no dream counts. The modal fetched this same
-  // query while you were picking, so it's usually already warm here.
-  const detailQuery = usePlaylist(selectedUuid, Boolean(selectedUuid));
-  const detail = useMemo(() => {
-    const playlist = detailQuery.data?.data?.playlist;
-    // keepPreviousData holds the previous playlist's payload; match the uuid
-    // or we'd caption this playlist with the last one's dream count.
-    return playlist?.uuid === selectedUuid ? playlist : undefined;
-  }, [detailQuery.data, selectedUuid]);
-
-  const countText = useMemo(() => {
-    if (!detail) {
-      return detailQuery.isFetching
-        ? "counting dreams…"
-        : "dream count unavailable";
-    }
-    const count = detail.totalDreamCount;
-    const dreams =
-      count === undefined
-        ? "dream count unavailable"
-        : `${count} dream${count === 1 ? "" : "s"}`;
-    // The API sends totalDurationSeconds, not a preformatted string.
-    return typeof detail.totalDurationSeconds === "number"
-      ? `${dreams} · ${secondsToTimeFormat(detail.totalDurationSeconds)}`
-      : dreams;
-  }, [detail, detailQuery.isFetching]);
+  const selectedUuid = selected?.uuid ?? "";
+  const countText = usePlaylistMetadata(selectedUuid);
 
   // Follows the selected playlist until the user types their own name.
   const name = nameOverride ?? (selected ? uprezName(selected.name) : "");
 
   const isNoOp = isNoOpUprez(upscaleFactor, interpolationFactor);
   const canSubmit =
-    Boolean(selectedUuid) && name.trim().length > 0 && !isNoOp && !isSubmitting;
+    Boolean(selected) && name.trim().length > 0 && !isNoOp && !isSubmitting;
 
-  const handleSelect = useCallback((uuid: string) => {
-    setSelectedUuid(uuid);
+  const handleSelect = (playlist: PlaylistSummary) => {
+    setSelected(playlist);
     // Keep a name the user actually typed; let a blank one re-follow the source.
     setNameOverride((prev) => (prev !== null && prev.trim() ? prev : null));
     setResult(null);
-  }, []);
+  };
 
-  const handleSubmit = useCallback(async () => {
+  const handleSubmit = async () => {
     if (!canSubmit) return;
+    setResult(null);
 
     // Opened synchronously so the popup blocker still counts this as
     // user-initiated; it's navigated once the create call returns a uuid.
@@ -127,7 +103,7 @@ export const UprezApp: React.FC = () => {
         interpolationFactor,
       });
 
-      addPlaylistToCache({ uuid: created.uuid, name: created.name });
+      await addPlaylistToCache(created);
       setResult(created);
 
       const href = `${window.location.origin}${ROUTES.VIEW_PLAYLIST}/${created.uuid}`;
@@ -149,15 +125,7 @@ export const UprezApp: React.FC = () => {
       Bugsnag.notify(err as Error);
       toast.error("Failed to create the uprez playlist.");
     }
-  }, [
-    canSubmit,
-    createAndRun,
-    name,
-    selectedUuid,
-    upscaleFactor,
-    interpolationFactor,
-    addPlaylistToCache,
-  ]);
+  };
 
   const sourceThumb = selected?.thumbnail
     ? generateCloudflareImageURL(selected.thumbnail, CARD_THUMB)
@@ -165,13 +133,18 @@ export const UprezApp: React.FC = () => {
 
   return (
     <AppBody>
-      <Intro>
-        Creates a playlist that tracks a source playlist and uprezes each of its
-        dreams. Re-run it later to pick up dreams added or changed.
-      </Intro>
+      <AppHeader>
+        <AppTitle>Uprez playlist</AppTitle>
+        <Intro>
+          Creates a playlist that tracks a source playlist and uprezes each of
+          its dreams. Re-run it later to pick up dreams added or changed.
+        </Intro>
+      </AppHeader>
 
       <Section>
-        <SectionLabel>Source playlist</SectionLabel>
+        <SectionLabel htmlFor="uprez-source-playlist">
+          Source playlist
+        </SectionLabel>
         {selected ? (
           <SourceCard>
             {sourceThumb && <SourceThumb src={sourceThumb} alt="" />}
@@ -179,10 +152,20 @@ export const UprezApp: React.FC = () => {
               <SourceName>{selected.name}</SourceName>
               <SourceMeta>{countText}</SourceMeta>
             </SourceInfo>
-            <LinkButton onClick={() => setPickerOpen(true)}>Change</LinkButton>
+            <LinkButton
+              id="uprez-source-playlist"
+              type="button"
+              onClick={() => setPickerOpen(true)}
+            >
+              Change
+            </LinkButton>
           </SourceCard>
         ) : (
-          <EmptySource type="button" onClick={() => setPickerOpen(true)}>
+          <EmptySource
+            id="uprez-source-playlist"
+            type="button"
+            onClick={() => setPickerOpen(true)}
+          >
             Choose a playlist…
           </EmptySource>
         )}
@@ -202,7 +185,7 @@ export const UprezApp: React.FC = () => {
       </Section>
 
       <Section>
-        <SectionLabel>Settings</SectionLabel>
+        <SectionLabel as="h3">Settings</SectionLabel>
         <FactorFields>
           <UprezFactorFields
             upscaleFactor={upscaleFactor}
@@ -214,7 +197,11 @@ export const UprezApp: React.FC = () => {
       </Section>
 
       <Footer>
-        <PrimaryButton onClick={handleSubmit} disabled={!canSubmit}>
+        <PrimaryButton
+          onClick={handleSubmit}
+          disabled={!canSubmit}
+          aria-label={isSubmitting ? "Creating uprez playlist" : undefined}
+        >
           {isSubmitting ? (
             <SpinningIcon>
               <Loader2 size={14} strokeWidth={2.4} />
@@ -228,7 +215,7 @@ export const UprezApp: React.FC = () => {
       </Footer>
 
       {result && (
-        <ResultPanel $error={Boolean(result.runError)}>
+        <ResultPanel role="status" $error={Boolean(result.runError)}>
           <ResultTitle>
             {result.runError
               ? `${result.name} created, but didn't start`
@@ -255,12 +242,10 @@ export const UprezApp: React.FC = () => {
       {pickerOpen && (
         <SelectPlaylistModal
           onClose={() => setPickerOpen(false)}
-          selectedUuid={selectedUuid}
+          selectedPlaylist={selected}
           onSelect={handleSelect}
         />
       )}
     </AppBody>
   );
 };
-
-export default UprezApp;

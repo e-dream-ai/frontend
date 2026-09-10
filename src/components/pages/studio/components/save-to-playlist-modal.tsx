@@ -7,13 +7,16 @@ import { useShallow } from "zustand/react/shallow";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
-import { useCreateUprezPlaylist } from "../hooks/useCreateUprezPlaylist";
-import { ROUTES } from "@/constants/routes.constants";
 import {
-  UprezFactorFields,
-  type InterpolationFactor,
-  type UpscaleFactor,
-} from "./uprez-factor-row";
+  useCreateUprezPlaylist,
+  type CreatedUprezPlaylist,
+} from "../hooks/useCreateUprezPlaylist";
+import type {
+  InterpolationFactor,
+  UpscaleFactor,
+} from "../constants/uprez-factor-options";
+import { ROUTES } from "@/constants/routes.constants";
+import { UprezFactorFields } from "./uprez-factor-row";
 import {
   ModalOverlay,
   ModalContent,
@@ -85,7 +88,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     try {
       let playlistUUID: string;
       let finalName: string;
-      let createdUprez: { uuid: string; name: string } | null = null;
+      let createdUprez: CreatedUprezPlaylist | null = null;
 
       if (mode === "new") {
         const result = await createPlaylist.mutateAsync({
@@ -95,7 +98,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
         if (!playlist) throw new Error("No playlist in response");
         playlistUUID = playlist.uuid;
         finalName = playlist.name;
-        addPlaylistToCache({ uuid: playlist.uuid, name: playlist.name });
+        await addPlaylistToCache(playlist);
       } else {
         playlistUUID = selectedPlaylistId;
         finalName =
@@ -134,14 +137,8 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
             upscaleFactor,
             interpolationFactor,
           });
-          addPlaylistToCache({
-            uuid: uprezPlaylist.uuid,
-            name: uprezPlaylist.name,
-          });
-          createdUprez = {
-            uuid: uprezPlaylist.uuid,
-            name: uprezPlaylist.name,
-          };
+          await addPlaylistToCache(uprezPlaylist);
+          createdUprez = uprezPlaylist;
           if (uprezPlaylist.runError) {
             toast.error(
               `${uprezPlaylist.name} was created but didn't start — run it from its playlist page.`,
@@ -166,7 +163,9 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
           </a>
           {createdUprez && (
             <>
-              {". "}Uprezing in{" "}
+              {createdUprez.runError
+                ? ". Uprez playlist created: "
+                : ". Uprezing in "}
               <a
                 href={`${ROUTES.VIEW_PLAYLIST}/${createdUprez.uuid}`}
                 style={{ color: "inherit", textDecoration: "underline" }}

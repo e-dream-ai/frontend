@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, beforeAll } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import type { PersistedStudioSession } from "@/types/session.types";
 
-beforeAll(() => {
+{
   const store: Record<string, string> = {};
   globalThis.localStorage = {
     getItem: (key: string) => store[key] ?? null,
@@ -19,7 +19,7 @@ beforeAll(() => {
     },
     key: (index: number) => Object.keys(store)[index] ?? null,
   };
-});
+}
 
 const { useSessionStore, migrateSessions } = await import("./session.store");
 const { useFlowStore } = await import("./flow.store");

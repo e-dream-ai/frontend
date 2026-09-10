@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { isNoOpUprez } from "./uprez-factor-row";
+import { isNoOpUprez } from "../utils/uprez-playlist-prompt";
 
 describe("isNoOpUprez", () => {
   it("flags 1x on both factors, which would just copy the source", () => {

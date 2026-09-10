@@ -1,3 +1,7 @@
+import type {
+  InterpolationFactor,
+  UpscaleFactor,
+} from "../constants/uprez-factor-options";
 import type { UprezPlaylistPrompt } from "@/types/playlist.types";
 
 /**
@@ -12,8 +16,8 @@ export const buildUprezPlaylistPrompt = ({
   interpolationFactor,
 }: {
   sourcePlaylistUuid: string;
-  upscaleFactor: number;
-  interpolationFactor: number;
+  upscaleFactor: UpscaleFactor;
+  interpolationFactor: InterpolationFactor;
 }): UprezPlaylistPrompt => ({
   infinidream_algorithm: "uprez_playlist",
   source_playlist_uuid: sourcePlaylistUuid,
@@ -23,3 +27,8 @@ export const buildUprezPlaylistPrompt = ({
     interpolation_factor: interpolationFactor,
   },
 });
+
+export const isNoOpUprez = (
+  upscaleFactor: UpscaleFactor,
+  interpolationFactor: InterpolationFactor,
+): boolean => upscaleFactor === 1 && interpolationFactor === 1;

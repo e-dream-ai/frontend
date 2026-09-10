@@ -30,6 +30,7 @@ import {
   HeaderSpacer,
   StudioBody,
   StudioFrame,
+  UprezFrame,
   ModeToggle,
   ModeButton,
 } from "./studio.page.styled";
@@ -158,6 +159,7 @@ export const StudioPage: React.FC = () => {
             <ModeButton
               key={studioMode}
               $active={mode === studioMode}
+              aria-pressed={mode === studioMode}
               onClick={() => setMode(studioMode)}
             >
               {STUDIO_MODE_LABELS[studioMode]}
@@ -184,9 +186,9 @@ export const StudioPage: React.FC = () => {
             </StudioFrame>
           )}
           {mode === "uprez" && (
-            <StudioFrame>
+            <UprezFrame>
               <UprezApp />
-            </StudioFrame>
+            </UprezFrame>
           )}
         </Suspense>
       </StudioBody>
