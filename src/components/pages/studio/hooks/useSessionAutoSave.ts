@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { useFlowStore } from "@/stores/flow.store";
 import { useStudioStore } from "@/stores/studio.store";
+import { useUprezStore } from "@/stores/uprez.store";
 import { useSessionStore } from "@/stores/session.store";
 
 export function useSessionAutoSave() {
@@ -18,10 +19,12 @@ export function useSessionAutoSave() {
 
     const unsubFlow = useFlowStore.subscribe(debouncedSave);
     const unsubStudio = useStudioStore.subscribe(debouncedSave);
+    const unsubUprez = useUprezStore.subscribe(debouncedSave);
 
     return () => {
       unsubFlow();
       unsubStudio();
+      unsubUprez();
       if (timer) clearTimeout(timer);
     };
   }, []);

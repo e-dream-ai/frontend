@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { FLOW, flowSlideIn } from "@/constants/flow-theme.constants";
+import type { StudioMode } from "@/types/flow.types";
 
 export const SwitcherContainer = styled.div`
   position: relative;
@@ -165,7 +166,7 @@ export const SessionMeta = styled.div`
   color: ${FLOW.textMuted};
 `;
 
-export const ModeBadge = styled.span<{ $mode?: "flow" | "action" }>`
+export const ModeBadge = styled.span<{ $mode?: StudioMode }>`
   font-size: 9px;
   font-weight: 600;
   text-transform: uppercase;

@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, beforeAll } from "vitest";
+import { describe, it, expect, beforeEach } from "vitest";
 import type { PersistedStudioSession } from "@/types/session.types";
 
-beforeAll(() => {
+{
   const store: Record<string, string> = {};
   globalThis.localStorage = {
     getItem: (key: string) => store[key] ?? null,
@@ -19,17 +19,21 @@ beforeAll(() => {
     },
     key: (index: number) => Object.keys(store)[index] ?? null,
   };
-});
+}
 
 const { useSessionStore, migrateSessions } = await import("./session.store");
 const { useFlowStore } = await import("./flow.store");
-const { migrateStudioMode } = await import("./studio-mode.store");
+const { useUprezStore } = await import("./uprez.store");
+const { migrateStudioMode, useStudioModeStore } = await import(
+  "./studio-mode.store"
+);
 
 describe("session store", () => {
   beforeEach(() => {
     localStorage.clear();
     useSessionStore.setState({ sessions: [], activeSessionId: null });
     useFlowStore.getState().resetFlow();
+    useUprezStore.getState().resetUprez();
   });
 
   it("creates a new session", () => {
@@ -132,6 +136,66 @@ describe("session store", () => {
     expect(useFlowStore.getState().globalPrompt).toBe("hello from B");
   });
 
+  it("saves and restores uprez state across sessions", () => {
+    useSessionStore.getState().createSession("Session A");
+    useUprezStore.getState().setSourcePlaylist({
+      uuid: "playlist-a",
+      name: "Playlist A",
+    });
+    useUprezStore.getState().setUpscaleFactor(4);
+    useSessionStore.getState().saveCurrentSession();
+
+    useSessionStore.getState().createSession("Session B");
+    expect(useUprezStore.getState().sourcePlaylist).toBeNull();
+    expect(useUprezStore.getState().upscaleFactor).toBe(2);
+
+    useUprezStore.getState().setSourcePlaylist({
+      uuid: "playlist-b",
+      name: "Playlist B",
+    });
+    useSessionStore.getState().saveCurrentSession();
+
+    const { sessions } = useSessionStore.getState();
+    useSessionStore.getState().switchSession(sessions[0].id);
+    expect(useUprezStore.getState().sourcePlaylist?.uuid).toBe("playlist-a");
+    expect(useUprezStore.getState().upscaleFactor).toBe(4);
+
+    useSessionStore.getState().switchSession(sessions[1].id);
+    expect(useUprezStore.getState().sourcePlaylist?.uuid).toBe("playlist-b");
+    expect(useUprezStore.getState().upscaleFactor).toBe(2);
+  });
+
+  it("clears uprez state when switching to a session that never used it", () => {
+    useSessionStore.getState().createSession("No uprez");
+    useSessionStore.getState().saveCurrentSession();
+    const [pristine] = useSessionStore.getState().sessions;
+
+    useSessionStore.getState().createSession("With uprez");
+    useUprezStore.getState().setSourcePlaylist({
+      uuid: "playlist-a",
+      name: "Playlist A",
+    });
+    useSessionStore.getState().saveCurrentSession();
+
+    useSessionStore.getState().switchSession(pristine.id);
+    expect(useUprezStore.getState().sourcePlaylist).toBeNull();
+  });
+
+  it("uses the uprez source playlist as the session thumbnail", () => {
+    useSessionStore.getState().createSession("Uprez session");
+    useStudioModeStore.getState().setMode("uprez");
+    useUprezStore.getState().setSourcePlaylist({
+      uuid: "playlist-a",
+      name: "Playlist A",
+      thumbnail: "https://example.test/thumb.jpg",
+    });
+    useSessionStore.getState().saveCurrentSession();
+
+    const [session] = useSessionStore.getState().sessions;
+    expect(session.thumbnail).toBe("https://example.test/thumb.jpg");
+    useStudioModeStore.getState().setMode("flow");
+  });
+
   it("ensureActiveSession adopts current live state without resetting", () => {
     expect(useSessionStore.getState().activeSessionId).toBeNull();
     useFlowStore.setState({ globalPrompt: "adopt me" });
@@ -174,6 +238,21 @@ describe("legacy session migration (#719, #729)", () => {
       images: [{ uuid: "d1", url: "u1" }],
     });
     expect(migrated).not.toHaveProperty("batchState");
+  });
+
+  it("defaults a missing uprezState so switchSession can read it", () => {
+    const legacySession: PersistedStudioSession = {
+      id: "s1",
+      name: "Session 1",
+      createdAt: "2026-01-01T00:00:00.000Z",
+      updatedAt: "2026-01-01T00:00:00.000Z",
+      mode: "flow",
+      flowState: {},
+    };
+
+    const [migrated] = migrateSessions([legacySession]);
+
+    expect(migrated.uprezState).toEqual({});
   });
 
   it("renames the keyframe keys inside a session's flowState", () => {

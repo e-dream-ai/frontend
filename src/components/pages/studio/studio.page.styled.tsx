@@ -156,3 +156,9 @@ export const ModeButton = styled.button<{ $active: boolean }>`
     color: ${FLOW.text};
   }
 `;
+
+export const UprezFrame = styled(StudioFrame)`
+  width: 100%;
+  max-width: 560px;
+  margin-inline: auto;
+`;

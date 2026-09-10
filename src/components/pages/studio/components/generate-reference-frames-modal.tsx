@@ -26,7 +26,7 @@ import {
   FooterButtons,
   CancelBtn,
   AddBtn,
-} from "./select-image-dream-modal.styled";
+} from "./select-modal.styled";
 import {
   FieldRow,
   FieldGroup,

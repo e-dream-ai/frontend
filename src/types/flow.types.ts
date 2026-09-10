@@ -1,6 +1,6 @@
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
 
-export type StudioMode = "flow" | "action";
+export type StudioMode = "flow" | "action" | "uprez";
 
 export interface FlowReferenceFrame {
   id: string; // local UUID for drag/drop identity
