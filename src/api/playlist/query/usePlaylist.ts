@@ -1,3 +1,4 @@
+import useAuth from "@/hooks/useAuth";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { Playlist } from "@/types/playlist.types";
 import useApiQuery from "@/api/shared/useApiQuery";
@@ -37,6 +38,7 @@ export const fetchPlaylist = async (uuid?: string) => {
  * fetch — without it a missing uuid requests `/v1/playlist/`.
  */
 export const usePlaylist = (uuid?: string, enabled = true) => {
+  const { user } = useAuth();
   return useApiQuery<PlaylistResponse>(
     [PLAYLIST_QUERY_KEY, uuid],
     `/v1/playlist/${uuid ?? ""}`,
@@ -46,6 +48,11 @@ export const usePlaylist = (uuid?: string, enabled = true) => {
       }),
     },
     {},
-    enabled ? {} : { enabled: false },
+    {
+      enabled: enabled && Boolean(uuid) && Boolean(user),
+      refetchInterval: (data) =>
+        data?.data?.playlist?.progress?.remaining ? 5000 : false,
+      refetchOnWindowFocus: true,
+    },
   );
 };

@@ -724,6 +724,20 @@
       "open_dream": "Open dream",
       "open_playlist": "Open playlist",
       "open_keyframe": "Open keyframe"
+    },
+    "dream_progress": {
+      "queued": "Queued",
+      "rendering": "Rendering",
+      "ingesting": "Ingesting",
+      "eta": "ETA {{time}}",
+      "playlist": "Playlist progress",
+      "completed_count": "{{completed}} of {{total}} completed",
+      "remaining_one": "{{count}} remaining",
+      "remaining_other": "{{count}} remaining",
+      "count_in_progress": "{{count}} in progress",
+      "count_queued": "{{count}} queued",
+      "count_failed": "{{count}} failed",
+      "count_idle": "{{count}} not started"
     }
   },
   "units": {

@@ -1,3 +1,4 @@
+import { DreamProgressOverlay } from "@/components/shared/dream-progress/dream-progress";
 import React, { useState, useMemo, useCallback } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import type { StudioImage } from "@/types/studio.types";
@@ -145,6 +146,7 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
                           dream.processedMediaHeight,
                         )}
                       />
+                      <DreamProgressOverlay dream={dream} />
                     </ImageSelectCard>
                   );
                 })}

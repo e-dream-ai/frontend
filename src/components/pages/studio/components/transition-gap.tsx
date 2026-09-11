@@ -1,3 +1,4 @@
+import { DreamCardProgress } from "@/components/shared/dream-progress/dream-progress";
 import type { KeyboardEvent } from "react";
 import { Check, Loader2, AlertTriangle, RotateCcw } from "lucide-react";
 import type { FlowTransition } from "@/types/flow.types";
@@ -5,7 +6,6 @@ import {
   GapContainer,
   GapLine,
   StatusNode,
-  ProgressRing,
   GapStatusLabel,
   DurationLabel,
 } from "./transition-gap.styled";
@@ -36,7 +36,7 @@ export function TransitionGapEnhanced({
   mismatch,
   onClick,
 }: TransitionGapProps) {
-  const { status, progress } = transition;
+  const { status } = transition;
   const configured = hasOverrides(transition);
 
   const activate = {
@@ -91,34 +91,24 @@ export function TransitionGapEnhanced({
     );
   }
 
-  // Queued — soft pulsing dot.
-  if (status === "queue") {
+  if (status === "queue" || status === "processing") {
+    const fallbackLabel = status === "queue" ? "queued" : "rendering";
     return (
-      <GapContainer $expanded {...activate} aria-label="Transition queued">
-        <StatusNode $variant="queued" />
-        <GapStatusLabel $status="queued">queued</GapStatusLabel>
-      </GapContainer>
-    );
-  }
-
-  // Processing — spinning loader inside a node, with progress ring.
-  if (status === "processing") {
-    const pct = Math.max(0, Math.min(100, progress ?? 0));
-    return (
-      <GapContainer
-        $expanded
-        {...activate}
-        aria-label={`Transition rendering${
-          pct > 0 ? `, ${Math.round(pct)}%` : ""
-        }`}
-      >
-        <StatusNode $variant="processing">
-          {pct > 0 && <ProgressRing $percent={pct} />}
-          <Loader2 size={14} strokeWidth={2.4} />
-        </StatusNode>
-        <GapStatusLabel $status="processing">
-          {pct > 0 ? `${Math.round(pct)}%` : "rendering"}
-        </GapStatusLabel>
+      <GapContainer $expanded {...activate} aria-label="Transition progress">
+        {transition.dreamUuid ? (
+          <DreamCardProgress dream={{ uuid: transition.dreamUuid, status }} />
+        ) : (
+          <>
+            <StatusNode $variant={status === "queue" ? "queued" : "processing"}>
+              {status === "processing" && (
+                <Loader2 size={14} strokeWidth={2.4} />
+              )}
+            </StatusNode>
+            <GapStatusLabel $status={fallbackLabel}>
+              {fallbackLabel}
+            </GapStatusLabel>
+          </>
+        )}
       </GapContainer>
     );
   }
@@ -135,6 +125,14 @@ export function TransitionGapEnhanced({
           <Check size={14} strokeWidth={3} />
         </StatusNode>
         <DurationLabel>{effectiveDuration}s</DurationLabel>
+        {transition.uprezDreamUuid && transition.uprezStatus && (
+          <DreamCardProgress
+            dream={{
+              uuid: transition.uprezDreamUuid,
+              status: transition.uprezStatus,
+            }}
+          />
+        )}
       </GapContainer>
     );
   }

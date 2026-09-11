@@ -5,6 +5,7 @@ import React, {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
 import socketIO, { Socket } from "socket.io-client";
 import useAuth from "@/hooks/useAuth";
@@ -42,9 +43,27 @@ export const SocketProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
   const { user, authenticateUser } = useAuth();
+  const userUuid = user?.uuid;
+  const [socket, setSocket] = useState<Socket | null>(null);
 
-  // boolean flag on state to know if socket is connected
-  const [isConnected, setIsConnected] = useState<boolean>(false);
+  const isConnected = useSyncExternalStore(
+    useCallback(
+      (onStoreChange: () => void) => {
+        socket?.on("connect", onStoreChange);
+        socket?.on("disconnect", onStoreChange);
+        window.addEventListener("online", onStoreChange);
+        window.addEventListener("offline", onStoreChange);
+        return () => {
+          socket?.off("connect", onStoreChange);
+          socket?.off("disconnect", onStoreChange);
+          window.removeEventListener("online", onStoreChange);
+          window.removeEventListener("offline", onStoreChange);
+        };
+      },
+      [socket],
+    ),
+    () => (socket?.connected ?? false) && navigator.onLine,
+  );
   const [connectedDevicesCount, setConnectedDevicesCount] = useState<number>(0);
   const [hasWebPlayer, setHasWebPlayer] = useState<boolean>(false);
 
@@ -76,19 +95,7 @@ export const SocketProvider: React.FC<{
       },
     });
 
-    setIsConnected(newSocket.connected);
-
-    // "connect" fires on initial connection and every reconnection
-    newSocket.on("connect", () => {
-      setIsConnected(true);
-    });
-
-    newSocket.on("disconnect", () => {
-      setIsConnected(false);
-    });
-
     newSocket.on("connect_error", (error) => {
-      setIsConnected(false);
       // only auth failures need us — socket.io can't refresh an expired cookie;
       // everything else is connectivity it retries on its own
       if (error.message === SOCKET_AUTH_ERROR_MESSAGES.UNAUTHORIZED) {
@@ -175,7 +182,8 @@ export const SocketProvider: React.FC<{
 
   useEffect(() => {
     // if there's user generate instance
-    socketRef.current = user ? generateSocketInstance() : null;
+    socketRef.current = userUuid ? generateSocketInstance() : null;
+    setSocket(socketRef.current);
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -187,30 +195,26 @@ export const SocketProvider: React.FC<{
       nudgeReconnect();
     };
 
-    const handleOffline = () => {
-      setIsConnected(false);
-    };
-
     // Add event listener for when the tab becomes visible or focus
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", nudgeReconnect);
     // Add event listener for when window online status is active
     window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
     return () => {
       // Remove socket listeners, disconnect socket and set socketRef to null
       teardownSocket();
 
       // Clean ups functions to prevent execute them when are no longer needed
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", nudgeReconnect);
       window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
     };
-  }, [user, generateSocketInstance, nudgeReconnect, teardownSocket]);
+  }, [userUuid, generateSocketInstance, nudgeReconnect, teardownSocket]);
 
   // useMemo to memoize context value
   const contextValue = useMemo(
     () => ({
-      socket: socketRef.current,
+      socket,
       isConnected,
       connectedDevicesCount,
       hasWebPlayer,
@@ -219,6 +223,7 @@ export const SocketProvider: React.FC<{
       removeEmitListener,
     }),
     [
+      socket,
       isConnected,
       connectedDevicesCount,
       hasWebPlayer,
