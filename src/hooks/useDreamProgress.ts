@@ -51,7 +51,8 @@ async function fetchDreamProgress(
   const dream = response.data?.dream;
   if (!dream) throw new Error("Dream not found");
 
-  return progressFromDream(dream);
+  const fetched = progressFromDream(dream);
+  return applyProgress(queryClient, fetched) ?? fetched;
 }
 
 export function useDreamProgress(
