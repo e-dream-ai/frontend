@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { usePlaylist } from "@/api/playlist/query/usePlaylist";
 import type { PlaylistProgress as PlaylistProgressData } from "@/types/job-progress.types";
 import {
   PlaylistSummary,
@@ -8,9 +7,11 @@ import {
   PlaylistProgressOverlayContainer,
 } from "./dream-progress.styled";
 
-export function PlaylistProgressOverlay({ uuid }: { uuid: string }) {
-  const { data } = usePlaylist(uuid);
-  const progress = data?.data?.playlist?.progress;
+export function PlaylistProgressOverlay({
+  progress,
+}: {
+  progress?: PlaylistProgressData;
+}) {
   if (!progress?.remaining) return null;
 
   return (

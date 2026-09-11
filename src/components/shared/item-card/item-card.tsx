@@ -1,5 +1,6 @@
 import { DreamProgressOverlay } from "@/components/shared/dream-progress/dream-progress";
 import { PlaylistProgressOverlay } from "@/components/shared/dream-progress/playlist-progress";
+import type { PlaylistProgress as PlaylistProgressData } from "@/types/job-progress.types";
 import { DND_ACTIONS, DND_METADATA } from "@/constants/dnd.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import {
@@ -537,7 +538,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
           <DreamProgressOverlay dream={item as Dream} />
         )}
         {type === "playlist" && item && (
-          <PlaylistProgressOverlay uuid={item.uuid} />
+          <PlaylistProgressOverlay progress={(item as Playlist)?.progress} />
         )}
 
         {statusBadge && statusBadge.tone !== "processing" && (
@@ -818,6 +819,96 @@ export const ItemCardSkeleton: React.FC<ItemCardSkeletonProps> = ({
   children,
 }) => <StyledItemCardSkeleton size={size}>{children}</StyledItemCardSkeleton>;
 
-export const ItemCard = memo(ItemCardComponent);
+const isVirtualPlaylist = (item: Item): item is VirtualPlaylist =>
+  Boolean(item) && "dreams" in item;
+
+const sameThumbnailDreams = (
+  prevItem: VirtualPlaylist,
+  nextItem: VirtualPlaylist,
+): boolean => {
+  const prev = getVirtualPlaylistThumbnailDreams(prevItem?.dreams);
+  const next = getVirtualPlaylistThumbnailDreams(nextItem?.dreams);
+  return (
+    prev.length === next.length &&
+    prev.every((dream, index) => dream.id === next[index]?.id)
+  );
+};
+
+const ownerAvatar = (item: Item) =>
+  item.displayedOwner ? item.displayedOwner.avatar : item.user?.avatar;
+
+const PROGRESS_FIELDS = [
+  "total",
+  "completed",
+  "queued",
+  "inProgress",
+  "failed",
+  "idle",
+  "remaining",
+] as const;
+
+const samePlaylistProgress = (
+  prev?: PlaylistProgressData,
+  next?: PlaylistProgressData,
+): boolean => {
+  if (prev === next) return true;
+  if (!prev || !next) return false;
+  return PROGRESS_FIELDS.every((field) => prev[field] === next[field]);
+};
+
+const areItemsEqual = (
+  type: ItemType | undefined,
+  prevItem: Item | undefined,
+  nextItem: Item | undefined,
+): boolean => {
+  if (prevItem === nextItem) return true;
+  if (!prevItem || !nextItem) return false;
+  if (prevItem.uuid !== nextItem.uuid) return false;
+
+  if (isVirtualPlaylist(prevItem) && isVirtualPlaylist(nextItem)) {
+    return sameThumbnailDreams(prevItem, nextItem);
+  }
+
+  const prevDream = prevItem as Dream;
+  const nextDream = nextItem as Dream;
+  const prevPlaylist = prevItem as Playlist;
+  const nextPlaylist = nextItem as Playlist;
+
+  return (
+    prevItem.name === nextItem.name &&
+    getThumbnail(type ?? "", prevItem) === getThumbnail(type ?? "", nextItem) &&
+    ownerAvatar(prevItem) === ownerAvatar(nextItem) &&
+    getUserName(prevItem.displayedOwner ?? prevItem.user) ===
+      getUserName(nextItem.displayedOwner ?? nextItem.user) &&
+    prevDream.status === nextDream.status &&
+    prevDream.mediaType === nextDream.mediaType &&
+    prevDream.jobProgress?.stage === nextDream.jobProgress?.stage &&
+    prevDream.jobProgress?.progress === nextDream.jobProgress?.progress &&
+    samePlaylistProgress(prevPlaylist.progress, nextPlaylist.progress)
+  );
+};
+
+const arePropsEqual = (
+  prevProps: ItemCardProps,
+  nextProps: ItemCardProps,
+): boolean => {
+  const keys = new Set([
+    ...Object.keys(prevProps),
+    ...Object.keys(nextProps),
+  ]) as Set<keyof ItemCardProps>;
+
+  for (const key of keys) {
+    if (key === "item") {
+      if (!areItemsEqual(nextProps.type, prevProps.item, nextProps.item))
+        return false;
+    } else if (prevProps[key] !== nextProps[key]) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
+export const ItemCard = memo(ItemCardComponent, arePropsEqual);
 
 export default ItemCard;

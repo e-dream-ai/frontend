@@ -24,6 +24,19 @@ const DISCONNECTED_POLL_INTERVAL_MS = 5000;
 export const getDreamProgressQueryKey = (uuid?: string) =>
   [DREAM_PROGRESS_QUERY_KEY, uuid] as const;
 
+export function applyProgress(
+  queryClient: QueryClient,
+  incoming: DreamJobProgress,
+): DreamJobProgress | undefined {
+  if (!incoming?.dream_uuid || !incoming.stage) return;
+
+  const queryKey = getDreamProgressQueryKey(incoming.dream_uuid);
+  const current = queryClient.getQueryData<DreamJobProgress>(queryKey);
+  const merged = latestProgress(current, incoming);
+  if (merged !== current) queryClient.setQueryData(queryKey, merged);
+  return merged;
+}
+
 async function fetchDreamProgress(
   queryClient: QueryClient,
   uuid?: string,
@@ -41,40 +54,33 @@ async function fetchDreamProgress(
   return progressFromDream(dream);
 }
 
-function getPollInterval(
-  progress: DreamJobProgress | undefined,
-  pending: boolean,
-  connected: boolean,
+export function useDreamProgress(
+  dream?: DreamProgressSource,
+  { poll = false }: { poll?: boolean } = {},
 ) {
-  if (!pending || (progress && !isActiveProgress(progress))) return false;
-  return connected ? CONNECTED_POLL_INTERVAL_MS : DISCONNECTED_POLL_INTERVAL_MS;
-}
-
-export function useDreamProgress(dream?: DreamProgressSource) {
   const queryClient = useQueryClient();
   const { isConnected } = useSocket();
   const uuid = dream?.uuid;
-  const queryKey = getDreamProgressQueryKey(uuid);
-  const cachedProgress = queryClient.getQueryData<DreamJobProgress>(queryKey);
-  const pending =
-    dream?.status === "queue" ||
-    dream?.status === "processing" ||
-    isActiveProgress(cachedProgress);
+  const derived = dream ? progressFromDream(dream) : undefined;
+  const pending = isActiveProgress(derived);
 
   useDreamRooms(pending && uuid ? [uuid] : []);
 
-  const { data: progress } = useQuery<DreamJobProgress>({
-    queryKey,
+  const { data: live } = useQuery<DreamJobProgress>({
+    queryKey: getDreamProgressQueryKey(uuid),
     queryFn: () => fetchDreamProgress(queryClient, uuid),
-    enabled: Boolean(uuid) && pending,
+    enabled: Boolean(uuid) && pending && poll,
     staleTime: PROGRESS_STALE_TIME_MS,
-    refetchOnWindowFocus: true,
-    refetchOnReconnect: true,
-    refetchInterval: (current) =>
-      getPollInterval(current, pending, isConnected),
-    structuralSharing: (current, next) =>
-      latestProgress(current as DreamJobProgress | undefined, next),
+    refetchOnWindowFocus: poll,
+    refetchOnReconnect: poll,
+    refetchInterval:
+      poll && pending
+        ? isConnected
+          ? CONNECTED_POLL_INTERVAL_MS
+          : DISCONNECTED_POLL_INTERVAL_MS
+        : false,
   });
 
-  return dream ? latestProgress(progress, progressFromDream(dream)) : undefined;
+  if (!derived) return undefined;
+  return live ? latestProgress(live, derived) : derived;
 }

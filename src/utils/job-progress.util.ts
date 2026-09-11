@@ -1,4 +1,8 @@
-import type { DreamJobProgress, JobStage } from "@/types/job-progress.types";
+import type {
+  DreamJobProgress,
+  JobStage,
+  JobStatus,
+} from "@/types/job-progress.types";
 
 export interface DreamProgressSource {
   uuid: string;
@@ -7,12 +11,12 @@ export interface DreamProgressSource {
   updated_at?: string;
 }
 
-const DREAM_STAGES: Record<string, JobStage> = {
-  queue: "queued",
-  processing: "ingesting",
-  processed: "completed",
-  failed: "failed",
-  none: "idle",
+const DREAM_STATES: Record<string, [JobStatus, JobStage]> = {
+  queue: ["IN_QUEUE", "queued"],
+  processing: ["IN_PROGRESS", "ingesting"],
+  processed: ["COMPLETED", "completed"],
+  failed: ["FAILED", "failed"],
+  none: ["CANCELLED", "idle"],
 };
 
 export const isActiveProgress = (progress?: DreamJobProgress) =>
@@ -23,16 +27,17 @@ export const isActiveProgress = (progress?: DreamJobProgress) =>
 export function progressFromDream(
   dream: DreamProgressSource,
 ): DreamJobProgress {
-  return (
-    dream.jobProgress ?? {
-      dream_uuid: dream.uuid,
-      status: dream.status,
-      stage: DREAM_STAGES[dream.status] ?? "idle",
-      progress: dream.status === "processed" ? 100 : null,
-      countdown_ms: null,
-      updated_at: dream.updated_at ? Date.parse(dream.updated_at) : 0,
-    }
-  );
+  if (dream.jobProgress) return dream.jobProgress;
+
+  const [status, stage] = DREAM_STATES[dream.status] ?? ["CANCELLED", "idle"];
+  return {
+    dream_uuid: dream.uuid,
+    status,
+    stage,
+    progress: stage === "completed" ? 100 : null,
+    countdown_ms: null,
+    updated_at: dream.updated_at ? Date.parse(dream.updated_at) : 0,
+  };
 }
 
 export function latestProgress(

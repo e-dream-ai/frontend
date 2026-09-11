@@ -249,6 +249,7 @@ const ViewDreamPage: React.FC = () => {
   const dream = data?.data?.dream;
   const jobProgress = useDreamProgress(
     dream?.uuid === uuid ? dream : undefined,
+    { poll: true },
   );
   const jobStatus = jobProgress?.status;
 

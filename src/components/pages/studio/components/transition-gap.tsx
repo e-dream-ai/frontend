@@ -1,6 +1,6 @@
 import { DreamCardProgress } from "@/components/shared/dream-progress/dream-progress";
 import type { KeyboardEvent } from "react";
-import { Check, AlertTriangle, RotateCcw } from "lucide-react";
+import { Check, Loader2, AlertTriangle, RotateCcw } from "lucide-react";
 import type { FlowTransition } from "@/types/flow.types";
 import {
   GapContainer,
@@ -92,10 +92,22 @@ export function TransitionGapEnhanced({
   }
 
   if (status === "queue" || status === "processing") {
+    const fallbackLabel = status === "queue" ? "queued" : "rendering";
     return (
       <GapContainer $expanded {...activate} aria-label="Transition progress">
-        {transition.dreamUuid && (
+        {transition.dreamUuid ? (
           <DreamCardProgress dream={{ uuid: transition.dreamUuid, status }} />
+        ) : (
+          <>
+            <StatusNode $variant={status === "queue" ? "queued" : "processing"}>
+              {status === "processing" && (
+                <Loader2 size={14} strokeWidth={2.4} />
+              )}
+            </StatusNode>
+            <GapStatusLabel $status={fallbackLabel}>
+              {fallbackLabel}
+            </GapStatusLabel>
+          </>
         )}
       </GapContainer>
     );

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import type { Socket } from "socket.io-client";
 import useSocket from "@/hooks/useSocket";
 import {
@@ -52,23 +52,50 @@ function getRoomSubscriptions(socket: Socket) {
   return created;
 }
 
+function releaseRooms(socket: Socket, rooms: RoomSubscriptions) {
+  if (!rooms.isEmpty) return;
+  rooms.dispose();
+  subscriptions.delete(socket);
+}
+
 export function useDreamRooms(uuids: readonly string[]) {
   const { socket } = useSocket();
   const roomsKey = [...new Set(uuids)].sort().join(",");
+  const roomIds = useMemo(
+    () => (roomsKey ? roomsKey.split(",") : []),
+    [roomsKey],
+  );
+  const joinedRef = useRef<string[]>([]);
 
   useEffect(() => {
-    if (!socket || !roomsKey) return;
+    if (!socket) return;
 
-    const roomIds = roomsKey.split(",");
     const rooms = getRoomSubscriptions(socket);
-    roomIds.forEach((uuid) => rooms.add(uuid));
+    const previous = joinedRef.current;
+    const nextSet = new Set(roomIds);
+    const previousSet = new Set(previous);
+
+    for (const uuid of roomIds) {
+      if (!previousSet.has(uuid)) rooms.add(uuid);
+    }
+    for (const uuid of previous) {
+      if (!nextSet.has(uuid)) rooms.remove(uuid);
+    }
+
+    joinedRef.current = roomIds;
+    releaseRooms(socket, rooms);
+  }, [socket, roomIds]);
+
+  useEffect(() => {
+    if (!socket) return;
 
     return () => {
-      roomIds.forEach((uuid) => rooms.remove(uuid));
-      if (!rooms.isEmpty) return;
+      const rooms = subscriptions.get(socket);
+      if (!rooms) return;
 
-      rooms.dispose();
-      subscriptions.delete(socket);
+      joinedRef.current.forEach((uuid) => rooms.remove(uuid));
+      joinedRef.current = [];
+      releaseRooms(socket, rooms);
     };
-  }, [socket, roomsKey]);
+  }, [socket]);
 }

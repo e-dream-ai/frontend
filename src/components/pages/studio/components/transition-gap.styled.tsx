@@ -147,21 +147,6 @@ export const StatusNode = styled.div<{ $variant: string }>`
     `}
 `;
 
-export const ProgressRing = styled.div<{ $percent: number }>`
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: conic-gradient(
-    ${FLOW.processing} ${(p) => p.$percent}%,
-    transparent ${(p) => p.$percent}%
-  );
-  mask: radial-gradient(circle, transparent 60%, #000 61%) center / 100% 100%
-    no-repeat;
-  -webkit-mask: radial-gradient(circle, transparent 60%, #000 61%) center / 100%
-    100% no-repeat;
-  pointer-events: none;
-`;
-
 export const GapStatusLabel = styled.span<{ $status: string }>`
   font-size: 9px;
   font-family: ${FLOW.fontFamily};

@@ -171,11 +171,9 @@ export const ImagesTab: React.FC = () => {
                   </ThumbnailButton>
                 ) : img.status === "processing" && img.url ? (
                   <ImageThumbnail $pending src={img.url} alt={img.name} />
-                ) : (
-                  <ImageStatus>
-                    {img.status === "failed" && "Failed"}
-                  </ImageStatus>
-                )}
+                ) : img.status === "failed" ? (
+                  <ImageStatus>Failed</ImageStatus>
+                ) : null}
                 <DreamProgressOverlay dream={img} />
                 {img.seed != null && <SeedLabel>#{img.seed}</SeedLabel>}
                 <DeleteButton
