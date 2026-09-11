@@ -1,3 +1,4 @@
+import type { PlaylistProgress } from "./job-progress.types";
 import { User } from "./auth.types";
 import { Dream } from "./dream.types";
 import { Keyframe } from "./keyframe.types";
@@ -54,6 +55,7 @@ export type Playlist = {
   totalDurationSeconds?: number;
   totalDurationFormatted?: string;
   totalDreamCount?: number;
+  progress?: PlaylistProgress;
   prompt?: string | null;
 };
 

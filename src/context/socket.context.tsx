@@ -42,6 +42,8 @@ export const SocketProvider: React.FC<{
   children?: React.ReactNode;
 }> = ({ children }) => {
   const { user, authenticateUser } = useAuth();
+  const userUuid = user?.uuid;
+  const [socket, setSocket] = useState<Socket | null>(null);
 
   // boolean flag on state to know if socket is connected
   const [isConnected, setIsConnected] = useState<boolean>(false);
@@ -175,7 +177,9 @@ export const SocketProvider: React.FC<{
 
   useEffect(() => {
     // if there's user generate instance
-    socketRef.current = user ? generateSocketInstance() : null;
+    socketRef.current = userUuid ? generateSocketInstance() : null;
+    setSocket(socketRef.current);
+    setIsConnected(socketRef.current?.connected ?? false);
 
     const handleVisibilityChange = () => {
       if (!document.hidden) {
@@ -193,6 +197,7 @@ export const SocketProvider: React.FC<{
 
     // Add event listener for when the tab becomes visible or focus
     document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", nudgeReconnect);
     // Add event listener for when window online status is active
     window.addEventListener("online", handleOnline);
     window.addEventListener("offline", handleOffline);
@@ -202,15 +207,16 @@ export const SocketProvider: React.FC<{
 
       // Clean ups functions to prevent execute them when are no longer needed
       document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", nudgeReconnect);
       window.removeEventListener("online", handleOnline);
       window.removeEventListener("offline", handleOffline);
     };
-  }, [user, generateSocketInstance, nudgeReconnect, teardownSocket]);
+  }, [userUuid, generateSocketInstance, nudgeReconnect, teardownSocket]);
 
   // useMemo to memoize context value
   const contextValue = useMemo(
     () => ({
-      socket: socketRef.current,
+      socket,
       isConnected,
       connectedDevicesCount,
       hasWebPlayer,
@@ -219,6 +225,7 @@ export const SocketProvider: React.FC<{
       removeEmitListener,
     }),
     [
+      socket,
       isConnected,
       connectedDevicesCount,
       hasWebPlayer,

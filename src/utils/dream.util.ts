@@ -1,3 +1,4 @@
+import type { JobStage } from "@/types/job-progress.types";
 import { ApiResponse } from "@/types/api.types";
 import {
   Dream,
@@ -28,8 +29,12 @@ const FINISHED_JOB_STATUSES = new Set(["CANCELLED", "FAILED"]);
 export const getDreamProcessingPhase = (
   isProcessing: boolean,
   jobStatus?: string,
+  stage?: JobStage,
 ): DreamProcessingPhase | undefined => {
   if (!isProcessing) return undefined;
+  if (stage === "ingesting") return "INGESTING";
+  if (stage === "rendering") return "RENDERING";
+  if (stage === "queued") return "QUEUED";
 
   const status = (jobStatus ?? "").toUpperCase();
   if (FINISHED_JOB_STATUSES.has(status)) return undefined;

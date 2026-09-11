@@ -1,3 +1,4 @@
+import { DreamCardProgress } from "@/components/shared/dream-progress/dream-progress";
 import React, { useCallback, useMemo, useState } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
@@ -376,9 +377,12 @@ export const ResultsTab: React.FC = () => {
                             }
                           >
                             {job.status === "processed" && "done"}
-                            {job.status === "processing" &&
-                              `${job.progress ?? 0}%`}
-                            {job.status === "queue" && "queued"}
+                            <DreamCardProgress
+                              dream={{
+                                uuid: job.dreamUuid,
+                                status: job.status,
+                              }}
+                            />
                             {job.status === "failed" && "failed"}
                           </ResultCellStatus>
                         </ResultCell>

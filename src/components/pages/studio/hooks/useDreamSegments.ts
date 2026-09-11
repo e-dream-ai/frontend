@@ -1,10 +1,11 @@
+import type { ApiResponse } from "@/types/api.types";
 import { useMemo } from "react";
 import {
   useQueries,
   type QueryFunctionContext,
   type UseQueryOptions,
 } from "@tanstack/react-query";
-import { DREAM_QUERY_KEY, getDream } from "@/api/dream/query/useDream";
+import { DREAM_QUERY_KEY, getDreamResponse } from "@/api/dream/query/useDream";
 import type { Dream } from "@/types/dream.types";
 import type { CrossfadeSegment } from "../components/crossfade-video";
 import { dreamsToSegments } from "../utils/dream-segments";
@@ -12,7 +13,7 @@ import { dreamsToSegments } from "../utils/dream-segments";
 const POLL_INTERVAL_MS = 3000;
 
 type DreamQueryOptions = UseQueryOptions<
-  Dream | undefined,
+  ApiResponse<{ dream: Dream }>,
   unknown,
   Dream | undefined,
   [string, string]
@@ -32,9 +33,12 @@ export function useDreamSegments(uuids: readonly string[]): CrossfadeSegment[] {
     queries: uuids.map(
       (uuid): DreamQueryOptions => ({
         queryKey: [DREAM_QUERY_KEY, uuid],
-        queryFn: ({ signal }: QueryFunctionContext) => getDream(uuid, signal),
+        queryFn: ({ signal }: QueryFunctionContext) =>
+          getDreamResponse(uuid, signal),
+        select: (response) => response.data?.dream,
         staleTime: Infinity,
-        refetchInterval: (data) => (data?.video ? false : POLL_INTERVAL_MS),
+        refetchInterval: (_data, query) =>
+          query.state.data?.data?.dream?.video ? false : POLL_INTERVAL_MS,
         refetchIntervalInBackground: false,
       }),
     ),

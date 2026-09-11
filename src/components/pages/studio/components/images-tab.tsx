@@ -1,3 +1,4 @@
+import { DreamProgressOverlay } from "@/components/shared/dream-progress/dream-progress";
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useStudioStore } from "@/stores/studio.store";
@@ -172,11 +173,10 @@ export const ImagesTab: React.FC = () => {
                   <ImageThumbnail $pending src={img.url} alt={img.name} />
                 ) : (
                   <ImageStatus>
-                    {img.status === "queue" && "Queued..."}
-                    {img.status === "processing" && `${img.progress ?? 0}%`}
                     {img.status === "failed" && "Failed"}
                   </ImageStatus>
                 )}
+                <DreamProgressOverlay dream={img} />
                 {img.seed != null && <SeedLabel>#{img.seed}</SeedLabel>}
                 <DeleteButton
                   aria-label={`Remove ${img.name}`}

@@ -1,3 +1,5 @@
+import { DreamProgressOverlay } from "@/components/shared/dream-progress/dream-progress";
+import { PlaylistProgressOverlay } from "@/components/shared/dream-progress/playlist-progress";
 import { DND_ACTIONS, DND_METADATA } from "@/constants/dnd.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import {
@@ -454,78 +456,75 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
     [showStatusBadge, type, item],
   );
 
-  const Thumbnail = useMemo(
-    () => () => {
-      if (type === "virtual-playlist") {
-        return (
-          <ThumbnailGrid size={size}>
-            {thumbnailDreams.map((dream, index) => {
-              const dreamFailed = dream?.status === DreamStatusType.FAILED;
-              return (
-                <ThumbnailGridItem key={index}>
-                  {dreamFailed ? (
-                    <ThumbnailPlaceholder size={size}>
-                      <FontAwesomeIcon
-                        icon={faExclamationCircle}
-                        style={{ fontSize: "48px", color: "#ff4444" }}
-                      />
-                    </ThumbnailPlaceholder>
-                  ) : (
-                    <ItemCardImage size={size} src={dream.thumbnail} />
-                  )}
-                </ThumbnailGridItem>
-              );
-            })}
-          </ThumbnailGrid>
-        );
-      }
+  const thumbnailContent = useMemo(() => {
+    if (type === "virtual-playlist") {
+      return (
+        <ThumbnailGrid size={size}>
+          {thumbnailDreams.map((dream, index) => {
+            const dreamFailed = dream?.status === DreamStatusType.FAILED;
+            return (
+              <ThumbnailGridItem key={index}>
+                {dreamFailed ? (
+                  <ThumbnailPlaceholder size={size}>
+                    <FontAwesomeIcon
+                      icon={faExclamationCircle}
+                      style={{ fontSize: "48px", color: "#ff4444" }}
+                    />
+                  </ThumbnailPlaceholder>
+                ) : (
+                  <ItemCardImage size={size} src={dream.thumbnail} />
+                )}
+              </ThumbnailGridItem>
+            );
+          })}
+        </ThumbnailGrid>
+      );
+    }
 
-      if (isDreamFailed) {
-        return (
-          <ThumbnailPlaceholder size={size}>
-            <FontAwesomeIcon
-              icon={faExclamationCircle}
-              style={{ fontSize: "64px", color: "#ff4444" }}
-            />
-          </ThumbnailPlaceholder>
-        );
-      }
-
-      if (thumbnail) {
-        return <ItemCardImage size={size} src={thumbnailUrl} />;
-      }
-
-      if (statusBadge) {
-        return (
-          <ThumbnailPlaceholder size={size}>
-            <StatusPlaceholderIcon tone={statusBadge.tone}>
-              <FontAwesomeIcon
-                icon={STATUS_PLACEHOLDER_ICONS[statusBadge.tone]}
-              />
-            </StatusPlaceholderIcon>
-          </ThumbnailPlaceholder>
-        );
-      }
-
+    if (isDreamFailed) {
       return (
         <ThumbnailPlaceholder size={size}>
-          <FontAwesomeIcon icon={faPhotoFilm} />
+          <FontAwesomeIcon
+            icon={faExclamationCircle}
+            style={{ fontSize: "64px", color: "#ff4444" }}
+          />
         </ThumbnailPlaceholder>
       );
-    },
-    [
-      type,
-      thumbnail,
-      thumbnailDreams,
-      size,
-      thumbnailUrl,
-      isDreamFailed,
-      statusBadge,
-    ],
-  );
+    }
 
-  const ThumbnailAndPlayButton = useMemo(
-    () => () => (
+    if (thumbnail) {
+      return <ItemCardImage size={size} src={thumbnailUrl} />;
+    }
+
+    if (statusBadge) {
+      return (
+        <ThumbnailPlaceholder size={size}>
+          <StatusPlaceholderIcon tone={statusBadge.tone}>
+            <FontAwesomeIcon
+              icon={STATUS_PLACEHOLDER_ICONS[statusBadge.tone]}
+            />
+          </StatusPlaceholderIcon>
+        </ThumbnailPlaceholder>
+      );
+    }
+
+    return (
+      <ThumbnailPlaceholder size={size}>
+        <FontAwesomeIcon icon={faPhotoFilm} />
+      </ThumbnailPlaceholder>
+    );
+  }, [
+    type,
+    thumbnail,
+    thumbnailDreams,
+    size,
+    thumbnailUrl,
+    isDreamFailed,
+    statusBadge,
+  ]);
+
+  const thumbnailAndPlayButton = useMemo(
+    () => (
       <Row
         style={{ position: "relative" }}
         m={0}
@@ -533,45 +532,57 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
         mr={inline ? [0, 4, 4, 4] : 0}
         flex={["auto", 0, 0, 0]}
       >
-        <Thumbnail />
+        {thumbnailContent}
+        {type === "dream" && item && (
+          <DreamProgressOverlay dream={item as Dream} />
+        )}
+        {type === "playlist" && item && (
+          <PlaylistProgressOverlay uuid={item.uuid} />
+        )}
 
-        {statusBadge && (
+        {statusBadge && statusBadge.tone !== "processing" && (
           <StatusBadge tone={statusBadge.tone}>
             {t(statusBadge.labelKey)}
           </StatusBadge>
         )}
 
-        {showPlayButton && !statusBadge && (
-          <Row
-            justifyContent="flex-end"
-            style={{ position: "absolute", top: 0, right: 0 }}
-          >
-            <PlayButton
-              type="button"
-              buttonType="default"
-              transparent
-              playType={type}
-              after={
-                type === "dream" ? (
-                  <span>
-                    <FontAwesomeIcon icon={faPlay} />
-                  </span>
-                ) : (
-                  <span
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <PlaylistPlay />
-                  </span>
-                )
-              }
-              onClick={handlePlay}
-            />
-          </Row>
-        )}
+        {showPlayButton &&
+          !statusBadge &&
+          !(
+            type === "dream" &&
+            ((item as Dream)?.status === DreamStatusType.QUEUE ||
+              (item as Dream)?.status === DreamStatusType.PROCESSING)
+          ) && (
+            <Row
+              justifyContent="flex-end"
+              style={{ position: "absolute", top: 0, right: 0 }}
+            >
+              <PlayButton
+                type="button"
+                buttonType="default"
+                transparent
+                playType={type}
+                after={
+                  type === "dream" ? (
+                    <span>
+                      <FontAwesomeIcon icon={faPlay} />
+                    </span>
+                  ) : (
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <PlaylistPlay />
+                    </span>
+                  )
+                }
+                onClick={handlePlay}
+              />
+            </Row>
+          )}
 
         {type == "virtual-playlist" &&
           shouldVirtualPlaylistDisplayDots(
@@ -589,7 +600,16 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
           )}
       </Row>
     ),
-    [Thumbnail, handlePlay, item, type, inline, showPlayButton, statusBadge, t],
+    [
+      thumbnailContent,
+      handlePlay,
+      item,
+      type,
+      inline,
+      showPlayButton,
+      statusBadge,
+      t,
+    ],
   );
 
   const onHideClientNotConnectedModal = () =>
@@ -698,14 +718,14 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                   )}
                 </Row>
               )}
-              {inline && <ThumbnailAndPlayButton />}
+              {inline && thumbnailAndPlayButton}
               <Column
                 flex="auto"
                 margin="0"
                 padding="0"
                 justifyContent="center"
               >
-                {!inline && <ThumbnailAndPlayButton />}
+                {!inline && thumbnailAndPlayButton}
                 <Row mb={0}>
                   <Column mr="3">
                     <Avatar size="sm" url={avatarUrl} />
@@ -798,52 +818,6 @@ export const ItemCardSkeleton: React.FC<ItemCardSkeletonProps> = ({
   children,
 }) => <StyledItemCardSkeleton size={size}>{children}</StyledItemCardSkeleton>;
 
-const isVirtualPlaylist = (item: Item): item is VirtualPlaylist => {
-  return item && "dreams" in item;
-};
-
-// Verifies if changes on item should rerender the component
-const areItemsEqual = (
-  prevItem: Item | undefined,
-  nextItem: Item | undefined,
-): boolean => {
-  // If both items are undefined, considered it equal
-  if (!prevItem && !nextItem) return true;
-
-  // If one is undefined and the other isn't, they're not equal
-  if (!prevItem || !nextItem) return false;
-
-  // Check if both (prev and next item) are VirtualPlaylists and thumbnail dreams changes
-  if (isVirtualPlaylist(prevItem) && isVirtualPlaylist(nextItem)) {
-    const prevThumbnailDreams = getVirtualPlaylistThumbnailDreams(
-      prevItem?.dreams,
-    );
-    const nextThumbnailDreams = getVirtualPlaylistThumbnailDreams(
-      nextItem?.dreams,
-    );
-
-    // If every thumbnail dream is the same, then do not rerender
-    return prevThumbnailDreams.every(
-      (prevDream, index) => prevDream.id === nextThumbnailDreams[index]?.id,
-    );
-  }
-
-  // If items has same uuid consider it equal, unless a dream's status changed
-  // (keeps the "My Dreams" status badge in sync on refetch without a remount)
-  if (prevItem.uuid === nextItem.uuid) {
-    return (prevItem as Dream).status === (nextItem as Dream).status;
-  }
-
-  // If types don't match or aren't VirtualPlaylist, consider them not equal
-  return false;
-};
-
-// Try rerender component only when order or some item properties changes
-export const ItemCard = memo(
-  ItemCardComponent,
-  (prevProps, nextProps) =>
-    prevProps.order === nextProps.order &&
-    areItemsEqual(prevProps.item, nextProps.item),
-);
+export const ItemCard = memo(ItemCardComponent);
 
 export default ItemCard;

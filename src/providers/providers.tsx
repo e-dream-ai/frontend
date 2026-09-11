@@ -1,3 +1,4 @@
+import { JobProgressProvider } from "./job-progress.provider";
 import React from "react";
 import AuthProvider from "@/providers/auth.provider";
 import ModalProvider from "@/providers/modal.provider";
@@ -30,6 +31,7 @@ export const Providers = [
   ModalProvider,
   PermissionProvider,
   SocketProvider,
+  JobProgressProvider,
   PlaybackSyncProvider,
   DesktopClientProvider,
   VideoJSProvider,

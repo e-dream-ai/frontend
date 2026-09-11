@@ -1,3 +1,9 @@
+import {
+  useDreamProgress,
+  DREAM_PROGRESS_QUERY_KEY,
+} from "@/hooks/useDreamProgress";
+import { DreamProgress } from "@/components/shared/dream-progress/dream-progress";
+import { isActiveProgress } from "@/utils/job-progress.util";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useDeleteDream } from "@/api/dream/mutation/useDeleteDream";
 import { useUpdateDream } from "@/api/dream/mutation/useUpdateDream";
@@ -67,12 +73,6 @@ import {
 import { isAdmin } from "@/utils/user.util";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import useSocket from "@/hooks/useSocket";
-import useSocketEventListener from "@/hooks/useSocketEventListener";
-import {
-  JOB_PROGRESS_EVENT,
-  JOIN_DREAM_ROOM_EVENT,
-  LEAVE_DREAM_ROOM_EVENT,
-} from "@/constants/remote-control.constants";
 import { emitPlayDream } from "@/utils/socket.util";
 import { truncateString } from "@/utils/string.util";
 import { AnchorLink } from "@/components/shared";
@@ -98,7 +98,6 @@ import {
 import { ReportDreamModal } from "@/components/modals/report-dream.modal";
 import { useUpdateReport } from "@/api/report/mutation/useUpdateReport";
 import { Tooltip } from "react-tooltip";
-import { JobProgressData } from "./view-dream-inputs";
 import {
   TOAST_DEFAULT_CONFIG,
   TOOLTIP_DELAY_MS,
@@ -108,8 +107,6 @@ import { PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
 import PermissionContext from "@/context/permission.context";
 import { Dream } from "@/types/dream.types";
 import { ApiResponse } from "@/types/api.types";
-import ProgressBar from "@/components/shared/progress-bar/progress-bar";
-import { formatEta } from "@/utils/video.utils";
 import Text from "@/components/shared/text/text";
 import { useModels } from "@/api/model/query/useModels";
 import { estimateUnitCostUsd } from "@/utils/model-cost.util";
@@ -130,8 +127,6 @@ type DreamModal =
 const SectionID = "dream";
 
 const FALLBACK_ERROR_MESSAGE = "An error occurred while processing this dream.";
-
-const FINISHED_JOB_STATUSES = new Set(["COMPLETED", "FAILED", "CANCELLED"]);
 
 const PREVIEW_FRAME_ALGORITHMS = new Set(["deforum", "uprez", "nvidia-uprez"]);
 
@@ -228,9 +223,6 @@ const ViewDreamPage: React.FC = () => {
   const [removingPlaylistItemId, setRemovingPlaylistItemId] = useState<
     number | null
   >(null);
-  const [progress, setProgress] = useState<number | undefined>(undefined);
-  const [jobStatus, setJobStatus] = useState<string | undefined>(undefined);
-  const [countdownMs, setCountdownMs] = useState<number | undefined>(undefined);
   const validatePromptRef = useRef<(() => boolean) | null>(null);
   const resetPromptRef = useRef<(() => void) | null>(null);
 
@@ -254,56 +246,11 @@ const ViewDreamPage: React.FC = () => {
 
   const { socket } = useSocket();
 
-  const handleJobProgress = useCallback(
-    async (data?: JobProgressData) => {
-      if (data && data.dream_uuid === uuid) {
-        if (data.progress !== undefined) {
-          setProgress(Number(data.progress));
-        }
-        if (typeof data.status === "string") {
-          setJobStatus(data.status);
-        }
-        if (typeof data.countdown_ms === "number") {
-          setCountdownMs(data.countdown_ms);
-        }
-      }
-    },
-    [uuid],
+  const dream = data?.data?.dream;
+  const jobProgress = useDreamProgress(
+    dream?.uuid === uuid ? dream : undefined,
   );
-
-  useSocketEventListener<JobProgressData>(
-    JOB_PROGRESS_EVENT,
-    handleJobProgress,
-  );
-
-  useEffect(() => {
-    setProgress(undefined);
-    setJobStatus(undefined);
-    setCountdownMs(undefined);
-  }, [uuid]);
-
-  useEffect(() => {
-    if (!socket || !uuid) return;
-
-    const joinRoom = () => {
-      socket.emit(JOIN_DREAM_ROOM_EVENT, uuid);
-    };
-
-    if (socket.connected) {
-      joinRoom();
-    }
-
-    socket.on("connect", joinRoom);
-
-    return () => {
-      socket.off("connect", joinRoom);
-      if (socket && uuid) {
-        socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
-      }
-    };
-  }, [uuid, socket]);
-
-  const dream = useMemo(() => data?.data?.dream, [data]);
+  const jobStatus = jobProgress?.status;
 
   const displayDream = useMemo(() => {
     if (!dream || dream.uuid === uuid) return dream;
@@ -399,16 +346,11 @@ const ViewDreamPage: React.FC = () => {
     [dream],
   );
 
-  const isDreamProcessing: boolean = useMemo(
-    () =>
-      isDreamProcessingRaw &&
-      !FINISHED_JOB_STATUSES.has((jobStatus ?? "").toUpperCase()),
-    [isDreamProcessingRaw, jobStatus],
-  );
-
-  const dreamProcessingPhase = useMemo(
-    () => getDreamProcessingPhase(isDreamProcessingRaw, jobStatus),
-    [isDreamProcessingRaw, jobStatus],
+  const isDreamProcessing = isActiveProgress(jobProgress);
+  const dreamProcessingPhase = getDreamProcessingPhase(
+    isDreamProcessing,
+    jobStatus,
+    jobProgress?.stage,
   );
 
   const isDreamFailed: boolean = useMemo(
@@ -792,9 +734,7 @@ const ViewDreamPage: React.FC = () => {
       if (response?.success) {
         toast.success(`${t("page.view_dream.dream_processing_successfully")}`);
         setTumbnail(undefined);
-        setProgress(0);
-        setJobStatus(undefined);
-        setCountdownMs(undefined);
+        void queryClient.invalidateQueries([DREAM_PROGRESS_QUERY_KEY, uuid]);
         refetch();
         queryClient.invalidateQueries([USER_QUERY_KEY, user?.uuid]);
         closeModal();
@@ -818,9 +758,7 @@ const ViewDreamPage: React.FC = () => {
       }
 
       setTumbnail(undefined);
-      setProgress(undefined);
-      setJobStatus(undefined);
-      setCountdownMs(undefined);
+      void queryClient.invalidateQueries([DREAM_PROGRESS_QUERY_KEY, uuid]);
       closeModal();
 
       if (!response.data?.jobFound) {
@@ -1248,27 +1186,7 @@ const ViewDreamPage: React.FC = () => {
               <Row justifyContent="space-between" alignItems="center">
                 {isDreamProcessing && (
                   <Column mr={[0, 2, 2]} width="50%">
-                    {jobStatus?.toUpperCase() === "IN_PROGRESS" &&
-                      typeof progress === "number" && (
-                        <>
-                          <ProgressBar
-                            completed={progress}
-                            width="100%"
-                            height="16px"
-                            labelSize="12px"
-                            borderRadius="8px"
-                            margin="0 0 0.5rem 0"
-                            isLabelVisible={false}
-                          />
-                          <Text color="textSecondary" fontSize="0.875rem">
-                            Rendering {progress.toFixed(1)}% done
-                            {countdownMs &&
-                              `, ETA ${formatEta(
-                                Math.floor(countdownMs / 1000),
-                              )}`}
-                          </Text>
-                        </>
-                      )}
+                    <DreamProgress progress={jobProgress} />
                   </Column>
                 )}
                 <Row flex="1" justifyContent="flex-end">

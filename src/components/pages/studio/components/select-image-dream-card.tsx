@@ -1,3 +1,4 @@
+import { DreamProgressOverlay } from "@/components/shared/dream-progress/dream-progress";
 import React, { memo } from "react";
 import { Dream } from "@/types/dream.types";
 import { mediaAspectRatio } from "../utils/media-aspect-ratio";
@@ -50,6 +51,7 @@ const SelectImageDreamCardComponent: React.FC<Props> = ({
       )}
       {isSelected && <CardCheckmark aria-hidden="true">✓</CardCheckmark>}
       <CardName aria-hidden="true">{dream.name}</CardName>
+      <DreamProgressOverlay dream={dream} />
     </Card>
   );
 };

@@ -1,5 +1,10 @@
 import styled, { css, keyframes } from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
+import {
+  ProgressContent,
+  ProgressLabel,
+  ProgressEta,
+} from "@/components/shared/dream-progress/dream-progress.styled";
 
 const pulseDot = keyframes`
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -39,6 +44,23 @@ export const GapContainer = styled.div<{ $expanded: boolean }>`
   gap: 14px;
   cursor: pointer;
   transition: width 0.3s ease;
+
+  ${ProgressContent} {
+    width: 56px;
+    gap: 6px;
+    font-size: 10px;
+    text-align: center;
+  }
+
+  ${ProgressLabel} {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  ${ProgressEta} {
+    font-size: 9px;
+  }
 `;
 
 export type GapLineVariant = "idle" | "configured" | "failed" | "mismatched";
