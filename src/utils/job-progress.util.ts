@@ -45,10 +45,16 @@ export function latestProgress(
   next: DreamJobProgress,
 ): DreamJobProgress {
   if (!current) return next;
-  if (current.run_id && next.run_id && current.run_id !== next.run_id) {
-    return (next.run_started_at ?? 0) > (current.run_started_at ?? 0)
-      ? next
-      : current;
+
+  if (current.seq !== undefined && next.seq !== undefined) {
+    return next.seq >= current.seq ? next : current;
   }
+
+  if (current.seq !== undefined || next.seq !== undefined) {
+    const [observed, fallback] =
+      next.seq !== undefined ? [next, current] : [current, next];
+    return isActiveProgress(fallback) ? observed : fallback;
+  }
+
   return next.updated_at >= current.updated_at ? next : current;
 }
