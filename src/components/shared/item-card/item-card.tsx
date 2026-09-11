@@ -837,15 +837,16 @@ const sameThumbnailDreams = (
 const ownerAvatar = (item: Item) =>
   item.displayedOwner ? item.displayedOwner.avatar : item.user?.avatar;
 
-const PROGRESS_FIELDS = [
-  "total",
-  "completed",
-  "queued",
-  "inProgress",
-  "failed",
-  "idle",
-  "remaining",
-] as const;
+const PROGRESS_FIELDS: Record<keyof PlaylistProgressData, true> = {
+  total: true,
+  queued: true,
+  rendering: true,
+  ingesting: true,
+  completed: true,
+  failed: true,
+  idle: true,
+  remaining: true,
+};
 
 const samePlaylistProgress = (
   prev?: PlaylistProgressData,
@@ -853,7 +854,9 @@ const samePlaylistProgress = (
 ): boolean => {
   if (prev === next) return true;
   if (!prev || !next) return false;
-  return PROGRESS_FIELDS.every((field) => prev[field] === next[field]);
+  return (Object.keys(PROGRESS_FIELDS) as (keyof PlaylistProgressData)[]).every(
+    (field) => prev[field] === next[field],
+  );
 };
 
 const areItemsEqual = (

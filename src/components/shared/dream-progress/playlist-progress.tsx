@@ -58,7 +58,8 @@ export function PlaylistProgress({
     total: progress.total,
   });
   const counts = [
-    ["in_progress", progress.inProgress],
+    ["rendering", progress.rendering],
+    ["ingesting", progress.ingesting],
     ["queued", progress.queued],
     ["failed", progress.failed],
     ["idle", progress.idle],

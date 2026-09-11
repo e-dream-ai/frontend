@@ -47,6 +47,7 @@ const RECONCILE_QUERY_KEYS = [
   ...LIST_QUERY_KEYS,
 ];
 const COMPLETION_QUERY_KEYS = LIST_QUERY_KEYS;
+const SUMMARY_QUERY_KEYS = [PLAYLIST_QUERY_KEY];
 
 function invalidateQueries(queryClient: QueryClient, keys: readonly string[]) {
   keys.forEach((key) => {
@@ -68,6 +69,7 @@ function useJobProgressSync(socket: Socket | null | undefined) {
     const active = new Set<string>();
     const completed = new Set<string>();
     const versions = new Map<string, string>();
+    let summaryStale = false;
     let refreshTimer: ReturnType<typeof setTimeout> | undefined;
 
     const reconcile = (force = false) => {
@@ -78,7 +80,13 @@ function useJobProgressSync(socket: Socket | null | undefined) {
 
     const refresh = () => {
       refreshTimer = undefined;
-      if (completed.size === 0) return;
+      const keys = summaryStale ? SUMMARY_QUERY_KEYS : [];
+      summaryStale = false;
+
+      if (completed.size === 0) {
+        invalidateQueries(queryClient, keys);
+        return;
+      }
 
       completed.forEach((uuid) => {
         void queryClient.invalidateQueries([DREAM_QUERY_KEY, uuid]);
@@ -91,14 +99,15 @@ function useJobProgressSync(socket: Socket | null | undefined) {
       const version = getProgressVersion(progress);
       if (versions.get(progress.dream_uuid) === version) return;
       versions.set(progress.dream_uuid, version);
+      summaryStale = true;
 
       if (isActiveProgress(progress)) {
         active.add(progress.dream_uuid);
-        return;
+      } else {
+        active.delete(progress.dream_uuid);
+        completed.add(progress.dream_uuid);
       }
 
-      active.delete(progress.dream_uuid);
-      completed.add(progress.dream_uuid);
       refreshTimer ??= setTimeout(refresh, REFRESH_DELAY_MS);
     };
 

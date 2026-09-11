@@ -734,7 +734,8 @@
       "completed_count": "{{completed}} of {{total}} completed",
       "remaining_one": "{{count}} remaining",
       "remaining_other": "{{count}} remaining",
-      "count_in_progress": "{{count}} in progress",
+      "count_rendering": "{{count}} rendering",
+      "count_ingesting": "{{count}} ingesting",
       "count_queued": "{{count}} queued",
       "count_failed": "{{count}} failed",
       "count_idle": "{{count}} not started"
