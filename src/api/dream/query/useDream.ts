@@ -19,33 +19,24 @@ type DreamResponse = {
   dream?: Dream;
 };
 
-export const getDream = async (
-  uuid: string,
-  signal?: AbortSignal,
-): Promise<Dream | undefined> => {
+export const getDreamResponse = async (uuid: string, signal?: AbortSignal) => {
   const res = await axiosClient.get<ApiResponse<{ dream: Dream }>>(
     `/v1/dream/${uuid}`,
     { headers: getRequestHeaders({ contentType: ContentType.json }), signal },
   );
-  return res.data?.data?.dream;
+  return res.data;
 };
 
-export const fetchDream = async (uuid?: string) => {
-  const data = await queryClient.fetchQuery<ApiResponse<{ dream: Dream }>>({
-    queryKey: [DREAM_QUERY_KEY, uuid],
-    queryFn: () =>
-      axiosClient
-        .get(`/v1/dream/${uuid ?? ""}`, {
-          headers: getRequestHeaders({
-            contentType: ContentType.json,
-          }),
-        })
-        .then((res) => {
-          return res.data;
-        }),
-  });
+export const getDream = async (uuid: string, signal?: AbortSignal) =>
+  (await getDreamResponse(uuid, signal)).data?.dream;
 
-  return data?.data?.dream;
+export const fetchDream = async (uuid?: string) => {
+  if (!uuid) return;
+  const response = await queryClient.fetchQuery({
+    queryKey: [DREAM_QUERY_KEY, uuid],
+    queryFn: ({ signal }) => getDreamResponse(uuid, signal),
+  });
+  return response.data?.dream;
 };
 
 export const useDream = (uuid?: string, options?: HookOptions) => {

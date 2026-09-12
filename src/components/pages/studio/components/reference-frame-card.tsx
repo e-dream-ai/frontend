@@ -1,3 +1,4 @@
+import { DreamCardProgress } from "@/components/shared/dream-progress/dream-progress";
 import React from "react";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
@@ -10,6 +11,7 @@ import {
   CardWrapper,
   CardImage,
   CardPlaceholder,
+  GenerationPlaceholder,
   CardLabel,
   LoopBadge,
   DeleteButton,
@@ -34,6 +36,7 @@ export const ReferenceFrameCard: React.FC<Props> = ({
 }) => {
   const isLoop = frame.isLoopFrame ?? false;
   const isUploading = frame.uploadStatus === "uploading";
+  const isGenerating = isUploading && !!frame.dreamUuid && !frame.imageUrl;
   const isFailed = frame.uploadStatus === "failed";
   const isBusy = isUploading || isFailed;
 
@@ -97,7 +100,13 @@ export const ReferenceFrameCard: React.FC<Props> = ({
       $ratio={aspectRatioOf(frame)}
       {...(isLoop || isBusy ? {} : { ...attributes, ...listeners })}
     >
-      {imgSrc ? (
+      {isGenerating && frame.dreamUuid ? (
+        <GenerationPlaceholder title={frame.name}>
+          <DreamCardProgress
+            dream={{ uuid: frame.dreamUuid, status: "queue" }}
+          />
+        </GenerationPlaceholder>
+      ) : imgSrc ? (
         <CardImage
           src={imgSrc}
           alt={frame.name}
@@ -111,7 +120,7 @@ export const ReferenceFrameCard: React.FC<Props> = ({
         <CardPlaceholder>{frame.name}</CardPlaceholder>
       )}
 
-      {isUploading && (
+      {isUploading && !isGenerating && (
         <UploadOverlay
           role="progressbar"
           aria-label={`Uploading ${frame.name}`}

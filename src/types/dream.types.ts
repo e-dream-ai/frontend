@@ -1,3 +1,4 @@
+import type { DreamJobProgress } from "./job-progress.types";
 import { User } from "./auth.types";
 import { Keyframe } from "./keyframe.types";
 import { PlaylistItem } from "./playlist.types";
@@ -42,6 +43,7 @@ export type Dream = {
   processedMediaHeight?: number;
   render_duration?: number | null;
   status: DreamStatusType;
+  jobProgress?: DreamJobProgress;
   mediaType?: DreamMediaType;
   nsfw?: boolean;
   hidden?: boolean;

@@ -1,24 +1,26 @@
-import { useEffect } from "react";
+import { useQueries, type QueryFunctionContext } from "@tanstack/react-query";
+import type { ApiResponse } from "@/types/api.types";
+import type { Dream } from "@/types/dream.types";
+import { useDreamRooms } from "@/hooks/useDreamRooms";
+import { useCallback, useEffect } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { toast } from "react-toastify";
 import useSocket from "@/hooks/useSocket";
 import { useStudioStore } from "@/stores/studio.store";
-import { useSessionStore } from "@/stores/session.store";
 import queryClient from "@/api/query-client";
-import { DREAM_QUERY_KEY, fetchDream } from "@/api/dream/query/useDream";
-import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import {
-  JOB_PROGRESS_EVENT,
-  JOIN_DREAM_ROOM_EVENT,
-  LEAVE_DREAM_ROOM_EVENT,
-} from "@/constants/remote-control.constants";
+  DREAM_QUERY_KEY,
+  fetchDream,
+  getDreamResponse,
+} from "@/api/dream/query/useDream";
+import { USER_QUERY_KEY } from "@/api/user/query/useUser";
+import { JOB_PROGRESS_EVENT } from "@/constants/remote-control.constants";
 import { dreamMediaUrl } from "../utils/resolve-dream-media";
 import { useDreamMediaResolver } from "./useDreamMediaResolver";
 import {
   mapSocketStatus,
   shouldApplyStatus,
   isPendingStatus,
-  type DreamJobStatus,
 } from "./mapSocketStatus";
 
 const RECONCILE_POLL_MS = 5000;
@@ -35,17 +37,15 @@ export const useStudioJobProgress = () => {
       const jobUuids = s.jobs
         .filter((j) => isPendingStatus(j.status))
         .map((j) => j.dreamUuid);
-      return [...imageUuids, ...jobUuids];
+      return [...new Set([...imageUuids, ...jobUuids])];
     }),
   );
 
-  useEffect(() => {
-    if (!socket) return;
-
-    const handleProgress = (data: {
+  const handleProgress = useCallback(
+    (data: {
       dream_uuid: string;
       status?: string;
-      progress?: number;
+      progress?: number | null;
       preview_frame?: string;
     }) => {
       const { dream_uuid, progress, preview_frame } = data;
@@ -56,7 +56,7 @@ export const useStudioJobProgress = () => {
       if (image) {
         const applyStatus = shouldApplyStatus(image.status, mappedStatus);
         state.updateImage(dream_uuid, {
-          progress,
+          progress: progress ?? undefined,
           previewFrame: preview_frame,
           ...(applyStatus && mappedStatus ? { status: mappedStatus } : {}),
         });
@@ -64,6 +64,7 @@ export const useStudioJobProgress = () => {
         if (
           applyStatus &&
           mappedStatus === "processed" &&
+          isPendingStatus(image.status) &&
           !image.url?.startsWith("http")
         ) {
           queryClient.invalidateQueries([DREAM_QUERY_KEY, dream_uuid]);
@@ -87,12 +88,12 @@ export const useStudioJobProgress = () => {
         const isNowFailed = applyStatus && mappedStatus === "failed";
 
         state.updateJob(dream_uuid, {
-          progress,
+          progress: progress ?? undefined,
           previewFrame: preview_frame,
           ...(applyStatus && mappedStatus ? { status: mappedStatus } : {}),
         });
 
-        if (isNowCompleted) {
+        if (isNowCompleted && wasPending) {
           queryClient.invalidateQueries([DREAM_QUERY_KEY, dream_uuid]);
           queryClient.invalidateQueries([USER_QUERY_KEY]);
           fetchDream(dream_uuid)
@@ -120,95 +121,42 @@ export const useStudioJobProgress = () => {
             .catch(() => {});
         }
       }
-    };
+    },
+    [resolveMedia],
+  );
 
+  useEffect(() => {
+    if (!socket) return;
     socket.on(JOB_PROGRESS_EVENT, handleProgress);
     return () => {
       socket.off(JOB_PROGRESS_EVENT, handleProgress);
     };
-  }, [socket, resolveMedia]);
+  }, [socket, handleProgress]);
 
-  useEffect(() => {
-    if (!socket || pendingUuids.length === 0) return;
-
-    queryClient.invalidateQueries([USER_QUERY_KEY]);
-
-    const joinRooms = () => {
-      pendingUuids.forEach((uuid) => socket.emit(JOIN_DREAM_ROOM_EVENT, uuid));
-    };
-
-    if (socket.connected) joinRooms();
-    socket.on("connect", joinRooms);
-
-    return () => {
-      socket.off("connect", joinRooms);
-      pendingUuids.forEach((uuid) => socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid));
-    };
-  }, [socket, pendingUuids]);
+  useDreamRooms(pendingUuids);
 
   const hasPending = pendingUuids.length > 0;
-  const activeSessionId = useSessionStore((s) => s.activeSessionId);
-
   useEffect(() => {
-    if (!hasPending) return;
+    if (hasPending) void queryClient.invalidateQueries([USER_QUERY_KEY]);
+  }, [hasPending]);
 
-    const reconcile = () => {
-      const state = useStudioStore.getState();
-
-      for (const img of state.images.filter((i) => isPendingStatus(i.status))) {
-        fetchDream(img.uuid)
-          .then((dream) => {
-            if (!dream) return;
-            if (dream.status === img.status) return;
-            if (!shouldApplyStatus(img.status, dream.status)) return;
-            useStudioStore.getState().updateImage(img.uuid, {
-              status: dream.status as DreamJobStatus,
-            });
-          })
-          .catch(() => {});
-      }
-
-      for (const job of state.jobs.filter((j) => isPendingStatus(j.status))) {
-        fetchDream(job.dreamUuid)
-          .then((dream) => {
-            if (!dream) return;
-            if (dream.status === job.status) return;
-            if (!shouldApplyStatus(job.status, dream.status)) return;
-
-            const wasNotCompleted = job.status !== "processed";
-            const isNowCompleted = dream.status === "processed";
-
-            useStudioStore.getState().updateJob(job.dreamUuid, {
-              status: dream.status as DreamJobStatus,
-              ...(isNowCompleted && dream.thumbnail
-                ? { thumbnailUrl: dream.thumbnail }
-                : {}),
-            });
-
-            if (wasNotCompleted && isNowCompleted) {
-              queryClient.invalidateQueries([DREAM_QUERY_KEY, job.dreamUuid]);
-              const s = useStudioStore.getState();
-              if (s.activeTab !== "results") s.incrementNewCompleted();
-            }
-          })
-          .catch(() => {});
-      }
-    };
-
-    reconcile();
-
-    const interval = isConnected
-      ? null
-      : setInterval(reconcile, RECONCILE_POLL_MS);
-
-    const onVisibility = () => {
-      if (document.visibilityState === "visible") reconcile();
-    };
-    document.addEventListener("visibilitychange", onVisibility);
-
-    return () => {
-      if (interval) clearInterval(interval);
-      document.removeEventListener("visibilitychange", onVisibility);
-    };
-  }, [hasPending, activeSessionId, isConnected]);
+  useQueries({
+    queries: pendingUuids.map((uuid) => ({
+      queryKey: [DREAM_QUERY_KEY, uuid],
+      queryFn: ({ signal }: QueryFunctionContext) =>
+        getDreamResponse(uuid, signal),
+      staleTime: 1000,
+      refetchInterval: isConnected ? 30_000 : RECONCILE_POLL_MS,
+      refetchOnWindowFocus: true,
+      onSuccess: (response: ApiResponse<{ dream: Dream }>) => {
+        const dream = response.data?.dream;
+        if (!dream) return;
+        handleProgress({
+          dream_uuid: uuid,
+          status: dream.jobProgress?.status ?? dream.status,
+          progress: dream.jobProgress?.progress,
+        });
+      },
+    })),
+  });
 };

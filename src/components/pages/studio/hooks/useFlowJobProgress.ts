@@ -1,3 +1,5 @@
+import type { ApiResponse } from "@/types/api.types";
+import { useDreamRooms } from "@/hooks/useDreamRooms";
 import { useEffect, useCallback, useMemo, useRef } from "react";
 import { useQueries, type QueryFunctionContext } from "@tanstack/react-query";
 import { toast } from "react-toastify";
@@ -6,14 +8,10 @@ import { useSocket } from "@/hooks/useSocket";
 import {
   DREAM_QUERY_KEY,
   fetchDream,
-  getDream,
+  getDreamResponse,
 } from "@/api/dream/query/useDream";
 import type { Dream } from "@/types/dream.types";
-import {
-  JOB_PROGRESS_EVENT,
-  JOIN_DREAM_ROOM_EVENT,
-  LEAVE_DREAM_ROOM_EVENT,
-} from "@/constants/remote-control.constants";
+import { JOB_PROGRESS_EVENT } from "@/constants/remote-control.constants";
 import {
   mapSocketStatus,
   shouldApplyStatus,
@@ -92,7 +90,7 @@ export function useFlowJobProgress() {
       dreamUuid?: string;
       dream_uuid?: string;
       status?: string;
-      progress?: number;
+      progress?: number | null;
     }) => {
       const uuid = data.dreamUuid || data.dream_uuid;
       if (!uuid) return;
@@ -104,7 +102,7 @@ export function useFlowJobProgress() {
         uuid,
         entry.isUprez,
         data.status,
-        data.progress,
+        data.progress ?? undefined,
       );
 
       if (nextStatus === "failed") {
@@ -124,53 +122,28 @@ export function useFlowJobProgress() {
     };
   }, [socket, handleProgress]);
 
-  const joinedUuidsRef = useRef<Set<string>>(new Set());
-
-  useEffect(() => {
-    if (!socket) return;
-
-    const currentSet = new Set(pendingUuids);
-    const prevSet = joinedUuidsRef.current;
-
-    for (const uuid of currentSet) {
-      if (!prevSet.has(uuid)) socket.emit(JOIN_DREAM_ROOM_EVENT, uuid);
-    }
-    for (const uuid of prevSet) {
-      if (!currentSet.has(uuid)) socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid);
-    }
-    joinedUuidsRef.current = currentSet;
-  }, [socket, pendingUuids]);
-
-  useEffect(() => {
-    if (!socket) return;
-    const rejoinAll = () => {
-      joinedUuidsRef.current.forEach((uuid) =>
-        socket.emit(JOIN_DREAM_ROOM_EVENT, uuid),
-      );
-    };
-    socket.on("connect", rejoinAll);
-    return () => {
-      socket.off("connect", rejoinAll);
-      joinedUuidsRef.current.forEach((uuid) =>
-        socket.emit(LEAVE_DREAM_ROOM_EVENT, uuid),
-      );
-      joinedUuidsRef.current = new Set();
-    };
-  }, [socket]);
+  useDreamRooms(pendingUuids);
 
   useQueries({
     queries: pendingEntries.map((entry) => ({
       queryKey: [DREAM_QUERY_KEY, entry.uuid],
       queryFn: ({ signal }: QueryFunctionContext) =>
-        getDream(entry.uuid, signal),
+        getDreamResponse(entry.uuid, signal),
+      select: (response: ApiResponse<{ dream: Dream }>) => response.data?.dream,
       refetchInterval: RECONCILE_POLL_MS,
       refetchIntervalInBackground: false,
       onSuccess: (dream: Dream | undefined) => {
         if (!dream) return;
-        if (mapSocketStatus(dream.status) === "failed") {
+        const status = dream.jobProgress?.status ?? dream.status;
+        if (mapSocketStatus(status) === "failed") {
           toastFailure(entry.uuid, dream.error);
         }
-        applyStatus(entry.uuid, entry.isUprez, dream.status);
+        applyStatus(
+          entry.uuid,
+          entry.isUprez,
+          status,
+          dream.jobProgress?.progress ?? undefined,
+        );
       },
     })),
   });
