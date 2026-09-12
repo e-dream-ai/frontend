@@ -1,3 +1,4 @@
+import type { DreamJobProgress } from "./job-progress.types";
 import { User } from "./auth.types";
 import { Keyframe } from "./keyframe.types";
 import { PlaylistItem } from "./playlist.types";
@@ -22,6 +23,8 @@ export enum DreamMediaType {
   IMAGE = "image",
 }
 
+export type DreamProcessingPhase = "QUEUED" | "RENDERING" | "INGESTING";
+
 export type Dream = {
   id: number;
   uuid: string;
@@ -40,6 +43,7 @@ export type Dream = {
   processedMediaHeight?: number;
   render_duration?: number | null;
   status: DreamStatusType;
+  jobProgress?: DreamJobProgress;
   mediaType?: DreamMediaType;
   nsfw?: boolean;
   hidden?: boolean;

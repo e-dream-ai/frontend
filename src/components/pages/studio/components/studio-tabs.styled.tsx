@@ -1,20 +1,24 @@
 import styled, { css } from "styled-components";
+import { FLOW } from "@/constants/flow-theme.constants";
 
 export const TabBar = styled.div`
   display: flex;
   gap: 0;
-  border-bottom: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
-  margin-bottom: 1.5rem;
+  padding: 0 16px;
+  border-bottom: 1px solid ${FLOW.border};
+  overflow-x: auto;
 `;
 
 export const Tab = styled.button<{ $active: boolean; $badge?: number }>`
-  padding: 0.75rem 1.25rem;
+  padding: 14px 16px;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
-  color: ${(props) => props.theme.textBodyColor};
-  font-size: 0.875rem;
+  color: ${FLOW.textMuted};
+  font-family: ${FLOW.fontFamily};
+  font-size: 13px;
   font-weight: 500;
+  white-space: nowrap;
   cursor: pointer;
   position: relative;
   transition:
@@ -24,12 +28,12 @@ export const Tab = styled.button<{ $active: boolean; $badge?: number }>`
   ${(props) =>
     props.$active &&
     css`
-      color: ${props.theme.textPrimaryColor};
-      border-bottom-color: ${props.theme.colorPrimary};
+      color: ${FLOW.accent};
+      border-bottom-color: ${FLOW.accent};
     `}
 
   &:hover {
-    color: ${(props) => props.theme.textPrimaryColor};
+    color: ${(props) => (props.$active ? FLOW.accent : FLOW.text)};
   }
 
   ${(props) =>
@@ -41,8 +45,8 @@ export const Tab = styled.button<{ $active: boolean; $badge?: number }>`
         position: absolute;
         top: 0.25rem;
         right: 0.25rem;
-        background: ${props.theme.colorPrimary};
-        color: white;
+        background: ${FLOW.accent};
+        color: ${FLOW.bg};
         font-size: 0.625rem;
         border-radius: 50%;
         width: 1.125rem;

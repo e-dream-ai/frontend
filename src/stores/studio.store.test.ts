@@ -24,26 +24,17 @@ beforeAll(() => {
 // Dynamic import after localStorage is set up
 const { useStudioStore } = await import("./studio.store");
 
+const DEFAULT_VIDEO_PARAMS = {
+  model: "ltx-i2v",
+  duration: 5,
+  numInferenceSteps: 30,
+  guidance: 1.0,
+  seed: -1,
+};
+
 describe("studio.store", () => {
   beforeEach(() => {
     useStudioStore.getState().resetSession();
-  });
-
-  describe("isGenerating", () => {
-    it("defaults to false", () => {
-      expect(useStudioStore.getState().isGenerating).toBe(false);
-    });
-
-    it("can be set to true", () => {
-      useStudioStore.getState().setIsGenerating(true);
-      expect(useStudioStore.getState().isGenerating).toBe(true);
-    });
-
-    it("resets to false on resetSession", () => {
-      useStudioStore.getState().setIsGenerating(true);
-      useStudioStore.getState().resetSession();
-      expect(useStudioStore.getState().isGenerating).toBe(false);
-    });
   });
 
   describe("newCompletedCount", () => {
@@ -74,7 +65,6 @@ describe("studio.store", () => {
         dreamUuid: "dream1",
         jobType: "wan-i2v",
         status: "queue",
-        selectedForUprez: false,
       });
 
       useStudioStore.getState().updateJob("dream1", { status: "processing" });
@@ -90,7 +80,6 @@ describe("studio.store", () => {
         dreamUuid: "dream1",
         jobType: "wan-i2v",
         status: "processing",
-        selectedForUprez: false,
       });
 
       useStudioStore.getState().updateJob("dream1", { status: "processed" });
@@ -146,35 +135,6 @@ describe("studio.store", () => {
     });
   });
 
-  describe("selectAllJobsForUprez", () => {
-    it("does not select uprez jobs for uprezzing", () => {
-      useStudioStore.getState().addJob({
-        imageId: "img1",
-        actionId: "act1",
-        dreamUuid: "dream1",
-        jobType: "wan-i2v",
-        status: "processed",
-        selectedForUprez: false,
-      });
-      useStudioStore.getState().addJob({
-        imageId: "img1",
-        actionId: "uprez-act1",
-        dreamUuid: "dream2",
-        jobType: "uprez",
-        status: "processed",
-        selectedForUprez: false,
-      });
-
-      useStudioStore.getState().selectAllJobsForUprez();
-
-      const jobs = useStudioStore.getState().jobs;
-      // wan-i2v job should be selected
-      expect(jobs[0].selectedForUprez).toBe(true);
-      // uprez job should NOT be selected
-      expect(jobs[1].selectedForUprez).toBe(false);
-    });
-  });
-
   describe("imageGenParams", () => {
     it("partial update merges correctly", () => {
       useStudioStore.getState().setImageGenParams({ model: "z-image-turbo" });
@@ -192,6 +152,101 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(5); // preserved
       expect(params.numInferenceSteps).toBe(30); // preserved
+    });
+
+    it("clears per-action LoRAs the newly selected model cannot run", () => {
+      useStudioStore.getState().addAction({
+        id: "a1",
+        prompt: "dolly in",
+        enabled: true,
+        highNoiseLoras: [
+          {
+            path: "ltx-2-19b-lora-camera-control-dolly-in.safetensors",
+            scale: 0.4,
+          },
+        ],
+      });
+
+      useStudioStore.getState().setVideoGenParams({ model: "wan-i2v" });
+
+      const [action] = useStudioStore.getState().actions;
+      expect(action.highNoiseLoras).toEqual([]);
+      expect(action.lowNoiseLoras).toEqual([]);
+      expect(action.prompt).toBe("dolly in");
+    });
+
+    it("leaves LoRAs alone when the model does not change", () => {
+      const loras = [
+        {
+          path: "ltx-2-19b-lora-camera-control-jib-up.safetensors",
+          scale: 0.4,
+        },
+      ];
+      useStudioStore.getState().addAction({
+        id: "a1",
+        prompt: "",
+        enabled: true,
+        highNoiseLoras: loras,
+      });
+
+      useStudioStore.getState().setVideoGenParams({ duration: 8 });
+
+      expect(useStudioStore.getState().actions[0].highNoiseLoras).toEqual(
+        loras,
+      );
+    });
+  });
+
+  describe("migration v8 → v9", () => {
+    it("clears persisted LoRAs the persisted model cannot run", () => {
+      const v8State = {
+        videoGenParams: { ...DEFAULT_VIDEO_PARAMS, model: "wan-i2v" },
+        actions: [
+          {
+            id: "a1",
+            prompt: "dolly in",
+            enabled: true,
+            highNoiseLoras: [
+              {
+                path: "ltx-2-19b-lora-camera-control-dolly-in.safetensors",
+                scale: 0.4,
+              },
+            ],
+          },
+        ],
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v8State, 8) as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const actions = migrated.actions as any[];
+      expect(actions[0].highNoiseLoras).toEqual([]);
+      expect(actions[0].prompt).toBe("dolly in");
+    });
+
+    it("keeps persisted LoRAs the persisted model can run", () => {
+      const lora = {
+        path: "ltx-2-19b-lora-camera-control-dolly-in.safetensors",
+        scale: 0.4,
+      };
+      const v8State = {
+        videoGenParams: { ...DEFAULT_VIDEO_PARAMS, model: "ltx-i2v" },
+        actions: [
+          { id: "a1", prompt: "", enabled: true, highNoiseLoras: [lora] },
+        ],
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v8State, 8) as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const actions = migrated.actions as any[];
+      expect(actions[0].highNoiseLoras).toEqual([lora]);
+    });
+
+    it("tolerates a persisted session with no actions", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      expect(() => migrate({}, 8)).not.toThrow();
     });
   });
 
@@ -357,7 +412,6 @@ describe("studio.store", () => {
         url: "http://example.com/img.jpg",
         name: "Test",
         status: "processed",
-        selected: false,
         previewFrame: "base64data",
       });
 

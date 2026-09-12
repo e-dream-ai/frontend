@@ -8,7 +8,6 @@ export interface StudioImage {
   size?: string;
   status: "queue" | "processing" | "processed" | "failed";
   progress?: number;
-  selected: boolean;
   previewFrame?: string;
 }
 
@@ -23,7 +22,6 @@ export interface StudioAction {
   // Prompt-level negative, supplied by presets that need one (transitions).
   // Undefined means "no opinion" — the user's negative prompt stands.
   negativePrompt?: string;
-  enabled: boolean;
   highNoiseLoras?: LoRAConfig[];
   lowNoiseLoras?: LoRAConfig[];
 }
@@ -48,8 +46,6 @@ export interface StudioJob {
   progress?: number;
   previewFrame?: string;
   thumbnailUrl?: string;
-  selectedForUprez: boolean;
-  uprezed?: boolean;
   startedAt?: number;
   completedAt?: number;
 }

@@ -1,5 +1,10 @@
+import type { JobStage } from "@/types/job-progress.types";
 import { ApiResponse } from "@/types/api.types";
-import { Dream, DreamStatusType } from "@/types/dream.types";
+import {
+  Dream,
+  DreamProcessingPhase,
+  DreamStatusType,
+} from "@/types/dream.types";
 import { formatFileSize } from "./file.util";
 import { formatEta, framesToSeconds, secondsToTimeFormat } from "./video.utils";
 import { getUserName } from "./user.util";
@@ -18,6 +23,25 @@ import {
 } from "./select.util";
 
 export const getDreamNameOrUUID = (dream?: Dream) => dream?.name || dream?.uuid;
+
+const FINISHED_JOB_STATUSES = new Set(["CANCELLED", "FAILED"]);
+
+export const getDreamProcessingPhase = (
+  isProcessing: boolean,
+  jobStatus?: string,
+  stage?: JobStage,
+): DreamProcessingPhase | undefined => {
+  if (!isProcessing) return undefined;
+  if (stage === "ingesting") return "INGESTING";
+  if (stage === "rendering") return "RENDERING";
+  if (stage === "queued") return "QUEUED";
+
+  const status = (jobStatus ?? "").toUpperCase();
+  if (FINISHED_JOB_STATUSES.has(status)) return undefined;
+  if (status === "IN_PROGRESS") return "RENDERING";
+  if (status === "IN_QUEUE") return "QUEUED";
+  return "INGESTING";
+};
 
 export type DreamStatusBadgeTone =
   | "draft"

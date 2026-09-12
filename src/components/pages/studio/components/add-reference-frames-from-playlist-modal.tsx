@@ -1,3 +1,4 @@
+import { DreamProgressOverlay } from "@/components/shared/dream-progress/dream-progress";
 import React, { useCallback, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useFlowStore } from "@/stores/flow.store";
@@ -123,6 +124,7 @@ export const AddReferenceFramesFromPlaylistModal: React.FC<Props> = ({
                           dream.processedMediaHeight,
                         )}
                       />
+                      <DreamProgressOverlay dream={dream} />
                     </ImageSelectCard>
                   );
                 })}

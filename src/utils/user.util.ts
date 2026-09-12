@@ -17,3 +17,12 @@ export const isAdmin = (user?: User | null): boolean =>
   user?.role?.name === ROLES.ADMIN_GROUP;
 
 export const formatRoleName = (name?: string) => name?.replace("-group", "");
+
+/**
+ * Checks if the user has opted into NSFW content in their profile.
+ * Users who have not opted in are never asked to rate their own uploads.
+ * @param user The user object to check.
+ * @returns True if the user has opted into NSFW content, false otherwise.
+ */
+export const hasOptedIntoNsfw = (user?: User | null): boolean =>
+  Boolean(user?.nsfw);

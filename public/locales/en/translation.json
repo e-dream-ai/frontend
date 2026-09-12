@@ -76,11 +76,11 @@
       "or": "OR",
       "dont_have_account": "Don't have an account?",
       "forgot_your_password": "Forgot your password?",
-      "subtitle": "Enter your email and we'll send you a one-time sign-in code.",
+      "subtitle": "Enter your email to request a one-time sign-in code.",
       "user_logged_successfully": "{{role}} signed in successfully.",
       "welcome_user": "Welcome {{username}}",
       "error_logging_in": "Error signing in.",
-      "email_code_sent": "Email verification code sent. Please check your email.",
+      "email_code_sent": "If this email is eligible to sign in, you'll receive a code.",
       "error_sending_code": "Error sending code."
     },
     "signup": {
@@ -103,7 +103,7 @@
     "magic": {
       "title_signin": "Check your email",
       "title_verification": "Verify your email",
-      "sent_to": "Enter the 6-digit code we sent to {{email}}.",
+      "sent_to": "If {{email}} is eligible to sign in, you'll receive a 6-digit code. Enter it below when it arrives.",
       "instructions_signin": "Find the one-time code in your email and enter it below.",
       "instructions_verification": "Find the code in your email and enter it below.",
       "email": "Email",
@@ -124,8 +124,8 @@
       "resend_code": "Resend code",
       "resend_in": "Resend available in {{seconds}}s",
       "resend_too_soon": "Please wait {{seconds}}s before requesting another code.",
-      "code_resent_title": "New code sent",
-      "code_resent_message": "Check your inbox — your previous code no longer works.",
+      "code_resent_title": "Code requested",
+      "code_resent_message": "If this email is eligible to sign in, you'll receive a new code. Check your inbox and spam folder, and use the latest code you receive.",
       "start_over": "Wrong email? Start over",
       "go_to_signin": "Go to sign in",
       "go_to_signup": "Create an account",
@@ -166,12 +166,12 @@
       "dream_instructions": "Upload or drop your dream here. A video file in almost any format should work.",
       "dream_description": "Optional Description",
       "dream_source_url": "Optional Source URL",
-      "nsfw_dream": "Mark NSFW Dream",
+      "nsfw_dream": "Mark dream as NSFW",
       "hidden_dream": "Hidden Dream",
-      "nsfw_playlist": "Mark NSFW Playlist",
+      "nsfw_playlist": "Mark playlist as NSFW",
       "hidden_playlist": "Hidden Playlist",
-      "license_dream": "Allow Training and Remixing with",
-      "license_dream_ccby": "CC BY",
+      "license_dream": "Allow Training and Remixing with a",
+      "license_dream_ccby": "CC BY license",
       "ccby_license_dream_tooltip": "Add Creative Commons Attribution License",
       "content_policy": "Be sure to follow the Content Policy and User Generated Content section of the",
       "terms_of_service": "Terms of Service",
@@ -210,7 +210,7 @@
       "edit": "Edit",
       "rerun": "Rerun",
       "remix": "Remix",
-      "remix_confirm": "Create a new dream by editing the prompt of this one and then rerunning it.",
+      "remix_confirm": "Create a new dream by copying the prompt of this one and editing your own version of it.",
       "save": "Save",
       "saving": "Saving",
       "cancel": "Cancel",
@@ -268,6 +268,8 @@
       "dream_processing_successfully": "Dream processing successfully.",
       "error_processing_dream": "Error processing dream.",
       "dream_cancelled_successfully": "Dream cancelled successfully.",
+      "dream_job_already_finished": "No render was in flight for this dream — nothing to cancel.",
+      "dream_stale_state_cleared": "No render was in flight — cleared the stale queued state.",
       "error_cancelling_dream": "Error cancelling dream.",
       "error_fetching_preview": "Error fetching preview.",
       "rendering_hasnt_started_yet": "Rendering hasn't started yet.",
@@ -389,7 +391,15 @@
     "profile": {
       "title": "Profile",
       "my_profile": "My Profile",
-      "dreams": "Dreams"
+      "dreams": "Dreams",
+      "delete_account": {
+        "title": "Delete account",
+        "confirm_title": "Delete your account?",
+        "cancel": "Cancel",
+        "confirm_button": "Confirm delete",
+        "success": "Account deleted. App emails are turned off.",
+        "error": "We could not delete your account. Try again. If you were signed out, sign in first."
+      }
     },
     "user_feed": {
       "title": "Dreams"
@@ -709,6 +719,26 @@
       "add_key": "Add your fal.ai key",
       "out_of_credits": "You're out of daily credits.",
       "resets_in": "Resets in {{time}}."
+    },
+    "prompt_editor": {
+      "open_dream": "Open dream",
+      "open_playlist": "Open playlist",
+      "open_keyframe": "Open keyframe"
+    },
+    "dream_progress": {
+      "queued": "Queued",
+      "rendering": "Rendering",
+      "ingesting": "Ingesting",
+      "eta": "ETA {{time}}",
+      "playlist": "Playlist progress",
+      "completed_count": "{{completed}} of {{total}} completed",
+      "remaining_one": "{{count}} remaining",
+      "remaining_other": "{{count}} remaining",
+      "count_rendering": "{{count}} rendering",
+      "count_ingesting": "{{count}} ingesting",
+      "count_queued": "{{count}} queued",
+      "count_failed": "{{count}} failed",
+      "count_idle": "{{count}} not started"
     }
   },
   "units": {

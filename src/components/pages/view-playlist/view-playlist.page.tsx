@@ -1,3 +1,4 @@
+import { PlaylistProgress } from "@/components/shared/dream-progress/playlist-progress";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, ItemCardList, Row } from "@/components/shared";
 import { UprezPlaylistControls } from "./components/uprez-playlist-controls";
@@ -828,8 +829,14 @@ export const ViewPlaylistPage = () => {
               style={{ minWidth: "320px" }}
               onSubmit={formMethods.handleSubmit(onSubmit)}
             >
-              <Row justifyContent="space-between">
-                <span />
+              <Row
+                justifyContent="space-between"
+                alignItems="center"
+                flexWrap="wrap"
+              >
+                <Column flex="0 1 480px" width="100%" mr={[0, 4, 5]}>
+                  <PlaylistProgress progress={playlist?.progress} />
+                </Column>
                 <div>
                   {editMode ? (
                     <>
@@ -935,7 +942,11 @@ export const ViewPlaylistPage = () => {
                           <Avatar size="xs" url={ownerAvatarUrl} />
                         )
                       }
-                      to={`${ROUTES.PROFILE}/${playlist?.user.uuid}`}
+                      to={
+                        playlist?.user?.uuid
+                          ? `${ROUTES.PROFILE}/${playlist.user.uuid}`
+                          : undefined
+                      }
                       {...formMethods.register("user")}
                     />
                   </Restricted>

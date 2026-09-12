@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo } from "react";
-import { useStudioStore } from "@/stores/studio.store";
+import { useStudioStore, comboKeyOf } from "@/stores/studio.store";
 import { useBatchSubmit } from "../hooks/useBatchSubmit";
+import { isAnimatableFrame, isRunnableAction } from "../utils/batch-selectors";
 import { useUserPlaylists } from "../hooks/useUserPlaylists";
 import { axiosClient } from "@/client/axios.client";
 import type { VideoModel } from "@/types/studio.types";
@@ -80,21 +81,18 @@ export const GenerateTab: React.FC = () => {
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const jobs = useStudioStore((s) => s.jobs);
 
-  const { submit, isSubmitting, getSelectedCombinations } = useBatchSubmit();
+  const { submit, isSubmitting, getPendingCombinations } = useBatchSubmit();
   const { playlists, addPlaylistToCache } = useUserPlaylists();
 
-  const selectedImages = useMemo(
-    () => images.filter((img) => img.selected && img.status === "processed"),
-    [images],
-  );
-  const enabledActions = useMemo(
-    () => actions.filter((a) => a.enabled && a.prompt.trim()),
+  const frames = useMemo(() => images.filter(isAnimatableFrame), [images]);
+  const runnableActions = useMemo(
+    () => actions.filter(isRunnableAction),
     [actions],
   );
 
   const newCombos = useMemo(
-    () => getSelectedCombinations(),
-    [getSelectedCombinations],
+    () => getPendingCombinations(),
+    [getPendingCombinations],
   );
   const modelConstraints = useModelConstraints({ mediaType: "video" });
   const durationOptions = useMemo(
@@ -133,10 +131,10 @@ export const GenerateTab: React.FC = () => {
   const showLtxHint = useMemo(() => {
     if (videoGenParams.model !== "ltx-i2v") return false;
     return (
-      enabledActions.length > 0 &&
-      enabledActions.some((a) => !hasActionLoras(a))
+      runnableActions.length > 0 &&
+      runnableActions.some((a) => !hasActionLoras(a))
     );
-  }, [videoGenParams.model, enabledActions]);
+  }, [videoGenParams.model, runnableActions]);
 
   useEffect(() => {
     const nextDuration = clampDurationToAllowed(
@@ -158,7 +156,7 @@ export const GenerateTab: React.FC = () => {
     });
   };
 
-  const totalPossible = selectedImages.length * enabledActions.length;
+  const totalPossible = frames.length * runnableActions.length;
 
   const handleCreatePlaylist = async () => {
     const now = new Date();
@@ -167,7 +165,7 @@ export const GenerateTab: React.FC = () => {
       const { data } = await axiosClient.post("/v1/playlist", { name });
       const playlist = data.data.playlist;
       setOutputPlaylistId(playlist.uuid);
-      addPlaylistToCache({ uuid: playlist.uuid, name: playlist.name });
+      await addPlaylistToCache(playlist);
     } catch (err) {
       console.error("Failed to create playlist:", err);
     }
@@ -187,7 +185,7 @@ export const GenerateTab: React.FC = () => {
             <thead>
               <tr>
                 <GridHeader />
-                {enabledActions.map((action) => (
+                {runnableActions.map((action) => (
                   <GridHeader key={action.id} title={action.prompt}>
                     {action.prompt.slice(0, 20)}...
                   </GridHeader>
@@ -195,11 +193,11 @@ export const GenerateTab: React.FC = () => {
               </tr>
             </thead>
             <tbody>
-              {selectedImages.map((image) => (
+              {frames.map((image) => (
                 <tr key={image.uuid}>
                   <GridRowHeader>{image.name}</GridRowHeader>
-                  {enabledActions.map((action) => {
-                    const comboKey = `${image.uuid}:${action.id}`;
+                  {runnableActions.map((action) => {
+                    const comboKey = comboKeyOf(image.uuid, action.id);
                     const excluded = excludedCombos.has(comboKey);
                     const existingJob = jobs.find(
                       (j) =>

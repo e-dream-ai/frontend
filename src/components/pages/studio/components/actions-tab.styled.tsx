@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { FLOW } from "@/constants/flow-theme.constants";
 
 export const ActionList = styled.div`
   display: flex;
@@ -22,27 +23,36 @@ export const ActionRow = styled.div`
   }
 `;
 
-export const ActionCheckbox = styled.input.attrs({ type: "checkbox" })`
-  width: 1.125rem;
-  height: 1.125rem;
-  cursor: pointer;
+export const ActionLoraSelect = styled.select`
   flex-shrink: 0;
+  max-width: 11rem;
+  padding: 0.5rem 0.5rem;
+  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
+  border-radius: 4px;
+  background: ${(props) => props.theme.colorBackgroundSecondary};
+  color: ${(props) => props.theme.textPrimaryColor};
+  font-size: 0.8125rem;
+  cursor: pointer;
+
+  &:focus {
+    outline: none;
+    border-color: ${(props) => props.theme.colorPrimary};
+  }
 `;
 
 export const ActionInput = styled.input`
   flex: 1;
+  min-width: 0;
   padding: 0.5rem;
-  border: 1px solid transparent;
+  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
   border-radius: 4px;
-  background: transparent;
+  background: ${(props) => props.theme.colorBackgroundSecondary};
   color: ${(props) => props.theme.textPrimaryColor};
   font-size: 0.875rem;
 
   &:focus {
     outline: none;
     border-color: ${(props) => props.theme.colorPrimary};
-    background: ${(props) =>
-      props.theme.colorBackgroundSecondary || "transparent"};
   }
 `;
 
@@ -62,13 +72,19 @@ export const DeleteButton = styled.button`
 `;
 
 export const SummaryBox = styled.div`
-  border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
-  border-radius: 8px;
+  border: 1px solid ${FLOW.border};
+  border-radius: ${FLOW.radiusSm};
+  background: ${FLOW.bgElevated};
   padding: 1rem;
   text-align: center;
   font-size: 0.875rem;
-  color: ${(props) => props.theme.textBodyColor};
-  margin-top: 1rem;
+  color: ${FLOW.textDim};
+  /* Aligns with GenerateSection's 28px inset — it is a sibling, not a child. */
+  margin: 0 ${FLOW.inset} 24px;
+
+  @media (max-width: 480px) {
+    margin: 0 ${FLOW.insetNarrow} ${FLOW.insetNarrow};
+  }
 `;
 
 export const SummaryHighlight = styled.span`

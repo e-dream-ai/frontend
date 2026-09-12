@@ -1,18 +1,28 @@
 import React, { useState, useCallback } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
 import Bugsnag from "@bugsnag/js";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
-import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
-import { useRunPlaylist } from "@/api/playlist/mutation/useRunPlaylist";
-import { useUserPlaylists } from "../hooks/useUserPlaylists";
-import { ROUTES } from "@/constants/routes.constants";
 import {
-  INTERPOLATION_FACTOR_OPTIONS,
-  UPSCALE_FACTOR_OPTIONS,
-} from "@/components/pages/studio/constants/uprez-factor-options";
+  useAddPlaylistItems,
+  ADD_PLAYLIST_ITEMS_BATCH_SIZE,
+} from "@/api/playlist/mutation/useAddPlaylistItems";
+import { useUserPlaylists } from "../hooks/useUserPlaylists";
+import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
+import { PLAYLIST_KEYFRAMES_QUERY_KEY } from "@/api/playlist/query/usePlaylistKeyframes";
+import {
+  useCreateUprezPlaylist,
+  type CreatedUprezPlaylist,
+} from "../hooks/useCreateUprezPlaylist";
+import type {
+  InterpolationFactor,
+  UpscaleFactor,
+} from "../constants/uprez-factor-options";
+import { ROUTES } from "@/constants/routes.constants";
+import { UprezFactorFields } from "./uprez-factor-row";
 import {
   ModalOverlay,
   ModalContent,
@@ -25,10 +35,6 @@ import {
   NameInput,
   CheckboxLabel,
   UprezParams,
-  UprezParamRow,
-  UprezParamLabel,
-  FactorToggleGroup,
-  FactorToggle,
   PlaylistList,
   PlaylistItem,
   Summary,
@@ -38,52 +44,6 @@ import {
   SpinningIcon,
 } from "./save-to-playlist-modal.styled";
 import { syncFlowPlaylistKeyframes } from "@/components/pages/studio/utils/flow-keyframes";
-
-type UpscaleFactor = (typeof UPSCALE_FACTOR_OPTIONS)[number];
-type InterpolationFactor = (typeof INTERPOLATION_FACTOR_OPTIONS)[number];
-type Factor = UpscaleFactor | InterpolationFactor;
-
-const NO_OP_HINT =
-  "1x on both upscale and interpolation would be a no-op — pick 1x on only one of them.";
-
-function FactorRow<T extends Factor>({
-  label,
-  options,
-  value,
-  onChange,
-  disabledFactor,
-  disabledHint,
-}: {
-  label: string;
-  options: readonly T[];
-  value: T;
-  onChange: (factor: T) => void;
-  disabledFactor?: T;
-  disabledHint?: string;
-}) {
-  return (
-    <UprezParamRow>
-      <UprezParamLabel>{label}</UprezParamLabel>
-      <FactorToggleGroup>
-        {options.map((factor) => {
-          const disabled = factor === disabledFactor;
-          return (
-            <FactorToggle
-              key={factor}
-              type="button"
-              $active={value === factor}
-              disabled={disabled}
-              title={disabled ? disabledHint : undefined}
-              onClick={() => onChange(factor)}
-            >
-              {factor}×
-            </FactorToggle>
-          );
-        })}
-      </FactorToggleGroup>
-    </UprezParamRow>
-  );
-}
 
 interface Props {
   onClose: () => void;
@@ -114,10 +74,11 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
   const [isSaving, setIsSaving] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
 
+  const queryClient = useQueryClient();
   const { playlists, addPlaylistToCache } = useUserPlaylists();
   const createPlaylist = useCreatePlaylist();
-  const addPlaylistItem = useAddPlaylistItem();
-  const runPlaylist = useRunPlaylist();
+  const addPlaylistItems = useAddPlaylistItems();
+  const { createAndRun: createUprezPlaylist } = useCreateUprezPlaylist();
 
   const canSave =
     completedTransitions.length > 0 &&
@@ -134,7 +95,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     try {
       let playlistUUID: string;
       let finalName: string;
-      let createdUprez: { uuid: string; name: string } | null = null;
+      let createdUprez: CreatedUprezPlaylist | null = null;
 
       if (mode === "new") {
         const result = await createPlaylist.mutateAsync({
@@ -144,7 +105,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
         if (!playlist) throw new Error("No playlist in response");
         playlistUUID = playlist.uuid;
         finalName = playlist.name;
-        addPlaylistToCache({ uuid: playlist.uuid, name: playlist.name });
+        await addPlaylistToCache(playlist);
       } else {
         playlistUUID = selectedPlaylistId;
         finalName =
@@ -152,14 +113,22 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
           "playlist";
       }
 
-      for (let i = 0; i < completedTransitions.length; i++) {
-        setProgress({ current: i + 1, total });
-        await addPlaylistItem.mutateAsync({
+      for (
+        let offset = 0;
+        offset < completedTransitions.length;
+        offset += ADD_PLAYLIST_ITEMS_BATCH_SIZE
+      ) {
+        const batch = completedTransitions.slice(
+          offset,
+          offset + ADD_PLAYLIST_ITEMS_BATCH_SIZE,
+        );
+        setProgress({ current: offset + batch.length, total });
+        await addPlaylistItems.mutateAsync({
           playlistUUID,
-          values: {
+          items: batch.map((transition) => ({
             type: "dream",
-            uuid: completedTransitions[i].dreamUuid!,
-          },
+            uuid: transition.dreamUuid!,
+          })),
         });
       }
 
@@ -167,6 +136,12 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
         playlistUuid: playlistUUID,
         referenceFrames,
         transitions: completedTransitions,
+      });
+      void queryClient.invalidateQueries({
+        queryKey: [PLAYLIST_QUERY_KEY, playlistUUID],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: [PLAYLIST_KEYFRAMES_QUERY_KEY, playlistUUID],
       });
 
       // Link this flow to the playlist so newly rendered dreams keep it in sync.
@@ -177,29 +152,18 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
 
       if (mode === "new" && createUprez) {
         try {
-          const uprezResult = await createPlaylist.mutateAsync({
+          const uprezPlaylist = await createUprezPlaylist({
             name: `${finalName} (uprez)`,
-            prompt: {
-              infinidream_algorithm: "uprez_playlist",
-              source_playlist_uuid: playlistUUID,
-              dream_algorithm: "uprez",
-              params: {
-                upscale_factor: upscaleFactor,
-                interpolation_factor: interpolationFactor,
-              },
-            },
+            sourcePlaylistUuid: playlistUUID,
+            upscaleFactor,
+            interpolationFactor,
           });
-          const uprezPlaylist = uprezResult.data?.playlist;
-          if (uprezPlaylist) {
-            addPlaylistToCache({
-              uuid: uprezPlaylist.uuid,
-              name: uprezPlaylist.name,
-            });
-            await runPlaylist.mutateAsync(uprezPlaylist.uuid);
-            createdUprez = {
-              uuid: uprezPlaylist.uuid,
-              name: uprezPlaylist.name,
-            };
+          await addPlaylistToCache(uprezPlaylist);
+          createdUprez = uprezPlaylist;
+          if (uprezPlaylist.runError) {
+            toast.error(
+              `${uprezPlaylist.name} was created but didn't start — run it from its playlist page.`,
+            );
           }
         } catch (uprezErr) {
           Bugsnag.notify(uprezErr as Error);
@@ -220,7 +184,9 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
           </a>
           {createdUprez && (
             <>
-              {". "}Uprezing in{" "}
+              {createdUprez.runError
+                ? ". Uprez playlist created: "
+                : ". Uprezing in "}
               <a
                 href={`${ROUTES.VIEW_PLAYLIST}/${createdUprez.uuid}`}
                 style={{ color: "inherit", textDecoration: "underline" }}
@@ -246,8 +212,8 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     referenceFrames,
     completedTransitions,
     createPlaylist,
-    addPlaylistItem,
-    runPlaylist,
+    addPlaylistItems,
+    createUprezPlaylist,
     createUprez,
     upscaleFactor,
     interpolationFactor,
@@ -255,6 +221,7 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
     addPlaylistToCache,
     playlists,
     onClose,
+    queryClient,
   ]);
 
   return (
@@ -298,21 +265,11 @@ export const SaveToPlaylistModal: React.FC<Props> = ({ onClose }) => {
 
               {createUprez && (
                 <UprezParams>
-                  <FactorRow
-                    label="Upscale factor"
-                    options={UPSCALE_FACTOR_OPTIONS}
-                    value={upscaleFactor}
-                    onChange={setUpscaleFactor}
-                    disabledFactor={interpolationFactor === 1 ? 1 : undefined}
-                    disabledHint={NO_OP_HINT}
-                  />
-                  <FactorRow
-                    label="Interpolation factor"
-                    options={INTERPOLATION_FACTOR_OPTIONS}
-                    value={interpolationFactor}
-                    onChange={setInterpolationFactor}
-                    disabledFactor={upscaleFactor === 1 ? 1 : undefined}
-                    disabledHint={NO_OP_HINT}
+                  <UprezFactorFields
+                    upscaleFactor={upscaleFactor}
+                    interpolationFactor={interpolationFactor}
+                    onUpscaleChange={setUpscaleFactor}
+                    onInterpolationChange={setInterpolationFactor}
                   />
                 </UprezParams>
               )}

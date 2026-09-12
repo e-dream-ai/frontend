@@ -1,10 +1,14 @@
+import { DreamCardProgress } from "@/components/shared/dream-progress/dream-progress";
 import React, { useCallback, useMemo, useState } from "react";
 import { useStudioStore } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import { axiosClient } from "@/client/axios.client";
 import { createComboKey } from "@/types/studio.types";
-import type { StudioJob } from "@/types/studio.types";
-import { useUserPlaylists } from "../hooks/useUserPlaylists";
+import type {
+  StudioAction,
+  StudioImage,
+  StudioJob,
+} from "@/types/studio.types";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
@@ -14,6 +18,8 @@ import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import { GenerateSection, SectionTitle } from "./images-tab.styled";
 import { GridTable, GridHeader, GridRowHeader } from "./generate-tab.styled";
+import { SegmentPreview } from "./segment-preview";
+import { useDreamSegments } from "../hooks/useDreamSegments";
 import {
   ProgressBar,
   ProgressInfo,
@@ -23,8 +29,8 @@ import {
   ResultThumb,
   ResultThumbImg,
   ResultCellStatus,
-  UprezStarBadge,
   ActionBar,
+  ActionGroup,
   ActionButton,
   ScrollableGrid,
   TimeEstimate,
@@ -32,98 +38,87 @@ import {
 
 const BATCH_SIZE = 5;
 
+const cellKey = (imageId: string, actionId: string) => `${imageId}:${actionId}`;
+
+function orderedByFirstJob<T>(
+  jobs: readonly StudioJob[],
+  idOf: (job: StudioJob) => string,
+  pool: readonly T[],
+  keyOf: (item: T) => string,
+): T[] {
+  const byKey = new Map(pool.map((item) => [keyOf(item), item]));
+  const seen = new Set<string>();
+  const ordered: T[] = [];
+  for (const job of jobs) {
+    const id = idOf(job);
+    if (seen.has(id)) continue;
+    seen.add(id);
+    const item = byKey.get(id);
+    if (item) ordered.push(item);
+  }
+  return ordered;
+}
+
 export const ResultsTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const actions = useStudioStore((s) => s.actions);
   const jobs = useStudioStore((s) => s.jobs);
-  const toggleJobUprez = useStudioStore((s) => s.toggleJobUprez);
-  const selectAllJobsForUprez = useStudioStore((s) => s.selectAllJobsForUprez);
-  const deselectAllJobsForUprez = useStudioStore(
-    (s) => s.deselectAllJobsForUprez,
-  );
   const addJob = useStudioStore((s) => s.addJob);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
-  const uprezPlaylistId = useStudioStore((s) => s.uprezPlaylistId);
-  const setUprezPlaylistId = useStudioStore((s) => s.setUprezPlaylistId);
-  const updateJob = useStudioStore((s) => s.updateJob);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const createDream = useCreateDreamFromPrompt();
-  const { addPlaylistToCache } = useUserPlaylists();
 
   const videoGenParams = useStudioStore((s) => s.videoGenParams);
   const removeJob = useStudioStore((s) => s.removeJob);
   const modelConstraints = useModelConstraints({ mediaType: "video" });
 
-  const [isUprezzing, setIsUprezzing] = useState(false);
   const [isRetrying, setIsRetrying] = useState(false);
 
-  // Derive grid dimensions from jobs (not from selected/enabled filters)
-  const gridImageIds = useMemo(() => {
-    const ids = new Set<string>();
-    jobs
-      .filter((j) => j.jobType !== "uprez")
-      .forEach((j) => ids.add(j.imageId));
-    return [...ids];
-  }, [jobs]);
+  const videoJobs = useMemo(
+    () => jobs.filter((j) => j.jobType !== "uprez"),
+    [jobs],
+  );
 
-  const gridActionIds = useMemo(() => {
-    const ids = new Set<string>();
-    jobs
-      .filter((j) => j.jobType !== "uprez")
-      .forEach((j) => ids.add(j.actionId));
-    return [...ids];
-  }, [jobs]);
-
+  // Derive grid dimensions from the jobs themselves, not from the current
+  // image/action lists — those can change after a batch is submitted.
   const gridImages = useMemo(
     () =>
-      gridImageIds
-        .map((id) => images.find((img) => img.uuid === id))
-        .filter(Boolean),
-    [gridImageIds, images],
+      orderedByFirstJob<StudioImage>(
+        videoJobs,
+        (j) => j.imageId,
+        images,
+        (i) => i.uuid,
+      ),
+    [videoJobs, images],
   );
 
   const gridActions = useMemo(
     () =>
-      gridActionIds
-        .map((id) => actions.find((a) => a.id === id))
-        .filter(Boolean),
-    [gridActionIds, actions],
-  );
-
-  const wanJobs = useMemo(
-    () => jobs.filter((j) => j.jobType !== "uprez"),
-    [jobs],
+      orderedByFirstJob<StudioAction>(
+        videoJobs,
+        (j) => j.actionId,
+        actions,
+        (a) => a.id,
+      ),
+    [videoJobs, actions],
   );
 
   const { completedCount, failedCount } = useMemo(() => {
     let completed = 0;
     let failed = 0;
-    for (const j of wanJobs) {
+    for (const j of videoJobs) {
       if (j.status === "processed") completed++;
       else if (j.status === "failed") failed++;
     }
     return { completedCount: completed, failedCount: failed };
-  }, [wanJobs]);
+  }, [videoJobs]);
 
-  const totalCount = wanJobs.length;
+  const totalCount = videoJobs.length;
   const progressPercent =
     totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
 
-  const uprezCount = useMemo(
-    () => jobs.filter((j) => j.selectedForUprez && !j.uprezed).length,
-    [jobs],
-  );
-
-  const uprezableWanJobs = useMemo(
-    () => wanJobs.filter((j) => j.status === "processed" && !j.uprezed),
-    [wanJobs],
-  );
-  const allUprezableSelectedForUprez =
-    uprezableWanJobs.length > 0 &&
-    uprezableWanJobs.every((j) => j.selectedForUprez);
-
   const timeEstimate = useMemo(() => {
-    const done = wanJobs.filter((j) => j.startedAt && j.completedAt);
+    const done = videoJobs.filter((j) => j.startedAt && j.completedAt);
     if (done.length === 0) return null;
     const avgMs =
       done.reduce((sum, j) => sum + (j.completedAt! - j.startedAt!), 0) /
@@ -133,109 +128,42 @@ export const ResultsTab: React.FC = () => {
     const estimateMs = avgMs * remaining;
     const minutes = Math.ceil(estimateMs / 60_000);
     return minutes <= 1 ? "~1 min remaining" : `~${minutes} min remaining`;
-  }, [wanJobs, totalCount, completedCount, failedCount]);
+  }, [videoJobs, totalCount, completedCount, failedCount]);
 
-  const jobMap = useMemo(() => {
-    const map = new Map<string, StudioJob>();
-    for (const j of jobs) {
-      if (j.jobType !== "uprez") {
-        map.set(`${j.imageId}:${j.actionId}`, j);
+  const jobMap = useMemo(
+    () => new Map(videoJobs.map((j) => [cellKey(j.imageId, j.actionId), j])),
+    [videoJobs],
+  );
+
+  // Reading order of the matrix — row by row, left to right — so stepping
+  // through the preview walks the grid the way it looks on screen.
+  const completedUuids = useMemo(() => {
+    const uuids: string[] = [];
+    for (const image of gridImages) {
+      for (const action of gridActions) {
+        const job = jobMap.get(cellKey(image.uuid, action.id));
+        if (job?.status === "processed") uuids.push(job.dreamUuid);
       }
     }
-    return map;
-  }, [jobs]);
+    return uuids;
+  }, [gridImages, gridActions, jobMap]);
 
-  const handleUprezSelected = useCallback(async () => {
-    const toUprez = jobs.filter(
-      (j) =>
-        j.selectedForUprez &&
-        j.status === "processed" &&
-        j.jobType !== "uprez" &&
-        !j.uprezed,
-    );
-    if (toUprez.length === 0) return;
+  const segments = useDreamSegments(completedUuids);
 
-    setIsUprezzing(true);
-    try {
-      // Create a dedicated uprez playlist if we don't have one yet
-      let playlistId = uprezPlaylistId;
-      if (!playlistId) {
-        const now = new Date();
-        const name = `Studio Uprez ${now
-          .toISOString()
-          .slice(0, 16)
-          .replace("T", " ")}`;
-        const { data } = await axiosClient.post("/v1/playlist", { name });
-        const playlist = data.data.playlist;
-        playlistId = playlist.uuid;
-        setUprezPlaylistId(playlistId);
-        addPlaylistToCache({ uuid: playlist.uuid, name: playlist.name });
-      }
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
 
-      for (let i = 0; i < toUprez.length; i += BATCH_SIZE) {
-        const batch = toUprez.slice(i, i + BATCH_SIZE);
+  // Segments only exist once a dream's video has resolved, so positions here
+  // don't line up with `completedUuids` — a cell has to look itself up.
+  const segmentIndexByUuid = useMemo(
+    () => new Map(segments.map((s, i) => [s.key, i])),
+    [segments],
+  );
 
-        const results = await Promise.allSettled(
-          batch.map(async (job) => {
-            const algoParams = {
-              infinidream_algorithm: "uprez",
-              video_uuid: job.dreamUuid,
-              upscale_factor: 2,
-              interpolation_factor: 2,
-            };
-
-            const response = await createDream.mutateAsync({
-              name: `Uprez - ${job.dreamUuid.slice(0, 8)}`,
-              prompt: JSON.stringify(algoParams),
-              description: `Uprez of ${job.dreamUuid}`,
-            });
-
-            const dream = response.data?.dream;
-            if (!dream) return;
-
-            addJob({
-              imageId: job.imageId,
-              actionId: `uprez-${job.actionId}`,
-              dreamUuid: dream.uuid,
-              jobType: "uprez",
-              status: (dream.status as StudioJob["status"]) || "queue",
-              selectedForUprez: false,
-            });
-
-            // Add to the dedicated uprez playlist
-            if (playlistId) {
-              await axiosClient.put(`/v1/playlist/${playlistId}/add-item`, {
-                type: "dream",
-                uuid: dream.uuid,
-              });
-            }
-
-            // Mark source job as uprezed and deselect it
-            updateJob(job.dreamUuid, {
-              selectedForUprez: false,
-              uprezed: true,
-            });
-          }),
-        );
-
-        for (const result of results) {
-          if (result.status === "rejected") {
-            console.error("Failed to create uprez job:", result.reason);
-          }
-        }
-      }
-    } finally {
-      setIsUprezzing(false);
-    }
-  }, [
-    jobs,
-    createDream,
-    addJob,
-    updateJob,
-    uprezPlaylistId,
-    setUprezPlaylistId,
-    addPlaylistToCache,
-  ]);
+  const openPreviewAt = useCallback((index: number) => {
+    setPreviewIndex(index);
+    setLightboxOpen(true);
+  }, []);
 
   const handleRetryFailed = useCallback(async () => {
     // Only retry video generation jobs (uprez retries not yet supported)
@@ -300,7 +228,6 @@ export const ResultsTab: React.FC = () => {
               dreamUuid: dream.uuid,
               jobType: retryModel,
               status: (dream.status as StudioJob["status"]) || "queue",
-              selectedForUprez: false,
             });
 
             if (outputPlaylistId) {
@@ -338,6 +265,16 @@ export const ResultsTab: React.FC = () => {
 
   return (
     <>
+      <SegmentPreview
+        segments={segments}
+        index={previewIndex}
+        onIndexChange={setPreviewIndex}
+        lightboxOpen={lightboxOpen}
+        onLightboxOpenChange={setLightboxOpen}
+        label="Preview"
+        divider="bottom"
+      />
+
       <ProgressBar>
         <ProgressInfo>
           <span>
@@ -365,111 +302,94 @@ export const ResultsTab: React.FC = () => {
               <thead>
                 <tr>
                   <GridHeader />
-                  {gridActions.map((action) =>
-                    action ? (
-                      <GridHeader key={action.id} title={action.prompt}>
-                        {action.prompt.slice(0, 20)}...
-                      </GridHeader>
-                    ) : null,
-                  )}
+                  {gridActions.map((action) => (
+                    <GridHeader key={action.id} title={action.prompt}>
+                      {action.prompt.slice(0, 20)}...
+                    </GridHeader>
+                  ))}
                 </tr>
               </thead>
               <tbody>
-                {gridImages.map((image) =>
-                  image ? (
-                    <tr key={image.uuid}>
-                      <GridRowHeader>{image.name}</GridRowHeader>
-                      {gridActions.map((action) => {
-                        if (!action) return null;
-                        const job = jobMap.get(`${image.uuid}:${action.id}`);
+                {gridImages.map((image) => (
+                  <tr key={image.uuid}>
+                    <GridRowHeader>{image.name}</GridRowHeader>
+                    {gridActions.map((action) => {
+                      const key = cellKey(image.uuid, action.id);
+                      const job = jobMap.get(key);
 
-                        if (!job) {
-                          return (
-                            <ResultCell key={`${image.uuid}:${action.id}`}>
-                              <ResultCellStatus $color="#555">
-                                --
-                              </ResultCellStatus>
-                            </ResultCell>
-                          );
-                        }
-
+                      if (!job) {
                         return (
-                          <ResultCell
-                            key={job.dreamUuid}
-                            $status={job.status}
-                            onClick={() => {
-                              if (job.status === "processed") {
-                                window.open(
-                                  `/dream/${job.dreamUuid}`,
-                                  "_blank",
-                                );
-                              }
-                            }}
-                          >
-                            <ResultThumb>
-                              {job.previewFrame ? (
-                                <ResultThumbImg
-                                  src={`data:image/jpeg;base64,${job.previewFrame}`}
-                                  alt="preview"
-                                />
-                              ) : job.status === "processed" ? (
-                                <ResultThumbImg
-                                  as={PresignedImage}
-                                  dreamUuid={job.dreamUuid}
-                                  alt="thumbnail"
-                                />
-                              ) : null}
-
-                              {job.status === "processed" && (
-                                <UprezStarBadge
-                                  $active={
-                                    job.selectedForUprez || !!job.uprezed
-                                  }
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    if (!job.uprezed) {
-                                      toggleJobUprez(job.dreamUuid);
-                                    }
-                                  }}
-                                  style={
-                                    job.uprezed
-                                      ? { opacity: 0.5, cursor: "default" }
-                                      : undefined
-                                  }
-                                  title={
-                                    job.uprezed ? "Already uprezed" : undefined
-                                  }
-                                >
-                                  {job.uprezed
-                                    ? "\u2713"
-                                    : job.selectedForUprez
-                                      ? "\u2605"
-                                      : "\u2606"}
-                                </UprezStarBadge>
-                              )}
-                            </ResultThumb>
-
-                            <ResultCellStatus
-                              $color={
-                                job.status === "processed"
-                                  ? "#6c6"
-                                  : job.status === "failed"
-                                    ? "#c66"
-                                    : undefined
-                              }
-                            >
-                              {job.status === "processed" && "done"}
-                              {job.status === "processing" &&
-                                `${job.progress ?? 0}%`}
-                              {job.status === "queue" && "queued"}
-                              {job.status === "failed" && "failed"}
+                          <ResultCell key={key}>
+                            <ResultCellStatus $color="#555">
+                              --
                             </ResultCellStatus>
                           </ResultCell>
                         );
-                      })}
-                    </tr>
-                  ) : null,
-                )}
+                      }
+
+                      const segmentIndex = segmentIndexByUuid.get(
+                        job.dreamUuid,
+                      );
+                      const openable = segmentIndex !== undefined;
+                      const open = () => {
+                        if (segmentIndex !== undefined) {
+                          openPreviewAt(segmentIndex);
+                        }
+                      };
+
+                      return (
+                        <ResultCell
+                          key={key}
+                          $clickable={openable}
+                          title={openable ? "Open in preview" : undefined}
+                          role={openable ? "button" : undefined}
+                          tabIndex={openable ? 0 : undefined}
+                          onClick={open}
+                          onKeyDown={(e) => {
+                            if (!openable) return;
+                            if (e.key !== "Enter" && e.key !== " ") return;
+                            e.preventDefault();
+                            open();
+                          }}
+                        >
+                          <ResultThumb>
+                            {job.previewFrame ? (
+                              <ResultThumbImg
+                                src={`data:image/jpeg;base64,${job.previewFrame}`}
+                                alt="preview"
+                              />
+                            ) : job.status === "processed" ? (
+                              <ResultThumbImg
+                                as={PresignedImage}
+                                dreamUuid={job.dreamUuid}
+                                alt="thumbnail"
+                              />
+                            ) : null}
+                          </ResultThumb>
+
+                          <ResultCellStatus
+                            $color={
+                              job.status === "processed"
+                                ? "#6c6"
+                                : job.status === "failed"
+                                  ? "#c66"
+                                  : undefined
+                            }
+                          >
+                            {job.status === "processed" && "done"}
+                            <DreamCardProgress
+                              dream={{
+                                uuid: job.dreamUuid,
+                                status: job.status,
+                              }}
+                            />
+                            {job.status === "failed" && "failed"}
+                          </ResultCellStatus>
+                        </ResultCell>
+                      );
+                    })}
+                  </tr>
+                ))}
               </tbody>
             </GridTable>
           </ScrollableGrid>
@@ -477,55 +397,29 @@ export const ResultsTab: React.FC = () => {
       </GenerateSection>
 
       <ActionBar>
-        {uprezableWanJobs.length > 0 && (
-          <ActionButton
-            onClick={
-              allUprezableSelectedForUprez
-                ? deselectAllJobsForUprez
-                : selectAllJobsForUprez
-            }
-          >
-            {allUprezableSelectedForUprez
-              ? "Deselect All for Uprez"
-              : "Select All for Uprez"}
+        <ActionGroup>
+          <ActionButton $accent onClick={() => setActiveTab("generate")}>
+            &larr; Back to Generate
           </ActionButton>
-        )}
-        <ActionButton
-          $variant="primary"
-          disabled={uprezCount === 0 || isUprezzing}
-          onClick={handleUprezSelected}
-        >
-          {isUprezzing ? "Uprezzing..." : `Uprez Selected (${uprezCount})`}
-        </ActionButton>
-        {failedCount > 0 && (
-          <ActionButton onClick={handleRetryFailed} disabled={isRetrying}>
-            {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
-          </ActionButton>
-        )}
-        {outputPlaylistId && (
-          <ActionButton
-            onClick={() =>
-              window.open(`/playlist/${outputPlaylistId}`, "_blank")
-            }
-          >
-            View Playlist
-          </ActionButton>
-        )}
-        {uprezPlaylistId && (
-          <ActionButton
-            onClick={() =>
-              window.open(`/playlist/${uprezPlaylistId}`, "_blank")
-            }
-          >
-            View Uprez Playlist
-          </ActionButton>
-        )}
-        <ActionButton
-          onClick={() => setActiveTab("generate")}
-          style={{ marginLeft: "auto" }}
-        >
-          &larr; Back to Generate
-        </ActionButton>
+        </ActionGroup>
+
+        <ActionGroup>
+          {failedCount > 0 && (
+            <ActionButton onClick={handleRetryFailed} disabled={isRetrying}>
+              {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
+            </ActionButton>
+          )}
+          {outputPlaylistId && (
+            <ActionButton
+              $accent
+              onClick={() =>
+                window.open(`/playlist/${outputPlaylistId}`, "_blank")
+              }
+            >
+              View Playlist
+            </ActionButton>
+          )}
+        </ActionGroup>
       </ActionBar>
     </>
   );

@@ -1,8 +1,6 @@
 import React, { useCallback, useMemo, useState } from "react";
-import { v4 as uuidv4 } from "uuid";
 import { axiosClient } from "@/client/axios.client";
 import { useStudioStore } from "@/stores/studio.store";
-import { useFlowStore } from "@/stores/flow.store";
 import type { ImageModel, StudioImage } from "@/types/studio.types";
 import { useModels } from "@/api/model/query/useModels";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
@@ -28,7 +26,7 @@ import {
   FooterButtons,
   CancelBtn,
   AddBtn,
-} from "./select-image-dream-modal.styled";
+} from "./select-modal.styled";
 import {
   FieldRow,
   FieldGroup,
@@ -38,15 +36,23 @@ import {
   PromptTextarea,
 } from "./transition-settings-panel.styled";
 
-interface Props {
-  onClose: () => void;
+export interface GeneratedFrameDream {
+  uuid: string;
+  name: string;
 }
 
-export const GenerateReferenceFramesModal: React.FC<Props> = ({ onClose }) => {
+interface Props {
+  onClose: () => void;
+  onCreated?: (dream: GeneratedFrameDream) => void;
+}
+
+export const GenerateReferenceFramesModal: React.FC<Props> = ({
+  onClose,
+  onCreated,
+}) => {
   const imageGenParams = useStudioStore((s) => s.imageGenParams);
   const setImageGenParams = useStudioStore((s) => s.setImageGenParams);
   const addImage = useStudioStore((s) => s.addImage);
-  const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
 
   // Shared with the batch Images tab so the prompt survives reopening the
   // dialog and carries over between the two generate UIs.
@@ -118,18 +124,8 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({ onClose }) => {
               seed,
               size: imageGenParams.size,
               status: (dream.status as StudioImage["status"]) || "queue",
-              selected: false,
             });
-            // Placeholder card in the strip; useGeneratedFrameSync fills
-            // in progress and the final thumbnail.
-            addReferenceFrame({
-              id: uuidv4(),
-              dreamUuid: dream.uuid,
-              imageUrl: "",
-              name: dream.name,
-              uploadStatus: "uploading",
-              uploadProgress: 0,
-            });
+            onCreated?.(dream);
           })
           .catch((err) => {
             console.error("Failed to create image:", err);
@@ -147,7 +143,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({ onClose }) => {
     negativePromptEnabled,
     modelOptions,
     addImage,
-    addReferenceFrame,
+    onCreated,
     onClose,
   ]);
 

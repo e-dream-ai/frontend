@@ -1,5 +1,9 @@
 import styled, { css, keyframes } from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
+import {
+  ProgressContent,
+  ProgressEta,
+} from "@/components/shared/dream-progress/dream-progress.styled";
 
 const errorBreathe = keyframes`
   0%, 100% { box-shadow: 0 0 0 0 ${FLOW.errorDim}; }
@@ -167,6 +171,20 @@ export const CardPlaceholder = styled.div`
   background: linear-gradient(135deg, #1a1520, #1d1825);
   font-size: 11px;
   color: ${FLOW.textMuted};
+`;
+
+export const GenerationPlaceholder = styled(CardPlaceholder)`
+  box-sizing: border-box;
+  padding: 10px 10px 28px;
+
+  ${ProgressContent} {
+    gap: 5px;
+    font-size: 11px;
+  }
+
+  ${ProgressEta} {
+    font-size: 10px;
+  }
 `;
 
 export const CardLabel = styled.div`

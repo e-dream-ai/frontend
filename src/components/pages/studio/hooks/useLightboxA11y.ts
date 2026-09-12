@@ -37,7 +37,9 @@ export function useLightboxA11y<T extends HTMLElement>(onClose: () => void) {
   useEffect(() => {
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const container = containerRef.current;
-    const first = container?.querySelector<HTMLElement>(FOCUSABLE);
+    const first =
+      container?.querySelector<HTMLElement>("[data-autofocus]") ??
+      container?.querySelector<HTMLElement>(FOCUSABLE);
     (first ?? container)?.focus();
     return () => previouslyFocused?.focus?.();
   }, []);

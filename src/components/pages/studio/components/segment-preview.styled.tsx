@@ -1,9 +1,9 @@
 import styled, { css } from "styled-components";
 import { FLOW, flowFadeIn } from "@/constants/flow-theme.constants";
 
-export const PreviewContainer = styled.div`
+export const PreviewContainer = styled.div<{ $divider: "top" | "bottom" }>`
   padding: 24px 28px;
-  border-top: 1px solid ${FLOW.border};
+  border-${(p) => p.$divider}: 1px solid ${FLOW.border};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -182,5 +182,3 @@ export const LightboxVideo = styled.div<{ $ratio?: string }>`
 `;
 
 // Legacy export retained in case external consumers import it.
-export const SegmentIndicator = ChipRail;
-export const SegmentDot = SegmentChip;

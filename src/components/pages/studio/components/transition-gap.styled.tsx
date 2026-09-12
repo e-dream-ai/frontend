@@ -1,5 +1,10 @@
 import styled, { css, keyframes } from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
+import {
+  ProgressContent,
+  ProgressLabel,
+  ProgressEta,
+} from "@/components/shared/dream-progress/dream-progress.styled";
 
 const pulseDot = keyframes`
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -70,6 +75,23 @@ export const GapContainer = styled.div<{
         background: ${FLOW.selectedDim};
       }
     `}
+
+  ${ProgressContent} {
+    width: 56px;
+    gap: 6px;
+    font-size: 10px;
+    text-align: center;
+  }
+
+  ${ProgressLabel} {
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+  }
+
+  ${ProgressEta} {
+    font-size: 9px;
+  }
 `;
 
 export type GapLineVariant = "idle" | "configured" | "failed" | "mismatched";
@@ -154,21 +176,6 @@ export const StatusNode = styled.div<{ $variant: string }>`
         background: ${FLOW.errorDim};
       }
     `}
-`;
-
-export const ProgressRing = styled.div<{ $percent: number }>`
-  position: absolute;
-  inset: -4px;
-  border-radius: 50%;
-  background: conic-gradient(
-    ${FLOW.processing} ${(p) => p.$percent}%,
-    transparent ${(p) => p.$percent}%
-  );
-  mask: radial-gradient(circle, transparent 60%, #000 61%) center / 100% 100%
-    no-repeat;
-  -webkit-mask: radial-gradient(circle, transparent 60%, #000 61%) center / 100%
-    100% no-repeat;
-  pointer-events: none;
 `;
 
 export const GapStatusLabel = styled.span<{ $status: string }>`
