@@ -33,6 +33,34 @@ export type TransitionStatus =
   | "processed"
   | "failed";
 
+/**
+ * The settings a single generation ran with, captured as a full override set.
+ * Snapshotting the *resolved* values (global + override) rather than just the
+ * overrides is what makes a history entry restorable: globals drift as the user
+ * keeps working, so overrides alone would replay a run under today's defaults.
+ */
+export interface TransitionRunSettings {
+  presetOverride: string;
+  promptOverride: string;
+  negativePromptOverride: string;
+  durationOverride: number;
+  modelOverride: VideoModel;
+  numInferenceStepsOverride: number;
+  guidanceOverride: number;
+  seedOverride: number;
+  loraOverride: LoRAConfig[];
+}
+
+/** One completed (or in-flight) generation for a transition position. */
+export interface TransitionHistoryEntry {
+  dreamUuid: string;
+  createdAt: number; // epoch ms
+  // Set once the run reaches "processed". Only completed runs are offered in
+  // the history strip — a failed or in-flight dream has nothing to show.
+  completed?: boolean;
+  settings: TransitionRunSettings;
+}
+
 export interface FlowTransition {
   fromFrameId: string; // FlowReferenceFrame.id
   toFrameId: string; // FlowReferenceFrame.id
@@ -52,6 +80,10 @@ export interface FlowTransition {
   dreamUuid?: string;
   status: TransitionStatus;
   progress?: number; // 0-100
+
+  // Every generation run at this position, oldest first. The entry matching
+  // `dreamUuid` is the one currently in the flow; the rest are restorable.
+  history?: TransitionHistoryEntry[];
 
   // Uprez state (undefined = not started)
   uprezDreamUuid?: string;
