@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useRef } from "react";
-import { useQueries, type QueryFunctionContext } from "@tanstack/react-query";
+import {
+  useQueries,
+  type QueryFunctionContext,
+  type UseQueryOptions,
+} from "@tanstack/react-query";
 import { useShallow } from "zustand/react/shallow";
 import { useFlowStore } from "@/stores/flow.store";
-import { DREAM_QUERY_KEY, getDream } from "@/api/dream/query/useDream";
+import { DREAM_QUERY_KEY, getDreamResponse } from "@/api/dream/query/useDream";
 import type { Dream } from "@/types/dream.types";
+import type { ApiResponse } from "@/types/api.types";
 import {
   middleFilmstripUrl,
   formatRunTime,
@@ -18,6 +23,19 @@ import {
   HistoryTime,
   HistoryEmpty,
 } from "./transition-history.styled";
+
+/**
+ * `[DREAM_QUERY_KEY, uuid]` is one cache entry shared with `useDreamSegments`,
+ * `useDreamProgress` and `useDream`. They all store the whole ApiResponse, so
+ * this query must too — storing an unwrapped Dream here makes the two readers
+ * overwrite each other, blanking thumbnails and dropping preview segments.
+ */
+type DreamQueryOptions = UseQueryOptions<
+  ApiResponse<{ dream: Dream }>,
+  unknown,
+  Dream | undefined,
+  [string, string]
+>;
 
 export function TransitionHistory() {
   const { transitions, selectedIndices } = useFlowStore(
@@ -42,16 +60,21 @@ export function TransitionHistory() {
   );
 
   const dreamQueries = useQueries({
-    queries: entries.map((entry) => ({
-      queryKey: [DREAM_QUERY_KEY, entry.dreamUuid],
-      queryFn: ({ signal }: QueryFunctionContext) =>
-        getDream(entry.dreamUuid, signal),
-      staleTime: Infinity,
-      // A just-finished dream has no filmstrip until the video service has run.
-      refetchInterval: (data: unknown) =>
-        (data as Dream | undefined)?.filmstrip?.length ? false : 5000,
-      refetchIntervalInBackground: false,
-    })),
+    queries: entries.map(
+      (entry): DreamQueryOptions => ({
+        queryKey: [DREAM_QUERY_KEY, entry.dreamUuid],
+        queryFn: ({ signal }: QueryFunctionContext) =>
+          getDreamResponse(entry.dreamUuid, signal),
+        select: (response) => response.data?.dream,
+        staleTime: Infinity,
+        // A just-finished dream has no filmstrip until the video service has
+        // run. Read the unselected response: the cache holds what the query
+        // function returned, not what `select` derived.
+        refetchInterval: (_data, query) =>
+          query.state.data?.data?.dream?.filmstrip?.length ? false : 5000,
+        refetchIntervalInBackground: false,
+      }),
+    ),
   });
 
   // Takes run oldest-to-newest, so the current one is usually rightmost — and

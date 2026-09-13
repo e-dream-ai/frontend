@@ -38,36 +38,37 @@ export function FlowPreview() {
 
   const segments = useDreamSegments(completedUuids);
 
-  const [index, setIndex] = useState(0);
-
-  // Segments drop dreams whose video hasn't landed, so look a dream up by key
-  // rather than by its position among the transitions.
-  const segmentKeys = segments.map((segment) => segment.key).join(",");
+  // Track what is on screen by dream uuid, not by position. Segments appear as
+  // renders land, so a stored index quietly starts pointing at a different clip
+  // every time the list grows — which looks like the preview jumping around on
+  // its own. Deriving the index each render keeps the same clip playing.
+  const [currentUuid, setCurrentUuid] = useState<string | null>(null);
+  const foundIndex = segments.findIndex((s) => s.key === currentUuid);
+  const index = foundIndex >= 0 ? foundIndex : 0;
 
   useEffect(() => {
     if (!primaryDreamUuid) return;
-    const next = segmentKeys.split(",").indexOf(primaryDreamUuid);
     // A selected transition that hasn't rendered yet has no segment to show —
     // leave whatever is playing alone rather than jumping to an unrelated clip.
-    if (next >= 0) setIndex(next);
-  }, [primaryDreamUuid, segmentKeys]);
+    if (!segments.some((s) => s.key === primaryDreamUuid)) return;
+    setCurrentUuid(primaryDreamUuid);
+  }, [primaryDreamUuid, segments]);
 
   // An explicit play request seeks to the segment and, via replayToken,
   // restarts it even when it is already the one on screen.
   const [replayToken, setReplayToken] = useState(0);
   useEffect(() => {
     if (!playRequest) return;
-    const next = segmentKeys.split(",").indexOf(playRequest.dreamUuid);
-    if (next < 0) return;
-    setIndex(next);
+    if (!segments.some((s) => s.key === playRequest.dreamUuid)) return;
+    setCurrentUuid(playRequest.dreamUuid);
     setReplayToken(playRequest.seq);
-  }, [playRequest, segmentKeys]);
+  }, [playRequest, segments]);
 
   return (
     <SegmentPreview
       segments={segments}
       index={index}
-      onIndexChange={setIndex}
+      onIndexChange={(next) => setCurrentUuid(segments[next]?.key ?? null)}
       lightboxOpen={previewLightboxOpen}
       onLightboxOpenChange={setPreviewLightboxOpen}
       label="Preview"
