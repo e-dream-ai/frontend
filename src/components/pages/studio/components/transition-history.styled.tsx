@@ -8,7 +8,7 @@ import { FLOW } from "@/constants/flow-theme.constants";
  * Here the enclosing row reserves the height once (HISTORY_ROW_HEIGHT), so the
  * panel is the same height whether or not there is anything to show.
  */
-export const HISTORY_ROW_HEIGHT = 88;
+export const HISTORY_ROW_HEIGHT = 112;
 
 export const HistoryInline = styled.div`
   display: flex;
@@ -82,8 +82,8 @@ export const HistoryItem = styled.button<{ $current: boolean }>`
 `;
 
 export const HistoryThumb = styled.div<{ $current: boolean }>`
-  width: 84px;
-  height: 48px;
+  width: 126px;
+  height: 72px;
   border-radius: 5px;
   overflow: hidden;
   background: ${FLOW.bgElevated};
