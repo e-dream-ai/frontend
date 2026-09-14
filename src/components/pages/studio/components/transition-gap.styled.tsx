@@ -155,11 +155,13 @@ export const StatusNode = styled.div<{ $variant: string }>`
   ${(p) =>
     p.$variant === "processed" &&
     css`
-      background: ${FLOW.accent};
-      color: ${FLOW.bg};
-      box-shadow:
-        0 0 0 4px ${FLOW.accentDim},
-        0 0 14px ${FLOW.accentGlow};
+      /* No disc: the filmstrip glyph is the whole shape. The glow follows its
+         outline via drop-shadow, which a box-shadow on this square node can't. */
+      width: 36px;
+      height: 28px;
+      border-radius: 0;
+      color: ${FLOW.accent};
+      filter: drop-shadow(0 0 5px ${FLOW.accentDim});
       animation: ${popIn} 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     `}
 
