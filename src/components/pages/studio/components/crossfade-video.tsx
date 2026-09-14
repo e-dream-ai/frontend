@@ -30,6 +30,12 @@ interface Props {
   loop?: boolean;
   onEnded?: () => void;
   /**
+   * Bump to replay the segment already on screen from the start. Needed
+   * because re-selecting the current segment changes no prop the player would
+   * otherwise notice, so there is nothing to react to.
+   */
+  replayToken?: number;
+  /**
    * Reports a segment's true shape once the browser has read the file header,
    * correcting the `ratio` hint. Covers dreams whose dimensions were never
    * recorded, and any case where the file played is not the one those
@@ -57,6 +63,7 @@ export function CrossfadeVideo({
   loop = false,
   onEnded,
   onMeasured,
+  replayToken,
 }: Props) {
   const targetKey = segments[index]?.key ?? null;
 
@@ -101,6 +108,21 @@ export function CrossfadeVideo({
     if (front.paused && front.currentTime > 0.05) front.currentTime = 0;
     front.play().catch(() => undefined);
   }, [buf.front, active, layerRefs]);
+
+  // Replay only when the requested segment is the one already up front. If the
+  // token arrived alongside an index change, the segment is still loading into
+  // the back layer and the effect above plays it from the start anyway.
+  useEffect(() => {
+    if (!replayToken || !active) return;
+    if (buf.loaded[buf.front] !== targetKey) return;
+    const front = layerRefs[buf.front].current;
+    if (!front) return;
+    front.currentTime = 0;
+    front.play().catch(() => undefined);
+    // Deliberately keyed on the token alone: this fires on request, not on
+    // every buffer change that happens to leave the same segment up front.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [replayToken]);
 
   return (
     <LayerStack>

@@ -36,7 +36,7 @@ export const FlowBuilder: React.FC = () => {
   useGeneratedFrameSync();
 
   // Generation controls
-  const { generateAll, generateOne, isGenerating } = useFlowGeneration();
+  const { generateAll, generateMany, isGenerating } = useFlowGeneration();
   const uploadDream = useUploadImageDream();
 
   const [showPlaylistModal, setShowPlaylistModal] = useState(false);
@@ -169,12 +169,11 @@ export const FlowBuilder: React.FC = () => {
         onAddGenerate={() => setShowGenerateModal(true)}
         onAddFromPlaylist={handleAddFromPlaylist}
         onAddFromLibrary={handleAddFromLibrary}
-        onRetry={generateOne}
       />
 
       <TransitionSettingsPanel
         onGenerateAll={generateAll}
-        onGenerateOne={generateOne}
+        onGenerateSelected={generateMany}
         isGenerating={isGenerating}
       />
 

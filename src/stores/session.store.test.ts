@@ -58,7 +58,7 @@ describe("session store", () => {
     useSessionStore.getState().createSession("Session B");
 
     useFlowStore.setState({
-      selectedTransitionIndex: 3,
+      selectedTransitionIndices: [3],
       settingsExpanded: true,
       previewLightboxOpen: true,
     });
@@ -67,7 +67,7 @@ describe("session store", () => {
     useSessionStore.getState().switchSession(sessions[0].id);
 
     const flowState = useFlowStore.getState();
-    expect(flowState.selectedTransitionIndex).toBeNull();
+    expect(flowState.selectedTransitionIndices).toEqual([]);
     expect(flowState.settingsExpanded).toBe(false);
     expect(flowState.previewLightboxOpen).toBe(false);
   });

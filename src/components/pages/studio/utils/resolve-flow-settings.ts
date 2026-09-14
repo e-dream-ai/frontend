@@ -68,7 +68,7 @@ interface GlobalSettings {
   globalLora: LoRAConfig[] | undefined;
 }
 
-interface EffectiveSettings {
+export interface EffectiveSettings {
   presetId: string;
   prompt: string;
   negativePrompt: string;
