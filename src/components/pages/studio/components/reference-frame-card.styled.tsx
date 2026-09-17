@@ -173,6 +173,20 @@ export const CardPlaceholder = styled.div`
   color: ${FLOW.textMuted};
 `;
 
+const framePulse = keyframes`
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 0.75; }
+`;
+
+export const LoadingPlaceholder = styled(CardPlaceholder)`
+  animation: ${framePulse} 1.4s ease-in-out infinite;
+
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    opacity: 0.55;
+  }
+`;
+
 export const GenerationPlaceholder = styled(CardPlaceholder)`
   box-sizing: border-box;
   padding: 10px 10px 28px;

@@ -19,6 +19,7 @@ export type EditorAdapter = {
   reset: () => void;
   subscribe: (listener: () => void) => () => void;
   isEmpty: () => boolean;
+  thumbnail: () => string | null;
 };
 
 const flowAdapter: EditorAdapter = {
@@ -37,6 +38,11 @@ const flowAdapter: EditorAdapter = {
   },
   reset: () => useFlowStore.getState().resetFlow(),
   subscribe: (listener) => useFlowStore.subscribe(listener),
+  thumbnail: () =>
+    useFlowStore
+      .getState()
+      .referenceFrames.find((frame) => frame.dreamThumbnail)?.dreamThumbnail ??
+    null,
   isEmpty: () => {
     const state = useFlowStore.getState();
     return (
@@ -61,6 +67,11 @@ const actionAdapter: EditorAdapter = {
   },
   reset: () => useStudioStore.getState().resetSession(),
   subscribe: (listener) => useStudioStore.subscribe(listener),
+  thumbnail: () =>
+    useStudioStore
+      .getState()
+      .images.find((image) => image.url && !image.url.startsWith("blob:"))
+      ?.url ?? null,
   isEmpty: () => {
     const state = useStudioStore.getState();
     return state.images.length === 0 && state.actions.length === 0;
@@ -73,6 +84,7 @@ const uprezAdapter: EditorAdapter = {
     useUprezStore.getState().restoreUprez(state as Partial<UprezFormState>),
   reset: () => useUprezStore.getState().resetUprez(),
   subscribe: (listener) => useUprezStore.subscribe(listener),
+  thumbnail: () => useUprezStore.getState().sourcePlaylist?.thumbnail ?? null,
   isEmpty: () => !useUprezStore.getState().sourcePlaylist,
 };
 

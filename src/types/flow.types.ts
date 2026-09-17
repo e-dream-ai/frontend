@@ -12,6 +12,7 @@ export interface FlowReferenceFrame {
   // from the image library or a playlist — every path adds image Dreams.
   dreamUuid?: string;
   imageUrl: string; // presigned URL or local objectURL while uploading
+  dreamThumbnail?: string; // durable CDN thumbnail, survives reload
   name: string; // display name
   isLoopFrame?: boolean; // true for auto-generated loop frame
 

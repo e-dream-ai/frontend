@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FlowReferenceFrame } from "@/types/flow.types";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
@@ -10,12 +10,15 @@ export function useReferenceFrameImage(frame: FlowReferenceFrame | undefined) {
     replaces: string;
     url: string;
   } | null>(null);
+  const resolvedRef = useRef<string>();
 
-  const { id, imageUrl, dreamUuid, isLoopFrame } = frame ?? {};
-  const src =
+  const { id, imageUrl, dreamUuid, dreamThumbnail, isLoopFrame } = frame ?? {};
+  const resolved =
     override !== null && override.replaces === imageUrl
       ? override.url
       : imageUrl;
+  const src = resolved || dreamThumbnail;
+  const isFallback = !resolved && Boolean(dreamThumbnail);
 
   const refresh = useCallback(async () => {
     if (!dreamUuid || id === undefined || imageUrl === undefined) return;
@@ -30,11 +33,23 @@ export function useReferenceFrameImage(frame: FlowReferenceFrame | undefined) {
       if (!freshUrl) return;
       setOverride({ replaces: imageUrl, url: freshUrl });
       // The loop frame mirrors frame 0 and isn't a real store entry.
-      if (!isLoopFrame) updateReferenceFrame(id, { imageUrl: freshUrl });
+      if (!isLoopFrame) {
+        updateReferenceFrame(id, {
+          imageUrl: freshUrl,
+          ...(dream?.thumbnail ? { dreamThumbnail: dream.thumbnail } : {}),
+        });
+      }
     } catch {
       // ignore
     }
   }, [dreamUuid, id, imageUrl, isLoopFrame, updateReferenceFrame]);
 
-  return { src, onError: dreamUuid ? refresh : undefined };
+  useEffect(() => {
+    if (!dreamUuid || imageUrl) return;
+    if (resolvedRef.current === dreamUuid) return;
+    resolvedRef.current = dreamUuid;
+    void refresh();
+  }, [dreamUuid, imageUrl, refresh]);
+
+  return { src, isFallback, onError: dreamUuid ? refresh : undefined };
 }

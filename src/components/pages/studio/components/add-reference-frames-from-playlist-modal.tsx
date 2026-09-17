@@ -58,6 +58,7 @@ export const AddReferenceFramesFromPlaylistModal: React.FC<Props> = ({
         // Prefer the full-resolution source over the thumbnail, matching
         // "+ My Images" — the frame feeds generation, not just display.
         imageUrl: dream.video || dream.original_video || dream.thumbnail,
+        dreamThumbnail: dream.thumbnail,
         name: dream.name,
       });
     }

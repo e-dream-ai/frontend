@@ -61,8 +61,6 @@ export const useEditorProjectSync = (
   const creatingRef = useRef(false);
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const lastSavedRef = useRef<string>("");
-  const conflictRef = useRef<EditorProject | null>(null);
-  const routeUuidRef = useRef<string | undefined | null>(null);
   const persistRef = useRef<() => Promise<void>>(async () => {});
 
   const loadedProject = data?.data?.project;
@@ -86,9 +84,6 @@ export const useEditorProjectSync = (
   );
 
   useEffect(() => {
-    if (routeUuidRef.current === projectUuid) return;
-    routeUuidRef.current = projectUuid;
-
     if (projectUuid) return;
 
     hydratingRef.current = true;
@@ -110,7 +105,7 @@ export const useEditorProjectSync = (
   }, [projectUuid, loadedProject, hydrate]);
 
   const persist = useCallback(async () => {
-    if (hydratingRef.current || conflictRef.current) return;
+    if (hydratingRef.current || conflict) return;
 
     const state = adapter.read();
     const serialised = JSON.stringify(state);
@@ -128,6 +123,7 @@ export const useEditorProjectSync = (
           name: defaultProjectName(),
           state,
           schemaVersion: EDITOR_STATE_SCHEMA_VERSION,
+          thumbnail: adapter.thumbnail(),
         });
         const project = created.data?.project;
         if (!project) throw new Error("No project in create response");
@@ -154,6 +150,7 @@ export const useEditorProjectSync = (
         revision: revisionRef.current,
         state,
         schemaVersion: EDITOR_STATE_SCHEMA_VERSION,
+        thumbnail: adapter.thumbnail(),
       });
       const project = saved.data?.project;
       if (project) revisionRef.current = project.revision;
@@ -168,11 +165,10 @@ export const useEditorProjectSync = (
       Bugsnag.notify(error as Error);
       setStatus("error");
     }
-  }, [adapter, createProject, mode, navigate, updateProject]);
+  }, [adapter, conflict, createProject, mode, navigate, updateProject]);
 
   useEffect(() => {
     persistRef.current = persist;
-    conflictRef.current = conflict;
   });
 
   useEffect(() => {

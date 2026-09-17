@@ -11,6 +11,7 @@ import {
   CardWrapper,
   CardImage,
   CardPlaceholder,
+  LoadingPlaceholder,
   GenerationPlaceholder,
   CardLabel,
   LoopBadge,
@@ -40,8 +41,11 @@ export const ReferenceFrameCard: React.FC<Props> = ({
   const isFailed = frame.uploadStatus === "failed";
   const isBusy = isUploading || isFailed;
 
-  const { src: imgSrc, onError: handleImgError } =
-    useReferenceFrameImage(frame);
+  const {
+    src: imgSrc,
+    isFallback: isFallbackImg,
+    onError: handleImgError,
+  } = useReferenceFrameImage(frame);
 
   const {
     attributes,
@@ -73,7 +77,7 @@ export const ReferenceFrameCard: React.FC<Props> = ({
   // The loop frame is a synthetic copy of the first, so it has no store row to
   // write back to — the frame it mirrors reports its own size.
   const handleImgLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    if (isLoop) return;
+    if (isLoop || isFallbackImg) return;
     const { naturalWidth, naturalHeight } = e.currentTarget;
     if (!naturalWidth || !naturalHeight) return;
     if (
@@ -116,6 +120,8 @@ export const ReferenceFrameCard: React.FC<Props> = ({
           onLoad={handleImgLoad}
           onError={handleImgError}
         />
+      ) : frame.dreamUuid ? (
+        <LoadingPlaceholder />
       ) : (
         <CardPlaceholder>{frame.name}</CardPlaceholder>
       )}

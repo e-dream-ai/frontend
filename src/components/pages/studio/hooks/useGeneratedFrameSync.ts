@@ -40,6 +40,7 @@ export const useGeneratedFrameSync = () => {
           useStudioStore.getState().updateImage(dreamUuid, { url });
           useFlowStore.getState().updateReferenceFrame(id, {
             imageUrl: url,
+            dreamThumbnail: dream?.thumbnail ?? undefined,
             name: dream?.name ?? undefined,
             uploadStatus: undefined,
             uploadProgress: undefined,
