@@ -13,7 +13,6 @@ import {
   horizontalListSortingStrategy,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
-import { useShallow } from "zustand/react/shallow";
 import { useFlowStore, buildFramesWithLoop } from "@/stores/flow.store";
 import { ReferenceFrameCard } from "./reference-frame-card";
 import { ReferenceFrameLightbox } from "./reference-frame-lightbox";
@@ -25,9 +24,9 @@ import {
   forcedFieldPatch,
   mismatchedFields,
   type TransitionField,
-  type TransitionGlobals,
 } from "../utils/transition-field-values";
 import { isTransitionStale } from "../utils/transition-staleness";
+import { useToggleModifierHeld } from "../hooks/useToggleModifierHeld";
 import {
   StripSection,
   SectionHeader,
@@ -70,39 +69,17 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
     (s) => s.toggleTransitionSelection,
   );
   const selectAllTransitions = useFlowStore((s) => s.selectAllTransitions);
-  const clearTransitionSelection = useFlowStore(
-    (s) => s.clearTransitionSelection,
-  );
 
   // Data
   const rawFrames = useFlowStore((s) => s.referenceFrames);
   const loop = useFlowStore((s) => s.loop);
   const transitions = useFlowStore((s) => s.transitions);
   const selectedIndices = useFlowStore((s) => s.selectedTransitionIndices);
-  // Every global, because a transition without an override renders from them:
-  // editing a global moves what the next run would produce, which is exactly
-  // what the stale marker is about.
-  const globals = useFlowStore(
-    useShallow(
-      (s): TransitionGlobals => ({
-        globalPresetId: s.globalPresetId,
-        globalPrompt: s.globalPrompt,
-        globalNegativePrompt: s.globalNegativePrompt,
-        globalDuration: s.globalDuration,
-        globalModel: s.globalModel,
-        globalNumInferenceSteps: s.globalNumInferenceSteps,
-        globalGuidance: s.globalGuidance,
-        globalSeed: s.globalSeed,
-        globalLora: s.globalLora,
-      }),
-    ),
-  );
-  const globalDuration = globals.globalDuration;
+  const toggleModifierHeld = useToggleModifierHeld();
 
   const staleFlags = useMemo(
-    () =>
-      transitions.map((transition) => isTransitionStale(transition, globals)),
-    [transitions, globals],
+    () => transitions.map((transition) => isTransitionStale(transition)),
+    [transitions],
   );
   const staleCount = staleFlags.filter(Boolean).length;
 
@@ -137,23 +114,12 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
   const selectWhenAligned = useCallback(
     (next: readonly number[], source: number, apply: () => void) => {
       const state = useFlowStore.getState();
-      const globals: TransitionGlobals = {
-        globalPresetId: state.globalPresetId,
-        globalPrompt: state.globalPrompt,
-        globalNegativePrompt: state.globalNegativePrompt,
-        globalDuration: state.globalDuration,
-        globalModel: state.globalModel,
-        globalNumInferenceSteps: state.globalNumInferenceSteps,
-        globalGuidance: state.globalGuidance,
-        globalSeed: state.globalSeed,
-        globalLora: state.globalLora,
-      };
       const selected = next
         .map((index) => state.transitions[index])
         .filter((transition): transition is NonNullable<typeof transition> =>
           Boolean(transition),
         );
-      const clashes: TransitionField[] = mismatchedFields(selected, globals);
+      const clashes: TransitionField[] = mismatchedFields(selected);
       if (clashes.length === 0) {
         apply();
         return;
@@ -163,8 +129,7 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
           const store = useFlowStore.getState();
           const from = store.transitions[source];
           if (from) {
-            const patch = forcedFieldPatch(from, globals, clashes);
-            for (const index of next) store.setTransitionOverride(index, patch);
+            store.setTransitionSettings(next, forcedFieldPatch(from, clashes));
           }
           apply();
         },
@@ -206,7 +171,7 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
       const transitionIndex = i - 1;
       const transition = transitions[transitionIndex];
       if (transition) {
-        const effectiveDuration = transition.durationOverride ?? globalDuration;
+        const effectiveDuration = transition.settings.duration;
         stripItems.push(
           <TransitionGapEnhanced
             key={`gap-${transitionIndex}`}
@@ -215,6 +180,11 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
             mismatch={describeMismatch(displayFrames[i - 1], frame)}
             selected={selectedIndices.includes(transitionIndex)}
             stale={staleFlags[transitionIndex]}
+            deselectBlocked={
+              toggleModifierHeld &&
+              selectedIndices.length === 1 &&
+              selectedIndices[0] === transitionIndex
+            }
             onClick={({ toggle }) => {
               // Clicking a transition plays it, every time — including when it
               // was already the selected one, where nothing about the
@@ -294,13 +264,6 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
                 }}
               >
                 Select all
-              </SelectionButton>
-              <SelectionButton
-                type="button"
-                disabled={selectedIndices.length === 0}
-                onClick={() => clearTransitionSelection()}
-              >
-                Clear all
               </SelectionButton>
             </>
           )}

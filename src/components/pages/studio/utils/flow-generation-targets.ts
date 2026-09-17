@@ -1,7 +1,6 @@
 import type { FlowReferenceFrame, FlowTransition } from "@/types/flow.types";
 import { isTransitionMismatched } from "./frame-aspect";
 import { isTransitionStale } from "./transition-staleness";
-import type { TransitionGlobals } from "./transition-field-values";
 
 export interface GenerationTargets {
   targets: Array<{ index: number; transition: FlowTransition }>;
@@ -23,7 +22,6 @@ export interface GenerationTargets {
 export const resolveGenerationTargets = (
   transitions: readonly FlowTransition[],
   referenceFrames: readonly FlowReferenceFrame[],
-  globals: TransitionGlobals,
 ): GenerationTargets => {
   const byId = new Map(referenceFrames.map((frame) => [frame.id, frame]));
   const targets: GenerationTargets["targets"] = [];
@@ -34,8 +32,7 @@ export const resolveGenerationTargets = (
   transitions.forEach((transition, index) => {
     const { status, fromFrameId, toFrameId } = transition;
     if (status === "processing" || status === "queue") return;
-    const isStale =
-      status === "processed" && isTransitionStale(transition, globals);
+    const isStale = status === "processed" && isTransitionStale(transition);
     if (status === "processed" && !isStale) return;
     if (isTransitionMismatched(byId.get(fromFrameId), byId.get(toFrameId))) {
       skippedForMismatch += 1;

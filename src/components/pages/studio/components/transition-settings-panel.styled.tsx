@@ -39,6 +39,17 @@ export const PanelSubtitle = styled.span`
   color: ${FLOW.textDim};
 `;
 
+/**
+ * Take timestamp beside the edited transition's name. Matches the accent the
+ * history rail gives the current take, so the header and the rail read as the
+ * same fact stated twice.
+ */
+export const SubtitleTime = styled.span`
+  color: ${FLOW.accent};
+  font-weight: 600;
+  white-space: nowrap;
+`;
+
 export const HeaderActions = styled.div`
   display: flex;
   align-items: center;

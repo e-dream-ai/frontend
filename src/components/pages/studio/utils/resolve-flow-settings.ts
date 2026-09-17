@@ -1,11 +1,8 @@
-import type {
-  StudioAction,
-  VideoModel,
-  LoRAConfig,
-} from "@/types/studio.types";
-import type { FlowTransition } from "@/types/flow.types";
+import type { StudioAction, VideoModel } from "@/types/studio.types";
+import type { TransitionSettings } from "@/types/flow.types";
 import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
 import { TRANSITION_PRESETS } from "@/components/pages/studio/constants/transition-presets";
+import { fieldComparisonKey } from "./transition-field-values";
 import {
   PRESET_GROUPS,
   createActionsFromPreset,
@@ -56,85 +53,63 @@ export function resolvePresetAction(
   return createActionsFromPreset(pack)[0];
 }
 
-interface GlobalSettings {
-  globalPresetId: string;
-  globalPrompt: string;
-  globalNegativePrompt: string;
-  globalDuration: number;
-  globalModel: VideoModel;
-  globalNumInferenceSteps: number;
-  globalGuidance: number;
-  globalSeed: number;
-  globalLora: LoRAConfig[] | undefined;
-}
-
-export interface EffectiveSettings {
-  presetId: string;
-  prompt: string;
-  negativePrompt: string;
-  duration: number;
-  model: VideoModel;
-  numInferenceSteps: number;
-  guidance: number;
-  seed: number;
-  action: Pick<StudioAction, "prompt" | "highNoiseLoras" | "lowNoiseLoras">;
+/**
+ * A preset applied as an action: the fields it stamps onto the current scope.
+ *
+ * A preset used to be a stored id that supplied the prompt and LoRAs whenever
+ * the transition had none of its own — a setting that behaved like an action.
+ * Now it writes values once and is done, so the fields it changed are visible
+ * in the panel and editable afterwards like any others.
+ */
+export function presetSettingsPatch(
+  presetName: string,
+): Partial<TransitionSettings> | undefined {
+  const action = resolvePresetAction(presetName);
+  if (!action) return undefined;
+  return {
+    prompt: action.prompt ?? "",
+    negativePrompt: action.negativePrompt ?? "",
+    highNoiseLoras: action.highNoiseLoras ?? [],
+    lowNoiseLoras: action.lowNoiseLoras ?? [],
+  };
 }
 
 /**
- * Compute effective settings for a transition: override > global.
- * Resolves the preset to a concrete StudioAction for buildVideoAlgoParams.
+ * Which of `presets` the given settings still match exactly, or "" for none.
+ *
+ * Derived, not stored. A preset stays an action — nothing records which one ran
+ * — but the menu can show the answer by comparing values, which is stricter
+ * than a remembered id: edit the prompt afterwards and this reports no match,
+ * where a stored id went on claiming the preset.
  */
-export function resolveEffectiveSettings(
-  transition: FlowTransition,
-  global: GlobalSettings,
-): EffectiveSettings {
-  const presetId = transition.presetOverride ?? global.globalPresetId;
-  const prompt = transition.promptOverride ?? global.globalPrompt;
-  const negativePrompt =
-    transition.negativePromptOverride ?? global.globalNegativePrompt;
-  const duration = transition.durationOverride ?? global.globalDuration;
-  const model = transition.modelOverride ?? global.globalModel;
-  const numInferenceSteps =
-    transition.numInferenceStepsOverride ?? global.globalNumInferenceSteps;
-  const guidance = transition.guidanceOverride ?? global.globalGuidance;
-  const seed = transition.seedOverride ?? global.globalSeed;
-
-  // Resolve LoRAs: per-transition override > global override > preset > none
-  let action: Pick<StudioAction, "prompt" | "highNoiseLoras" | "lowNoiseLoras">;
-
-  const explicitLora = transition.loraOverride ?? global.globalLora;
-  if (explicitLora) {
-    // Explicit LoRA override — look up matching preset action for lowNoiseLoras
-    const presetAction = resolvePresetAction(presetId);
-    const matchesPreset =
-      presetAction?.highNoiseLoras?.[0]?.path === explicitLora[0]?.path;
-    action = {
-      prompt: prompt || presetAction?.prompt || "",
-      highNoiseLoras: explicitLora,
-      lowNoiseLoras: matchesPreset ? presetAction!.lowNoiseLoras ?? [] : [],
-    };
-  } else {
-    const presetAction = resolvePresetAction(presetId);
-    if (presetAction) {
-      action = {
-        prompt: prompt || presetAction.prompt,
-        highNoiseLoras: presetAction.highNoiseLoras ?? [],
-        lowNoiseLoras: presetAction.lowNoiseLoras ?? [],
-      };
-    } else {
-      action = { prompt, highNoiseLoras: [], lowNoiseLoras: [] };
+export function matchingPresetName(
+  settings: TransitionSettings,
+  presets: readonly PresetPack[],
+): string {
+  for (const pack of presets) {
+    const patch = presetSettingsPatch(pack.name);
+    if (!patch) continue;
+    if (
+      patch.prompt === settings.prompt &&
+      patch.negativePrompt === settings.negativePrompt &&
+      fieldComparisonKey(patch.highNoiseLoras) ===
+        fieldComparisonKey(settings.highNoiseLoras) &&
+      fieldComparisonKey(patch.lowNoiseLoras) ===
+        fieldComparisonKey(settings.lowNoiseLoras)
+    ) {
+      return pack.name;
     }
   }
+  return "";
+}
 
+/** The shape buildVideoAlgoParams wants, read straight off stored settings. */
+export function settingsToAction(
+  settings: TransitionSettings,
+): Pick<StudioAction, "prompt" | "highNoiseLoras" | "lowNoiseLoras"> {
   return {
-    presetId,
-    prompt,
-    negativePrompt,
-    duration,
-    model,
-    numInferenceSteps,
-    guidance,
-    seed,
-    action,
+    prompt: settings.prompt,
+    highNoiseLoras: settings.highNoiseLoras,
+    lowNoiseLoras: settings.lowNoiseLoras,
   };
 }

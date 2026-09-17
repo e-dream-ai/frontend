@@ -1,68 +1,77 @@
 import { describe, it, expect } from "vitest";
-import type { FlowTransition } from "@/types/flow.types";
-import type { TransitionGlobals } from "./transition-field-values";
-import { currentRunSettings, isTransitionStale } from "./transition-staleness";
+import type { FlowTransition, TransitionSettings } from "@/types/flow.types";
+import { isTransitionStale, settingsMatch } from "./transition-staleness";
+// Relative, not "@/": the alias does not resolve for value imports in tests.
+import { DEFAULT_TRANSITION_SETTINGS } from "../constants/default-transition-settings";
 
-const GLOBALS: TransitionGlobals = {
-  globalPresetId: "",
-  globalPrompt: "drift",
-  globalNegativePrompt: "",
-  globalDuration: 5,
-  globalModel: "kling-25-i2v",
-  globalNumInferenceSteps: 30,
-  globalGuidance: 0.5,
-  globalSeed: -1,
-  globalLora: undefined,
-};
-
-/** A transition rendered from exactly the settings it currently resolves to. */
+/** A transition rendered from exactly the settings it currently holds. */
 const rendered = (
-  overrides: Partial<FlowTransition> = {},
-  globals: TransitionGlobals = GLOBALS,
+  settings: Partial<TransitionSettings> = {},
 ): FlowTransition => {
-  const base: FlowTransition = {
+  const merged = { ...DEFAULT_TRANSITION_SETTINGS, ...settings };
+  return {
     fromFrameId: "a",
     toFrameId: "b",
     status: "processed",
     dreamUuid: "dream-1",
-    ...overrides,
-  };
-  return {
-    ...base,
+    settings: merged,
     history: [
-      {
-        dreamUuid: "dream-1",
-        createdAt: 1,
-        completed: true,
-        settings: currentRunSettings(base, globals),
-      },
+      { dreamUuid: "dream-1", createdAt: 1, completed: true, settings: merged },
     ],
   };
 };
 
+/** Edit the live settings without touching the recorded take. */
+const edited = (
+  transition: FlowTransition,
+  patch: Partial<TransitionSettings>,
+): FlowTransition => ({
+  ...transition,
+  settings: { ...transition.settings, ...patch },
+});
+
+describe("settingsMatch", () => {
+  it("compares LoRA by path, not object identity", () => {
+    const lora = [{ path: "a.safetensors", scale: 1 }];
+    expect(
+      settingsMatch(
+        { ...DEFAULT_TRANSITION_SETTINGS, highNoiseLoras: lora },
+        { ...DEFAULT_TRANSITION_SETTINGS, highNoiseLoras: [...lora] },
+      ),
+    ).toBe(true);
+  });
+
+  it("notices a low-noise LoRA change on its own", () => {
+    expect(
+      settingsMatch(
+        { ...DEFAULT_TRANSITION_SETTINGS, lowNoiseLoras: [] },
+        {
+          ...DEFAULT_TRANSITION_SETTINGS,
+          lowNoiseLoras: [{ path: "b.safetensors", scale: 1 }],
+        },
+      ),
+    ).toBe(false);
+  });
+});
+
 describe("isTransitionStale", () => {
   it("is false for a transition rendered from its current settings", () => {
-    expect(isTransitionStale(rendered(), GLOBALS)).toBe(false);
+    expect(isTransitionStale(rendered())).toBe(false);
   });
 
-  it("is true once an override is edited", () => {
-    const transition = rendered();
-    expect(
-      isTransitionStale({ ...transition, promptOverride: "swirl" }, GLOBALS),
-    ).toBe(true);
+  it("is true once a field is edited", () => {
+    expect(isTransitionStale(edited(rendered(), { prompt: "swirl" }))).toBe(
+      true,
+    );
   });
 
-  it("is true when a global moves under a transition with no override", () => {
-    expect(
-      isTransitionStale(rendered(), { ...GLOBALS, globalPrompt: "swirl" }),
-    ).toBe(true);
-  });
-
-  it("ignores a global the transition overrides", () => {
-    const transition = rendered({ promptOverride: "swirl" });
-    expect(
-      isTransitionStale(transition, { ...GLOBALS, globalPrompt: "other" }),
-    ).toBe(false);
+  it("is unaffected by another transition's settings", () => {
+    // The point of dropping inheritance: there is no shared value left that can
+    // move underneath a rendered transition.
+    const a = rendered({ prompt: "drift" });
+    const b = edited(rendered({ prompt: "drift" }), { prompt: "swirl" });
+    expect(isTransitionStale(a)).toBe(false);
+    expect(isTransitionStale(b)).toBe(true);
   });
 
   it("compares against the take in the flow, not the newest one", () => {
@@ -77,45 +86,38 @@ describe("isTransitionStale", () => {
           dreamUuid: "dream-2",
           createdAt: 2,
           completed: true,
-          settings: currentRunSettings(
-            { ...older, promptOverride: "swirl" },
-            GLOBALS,
-          ),
+          settings: { ...older.settings, prompt: "swirl" },
         },
       ],
     };
-    expect(isTransitionStale(transition, GLOBALS)).toBe(false);
+    expect(isTransitionStale(transition)).toBe(false);
   });
 
   it("is false for a take with no recorded settings", () => {
-    const transition = rendered();
-    expect(isTransitionStale({ ...transition, history: [] }, GLOBALS)).toBe(
-      false,
-    );
+    expect(isTransitionStale({ ...rendered(), history: [] })).toBe(false);
   });
 
   it("is false for anything not rendered", () => {
     for (const status of ["idle", "queue", "processing", "failed"] as const) {
-      const transition = { ...rendered({ promptOverride: "swirl" }), status };
-      expect(isTransitionStale(transition, GLOBALS)).toBe(false);
+      const transition = edited({ ...rendered(), status }, { prompt: "swirl" });
+      expect(isTransitionStale(transition)).toBe(false);
     }
   });
 
   it("notices a LoRA change", () => {
     const transition = rendered({
-      loraOverride: [{ path: "a.safetensors", scale: 1 }],
+      highNoiseLoras: [{ path: "a.safetensors", scale: 1 }],
     });
     expect(
       isTransitionStale(
-        { ...transition, loraOverride: [{ path: "b.safetensors", scale: 1 }] },
-        GLOBALS,
+        edited(transition, {
+          highNoiseLoras: [{ path: "b.safetensors", scale: 1 }],
+        }),
       ),
     ).toBe(true);
   });
 
   it("does not fire on a random seed, which records as -1 either way", () => {
-    expect(isTransitionStale(rendered({ seedOverride: -1 }), GLOBALS)).toBe(
-      false,
-    );
+    expect(isTransitionStale(rendered({ seed: -1 }))).toBe(false);
   });
 });

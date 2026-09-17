@@ -1,9 +1,13 @@
 import { describe, it, expect } from "vitest";
 import {
+  matchingPresetName,
+  presetSettingsPatch,
   resolvePresetAction,
-  resolveEffectiveSettings,
+  settingsToAction,
 } from "../resolve-flow-settings";
-import type { FlowTransition } from "@/types/flow.types";
+// Relative, not "@/": the alias does not resolve for value imports in tests.
+import { DEFAULT_TRANSITION_SETTINGS } from "../../constants/default-transition-settings";
+import { ACTION_PRESETS } from "../../constants/action-presets";
 
 describe("resolvePresetAction", () => {
   it("returns first action from a known preset pack", () => {
@@ -34,207 +38,136 @@ describe("resolvePresetAction", () => {
   });
 });
 
-describe("resolveEffectiveSettings", () => {
-  const globalSettings = {
-    globalPresetId: "Camera Basics",
-    globalPrompt: "global prompt",
-    globalNegativePrompt: "global negative",
-    globalDuration: 5,
-    globalModel: "wan-i2v" as const,
-    globalNumInferenceSteps: 30,
-    globalGuidance: 5.0,
-    globalSeed: -1,
-    globalLora: undefined,
-  };
-
-  it("uses global settings when transition has no overrides", () => {
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-    };
-    const settings = resolveEffectiveSettings(transition, globalSettings);
-    expect(settings.presetId).toBe("Camera Basics");
-    expect(settings.prompt).toBe("global prompt");
-    expect(settings.negativePrompt).toBe("global negative");
-    expect(settings.duration).toBe(5);
-    expect(settings.model).toBe("wan-i2v");
-    expect(settings.numInferenceSteps).toBe(30);
-    expect(settings.guidance).toBe(5.0);
-    expect(settings.seed).toBe(-1);
-  });
-
-  it("overrides with per-transition values", () => {
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-      presetOverride: "Organic",
-      promptOverride: "override prompt",
-      negativePromptOverride: "override negative",
-      durationOverride: 10,
-      modelOverride: "ltx-i2v",
-      seedOverride: 42,
-    };
-    const settings = resolveEffectiveSettings(transition, globalSettings);
-    expect(settings.presetId).toBe("Organic");
-    expect(settings.prompt).toBe("override prompt");
-    expect(settings.negativePrompt).toBe("override negative");
-    expect(settings.duration).toBe(10);
-    expect(settings.model).toBe("ltx-i2v");
-    expect(settings.numInferenceSteps).toBe(30);
-    expect(settings.guidance).toBe(5.0);
-    expect(settings.seed).toBe(42);
-  });
-
-  it("builds a bare action when no preset is selected", () => {
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-    };
-    const settings = resolveEffectiveSettings(transition, {
-      ...globalSettings,
-      globalPresetId: "",
+describe("presetSettingsPatch", () => {
+  it("stamps prompt, negative prompt and both LoRA sets", () => {
+    const action = resolvePresetAction("Abstract")!;
+    expect(presetSettingsPatch("Abstract")).toEqual({
+      prompt: action.prompt,
+      negativePrompt: action.negativePrompt ?? "",
+      highNoiseLoras: action.highNoiseLoras ?? [],
+      lowNoiseLoras: action.lowNoiseLoras ?? [],
     });
-    expect(settings.action.prompt).toBe("global prompt");
-    expect(settings.action.highNoiseLoras).toEqual([]);
-    expect(settings.action.lowNoiseLoras).toEqual([]);
   });
 
-  it("resolves action from preset pack using first action", () => {
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-    };
-    const settings = resolveEffectiveSettings(transition, globalSettings);
-    expect(settings.action).toBeDefined();
-    expect(settings.action.prompt).toBeTruthy();
+  it("writes an empty negative prompt for a preset without one", () => {
+    // Otherwise the previous preset's negative would ride along invisibly.
+    expect(presetSettingsPatch("Abstract")?.negativePrompt).toBe("");
   });
 
-  it("keeps a cleared negative prompt cleared", () => {
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-      presetOverride: "Morph",
-      negativePromptOverride: "",
-    };
-    const settings = resolveEffectiveSettings(transition, globalSettings);
-    expect(settings.negativePrompt).toBe("");
+  it("carries a preset's LoRAs as a pair", () => {
+    const withLora = ACTION_PRESETS.find((p) =>
+      p.actions.some((a) => a.highNoiseLoras?.length),
+    );
+    if (!withLora) return;
+    const patch = presetSettingsPatch(withLora.name)!;
+    const action = resolvePresetAction(withLora.name)!;
+    expect(patch.highNoiseLoras).toEqual(action.highNoiseLoras ?? []);
+    expect(patch.lowNoiseLoras).toEqual(action.lowNoiseLoras ?? []);
   });
 
-  it("a stored negative prompt wins over the preset's", () => {
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-      presetOverride: "Morph",
-      negativePromptOverride: "my negative",
-    };
-    const settings = resolveEffectiveSettings(transition, globalSettings);
-    expect(settings.negativePrompt).toBe("my negative");
+  it("is undefined for an unknown or empty preset", () => {
+    expect(presetSettingsPatch("nope")).toBeUndefined();
+    expect(presetSettingsPatch("")).toBeUndefined();
   });
 
-  it("leaves the negative prompt empty for a preset without one", () => {
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-      presetOverride: "Whip Pan",
+  it("writes values, leaving no trace of which preset ran", () => {
+    // A preset is an action now: nothing stores its name, so nothing can
+    // resolve through it later.
+    expect(Object.keys(presetSettingsPatch("Abstract")!).sort()).toEqual([
+      "highNoiseLoras",
+      "lowNoiseLoras",
+      "negativePrompt",
+      "prompt",
+    ]);
+  });
+});
+
+describe("matchingPresetName", () => {
+  const packs = ACTION_PRESETS.filter((p) => p.model === "all");
+  const abstract = ACTION_PRESETS.find((p) => p.name === "Abstract")!;
+
+  it("names the preset whose values the settings still match", () => {
+    const settings = {
+      ...DEFAULT_TRANSITION_SETTINGS,
+      ...presetSettingsPatch("Abstract"),
     };
-    const settings = resolveEffectiveSettings(transition, {
-      ...globalSettings,
-      globalNegativePrompt: "",
+    expect(matchingPresetName(settings, [abstract])).toBe("Abstract");
+  });
+
+  it("reports no match once the prompt is edited away", () => {
+    // Stricter than the old stored preset id, which kept claiming the preset
+    // after the prompt had been rewritten.
+    const settings = {
+      ...DEFAULT_TRANSITION_SETTINGS,
+      ...presetSettingsPatch("Abstract"),
+      prompt: "something else",
+    };
+    expect(matchingPresetName(settings, [abstract])).toBe("");
+  });
+
+  it("reports no match when only the LoRAs differ", () => {
+    const settings = {
+      ...DEFAULT_TRANSITION_SETTINGS,
+      ...presetSettingsPatch("Abstract"),
+      highNoiseLoras: [{ path: "other.safetensors", scale: 1 }],
+    };
+    expect(matchingPresetName(settings, [abstract])).toBe("");
+  });
+
+  it("ignores fields a preset does not write", () => {
+    // Duration, seed and the rest are not part of a preset, so changing them
+    // must not knock the settings out of the match.
+    const settings = {
+      ...DEFAULT_TRANSITION_SETTINGS,
+      ...presetSettingsPatch("Abstract"),
+      duration: 10,
+      seed: 42,
+      guidance: 9,
+    };
+    expect(matchingPresetName(settings, [abstract])).toBe("Abstract");
+  });
+
+  it("is empty when nothing in the list matches", () => {
+    const settings = { ...DEFAULT_TRANSITION_SETTINGS, prompt: "unique" };
+    expect(matchingPresetName(settings, packs)).toBe("");
+  });
+
+  it("only ever returns a name from the list it was given", () => {
+    // The panel feeds it the presets for the current model, so the result is
+    // always an option the dropdown actually has.
+    const name = matchingPresetName(
+      { ...DEFAULT_TRANSITION_SETTINGS, ...presetSettingsPatch("Abstract") },
+      packs,
+    );
+    if (name) expect(packs.map((p) => p.name)).toContain(name);
+  });
+});
+
+describe("settingsToAction", () => {
+  it("passes the stored fields straight through", () => {
+    const settings = {
+      ...DEFAULT_TRANSITION_SETTINGS,
+      prompt: "swirl",
+      highNoiseLoras: [{ path: "a.safetensors", scale: 1 }],
+      lowNoiseLoras: [{ path: "b.safetensors", scale: 1 }],
+    };
+    expect(settingsToAction(settings)).toEqual({
+      prompt: "swirl",
+      highNoiseLoras: settings.highNoiseLoras,
+      lowNoiseLoras: settings.lowNoiseLoras,
     });
-    expect(settings.negativePrompt).toBe("");
   });
 
-  it("resolves a transition preset's prompt into the action", () => {
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-      presetOverride: "Dolly Zoom",
+  it("keeps the low-noise set without matching it back to a preset", () => {
+    // The old resolver recovered lowNoiseLoras only when the high-noise set
+    // still matched the preset it came from; now it is simply stored.
+    const settings = {
+      ...DEFAULT_TRANSITION_SETTINGS,
+      highNoiseLoras: [{ path: "custom.safetensors", scale: 1 }],
+      lowNoiseLoras: [{ path: "custom-low.safetensors", scale: 1 }],
     };
-    const settings = resolveEffectiveSettings(transition, {
-      ...globalSettings,
-      globalPrompt: "",
-    });
-    expect(settings.action.prompt).toContain("dollies forward");
-    expect(settings.action.highNoiseLoras).toEqual([]);
-  });
-
-  it("applies prompt override on top of preset action", () => {
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-      promptOverride: "my custom prompt",
-    };
-    const settings = resolveEffectiveSettings(transition, globalSettings);
-    expect(settings.action.prompt).toBe("my custom prompt");
-  });
-
-  it("globalLora overrides preset LoRAs", () => {
-    const customLora = [{ path: "custom-lora.safetensors", scale: 0.8 }];
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-    };
-    const settings = resolveEffectiveSettings(transition, {
-      ...globalSettings,
-      globalLora: customLora,
-    });
-    expect(settings.action.highNoiseLoras).toEqual(customLora);
-  });
-
-  it("transition loraOverride overrides globalLora", () => {
-    const globalLoraConfig = [{ path: "global-lora.safetensors", scale: 0.5 }];
-    const transitionLoraConfig = [
-      { path: "transition-lora.safetensors", scale: 1.0 },
-    ];
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-      loraOverride: transitionLoraConfig,
-    };
-    const settings = resolveEffectiveSettings(transition, {
-      ...globalSettings,
-      globalLora: globalLoraConfig,
-    });
-    expect(settings.action.highNoiseLoras).toEqual(transitionLoraConfig);
-  });
-
-  it("falls through to preset LoRAs when globalLora is undefined", () => {
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-    };
-    const settings = resolveEffectiveSettings(transition, {
-      ...globalSettings,
-      globalLora: undefined,
-    });
-    // Camera Basics preset's first action has LoRAs (zoom in)
-    expect(settings.action.highNoiseLoras!.length).toBeGreaterThan(0);
-    expect(settings.action.highNoiseLoras![0].path).toContain("zoom_in");
-  });
-
-  it("an explicit empty globalLora strips the preset's LoRA (None)", () => {
-    const transition: FlowTransition = {
-      fromFrameId: "a",
-      toFrameId: "b",
-      status: "idle",
-    };
-    const settings = resolveEffectiveSettings(transition, {
-      ...globalSettings,
-      globalLora: [],
-    });
-    expect(settings.action.highNoiseLoras).toEqual([]);
-    expect(settings.action.lowNoiseLoras).toEqual([]);
+    expect(settingsToAction(settings).lowNoiseLoras).toEqual(
+      settings.lowNoiseLoras,
+    );
   });
 });

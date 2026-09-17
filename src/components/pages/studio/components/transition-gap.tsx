@@ -22,6 +22,11 @@ interface TransitionGapProps {
   selected: boolean;
   /** Rendered, then edited: the video on screen is behind the settings. */
   stale?: boolean;
+  /**
+   * A toggle modifier is held and this is the only selected transition, so a
+   * toggle-click here would do nothing. Shows as a not-allowed cursor.
+   */
+  deselectBlocked?: boolean;
   onClick: (modifiers: TransitionClickModifiers) => void;
 }
 
@@ -47,29 +52,16 @@ function FilmstripIcon() {
   );
 }
 
-function hasOverrides(t: FlowTransition): boolean {
-  return !!(
-    t.presetOverride ||
-    t.promptOverride ||
-    t.negativePromptOverride ||
-    t.durationOverride !== undefined ||
-    t.modelOverride ||
-    t.loraOverride ||
-    t.numInferenceStepsOverride !== undefined ||
-    t.guidanceOverride !== undefined
-  );
-}
-
 export function TransitionGapEnhanced({
   transition,
   effectiveDuration,
   mismatch,
   selected,
   stale = false,
+  deselectBlocked = false,
   onClick,
 }: TransitionGapProps) {
   const { status } = transition;
-  const configured = hasOverrides(transition);
 
   const selectedSuffix = selected ? " Selected." : "";
   // Spelled out for anyone not seeing the dot: the marker is the only thing
@@ -80,6 +72,7 @@ export function TransitionGapEnhanced({
     role: "button" as const,
     tabIndex: 0,
     $selected: selected,
+    $deselectBlocked: deselectBlocked,
     "aria-pressed": selected,
     // Swallow the mousedown default for every click, which does two jobs.
     // It stops a shift-click extending the browser's text selection from
@@ -113,29 +106,18 @@ export function TransitionGapEnhanced({
     );
   }
 
-  // Idle, no config — just the connecting line.
-  if (status === "idle" && !configured) {
+  // Idle — just the connecting line. There used to be a second, gold variant
+  // for a transition carrying overrides, but every transition now owns a full
+  // set of settings, so "configured" is true of all of them and distinguishes
+  // nothing.
+  if (status === "idle") {
     return (
       <GapContainer
         $expanded={false}
         {...activate}
-        aria-label={`Transition, not yet generated. Activate to select it.${selectedSuffix}`}
+        aria-label={`Transition, not yet generated, ${effectiveDuration} seconds. Activate to select it.${selectedSuffix}`}
       >
         <GapLine $variant="idle" />
-      </GapContainer>
-    );
-  }
-
-  // Idle but configured — solid line, no marker: nothing has been rendered
-  // here, so there is no gap between what is on screen and these settings.
-  if (status === "idle" && configured) {
-    return (
-      <GapContainer
-        $expanded={false}
-        {...activate}
-        aria-label={`Transition with custom settings, ${effectiveDuration} seconds. Activate to select it.${selectedSuffix}`}
-      >
-        <GapLine $variant="configured" />
       </GapContainer>
     );
   }

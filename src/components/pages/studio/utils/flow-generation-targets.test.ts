@@ -4,24 +4,12 @@ import type {
   FlowTransition,
   TransitionStatus,
 } from "@/types/flow.types";
-import type { TransitionGlobals } from "./transition-field-values";
 import {
   resolveGenerationTargets,
   resolveSelectedTargets,
 } from "./flow-generation-targets";
-import { currentRunSettings } from "./transition-staleness";
-
-const GLOBALS: TransitionGlobals = {
-  globalPresetId: "",
-  globalPrompt: "drift",
-  globalNegativePrompt: "",
-  globalDuration: 5,
-  globalModel: "kling-25-i2v",
-  globalNumInferenceSteps: 30,
-  globalGuidance: 0.5,
-  globalSeed: -1,
-  globalLora: undefined,
-};
+// Relative, not "@/": the alias does not resolve for value imports in tests.
+import { DEFAULT_TRANSITION_SETTINGS } from "../constants/default-transition-settings";
 
 const frame = (id: string): FlowReferenceFrame => ({
   id,
@@ -37,9 +25,10 @@ const at = (status: TransitionStatus): FlowTransition => ({
   fromFrameId: "a",
   toFrameId: "b",
   status,
+  settings: { ...DEFAULT_TRANSITION_SETTINGS },
 });
 
-/** Rendered from exactly the settings it currently resolves to. */
+/** Rendered from exactly the settings it currently holds. */
 const current = (overrides: Partial<FlowTransition> = {}): FlowTransition => {
   const base: FlowTransition = {
     ...at("processed"),
@@ -53,7 +42,7 @@ const current = (overrides: Partial<FlowTransition> = {}): FlowTransition => {
         dreamUuid: "dream-1",
         createdAt: 1,
         completed: true,
-        settings: currentRunSettings(base, GLOBALS),
+        settings: { ...base.settings },
       },
     ],
   };
@@ -64,37 +53,42 @@ const indexes = (result: { targets: Array<{ index: number }> }) =>
 
 describe("resolveGenerationTargets", () => {
   it("takes the never-rendered ones", () => {
-    const result = resolveGenerationTargets(
-      [at("idle"), at("failed")],
-      FRAMES,
-      GLOBALS,
-    );
+    const result = resolveGenerationTargets([at("idle"), at("failed")], FRAMES);
     expect(indexes(result)).toEqual([0, 1]);
     expect(result.neverRendered).toBe(2);
     expect(result.stale).toBe(0);
   });
 
   it("skips a rendered transition that still matches its settings", () => {
-    const result = resolveGenerationTargets([current()], FRAMES, GLOBALS);
+    const result = resolveGenerationTargets([current()], FRAMES);
     expect(indexes(result)).toEqual([]);
   });
 
   // The bug this all exists for: edit a rendered transition and Generate used
   // to skip it, because "processed" was read as "done".
   it("takes a rendered transition that has been edited since", () => {
-    const edited = { ...current(), promptOverride: "swirl" };
-    const result = resolveGenerationTargets([edited], FRAMES, GLOBALS);
+    const base = current();
+    const edited = {
+      ...base,
+      settings: { ...base.settings, prompt: "swirl" },
+    };
+    const result = resolveGenerationTargets([edited], FRAMES);
     expect(indexes(result)).toEqual([0]);
     expect(result.stale).toBe(1);
     expect(result.neverRendered).toBe(0);
   });
 
-  it("takes one made stale by a global moving under it", () => {
-    const result = resolveGenerationTargets([current()], FRAMES, {
-      ...GLOBALS,
-      globalPrompt: "swirl",
-    });
-    expect(indexes(result)).toEqual([0]);
+  // There is no longer any shared value that can move under a rendered
+  // transition — editing one is the only way to make it stale.
+  it("leaves a rendered transition alone when another is edited", () => {
+    const result = resolveGenerationTargets(
+      [
+        current(),
+        { ...current(), settings: { ...current().settings, prompt: "swirl" } },
+      ],
+      FRAMES,
+    );
+    expect(indexes(result)).toEqual([1]);
     expect(result.stale).toBe(1);
   });
 
@@ -102,7 +96,6 @@ describe("resolveGenerationTargets", () => {
     const result = resolveGenerationTargets(
       [at("queue"), at("processing")],
       FRAMES,
-      GLOBALS,
     );
     expect(indexes(result)).toEqual([]);
   });
@@ -112,7 +105,7 @@ describe("resolveGenerationTargets", () => {
       frame("a"),
       { ...frame("b"), naturalWidth: 1920, naturalHeight: 1080 },
     ];
-    const result = resolveGenerationTargets([at("idle")], frames, GLOBALS);
+    const result = resolveGenerationTargets([at("idle")], frames);
     expect(indexes(result)).toEqual([]);
     expect(result.skippedForMismatch).toBe(1);
   });

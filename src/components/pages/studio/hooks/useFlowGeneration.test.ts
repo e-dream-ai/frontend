@@ -1,6 +1,18 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
+  /** One complete settings object, shared by every fixture transition. */
+  const SETTINGS = {
+    prompt: "move",
+    negativePrompt: "",
+    duration: 5,
+    model: "ltx-i2v" as const,
+    steps: 20,
+    guidance: 3,
+    seed: -1,
+    highNoiseLoras: [],
+    lowNoiseLoras: [],
+  };
   const invalidateQueries = vi.fn();
   const post = vi.fn();
   const ensureFlowKeyframe = vi.fn(
@@ -14,11 +26,13 @@ const mocks = vi.hoisted(() => {
         fromFrameId: "frame-1",
         toFrameId: "frame-2",
         status: "idle",
+        settings: SETTINGS,
       },
       {
         fromFrameId: "frame-2",
         toFrameId: "frame-3",
         status: "idle",
+        settings: SETTINGS,
       },
     ],
     referenceFrames: [
@@ -26,16 +40,9 @@ const mocks = vi.hoisted(() => {
       { id: "frame-2", dreamUuid: "dream-2", name: "Two" },
       { id: "frame-3", dreamUuid: "dream-3", name: "Three" },
     ],
-    globalPresetId: "",
-    globalPrompt: "move",
-    globalNegativePrompt: "",
-    globalDuration: 5,
-    globalModel: "ltx-i2v",
-    globalNumInferenceSteps: 20,
-    globalGuidance: 3,
-    globalLora: undefined,
   };
   return {
+    SETTINGS,
     invalidateQueries,
     post,
     ensureFlowKeyframe,
@@ -44,6 +51,8 @@ const mocks = vi.hoisted(() => {
     store,
   };
 });
+
+const SETTINGS = mocks.SETTINGS;
 
 vi.mock("react", async () => {
   const actual = await vi.importActual<typeof import("react")>("react");
@@ -90,20 +99,6 @@ vi.mock("../utils/build-video-algo-params", () => ({
   buildVideoAlgoParams: () => ({ infinidream_algorithm: "ltx-i2v" }),
 }));
 
-vi.mock("../utils/resolve-flow-settings", () => ({
-  resolveEffectiveSettings: () => ({
-    presetId: "",
-    prompt: "move",
-    model: "ltx-i2v",
-    action: { prompt: "move", highNoiseLoras: [], lowNoiseLoras: [] },
-    duration: 5,
-    numInferenceSteps: 20,
-    guidance: 3,
-    seed: -1,
-    negativePrompt: "",
-  }),
-}));
-
 vi.mock("../utils/flow-keyframes", () => ({
   ensureFlowKeyframe: mocks.ensureFlowKeyframe,
 }));
@@ -148,23 +143,28 @@ describe("useFlowGeneration", () => {
       mocks.recordTransitionRun.mock.calls[0];
     expect(index).toBe(0);
     expect(dreamUuid).toBe("new-1");
-    expect(settings).toMatchObject({
-      promptOverride: "move",
-      modelOverride: "ltx-i2v",
-      durationOverride: 5,
-      numInferenceStepsOverride: 20,
-      guidanceOverride: 3,
-      seedOverride: -1,
-      loraOverride: [],
-    });
+    // The snapshot is a copy of the transition's own settings — nothing is
+    // resolved on the way in, so there is nothing that can drift out from
+    // under a recorded take.
+    expect(settings).toEqual(SETTINGS);
     expect(typeof createdAt).toBe("number");
   });
 
   it("regenerates an explicit selection, processed ones included", async () => {
     // Generate All skips these; asking for a rerun of what you picked must not.
     mocks.store.transitions = [
-      { fromFrameId: "frame-1", toFrameId: "frame-2", status: "processed" },
-      { fromFrameId: "frame-2", toFrameId: "frame-3", status: "processed" },
+      {
+        fromFrameId: "frame-1",
+        toFrameId: "frame-2",
+        status: "processed",
+        settings: SETTINGS,
+      },
+      {
+        fromFrameId: "frame-2",
+        toFrameId: "frame-3",
+        status: "processed",
+        settings: SETTINGS,
+      },
     ];
 
     const { generateMany } = useFlowGeneration();
@@ -179,8 +179,18 @@ describe("useFlowGeneration", () => {
     );
 
     mocks.store.transitions = [
-      { fromFrameId: "frame-1", toFrameId: "frame-2", status: "idle" },
-      { fromFrameId: "frame-2", toFrameId: "frame-3", status: "idle" },
+      {
+        fromFrameId: "frame-1",
+        toFrameId: "frame-2",
+        status: "idle",
+        settings: SETTINGS,
+      },
+      {
+        fromFrameId: "frame-2",
+        toFrameId: "frame-3",
+        status: "idle",
+        settings: SETTINGS,
+      },
     ];
   });
 

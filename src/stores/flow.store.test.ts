@@ -22,6 +22,12 @@ globalThis.localStorage = {
 
 // Dynamic import after localStorage is set up (persist middleware needs it)
 const { useFlowStore, MAX_TRANSITION_HISTORY } = await import("./flow.store");
+const { DEFAULT_TRANSITION_SETTINGS } = await import(
+  "../components/pages/studio/constants/default-transition-settings"
+);
+const { ACTION_PRESETS } = await import(
+  "../components/pages/studio/constants/action-presets"
+);
 
 // Reset store between tests
 beforeEach(() => {
@@ -41,17 +47,8 @@ function seedTransitions(count: number) {
   }
 }
 
-const RUN_SETTINGS = {
-  presetOverride: "Abstract",
-  promptOverride: "drift",
-  negativePromptOverride: "",
-  durationOverride: 5,
-  modelOverride: "kling-25-i2v" as const,
-  numInferenceStepsOverride: 30,
-  guidanceOverride: 0.5,
-  seedOverride: -1,
-  loraOverride: [],
-};
+/** A run snapshot is just a copy of the settings the run used. */
+const RUN_SETTINGS = { ...DEFAULT_TRANSITION_SETTINGS, prompt: "drift" };
 
 describe("flow store", () => {
   describe("reference frames", () => {
@@ -266,14 +263,14 @@ describe("Phase 1: transitions", () => {
       // Simulate generation completing
       store.setTransitionDream(0, "dream-abc");
       store.updateTransitionStatus(0, "processed");
-      store.setTransitionOverride(0, { promptOverride: "custom prompt" });
+      store.setTransitionSettings([0], { prompt: "custom prompt" });
 
       // Recompute should preserve state
       store.recomputeTransitions();
       const { transitions } = useFlowStore.getState();
       expect(transitions[0].dreamUuid).toBe("dream-abc");
       expect(transitions[0].status).toBe("processed");
-      expect(transitions[0].promptOverride).toBe("custom prompt");
+      expect(transitions[0].settings.prompt).toBe("custom prompt");
     });
 
     it("adds loop transition with real frame IDs when loop enabled", () => {
@@ -306,41 +303,189 @@ describe("Phase 1: transitions", () => {
     });
   });
 
-  describe("transition overrides", () => {
-    it("sets per-transition overrides", () => {
+  describe("transition settings", () => {
+    it("writes fields onto one transition", () => {
       const store = useFlowStore.getState();
       store.addReferenceFrame(makeKf("a"));
       store.addReferenceFrame(makeKf("b"));
       store.recomputeTransitions();
-      store.setTransitionOverride(0, {
-        presetOverride: "Camera Basics",
-        durationOverride: 8,
-      });
+      store.setTransitionSettings([0], { duration: 8, prompt: "swirl" });
 
       const t = useFlowStore.getState().transitions[0];
-      expect(t.presetOverride).toBe("Camera Basics");
-      expect(t.durationOverride).toBe(8);
+      expect(t.settings.duration).toBe(8);
+      expect(t.settings.prompt).toBe("swirl");
     });
 
-    it("clears all overrides on a transition", () => {
+    it("writes the same fields onto several transitions at once", () => {
+      const store = useFlowStore.getState();
+      for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
+      store.recomputeTransitions();
+      store.setTransitionSettings([0, 1], { duration: 10 });
+
+      const { transitions } = useFlowStore.getState();
+      expect(transitions.map((t) => t.settings.duration)).toEqual([10, 10]);
+    });
+
+    it("leaves untouched fields alone", () => {
       const store = useFlowStore.getState();
       store.addReferenceFrame(makeKf("a"));
       store.addReferenceFrame(makeKf("b"));
       store.recomputeTransitions();
-      store.setTransitionOverride(0, {
-        presetOverride: "Organic",
-        promptOverride: "test",
-        durationOverride: 10,
-        modelOverride: "ltx-i2v",
-      });
-      store.clearTransitionOverride(0);
+      const before = useFlowStore.getState().transitions[0].settings;
+      store.setTransitionSettings([0], { seed: 7 });
 
-      const t = useFlowStore.getState().transitions[0];
-      expect(t.presetOverride).toBeUndefined();
-      expect(t.promptOverride).toBeUndefined();
-      expect(t.durationOverride).toBeUndefined();
-      expect(t.modelOverride).toBeUndefined();
-      expect(t.loraOverride).toBeUndefined();
+      const after = useFlowStore.getState().transitions[0].settings;
+      expect(after.seed).toBe(7);
+      expect(after.prompt).toBe(before.prompt);
+      expect(after.model).toBe(before.model);
+    });
+
+    it("does not touch a transition outside the given indices", () => {
+      // The heart of dropping inheritance: one write reaches exactly the
+      // transitions named, and nothing else can pick the value up later.
+      const store = useFlowStore.getState();
+      for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
+      store.recomputeTransitions();
+      store.setTransitionSettings([0], { prompt: "only me" });
+
+      const { transitions } = useFlowStore.getState();
+      expect(transitions[0].settings.prompt).toBe("only me");
+      expect(transitions[1].settings.prompt).toBe(
+        DEFAULT_TRANSITION_SETTINGS.prompt,
+      );
+    });
+  });
+
+  describe("selection follows the transition list", () => {
+    it("selects the first transition the moment it exists", () => {
+      // Adding frames derives transitions inline; if that path skips the
+      // selection rule the panel comes up wired to nothing.
+      const store = useFlowStore.getState();
+      store.addReferenceFrame(makeKf("a"));
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
+      store.addReferenceFrame(makeKf("b"));
+      expect(useFlowStore.getState().transitions).toHaveLength(1);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0]);
+    });
+
+    it("extends an all-selection onto transitions added after it", () => {
+      const store = useFlowStore.getState();
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0]);
+
+      store.addReferenceFrame(makeKf("c"));
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0, 1]);
+      store.addReferenceFrame(makeKf("d"));
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
+        0, 1, 2,
+      ]);
+    });
+
+    it("leaves a narrowed selection narrow when a frame is added", () => {
+      const store = useFlowStore.getState();
+      for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
+      store.selectTransition(0);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0]);
+
+      store.addReferenceFrame(makeKf("d"));
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0]);
+    });
+
+    it("keeps the selection whole when reordering frames", () => {
+      const store = useFlowStore.getState();
+      for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
+      store.reorderReferenceFrames(["c", "a", "b"]);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0, 1]);
+    });
+
+    it("grows the selection when looping adds a transition", () => {
+      const store = useFlowStore.getState();
+      for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
+      store.setLoop(true);
+      expect(useFlowStore.getState().transitions).toHaveLength(3);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
+        0, 1, 2,
+      ]);
+    });
+
+    it("empties the selection only when there are no transitions", () => {
+      const store = useFlowStore.getState();
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0]);
+
+      store.removeReferenceFrame("b");
+      expect(useFlowStore.getState().transitions).toHaveLength(0);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
+    });
+  });
+
+  describe("new transitions inherit nothing, they copy", () => {
+    it("seeds the first transition from the built-in default", () => {
+      const store = useFlowStore.getState();
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
+      store.recomputeTransitions();
+      expect(useFlowStore.getState().transitions[0].settings).toEqual(
+        DEFAULT_TRANSITION_SETTINGS,
+      );
+    });
+
+    it("copies the previous transition's settings for a frame added at the end", () => {
+      const store = useFlowStore.getState();
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
+      store.recomputeTransitions();
+      store.setTransitionSettings([0], { prompt: "swirl", duration: 8 });
+
+      store.addReferenceFrame(makeKf("c"));
+      store.recomputeTransitions();
+
+      const { transitions } = useFlowStore.getState();
+      expect(transitions).toHaveLength(2);
+      expect(transitions[1].settings.prompt).toBe("swirl");
+      expect(transitions[1].settings.duration).toBe(8);
+    });
+
+    it("copies, so editing the new one does not touch its source", () => {
+      const store = useFlowStore.getState();
+      store.addReferenceFrame(makeKf("a"));
+      store.addReferenceFrame(makeKf("b"));
+      store.recomputeTransitions();
+      store.setTransitionSettings([0], { prompt: "swirl" });
+      store.addReferenceFrame(makeKf("c"));
+      store.recomputeTransitions();
+
+      store.setTransitionSettings([1], { prompt: "drift" });
+      const { transitions } = useFlowStore.getState();
+      expect(transitions[0].settings.prompt).toBe("swirl");
+      expect(transitions[1].settings.prompt).toBe("drift");
+    });
+
+    it("takes the new neighbour's settings for a frame inserted in the middle", () => {
+      const store = useFlowStore.getState();
+      for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
+      store.recomputeTransitions();
+      store.setTransitionSettings([0], { prompt: "first" });
+      store.setTransitionSettings([1], { prompt: "second" });
+
+      // a -> x -> b -> c: the a:x pair is new and sits at index 0, so it has
+      // no predecessor and falls back to the default; x:b follows it.
+      store.addReferenceFrame(makeKf("x"));
+      store.reorderReferenceFrames(["a", "x", "b", "c"]);
+      store.recomputeTransitions();
+
+      const { transitions } = useFlowStore.getState();
+      expect(transitions).toHaveLength(3);
+      expect(transitions[0].settings.prompt).toBe(
+        DEFAULT_TRANSITION_SETTINGS.prompt,
+      );
+      expect(transitions[1].settings.prompt).toBe(
+        transitions[0].settings.prompt,
+      );
+      // b -> c survived untouched.
+      expect(transitions[2].settings.prompt).toBe("second");
     });
   });
 
@@ -396,11 +541,156 @@ describe("Phase 1: transitions", () => {
       const migrate = (useFlowStore as any).persist?.getOptions?.()?.migrate;
       const migrated = migrate(v4State, 4) as Record<string, unknown>;
 
-      expect(migrated.globalGuidance).toBe(0.5);
+      // v7 runs on the way out, so the guidance reset lands as a value on each
+      // transition rather than as a global.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const transitions = migrated.transitions as any[];
+      expect(migrated).not.toHaveProperty("globalGuidance");
+      expect(transitions[0].settings.guidance).toBe(0.5);
       expect(transitions[0]).not.toHaveProperty("guidanceOverride");
-      expect(transitions[1].durationOverride).toBe(10);
+      expect(transitions[1].settings.duration).toBe(10);
+    });
+  });
+
+  describe("migration v6 → v7 (overrides → settings, #728)", () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const migrate = (useFlowStore as any).persist?.getOptions?.()?.migrate;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const run = (state: unknown) => migrate(state, 6) as any;
+
+    it("materialises the global a transition used to inherit", () => {
+      const migrated = run({
+        globalPrompt: "drift",
+        globalDuration: 8,
+        transitions: [{ fromFrameId: "a", toFrameId: "b", status: "idle" }],
+      });
+      expect(migrated.transitions[0].settings.prompt).toBe("drift");
+      expect(migrated.transitions[0].settings.duration).toBe(8);
+    });
+
+    it("keeps an override in preference to the global", () => {
+      const migrated = run({
+        globalPrompt: "drift",
+        transitions: [
+          { fromFrameId: "a", toFrameId: "b", promptOverride: "swirl" },
+        ],
+      });
+      expect(migrated.transitions[0].settings.prompt).toBe("swirl");
+    });
+
+    it("treats an empty-string override as a real value, not absence", () => {
+      const migrated = run({
+        globalNegativePrompt: "blurry",
+        transitions: [
+          { fromFrameId: "a", toFrameId: "b", negativePromptOverride: "" },
+        ],
+      });
+      expect(migrated.transitions[0].settings.negativePrompt).toBe("");
+    });
+
+    it("falls through to the preset's prompt when nothing else stored one", () => {
+      const migrated = run({
+        globalPresetId: "Abstract",
+        globalPrompt: "",
+        transitions: [{ fromFrameId: "a", toFrameId: "b" }],
+      });
+      expect(migrated.transitions[0].settings.prompt).toBe(
+        DEFAULT_TRANSITION_SETTINGS.prompt,
+      );
+    });
+
+    it("recovers the preset's low-noise LoRAs when the high set still matches", () => {
+      // The old resolver read the pack's *first* action, so the fixture must
+      // use a pack whose first action carries the LoRAs.
+      const preset = ACTION_PRESETS.find(
+        (pack) => pack.actions[0]?.lowNoiseLoras?.length,
+      );
+      if (!preset) return;
+      const action = preset.actions[0];
+      const migrated = run({
+        globalPresetId: preset.name,
+        transitions: [
+          {
+            fromFrameId: "a",
+            toFrameId: "b",
+            loraOverride: action.highNoiseLoras,
+          },
+        ],
+      });
+      expect(migrated.transitions[0].settings.lowNoiseLoras).toEqual(
+        action.lowNoiseLoras,
+      );
+    });
+
+    it("gives two transitions that shared a global their own copies", () => {
+      // The behaviour change, made concrete: after migrating, editing one can
+      // no longer move the other.
+      const migrated = run({
+        globalPrompt: "drift",
+        transitions: [
+          { fromFrameId: "a", toFrameId: "b" },
+          { fromFrameId: "b", toFrameId: "c" },
+        ],
+      });
+      const [first, second] = migrated.transitions;
+      expect(first.settings.prompt).toBe("drift");
+      expect(second.settings.prompt).toBe("drift");
+      expect(first.settings).not.toBe(second.settings);
+    });
+
+    it("converts a recorded run snapshot too, so restore still works", () => {
+      const migrated = run({
+        globalPrompt: "drift",
+        transitions: [
+          {
+            fromFrameId: "a",
+            toFrameId: "b",
+            status: "processed",
+            dreamUuid: "dream-1",
+            history: [
+              {
+                dreamUuid: "dream-1",
+                createdAt: 1,
+                completed: true,
+                settings: {
+                  promptOverride: "as rendered",
+                  durationOverride: 10,
+                },
+              },
+            ],
+          },
+        ],
+      });
+      const entry = migrated.transitions[0].history[0];
+      expect(entry.settings.prompt).toBe("as rendered");
+      expect(entry.settings.duration).toBe(10);
+      expect(entry.settings).not.toHaveProperty("promptOverride");
+    });
+
+    it("leaves a history entry that never had settings alone", () => {
+      const migrated = run({
+        transitions: [
+          {
+            fromFrameId: "a",
+            toFrameId: "b",
+            history: [{ dreamUuid: "dream-1", createdAt: 1, completed: true }],
+          },
+        ],
+      });
+      expect(migrated.transitions[0].history[0].settings).toBeUndefined();
+    });
+
+    it("drops the override keys and the globals", () => {
+      const migrated = run({
+        globalPrompt: "drift",
+        globalLora: [],
+        transitions: [
+          { fromFrameId: "a", toFrameId: "b", promptOverride: "swirl" },
+        ],
+      });
+      expect(migrated).not.toHaveProperty("globalPrompt");
+      expect(migrated).not.toHaveProperty("globalLora");
+      expect(migrated.transitions[0]).not.toHaveProperty("promptOverride");
     });
   });
 
@@ -486,51 +776,68 @@ describe("Phase 1: transitions", () => {
   describe("global settings", () => {
     it("has correct defaults", () => {
       const s = useFlowStore.getState();
-      expect(s.globalPresetId).toBe("Abstract");
-      expect(s.globalPrompt).toBe("");
-      expect(s.globalNegativePrompt).toBe("");
-      expect(s.globalDuration).toBe(5);
-      expect(s.globalModel).toBe("kling-25-i2v");
-      expect(s.globalNumInferenceSteps).toBe(30);
-      expect(s.globalGuidance).toBe(0.5);
+      expect(s.transitions).toEqual([]);
       expect(s.selectedTransitionIndices).toEqual([]);
       expect(s.settingsExpanded).toBe(false);
     });
 
-    it("sets global settings individually", () => {
-      const store = useFlowStore.getState();
-      store.setGlobalPreset("Organic");
-      store.setGlobalPrompt("gentle drift");
-      store.setGlobalNegativePrompt("blurry, distorted");
-      store.setGlobalDuration(8);
-      store.setGlobalModel("wan-i2v");
-      store.setGlobalNumInferenceSteps(20);
-      store.setGlobalGuidance(3.5);
-
-      const s = useFlowStore.getState();
-      expect(s.globalPresetId).toBe("Organic");
-      expect(s.globalPrompt).toBe("gentle drift");
-      expect(s.globalNegativePrompt).toBe("blurry, distorted");
-      expect(s.globalDuration).toBe(8);
-      expect(s.globalModel).toBe("wan-i2v");
-      expect(s.globalNumInferenceSteps).toBe(20);
-      expect(s.globalGuidance).toBe(3.5);
+    it("seeds a transition from the built-in default", () => {
+      seedTransitions(1);
+      expect(useFlowStore.getState().transitions[0].settings).toEqual(
+        DEFAULT_TRANSITION_SETTINGS,
+      );
     });
   });
 
   describe("UI state", () => {
-    it("selects and deselects transitions", () => {
+    it("selects transitions", () => {
       seedTransitions(4);
-      const store = useFlowStore.getState();
-      store.selectTransition(2);
+      useFlowStore.getState().selectTransition(2);
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([2]);
-      store.selectTransition(null);
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
     });
 
-    it("ignores selection of an index with no transition", () => {
+    // The panel edits the selection and has no other scope, so deselecting
+    // everything would leave it with nothing to write to.
+    it("falls back to the whole flow instead of an empty selection", () => {
+      seedTransitions(3);
+      useFlowStore.getState().selectTransition(null);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
+        0, 1, 2,
+      ]);
+    });
+
+    it("falls back to the whole flow when an index names no transition", () => {
       seedTransitions(2);
       useFlowStore.getState().selectTransition(9);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0, 1]);
+    });
+
+    it("does nothing when the only selected transition is toggled off", () => {
+      // It used to fall back to selecting everything, which read as a wild
+      // overshoot for a click asking to deselect one thing.
+      seedTransitions(3);
+      const store = () => useFlowStore.getState();
+      store().selectTransition(1);
+      store().toggleTransitionSelection(1);
+      expect(store().selectedTransitionIndices).toEqual([1]);
+    });
+
+    it("still toggles one off while others remain selected", () => {
+      seedTransitions(3);
+      const store = () => useFlowStore.getState();
+      store().selectAllTransitions();
+      store().toggleTransitionSelection(1);
+      expect(store().selectedTransitionIndices).toEqual([0, 2]);
+      store().toggleTransitionSelection(2);
+      expect(store().selectedTransitionIndices).toEqual([0]);
+      // ...and stops at the last one.
+      store().toggleTransitionSelection(0);
+      expect(store().selectedTransitionIndices).toEqual([0]);
+    });
+
+    it("keeps an empty selection when there is nothing to select", () => {
+      expect(useFlowStore.getState().transitions).toHaveLength(0);
+      useFlowStore.getState().selectTransition(null);
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
     });
 
@@ -547,14 +854,21 @@ describe("Phase 1: transitions", () => {
       expect(store().selectedTransitionIndices).toEqual([1, 0]);
     });
 
-    it("selects all and clears all", () => {
+    it("selects all", () => {
       seedTransitions(3);
       useFlowStore.getState().selectAllTransitions();
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
         0, 1, 2,
       ]);
+    });
+
+    it("clearing lands on the whole flow, not on nothing", () => {
+      seedTransitions(3);
+      useFlowStore.getState().selectTransition(1);
       useFlowStore.getState().clearTransitionSelection();
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
+        0, 1, 2,
+      ]);
     });
 
     it("drops selected indices when deleting a frame shortens the flow", () => {
@@ -842,16 +1156,18 @@ describe("transition run history", () => {
     expect(store().transitions[0].status).toBe("failed");
   });
 
-  it("keeps history when overrides are reset to defaults", () => {
+  it("keeps history when settings are reset to the default", () => {
     seedTransitions(1);
     store().recordTransitionRun(0, "dream-a", RUN_SETTINGS, 1000);
     store().updateTransitionStatus(0, "processed");
-    store().setTransitionOverride(0, { promptOverride: "custom" });
+    store().setTransitionSettings([0], { prompt: "custom" });
 
-    store().clearTransitionOverride(0);
+    // Past runs are results, not settings — rewriting settings must not throw
+    // them away.
+    store().setTransitionSettings([0], { ...DEFAULT_TRANSITION_SETTINGS });
 
     const t = store().transitions[0];
-    expect(t.promptOverride).toBeUndefined();
+    expect(t.settings).toEqual(DEFAULT_TRANSITION_SETTINGS);
     expect(t.history).toHaveLength(1);
   });
 

@@ -1,7 +1,12 @@
 import { useMemo, useCallback, useState } from "react";
-import { useFlowStore, LOOP_FRAME_ID } from "@/stores/flow.store";
+import {
+  useFlowStore,
+  LOOP_FRAME_ID,
+  DEFAULT_TRANSITION_SETTINGS,
+} from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import type { LoRAConfig, VideoModel } from "@/types/studio.types";
+import type { TransitionSettings } from "@/types/flow.types";
 import { useModels } from "@/api/model/query/useModels";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { CostEstimate } from "@/components/shared/cost-estimate/cost-estimate";
@@ -25,9 +30,11 @@ import { useSeedInput } from "@/components/pages/studio/hooks/useSeedInput";
 import { GuidanceField } from "./guidance-field";
 import { ForceSettingsDialog } from "./force-settings-dialog";
 import { TransitionHistory } from "./transition-history";
+import { formatRunTime } from "@/components/pages/studio/utils/transition-history.util";
 import {
   getPresetGroups,
-  resolvePresetAction,
+  matchingPresetName,
+  presetSettingsPatch,
 } from "@/components/pages/studio/utils/resolve-flow-settings";
 import { resolveNegativePromptSupport } from "@/components/pages/studio/utils/negative-prompt-support";
 import {
@@ -37,7 +44,6 @@ import {
 import {
   selectionHasMismatch,
   type TransitionField,
-  type TransitionGlobals,
 } from "@/components/pages/studio/utils/transition-field-values";
 import {
   PanelContainer,
@@ -63,6 +69,7 @@ import {
   NumberInput,
   ValidationHint,
   RequiredMark,
+  SubtitleTime,
 } from "./transition-settings-panel.styled";
 
 interface TransitionSettingsPanelProps {
@@ -89,37 +96,15 @@ export function TransitionSettingsPanel({
   isGenerating,
 }: TransitionSettingsPanelProps) {
   // Data via useShallow (re-renders when any selected value changes).
-  const {
-    transitions,
-    referenceFrames,
-    selectedIndices,
-    settingsExpanded,
-    globalPresetId,
-    globalPrompt,
-    globalNegativePrompt,
-    globalDuration,
-    globalModel,
-    globalNumInferenceSteps,
-    globalGuidance,
-    globalSeed,
-    globalLora,
-  } = useFlowStore(
-    useShallow((s) => ({
-      transitions: s.transitions,
-      referenceFrames: s.referenceFrames,
-      selectedIndices: s.selectedTransitionIndices,
-      settingsExpanded: s.settingsExpanded,
-      globalPresetId: s.globalPresetId,
-      globalPrompt: s.globalPrompt,
-      globalNegativePrompt: s.globalNegativePrompt,
-      globalDuration: s.globalDuration,
-      globalModel: s.globalModel,
-      globalNumInferenceSteps: s.globalNumInferenceSteps,
-      globalGuidance: s.globalGuidance,
-      globalSeed: s.globalSeed,
-      globalLora: s.globalLora,
-    })),
-  );
+  const { transitions, referenceFrames, selectedIndices, settingsExpanded } =
+    useFlowStore(
+      useShallow((s) => ({
+        transitions: s.transitions,
+        referenceFrames: s.referenceFrames,
+        selectedIndices: s.selectedTransitionIndices,
+        settingsExpanded: s.settingsExpanded,
+      })),
+    );
 
   const [pendingEdit, setPendingEdit] = useState<PendingEdit | null>(null);
 
@@ -137,27 +122,32 @@ export function TransitionSettingsPanel({
   const selectedTransition =
     primaryIndex !== null ? transitions[primaryIndex] : null;
 
-  // Effective values (override > global > preset fallback)
-  const currentPresetId = selectedTransition?.presetOverride ?? globalPresetId;
-  const presetAction = useMemo(
-    () => resolvePresetAction(currentPresetId),
-    [currentPresetId],
-  );
-  const storedPrompt = selectedTransition?.promptOverride ?? globalPrompt;
-  const currentPrompt = storedPrompt || presetAction?.prompt || "";
-  const currentNegativePrompt =
-    selectedTransition?.negativePromptOverride ?? globalNegativePrompt;
-  const currentDuration =
-    selectedTransition?.durationOverride ?? globalDuration;
-  const currentModel = selectedTransition?.modelOverride ?? globalModel;
+  // What the panel shows is what the primary transition stores — no fallback
+  // chain, no preset resolution. The selection is never empty while there are
+  // transitions (see `ensureSelection`), so the default is only a type-level
+  // floor, not a state anyone reaches.
+  const current = selectedTransition?.settings ?? DEFAULT_TRANSITION_SETTINGS;
+  const currentPrompt = current.prompt;
+  const currentNegativePrompt = current.negativePrompt;
+  const currentDuration = current.duration;
+  const currentModel = current.model;
   const currentConstraints = modelConstraints.get(currentModel);
   const currentModelDurations = currentConstraints?.durationsSec;
   const supportsSteps = currentConstraints?.supportsSteps ?? true;
-  const currentSteps =
-    selectedTransition?.numInferenceStepsOverride ?? globalNumInferenceSteps;
-  const currentGuidance =
-    selectedTransition?.guidanceOverride ?? globalGuidance;
-  const currentSeed = selectedTransition?.seedOverride ?? globalSeed;
+  const currentSteps = current.steps;
+  const currentGuidance = current.guidance;
+  const currentSeed = current.seed;
+
+  // Durations are restricted by whichever LoRAs are actually stored, so the
+  // clamp reads the settings rather than the preset they may have come from.
+  const currentAction = useMemo(
+    () => ({
+      prompt: current.prompt,
+      highNoiseLoras: current.highNoiseLoras,
+      lowNoiseLoras: current.lowNoiseLoras,
+    }),
+    [current.prompt, current.highNoiseLoras, current.lowNoiseLoras],
+  );
   const guidanceConstraint = resolveGuidanceConstraint(
     currentModel,
     currentConstraints,
@@ -171,14 +161,20 @@ export function TransitionSettingsPanel({
     [currentModel],
   );
 
+  /** The preset these settings still match, or "" for Custom. */
+  const currentPresetName = useMemo(
+    () =>
+      matchingPresetName(
+        current,
+        presetGroups.flatMap((g) => g.presets),
+      ),
+    [current, presetGroups],
+  );
+
   // Compute allowed durations
   const allowedDurations = useMemo(
-    () =>
-      getAllowedDurationsForActions(
-        presetAction ? [presetAction] : [],
-        currentModelDurations,
-      ),
-    [presetAction, currentModelDurations],
+    () => getAllowedDurationsForActions([currentAction], currentModelDurations),
+    [currentAction, currentModelDurations],
   );
 
   // Extract available LoRA options for the current model from preset packs.
@@ -212,71 +208,13 @@ export function TransitionSettingsPanel({
     return options;
   }, [currentModel]);
 
-  // Determine current effective LoRA: per-transition override > global > preset > none.
-  // Returns the LoRA path key for matching against dropdown options.
-  const currentLoraKey = useMemo(() => {
-    const override = selectedTransition?.loraOverride ?? globalLora;
-    if (override !== undefined) return override[0]?.path ?? "";
-    if (presetAction?.highNoiseLoras?.length) {
-      return presetAction.highNoiseLoras[0].path;
-    }
-    return "";
-  }, [selectedTransition?.loraOverride, globalLora, presetAction]);
+  /** The stored LoRA, as the path key the dropdown matches on. */
+  const currentLoraKey = current.highNoiseLoras[0]?.path ?? "";
 
-  type FieldMap = {
-    presetOverride: string;
-    promptOverride: string;
-    negativePromptOverride: string;
-    durationOverride: number;
-    modelOverride: VideoModel;
-    numInferenceStepsOverride: number;
-    guidanceOverride: number;
-    seedOverride: number;
-  };
-
-  /**
-   * Write one field to every target. `indices` empty means global mode — the
-   * same edit lands on the flow-wide defaults instead.
-   */
-  const writeField = useCallback(
-    <K extends keyof FieldMap>(
-      indices: readonly number[],
-      field: K,
-      value: FieldMap[K],
-    ) => {
-      const store = useFlowStore.getState();
-      if (indices.length > 0) {
-        for (const index of indices) {
-          store.setTransitionOverride(index, { [field]: value });
-        }
-        return;
-      }
-      switch (field) {
-        case "presetOverride":
-          store.setGlobalPreset(value as string);
-          break;
-        case "promptOverride":
-          store.setGlobalPrompt(value as string);
-          break;
-        case "negativePromptOverride":
-          store.setGlobalNegativePrompt(value as string);
-          break;
-        case "durationOverride":
-          store.setGlobalDuration(value as number);
-          break;
-        case "modelOverride":
-          store.setGlobalModel(value as VideoModel);
-          break;
-        case "numInferenceStepsOverride":
-          store.setGlobalNumInferenceSteps(value as number);
-          break;
-        case "guidanceOverride":
-          store.setGlobalGuidance(value as number);
-          break;
-        case "seedOverride":
-          store.setGlobalSeed(value as number);
-          break;
-      }
+  /** Write fields to every selected transition. The only settings write. */
+  const writeFields = useCallback(
+    (indices: readonly number[], patch: Partial<TransitionSettings>) => {
+      useFlowStore.getState().setTransitionSettings(indices, patch);
     },
     [],
   );
@@ -302,19 +240,8 @@ export function TransitionSettingsPanel({
         const selected = indices
           .map((i) => state.transitions[i])
           .filter((t): t is NonNullable<typeof t> => Boolean(t));
-        const globals: TransitionGlobals = {
-          globalPresetId: state.globalPresetId,
-          globalPrompt: state.globalPrompt,
-          globalNegativePrompt: state.globalNegativePrompt,
-          globalDuration: state.globalDuration,
-          globalModel: state.globalModel,
-          globalNumInferenceSteps: state.globalNumInferenceSteps,
-          globalGuidance: state.globalGuidance,
-          globalSeed: state.globalSeed,
-          globalLora: state.globalLora,
-        };
         const clash = gatedFields.find((field) =>
-          selectionHasMismatch(selected, globals, field),
+          selectionHasMismatch(selected, field),
         );
         if (clash) {
           setPendingEdit({ run: () => run(indices) });
@@ -328,75 +255,63 @@ export function TransitionSettingsPanel({
 
   /** Edit a single field, gated on that same field. */
   const setValue = useCallback(
-    <K extends keyof FieldMap>(field: K, value: FieldMap[K]) => {
-      applyEdit([field as TransitionField], (indices) =>
-        writeField(indices, field, value),
+    <K extends keyof TransitionSettings>(
+      field: K,
+      value: TransitionSettings[K],
+    ) => {
+      applyEdit([field], (indices) =>
+        writeFields(indices, { [field]: value } as Partial<TransitionSettings>),
       );
     },
-    [applyEdit, writeField],
+    [applyEdit, writeFields],
   );
 
-  const seedInput = useSeedInput(currentSeed, (seed) =>
-    setValue("seedOverride", seed),
-  );
+  const seedInput = useSeedInput(currentSeed, (seed) => setValue("seed", seed));
 
-  const handlePresetChange = useCallback(
+  /**
+   * Apply a preset: stamp its prompt, negative prompt and LoRAs into the
+   * selection, then forget it. Nothing records which preset ran — the fields it
+   * wrote are visible in the panel and editable like any others.
+   */
+  const handleApplyPreset = useCallback(
     (presetName: string) => {
-      applyEdit(["presetOverride"], (indices) => {
-        writeField(indices, "presetOverride", presetName || "");
-
-        // Fill prompt (and negative prompt) from preset. The negative is cleared
-        // for presets that don't define one, so a previous preset's negative
-        // never silently rides along on the next transition.
-        const action = resolvePresetAction(presetName);
-        if (action) {
-          writeField(indices, "promptOverride", action.prompt);
-          writeField(
-            indices,
-            "negativePromptOverride",
-            action.negativePrompt ?? "",
+      if (!presetName) return;
+      const patch = presetSettingsPatch(presetName);
+      if (!patch) return;
+      applyEdit(
+        ["prompt", "negativePrompt", "highNoiseLoras", "lowNoiseLoras"],
+        (indices) => {
+          // Clamp duration against the LoRAs the preset just wrote, which can
+          // restrict what the model will accept.
+          const newAllowed = getAllowedDurationsForActions(
+            [
+              {
+                highNoiseLoras: patch.highNoiseLoras,
+                lowNoiseLoras: patch.lowNoiseLoras,
+              },
+            ],
+            currentModelDurations,
           );
-        }
-
-        // Clear any explicit LoRA override so the preset's LoRA takes effect
-        const store = useFlowStore.getState();
-        if (indices.length > 0) {
-          for (const index of indices) {
-            store.setTransitionOverride(index, { loraOverride: undefined });
-          }
-        } else {
-          store.setGlobalLora(undefined);
-        }
-
-        // Clamp duration if needed
-        const newAllowed = getAllowedDurationsForActions(
-          action ? [action] : [],
-          currentModelDurations,
-        );
-        const clamped = clampDurationToAllowed(currentDuration, newAllowed);
-        if (clamped !== currentDuration) {
-          writeField(indices, "durationOverride", clamped);
-        }
-      });
+          const clamped = clampDurationToAllowed(currentDuration, newAllowed);
+          writeFields(indices, {
+            ...patch,
+            ...(clamped !== currentDuration && { duration: clamped }),
+          });
+        },
+      );
     },
-    [applyEdit, writeField, currentModelDurations, currentDuration],
+    [applyEdit, writeFields, currentModelDurations, currentDuration],
   );
 
   const handleModelChange = useCallback(
     (model: VideoModel) => {
-      applyEdit(["modelOverride"], (indices) => {
-        writeField(indices, "modelOverride", model);
-
+      applyEdit(["model"], (indices) => {
         const fixedDurations = modelConstraints.get(model)?.durationsSec;
         const newAllowed = getAllowedDurationsForActions(
-          presetAction ? [presetAction] : [],
+          [currentAction],
           fixedDurations,
         );
         const clamped = clampDurationToAllowed(currentDuration, newAllowed);
-        if (clamped !== currentDuration) {
-          writeField(indices, "durationOverride", clamped);
-        }
-
         const nextConstraint = resolveGuidanceConstraint(
           model,
           modelConstraints.get(model),
@@ -405,15 +320,19 @@ export function TransitionSettingsPanel({
           currentGuidance,
           nextConstraint,
         );
-        if (clampedGuidance !== currentGuidance) {
-          writeField(indices, "guidanceOverride", clampedGuidance);
-        }
+        writeFields(indices, {
+          model,
+          ...(clamped !== currentDuration && { duration: clamped }),
+          ...(clampedGuidance !== currentGuidance && {
+            guidance: clampedGuidance,
+          }),
+        });
       });
     },
     [
       applyEdit,
-      writeField,
-      presetAction,
+      writeFields,
+      currentAction,
       currentDuration,
       currentGuidance,
       modelConstraints,
@@ -422,79 +341,47 @@ export function TransitionSettingsPanel({
 
   const handleLoraChange = useCallback(
     (loraKey: string) => {
-      applyEdit(["loraOverride"], (indices) => {
-        const loraOption = loraKey
+      applyEdit(["highNoiseLoras", "lowNoiseLoras"], (indices) => {
+        const option = loraKey
           ? loraOptions.find((o) => o.key === loraKey)
           : undefined;
-        const nextLora = loraOption?.highNoiseLoras ?? [];
+        // Both halves move together. The low-noise set used to be recovered by
+        // matching the high-noise one back to a preset; storing it here is what
+        // lets a LoRA keep its pair without that lookup.
+        const highNoiseLoras = option?.highNoiseLoras ?? [];
+        const lowNoiseLoras = option?.lowNoiseLoras ?? [];
 
-        const store = useFlowStore.getState();
-        if (indices.length > 0) {
-          for (const index of indices) {
-            store.setTransitionOverride(index, { loraOverride: nextLora });
-          }
-        } else {
-          store.setGlobalLora(nextLora);
-        }
-
-        // Re-clamp duration against the new LoRA, since LoRAs can restrict durations.
-        const clampAction = {
-          prompt: presetAction?.prompt ?? "",
-          highNoiseLoras: nextLora,
-        };
         const newAllowed = getAllowedDurationsForActions(
-          [clampAction],
+          [{ highNoiseLoras, lowNoiseLoras }],
           currentModelDurations,
         );
         const clamped = clampDurationToAllowed(currentDuration, newAllowed);
-        if (clamped !== currentDuration) {
-          writeField(indices, "durationOverride", clamped);
-        }
+        writeFields(indices, {
+          highNoiseLoras,
+          lowNoiseLoras,
+          ...(clamped !== currentDuration && { duration: clamped }),
+        });
       });
     },
     [
       applyEdit,
-      writeField,
+      writeFields,
       loraOptions,
-      presetAction,
       currentModelDurations,
       currentDuration,
     ],
   );
 
-  // When no preset is selected, the prompt drives the generation —
-  // so it becomes required. With a preset, the preset supplies a prompt.
-  const needsPrompt = !presetAction && !currentPrompt.trim();
+  // The prompt is what drives the generation and nothing supplies one behind
+  // the panel's back any more, so an empty one is always a blocker.
+  const needsPrompt = !currentPrompt.trim();
 
   // What each mode would actually start. This count drives the cost estimate
   // sitting beside the button, so the clips it prices are the dreams the click
   // produces — not the number of things on screen.
   const { targets: generateAllTargets } = useMemo(
-    () =>
-      resolveGenerationTargets(transitions, referenceFrames, {
-        globalPresetId,
-        globalPrompt,
-        globalNegativePrompt,
-        globalDuration,
-        globalModel,
-        globalNumInferenceSteps,
-        globalGuidance,
-        globalSeed,
-        globalLora,
-      }),
-    [
-      transitions,
-      referenceFrames,
-      globalPresetId,
-      globalPrompt,
-      globalNegativePrompt,
-      globalDuration,
-      globalModel,
-      globalNumInferenceSteps,
-      globalGuidance,
-      globalSeed,
-      globalLora,
-    ],
+    () => resolveGenerationTargets(transitions, referenceFrames),
+    [transitions, referenceFrames],
   );
 
   const { targets: generateSelectedTargets } = useMemo(
@@ -527,6 +414,15 @@ export function TransitionSettingsPanel({
   const fromName =
     selectedTransition && findName(selectedTransition.fromFrameId);
   const toName = selectedTransition && findName(selectedTransition.toFrameId);
+  // The take the flow is actually using — the same entry the history rail marks
+  // as current, so the two labels always agree.
+  const currentRun = selectedTransition?.dreamUuid
+    ? selectedTransition.history?.find(
+        (entry) =>
+          entry.completed && entry.dreamUuid === selectedTransition.dreamUuid,
+      )
+    : undefined;
+  const currentRunTime = currentRun && formatRunTime(currentRun.createdAt);
   const extraCount = selectionCount - 1;
 
   return (
@@ -538,6 +434,7 @@ export function TransitionSettingsPanel({
             <PanelSubtitle>
               {" "}
               &mdash; Editing: {fromName} &rarr; {toName}
+              {currentRunTime && <SubtitleTime> {currentRunTime}</SubtitleTime>}
               {extraCount > 0 && ` and ${extraCount} more`}
             </PanelSubtitle>
           )}
@@ -567,11 +464,16 @@ export function TransitionSettingsPanel({
 
         <FieldGroup>
           <FieldLabel>Preset</FieldLabel>
+          {/*
+            Shows the preset whose values these settings still match, or Custom
+            once they have been edited away from any of them. Picking one stamps
+            its fields; there is nothing stored to pick back out.
+          */}
           <Select
-            value={currentPresetId}
-            onChange={(e) => handlePresetChange(e.target.value)}
+            value={currentPresetName}
+            onChange={(e) => handleApplyPreset(e.target.value)}
           >
-            <option value="">No preset</option>
+            <option value="">Custom</option>
             {presetGroups.map((group) => (
               <optgroup key={group.id} label={group.label}>
                 {group.presets.map((p) => (
@@ -588,9 +490,7 @@ export function TransitionSettingsPanel({
           <FieldLabel>Duration</FieldLabel>
           <Select
             value={currentDuration}
-            onChange={(e) =>
-              setValue("durationOverride", Number(e.target.value))
-            }
+            onChange={(e) => setValue("duration", Number(e.target.value))}
           >
             {allowedDurations.map((d) => (
               <option key={d} value={d}>
@@ -662,7 +562,7 @@ export function TransitionSettingsPanel({
                 value={currentPrompt}
                 placeholder="Describe the transition motion..."
                 $invalid={needsPrompt}
-                onChange={(e) => setValue("promptOverride", e.target.value)}
+                onChange={(e) => setValue("prompt", e.target.value)}
               />
             </FieldGroup>
 
@@ -680,9 +580,7 @@ export function TransitionSettingsPanel({
                     ? "transition-negative-prompt-hint"
                     : undefined
                 }
-                onChange={(e) =>
-                  setValue("negativePromptOverride", e.target.value)
-                }
+                onChange={(e) => setValue("negativePrompt", e.target.value)}
               />
               {negativePromptHint && (
                 <FieldHint id="transition-negative-prompt-hint">
@@ -723,12 +621,7 @@ export function TransitionSettingsPanel({
                     min={1}
                     max={100}
                     value={currentSteps}
-                    onChange={(e) =>
-                      setValue(
-                        "numInferenceStepsOverride",
-                        Number(e.target.value),
-                      )
-                    }
+                    onChange={(e) => setValue("steps", Number(e.target.value))}
                   />
                 </ParamGroup>
               )}
@@ -744,9 +637,7 @@ export function TransitionSettingsPanel({
                   param={guidanceParam}
                   constraint={guidanceConstraint}
                   value={currentGuidance}
-                  onChange={(guidance) =>
-                    setValue("guidanceOverride", guidance)
-                  }
+                  onChange={(guidance) => setValue("guidance", guidance)}
                 />
               )}
             </ParamFields>
@@ -754,19 +645,23 @@ export function TransitionSettingsPanel({
         </>
       )}
 
-      {/* Per-transition extras */}
+      {/*
+        With nothing inherited there is no "clear the override" to offer, so
+        this writes the built-in default outright — still a way back to a known
+        state, just an explicit one.
+      */}
       {isPerTransition && (
         <ResetLink
           onClick={() => {
             const store = useFlowStore.getState();
-            for (const index of store.selectedTransitionIndices) {
-              store.clearTransitionOverride(index);
-            }
+            store.setTransitionSettings(store.selectedTransitionIndices, {
+              ...DEFAULT_TRANSITION_SETTINGS,
+            });
           }}
         >
           {selectionCount > 1
-            ? `Reset ${selectionCount} transitions to defaults`
-            : "Reset to defaults"}
+            ? `Reset ${selectionCount} transitions to default settings`
+            : "Reset to default settings"}
         </ResetLink>
       )}
 

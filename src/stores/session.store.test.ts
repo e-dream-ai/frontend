@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import type { PersistedStudioSession } from "@/types/session.types";
+import type { FlowTransition } from "@/types/flow.types";
 
 {
   const store: Record<string, string> = {};
@@ -23,6 +24,31 @@ import type { PersistedStudioSession } from "@/types/session.types";
 
 const { useSessionStore, migrateSessions } = await import("./session.store");
 const { useFlowStore } = await import("./flow.store");
+const { DEFAULT_TRANSITION_SETTINGS } = await import(
+  "../components/pages/studio/constants/default-transition-settings"
+);
+
+/**
+ * Flow state carrying one identifying prompt, for session round-trips.
+ * Transitions are derived from the reference frames on restore, so the frames
+ * have to be there or `recomputeTransitions` clears the pair away.
+ */
+const flowWith = (prompt: string) => ({
+  // A frame needs a backing uuid or flowPartialize drops it from the snapshot,
+  // and the restored flow would recompute to zero transitions.
+  referenceFrames: [
+    { id: "a", dreamUuid: "dream-a", imageUrl: "a.png", name: "A" },
+    { id: "b", dreamUuid: "dream-b", imageUrl: "b.png", name: "B" },
+  ],
+  transitions: [
+    {
+      fromFrameId: "a",
+      toFrameId: "b",
+      status: "idle" as const,
+      settings: { ...DEFAULT_TRANSITION_SETTINGS, prompt },
+    },
+  ] as FlowTransition[],
+});
 const { useUprezStore } = await import("./uprez.store");
 const { migrateStudioMode, useStudioModeStore } = await import(
   "./studio-mode.store"
@@ -120,20 +146,25 @@ describe("session store", () => {
   });
 
   it("saves and restores flow state across sessions", () => {
+    // Settings ride on the transitions now, so that is what a session carries.
     useSessionStore.getState().createSession("Session A");
-    useFlowStore.setState({ globalPrompt: "hello from A" });
+    useFlowStore.setState(flowWith("hello from A"));
     useSessionStore.getState().saveCurrentSession();
 
     useSessionStore.getState().createSession("Session B");
-    useFlowStore.setState({ globalPrompt: "hello from B" });
+    useFlowStore.setState(flowWith("hello from B"));
     useSessionStore.getState().saveCurrentSession();
 
     const { sessions } = useSessionStore.getState();
     useSessionStore.getState().switchSession(sessions[0].id);
-    expect(useFlowStore.getState().globalPrompt).toBe("hello from A");
+    expect(useFlowStore.getState().transitions[0].settings.prompt).toBe(
+      "hello from A",
+    );
 
     useSessionStore.getState().switchSession(sessions[1].id);
-    expect(useFlowStore.getState().globalPrompt).toBe("hello from B");
+    expect(useFlowStore.getState().transitions[0].settings.prompt).toBe(
+      "hello from B",
+    );
   });
 
   it("saves and restores uprez state across sessions", () => {
@@ -198,16 +229,19 @@ describe("session store", () => {
 
   it("ensureActiveSession adopts current live state without resetting", () => {
     expect(useSessionStore.getState().activeSessionId).toBeNull();
-    useFlowStore.setState({ globalPrompt: "adopt me" });
+    useFlowStore.setState(flowWith("adopt me"));
 
     useSessionStore.getState().ensureActiveSession();
 
     const { sessions, activeSessionId } = useSessionStore.getState();
     expect(sessions).toHaveLength(1);
     expect(activeSessionId).toBe(sessions[0].id);
-    expect(useFlowStore.getState().globalPrompt).toBe("adopt me");
+    expect(useFlowStore.getState().transitions[0].settings.prompt).toBe(
+      "adopt me",
+    );
     expect(
-      (sessions[0].flowState as { globalPrompt?: string }).globalPrompt,
+      (sessions[0].flowState as { transitions: FlowTransition[] })
+        .transitions[0].settings.prompt,
     ).toBe("adopt me");
   });
 

@@ -5,8 +5,7 @@ import { useFlowStore } from "@/stores/flow.store";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import { buildVideoAlgoParams } from "@/components/pages/studio/utils/build-video-algo-params";
-import { resolveEffectiveSettings } from "@/components/pages/studio/utils/resolve-flow-settings";
-import { runSettingsFromEffective } from "@/components/pages/studio/utils/transition-staleness";
+import { settingsToAction } from "@/components/pages/studio/utils/resolve-flow-settings";
 import type { FlowTransition } from "@/types/flow.types";
 import queryClient from "@/api/query-client";
 import { USER_QUERY_KEY } from "@/api/user/query/useUser";
@@ -52,17 +51,7 @@ export function useFlowGeneration() {
       // Read latest store state directly — keeps the callback identity stable
       // and avoids re-creating it on every settings keystroke.
       const store = useFlowStore.getState();
-      const settings = resolveEffectiveSettings(transition, {
-        globalPresetId: store.globalPresetId,
-        globalPrompt: store.globalPrompt,
-        globalNegativePrompt: store.globalNegativePrompt,
-        globalDuration: store.globalDuration,
-        globalModel: store.globalModel,
-        globalNumInferenceSteps: store.globalNumInferenceSteps,
-        globalGuidance: store.globalGuidance,
-        globalSeed: store.globalSeed,
-        globalLora: store.globalLora,
-      });
+      const settings = transition.settings;
 
       const fromKf = store.referenceFrames.find(
         (frame) => frame.id === transition.fromFrameId,
@@ -91,12 +80,12 @@ export function useFlowGeneration() {
 
       const algoParams = buildVideoAlgoParams({
         model: settings.model,
-        action: settings.action,
+        action: settingsToAction(settings),
         imageUuid: imageRef,
         endImageUuid: endImageRef,
         imageSize: undefined,
         duration: settings.duration,
-        numInferenceSteps: settings.numInferenceSteps,
+        numInferenceSteps: settings.steps,
         guidance: settings.guidance,
         seed: settings.seed,
         negativePrompt: settings.negativePrompt,
@@ -125,15 +114,10 @@ export function useFlowGeneration() {
           { headers },
         );
 
-        // Snapshot the *resolved* settings, not the overrides: this is what
-        // lets the history strip restore this take later, after the globals
-        // it fell back to have moved on.
-        recordTransitionRun(
-          index,
-          dreamUuid,
-          runSettingsFromEffective(settings),
-          Date.now(),
-        );
+        // The snapshot is a copy of the settings themselves — they are already
+        // complete, so there is nothing to resolve and nothing that can drift
+        // out from under a recorded take.
+        recordTransitionRun(index, dreamUuid, { ...settings }, Date.now());
         updateTransitionStatus(index, "queue");
       } catch (error) {
         Bugsnag.notify(error as Error);
@@ -163,17 +147,6 @@ export function useFlowGeneration() {
       const { targets, skippedForMismatch } = resolveGenerationTargets(
         store.transitions,
         store.referenceFrames,
-        {
-          globalPresetId: store.globalPresetId,
-          globalPrompt: store.globalPrompt,
-          globalNegativePrompt: store.globalNegativePrompt,
-          globalDuration: store.globalDuration,
-          globalModel: store.globalModel,
-          globalNumInferenceSteps: store.globalNumInferenceSteps,
-          globalGuidance: store.globalGuidance,
-          globalSeed: store.globalSeed,
-          globalLora: store.globalLora,
-        },
       );
 
       if (skippedForMismatch > 0) {
