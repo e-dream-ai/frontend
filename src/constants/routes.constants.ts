@@ -28,6 +28,18 @@ export const ROUTES = {
   STUDIO: "/studio",
 };
 
+export const STUDIO_ROUTES = {
+  PROJECTS: ROUTES.STUDIO,
+  EDITOR: `${ROUTES.STUDIO}/:editorId`,
+  PROJECT: `${ROUTES.STUDIO}/:editorId/:projectUuid`,
+};
+
+export const buildStudioEditorPath = (editorId: string) =>
+  `${ROUTES.STUDIO}/${editorId}`;
+
+export const buildStudioProjectPath = (editorId: string, projectUuid: string) =>
+  `${ROUTES.STUDIO}/${editorId}/${projectUuid}`;
+
 export const CREATE_ROUTES = {
   DREAM: "dream",
   PLAYLIST: "playlist",

@@ -18,3 +18,11 @@ export const STUDIO_MODE_LABELS: Record<StudioMode, string> = {
   action: "Action",
   uprez: "Uprez",
 };
+
+export const DEFAULT_STUDIO_MODE: StudioMode = "flow";
+
+export const isStudioMode = (value?: string): value is StudioMode =>
+  STUDIO_MODES.includes(value as StudioMode);
+
+export const parseStudioMode = (value?: string): StudioMode =>
+  isStudioMode(value) ? value : DEFAULT_STUDIO_MODE;

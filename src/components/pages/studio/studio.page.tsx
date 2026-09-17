@@ -1,17 +1,24 @@
 import React, { lazy, Suspense, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import Bugsnag from "@bugsnag/js";
 import { useStudioStore } from "@/stores/studio.store";
-import { useStudioModeStore } from "@/stores/studio-mode.store";
+import type { StudioMode } from "@/types/flow.types";
 import { useFlowStore } from "@/stores/flow.store";
-import { ROUTES } from "@/constants/routes.constants";
-import { STUDIO_MODE_LABELS, STUDIO_MODES } from "./constants/studio-modes";
+import { buildStudioEditorPath, ROUTES } from "@/constants/routes.constants";
+import {
+  parseStudioMode,
+  STUDIO_MODE_LABELS,
+  STUDIO_MODES,
+} from "./constants/studio-modes";
 import { StudioTabs } from "./components/studio-tabs";
-import { SessionSwitcher } from "./components/session-switcher";
+import { ProjectBar } from "./components/project-bar";
+import { SaveStatus } from "./components/save-status";
+import { ProjectConflictModal } from "./components/project-conflict-modal";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
-import { useSessionAutoSave } from "./hooks/useSessionAutoSave";
+import { useEditorProjectSync } from "./hooks/useEditorProjectSync";
+import { useSessionMigration } from "./hooks/useSessionMigration";
 import { useFileDropUpload } from "./hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import useAuth from "@/hooks/useAuth";
@@ -58,12 +65,23 @@ const UprezApp = lazy(() =>
 
 export const StudioPage: React.FC = () => {
   const navigate = useNavigate();
-  const mode = useStudioModeStore((s) => s.mode);
-  const setMode = useStudioModeStore((s) => s.setMode);
+  const { editorId, projectUuid } = useParams<{
+    editorId?: string;
+    projectUuid?: string;
+  }>();
+  const mode = parseStudioMode(editorId);
+  const sync = useEditorProjectSync(mode, projectUuid);
+  useSessionMigration();
+
+  const handleModeChange = useCallback(
+    (nextMode: StudioMode) => {
+      if (nextMode !== mode) navigate(buildStudioEditorPath(nextMode));
+    },
+    [mode, navigate],
+  );
 
   const activeTab = useStudioStore((s) => s.activeTab);
   useStudioJobProgress();
-  useSessionAutoSave();
 
   const { user: authUser } = useAuth();
   const canManageProviderKey = usePermission({
@@ -80,22 +98,13 @@ export const StudioPage: React.FC = () => {
   const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
   const uploadDream = useUploadImageDream();
 
-  const handleBack = useCallback(() => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate(ROUTES.REMOTE_CONTROL);
-    }
-  }, [navigate]);
-
   const handleStudioDrop = useCallback(
     async (files: File[]) => {
-      const currentMode = useStudioModeStore.getState().mode;
       // The uprez app takes a playlist, not files — nothing to drop onto.
-      if (currentMode === "uprez") return;
+      if (mode === "uprez") return;
 
       for (const file of files) {
-        if (currentMode === "action") {
+        if (mode === "action") {
           const placeholderUuid = uuidv4();
           const blobUrl = URL.createObjectURL(file);
           addImage({
@@ -134,7 +143,7 @@ export const StudioPage: React.FC = () => {
         }
       }
     },
-    [addImage, updateImage, addReferenceFrame, uploadDream],
+    [mode, addImage, updateImage, addReferenceFrame, uploadDream],
   );
 
   const { isDragOver, dropHandlers } = useFileDropUpload({
@@ -145,8 +154,9 @@ export const StudioPage: React.FC = () => {
   return (
     <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
-        <BackButton onClick={handleBack} aria-label="Go back">
+        <BackButton to={ROUTES.STUDIO} aria-label="Back to projects">
           <ArrowLeft size={16} />
+          <span>Projects</span>
         </BackButton>
         <TitleGroup>
           <LogoLink to={ROUTES.ROOT} aria-label="Go to home">
@@ -160,17 +170,22 @@ export const StudioPage: React.FC = () => {
               key={studioMode}
               $active={mode === studioMode}
               aria-pressed={mode === studioMode}
-              onClick={() => setMode(studioMode)}
+              onClick={() => handleModeChange(studioMode)}
             >
               {STUDIO_MODE_LABELS[studioMode]}
             </ModeButton>
           ))}
         </ModeToggle>
+        <ProjectBar
+          name={sync.projectName}
+          disabled={sync.status === "loading"}
+          onRename={sync.rename}
+        />
         <HeaderSpacer />
+        <SaveStatus status={sync.status} />
         {canManageProviderKey ? (
           <CreditsMeter user={currentUser} compact />
         ) : null}
-        <SessionSwitcher />
       </StudioHeader>
 
       <StudioBody>
@@ -187,11 +202,19 @@ export const StudioPage: React.FC = () => {
           )}
           {mode === "uprez" && (
             <UprezFrame>
-              <UprezApp />
+              <UprezApp onSourcePlaylistChange={sync.linkPlaylist} />
             </UprezFrame>
           )}
         </Suspense>
       </StudioBody>
+
+      {sync.conflict ? (
+        <ProjectConflictModal
+          serverName={sync.conflict.name}
+          onTakeTheirs={sync.takeServerVersion}
+          onKeepMine={sync.keepMineAsNewProject}
+        />
+      ) : null}
     </StudioContainer>
   );
 };

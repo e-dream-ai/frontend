@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
 import Bugsnag from "@bugsnag/js";
@@ -6,8 +6,12 @@ import { NO_OP_HINT } from "../constants/uprez-factor-options";
 import { ROUTES } from "@/constants/routes.constants";
 import { generateCloudflareImageURL } from "@/utils/image-handler";
 import { useUprezStore } from "@/stores/uprez.store";
+import type { EditorProjectPlaylistRef } from "@/types/editor-project.types";
 import { usePlaylistMetadata } from "../hooks/usePlaylistMetadata";
-import { useAddPlaylistToCache } from "../hooks/useUserPlaylists";
+import {
+  useAddPlaylistToCache,
+  type PlaylistSummary,
+} from "../hooks/useUserPlaylists";
 import { useCreateUprezPlaylist } from "../hooks/useCreateUprezPlaylist";
 import { SelectPlaylistModal } from "./select-playlist-modal";
 import { UprezFactorFields } from "./uprez-factor-row";
@@ -48,7 +52,11 @@ const CARD_THUMB = { width: 200, fit: "cover" as const };
  * "Uprez" studio app: name the output, pick the factors, and start a derived
  * playlist that tracks a source playlist and uprezes each of its dreams.
  */
-export const UprezApp: React.FC = () => {
+type Props = {
+  onSourcePlaylistChange?: (playlist: EditorProjectPlaylistRef) => void;
+};
+
+export const UprezApp: React.FC<Props> = ({ onSourcePlaylistChange }) => {
   const addPlaylistToCache = useAddPlaylistToCache();
   const { createAndRun, isSubmitting } = useCreateUprezPlaylist();
 
@@ -58,6 +66,13 @@ export const UprezApp: React.FC = () => {
   const interpolationFactor = useUprezStore((s) => s.interpolationFactor);
   const result = useUprezStore((s) => s.result);
   const setSourcePlaylist = useUprezStore((s) => s.setSourcePlaylist);
+  const handleSelectSourcePlaylist = useCallback(
+    (playlist: PlaylistSummary) => {
+      setSourcePlaylist(playlist);
+      onSourcePlaylistChange?.({ uuid: playlist.uuid, name: playlist.name });
+    },
+    [setSourcePlaylist, onSourcePlaylistChange],
+  );
   const setNameOverride = useUprezStore((s) => s.setNameOverride);
   const setUpscaleFactor = useUprezStore((s) => s.setUpscaleFactor);
   const setInterpolationFactor = useUprezStore((s) => s.setInterpolationFactor);
@@ -248,7 +263,7 @@ export const UprezApp: React.FC = () => {
         <SelectPlaylistModal
           onClose={() => setPickerOpen(false)}
           selectedPlaylist={selected}
-          onSelect={setSourcePlaylist}
+          onSelect={handleSelectSourcePlaylist}
         />
       )}
     </AppBody>

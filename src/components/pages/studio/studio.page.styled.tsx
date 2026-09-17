@@ -53,16 +53,20 @@ export const Logo = styled.img`
   flex-shrink: 0;
 `;
 
-export const BackButton = styled.button`
+export const BackButton = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
+  gap: 6px;
   height: 32px;
+  padding: 0 10px;
   border-radius: ${FLOW.radiusSm};
   border: 1px solid ${FLOW.border};
   background: transparent;
   color: ${FLOW.textDim};
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
@@ -70,6 +74,15 @@ export const BackButton = styled.button`
   &:hover {
     border-color: ${FLOW.borderHover};
     color: ${FLOW.text};
+  }
+
+  @media (max-width: 480px) {
+    padding: 0;
+    width: 32px;
+
+    span {
+      display: none;
+    }
   }
 `;
 
