@@ -2,6 +2,7 @@ import useAuth from "@/hooks/useAuth";
 import { Navigate } from "react-router-dom";
 import { RoleType } from "@/types/role.types";
 import { ROUTES } from "@/constants/routes.constants";
+import { RouteLoader } from "@/components/shared/route-loader";
 
 export const ProtectedRoute: React.FC<{
   children?: React.ReactNode;
@@ -14,7 +15,7 @@ export const ProtectedRoute: React.FC<{
   }
 
   if (isLoading) {
-    return <></>;
+    return <RouteLoader />;
   }
 
   if (allowedRoles && allowedRoles.indexOf(user?.role?.name as RoleType) < 0) {

@@ -5,6 +5,8 @@ import { toast } from "react-toastify";
 import Bugsnag from "@bugsnag/js";
 import { useEditorProjects } from "@/api/editor-project/query/useEditorProjects";
 import { useDeleteEditorProject } from "@/api/editor-project/mutation/useDeleteEditorProject";
+import { usePrefetchEditorProject } from "@/api/editor-project/query/usePrefetchEditorProject";
+import { preloadEditor } from "./components/lazy-editors";
 import { useSessionMigration } from "./hooks/useSessionMigration";
 import {
   buildStudioEditorPath,
@@ -88,6 +90,16 @@ export const StudioProjectsPage: React.FC = () => {
   });
 
   const deleteProject = useDeleteEditorProject();
+  const { prefetch: prefetchProject, cancel: cancelPrefetch } =
+    usePrefetchEditorProject();
+
+  const handleIntent = useCallback(
+    (project: { uuid: string; editorId: StudioMode }) => {
+      preloadEditor(project.editorId);
+      prefetchProject(project.uuid);
+    },
+    [prefetchProject],
+  );
   const projects = data?.data?.projects ?? [];
   const isSwitching = isLoading || isPreviousData;
   const skeletonCount = projects.length > 0 ? projects.length : SKELETON_COUNT;
@@ -189,6 +201,10 @@ export const StudioProjectsPage: React.FC = () => {
                 <Card key={project.uuid}>
                   <CardLink
                     to={buildStudioProjectPath(project.editorId, project.uuid)}
+                    onMouseEnter={() => handleIntent(project)}
+                    onMouseLeave={cancelPrefetch}
+                    onFocus={() => handleIntent(project)}
+                    onBlur={cancelPrefetch}
                   >
                     <Thumbnail
                       src={project.thumbnail}

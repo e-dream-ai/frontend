@@ -119,6 +119,14 @@ export const StudioBody = styled.div`
   overflow-y: auto;
   width: 100%;
   padding: 1.5rem 20px;
+  position: relative;
+`;
+
+export const BodyOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  padding: 1.5rem 20px;
+  background: ${FLOW.bg};
 `;
 
 /**

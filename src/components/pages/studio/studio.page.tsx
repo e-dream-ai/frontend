@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useCallback } from "react";
+import React, { Suspense, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
@@ -16,6 +16,15 @@ import { StudioTabs } from "./components/studio-tabs";
 import { ProjectBar } from "./components/project-bar";
 import { SaveStatus } from "./components/save-status";
 import { ProjectConflictModal } from "./components/project-conflict-modal";
+import { StudioSkeleton } from "./components/studio-skeleton";
+import {
+  ActionsTab,
+  FlowBuilder,
+  GenerateTab,
+  ImagesTab,
+  ResultsTab,
+  UprezApp,
+} from "./components/lazy-editors";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
 import { useEditorProjectSync } from "./hooks/useEditorProjectSync";
 import { useSessionMigration } from "./hooks/useSessionMigration";
@@ -40,28 +49,8 @@ import {
   UprezFrame,
   ModeToggle,
   ModeButton,
+  BodyOverlay,
 } from "./studio.page.styled";
-
-const ImagesTab = lazy(() =>
-  import("./components/images-tab").then((m) => ({ default: m.ImagesTab })),
-);
-const ActionsTab = lazy(() =>
-  import("./components/actions-tab").then((m) => ({ default: m.ActionsTab })),
-);
-const GenerateTab = lazy(() =>
-  import("./components/generate-tab").then((m) => ({ default: m.GenerateTab })),
-);
-const ResultsTab = lazy(() =>
-  import("./components/results-tab").then((m) => ({ default: m.ResultsTab })),
-);
-const FlowBuilder = lazy(() =>
-  import("./components/flow-builder").then((m) => ({
-    default: m.FlowBuilder,
-  })),
-);
-const UprezApp = lazy(() =>
-  import("./components/uprez-app").then((m) => ({ default: m.UprezApp })),
-);
 
 export const StudioPage: React.FC = () => {
   const navigate = useNavigate();
@@ -189,7 +178,7 @@ export const StudioPage: React.FC = () => {
       </StudioHeader>
 
       <StudioBody>
-        <Suspense fallback={null}>
+        <Suspense fallback={<StudioSkeleton />}>
           {mode === "flow" && <FlowBuilder />}
           {mode === "action" && (
             <StudioFrame>
@@ -206,6 +195,12 @@ export const StudioPage: React.FC = () => {
             </UprezFrame>
           )}
         </Suspense>
+
+        {sync.status === "loading" ? (
+          <BodyOverlay>
+            <StudioSkeleton />
+          </BodyOverlay>
+        ) : null}
       </StudioBody>
 
       {sync.conflict ? (
