@@ -34,16 +34,50 @@ const breathGlow = keyframes`
   50%      { box-shadow: 0 0 0 6px transparent; }
 `;
 
-export const GapContainer = styled.div<{ $expanded: boolean }>`
+export const GapContainer = styled.div<{
+  $expanded: boolean;
+  $selected?: boolean;
+  $deselectBlocked?: boolean;
+}>`
   flex-shrink: 0;
   width: ${(p) => (p.$expanded ? "84px" : "64px")};
+  align-self: stretch;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 14px;
-  cursor: pointer;
-  transition: width 0.3s ease;
+  /* not-allowed only while a toggle modifier is held over the last selected
+     transition — a plain click here is still fine, so the default stays. */
+  cursor: ${(p) => (p.$deselectBlocked ? "not-allowed" : "pointer")};
+  user-select: none;
+  border-radius: ${FLOW.radiusSm};
+  transition:
+    width 0.3s ease,
+    background-color 0.18s ease,
+    box-shadow 0.18s ease;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.03);
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${FLOW.selected};
+    outline-offset: 2px;
+  }
+
+  /* Selection reads as a filled blue slab so a run of selected transitions is
+     legible at a glance, independent of each one's status colour. */
+  ${(p) =>
+    p.$selected &&
+    css`
+      background: ${FLOW.selectedDim};
+      box-shadow: inset 0 0 0 1.5px ${FLOW.selected};
+
+      &:hover {
+        background: ${FLOW.selectedDim};
+      }
+    `}
 
   ${ProgressContent} {
     width: 56px;
@@ -63,11 +97,10 @@ export const GapContainer = styled.div<{ $expanded: boolean }>`
   }
 `;
 
-export type GapLineVariant = "idle" | "configured" | "failed" | "mismatched";
+export type GapLineVariant = "idle" | "failed" | "mismatched";
 
 const GAP_LINE: Record<GapLineVariant, { color: string; opacity: number }> = {
   idle: { color: FLOW.connector, opacity: 1 },
-  configured: { color: FLOW.accent, opacity: 1 },
   failed: { color: FLOW.error, opacity: 0.55 },
   mismatched: { color: FLOW.error, opacity: 1 },
 };
@@ -124,11 +157,13 @@ export const StatusNode = styled.div<{ $variant: string }>`
   ${(p) =>
     p.$variant === "processed" &&
     css`
-      background: ${FLOW.accent};
-      color: ${FLOW.bg};
-      box-shadow:
-        0 0 0 4px ${FLOW.accentDim},
-        0 0 14px ${FLOW.accentGlow};
+      /* No disc: the filmstrip glyph is the whole shape. The glow follows its
+         outline via drop-shadow, which a box-shadow on this square node can't. */
+      width: 36px;
+      height: 28px;
+      border-radius: 0;
+      color: ${FLOW.accent};
+      filter: drop-shadow(0 0 5px ${FLOW.accentDim});
       animation: ${popIn} 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
     `}
 
@@ -172,10 +207,15 @@ export const GapStatusLabel = styled.span<{ $status: string }>`
   gap: 3px;
 `;
 
-export const DurationLabel = styled.span`
-  font-size: 11px;
-  font-family: ${FLOW.fontFamily};
-  font-weight: 600;
-  color: ${FLOW.accent};
-  letter-spacing: 0.04em;
+/**
+ * Marks a rendered transition whose settings have been edited since — the video
+ * on screen is not what these settings would produce. Sits where the duration
+ * used to, so a gap keeps its height whether or not it is marked.
+ */
+export const StaleDot = styled.span`
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: ${FLOW.accent};
+  box-shadow: 0 0 0 3px ${FLOW.accentGlow};
 `;

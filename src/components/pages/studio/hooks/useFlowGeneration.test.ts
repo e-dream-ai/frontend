@@ -1,12 +1,24 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => {
+  /** One complete settings object, shared by every fixture transition. */
+  const SETTINGS = {
+    prompt: "move",
+    negativePrompt: "",
+    duration: 5,
+    model: "ltx-i2v" as const,
+    steps: 20,
+    guidance: 3,
+    seed: -1,
+    highNoiseLoras: [],
+    lowNoiseLoras: [],
+  };
   const invalidateQueries = vi.fn();
   const post = vi.fn();
   const ensureFlowKeyframe = vi.fn(
     async (frame: { id: string }) => `frame-${frame.id}`,
   );
-  const setTransitionDream = vi.fn();
+  const recordTransitionRun = vi.fn();
   const updateTransitionStatus = vi.fn();
   const store = {
     transitions: [
@@ -14,11 +26,13 @@ const mocks = vi.hoisted(() => {
         fromFrameId: "frame-1",
         toFrameId: "frame-2",
         status: "idle",
+        settings: SETTINGS,
       },
       {
         fromFrameId: "frame-2",
         toFrameId: "frame-3",
         status: "idle",
+        settings: SETTINGS,
       },
     ],
     referenceFrames: [
@@ -26,24 +40,19 @@ const mocks = vi.hoisted(() => {
       { id: "frame-2", dreamUuid: "dream-2", name: "Two" },
       { id: "frame-3", dreamUuid: "dream-3", name: "Three" },
     ],
-    globalPresetId: "",
-    globalPrompt: "move",
-    globalNegativePrompt: "",
-    globalDuration: 5,
-    globalModel: "ltx-i2v",
-    globalNumInferenceSteps: 20,
-    globalGuidance: 3,
-    globalLora: undefined,
   };
   return {
+    SETTINGS,
     invalidateQueries,
     post,
     ensureFlowKeyframe,
-    setTransitionDream,
+    recordTransitionRun,
     updateTransitionStatus,
     store,
   };
 });
+
+const SETTINGS = mocks.SETTINGS;
 
 vi.mock("react", async () => {
   const actual = await vi.importActual<typeof import("react")>("react");
@@ -72,14 +81,14 @@ vi.mock("../../../../stores/flow.store", () => ({
     (
       selector: (
         state: typeof mocks.store & {
-          setTransitionDream: typeof mocks.setTransitionDream;
+          recordTransitionRun: typeof mocks.recordTransitionRun;
           updateTransitionStatus: typeof mocks.updateTransitionStatus;
         },
       ) => unknown,
     ) =>
       selector({
         ...mocks.store,
-        setTransitionDream: mocks.setTransitionDream,
+        recordTransitionRun: mocks.recordTransitionRun,
         updateTransitionStatus: mocks.updateTransitionStatus,
       }),
     { getState: () => mocks.store },
@@ -88,17 +97,6 @@ vi.mock("../../../../stores/flow.store", () => ({
 
 vi.mock("../utils/build-video-algo-params", () => ({
   buildVideoAlgoParams: () => ({ infinidream_algorithm: "ltx-i2v" }),
-}));
-
-vi.mock("../utils/resolve-flow-settings", () => ({
-  resolveEffectiveSettings: () => ({
-    model: "ltx-i2v",
-    action: undefined,
-    duration: 5,
-    numInferenceSteps: 20,
-    guidance: 3,
-    negativePrompt: "",
-  }),
 }));
 
 vi.mock("../utils/flow-keyframes", () => ({
@@ -128,6 +126,72 @@ describe("useFlowGeneration", () => {
 
     expect(mocks.post).toHaveBeenCalledTimes(2);
     expect(mocks.invalidateQueries).toHaveBeenCalledWith(["getUser"]);
+    // Nothing was rolled back to "failed" — the happy path really ran.
+    expect(mocks.updateTransitionStatus).not.toHaveBeenCalledWith(
+      expect.anything(),
+      "failed",
+    );
+  });
+
+  it("records each run with the settings it used, for the history strip", async () => {
+    const { generateAll } = useFlowGeneration();
+
+    await generateAll();
+
+    expect(mocks.recordTransitionRun).toHaveBeenCalledTimes(2);
+    const [index, dreamUuid, settings, createdAt] =
+      mocks.recordTransitionRun.mock.calls[0];
+    expect(index).toBe(0);
+    expect(dreamUuid).toBe("new-1");
+    // The snapshot is a copy of the transition's own settings — nothing is
+    // resolved on the way in, so there is nothing that can drift out from
+    // under a recorded take.
+    expect(settings).toEqual(SETTINGS);
+    expect(typeof createdAt).toBe("number");
+  });
+
+  it("regenerates an explicit selection, processed ones included", async () => {
+    // Generate All skips these; asking for a rerun of what you picked must not.
+    mocks.store.transitions = [
+      {
+        fromFrameId: "frame-1",
+        toFrameId: "frame-2",
+        status: "processed",
+        settings: SETTINGS,
+      },
+      {
+        fromFrameId: "frame-2",
+        toFrameId: "frame-3",
+        status: "processed",
+        settings: SETTINGS,
+      },
+    ];
+
+    const { generateMany } = useFlowGeneration();
+    await generateMany([1]);
+
+    expect(mocks.post).toHaveBeenCalledTimes(1);
+    expect(mocks.recordTransitionRun).toHaveBeenCalledWith(
+      1,
+      "new-1",
+      expect.anything(),
+      expect.any(Number),
+    );
+
+    mocks.store.transitions = [
+      {
+        fromFrameId: "frame-1",
+        toFrameId: "frame-2",
+        status: "idle",
+        settings: SETTINGS,
+      },
+      {
+        fromFrameId: "frame-2",
+        toFrameId: "frame-3",
+        status: "idle",
+        settings: SETTINGS,
+      },
+    ];
   });
 
   it("skips a transition whose two frames have different aspect ratios", async () => {

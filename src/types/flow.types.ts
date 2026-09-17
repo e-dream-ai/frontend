@@ -33,25 +33,59 @@ export type TransitionStatus =
   | "processed"
   | "failed";
 
+/**
+ * Everything one transition renders with.
+ *
+ * Complete by construction: every field is required and nothing resolves at
+ * read time, so what the panel shows is what gets sent to the model. This
+ * replaced a chain of `transitionOverride ?? global ?? preset`, where
+ * `undefined` meant "inherit" and a transition's real settings existed only
+ * after resolution — which is what let editing a global quietly restale a
+ * batch of finished renders.
+ *
+ * Both LoRA sets are stored. They used to be split: the high-noise set was the
+ * stored value and the low-noise set was recovered by matching it back to the
+ * preset it came from, so a LoRA's other half existed only as a lookup.
+ */
+export interface TransitionSettings {
+  prompt: string;
+  negativePrompt: string;
+  duration: number;
+  model: VideoModel;
+  steps: number;
+  guidance: number;
+  seed: number;
+  highNoiseLoras: LoRAConfig[];
+  lowNoiseLoras: LoRAConfig[];
+}
+
+/** One completed (or in-flight) generation for a transition position. */
+export interface TransitionHistoryEntry {
+  dreamUuid: string;
+  createdAt: number; // epoch ms
+  // Set once the run reaches "processed". Only completed runs are offered in
+  // the history strip — a failed or in-flight dream has nothing to show.
+  completed?: boolean;
+  settings: TransitionSettings;
+}
+
 export interface FlowTransition {
   fromFrameId: string; // FlowReferenceFrame.id
   toFrameId: string; // FlowReferenceFrame.id
 
-  // Per-transition overrides (undefined = use global)
-  presetOverride?: string; // PresetPack name
-  promptOverride?: string;
-  negativePromptOverride?: string;
-  durationOverride?: number; // seconds
-  modelOverride?: VideoModel;
-  numInferenceStepsOverride?: number;
-  guidanceOverride?: number;
-  seedOverride?: number;
-  loraOverride?: LoRAConfig[];
+  // What this transition renders with. Always complete — a new transition is
+  // seeded by copying its predecessor (or DEFAULT_TRANSITION_SETTINGS for the
+  // first), and after that it is independent of every other transition.
+  settings: TransitionSettings;
 
   // Generation state
   dreamUuid?: string;
   status: TransitionStatus;
   progress?: number; // 0-100
+
+  // Every generation run at this position, oldest first. The entry matching
+  // `dreamUuid` is the one currently in the flow; the rest are restorable.
+  history?: TransitionHistoryEntry[];
 
   // Uprez state (undefined = not started)
   uprezDreamUuid?: string;
