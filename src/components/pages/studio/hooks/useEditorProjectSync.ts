@@ -84,7 +84,7 @@ export const useEditorProjectSync = (
   );
 
   useEffect(() => {
-    if (projectUuid) return;
+    if (projectUuid && projectUuid === hydratedUuidRef.current) return;
 
     hydratingRef.current = true;
     adapter.reset();
