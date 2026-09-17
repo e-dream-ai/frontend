@@ -123,7 +123,7 @@ export const useEditorProjectSync = (
           name: defaultProjectName(),
           state,
           schemaVersion: EDITOR_STATE_SCHEMA_VERSION,
-          thumbnail: adapter.thumbnail(),
+          thumbnailDreamUuid: adapter.thumbnailDreamUuid(),
         });
         const project = created.data?.project;
         if (!project) throw new Error("No project in create response");
@@ -150,7 +150,7 @@ export const useEditorProjectSync = (
         revision: revisionRef.current,
         state,
         schemaVersion: EDITOR_STATE_SCHEMA_VERSION,
-        thumbnail: adapter.thumbnail(),
+        thumbnailDreamUuid: adapter.thumbnailDreamUuid(),
       });
       const project = saved.data?.project;
       if (project) revisionRef.current = project.revision;

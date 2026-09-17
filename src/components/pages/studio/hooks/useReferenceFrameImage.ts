@@ -12,13 +12,11 @@ export function useReferenceFrameImage(frame: FlowReferenceFrame | undefined) {
   } | null>(null);
   const resolvedRef = useRef<string>();
 
-  const { id, imageUrl, dreamUuid, dreamThumbnail, isLoopFrame } = frame ?? {};
-  const resolved =
+  const { id, imageUrl, dreamUuid, isLoopFrame } = frame ?? {};
+  const src =
     override !== null && override.replaces === imageUrl
       ? override.url
       : imageUrl;
-  const src = resolved || dreamThumbnail;
-  const isFallback = !resolved && Boolean(dreamThumbnail);
 
   const refresh = useCallback(async () => {
     if (!dreamUuid || id === undefined || imageUrl === undefined) return;
@@ -33,12 +31,7 @@ export function useReferenceFrameImage(frame: FlowReferenceFrame | undefined) {
       if (!freshUrl) return;
       setOverride({ replaces: imageUrl, url: freshUrl });
       // The loop frame mirrors frame 0 and isn't a real store entry.
-      if (!isLoopFrame) {
-        updateReferenceFrame(id, {
-          imageUrl: freshUrl,
-          ...(dream?.thumbnail ? { dreamThumbnail: dream.thumbnail } : {}),
-        });
-      }
+      if (!isLoopFrame) updateReferenceFrame(id, { imageUrl: freshUrl });
     } catch {
       // ignore
     }
@@ -51,5 +44,5 @@ export function useReferenceFrameImage(frame: FlowReferenceFrame | undefined) {
     void refresh();
   }, [dreamUuid, imageUrl, refresh]);
 
-  return { src, isFallback, onError: dreamUuid ? refresh : undefined };
+  return { src, onError: dreamUuid ? refresh : undefined };
 }

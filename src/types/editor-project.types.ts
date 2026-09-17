@@ -30,7 +30,7 @@ export type CreateEditorProjectPayload = {
   name: string;
   state: EditorProjectState;
   schemaVersion?: number;
-  thumbnail?: string | null;
+  thumbnailDreamUuid?: string | null;
   playlistUuid?: string | null;
 };
 
@@ -40,6 +40,6 @@ export type UpdateEditorProjectPayload = {
   name?: string;
   state?: EditorProjectState;
   schemaVersion?: number;
-  thumbnail?: string | null;
+  thumbnailDreamUuid?: string | null;
   playlistUuid?: string | null;
 };

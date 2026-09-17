@@ -20,7 +20,6 @@ type LegacySession = {
   actionState?: Record<string, unknown>;
   batchState?: Record<string, unknown>;
   uprezState?: Record<string, unknown>;
-  thumbnail?: string;
   updatedAt?: string;
 };
 
@@ -28,7 +27,6 @@ export type PendingProject = {
   editorId: EditorId;
   name: string;
   state: EditorProjectState;
-  thumbnail?: string | null;
 };
 
 const hasContent = (blob?: Record<string, unknown>) =>
@@ -77,7 +75,6 @@ export const planSessionMigration = (
         editorId: mode,
         name: populated.length > 1 ? `${baseName} (${mode})` : baseName,
         state: toProjectState(mode, blob as Record<string, unknown>),
-        thumbnail: session.thumbnail ?? null,
       });
     });
   });

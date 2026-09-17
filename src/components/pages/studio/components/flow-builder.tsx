@@ -136,7 +136,6 @@ export const FlowBuilder: React.FC = () => {
           dreamUuid: dream.uuid,
           imageUrl:
             dream.video || dream.original_video || dream.thumbnail || "",
-          dreamThumbnail: dream.thumbnail,
           name: dream.name,
         });
       }

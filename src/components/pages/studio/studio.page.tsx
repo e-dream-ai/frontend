@@ -202,7 +202,7 @@ export const StudioPage: React.FC = () => {
           )}
           {mode === "uprez" && (
             <UprezFrame>
-              <UprezApp />
+              <UprezApp onSourcePlaylistChange={sync.linkPlaylist} />
             </UprezFrame>
           )}
         </Suspense>
