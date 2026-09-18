@@ -111,7 +111,97 @@ export const SectionLabel = styled.h2`
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: ${FLOW.textMuted};
-  margin: 0 0 12px;
+  margin: 0;
+  flex-shrink: 0;
+`;
+
+export const Controls = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+
+  @media (max-width: 640px) {
+    flex-wrap: wrap;
+  }
+`;
+
+export const ControlsSpacer = styled.div`
+  flex: 1;
+`;
+
+export const SearchField = styled.div`
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 240px;
+  max-width: 100%;
+
+  @media (max-width: 640px) {
+    width: 100%;
+    order: 3;
+  }
+`;
+
+export const SearchIcon = styled.span`
+  position: absolute;
+  left: 10px;
+  display: flex;
+  color: ${FLOW.textMuted};
+  pointer-events: none;
+`;
+
+export const SearchInput = styled.input`
+  width: 100%;
+  padding: 7px 30px 7px 30px;
+  border-radius: ${FLOW.radiusSm};
+  border: 1px solid ${FLOW.border};
+  background: ${FLOW.bg};
+  color: ${FLOW.text};
+  font-family: inherit;
+  font-size: 13px;
+
+  &::placeholder {
+    color: ${FLOW.textMuted};
+  }
+
+  &:hover {
+    border-color: ${FLOW.borderHover};
+  }
+
+  &:focus {
+    outline: none;
+    border-color: ${FLOW.accent};
+  }
+
+  &::-webkit-search-cancel-button,
+  &::-webkit-search-decoration {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+`;
+
+export const SearchClear = styled.button`
+  position: absolute;
+  right: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 3px;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: ${FLOW.textMuted};
+  cursor: pointer;
+
+  &:hover {
+    color: ${FLOW.text};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${FLOW.accent};
+    outline-offset: 1px;
+  }
 `;
 
 export const Grid = styled.ul`

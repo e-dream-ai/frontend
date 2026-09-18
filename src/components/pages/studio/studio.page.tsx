@@ -137,7 +137,7 @@ export const StudioPage: React.FC = () => {
           <LogoLink to={ROUTES.ROOT} aria-label="Go to home">
             <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
           </LogoLink>
-          <StudioTitle>Studio</StudioTitle>
+          <StudioTitle>Infinidream Studio</StudioTitle>
           <EditorBadge $mode={mode}>{STUDIO_MODE_LABELS[mode]}</EditorBadge>
         </TitleGroup>
         <ProjectBar

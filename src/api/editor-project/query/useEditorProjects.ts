@@ -21,6 +21,7 @@ const buildQueryString = (filters: EditorProjectListFilters) => {
   const params = new URLSearchParams();
   if (filters.editorId) params.set("editorId", filters.editorId);
   if (filters.playlistUuid) params.set("playlistUuid", filters.playlistUuid);
+  if (filters.search) params.set("search", filters.search);
   if (filters.take !== undefined) params.set("take", String(filters.take));
   if (filters.skip !== undefined) params.set("skip", String(filters.skip));
   const query = params.toString();

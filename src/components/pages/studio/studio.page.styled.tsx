@@ -93,6 +93,7 @@ export const StudioTitle = styled.h1`
   font-weight: 600;
   color: ${FLOW.text};
   font-family: ${FLOW.fontFamily};
+  white-space: nowrap;
 `;
 
 export const EditorBadge = styled.span<{ $mode: StudioMode }>`

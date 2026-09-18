@@ -8,10 +8,12 @@ import { useDeleteEditorProject } from "@/api/editor-project/mutation/useDeleteE
 import { usePrefetchEditorProject } from "@/api/editor-project/query/usePrefetchEditorProject";
 import { preloadEditor } from "./components/lazy-editors";
 import { NewProjectMenu } from "./components/new-project-menu";
+import { ProjectControls } from "./components/project-controls";
 import { useSessionMigration } from "./hooks/useSessionMigration";
 import { buildStudioProjectPath, ROUTES } from "@/constants/routes.constants";
 import type { StudioMode } from "@/types/flow.types";
-import { STUDIO_MODE_LABELS, STUDIO_MODES } from "./constants/studio-modes";
+import { STUDIO_MODE_LABELS } from "./constants/studio-modes";
+import { useDebounce } from "@/hooks/useDebounce";
 import {
   Body,
   Card,
@@ -25,14 +27,10 @@ import {
   EmptyHint,
   EmptyState,
   EmptyTitle,
-  FilterButton,
-  FilterToggle,
   Grid,
   Header,
-  HeaderSpacer,
   Logo,
   LogoLink,
-  SectionLabel,
   SkeletonCard,
   SkeletonGrid,
   Thumb,
@@ -75,9 +73,12 @@ const formatUpdated = (iso: string) =>
 export const StudioProjectsPage: React.FC = () => {
   useSessionMigration();
   const [editorFilter, setEditorFilter] = useState<StudioMode | undefined>();
+  const [searchDraft, setSearchDraft] = useState("");
+  const search = useDebounce(searchDraft.trim(), 400);
 
   const { data, isLoading, isPreviousData } = useEditorProjects({
     editorId: editorFilter,
+    search: search || undefined,
     take: PROJECTS_PAGE_SIZE,
   });
 
@@ -121,42 +122,19 @@ export const StudioProjectsPage: React.FC = () => {
           <LogoLink to={ROUTES.ROOT} aria-label="Go to home">
             <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
           </LogoLink>
-          <Title>Studio</Title>
+          <Title>Infinidream Studio</Title>
         </TitleGroup>
-
-        <FilterToggle role="group" aria-label="Filter projects by editor">
-          <FilterButton
-            type="button"
-            $active={editorFilter === undefined}
-            aria-pressed={editorFilter === undefined}
-            onClick={() => setEditorFilter(undefined)}
-          >
-            All
-          </FilterButton>
-          {STUDIO_MODES.map((mode) => (
-            <FilterButton
-              key={mode}
-              type="button"
-              $active={editorFilter === mode}
-              aria-pressed={editorFilter === mode}
-              onClick={() => setEditorFilter(mode)}
-            >
-              {STUDIO_MODE_LABELS[mode]}
-            </FilterButton>
-          ))}
-        </FilterToggle>
-
-        <HeaderSpacer />
 
         <NewProjectMenu />
       </Header>
 
       <Body>
-        <SectionLabel>
-          {editorFilter
-            ? `${STUDIO_MODE_LABELS[editorFilter]} projects`
-            : "All projects"}
-        </SectionLabel>
+        <ProjectControls
+          editorFilter={editorFilter}
+          onEditorFilterChange={setEditorFilter}
+          search={searchDraft}
+          onSearchChange={setSearchDraft}
+        />
 
         {isSwitching ? (
           <SkeletonGrid aria-hidden="true">
@@ -168,13 +146,17 @@ export const StudioProjectsPage: React.FC = () => {
 
         {!isSwitching && projects.length === 0 ? (
           <EmptyState>
-            <EmptyTitle>Nothing here yet.</EmptyTitle>
+            <EmptyTitle>
+              {search ? "Nothing found." : "Nothing here yet."}
+            </EmptyTitle>
             <EmptyHint>
-              {editorFilter
-                ? `Start a ${STUDIO_MODE_LABELS[editorFilter]} project and it will show up here, on every device you sign in from.`
-                : "Start a project and it will show up here, on every device you sign in from."}
+              {search
+                ? "No projects match that search."
+                : editorFilter
+                  ? `Start a ${STUDIO_MODE_LABELS[editorFilter]} project and it will show up here, on every device you sign in from.`
+                  : "Start a project and it will show up here, on every device you sign in from."}
             </EmptyHint>
-            <NewProjectMenu />
+            {search ? null : <NewProjectMenu />}
           </EmptyState>
         ) : null}
 

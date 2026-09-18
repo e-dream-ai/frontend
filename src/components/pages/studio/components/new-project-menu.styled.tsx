@@ -39,7 +39,7 @@ export const Trigger = styled.button`
 export const Menu = styled.ul`
   position: absolute;
   top: calc(100% + 6px);
-  right: 0;
+  left: 0;
   z-index: 20;
   min-width: 260px;
   padding: 6px;

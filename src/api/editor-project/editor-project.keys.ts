@@ -3,6 +3,7 @@ import { EditorId } from "@/types/editor-project.types";
 export type EditorProjectListFilters = {
   editorId?: EditorId;
   playlistUuid?: string;
+  search?: string;
   take?: number;
   skip?: number;
 };
