@@ -54,7 +54,9 @@ const usdAmountField = (label: string) =>
 export const ProfileSchema = yup
   .object({
     name: yup.string().required(),
-    description: yup.string(),
+    description: yup
+      .string()
+      .max(4000, "Description must be at most 4000 characters"),
     role: yup.object({
       label: yup.string(),
       value: yup.number(),
