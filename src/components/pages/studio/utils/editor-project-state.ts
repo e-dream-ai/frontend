@@ -133,6 +133,11 @@ export const toPersistedActionState = (
 export const fromPersistedActionState = (
   persisted: PersistedActionState,
 ): Record<string, unknown> & { excludedCombos: Set<string> } => {
-  const { excludedCombos = [], ...rest } = persisted;
-  return { ...rest, excludedCombos: new Set(excludedCombos) };
+  const { excludedCombos = [], images = [], ...rest } = persisted;
+
+  return {
+    ...rest,
+    excludedCombos: new Set(excludedCombos),
+    images: images.map((image) => ({ ...image, url: "" })),
+  };
 };

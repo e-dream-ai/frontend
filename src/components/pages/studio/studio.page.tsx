@@ -1,5 +1,5 @@
 import React, { Suspense, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import Bugsnag from "@bugsnag/js";
@@ -11,6 +11,7 @@ import { StudioTabs } from "./components/studio-tabs";
 import { ProjectBar } from "./components/project-bar";
 import { SaveStatus } from "./components/save-status";
 import { ProjectConflictModal } from "./components/project-conflict-modal";
+import { ProjectLockedModal } from "./components/project-locked-modal";
 import { StudioSkeleton } from "./components/studio-skeleton";
 import {
   ActionsTab,
@@ -22,6 +23,7 @@ import {
 } from "./components/lazy-editors";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
 import { useEditorProjectSync } from "./hooks/useEditorProjectSync";
+import { useEditorProjectLock } from "./hooks/useEditorProjectLock";
 import { useSessionMigration } from "./hooks/useSessionMigration";
 import { useFileDropUpload } from "./hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
@@ -47,12 +49,18 @@ import {
 } from "./studio.page.styled";
 
 export const StudioPage: React.FC = () => {
+  const navigate = useNavigate();
   const { editorId, projectUuid } = useParams<{
     editorId?: string;
     projectUuid?: string;
   }>();
   const mode = parseStudioMode(editorId);
-  const sync = useEditorProjectSync(mode, projectUuid);
+  const lock = useEditorProjectLock(projectUuid);
+  const sync = useEditorProjectSync(
+    mode,
+    projectUuid,
+    lock.status === "held" || lock.status === "idle",
+  );
   useSessionMigration();
 
   const activeTab = useStudioStore((s) => s.activeTab);
@@ -178,10 +186,19 @@ export const StudioPage: React.FC = () => {
         ) : null}
       </StudioBody>
 
+      {lock.status === "blocked" ? (
+        <ProjectLockedModal
+          lockedAt={lock.lockedAt}
+          onTakeOver={lock.takeOver}
+          onLeave={() => navigate(ROUTES.STUDIO)}
+        />
+      ) : null}
+
       {sync.conflict ? (
         <ProjectConflictModal
           serverName={sync.conflict.name}
           onTakeTheirs={sync.takeServerVersion}
+          onOverwrite={sync.overwriteServerVersion}
           onKeepMine={sync.keepMineAsNewProject}
         />
       ) : null}

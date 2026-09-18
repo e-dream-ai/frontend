@@ -8,6 +8,7 @@ import {
   isEditorProjectConflict,
   useUpdateEditorProject,
 } from "@/api/editor-project/mutation/useUpdateEditorProject";
+import { isProjectLocked } from "@/api/editor-project/editor-project-lock";
 import { buildStudioProjectPath } from "@/constants/routes.constants";
 import {
   EditorProject,
@@ -42,6 +43,7 @@ const isNameTaken = (error: unknown) =>
 export const useEditorProjectSync = (
   mode: StudioMode,
   projectUuid?: string,
+  canSave = true,
 ) => {
   const navigate = useNavigate();
   const adapter = EDITOR_ADAPTERS[mode];
@@ -75,7 +77,7 @@ export const useEditorProjectSync = (
       adapter.reset();
       adapter.write(project.state);
       revisionRef.current = project.revision;
-      lastSavedRef.current = JSON.stringify(project.state);
+      lastSavedRef.current = JSON.stringify(adapter.read());
       setProjectName(project.name);
       setPlaylist(project.playlist ?? null);
       hydratedUuidRef.current = project.uuid;
@@ -107,7 +109,7 @@ export const useEditorProjectSync = (
   }, [projectUuid, loadedProject, hydrate]);
 
   const persist = useCallback(async () => {
-    if (hydratingRef.current || conflict) return;
+    if (hydratingRef.current || conflict || !canSave) return;
 
     const state = adapter.read();
     const serialised = JSON.stringify(state);
@@ -174,6 +176,10 @@ export const useEditorProjectSync = (
       lastSavedRef.current = serialised;
       setStatus("saved");
     } catch (error) {
+      if (isProjectLocked(error)) {
+        setStatus("idle");
+        return;
+      }
       if (isEditorProjectConflict(error)) {
         setConflict(error.serverProject ?? null);
         setStatus("error");
@@ -182,7 +188,15 @@ export const useEditorProjectSync = (
       Bugsnag.notify(error as Error);
       setStatus("error");
     }
-  }, [adapter, conflict, createProject, mode, navigate, updateProject]);
+  }, [
+    adapter,
+    canSave,
+    conflict,
+    createProject,
+    mode,
+    navigate,
+    updateProject,
+  ]);
 
   useEffect(() => {
     persistRef.current = persist;
@@ -214,6 +228,37 @@ export const useEditorProjectSync = (
     hydrate(conflict);
     setConflict(null);
   }, [conflict, hydrate]);
+
+  const overwriteServerVersion = useCallback(async () => {
+    if (!conflict) return;
+
+    const state = adapter.read();
+    const serialised = JSON.stringify(state);
+    setStatus("saving");
+
+    try {
+      const saved = await updateProject.mutateAsync({
+        uuid: conflict.uuid,
+        revision: conflict.revision,
+        state,
+        schemaVersion: EDITOR_STATE_SCHEMA_VERSION,
+        thumbnailDreamUuid: adapter.thumbnailDreamUuid(),
+      });
+      const project = saved.data?.project;
+      if (project) revisionRef.current = project.revision;
+      lastSavedRef.current = serialised;
+      setConflict(null);
+      setStatus("saved");
+    } catch (error) {
+      if (isEditorProjectConflict(error)) {
+        setConflict(error.serverProject ?? null);
+        setStatus("error");
+        return;
+      }
+      Bugsnag.notify(error as Error);
+      setStatus("error");
+    }
+  }, [adapter, conflict, updateProject]);
 
   const keepMineAsNewProject = useCallback(async () => {
     const state = adapter.read();
@@ -255,6 +300,7 @@ export const useEditorProjectSync = (
         const project = saved.data?.project;
         if (project) revisionRef.current = project.revision;
       } catch (error) {
+        if (isProjectLocked(error)) return;
         if (isEditorProjectConflict(error)) {
           setConflict(error.serverProject ?? null);
           return;
@@ -280,6 +326,7 @@ export const useEditorProjectSync = (
         const project = saved.data?.project;
         if (project) revisionRef.current = project.revision;
       } catch (error) {
+        if (isProjectLocked(error)) return;
         if (isEditorProjectConflict(error)) {
           setConflict(error.serverProject ?? null);
           return;
@@ -298,6 +345,7 @@ export const useEditorProjectSync = (
     linkPlaylist,
     rename,
     takeServerVersion,
+    overwriteServerVersion,
     keepMineAsNewProject,
   };
 };
