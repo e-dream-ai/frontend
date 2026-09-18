@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer } from "react";
 import Bugsnag from "@bugsnag/js";
 import useSocket from "@/hooks/useSocket";
 import {
@@ -18,24 +18,56 @@ import {
 
 export type ProjectLockStatus = "idle" | "claiming" | "held" | "blocked";
 
+type LockState = {
+  status: ProjectLockStatus;
+  lockedAt: string | null;
+  interrupted: boolean;
+};
+
+type LockAction =
+  | { type: "idle" }
+  | { type: "claiming" }
+  | { type: "held" }
+  | { type: "blocked"; lockedAt: string | null };
+
+const INITIAL_STATE: LockState = {
+  status: "idle",
+  lockedAt: null,
+  interrupted: false,
+};
+
+const lockReducer = (state: LockState, action: LockAction): LockState => {
+  switch (action.type) {
+    case "idle":
+      return INITIAL_STATE;
+    case "claiming":
+      return { ...state, status: "claiming" };
+    case "held":
+      return { status: "held", lockedAt: null, interrupted: false };
+    case "blocked":
+      return {
+        status: "blocked",
+        lockedAt: action.lockedAt,
+        interrupted: state.status === "held",
+      };
+  }
+};
+
 export const useEditorProjectLock = (projectUuid?: string) => {
   const { socket } = useSocket();
-  const [status, setStatus] = useState<ProjectLockStatus>("idle");
-  const [lockedAt, setLockedAt] = useState<string | null>(null);
+  const [lock, dispatch] = useReducer(lockReducer, INITIAL_STATE);
 
   const claim = useCallback(async (uuid: string, force = false) => {
     try {
       await claimEditorProjectLock(uuid, force);
-      setLockedAt(null);
-      setStatus("held");
+      dispatch({ type: "held" });
     } catch (error) {
       if (isProjectLocked(error)) {
-        setLockedAt(error.lockedAt ?? null);
-        setStatus("blocked");
+        dispatch({ type: "blocked", lockedAt: error.lockedAt ?? null });
         return;
       }
       Bugsnag.notify(error as Error);
-      setStatus("held");
+      dispatch({ type: "held" });
     }
   }, []);
 
@@ -69,13 +101,11 @@ export const useEditorProjectLock = (projectUuid?: string) => {
       }
 
       if (state.lockedBy === EDITOR_SESSION_ID) {
-        setLockedAt(null);
-        setStatus("held");
+        dispatch({ type: "held" });
         return;
       }
 
-      setLockedAt(state.lockedAt);
-      setStatus("blocked");
+      dispatch({ type: "blocked", lockedAt: state.lockedAt });
     };
 
     join();
@@ -91,11 +121,11 @@ export const useEditorProjectLock = (projectUuid?: string) => {
 
   useEffect(() => {
     if (!projectUuid) {
-      setStatus("idle");
+      dispatch({ type: "idle" });
       return;
     }
 
-    setStatus("claiming");
+    dispatch({ type: "claiming" });
     void claim(projectUuid);
     const timer = setInterval(() => void claim(projectUuid), LOCK_HEARTBEAT_MS);
 
@@ -107,5 +137,5 @@ export const useEditorProjectLock = (projectUuid?: string) => {
     void claim(projectUuid, true);
   }, [projectUuid, claim]);
 
-  return { status, lockedAt, takeOver };
+  return { ...lock, takeOver };
 };

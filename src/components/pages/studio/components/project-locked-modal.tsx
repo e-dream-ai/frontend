@@ -4,6 +4,7 @@ import { Actions, Button, Text, Title } from "./project-dialog.styled";
 
 type Props = {
   lockedAt?: string | null;
+  interrupted?: boolean;
   onTakeOver: () => void;
   onLeave: () => void;
 };
@@ -20,6 +21,7 @@ const formatWhen = (iso?: string | null) => {
 
 export const ProjectLockedModal: React.FC<Props> = ({
   lockedAt,
+  interrupted,
   onTakeOver,
   onLeave,
 }) => {
@@ -27,7 +29,11 @@ export const ProjectLockedModal: React.FC<Props> = ({
 
   return (
     <ProjectDialog labelledBy="locked-title">
-      <Title id="locked-title">This project is already open</Title>
+      <Title id="locked-title">
+        {interrupted
+          ? "Project opened elsewhere"
+          : "This project is already open"}
+      </Title>
       <Text>
         {when
           ? `It was opened in another tab or on another device at ${when}.`

@@ -122,7 +122,7 @@ export const StudioProjectsPage: React.FC = () => {
           <LogoLink to={ROUTES.ROOT} aria-label="Go to home">
             <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
           </LogoLink>
-          <Title>Infinidream Studio</Title>
+          <Title>Studio</Title>
         </TitleGroup>
 
         <NewProjectMenu />

@@ -145,7 +145,7 @@ export const StudioPage: React.FC = () => {
           <LogoLink to={ROUTES.ROOT} aria-label="Go to home">
             <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
           </LogoLink>
-          <StudioTitle>Infinidream Studio</StudioTitle>
+          <StudioTitle>Studio</StudioTitle>
           <EditorBadge $mode={mode}>{STUDIO_MODE_LABELS[mode]}</EditorBadge>
         </TitleGroup>
         <ProjectBar
@@ -189,6 +189,7 @@ export const StudioPage: React.FC = () => {
       {lock.status === "blocked" ? (
         <ProjectLockedModal
           lockedAt={lock.lockedAt}
+          interrupted={lock.interrupted}
           onTakeOver={lock.takeOver}
           onLeave={() => navigate(ROUTES.STUDIO)}
         />
