@@ -1,5 +1,5 @@
 import React, { useCallback, useState } from "react";
-import { Film, Plus, Trash2 } from "lucide-react";
+import { Film, Trash2 } from "lucide-react";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { toast } from "react-toastify";
 import Bugsnag from "@bugsnag/js";
@@ -7,18 +7,11 @@ import { useEditorProjects } from "@/api/editor-project/query/useEditorProjects"
 import { useDeleteEditorProject } from "@/api/editor-project/mutation/useDeleteEditorProject";
 import { usePrefetchEditorProject } from "@/api/editor-project/query/usePrefetchEditorProject";
 import { preloadEditor } from "./components/lazy-editors";
+import { NewProjectMenu } from "./components/new-project-menu";
 import { useSessionMigration } from "./hooks/useSessionMigration";
-import {
-  buildStudioEditorPath,
-  buildStudioProjectPath,
-  ROUTES,
-} from "@/constants/routes.constants";
+import { buildStudioProjectPath, ROUTES } from "@/constants/routes.constants";
 import type { StudioMode } from "@/types/flow.types";
-import {
-  DEFAULT_STUDIO_MODE,
-  STUDIO_MODE_LABELS,
-  STUDIO_MODES,
-} from "./constants/studio-modes";
+import { STUDIO_MODE_LABELS, STUDIO_MODES } from "./constants/studio-modes";
 import {
   Body,
   Card,
@@ -39,7 +32,6 @@ import {
   HeaderSpacer,
   Logo,
   LogoLink,
-  NewButton,
   SectionLabel,
   SkeletonCard,
   SkeletonGrid,
@@ -103,7 +95,6 @@ export const StudioProjectsPage: React.FC = () => {
   const projects = data?.data?.projects ?? [];
   const isSwitching = isLoading || isPreviousData;
   const skeletonCount = projects.length > 0 ? projects.length : SKELETON_COUNT;
-  const newProjectMode = editorFilter ?? DEFAULT_STUDIO_MODE;
   const [pendingDelete, setPendingDelete] = useState<{
     uuid: string;
     name: string;
@@ -157,10 +148,7 @@ export const StudioProjectsPage: React.FC = () => {
 
         <HeaderSpacer />
 
-        <NewButton to={buildStudioEditorPath(newProjectMode)}>
-          <Plus size={14} strokeWidth={2.4} />
-          New {STUDIO_MODE_LABELS[newProjectMode]}
-        </NewButton>
+        <NewProjectMenu />
       </Header>
 
       <Body>
@@ -182,13 +170,11 @@ export const StudioProjectsPage: React.FC = () => {
           <EmptyState>
             <EmptyTitle>Nothing here yet.</EmptyTitle>
             <EmptyHint>
-              Start a {STUDIO_MODE_LABELS[newProjectMode]} project and it will
-              show up here, on every device you sign in from.
+              {editorFilter
+                ? `Start a ${STUDIO_MODE_LABELS[editorFilter]} project and it will show up here, on every device you sign in from.`
+                : "Start a project and it will show up here, on every device you sign in from."}
             </EmptyHint>
-            <NewButton to={buildStudioEditorPath(newProjectMode)}>
-              <Plus size={14} strokeWidth={2.4} />
-              New {STUDIO_MODE_LABELS[newProjectMode]}
-            </NewButton>
+            <NewProjectMenu />
           </EmptyState>
         ) : null}
 

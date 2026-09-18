@@ -1,17 +1,12 @@
 import React, { Suspense, useCallback } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import Bugsnag from "@bugsnag/js";
 import { useStudioStore } from "@/stores/studio.store";
-import type { StudioMode } from "@/types/flow.types";
 import { useFlowStore } from "@/stores/flow.store";
-import { buildStudioEditorPath, ROUTES } from "@/constants/routes.constants";
-import {
-  parseStudioMode,
-  STUDIO_MODE_LABELS,
-  STUDIO_MODES,
-} from "./constants/studio-modes";
+import { ROUTES } from "@/constants/routes.constants";
+import { parseStudioMode, STUDIO_MODE_LABELS } from "./constants/studio-modes";
 import { StudioTabs } from "./components/studio-tabs";
 import { ProjectBar } from "./components/project-bar";
 import { SaveStatus } from "./components/save-status";
@@ -47,13 +42,11 @@ import {
   StudioBody,
   StudioFrame,
   UprezFrame,
-  ModeToggle,
-  ModeButton,
+  EditorBadge,
   BodyOverlay,
 } from "./studio.page.styled";
 
 export const StudioPage: React.FC = () => {
-  const navigate = useNavigate();
   const { editorId, projectUuid } = useParams<{
     editorId?: string;
     projectUuid?: string;
@@ -61,13 +54,6 @@ export const StudioPage: React.FC = () => {
   const mode = parseStudioMode(editorId);
   const sync = useEditorProjectSync(mode, projectUuid);
   useSessionMigration();
-
-  const handleModeChange = useCallback(
-    (nextMode: StudioMode) => {
-      if (nextMode !== mode) navigate(buildStudioEditorPath(nextMode));
-    },
-    [mode, navigate],
-  );
 
   const activeTab = useStudioStore((s) => s.activeTab);
   useStudioJobProgress();
@@ -152,19 +138,8 @@ export const StudioPage: React.FC = () => {
             <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
           </LogoLink>
           <StudioTitle>Studio</StudioTitle>
+          <EditorBadge $mode={mode}>{STUDIO_MODE_LABELS[mode]}</EditorBadge>
         </TitleGroup>
-        <ModeToggle>
-          {STUDIO_MODES.map((studioMode) => (
-            <ModeButton
-              key={studioMode}
-              $active={mode === studioMode}
-              aria-pressed={mode === studioMode}
-              onClick={() => handleModeChange(studioMode)}
-            >
-              {STUDIO_MODE_LABELS[studioMode]}
-            </ModeButton>
-          ))}
-        </ModeToggle>
         <ProjectBar
           name={sync.projectName}
           disabled={sync.status === "loading"}

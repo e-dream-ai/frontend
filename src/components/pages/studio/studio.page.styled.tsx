@@ -1,6 +1,8 @@
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import { FLOW } from "@/constants/flow-theme.constants";
+import type { StudioMode } from "@/types/flow.types";
+import { EDITOR_BADGE } from "./constants/editor-badge";
 
 export const StudioContainer = styled.div<{ $dragOver?: boolean }>`
   height: 100vh;
@@ -93,6 +95,18 @@ export const StudioTitle = styled.h1`
   font-family: ${FLOW.fontFamily};
 `;
 
+export const EditorBadge = styled.span<{ $mode: StudioMode }>`
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: ${(p) => EDITOR_BADGE[p.$mode] ?? FLOW.textDim};
+  color: ${FLOW.bg};
+  flex-shrink: 0;
+`;
+
 export const HeaderSpacer = styled.div`
   flex: 1;
 `;
@@ -151,31 +165,6 @@ export const StudioFrame = styled.div<{ $dragOver?: boolean }>`
     border-color: ${FLOW.accent};
     background-color: ${FLOW.accentDim};
   `}
-`;
-
-export const ModeToggle = styled.div`
-  display: flex;
-  background: ${FLOW.bg};
-  border: 1px solid ${FLOW.border};
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
-`;
-
-export const ModeButton = styled.button<{ $active: boolean }>`
-  padding: 6px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-family: ${FLOW.fontFamily};
-  color: ${(props) => (props.$active ? FLOW.text : FLOW.textMuted)};
-  background: ${(props) => (props.$active ? FLOW.bgElevated : "transparent")};
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    color: ${FLOW.text};
-  }
 `;
 
 export const UprezFrame = styled(StudioFrame)`

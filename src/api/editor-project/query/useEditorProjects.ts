@@ -35,7 +35,7 @@ export const useEditorProjects = ({
     editorProjectKeys.list(filters),
     `/v2/editor-projects${buildQueryString(filters)}`,
     { headers: getRequestHeaders({ contentType: ContentType.json }) },
-    {},
+    { refetchOnMount: true },
     { enabled, staleTime: EDITOR_PROJECT_LIST_STALE_TIME },
   );
 

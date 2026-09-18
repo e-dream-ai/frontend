@@ -2,6 +2,7 @@ import styled, { keyframes } from "styled-components";
 import { Link } from "react-router-dom";
 import { FLOW, flowFadeSlideUp } from "@/constants/flow-theme.constants";
 import type { StudioMode } from "@/types/flow.types";
+import { EDITOR_BADGE } from "./constants/editor-badge";
 
 export const Container = styled.div`
   min-height: 100vh;
@@ -90,33 +91,6 @@ export const FilterButton = styled.button<{ $active: boolean }>`
   @media (max-width: 480px) {
     padding: 6px 12px;
     font-size: 12px;
-  }
-`;
-
-export const NewButton = styled(Link)`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 7px 14px;
-  border-radius: ${FLOW.radiusSm};
-  background: ${FLOW.accentDim};
-  border: 1px solid ${FLOW.accent};
-  color: ${FLOW.accent};
-  font-size: 13px;
-  font-weight: 600;
-  text-decoration: none;
-  transition:
-    background 0.15s,
-    color 0.15s;
-
-  &:hover {
-    background: ${FLOW.accent};
-    color: ${FLOW.bg};
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${FLOW.accent};
-    outline-offset: 2px;
   }
 `;
 
@@ -213,12 +187,6 @@ export const ThumbFallback = styled.span`
   align-items: center;
   justify-content: center;
 `;
-
-const EDITOR_BADGE: Record<StudioMode, string> = {
-  flow: FLOW.accent,
-  action: FLOW.processing,
-  uprez: FLOW.success,
-};
 
 export const ThumbBadge = styled.span<{ $mode: StudioMode }>`
   position: absolute;

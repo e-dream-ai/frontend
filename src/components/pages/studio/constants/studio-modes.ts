@@ -26,3 +26,9 @@ export const isStudioMode = (value?: string): value is StudioMode =>
 
 export const parseStudioMode = (value?: string): StudioMode =>
   isStudioMode(value) ? value : DEFAULT_STUDIO_MODE;
+
+export const STUDIO_MODE_DESCRIPTIONS: Record<StudioMode, string> = {
+  flow: "Animate transitions between reference frames",
+  action: "Generate images and turn them into clips",
+  uprez: "Upscale every dream in a playlist",
+};

@@ -14,16 +14,18 @@ export const Bar = styled.div`
 `;
 
 export const NameInput = styled.input`
-  width: 180px;
+  width: 280px;
   max-width: 100%;
   padding: 6px 10px;
   background: transparent;
   border: 1px solid transparent;
   border-radius: ${FLOW.radiusSm};
   color: ${FLOW.text};
-  font-family: inherit;
-  font-size: 13px;
-  font-weight: 500;
+  font-family: ${FLOW.fontFamily};
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  text-overflow: ellipsis;
 
   &::placeholder {
     color: ${FLOW.textMuted};
@@ -31,6 +33,7 @@ export const NameInput = styled.input`
 
   &:hover:not(:disabled) {
     border-color: ${FLOW.border};
+    background: ${FLOW.bg};
   }
 
   &:focus {
