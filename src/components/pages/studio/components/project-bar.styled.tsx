@@ -14,15 +14,15 @@ export const Bar = styled.div`
 `;
 
 export const NameInput = styled.input`
-  width: 280px;
+  width: 196px;
   max-width: 100%;
-  padding: 6px 10px;
-  background: transparent;
-  border: 1px solid transparent;
+  padding: 4px 8px;
+  background: ${FLOW.bg};
+  border: 1px solid ${FLOW.border};
   border-radius: ${FLOW.radiusSm};
   color: ${FLOW.text};
   font-family: ${FLOW.fontFamily};
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.01em;
   text-overflow: ellipsis;
@@ -32,8 +32,8 @@ export const NameInput = styled.input`
   }
 
   &:hover:not(:disabled) {
-    border-color: ${FLOW.border};
-    background: ${FLOW.bg};
+    border-color: ${FLOW.borderHover};
+    background: ${FLOW.bgInput};
   }
 
   &:focus {
@@ -43,8 +43,10 @@ export const NameInput = styled.input`
   }
 
   &:disabled {
+    background: transparent;
+    border-style: dashed;
     color: ${FLOW.textMuted};
-    cursor: not-allowed;
+    cursor: default;
   }
 
   @media (max-width: 480px) {

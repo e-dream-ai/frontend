@@ -12,6 +12,7 @@ import { ProjectBar } from "./components/project-bar";
 import { SaveStatus } from "./components/save-status";
 import { ProjectConflictModal } from "./components/project-conflict-modal";
 import { ProjectLockedModal } from "./components/project-locked-modal";
+import { PlaylistNameModal } from "./components/playlist-name-modal";
 import { StudioSkeleton } from "./components/studio-skeleton";
 import {
   ActionsTab,
@@ -24,6 +25,7 @@ import {
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
 import { useEditorProjectSync } from "./hooks/useEditorProjectSync";
 import { useEditorProjectLock } from "./hooks/useEditorProjectLock";
+import { useEditorProjectPlaylist } from "./hooks/useEditorProjectPlaylist";
 import { useSessionMigration } from "./hooks/useSessionMigration";
 import { useFileDropUpload } from "./hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
@@ -46,6 +48,7 @@ import {
   UprezFrame,
   EditorBadge,
   BodyOverlay,
+  SaveButton,
 } from "./studio.page.styled";
 
 export const StudioPage: React.FC = () => {
@@ -61,6 +64,12 @@ export const StudioPage: React.FC = () => {
     projectUuid,
     lock.status === "held" || lock.status === "idle",
   );
+  const playlistSave = useEditorProjectPlaylist({
+    mode,
+    playlist: sync.playlist,
+    attachPlaylist: sync.attachPlaylist,
+  });
+  const ownsPlaylist = mode !== "uprez";
   useSessionMigration();
 
   const activeTab = useStudioStore((s) => s.activeTab);
@@ -149,10 +158,21 @@ export const StudioPage: React.FC = () => {
           <EditorBadge $mode={mode}>{STUDIO_MODE_LABELS[mode]}</EditorBadge>
         </TitleGroup>
         <ProjectBar
-          name={sync.projectName}
-          disabled={sync.status === "loading"}
-          onRename={sync.rename}
+          name={sync.playlist?.name ?? ""}
+          disabled={
+            !ownsPlaylist || !sync.playlist || sync.status === "loading"
+          }
+          onRename={playlistSave.renamePlaylist}
         />
+        {ownsPlaylist ? (
+          <SaveButton
+            type="button"
+            onClick={playlistSave.save}
+            disabled={playlistSave.status === "saving"}
+          >
+            {playlistSave.status === "saving" ? "Saving..." : "Save"}
+          </SaveButton>
+        ) : null}
         <HeaderSpacer />
         <SaveStatus status={sync.status} />
         {canManageProviderKey ? (
@@ -174,7 +194,7 @@ export const StudioPage: React.FC = () => {
           )}
           {mode === "uprez" && (
             <UprezFrame>
-              <UprezApp onSourcePlaylistChange={sync.linkPlaylist} />
+              <UprezApp onSourcePlaylistChange={sync.attachPlaylist} />
             </UprezFrame>
           )}
         </Suspense>
@@ -185,6 +205,14 @@ export const StudioPage: React.FC = () => {
           </BodyOverlay>
         ) : null}
       </StudioBody>
+
+      {playlistSave.status === "naming" ? (
+        <PlaylistNameModal
+          defaultName={playlistSave.suggestedName}
+          onSave={playlistSave.saveAs}
+          onCancel={playlistSave.cancelNaming}
+        />
+      ) : null}
 
       {lock.status === "blocked" ? (
         <ProjectLockedModal

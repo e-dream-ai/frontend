@@ -41,6 +41,7 @@ import {
 } from "./studio-projects.page.styled";
 
 const PROJECTS_PAGE_SIZE = 60;
+const UNSAVED_PROJECT_NAME = "Untitled";
 const SKELETON_COUNT = 6;
 
 type ThumbnailProps = {
@@ -164,6 +165,7 @@ export const StudioProjectsPage: React.FC = () => {
           <Grid>
             {projects.map((project) => {
               const mode = project.editorId;
+              const name = project.playlist?.name ?? UNSAVED_PROJECT_NAME;
 
               return (
                 <Card key={project.uuid}>
@@ -176,12 +178,12 @@ export const StudioProjectsPage: React.FC = () => {
                   >
                     <Thumbnail
                       src={project.thumbnail}
-                      alt={`${project.name} preview`}
+                      alt={`${name} preview`}
                       mode={mode}
                       label={STUDIO_MODE_LABELS[mode] ?? project.editorId}
                     />
                     <CardBody>
-                      <CardName>{project.name}</CardName>
+                      <CardName>{name}</CardName>
                       <CardMetaRow>
                         <CardMeta>{formatUpdated(project.updated_at)}</CardMeta>
                       </CardMetaRow>
@@ -190,12 +192,9 @@ export const StudioProjectsPage: React.FC = () => {
 
                   <DeleteButton
                     type="button"
-                    aria-label={`Delete ${project.name}`}
+                    aria-label={`Delete ${name}`}
                     onClick={() =>
-                      setPendingDelete({
-                        uuid: project.uuid,
-                        name: project.name,
-                      })
+                      setPendingDelete({ uuid: project.uuid, name })
                     }
                   >
                     <Trash2 size={14} />
@@ -213,7 +212,7 @@ export const StudioProjectsPage: React.FC = () => {
         title="Delete project"
         text={`"${
           pendingDelete?.name ?? ""
-        }" and its saved state will be removed. The dreams and playlists it produced are not affected.`}
+        }" will be removed from the studio. Its playlist and dreams are not affected.`}
         confirmText="Delete"
         confirmButtonType="danger"
         onConfirm={handleConfirmDelete}

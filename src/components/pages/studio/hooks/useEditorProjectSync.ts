@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
 import Bugsnag from "@bugsnag/js";
 import { useEditorProject } from "@/api/editor-project/query/useEditorProject";
 import { useCreateEditorProject } from "@/api/editor-project/mutation/useCreateEditorProject";
@@ -28,17 +27,7 @@ export type ProjectSyncStatus =
   | "saved"
   | "error";
 
-export const UNTITLED_PROJECT_NAME = "Untitled Project";
-
-const MAX_NAME_ATTEMPTS = 25;
-
-const untitledName = (attempt: number) =>
-  attempt === 0
-    ? UNTITLED_PROJECT_NAME
-    : `${UNTITLED_PROJECT_NAME} ${attempt + 1}`;
-
-const isNameTaken = (error: unknown) =>
-  axios.isAxiosError(error) && error.response?.status === 409;
+export const UNTITLED_PROJECT_NAME = "Untitled";
 
 export const useEditorProjectSync = (
   mode: StudioMode,
@@ -122,27 +111,13 @@ export const useEditorProjectSync = (
       creatingRef.current = true;
       setStatus("saving");
       try {
-        let created;
-        for (let attempt = 0; attempt < MAX_NAME_ATTEMPTS; attempt += 1) {
-          try {
-            created = await createProject.mutateAsync({
-              editorId: mode,
-              name: untitledName(attempt),
-              state,
-              schemaVersion: EDITOR_STATE_SCHEMA_VERSION,
-              thumbnailDreamUuid: adapter.thumbnailDreamUuid(),
-            });
-            break;
-          } catch (error) {
-            if (!isNameTaken(error)) throw error;
-          }
-        }
-
-        if (!created) {
-          throw new Error(
-            `Could not find a free name after ${MAX_NAME_ATTEMPTS} attempts`,
-          );
-        }
+        const created = await createProject.mutateAsync({
+          editorId: mode,
+          name: UNTITLED_PROJECT_NAME,
+          state,
+          schemaVersion: EDITOR_STATE_SCHEMA_VERSION,
+          thumbnailDreamUuid: adapter.thumbnailDreamUuid(),
+        });
 
         const project = created.data?.project;
         if (!project) throw new Error("No project in create response");
@@ -285,10 +260,11 @@ export const useEditorProjectSync = (
     }
   }, [adapter, createProject, mode, navigate, projectName]);
 
-  const linkPlaylist = useCallback(
+  const attachPlaylist = useCallback(
     async (next: EditorProjectPlaylistRef) => {
       const uuid = hydratedUuidRef.current;
       setPlaylist(next);
+      setProjectName(next.name);
       if (!uuid) return;
 
       try {
@@ -296,32 +272,7 @@ export const useEditorProjectSync = (
           uuid,
           revision: revisionRef.current,
           playlistUuid: next.uuid,
-        });
-        const project = saved.data?.project;
-        if (project) revisionRef.current = project.revision;
-      } catch (error) {
-        if (isProjectLocked(error)) return;
-        if (isEditorProjectConflict(error)) {
-          setConflict(error.serverProject ?? null);
-          return;
-        }
-        Bugsnag.notify(error as Error);
-      }
-    },
-    [updateProject],
-  );
-
-  const rename = useCallback(
-    async (name: string) => {
-      const uuid = hydratedUuidRef.current;
-      setProjectName(name);
-      if (!uuid) return;
-
-      try {
-        const saved = await updateProject.mutateAsync({
-          uuid,
-          revision: revisionRef.current,
-          name,
+          name: next.name,
         });
         const project = saved.data?.project;
         if (project) revisionRef.current = project.revision;
@@ -340,10 +291,8 @@ export const useEditorProjectSync = (
   return {
     status: displayStatus,
     conflict,
-    projectName,
     playlist,
-    linkPlaylist,
-    rename,
+    attachPlaylist,
     takeServerVersion,
     overwriteServerVersion,
     keepMineAsNewProject,
