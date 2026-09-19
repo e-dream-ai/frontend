@@ -12,7 +12,6 @@ import { ProjectBar } from "./components/project-bar";
 import { SaveStatus } from "./components/save-status";
 import { ProjectConflictModal } from "./components/project-conflict-modal";
 import { ProjectLockedModal } from "./components/project-locked-modal";
-import { PlaylistNameModal } from "./components/playlist-name-modal";
 import { StudioSkeleton } from "./components/studio-skeleton";
 import {
   ActionsTab,
@@ -158,11 +157,9 @@ export const StudioPage: React.FC = () => {
           <EditorBadge $mode={mode}>{STUDIO_MODE_LABELS[mode]}</EditorBadge>
         </TitleGroup>
         <ProjectBar
-          name={sync.playlist?.name ?? ""}
-          disabled={
-            !ownsPlaylist || !sync.playlist || sync.status === "loading"
-          }
-          onRename={playlistSave.renamePlaylist}
+          name={playlistSave.name}
+          disabled={!ownsPlaylist || sync.status === "loading"}
+          onRename={playlistSave.setName}
         />
         {ownsPlaylist ? (
           <SaveButton
@@ -205,14 +202,6 @@ export const StudioPage: React.FC = () => {
           </BodyOverlay>
         ) : null}
       </StudioBody>
-
-      {playlistSave.status === "naming" ? (
-        <PlaylistNameModal
-          defaultName={playlistSave.suggestedName}
-          onSave={playlistSave.saveAs}
-          onCancel={playlistSave.cancelNaming}
-        />
-      ) : null}
 
       {lock.status === "blocked" ? (
         <ProjectLockedModal

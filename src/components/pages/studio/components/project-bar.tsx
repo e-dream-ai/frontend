@@ -51,7 +51,6 @@ export const ProjectBar: React.FC<Props> = ({
         disabled={disabled}
         placeholder="Untitled"
         aria-label="Playlist name"
-        title={disabled ? "Save to name this playlist" : undefined}
         onChange={(event) => setDraft(event.target.value)}
         onBlur={commit}
         onKeyDown={handleKeyDown}

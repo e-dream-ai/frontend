@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { toast } from "react-toastify";
 import Bugsnag from "@bugsnag/js";
 import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
@@ -12,7 +12,7 @@ import type { EditorProjectPlaylistRef } from "@/types/editor-project.types";
 import type { StudioMode } from "@/types/flow.types";
 import { SAVE_ADAPTERS } from "../utils/save-adapters";
 
-export type PlaylistSaveStatus = "idle" | "naming" | "saving";
+export type PlaylistSaveStatus = "idle" | "saving";
 
 type Options = {
   mode: StudioMode;
@@ -31,6 +31,8 @@ export const useEditorProjectPlaylist = ({
   const addPlaylistItems = useAddPlaylistItems();
 
   const [status, setStatus] = useState<PlaylistSaveStatus>("idle");
+  const [pendingName, setPendingName] = useState("");
+  const pendingNameRef = useRef("");
 
   const pushDreams = useCallback(
     async (playlistUuid: string) => {
@@ -63,10 +65,9 @@ export const useEditorProjectPlaylist = ({
     [adapter, addPlaylistItems],
   );
 
-  const saveAs = useCallback(
+  const createAndSave = useCallback(
     async (name: string) => {
-      const trimmed = name.trim();
-      if (!trimmed) return;
+      const trimmed = name.trim() || adapter.defaultName();
 
       setStatus("saving");
       let next;
@@ -78,6 +79,8 @@ export const useEditorProjectPlaylist = ({
 
         await attachPlaylist({ uuid: next.uuid, name: next.name });
         adapter.link(next.uuid);
+        pendingNameRef.current = "";
+        setPendingName("");
       } catch (error) {
         Bugsnag.notify(error as Error);
         toast.error("Could not create the playlist. Try again.");
@@ -100,7 +103,7 @@ export const useEditorProjectPlaylist = ({
 
   const save = useCallback(async () => {
     if (!playlist) {
-      setStatus("naming");
+      await createAndSave(pendingNameRef.current);
       return;
     }
 
@@ -114,7 +117,7 @@ export const useEditorProjectPlaylist = ({
     } finally {
       setStatus("idle");
     }
-  }, [playlist, pushDreams]);
+  }, [createAndSave, playlist, pushDreams]);
 
   const renamePlaylist = useCallback(
     async (name: string) => {
@@ -138,14 +141,22 @@ export const useEditorProjectPlaylist = ({
     [attachPlaylist, playlist, updatePlaylist],
   );
 
-  const cancelNaming = useCallback(() => setStatus("idle"), []);
+  const setName = useCallback(
+    (next: string) => {
+      if (playlist) {
+        void renamePlaylist(next);
+        return;
+      }
+      pendingNameRef.current = next;
+      setPendingName(next);
+    },
+    [playlist, renamePlaylist],
+  );
 
   return {
     status,
-    suggestedName: adapter.defaultName,
+    name: playlist?.name ?? pendingName,
+    setName,
     save,
-    saveAs,
-    cancelNaming,
-    renamePlaylist,
   };
 };
