@@ -1,4 +1,5 @@
 import type { FlowReferenceFrame, FlowTransition } from "@/types/flow.types";
+import { DEFAULT_TRANSITION_SETTINGS } from "../constants/default-transition-settings";
 import type { StudioImage, StudioJob } from "@/types/studio.types";
 
 export const EDITOR_STATE_SCHEMA_VERSION = 1;
@@ -86,11 +87,22 @@ export const fromPersistedFlowState = (
     const toFrameId = referenceFrames[i + 1].id;
     const stored = transitions[transitionKey(fromFrameId, toFrameId)];
 
-    ordered.push(
-      stored
-        ? { ...stored }
-        : { fromFrameId, toFrameId, status: "idle" as const },
-    );
+    if (stored) {
+      ordered.push({ ...stored });
+      continue;
+    }
+
+    // Settings live on the transition now, so a gap the snapshot has no entry
+    // for cannot be left without them. Same rule the store uses when a new pair
+    // appears: copy the transition before it, and only reach for the built-in
+    // default at the head of the flow.
+    const before = ordered[ordered.length - 1];
+    ordered.push({
+      fromFrameId,
+      toFrameId,
+      status: "idle" as const,
+      settings: { ...(before?.settings ?? DEFAULT_TRANSITION_SETTINGS) },
+    });
   }
 
   return {

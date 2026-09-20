@@ -76,13 +76,25 @@ describe("flow state persistence", () => {
         transition("a", "b", { dreamUuid: "d1" }),
         transition("b", "c", { dreamUuid: "d2" }),
       ],
-      globalPrompt: "keep me",
+      savedPlaylistUuid: "keep me",
     };
 
     const restored = fromPersistedFlowState(toPersistedFlowState(original));
 
     expect(restored.transitions.map((t) => t.dreamUuid)).toEqual(["d1", "d2"]);
-    expect(restored.globalPrompt).toBe("keep me");
+    expect(restored.savedPlaylistUuid).toBe("keep me");
+  });
+
+  it("gives every restored transition settings, including unstored gaps", () => {
+    const persisted = toPersistedFlowState({
+      referenceFrames: [frame("a"), frame("b")],
+      transitions: [],
+    });
+
+    const restored = fromPersistedFlowState(persisted);
+
+    expect(restored.transitions).toHaveLength(1);
+    expect(restored.transitions[0].settings).toBeDefined();
   });
 });
 
