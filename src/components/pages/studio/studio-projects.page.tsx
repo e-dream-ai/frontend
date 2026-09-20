@@ -41,7 +41,7 @@ import {
 } from "./studio-projects.page.styled";
 
 const PROJECTS_PAGE_SIZE = 60;
-const UNSAVED_PROJECT_NAME = "Untitled";
+const UNSAVED_PLAYLIST_NAME = "Untitled";
 const SKELETON_COUNT = 6;
 
 type ThumbnailProps = {
@@ -112,7 +112,7 @@ export const StudioProjectsPage: React.FC = () => {
       toast.success(`Deleted ${name}`);
     } catch (error) {
       Bugsnag.notify(error as Error);
-      toast.error("Could not delete that project. Try again.");
+      toast.error("Could not delete that playlist. Try again.");
     }
   }, [deleteProject, pendingDelete]);
 
@@ -152,10 +152,10 @@ export const StudioProjectsPage: React.FC = () => {
             </EmptyTitle>
             <EmptyHint>
               {search
-                ? "No projects match that search."
+                ? "No playlists match that search."
                 : editorFilter
-                  ? `Start a ${STUDIO_MODE_LABELS[editorFilter]} project and it will show up here, on every device you sign in from.`
-                  : "Start a project and it will show up here, on every device you sign in from."}
+                  ? `Start a ${STUDIO_MODE_LABELS[editorFilter]} playlist and it will show up here, on every device you sign in from.`
+                  : "Start a playlist and it will show up here, on every device you sign in from."}
             </EmptyHint>
             {search ? null : <NewProjectMenu />}
           </EmptyState>
@@ -165,7 +165,7 @@ export const StudioProjectsPage: React.FC = () => {
           <Grid>
             {projects.map((project) => {
               const mode = project.editorId;
-              const name = project.playlist?.name ?? UNSAVED_PROJECT_NAME;
+              const name = project.playlist?.name ?? UNSAVED_PLAYLIST_NAME;
 
               return (
                 <Card key={project.uuid}>
@@ -209,10 +209,10 @@ export const StudioProjectsPage: React.FC = () => {
       <ConfirmModal
         isOpen={Boolean(pendingDelete)}
         isConfirming={deleteProject.isLoading}
-        title="Delete project"
+        title="Delete playlist"
         text={`"${
           pendingDelete?.name ?? ""
-        }" will be removed from the studio. Its playlist and dreams are not affected.`}
+        }" will be removed from the studio. The playlist itself and its dreams are not affected.`}
         confirmText="Delete"
         confirmButtonType="danger"
         onConfirm={handleConfirmDelete}

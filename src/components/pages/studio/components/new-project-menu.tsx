@@ -55,12 +55,12 @@ export const NewProjectMenu: React.FC = () => {
         onClick={() => setOpen((value) => !value)}
       >
         <Plus size={14} strokeWidth={2.4} />
-        New project
+        New playlist
         <ChevronDown size={14} strokeWidth={2.4} />
       </Trigger>
 
       {open ? (
-        <Menu id={menuId} aria-label="Project types">
+        <Menu id={menuId} aria-label="Playlist types">
           {STUDIO_MODES.map((mode) => (
             <MenuItem key={mode}>
               <Item

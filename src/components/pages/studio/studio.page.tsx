@@ -12,6 +12,7 @@ import { ProjectBar } from "./components/project-bar";
 import { SaveStatus } from "./components/save-status";
 import { ProjectConflictModal } from "./components/project-conflict-modal";
 import { ProjectLockedModal } from "./components/project-locked-modal";
+import { PlaylistActions } from "./components/playlist-actions";
 import { StudioSkeleton } from "./components/studio-skeleton";
 import {
   ActionsTab,
@@ -47,7 +48,6 @@ import {
   UprezFrame,
   EditorBadge,
   BodyOverlay,
-  SaveButton,
 } from "./studio.page.styled";
 
 export const StudioPage: React.FC = () => {
@@ -145,9 +145,9 @@ export const StudioPage: React.FC = () => {
   return (
     <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
-        <BackButton to={ROUTES.STUDIO} aria-label="Back to projects">
+        <BackButton to={ROUTES.STUDIO} aria-label="Back to playlists">
           <ArrowLeft size={16} />
-          <span>Projects</span>
+          <span>Playlists</span>
         </BackButton>
         <TitleGroup>
           <LogoLink to={ROUTES.ROOT} aria-label="Go to home">
@@ -161,15 +161,12 @@ export const StudioPage: React.FC = () => {
           disabled={!ownsPlaylist || sync.status === "loading"}
           onRename={playlistSave.setName}
         />
-        {ownsPlaylist ? (
-          <SaveButton
-            type="button"
-            onClick={playlistSave.save}
-            disabled={playlistSave.status === "saving"}
-          >
-            {playlistSave.status === "saving" ? "Saving..." : "Save"}
-          </SaveButton>
-        ) : null}
+        <PlaylistActions
+          playlist={sync.playlist}
+          canSave={ownsPlaylist}
+          saving={playlistSave.status === "saving"}
+          onSave={playlistSave.save}
+        />
         <HeaderSpacer />
         <SaveStatus status={sync.status} />
         {canManageProviderKey ? (

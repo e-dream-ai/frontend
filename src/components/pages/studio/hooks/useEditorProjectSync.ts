@@ -97,6 +97,42 @@ export const useEditorProjectSync = (
     hydrate(loadedProject);
   }, [projectUuid, loadedProject, hydrate]);
 
+  const ensureProject = useCallback(async () => {
+    if (hydratedUuidRef.current) return hydratedUuidRef.current;
+    if (creatingRef.current) return undefined;
+
+    creatingRef.current = true;
+    setStatus("saving");
+    const state = adapter.read();
+
+    try {
+      const created = await createProject.mutateAsync({
+        editorId: mode,
+        name: UNTITLED_PROJECT_NAME,
+        state,
+        schemaVersion: EDITOR_STATE_SCHEMA_VERSION,
+        thumbnailDreamUuid: adapter.thumbnailDreamUuid(),
+      });
+
+      const project = created.data?.project;
+      if (!project) throw new Error("No project in create response");
+
+      revisionRef.current = project.revision;
+      lastSavedRef.current = JSON.stringify(state);
+      hydratedUuidRef.current = project.uuid;
+      setProjectName(project.name);
+      setStatus("saved");
+      navigate(buildStudioProjectPath(mode, project.uuid), { replace: true });
+      return project.uuid;
+    } catch (error) {
+      Bugsnag.notify(error as Error);
+      setStatus("error");
+      return undefined;
+    } finally {
+      creatingRef.current = false;
+    }
+  }, [adapter, createProject, mode, navigate]);
+
   const persist = useCallback(async () => {
     if (hydratingRef.current || conflict || !canSave) return;
 
@@ -108,32 +144,7 @@ export const useEditorProjectSync = (
 
     if (!uuid) {
       if (creatingRef.current || adapter.isEmpty()) return;
-      creatingRef.current = true;
-      setStatus("saving");
-      try {
-        const created = await createProject.mutateAsync({
-          editorId: mode,
-          name: UNTITLED_PROJECT_NAME,
-          state,
-          schemaVersion: EDITOR_STATE_SCHEMA_VERSION,
-          thumbnailDreamUuid: adapter.thumbnailDreamUuid(),
-        });
-
-        const project = created.data?.project;
-        if (!project) throw new Error("No project in create response");
-
-        revisionRef.current = project.revision;
-        lastSavedRef.current = serialised;
-        hydratedUuidRef.current = project.uuid;
-        setProjectName(project.name);
-        setStatus("saved");
-        navigate(buildStudioProjectPath(mode, project.uuid), { replace: true });
-      } catch (error) {
-        Bugsnag.notify(error as Error);
-        setStatus("error");
-      } finally {
-        creatingRef.current = false;
-      }
+      await ensureProject();
       return;
     }
 
@@ -163,15 +174,7 @@ export const useEditorProjectSync = (
       Bugsnag.notify(error as Error);
       setStatus("error");
     }
-  }, [
-    adapter,
-    canSave,
-    conflict,
-    createProject,
-    mode,
-    navigate,
-    updateProject,
-  ]);
+  }, [adapter, canSave, conflict, ensureProject, updateProject]);
 
   useEffect(() => {
     persistRef.current = persist;
@@ -261,11 +264,12 @@ export const useEditorProjectSync = (
   }, [adapter, createProject, mode, navigate, projectName]);
 
   const attachPlaylist = useCallback(
-    async (next: EditorProjectPlaylistRef) => {
-      const uuid = hydratedUuidRef.current;
+    async (next: EditorProjectPlaylistRef): Promise<boolean> => {
       setPlaylist(next);
       setProjectName(next.name);
-      if (!uuid) return;
+
+      const uuid = hydratedUuidRef.current ?? (await ensureProject());
+      if (!uuid) return false;
 
       try {
         const saved = await updateProject.mutateAsync({
@@ -276,16 +280,18 @@ export const useEditorProjectSync = (
         });
         const project = saved.data?.project;
         if (project) revisionRef.current = project.revision;
+        return true;
       } catch (error) {
-        if (isProjectLocked(error)) return;
+        if (isProjectLocked(error)) return false;
         if (isEditorProjectConflict(error)) {
           setConflict(error.serverProject ?? null);
-          return;
+          return false;
         }
         Bugsnag.notify(error as Error);
+        return false;
       }
     },
-    [updateProject],
+    [ensureProject, updateProject],
   );
 
   return {

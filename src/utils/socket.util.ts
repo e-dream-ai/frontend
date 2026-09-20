@@ -24,7 +24,7 @@ export const emitPlayDream = (socket?: Socket | null, dream?: Dream): void => {
 
 export const emitPlayPlaylist = (
   socket?: Socket | null,
-  playlist?: Playlist,
+  playlist?: Pick<Playlist, "uuid" | "name">,
 ): void => {
   socket?.emit(NEW_REMOTE_CONTROL_EVENT, {
     event: REMOTE_CONTROLS.PLAY_PLAYLIST.event,

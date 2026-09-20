@@ -28,9 +28,9 @@ export const ProjectControls: React.FC<Props> = ({
   onSearchChange,
 }) => (
   <Controls>
-    <SectionLabel>Projects</SectionLabel>
+    <SectionLabel>Playlists</SectionLabel>
 
-    <FilterToggle role="group" aria-label="Filter projects by editor">
+    <FilterToggle role="group" aria-label="Filter playlists by editor">
       <FilterButton
         type="button"
         $active={editorFilter === undefined}
@@ -61,8 +61,8 @@ export const ProjectControls: React.FC<Props> = ({
       <SearchInput
         type="search"
         value={search}
-        placeholder="Search projects"
-        aria-label="Search projects"
+        placeholder="Search playlists"
+        aria-label="Search playlists"
         onChange={(event) => onSearchChange(event.target.value)}
       />
       {search ? (

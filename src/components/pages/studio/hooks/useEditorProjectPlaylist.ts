@@ -17,7 +17,7 @@ export type PlaylistSaveStatus = "idle" | "saving";
 type Options = {
   mode: StudioMode;
   playlist: EditorProjectPlaylistRef | null;
-  attachPlaylist: (next: EditorProjectPlaylistRef) => void | Promise<void>;
+  attachPlaylist: (next: EditorProjectPlaylistRef) => Promise<boolean>;
 };
 
 export const useEditorProjectPlaylist = ({
@@ -77,13 +77,18 @@ export const useEditorProjectPlaylist = ({
         next = created.data?.playlist;
         if (!next) throw new Error("No playlist in create response");
 
-        await attachPlaylist({ uuid: next.uuid, name: next.name });
+        const attached = await attachPlaylist({
+          uuid: next.uuid,
+          name: next.name,
+        });
+        if (!attached) throw new Error("Could not link the playlist");
+
         adapter.link(next.uuid);
         pendingNameRef.current = "";
         setPendingName("");
       } catch (error) {
         Bugsnag.notify(error as Error);
-        toast.error("Could not create the playlist. Try again.");
+        toast.error(`Could not save "${trimmed}". Try again.`);
         setStatus("idle");
         return;
       }

@@ -31,8 +31,8 @@ export const ProjectLockedModal: React.FC<Props> = ({
     <ProjectDialog labelledBy="locked-title">
       <Title id="locked-title">
         {interrupted
-          ? "Project opened elsewhere"
-          : "This project is already open"}
+          ? "Playlist opened elsewhere"
+          : "This playlist is already open"}
       </Title>
       <Text>
         {when
@@ -42,7 +42,7 @@ export const ProjectLockedModal: React.FC<Props> = ({
       </Text>
       <Actions>
         <Button type="button" onClick={onLeave}>
-          Back to projects
+          Back to playlists
         </Button>
         <Button type="button" $primary onClick={onTakeOver}>
           Edit here anyway

@@ -129,39 +129,6 @@ export const NewSessionButton = styled.button`
   }
 `;
 
-export const SaveButton = styled.button`
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 14px;
-  border-radius: ${FLOW.radiusSm};
-  border: 1px solid ${FLOW.accent};
-  background: ${FLOW.accentDim};
-  color: ${FLOW.accent};
-  font-family: ${FLOW.fontFamily};
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-  transition:
-    background 0.15s,
-    color 0.15s;
-
-  &:hover:not(:disabled) {
-    background: ${FLOW.accent};
-    color: ${FLOW.bg};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-
-  &:focus-visible {
-    outline: 2px solid ${FLOW.accent};
-    outline-offset: 2px;
-  }
-`;
-
 export const StudioBody = styled.div`
   flex: 1;
   overflow-y: auto;

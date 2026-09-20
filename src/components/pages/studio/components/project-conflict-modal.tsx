@@ -16,10 +16,10 @@ export const ProjectConflictModal: React.FC<Props> = ({
   onKeepMine,
 }) => (
   <ProjectDialog labelledBy="conflict-title">
-    <Title id="conflict-title">This project changed somewhere else</Title>
+    <Title id="conflict-title">This playlist changed somewhere else</Title>
     <Text>
-      {serverName ? `"${serverName}"` : "This project"} was saved in another tab
-      or on another device after you opened it. Pick which version to keep.
+      {serverName ? `"${serverName}"` : "This playlist"} was saved in another
+      tab or on another device after you opened it. Pick which version to keep.
     </Text>
     <Actions>
       <Button type="button" onClick={onTakeTheirs}>

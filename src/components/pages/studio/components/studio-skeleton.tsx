@@ -10,7 +10,7 @@ import {
 const CARD_COUNT = 3;
 
 export const StudioSkeleton: React.FC = () => (
-  <SkeletonFrame role="status" aria-label="Loading project">
+  <SkeletonFrame role="status" aria-label="Loading playlist">
     <SkeletonBlock $height={14} $width="140px" />
     <SkeletonCards>
       {Array.from({ length: CARD_COUNT }, (_, index) => (
