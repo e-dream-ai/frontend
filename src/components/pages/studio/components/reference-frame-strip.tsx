@@ -18,7 +18,6 @@ import { ReferenceFrameCard } from "./reference-frame-card";
 import { ReferenceFrameLightbox } from "./reference-frame-lightbox";
 import { TransitionGapEnhanced } from "./transition-gap";
 import { describeMismatch } from "../utils/frame-aspect";
-import { FlowReset } from "./flow-reset";
 import { ForceSettingsDialog } from "./force-settings-dialog";
 import {
   forcedFieldPatch,
@@ -271,7 +270,6 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
               </SelectionButton>
             </>
           )}
-          <FlowReset />
         </SectionActions>
       </SectionHeader>
 

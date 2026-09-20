@@ -96,39 +96,6 @@ export const SectionLabel = styled.label`
   font-family: ${FLOW.fontFamily};
 `;
 
-export const TextInput = styled.input`
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 44px;
-  background: ${FLOW.bgInput};
-  border: 1px solid ${FLOW.border};
-  border-radius: 6px;
-  padding: 9px 12px;
-  color: ${FLOW.text};
-  font-size: 13px;
-  font-family: ${FLOW.fontFamily};
-  transition: border-color 0.15s;
-
-  @media (max-width: 480px) {
-    min-height: 38px;
-    padding: 8px 10px;
-  }
-
-  &::placeholder {
-    color: ${FLOW.textMuted};
-  }
-
-  &:focus {
-    outline: none;
-    border-color: ${FLOW.accent};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
-
 export const EmptySource = styled.button`
   display: flex;
   align-items: center;

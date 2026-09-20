@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
 import Bugsnag from "@bugsnag/js";
@@ -8,15 +8,11 @@ import { generateCloudflareImageURL } from "@/utils/image-handler";
 import { useUprezStore } from "@/stores/uprez.store";
 import type { EditorProjectPlaylistRef } from "@/types/editor-project.types";
 import { usePlaylistMetadata } from "../hooks/usePlaylistMetadata";
-import {
-  useAddPlaylistToCache,
-  type PlaylistSummary,
-} from "../hooks/useUserPlaylists";
+import { useAddPlaylistToCache } from "../hooks/useUserPlaylists";
 import { useCreateUprezPlaylist } from "../hooks/useCreateUprezPlaylist";
 import { SelectPlaylistModal } from "./select-playlist-modal";
 import { UprezFactorFields } from "./uprez-factor-row";
 import { isNoOpUprez } from "../utils/uprez-playlist-prompt";
-import { StudioResetButton } from "./reset-button";
 import {
   AppBody,
   AppHeader,
@@ -40,11 +36,8 @@ import {
   SourceName,
   SourceThumb,
   SpinningIcon,
-  TextInput,
   TitleRow,
 } from "./uprez-app.styled";
-
-const uprezName = (sourceName: string) => `${sourceName} (uprez)`;
 
 const CARD_THUMB = { width: 200, fit: "cover" as const };
 
@@ -53,10 +46,10 @@ const CARD_THUMB = { width: 200, fit: "cover" as const };
  * playlist that tracks a source playlist and uprezes each of its dreams.
  */
 type Props = {
-  onSourcePlaylistChange?: (playlist: EditorProjectPlaylistRef) => void;
+  onCreated?: (playlist: EditorProjectPlaylistRef) => Promise<boolean>;
 };
 
-export const UprezApp: React.FC<Props> = ({ onSourcePlaylistChange }) => {
+export const UprezApp: React.FC<Props> = ({ onCreated }) => {
   const addPlaylistToCache = useAddPlaylistToCache();
   const { createAndRun, isSubmitting } = useCreateUprezPlaylist();
 
@@ -66,36 +59,20 @@ export const UprezApp: React.FC<Props> = ({ onSourcePlaylistChange }) => {
   const interpolationFactor = useUprezStore((s) => s.interpolationFactor);
   const result = useUprezStore((s) => s.result);
   const setSourcePlaylist = useUprezStore((s) => s.setSourcePlaylist);
-  const handleSelectSourcePlaylist = useCallback(
-    (playlist: PlaylistSummary) => {
-      setSourcePlaylist(playlist);
-      onSourcePlaylistChange?.({ uuid: playlist.uuid, name: playlist.name });
-    },
-    [setSourcePlaylist, onSourcePlaylistChange],
-  );
-  const setNameOverride = useUprezStore((s) => s.setNameOverride);
   const setUpscaleFactor = useUprezStore((s) => s.setUpscaleFactor);
   const setInterpolationFactor = useUprezStore((s) => s.setInterpolationFactor);
   const setResult = useUprezStore((s) => s.setResult);
-  const resetUprez = useUprezStore((s) => s.resetUprez);
 
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const selectedUuid = selected?.uuid ?? "";
   const countText = usePlaylistMetadata(selectedUuid);
 
-  // Follows the selected playlist until the user types their own name.
-  const name = nameOverride ?? (selected ? uprezName(selected.name) : "");
+  const name = nameOverride ?? "";
 
   const isNoOp = isNoOpUprez(upscaleFactor, interpolationFactor);
   const canSubmit =
     Boolean(selected) && name.trim().length > 0 && !isNoOp && !isSubmitting;
-  const canReset = Boolean(selected || nameOverride?.trim() || result);
-
-  const handleReset = () => {
-    resetUprez();
-    toast.info("Uprez reset");
-  };
 
   const handleSubmit = async () => {
     if (!canSubmit) return;
@@ -135,6 +112,14 @@ export const UprezApp: React.FC<Props> = ({ onSourcePlaylistChange }) => {
       } else {
         toast.success(`Uprezing into ${created.name}.`);
       }
+
+      const linked =
+        (await onCreated?.({ uuid: created.uuid, name: created.name })) ?? true;
+      if (!linked) {
+        toast.warning(
+          `${created.name} is running, but this project could not be linked to it.`,
+        );
+      }
     } catch (err) {
       newTab?.close();
       Bugsnag.notify(err as Error);
@@ -151,13 +136,11 @@ export const UprezApp: React.FC<Props> = ({ onSourcePlaylistChange }) => {
       <AppHeader>
         <TitleRow>
           <AppTitle>Uprez playlist</AppTitle>
-          {canReset && (
-            <StudioResetButton label="Reset uprez" onReset={handleReset} />
-          )}
         </TitleRow>
         <Intro>
-          Creates a playlist that tracks a source playlist and uprezes each of
-          its dreams. Re-run it later to pick up dreams added or changed.
+          Creates a playlist that tracks a source playlist and increases the
+          pixel resolution and uses interpolation for slow motion. Re-run it
+          later to pick up dreams added or changed.
         </Intro>
       </AppHeader>
 
@@ -189,19 +172,6 @@ export const UprezApp: React.FC<Props> = ({ onSourcePlaylistChange }) => {
             Choose a playlist…
           </EmptySource>
         )}
-      </Section>
-
-      <Section>
-        <SectionLabel htmlFor="uprez-playlist-name">
-          New playlist name
-        </SectionLabel>
-        <TextInput
-          id="uprez-playlist-name"
-          value={name}
-          onChange={(e) => setNameOverride(e.target.value)}
-          placeholder="Named after the source playlist"
-          disabled={!selected}
-        />
       </Section>
 
       <Section>
@@ -263,7 +233,7 @@ export const UprezApp: React.FC<Props> = ({ onSourcePlaylistChange }) => {
         <SelectPlaylistModal
           onClose={() => setPickerOpen(false)}
           selectedPlaylist={selected}
-          onSelect={handleSelectSourcePlaylist}
+          onSelect={setSourcePlaylist}
         />
       )}
     </AppBody>

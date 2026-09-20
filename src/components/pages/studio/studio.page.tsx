@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import Bugsnag from "@bugsnag/js";
 import { useStudioStore } from "@/stores/studio.store";
 import { useFlowStore } from "@/stores/flow.store";
+import { useUprezStore } from "@/stores/uprez.store";
 import { ROUTES } from "@/constants/routes.constants";
 import { parseStudioMode, STUDIO_MODE_LABELS } from "./constants/studio-modes";
 import { StudioTabs } from "./components/studio-tabs";
@@ -68,7 +69,23 @@ export const StudioPage: React.FC = () => {
     playlist: sync.playlist,
     attachPlaylist: sync.attachPlaylist,
   });
-  const ownsPlaylist = mode !== "uprez";
+  const isUprez = mode === "uprez";
+  const setUprezName = useUprezStore((s) => s.setNameOverride);
+  const uprezDraftName = useUprezStore((s) => s.nameOverride);
+  const projectName =
+    isUprez && !sync.playlist ? uprezDraftName ?? "" : playlistSave.name;
+
+  const setPlaylistName = playlistSave.setName;
+  const handleRename = useCallback(
+    (next: string) => {
+      if (isUprez && !sync.playlist) {
+        setUprezName(next);
+        return;
+      }
+      setPlaylistName(next);
+    },
+    [isUprez, sync.playlist, setUprezName, setPlaylistName],
+  );
   useSessionMigration();
 
   const activeTab = useStudioStore((s) => s.activeTab);
@@ -92,7 +109,7 @@ export const StudioPage: React.FC = () => {
   const handleStudioDrop = useCallback(
     async (files: File[]) => {
       // The uprez app takes a playlist, not files — nothing to drop onto.
-      if (mode === "uprez") return;
+      if (isUprez) return;
 
       for (const file of files) {
         if (mode === "action") {
@@ -134,7 +151,7 @@ export const StudioPage: React.FC = () => {
         }
       }
     },
-    [mode, addImage, updateImage, addReferenceFrame, uploadDream],
+    [isUprez, mode, addImage, updateImage, addReferenceFrame, uploadDream],
   );
 
   const { isDragOver, dropHandlers } = useFileDropUpload({
@@ -156,13 +173,13 @@ export const StudioPage: React.FC = () => {
           <EditorBadge $mode={mode}>{STUDIO_MODE_LABELS[mode]}</EditorBadge>
         </TitleGroup>
         <ProjectBar
-          name={playlistSave.name}
-          disabled={!ownsPlaylist || sync.status === "loading"}
-          onRename={playlistSave.setName}
+          name={projectName}
+          disabled={sync.status === "loading"}
+          onRename={handleRename}
         />
         <PlaylistActions
           playlist={sync.playlist}
-          canSave={ownsPlaylist}
+          canSave={!isUprez}
           saving={playlistSave.status === "saving"}
           onSave={playlistSave.save}
         />
@@ -185,9 +202,9 @@ export const StudioPage: React.FC = () => {
               {activeTab === "results" && <ResultsTab />}
             </StudioFrame>
           )}
-          {mode === "uprez" && (
+          {isUprez && (
             <UprezFrame>
-              <UprezApp onSourcePlaylistChange={sync.attachPlaylist} />
+              <UprezApp onCreated={sync.attachPlaylist} />
             </UprezFrame>
           )}
         </Suspense>

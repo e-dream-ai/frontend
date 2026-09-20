@@ -14,6 +14,9 @@ export type UprezResult = {
   runFailed: boolean;
 };
 
+export const uprezPlaylistName = (sourceName: string) =>
+  `${sourceName} (uprez)`;
+
 export type UprezFormState = {
   sourcePlaylist: PlaylistSummary | null;
   nameOverride: string | null;
@@ -54,11 +57,19 @@ export const useUprezStore = create<UprezStoreState>()(
       ...UPREZ_DEFAULTS,
 
       setSourcePlaylist: (playlist) =>
-        set((s) => ({
-          sourcePlaylist: playlist,
-          nameOverride: s.nameOverride?.trim() ? s.nameOverride : null,
-          result: null,
-        })),
+        set((s) => {
+          const followedSource =
+            !s.nameOverride?.trim() ||
+            (s.sourcePlaylist !== null &&
+              s.nameOverride === uprezPlaylistName(s.sourcePlaylist.name));
+          return {
+            sourcePlaylist: playlist,
+            nameOverride: followedSource
+              ? uprezPlaylistName(playlist.name)
+              : s.nameOverride,
+            result: null,
+          };
+        }),
       setNameOverride: (nameOverride) => set({ nameOverride }),
       setUpscaleFactor: (upscaleFactor) => set({ upscaleFactor }),
       setInterpolationFactor: (interpolationFactor) =>
@@ -68,7 +79,11 @@ export const useUprezStore = create<UprezStoreState>()(
       restoreUprez: (snapshot) =>
         set({
           sourcePlaylist: snapshot.sourcePlaylist ?? null,
-          nameOverride: snapshot.nameOverride ?? null,
+          nameOverride:
+            snapshot.nameOverride ??
+            (snapshot.sourcePlaylist
+              ? uprezPlaylistName(snapshot.sourcePlaylist.name)
+              : null),
           upscaleFactor: snapshot.upscaleFactor ?? UPREZ_DEFAULTS.upscaleFactor,
           interpolationFactor:
             snapshot.interpolationFactor ?? UPREZ_DEFAULTS.interpolationFactor,
