@@ -2,8 +2,9 @@ import { PlaylistProgress } from "@/components/shared/dream-progress/playlist-pr
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, ItemCardList, Row } from "@/components/shared";
 import { UprezPlaylistControls } from "./components/uprez-playlist-controls";
-import { OpenInStudioButton } from "./components/open-in-studio-button";
-import { PlaylistStudioBadge } from "./components/playlist-studio-badge";
+import { OpenInStudio } from "@/components/shared/open-in-studio";
+import { StudioBadge } from "@/components/shared/studio-badge";
+import { useEditorProjectByPlaylist } from "@/api/editor-project/query/useEditorProjects";
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
@@ -312,6 +313,9 @@ export const ViewPlaylistPage = () => {
     hasJumpedToEndKeyframes,
     setHasJumpedToEndKeyframes,
   } = usePlaylistState();
+  const { project: studioProject, isInitialLoading: isStudioLoading } =
+    useEditorProjectByPlaylist(playlist?.uuid, isOwner);
+  const isStudioBacked = isStudioLoading || Boolean(studioProject);
   const playlistReferences = playlist?.playlistItems ?? [];
   const isUprezRunning = items.some(
     (item) =>
@@ -554,7 +558,7 @@ export const ViewPlaylistPage = () => {
       return (
         <ItemCard
           key={playlistItem.id}
-          draggable
+          draggable={!isStudioBacked}
           itemId={playlistItem.id}
           dndMode="local"
           size="sm"
@@ -565,15 +569,15 @@ export const ViewPlaylistPage = () => {
               : playlistItem.playlistItem
           }
           order={playlistItem.order}
-          deleteDisabled={!allowedEditPlaylist}
+          deleteDisabled={!allowedEditPlaylist || isStudioBacked}
           showPlayButton
           showOrderNumber
           indexNumber={index + 1}
           inline
-          droppable
+          droppable={!isStudioBacked}
           onDelete={handleDeletePlaylistItem(playlistItem.id)}
           onOrder={handleOrderPlaylist}
-          showReorderControls={allowedEditPlaylist}
+          showReorderControls={allowedEditPlaylist && !isStudioBacked}
           disableMoveToTop={!allowedEditPlaylist || isFirstItem}
           disableMoveUp={!allowedEditPlaylist || isFirstItem}
           disableMoveDown={!allowedEditPlaylist || isLastItem}
@@ -613,6 +617,7 @@ export const ViewPlaylistPage = () => {
       allowedEditPlaylist,
       handleDeletePlaylistItem,
       handleOrderPlaylist,
+      isStudioBacked,
       items.length,
     ],
   );
@@ -864,10 +869,7 @@ export const ViewPlaylistPage = () => {
                     </>
                   ) : (
                     <>
-                      <OpenInStudioButton
-                        playlistUuid={playlist.uuid}
-                        isOwner={isOwner}
-                      />
+                      <OpenInStudio project={studioProject} />
                       <UprezPlaylistControls
                         playlist={playlist}
                         isOwner={isOwner}
@@ -926,10 +928,9 @@ export const ViewPlaylistPage = () => {
                     type="text"
                     before={<FontAwesomeIcon icon={faFileVideo} />}
                     after={
-                      <PlaylistStudioBadge
-                        playlistUuid={playlist?.uuid}
-                        isOwner={isOwner}
-                      />
+                      studioProject ? (
+                        <StudioBadge mode={studioProject.editorId} />
+                      ) : null
                     }
                     {...formMethods.register("name")}
                   />
