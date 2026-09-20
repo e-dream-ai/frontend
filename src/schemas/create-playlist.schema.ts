@@ -16,7 +16,9 @@ export const CreatePlaylistSchema = yup
     nsfw: yup.boolean(),
     hidden: yup.boolean(),
     ccbyLicense: yup.boolean(),
-    description: yup.string(),
+    description: yup
+      .string()
+      .max(4000, "Description must be at most 4000 characters"),
     sourceUrl: yup.string(),
   })
   .required();

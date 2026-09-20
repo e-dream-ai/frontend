@@ -14,7 +14,9 @@ export type CreateDreamFormValues = {
 
 export const CreateDreamSchema = yup
   .object({
-    description: yup.string(),
+    description: yup
+      .string()
+      .max(4000, "Description must be at most 4000 characters"),
     sourceUrl: yup.string(),
     nsfw: yup.boolean().default(false).required(),
     hidden: yup.boolean(),

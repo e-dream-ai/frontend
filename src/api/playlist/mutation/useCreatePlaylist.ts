@@ -1,9 +1,10 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { CreatePlaylistFormValues } from "@/schemas/create-playlist.schema";
 import { ApiResponse } from "@/types/api.types";
 import { Playlist } from "@/types/playlist.types";
 import { axiosClient } from "@/client/axios.client";
+import { PLAYLISTS_QUERY_KEY } from "@/api/playlist/query/usePlaylists";
 
 export const CREATE_PLAYLIST_MUTATION_KEY = "createPlaylist";
 
@@ -22,11 +23,16 @@ const createPlaylist = () => {
 };
 
 export const useCreatePlaylist = () => {
+  const queryClient = useQueryClient();
+
   return useMutation<
     ApiResponse<{ playlist: Playlist }>,
     Error,
     CreatePlaylistFormValues
   >(createPlaylist(), {
     mutationKey: [CREATE_PLAYLIST_MUTATION_KEY],
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [PLAYLISTS_QUERY_KEY] });
+    },
   });
 };

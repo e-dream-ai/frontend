@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { FlowReferenceFrame } from "@/types/flow.types";
 import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
@@ -10,6 +10,7 @@ export function useReferenceFrameImage(frame: FlowReferenceFrame | undefined) {
     replaces: string;
     url: string;
   } | null>(null);
+  const resolvedRef = useRef<string>();
 
   const { id, imageUrl, dreamUuid, isLoopFrame } = frame ?? {};
   const src =
@@ -35,6 +36,13 @@ export function useReferenceFrameImage(frame: FlowReferenceFrame | undefined) {
       // ignore
     }
   }, [dreamUuid, id, imageUrl, isLoopFrame, updateReferenceFrame]);
+
+  useEffect(() => {
+    if (!dreamUuid || imageUrl) return;
+    if (resolvedRef.current === dreamUuid) return;
+    resolvedRef.current = dreamUuid;
+    void refresh();
+  }, [dreamUuid, imageUrl, refresh]);
 
   return { src, onError: dreamUuid ? refresh : undefined };
 }

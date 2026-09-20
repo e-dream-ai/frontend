@@ -11,6 +11,7 @@ import {
   CardWrapper,
   CardImage,
   CardPlaceholder,
+  LoadingPlaceholder,
   GenerationPlaceholder,
   CardLabel,
   LoopBadge,
@@ -116,6 +117,8 @@ export const ReferenceFrameCard: React.FC<Props> = ({
           onLoad={handleImgLoad}
           onError={handleImgError}
         />
+      ) : frame.dreamUuid ? (
+        <LoadingPlaceholder />
       ) : (
         <CardPlaceholder>{frame.name}</CardPlaceholder>
       )}

@@ -15,7 +15,7 @@ import ViewDreamPage from "@/components/pages/view-dream/view-dream.page";
 import ViewPlaylistPage from "@/components/pages/view-playlist/view-playlist.page";
 import ViewKeyframePage from "@/components/pages/view-keyframe/view-keyframe.page";
 import { ROLES } from "@/constants/role.constants";
-import { ROUTES } from "@/constants/routes.constants";
+import { ROUTES, STUDIO_ROUTES } from "@/constants/routes.constants";
 import {
   Navigate,
   Outlet,
@@ -33,6 +33,7 @@ import PublicRoute from "@/routes/public-route";
 import PlaylistsFeedPage from "@/components/pages/playlist-feed/playlist-feed";
 import PlaygroundPage from "@/components/pages/playground/playground.page";
 import { StudioLayout } from "@/components/pages/studio/studio.layout";
+import { StudioProjectsPage } from "@/components/pages/studio/studio-projects.page";
 import NotFoundPage from "@/components/pages/not-found/not-found.page";
 import UnsubscribePage from "@/components/pages/unsubscribe/unsubscribe.page";
 import { useEffect } from "react";
@@ -86,6 +87,11 @@ const NotFoundPageWithProviders = withProviders(...Providers)(NotFoundPage);
 const StudioRouteWithProviders = withProviders(...Providers)(() => (
   <ProtectedRoute allowedRoles={[ROLES.CREATOR_GROUP, ROLES.ADMIN_GROUP]}>
     <StudioLayout />
+  </ProtectedRoute>
+));
+const StudioProjectsRouteWithProviders = withProviders(...Providers)(() => (
+  <ProtectedRoute allowedRoles={[ROLES.CREATOR_GROUP, ROLES.ADMIN_GROUP]}>
+    <StudioProjectsPage />
   </ProtectedRoute>
 ));
 
@@ -370,7 +376,17 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: ROUTES.STUDIO,
+    path: STUDIO_ROUTES.PROJECTS,
+    element: <StudioProjectsRouteWithProviders />,
+    errorElement: <NotFoundPageWithProviders />,
+  },
+  {
+    path: STUDIO_ROUTES.EDITOR,
+    element: <StudioRouteWithProviders />,
+    errorElement: <NotFoundPageWithProviders />,
+  },
+  {
+    path: STUDIO_ROUTES.PROJECT,
     element: <StudioRouteWithProviders />,
     errorElement: <NotFoundPageWithProviders />,
   },

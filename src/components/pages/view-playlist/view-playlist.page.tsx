@@ -2,6 +2,7 @@ import { PlaylistProgress } from "@/components/shared/dream-progress/playlist-pr
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, ItemCardList, Row } from "@/components/shared";
 import { UprezPlaylistControls } from "./components/uprez-playlist-controls";
+import { OpenInStudioButton } from "./components/open-in-studio-button";
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
@@ -861,6 +862,10 @@ export const ViewPlaylistPage = () => {
                     </>
                   ) : (
                     <>
+                      <OpenInStudioButton
+                        playlistUuid={playlist.uuid}
+                        isOwner={isOwner}
+                      />
                       <UprezPlaylistControls
                         playlist={playlist}
                         isOwner={isOwner}

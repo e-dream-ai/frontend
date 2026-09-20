@@ -51,7 +51,9 @@ export type UpdatePlaylistRequestValues = {
 export const UpdatePlaylistSchema = yup
   .object({
     name: yup.string().required(),
-    description: yup.string(),
+    description: yup
+      .string()
+      .max(4000, "Description must be at most 4000 characters"),
     prompt: yup.mixed().nullable(),
     featureRank: yup
       .number()
@@ -86,7 +88,9 @@ export const UpdateVideoPlaylistSchema = yup
     nsfw: yup.boolean().default(false).required(),
     hidden: yup.boolean(),
     ccbyLicense: yup.boolean().required(),
-    description: yup.string(),
+    description: yup
+      .string()
+      .max(4000, "Description must be at most 4000 characters"),
     sourceUrl: yup.string(),
   })
   .required();

@@ -46,7 +46,7 @@ export const CreditsMeter: React.FC<CreditsMeterProps> = ({
           aria-label={t("components.credits_meter.unlimited")}
         >
           <FlowFill />
-          <FlowSheen />
+          {compact ? null : <FlowSheen />}
         </Track>
 
         {!compact && (
@@ -88,7 +88,7 @@ export const CreditsMeter: React.FC<CreditsMeterProps> = ({
         aria-valuemin={0}
         aria-valuemax={100}
       >
-        <Fill $pct={pctLeft} $low={isLow} />
+        <Fill $pct={pctLeft} $low={isLow} $compact={compact} />
       </Track>
 
       {!compact &&

@@ -1,6 +1,8 @@
 import styled from "styled-components";
 import { Link } from "react-router-dom";
 import { FLOW } from "@/constants/flow-theme.constants";
+import type { StudioMode } from "@/types/flow.types";
+import { EDITOR_BADGE } from "./constants/editor-badge";
 
 export const StudioContainer = styled.div<{ $dragOver?: boolean }>`
   height: 100vh;
@@ -53,16 +55,20 @@ export const Logo = styled.img`
   flex-shrink: 0;
 `;
 
-export const BackButton = styled.button`
+export const BackButton = styled(Link)`
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
+  gap: 6px;
   height: 32px;
+  padding: 0 10px;
   border-radius: ${FLOW.radiusSm};
   border: 1px solid ${FLOW.border};
   background: transparent;
   color: ${FLOW.textDim};
+  font-size: 13px;
+  font-weight: 500;
+  text-decoration: none;
   cursor: pointer;
   transition: all 0.2s;
   flex-shrink: 0;
@@ -71,6 +77,15 @@ export const BackButton = styled.button`
     border-color: ${FLOW.borderHover};
     color: ${FLOW.text};
   }
+
+  @media (max-width: 480px) {
+    padding: 0;
+    width: 32px;
+
+    span {
+      display: none;
+    }
+  }
 `;
 
 export const StudioTitle = styled.h1`
@@ -78,6 +93,19 @@ export const StudioTitle = styled.h1`
   font-weight: 600;
   color: ${FLOW.text};
   font-family: ${FLOW.fontFamily};
+  white-space: nowrap;
+`;
+
+export const EditorBadge = styled.span<{ $mode: StudioMode }>`
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: ${(p) => EDITOR_BADGE[p.$mode] ?? FLOW.textDim};
+  color: ${FLOW.bg};
+  flex-shrink: 0;
 `;
 
 export const HeaderSpacer = styled.div`
@@ -106,6 +134,14 @@ export const StudioBody = styled.div`
   overflow-y: auto;
   width: 100%;
   padding: 1.5rem 20px;
+  position: relative;
+`;
+
+export const BodyOverlay = styled.div`
+  position: absolute;
+  inset: 0;
+  padding: 1.5rem 20px;
+  background: ${FLOW.bg};
 `;
 
 /**
@@ -130,31 +166,6 @@ export const StudioFrame = styled.div<{ $dragOver?: boolean }>`
     border-color: ${FLOW.accent};
     background-color: ${FLOW.accentDim};
   `}
-`;
-
-export const ModeToggle = styled.div`
-  display: flex;
-  background: ${FLOW.bg};
-  border: 1px solid ${FLOW.border};
-  border-radius: 8px;
-  padding: 3px;
-  gap: 2px;
-`;
-
-export const ModeButton = styled.button<{ $active: boolean }>`
-  padding: 6px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-family: ${FLOW.fontFamily};
-  color: ${(props) => (props.$active ? FLOW.text : FLOW.textMuted)};
-  background: ${(props) => (props.$active ? FLOW.bgElevated : "transparent")};
-  border: none;
-  cursor: pointer;
-  transition: all 0.2s;
-
-  &:hover {
-    color: ${FLOW.text};
-  }
 `;
 
 export const UprezFrame = styled(StudioFrame)`

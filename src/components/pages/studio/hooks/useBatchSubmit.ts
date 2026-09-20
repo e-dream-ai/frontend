@@ -24,7 +24,6 @@ export const useBatchSubmit = () => {
   const videoGenParams = useStudioStore((s) => s.videoGenParams);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
-  const setOutputPlaylistId = useStudioStore((s) => s.setOutputPlaylistId);
   const addJob = useStudioStore((s) => s.addJob);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const jobs = useStudioStore((s) => s.jobs);
@@ -64,18 +63,6 @@ export const useBatchSubmit = () => {
     setIsSubmitting(true);
 
     try {
-      let playlistId = outputPlaylistId;
-      if (!playlistId) {
-        const now = new Date();
-        const name = `Studio ${now
-          .toISOString()
-          .slice(0, 16)
-          .replace("T", " ")}`;
-        const { data } = await axiosClient.post("/v1/playlist", { name });
-        playlistId = data.data.playlist.uuid;
-        setOutputPlaylistId(playlistId);
-      }
-
       const combos = getPendingCombinations();
       const allowedDurations = getAllowedDurationsForActions(
         combos.map(({ action }) => action),
@@ -147,10 +134,12 @@ export const useBatchSubmit = () => {
             });
             jobsAdded++;
 
-            await axiosClient.put(`/v1/playlist/${playlistId}/add-item`, {
-              type: "dream",
-              uuid: dream.uuid,
-            });
+            if (outputPlaylistId) {
+              await axiosClient.put(
+                `/v1/playlist/${outputPlaylistId}/add-item`,
+                { type: "dream", uuid: dream.uuid },
+              );
+            }
           }),
         );
 
@@ -169,7 +158,6 @@ export const useBatchSubmit = () => {
     }
   }, [
     outputPlaylistId,
-    setOutputPlaylistId,
     getPendingCombinations,
     videoGenParams,
     modelConstraints,

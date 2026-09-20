@@ -1,17 +1,32 @@
-import React, { lazy, Suspense, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { Suspense, useCallback } from "react";
+import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import Bugsnag from "@bugsnag/js";
 import { useStudioStore } from "@/stores/studio.store";
-import { useStudioModeStore } from "@/stores/studio-mode.store";
 import { useFlowStore } from "@/stores/flow.store";
 import { ROUTES } from "@/constants/routes.constants";
-import { STUDIO_MODE_LABELS, STUDIO_MODES } from "./constants/studio-modes";
+import { parseStudioMode, STUDIO_MODE_LABELS } from "./constants/studio-modes";
 import { StudioTabs } from "./components/studio-tabs";
-import { SessionSwitcher } from "./components/session-switcher";
+import { ProjectBar } from "./components/project-bar";
+import { SaveStatus } from "./components/save-status";
+import { ProjectConflictModal } from "./components/project-conflict-modal";
+import { ProjectLockedModal } from "./components/project-locked-modal";
+import { PlaylistActions } from "./components/playlist-actions";
+import { StudioSkeleton } from "./components/studio-skeleton";
+import {
+  ActionsTab,
+  FlowBuilder,
+  GenerateTab,
+  ImagesTab,
+  ResultsTab,
+  UprezApp,
+} from "./components/lazy-editors";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
-import { useSessionAutoSave } from "./hooks/useSessionAutoSave";
+import { useEditorProjectSync } from "./hooks/useEditorProjectSync";
+import { useEditorProjectLock } from "./hooks/useEditorProjectLock";
+import { useEditorProjectPlaylist } from "./hooks/useEditorProjectPlaylist";
+import { useSessionMigration } from "./hooks/useSessionMigration";
 import { useFileDropUpload } from "./hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import useAuth from "@/hooks/useAuth";
@@ -31,39 +46,33 @@ import {
   StudioBody,
   StudioFrame,
   UprezFrame,
-  ModeToggle,
-  ModeButton,
+  EditorBadge,
+  BodyOverlay,
 } from "./studio.page.styled";
-
-const ImagesTab = lazy(() =>
-  import("./components/images-tab").then((m) => ({ default: m.ImagesTab })),
-);
-const ActionsTab = lazy(() =>
-  import("./components/actions-tab").then((m) => ({ default: m.ActionsTab })),
-);
-const GenerateTab = lazy(() =>
-  import("./components/generate-tab").then((m) => ({ default: m.GenerateTab })),
-);
-const ResultsTab = lazy(() =>
-  import("./components/results-tab").then((m) => ({ default: m.ResultsTab })),
-);
-const FlowBuilder = lazy(() =>
-  import("./components/flow-builder").then((m) => ({
-    default: m.FlowBuilder,
-  })),
-);
-const UprezApp = lazy(() =>
-  import("./components/uprez-app").then((m) => ({ default: m.UprezApp })),
-);
 
 export const StudioPage: React.FC = () => {
   const navigate = useNavigate();
-  const mode = useStudioModeStore((s) => s.mode);
-  const setMode = useStudioModeStore((s) => s.setMode);
+  const { editorId, projectUuid } = useParams<{
+    editorId?: string;
+    projectUuid?: string;
+  }>();
+  const mode = parseStudioMode(editorId);
+  const lock = useEditorProjectLock(projectUuid);
+  const sync = useEditorProjectSync(
+    mode,
+    projectUuid,
+    lock.status === "held" || lock.status === "idle",
+  );
+  const playlistSave = useEditorProjectPlaylist({
+    mode,
+    playlist: sync.playlist,
+    attachPlaylist: sync.attachPlaylist,
+  });
+  const ownsPlaylist = mode !== "uprez";
+  useSessionMigration();
 
   const activeTab = useStudioStore((s) => s.activeTab);
   useStudioJobProgress();
-  useSessionAutoSave();
 
   const { user: authUser } = useAuth();
   const canManageProviderKey = usePermission({
@@ -80,22 +89,13 @@ export const StudioPage: React.FC = () => {
   const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
   const uploadDream = useUploadImageDream();
 
-  const handleBack = useCallback(() => {
-    if (window.history.length > 1) {
-      navigate(-1);
-    } else {
-      navigate(ROUTES.REMOTE_CONTROL);
-    }
-  }, [navigate]);
-
   const handleStudioDrop = useCallback(
     async (files: File[]) => {
-      const currentMode = useStudioModeStore.getState().mode;
       // The uprez app takes a playlist, not files — nothing to drop onto.
-      if (currentMode === "uprez") return;
+      if (mode === "uprez") return;
 
       for (const file of files) {
-        if (currentMode === "action") {
+        if (mode === "action") {
           const placeholderUuid = uuidv4();
           const blobUrl = URL.createObjectURL(file);
           addImage({
@@ -134,7 +134,7 @@ export const StudioPage: React.FC = () => {
         }
       }
     },
-    [addImage, updateImage, addReferenceFrame, uploadDream],
+    [mode, addImage, updateImage, addReferenceFrame, uploadDream],
   );
 
   const { isDragOver, dropHandlers } = useFileDropUpload({
@@ -145,36 +145,37 @@ export const StudioPage: React.FC = () => {
   return (
     <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
-        <BackButton onClick={handleBack} aria-label="Go back">
+        <BackButton to={ROUTES.STUDIO} aria-label="Back to playlists">
           <ArrowLeft size={16} />
+          <span>Playlists</span>
         </BackButton>
         <TitleGroup>
           <LogoLink to={ROUTES.ROOT} aria-label="Go to home">
             <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
           </LogoLink>
           <StudioTitle>Studio</StudioTitle>
+          <EditorBadge $mode={mode}>{STUDIO_MODE_LABELS[mode]}</EditorBadge>
         </TitleGroup>
-        <ModeToggle>
-          {STUDIO_MODES.map((studioMode) => (
-            <ModeButton
-              key={studioMode}
-              $active={mode === studioMode}
-              aria-pressed={mode === studioMode}
-              onClick={() => setMode(studioMode)}
-            >
-              {STUDIO_MODE_LABELS[studioMode]}
-            </ModeButton>
-          ))}
-        </ModeToggle>
+        <ProjectBar
+          name={playlistSave.name}
+          disabled={!ownsPlaylist || sync.status === "loading"}
+          onRename={playlistSave.setName}
+        />
+        <PlaylistActions
+          playlist={sync.playlist}
+          canSave={ownsPlaylist}
+          saving={playlistSave.status === "saving"}
+          onSave={playlistSave.save}
+        />
         <HeaderSpacer />
+        <SaveStatus status={sync.status} />
         {canManageProviderKey ? (
           <CreditsMeter user={currentUser} compact />
         ) : null}
-        <SessionSwitcher />
       </StudioHeader>
 
       <StudioBody>
-        <Suspense fallback={null}>
+        <Suspense fallback={<StudioSkeleton />}>
           {mode === "flow" && <FlowBuilder />}
           {mode === "action" && (
             <StudioFrame>
@@ -187,11 +188,35 @@ export const StudioPage: React.FC = () => {
           )}
           {mode === "uprez" && (
             <UprezFrame>
-              <UprezApp />
+              <UprezApp onSourcePlaylistChange={sync.attachPlaylist} />
             </UprezFrame>
           )}
         </Suspense>
+
+        {sync.status === "loading" ? (
+          <BodyOverlay>
+            <StudioSkeleton />
+          </BodyOverlay>
+        ) : null}
       </StudioBody>
+
+      {lock.status === "blocked" ? (
+        <ProjectLockedModal
+          lockedAt={lock.lockedAt}
+          interrupted={lock.interrupted}
+          onTakeOver={lock.takeOver}
+          onLeave={() => navigate(ROUTES.STUDIO)}
+        />
+      ) : null}
+
+      {sync.conflict ? (
+        <ProjectConflictModal
+          serverName={sync.conflict.name}
+          onTakeTheirs={sync.takeServerVersion}
+          onOverwrite={sync.overwriteServerVersion}
+          onKeepMine={sync.keepMineAsNewProject}
+        />
+      ) : null}
     </StudioContainer>
   );
 };
