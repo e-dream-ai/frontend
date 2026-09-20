@@ -1,5 +1,6 @@
 import type { FlowReferenceFrame, FlowTransition } from "@/types/flow.types";
 import { DEFAULT_TRANSITION_SETTINGS } from "../constants/default-transition-settings";
+import { migrateOverridesToSettings } from "@/stores/flow.store";
 import type { StudioImage, StudioJob } from "@/types/studio.types";
 
 export const EDITOR_STATE_SCHEMA_VERSION = 1;
@@ -105,13 +106,26 @@ export const fromPersistedFlowState = (
     });
   }
 
+  // An editor project is a flow snapshot that never passes through the store's
+  // localStorage persist migration, and `schemaVersion` on the stored row has
+  // never been bumped, so it cannot tell the vintages apart. Every project
+  // written before settings moved onto the transition therefore arrives with
+  // nine `*Override` keys and top-level `global*` values, and four call sites
+  // read `transition.settings.<field>` straight — which throws, and the studio
+  // route's `errorElement` turns that into the Not Found page. Convert on the
+  // way in; the call is idempotent, so a project already on the new shape and
+  // the placeholders built above both pass through untouched.
+  const { transitions: migrated, ...migratedRest } = migrateOverridesToSettings(
+    { ...rest, transitions: ordered },
+  );
+
   return {
-    ...rest,
+    ...migratedRest,
     referenceFrames: referenceFrames.map((frame) => ({
       ...frame,
       imageUrl: "",
     })),
-    transitions: ordered,
+    transitions: migrated as FlowTransition[],
   };
 };
 

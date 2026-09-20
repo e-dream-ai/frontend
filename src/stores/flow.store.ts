@@ -270,6 +270,9 @@ export const flowPartialize = (state: FlowStoreState) => ({
  * "inherit" when absent.
  */
 type LegacyTransition = Omit<FlowTransition, "settings"> & {
+  // Optional, not absent: the editor-project read path runs the conversion over
+  // snapshots of unknown vintage, so one may already be on the current shape.
+  settings?: TransitionSettings;
   presetOverride?: string;
   promptOverride?: string;
   negativePromptOverride?: string;
@@ -363,7 +366,16 @@ const LEGACY_OVERRIDE_KEYS = [
   "loraOverride",
 ] as const;
 
-/** Rewrite every persisted transition (and its history) onto `settings`. */
+/**
+ * Rewrite every persisted transition (and its history) onto `settings`.
+ *
+ * Idempotent: a transition that already carries `settings` keeps it. The
+ * localStorage persist migration only ever hands this a legacy state, but the
+ * editor-project read path runs it over blobs of unknown vintage — stored rows
+ * carry a `schemaVersion` that has never been bumped, so shape is the only
+ * thing that can discriminate them. Re-resolving an already-converted
+ * transition would quietly reset it to the defaults.
+ */
 export function migrateOverridesToSettings(
   state: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -373,7 +385,8 @@ export function migrateOverridesToSettings(
   ).map((transition) => {
     const next: Record<string, unknown> = {
       ...transition,
-      settings: materialiseLegacySettings(transition, globals),
+      settings:
+        transition.settings ?? materialiseLegacySettings(transition, globals),
       // A run snapshot was stored under the same nine override keys. Replaying
       // it through the same resolver keeps restore and the staleness dot
       // honest; an entry from before snapshots existed has nothing to convert.

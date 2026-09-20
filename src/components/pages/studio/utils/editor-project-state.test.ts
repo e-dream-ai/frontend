@@ -76,13 +76,71 @@ describe("flow state persistence", () => {
         transition("a", "b", { dreamUuid: "d1" }),
         transition("b", "c", { dreamUuid: "d2" }),
       ],
-      globalPrompt: "keep me",
+      savedPlaylistUuid: "keep me",
     };
 
     const restored = fromPersistedFlowState(toPersistedFlowState(original));
 
     expect(restored.transitions.map((t) => t.dreamUuid)).toEqual(["d1", "d2"]);
-    expect(restored.globalPrompt).toBe("keep me");
+    expect(restored.savedPlaylistUuid).toBe("keep me");
+  });
+
+  it("gives every restored transition settings, including unstored gaps", () => {
+    const persisted = toPersistedFlowState({
+      referenceFrames: [frame("a"), frame("b")],
+      transitions: [],
+    });
+
+    const restored = fromPersistedFlowState(persisted);
+
+    expect(restored.transitions).toHaveLength(1);
+    expect(restored.transitions[0].settings).toBeDefined();
+  });
+
+  // Every flow project written before settings moved onto the transition is
+  // stored this way, and `schemaVersion` cannot tell it apart from the current
+  // shape. Reading one without converting throws in `reference-frame-strip`,
+  // which the studio route renders as Not Found.
+  it("materialises a legacy override/global project onto transition settings", () => {
+    const restored = fromPersistedFlowState({
+      referenceFrames: [
+        { id: "a", name: "a" },
+        { id: "b", name: "b" },
+      ],
+      transitions: {
+        "a::b": {
+          fromFrameId: "a",
+          toFrameId: "b",
+          status: "processed",
+          dreamUuid: "d1",
+          promptOverride: "per-transition prompt",
+        },
+      },
+      globalPrompt: "global prompt",
+      globalDuration: 9,
+    } as never);
+
+    const [t] = restored.transitions;
+    expect(t.settings.prompt).toBe("per-transition prompt");
+    expect(t.settings.duration).toBe(9);
+    expect(t.dreamUuid).toBe("d1");
+    expect(t).not.toHaveProperty("promptOverride");
+    expect(restored).not.toHaveProperty("globalPrompt");
+  });
+
+  it("leaves a project already on the new shape untouched", () => {
+    const settings = { prompt: "mine", duration: 3 };
+    const restored = fromPersistedFlowState({
+      referenceFrames: [
+        { id: "a", name: "a" },
+        { id: "b", name: "b" },
+      ],
+      transitions: {
+        "a::b": { fromFrameId: "a", toFrameId: "b", status: "idle", settings },
+      },
+    } as never);
+
+    expect(restored.transitions[0].settings).toMatchObject(settings);
   });
 });
 
