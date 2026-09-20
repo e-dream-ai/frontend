@@ -357,25 +357,28 @@ describe("Phase 1: transitions", () => {
   });
 
   describe("selection follows the transition list", () => {
-    it("selects the first transition the moment it exists", () => {
-      // Adding frames derives transitions inline; if that path skips the
-      // selection rule the panel comes up wired to nothing.
+    it("starts with nothing selected, which means the whole flow", () => {
       const store = useFlowStore.getState();
       store.addReferenceFrame(makeKf("a"));
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
       store.addReferenceFrame(makeKf("b"));
       expect(useFlowStore.getState().transitions).toHaveLength(1);
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0]);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
+    });
+
+    it("leaves an empty selection empty as frames are added", () => {
+      const store = useFlowStore.getState();
+      for (const id of ["a", "b", "c", "d"])
+        store.addReferenceFrame(makeKf(id));
+      expect(useFlowStore.getState().transitions).toHaveLength(3);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
     });
 
     it("extends an all-selection onto transitions added after it", () => {
       const store = useFlowStore.getState();
-      store.addReferenceFrame(makeKf("a"));
-      store.addReferenceFrame(makeKf("b"));
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0]);
-
-      store.addReferenceFrame(makeKf("c"));
+      for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
+      store.selectAllTransitions();
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0, 1]);
+
       store.addReferenceFrame(makeKf("d"));
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
         0, 1, 2,
@@ -395,6 +398,7 @@ describe("Phase 1: transitions", () => {
     it("keeps the selection whole when reordering frames", () => {
       const store = useFlowStore.getState();
       for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
+      store.selectAllTransitions();
       store.reorderReferenceFrames(["c", "a", "b"]);
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0, 1]);
     });
@@ -402,6 +406,7 @@ describe("Phase 1: transitions", () => {
     it("grows the selection when looping adds a transition", () => {
       const store = useFlowStore.getState();
       for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
+      store.selectAllTransitions();
       store.setLoop(true);
       expect(useFlowStore.getState().transitions).toHaveLength(3);
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
@@ -409,14 +414,12 @@ describe("Phase 1: transitions", () => {
       ]);
     });
 
-    it("empties the selection only when there are no transitions", () => {
+    it("drops indices the rebuilt list no longer has", () => {
       const store = useFlowStore.getState();
-      store.addReferenceFrame(makeKf("a"));
-      store.addReferenceFrame(makeKf("b"));
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0]);
-
-      store.removeReferenceFrame("b");
-      expect(useFlowStore.getState().transitions).toHaveLength(0);
+      for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
+      store.selectTransition(1);
+      store.removeReferenceFrame("c");
+      expect(useFlowStore.getState().transitions).toHaveLength(1);
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
     });
   });
@@ -796,33 +799,27 @@ describe("Phase 1: transitions", () => {
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([2]);
     });
 
-    // The panel edits the selection and has no other scope, so deselecting
-    // everything would leave it with nothing to write to.
-    it("falls back to the whole flow instead of an empty selection", () => {
+    it("deselects everything when asked to select nothing", () => {
       seedTransitions(3);
       useFlowStore.getState().selectTransition(null);
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
-        0, 1, 2,
-      ]);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
     });
 
-    it("falls back to the whole flow when an index names no transition", () => {
+    it("deselects everything when an index names no transition", () => {
       seedTransitions(2);
       useFlowStore.getState().selectTransition(9);
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0, 1]);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
     });
 
-    it("does nothing when the only selected transition is toggled off", () => {
-      // It used to fall back to selecting everything, which read as a wild
-      // overshoot for a click asking to deselect one thing.
+    it("toggles off the only selected transition", () => {
       seedTransitions(3);
       const store = () => useFlowStore.getState();
       store().selectTransition(1);
       store().toggleTransitionSelection(1);
-      expect(store().selectedTransitionIndices).toEqual([1]);
+      expect(store().selectedTransitionIndices).toEqual([]);
     });
 
-    it("still toggles one off while others remain selected", () => {
+    it("toggles one off while others remain selected", () => {
       seedTransitions(3);
       const store = () => useFlowStore.getState();
       store().selectAllTransitions();
@@ -830,9 +827,8 @@ describe("Phase 1: transitions", () => {
       expect(store().selectedTransitionIndices).toEqual([0, 2]);
       store().toggleTransitionSelection(2);
       expect(store().selectedTransitionIndices).toEqual([0]);
-      // ...and stops at the last one.
       store().toggleTransitionSelection(0);
-      expect(store().selectedTransitionIndices).toEqual([0]);
+      expect(store().selectedTransitionIndices).toEqual([]);
     });
 
     it("keeps an empty selection when there is nothing to select", () => {
@@ -862,13 +858,11 @@ describe("Phase 1: transitions", () => {
       ]);
     });
 
-    it("clearing lands on the whole flow, not on nothing", () => {
+    it("clearing lands on nothing, which Generate reads as the whole flow", () => {
       seedTransitions(3);
       useFlowStore.getState().selectTransition(1);
       useFlowStore.getState().clearTransitionSelection();
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
-        0, 1, 2,
-      ]);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
     });
 
     it("drops selected indices when deleting a frame shortens the flow", () => {
@@ -1121,25 +1115,26 @@ describe("transition run history", () => {
     store().recordTransitionRun(
       0,
       "dream-a",
-      { ...RUN_SETTINGS, promptOverride: "first take", durationOverride: 5 },
+      { ...RUN_SETTINGS, prompt: "first take", duration: 5 },
       1000,
     );
     store().updateTransitionStatus(0, "processed");
     store().recordTransitionRun(
       0,
       "dream-b",
-      { ...RUN_SETTINGS, promptOverride: "second take", durationOverride: 8 },
+      { ...RUN_SETTINGS, prompt: "second take", duration: 8 },
       2000,
     );
     store().updateTransitionStatus(0, "processed");
+    store().setTransitionSettings([0], { prompt: "second take", duration: 8 });
 
     store().restoreTransitionRun(0, "dream-a");
 
     const t = store().transitions[0];
     expect(t.dreamUuid).toBe("dream-a");
     expect(t.status).toBe("processed");
-    expect(t.promptOverride).toBe("first take");
-    expect(t.durationOverride).toBe(5);
+    expect(t.settings.prompt).toBe("first take");
+    expect(t.settings.duration).toBe(5);
     // Both takes stay available — restoring is not destructive.
     expect(t.history).toHaveLength(2);
   });

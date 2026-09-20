@@ -53,10 +53,6 @@ type FlowStoreState = {
   transitions: FlowTransition[];
 
   // Phase 1 — UI state
-  // Selected transition indices in click order; the last one is the "primary"
-  // (the one the panel names and the preview plays). Never empty while the flow
-  // has transitions — the panel edits the selection and nothing else, so an
-  // empty one would leave it with no target. See `ensureSelection`.
   selectedTransitionIndices: number[];
   settingsExpanded: boolean;
   previewLightboxOpen: boolean;
@@ -128,33 +124,17 @@ const PHASE_1_DEFAULTS = {
 // where a user is still comparing takes.
 export const MAX_TRANSITION_HISTORY = 20;
 
-/**
- * The selection to keep after the transition list is rebuilt.
- *
- * Three rules, in order:
- *  - indices the new list no longer has are dropped;
- *  - a selection that covered the whole flow keeps covering it, so transitions
- *    created by adding a frame are edited along with the rest instead of
- *    silently sitting out the next change;
- *  - it is never empty while there are transitions, because the panel edits the
- *    selection and has no other scope to fall back on.
- *
- * Every path that rebuilds `transitions` must run this. Deriving transitions
- * without it is what left a freshly added first transition unselected, with the
- * panel showing controls wired to nothing.
- */
 function nextSelection(
   indices: number[],
   previousCount: number,
   nextCount: number,
 ): number[] {
   if (nextCount === 0) return indices.length === 0 ? indices : [];
-  const all = () => Array.from({ length: nextCount }, (_, i) => i);
-  const coveredEverything =
-    previousCount > 0 && indices.length >= previousCount;
-  if (coveredEverything) return all();
+  if (indices.length === 0) return indices;
+  if (previousCount > 0 && indices.length >= previousCount) {
+    return Array.from({ length: nextCount }, (_, i) => i);
+  }
   const kept = indices.filter((i) => i >= 0 && i < nextCount);
-  if (kept.length === 0) return all();
   return kept.length === indices.length ? indices : kept;
 }
 
@@ -222,20 +202,6 @@ function deriveTransitions(
     });
   }
   return result;
-}
-
-/**
- * Keep a selection whenever there is something to select.
- *
- * The panel edits the selection and has no other scope, so an empty selection
- * is a panel with nothing to write to. Falling back to everything also makes
- * the common move after "Generate all" — change one setting on the whole flow —
- * the thing that happens by default.
- */
-function ensureSelection(indices: number[], transitionCount: number): number[] {
-  if (transitionCount === 0) return indices.length === 0 ? indices : [];
-  if (indices.length > 0) return indices;
-  return Array.from({ length: transitionCount }, (_, i) => i);
 }
 
 export const flowPartialize = (state: FlowStoreState) => ({
@@ -579,12 +545,10 @@ export const useFlowStore = create<FlowStoreState>()(
 
       selectTransition: (index) =>
         set((s) => ({
-          selectedTransitionIndices: ensureSelection(
+          selectedTransitionIndices:
             index === null || index < 0 || index >= s.transitions.length
               ? []
               : [index],
-            s.transitions.length,
-          ),
         })),
 
       toggleTransitionSelection: (index) =>
@@ -594,11 +558,6 @@ export const useFlowStore = create<FlowStoreState>()(
           const without = current.filter((i) => i !== index);
           // Re-append rather than sort: the newest click is the primary, which
           // is what the panel names and the preview plays.
-          // Toggling off the only selected transition does nothing. It used to
-          // fall back to selecting everything, which read as a wild overshoot
-          // for a click that asked to deselect one thing. The strip shows this
-          // is coming by switching the cursor while a toggle modifier is held.
-          if (without.length === 0) return s;
           return {
             selectedTransitionIndices:
               without.length === current.length ? [...current, index] : without,
@@ -610,21 +569,12 @@ export const useFlowStore = create<FlowStoreState>()(
           selectedTransitionIndices: s.transitions.map((_, i) => i),
         })),
 
-      // Clearing falls back to the whole flow rather than to nothing: see
-      // `ensureSelection`. Kept as an action because deselecting the last
-      // transition routes through here.
-      clearTransitionSelection: () =>
-        set((s) => ({
-          selectedTransitionIndices: ensureSelection([], s.transitions.length),
-        })),
+      clearTransitionSelection: () => set({ selectedTransitionIndices: [] }),
 
       pruneTransitionSelection: () =>
         set((s) => {
-          const valid = ensureSelection(
-            s.selectedTransitionIndices.filter(
-              (i) => i >= 0 && i < s.transitions.length,
-            ),
-            s.transitions.length,
+          const valid = s.selectedTransitionIndices.filter(
+            (i) => i >= 0 && i < s.transitions.length,
           );
           return valid.length === s.selectedTransitionIndices.length
             ? s
@@ -732,9 +682,7 @@ export const useFlowStore = create<FlowStoreState>()(
           if (!entry || !entry.completed) return s;
           transitions[index] = {
             ...prev,
-            // The snapshot is a full override set, so the panel shows exactly
-            // the values this run used regardless of how globals have drifted.
-            ...entry.settings,
+            settings: { ...entry.settings },
             dreamUuid,
             status: "processed",
             progress: undefined,

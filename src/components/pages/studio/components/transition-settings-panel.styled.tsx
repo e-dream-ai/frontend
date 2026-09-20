@@ -154,6 +154,14 @@ export const RequiredMark = styled.span`
   margin-left: 4px;
 `;
 
+export const ScopeHint = styled.div`
+  margin-top: 10px;
+  font-family: ${FLOW.fontFamily};
+  font-size: 11px;
+  color: ${FLOW.textMuted};
+  letter-spacing: 0.04em;
+`;
+
 export const ValidationHint = styled.div`
   margin-top: 10px;
   font-family: ${FLOW.fontFamily};

@@ -28,21 +28,17 @@ const flowAdapter: EditorAdapter = {
       flowPartialize(useFlowStore.getState()),
     ) as EditorProjectState,
   write: (state) => {
-    useFlowStore.setState(
-      fromPersistedFlowState(state as PersistedFlowState) as Parameters<
-        typeof useFlowStore.setState
-      >[0],
-    );
     // `setState` merges, so the transient view state of whatever project was
     // open survives into this one unless it is cleared here. A selection is a
     // list of indices into a transition list that no longer exists; clearing it
     // also lets the recompute below re-select the loaded flow from scratch.
     useFlowStore.setState({
+      ...fromPersistedFlowState(state as PersistedFlowState),
       selectedTransitionIndices: [],
       settingsExpanded: false,
       previewLightboxOpen: false,
       previewPlayRequest: null,
-    });
+    } as Partial<ReturnType<typeof useFlowStore.getState>>);
     useFlowStore.getState().reconcileStaleTransitions();
     useFlowStore.getState().recomputeTransitions();
   },

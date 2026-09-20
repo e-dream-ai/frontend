@@ -22,11 +22,6 @@ interface TransitionGapProps {
   selected: boolean;
   /** Rendered, then edited: the video on screen is behind the settings. */
   stale?: boolean;
-  /**
-   * A toggle modifier is held and this is the only selected transition, so a
-   * toggle-click here would do nothing. Shows as a not-allowed cursor.
-   */
-  deselectBlocked?: boolean;
   onClick: (modifiers: TransitionClickModifiers) => void;
 }
 
@@ -58,7 +53,6 @@ export function TransitionGapEnhanced({
   mismatch,
   selected,
   stale = false,
-  deselectBlocked = false,
   onClick,
 }: TransitionGapProps) {
   const { status } = transition;
@@ -72,7 +66,6 @@ export function TransitionGapEnhanced({
     role: "button" as const,
     tabIndex: 0,
     $selected: selected,
-    $deselectBlocked: deselectBlocked,
     "aria-pressed": selected,
     // Swallow the mousedown default for every click, which does two jobs.
     // It stops a shift-click extending the browser's text selection from

@@ -64,6 +64,9 @@ export const resolveSelectedTargets = (
   for (const index of indices) {
     const transition = transitions[index];
     if (!transition) continue;
+    if (transition.status === "processing" || transition.status === "queue") {
+      continue;
+    }
     if (
       isTransitionMismatched(
         byId.get(transition.fromFrameId),

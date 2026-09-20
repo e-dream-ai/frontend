@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useFlowStore } from "@/stores/flow.store";
 import { useShallow } from "zustand/react/shallow";
 import { SegmentPreview } from "./segment-preview";
@@ -46,20 +46,26 @@ export function FlowPreview() {
   const foundIndex = segments.findIndex((s) => s.key === currentUuid);
   const index = foundIndex >= 0 ? foundIndex : 0;
 
+  const followedUuidRef = useRef<string>();
   useEffect(() => {
-    if (!primaryDreamUuid) return;
+    if (!primaryDreamUuid || primaryDreamUuid === followedUuidRef.current) {
+      return;
+    }
     // A selected transition that hasn't rendered yet has no segment to show —
     // leave whatever is playing alone rather than jumping to an unrelated clip.
     if (!segments.some((s) => s.key === primaryDreamUuid)) return;
+    followedUuidRef.current = primaryDreamUuid;
     setCurrentUuid(primaryDreamUuid);
   }, [primaryDreamUuid, segments]);
 
   // An explicit play request seeks to the segment and, via replayToken,
   // restarts it even when it is already the one on screen.
   const [replayToken, setReplayToken] = useState(0);
+  const handledSeqRef = useRef(0);
   useEffect(() => {
-    if (!playRequest) return;
+    if (!playRequest || playRequest.seq === handledSeqRef.current) return;
     if (!segments.some((s) => s.key === playRequest.dreamUuid)) return;
+    handledSeqRef.current = playRequest.seq;
     setCurrentUuid(playRequest.dreamUuid);
     setReplayToken(playRequest.seq);
   }, [playRequest, segments]);

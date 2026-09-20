@@ -37,7 +37,6 @@ const breathGlow = keyframes`
 export const GapContainer = styled.div<{
   $expanded: boolean;
   $selected?: boolean;
-  $deselectBlocked?: boolean;
 }>`
   flex-shrink: 0;
   width: ${(p) => (p.$expanded ? "84px" : "64px")};
@@ -49,7 +48,7 @@ export const GapContainer = styled.div<{
   gap: 14px;
   /* not-allowed only while a toggle modifier is held over the last selected
      transition — a plain click here is still fine, so the default stays. */
-  cursor: ${(p) => (p.$deselectBlocked ? "not-allowed" : "pointer")};
+  cursor: pointer;
   user-select: none;
   border-radius: ${FLOW.radiusSm};
   transition:

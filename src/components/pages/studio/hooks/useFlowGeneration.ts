@@ -166,21 +166,6 @@ export function useFlowGeneration() {
     }
   }, [generateTransition, startGenerating, stopGenerating]);
 
-  const generateOne = useCallback(
-    async (index: number) => {
-      startGenerating();
-      try {
-        const t = useFlowStore.getState().transitions[index];
-        if (t) {
-          await generateTransition(index, t);
-        }
-      } finally {
-        stopGenerating();
-      }
-    },
-    [generateTransition, startGenerating, stopGenerating],
-  );
-
   /**
    * Regenerate an explicit selection. Unlike Generate All this does not skip
    * already-processed transitions — asking for a rerun of the ones you picked
@@ -217,5 +202,5 @@ export function useFlowGeneration() {
     [generateTransition, startGenerating, stopGenerating],
   );
 
-  return { generateAll, generateOne, generateMany, isGenerating };
+  return { generateAll, generateMany, isGenerating };
 }

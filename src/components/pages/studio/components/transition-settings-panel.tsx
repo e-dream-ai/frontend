@@ -67,6 +67,7 @@ import {
   ParamTitle,
   ParamName,
   NumberInput,
+  ScopeHint,
   ValidationHint,
   RequiredMark,
   SubtitleTime,
@@ -112,8 +113,6 @@ export function TransitionSettingsPanel({
   const modelOptions = modelsData?.data?.models ?? [];
   const modelConstraints = useModelConstraints({ mediaType: "video" });
 
-  // Per-transition mode? The last-clicked index is the "primary": the one the
-  // panel names and whose values it displays when several are selected.
   const isPerTransition = selectedIndices.length > 0;
   const selectionCount = selectedIndices.length;
   const primaryIndex = isPerTransition
@@ -122,10 +121,6 @@ export function TransitionSettingsPanel({
   const selectedTransition =
     primaryIndex !== null ? transitions[primaryIndex] : null;
 
-  // What the panel shows is what the primary transition stores — no fallback
-  // chain, no preset resolution. The selection is never empty while there are
-  // transitions (see `ensureSelection`), so the default is only a type-level
-  // floor, not a state anyone reaches.
   const current = selectedTransition?.settings ?? DEFAULT_TRANSITION_SETTINGS;
   const currentPrompt = current.prompt;
   const currentNegativePrompt = current.negativePrompt;
@@ -372,10 +367,6 @@ export function TransitionSettingsPanel({
     ],
   );
 
-  // The prompt is what drives the generation and nothing supplies one behind
-  // the panel's back any more, so an empty one is always a blocker.
-  const needsPrompt = !currentPrompt.trim();
-
   // What each mode would actually start. This count drives the cost estimate
   // sitting beside the button, so the clips it prices are the dreams the click
   // produces — not the number of things on screen.
@@ -389,14 +380,24 @@ export function TransitionSettingsPanel({
     [selectedIndices, transitions, referenceFrames],
   );
 
-  const generateCount = isPerTransition
-    ? generateSelectedTargets.length
-    : generateAllTargets.length;
+  const generateTargets = isPerTransition
+    ? generateSelectedTargets
+    : generateAllTargets;
+  const generateCount = generateTargets.length;
+
+  const needsPrompt = generateTargets.some(
+    (target) => !target.transition.settings.prompt.trim(),
+  );
 
   const generateDisabled = isGenerating || generateCount === 0 || needsPrompt;
+
+  const costBasis =
+    selectedTransition?.settings ?? generateTargets[0]?.transition.settings;
   const { totalCostUsd, costBreakdown } = useCostEstimate({
-    model: modelOptions.find((m) => m.id === currentModel),
-    params: { durationSec: currentDuration },
+    model: modelOptions.find(
+      (m) => m.id === (costBasis?.model ?? currentModel),
+    ),
+    params: { durationSec: costBasis?.duration ?? currentDuration },
     count: generateCount,
     breakdownKey: "components.cost_estimate.clips",
   });
@@ -424,6 +425,8 @@ export function TransitionSettingsPanel({
     : undefined;
   const currentRunTime = currentRun && formatRunTime(currentRun.createdAt);
   const extraCount = selectionCount - 1;
+  const isRetry =
+    selectionCount === 1 && selectedTransition?.status === "failed";
 
   return (
     <PanelContainer>
@@ -446,7 +449,7 @@ export function TransitionSettingsPanel({
 
       {/* Collapsed view */}
       <FieldRow>
-        {modelOptions.length > 0 && (
+        {isPerTransition && modelOptions.length > 0 && (
           <FieldGroup>
             <FieldLabel>Model</FieldLabel>
             <Select
@@ -462,43 +465,47 @@ export function TransitionSettingsPanel({
           </FieldGroup>
         )}
 
-        <FieldGroup>
-          <FieldLabel>Preset</FieldLabel>
-          {/*
-            Shows the preset whose values these settings still match, or Custom
-            once they have been edited away from any of them. Picking one stamps
-            its fields; there is nothing stored to pick back out.
-          */}
-          <Select
-            value={currentPresetName}
-            onChange={(e) => handleApplyPreset(e.target.value)}
-          >
-            <option value="">Custom</option>
-            {presetGroups.map((group) => (
-              <optgroup key={group.id} label={group.label}>
-                {group.presets.map((p) => (
-                  <option key={p.name} value={p.name}>
-                    {p.name}
+        {isPerTransition && (
+          <>
+            <FieldGroup>
+              <FieldLabel>Preset</FieldLabel>
+              {/*
+                Shows the preset whose values these settings still match, or
+                Custom once they have been edited away from any of them. Picking
+                one stamps its fields; there is nothing stored to pick back out.
+              */}
+              <Select
+                value={currentPresetName}
+                onChange={(e) => handleApplyPreset(e.target.value)}
+              >
+                <option value="">Custom</option>
+                {presetGroups.map((group) => (
+                  <optgroup key={group.id} label={group.label}>
+                    {group.presets.map((p) => (
+                      <option key={p.name} value={p.name}>
+                        {p.name}
+                      </option>
+                    ))}
+                  </optgroup>
+                ))}
+              </Select>
+            </FieldGroup>
+
+            <FieldGroup>
+              <FieldLabel>Duration</FieldLabel>
+              <Select
+                value={currentDuration}
+                onChange={(e) => setValue("duration", Number(e.target.value))}
+              >
+                {allowedDurations.map((d) => (
+                  <option key={d} value={d}>
+                    {d}s
                   </option>
                 ))}
-              </optgroup>
-            ))}
-          </Select>
-        </FieldGroup>
-
-        <FieldGroup>
-          <FieldLabel>Duration</FieldLabel>
-          <Select
-            value={currentDuration}
-            onChange={(e) => setValue("duration", Number(e.target.value))}
-          >
-            {allowedDurations.map((d) => (
-              <option key={d} value={d}>
-                {d}s
-              </option>
-            ))}
-          </Select>
-        </FieldGroup>
+              </Select>
+            </FieldGroup>
+          </>
+        )}
 
         <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
 
@@ -507,7 +514,9 @@ export function TransitionSettingsPanel({
           disabled={generateDisabled}
           title={
             needsPrompt
-              ? "Add a prompt or pick a preset to generate"
+              ? isPerTransition
+                ? "Add a prompt or pick a preset to generate"
+                : "A transition has no prompt — select it to give it one"
               : isPerTransition
                 ? "Generate the selected transitions, edited or not"
                 : "Generate every transition whose video is behind its settings"
@@ -521,14 +530,23 @@ export function TransitionSettingsPanel({
             }
           }}
         >
-          Generate
+          {isRetry ? "Retry" : "Generate"}
         </GenerateButton>
       </FieldRow>
 
       {needsPrompt && (
         <ValidationHint>
-          Pick a preset or write a prompt to describe the motion.
+          {isPerTransition
+            ? "Pick a preset or write a prompt to describe the motion."
+            : "A transition has no prompt. Select it to give it one."}
         </ValidationHint>
+      )}
+
+      {!isPerTransition && (
+        <ScopeHint>
+          Nothing selected &mdash; Generate covers every transition whose video
+          is behind its settings. Select one to edit it.
+        </ScopeHint>
       )}
 
       <CreditLimitNotice
@@ -538,7 +556,7 @@ export function TransitionSettingsPanel({
       />
 
       {/* Expand/collapse toggle */}
-      {!settingsExpanded ? (
+      {!isPerTransition ? null : !settingsExpanded ? (
         <ToggleLink
           onClick={() => useFlowStore.getState().setSettingsExpanded(true)}
         >

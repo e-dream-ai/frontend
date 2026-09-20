@@ -8,12 +8,7 @@ import type { LoRAConfig } from "@/types/studio.types";
  */
 export type TransitionField = keyof TransitionSettings;
 
-/**
- * Human-readable field names, used in the mismatch prompt. The two LoRA sets
- * share a label: the picker sets both at once, so naming them separately would
- * report one disagreement twice.
- */
-export const TRANSITION_FIELD_LABELS: Record<TransitionField, string> = {
+const TRANSITION_FIELD_LABELS: Record<TransitionField, string> = {
   prompt: "Prompt",
   negativePrompt: "Negative Prompt",
   duration: "Duration",
@@ -76,16 +71,5 @@ export function mismatchedFields(
 ): TransitionField[] {
   return FIELD_ORDER.filter((field) =>
     selectionHasMismatch(transitions, field),
-  );
-}
-
-/** Those fields as distinct labels — the two LoRA sets read as one "LoRA". */
-export function mismatchedFieldLabels(
-  transitions: readonly FlowTransition[],
-): string[] {
-  return Array.from(
-    new Set(
-      mismatchedFields(transitions).map((f) => TRANSITION_FIELD_LABELS[f]),
-    ),
   );
 }

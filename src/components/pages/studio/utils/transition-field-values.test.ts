@@ -4,7 +4,6 @@ import {
   fieldComparisonKey,
   forcedFieldPatch,
   mismatchedFields,
-  mismatchedFieldLabels,
   selectionHasMismatch,
 } from "./transition-field-values";
 // Relative, not "@/": the alias does not resolve for value imports in tests.
@@ -77,7 +76,7 @@ describe("mismatchedFields", () => {
     expect(mismatchedFields([t(), t()])).toEqual([]);
   });
 
-  it("reports the two LoRA sets as one label", () => {
+  it("reports both LoRA sets, which the picker always moves together", () => {
     const selection = [
       t({ highNoiseLoras: LORA, lowNoiseLoras: LORA }),
       t({ highNoiseLoras: [], lowNoiseLoras: [] }),
@@ -86,7 +85,6 @@ describe("mismatchedFields", () => {
       "highNoiseLoras",
       "lowNoiseLoras",
     ]);
-    expect(mismatchedFieldLabels(selection)).toEqual(["LoRA"]);
   });
 });
 

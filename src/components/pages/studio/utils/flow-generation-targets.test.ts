@@ -139,4 +139,14 @@ describe("resolveSelectedTargets", () => {
     expect(indexes(result)).toEqual([]);
     expect(result.skippedForMismatch).toBe(1);
   });
+
+  it("leaves in-flight transitions alone", () => {
+    const result = resolveSelectedTargets(
+      [0, 1, 2],
+      [at("queue"), at("processing"), at("idle")],
+      FRAMES,
+    );
+    expect(indexes(result)).toEqual([2]);
+    expect(result.skippedForMismatch).toBe(0);
+  });
 });

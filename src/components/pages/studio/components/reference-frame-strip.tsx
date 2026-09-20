@@ -26,7 +26,6 @@ import {
   type TransitionField,
 } from "../utils/transition-field-values";
 import { isTransitionStale } from "../utils/transition-staleness";
-import { useToggleModifierHeld } from "../hooks/useToggleModifierHeld";
 import {
   StripSection,
   SectionHeader,
@@ -69,13 +68,15 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
     (s) => s.toggleTransitionSelection,
   );
   const selectAllTransitions = useFlowStore((s) => s.selectAllTransitions);
+  const clearTransitionSelection = useFlowStore(
+    (s) => s.clearTransitionSelection,
+  );
 
   // Data
   const rawFrames = useFlowStore((s) => s.referenceFrames);
   const loop = useFlowStore((s) => s.loop);
   const transitions = useFlowStore((s) => s.transitions);
   const selectedIndices = useFlowStore((s) => s.selectedTransitionIndices);
-  const toggleModifierHeld = useToggleModifierHeld();
 
   const staleFlags = useMemo(
     () => transitions.map((transition) => isTransitionStale(transition)),
@@ -180,11 +181,6 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
             mismatch={describeMismatch(displayFrames[i - 1], frame)}
             selected={selectedIndices.includes(transitionIndex)}
             stale={staleFlags[transitionIndex]}
-            deselectBlocked={
-              toggleModifierHeld &&
-              selectedIndices.length === 1 &&
-              selectedIndices[0] === transitionIndex
-            }
             onClick={({ toggle }) => {
               // Clicking a transition plays it, every time — including when it
               // was already the selected one, where nothing about the
@@ -264,6 +260,14 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
                 }}
               >
                 Select all
+              </SelectionButton>
+              <SelectionButton
+                type="button"
+                disabled={selectedIndices.length === 0}
+                title="Edit nothing; Generate then covers the whole flow"
+                onClick={clearTransitionSelection}
+              >
+                Clear all
               </SelectionButton>
             </>
           )}
