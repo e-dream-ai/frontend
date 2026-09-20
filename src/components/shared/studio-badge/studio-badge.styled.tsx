@@ -15,4 +15,5 @@ export const Badge = styled.span<{ $mode: StudioMode }>`
   background: ${(p) => EDITOR_BADGE[p.$mode] ?? FLOW.textDim};
   color: ${FLOW.bg};
   flex-shrink: 0;
+  margin-right: 8px;
 `;
