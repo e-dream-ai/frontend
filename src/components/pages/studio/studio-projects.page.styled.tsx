@@ -2,7 +2,7 @@ import styled, { keyframes } from "styled-components";
 import { Link } from "react-router-dom";
 import { FLOW, flowFadeSlideUp } from "@/constants/flow-theme.constants";
 import type { StudioMode } from "@/types/flow.types";
-import { EDITOR_BADGE } from "./constants/editor-badge";
+import { EDITOR_BADGE } from "@/constants/editor-badge.constants";
 
 export const Container = styled.div`
   min-height: 100vh;

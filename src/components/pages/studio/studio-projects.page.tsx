@@ -1,10 +1,6 @@
 import React, { useCallback, useState } from "react";
-import { Film, Trash2 } from "lucide-react";
-import { ConfirmModal } from "@/components/modals/confirm.modal";
-import { toast } from "react-toastify";
-import Bugsnag from "@bugsnag/js";
+import { Film } from "lucide-react";
 import { useEditorProjects } from "@/api/editor-project/query/useEditorProjects";
-import { useDeleteEditorProject } from "@/api/editor-project/mutation/useDeleteEditorProject";
 import { usePrefetchEditorProject } from "@/api/editor-project/query/usePrefetchEditorProject";
 import { preloadEditor } from "./components/lazy-editors";
 import { NewProjectMenu } from "./components/new-project-menu";
@@ -23,7 +19,6 @@ import {
   CardMetaRow,
   CardName,
   Container,
-  DeleteButton,
   EmptyHint,
   EmptyState,
   EmptyTitle,
@@ -83,7 +78,6 @@ export const StudioProjectsPage: React.FC = () => {
     take: PROJECTS_PAGE_SIZE,
   });
 
-  const deleteProject = useDeleteEditorProject();
   const { prefetch: prefetchProject, cancel: cancelPrefetch } =
     usePrefetchEditorProject();
 
@@ -97,25 +91,6 @@ export const StudioProjectsPage: React.FC = () => {
   const projects = data?.data?.projects ?? [];
   const isSwitching = isLoading || isPreviousData;
   const skeletonCount = projects.length > 0 ? projects.length : SKELETON_COUNT;
-  const [pendingDelete, setPendingDelete] = useState<{
-    uuid: string;
-    name: string;
-  } | null>(null);
-
-  const handleConfirmDelete = useCallback(async () => {
-    if (!pendingDelete) return;
-    const { uuid, name } = pendingDelete;
-
-    try {
-      await deleteProject.mutateAsync(uuid);
-      setPendingDelete(null);
-      toast.success(`Deleted ${name}`);
-    } catch (error) {
-      Bugsnag.notify(error as Error);
-      toast.error("Could not delete that playlist. Try again.");
-    }
-  }, [deleteProject, pendingDelete]);
-
   return (
     <Container>
       <Header>
@@ -189,35 +164,12 @@ export const StudioProjectsPage: React.FC = () => {
                       </CardMetaRow>
                     </CardBody>
                   </CardLink>
-
-                  <DeleteButton
-                    type="button"
-                    aria-label={`Delete ${name}`}
-                    onClick={() =>
-                      setPendingDelete({ uuid: project.uuid, name })
-                    }
-                  >
-                    <Trash2 size={14} />
-                  </DeleteButton>
                 </Card>
               );
             })}
           </Grid>
         ) : null}
       </Body>
-
-      <ConfirmModal
-        isOpen={Boolean(pendingDelete)}
-        isConfirming={deleteProject.isLoading}
-        title="Delete playlist"
-        text={`"${
-          pendingDelete?.name ?? ""
-        }" will be removed from the studio. The playlist itself and its dreams are not affected.`}
-        confirmText="Delete"
-        confirmButtonType="danger"
-        onConfirm={handleConfirmDelete}
-        onCancel={() => setPendingDelete(null)}
-      />
     </Container>
   );
 };

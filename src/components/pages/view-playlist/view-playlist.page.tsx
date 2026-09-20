@@ -3,6 +3,7 @@ import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, ItemCardList, Row } from "@/components/shared";
 import { UprezPlaylistControls } from "./components/uprez-playlist-controls";
 import { OpenInStudioButton } from "./components/open-in-studio-button";
+import { PlaylistStudioBadge } from "./components/playlist-studio-badge";
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
@@ -38,6 +39,7 @@ import {
   faCalendar,
   faEye,
   faFileVideo,
+  faPencil,
   faPlus,
   faRankingStar,
   faRepeat,
@@ -878,7 +880,7 @@ export const ViewPlaylistPage = () => {
                       >
                         <Button
                           type="button"
-                          after={<FontAwesomeIcon icon={faSave} />}
+                          after={<FontAwesomeIcon icon={faPencil} />}
                           onClick={handleEdit}
                         >
                           {t("page.view_playlist.edit")}
@@ -923,6 +925,12 @@ export const ViewPlaylistPage = () => {
                     placeholder={t("page.view_playlist.name")}
                     type="text"
                     before={<FontAwesomeIcon icon={faFileVideo} />}
+                    after={
+                      <PlaylistStudioBadge
+                        playlistUuid={playlist?.uuid}
+                        isOwner={isOwner}
+                      />
+                    }
                     {...formMethods.register("name")}
                   />
 
@@ -934,7 +942,7 @@ export const ViewPlaylistPage = () => {
                       disabled
                       placeholder={t("page.view_playlist.owner")}
                       type="text"
-                      before={<FontAwesomeIcon icon={faSave} />}
+                      before={<FontAwesomeIcon icon={faUser} />}
                       after={
                         playlist?.user?.uuid ? (
                           <AnchorLink

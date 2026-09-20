@@ -1,4 +1,5 @@
-import styled from "styled-components";
+import { Link } from "react-router-dom";
+import styled, { css } from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 
 export const Group = styled.div`
@@ -27,7 +28,7 @@ export const SaveButton = styled.button`
   }
 
   &:disabled {
-    opacity: 0.5;
+    opacity: 0.45;
     cursor: not-allowed;
   }
 
@@ -37,7 +38,7 @@ export const SaveButton = styled.button`
   }
 `;
 
-export const ActionButton = styled.button`
+const actionStyles = css`
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -54,13 +55,27 @@ export const ActionButton = styled.button`
     border-color 0.15s,
     color 0.15s;
 
-  &:hover {
+  &:hover:not(:disabled) {
     border-color: ${FLOW.borderHover};
     color: ${FLOW.text};
+  }
+
+  &:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
   }
 
   &:focus-visible {
     outline: 2px solid ${FLOW.accent};
     outline-offset: 2px;
   }
+`;
+
+export const ActionButton = styled.button`
+  ${actionStyles}
+`;
+
+export const ActionLink = styled(Link)`
+  ${actionStyles}
+  text-decoration: none;
 `;

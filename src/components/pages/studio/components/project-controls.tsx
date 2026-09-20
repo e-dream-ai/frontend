@@ -37,7 +37,7 @@ export const ProjectControls: React.FC<Props> = ({
         aria-pressed={editorFilter === undefined}
         onClick={() => onEditorFilterChange(undefined)}
       >
-        Everything
+        All
       </FilterButton>
       {STUDIO_MODES.map((mode) => (
         <FilterButton

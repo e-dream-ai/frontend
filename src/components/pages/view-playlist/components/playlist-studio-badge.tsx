@@ -1,19 +1,19 @@
 import React from "react";
-import { OpenInStudio } from "@/components/shared/open-in-studio";
+import { StudioBadge } from "@/components/shared/studio-badge";
 import { useEditorProjectByPlaylist } from "@/api/editor-project/query/useEditorProjects";
 
 interface Props {
-  playlistUuid: string;
+  playlistUuid?: string;
   isOwner: boolean;
 }
 
-export const OpenInStudioButton: React.FC<Props> = ({
+export const PlaylistStudioBadge: React.FC<Props> = ({
   playlistUuid,
   isOwner,
 }) => {
   const { project } = useEditorProjectByPlaylist(playlistUuid, isOwner);
 
-  return <OpenInStudio project={isOwner ? project : undefined} />;
-};
+  if (!isOwner || !project) return null;
 
-export default OpenInStudioButton;
+  return <StudioBadge mode={project.editorId} />;
+};

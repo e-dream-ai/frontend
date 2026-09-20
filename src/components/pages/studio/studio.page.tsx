@@ -145,9 +145,8 @@ export const StudioPage: React.FC = () => {
   return (
     <StudioContainer $dragOver={isDragOver} {...dropHandlers}>
       <StudioHeader>
-        <BackButton to={ROUTES.STUDIO} aria-label="Back to playlists">
+        <BackButton to={ROUTES.STUDIO} title="Back to playlists">
           <ArrowLeft size={16} />
-          <span>Playlists</span>
         </BackButton>
         <TitleGroup>
           <LogoLink to={ROUTES.ROOT} aria-label="Go to home">

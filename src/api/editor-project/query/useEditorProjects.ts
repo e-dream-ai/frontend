@@ -1,5 +1,6 @@
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import useApiQuery from "@/api/shared/useApiQuery";
+import useAuth from "@/hooks/useAuth";
 import {
   editorProjectKeys,
   EditorProjectListFilters,
@@ -31,14 +32,20 @@ const buildQueryString = (filters: EditorProjectListFilters) => {
 export const useEditorProjects = ({
   enabled = true,
   ...filters
-}: Params = {}) =>
-  useApiQuery<EditorProjectsResponse>(
+}: Params = {}) => {
+  const { user } = useAuth();
+
+  return useApiQuery<EditorProjectsResponse>(
     editorProjectKeys.list(filters),
     `/v2/editor-projects${buildQueryString(filters)}`,
     { headers: getRequestHeaders({ contentType: ContentType.json }) },
     { refetchOnMount: true },
-    { enabled, staleTime: EDITOR_PROJECT_LIST_STALE_TIME },
+    {
+      enabled: enabled && Boolean(user),
+      staleTime: EDITOR_PROJECT_LIST_STALE_TIME,
+    },
   );
+};
 
 export const useEditorProjectByPlaylist = (
   playlistUuid?: string,

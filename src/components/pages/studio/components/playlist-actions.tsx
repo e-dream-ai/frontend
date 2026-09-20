@@ -1,11 +1,18 @@
 import React, { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { ListVideo, Play } from "lucide-react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faListUl } from "@fortawesome/free-solid-svg-icons";
 import useSocket from "@/hooks/useSocket";
+import usePlaybackClient from "@/hooks/usePlaybackClient";
+import PlaylistPlay from "@/icons/playlist-play";
 import { emitPlayPlaylist } from "@/utils/socket.util";
 import { ROUTES } from "@/constants/routes.constants";
 import type { EditorProjectPlaylistRef } from "@/types/editor-project.types";
-import { ActionButton, Group, SaveButton } from "./playlist-actions.styled";
+import {
+  ActionButton,
+  ActionLink,
+  Group,
+  SaveButton,
+} from "./playlist-actions.styled";
 
 type Props = {
   playlist: EditorProjectPlaylistRef | null;
@@ -20,12 +27,8 @@ export const PlaylistActions: React.FC<Props> = ({
   saving,
   onSave,
 }) => {
-  const navigate = useNavigate();
   const { socket } = useSocket();
-
-  const handleOpen = useCallback(() => {
-    if (playlist) navigate(`${ROUTES.VIEW_PLAYLIST}/${playlist.uuid}`);
-  }, [navigate, playlist]);
+  const hasPlaybackClient = usePlaybackClient();
 
   const handlePlay = useCallback(() => {
     if (playlist) emitPlayPlaylist(socket, playlist);
@@ -41,20 +44,26 @@ export const PlaylistActions: React.FC<Props> = ({
 
       {playlist ? (
         <>
-          <ActionButton
-            type="button"
-            onClick={handleOpen}
-            title={`Open ${playlist.name}`}
+          <ActionLink
+            to={`${ROUTES.VIEW_PLAYLIST}/${playlist.uuid}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            title={`Open ${playlist.name} in a new tab`}
           >
-            <ListVideo size={14} />
+            <FontAwesomeIcon icon={faListUl} />
             Open
-          </ActionButton>
+          </ActionLink>
           <ActionButton
             type="button"
             onClick={handlePlay}
-            title={`Play ${playlist.name} on your client`}
+            disabled={!hasPlaybackClient}
+            title={
+              hasPlaybackClient
+                ? `Play ${playlist.name} on your client`
+                : "No client connected"
+            }
           >
-            <Play size={14} />
+            <PlaylistPlay width="1em" height="1em" />
             Play
           </ActionButton>
         </>

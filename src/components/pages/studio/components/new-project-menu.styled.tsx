@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { Link } from "react-router-dom";
 import { FLOW } from "@/constants/flow-theme.constants";
 import type { StudioMode } from "@/types/flow.types";
-import { EDITOR_BADGE } from "../constants/editor-badge";
+import { EDITOR_BADGE } from "@/constants/editor-badge.constants";
 
 export const Anchor = styled.div`
   position: relative;
