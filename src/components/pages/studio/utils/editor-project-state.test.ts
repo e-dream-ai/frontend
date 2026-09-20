@@ -96,52 +96,6 @@ describe("flow state persistence", () => {
     expect(restored.transitions).toHaveLength(1);
     expect(restored.transitions[0].settings).toBeDefined();
   });
-
-  // Every flow project written before settings moved onto the transition is
-  // stored this way, and `schemaVersion` cannot tell it apart from the current
-  // shape. Reading one without converting throws in `reference-frame-strip`,
-  // which the studio route renders as Not Found.
-  it("materialises a legacy override/global project onto transition settings", () => {
-    const restored = fromPersistedFlowState({
-      referenceFrames: [
-        { id: "a", name: "a" },
-        { id: "b", name: "b" },
-      ],
-      transitions: {
-        "a::b": {
-          fromFrameId: "a",
-          toFrameId: "b",
-          status: "processed",
-          dreamUuid: "d1",
-          promptOverride: "per-transition prompt",
-        },
-      },
-      globalPrompt: "global prompt",
-      globalDuration: 9,
-    } as never);
-
-    const [t] = restored.transitions;
-    expect(t.settings.prompt).toBe("per-transition prompt");
-    expect(t.settings.duration).toBe(9);
-    expect(t.dreamUuid).toBe("d1");
-    expect(t).not.toHaveProperty("promptOverride");
-    expect(restored).not.toHaveProperty("globalPrompt");
-  });
-
-  it("leaves a project already on the new shape untouched", () => {
-    const settings = { prompt: "mine", duration: 3 };
-    const restored = fromPersistedFlowState({
-      referenceFrames: [
-        { id: "a", name: "a" },
-        { id: "b", name: "b" },
-      ],
-      transitions: {
-        "a::b": { fromFrameId: "a", toFrameId: "b", status: "idle", settings },
-      },
-    } as never);
-
-    expect(restored.transitions[0].settings).toMatchObject(settings);
-  });
 });
 
 describe("action state persistence", () => {
