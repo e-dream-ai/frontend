@@ -62,7 +62,9 @@ export type UpdateDreamRequestValues = {
 export const UpdateDreamSchema = yup
   .object({
     name: yup.string().required(),
-    description: yup.string(),
+    description: yup
+      .string()
+      .max(4000, "Description must be at most 4000 characters"),
     prompt: yup.mixed().nullable(),
     sourceUrl: yup
       .string()

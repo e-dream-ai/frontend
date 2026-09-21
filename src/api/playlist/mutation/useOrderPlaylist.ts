@@ -24,11 +24,6 @@ type OrderPlaylistMutationContext = {
   itemsSnapshot?: PlaylistItemsQueryData;
 };
 
-type OrderPlaylistResponse = ApiResponse<{
-  items: PlaylistItem[];
-  totalCount: number;
-}>;
-
 const updateItemsOrderInCache = (
   oldData: PlaylistItemsQueryData | undefined,
   orderedItems: ItemOrder[],
@@ -63,12 +58,17 @@ const orderPlaylist = () => {
   ) => {
     const { uuid, values } = data;
     return axiosClient
-      .put(`/v1/playlist/${uuid}/order`, values, {
+      .put<ApiResponse<unknown>>(`/v1/playlist/${uuid}/order`, values, {
         headers: getRequestHeaders({
           contentType: ContentType.json,
         }),
       })
       .then((res) => {
+        if (!res.data.success) {
+          throw new Error(
+            res.data.message || "Could not reorder playlist items",
+          );
+        }
         return res.data;
       });
   };
@@ -84,65 +84,38 @@ export const useOrderPlaylist = (
     OrderPlaylistFormValues & { mode?: OrderPlaylistMode },
     OrderPlaylistMutationContext
   >(orderPlaylist(), {
-    mutationKey: [ORDER_PLAYLIST_MUTATION_KEY],
+    mutationKey: [ORDER_PLAYLIST_MUTATION_KEY, uuid],
     onMutate: async (variables) => {
-      const actualMode = variables.mode || mode;
-      const itemsSnapshot = queryClient.getQueryData<PlaylistItemsQueryData>([
-        PLAYLIST_ITEMS_QUERY_KEY,
-        uuid,
-      ]);
+      const actualMode = variables.mode ?? mode;
+      if (actualMode !== "optimistic") return {};
 
-      // Only optimistic updates for drag-and-drop mode
-      if (actualMode === "optimistic") {
-        const orderedItems = variables.values.order;
-        queryClient.setQueryData<PlaylistItemsQueryData>(
-          [PLAYLIST_ITEMS_QUERY_KEY, uuid],
-          (oldData) => updateItemsOrderInCache(oldData, orderedItems),
-        );
-      }
+      const queryKey = [PLAYLIST_ITEMS_QUERY_KEY, variables.uuid];
+      await queryClient.cancelQueries({ queryKey });
+      const itemsSnapshot =
+        queryClient.getQueryData<PlaylistItemsQueryData>(queryKey);
+
+      queryClient.setQueryData<PlaylistItemsQueryData>(queryKey, (oldData) =>
+        updateItemsOrderInCache(oldData, variables.values.order),
+      );
 
       return { itemsSnapshot };
     },
-    onSuccess: async (data, variables) => {
-      const actualMode = variables.mode || mode;
-
-      if (actualMode === "server-driven") {
-        const responseData = data as OrderPlaylistResponse;
-        const serverItems = responseData?.data?.items;
-        const totalCount = responseData?.data?.totalCount;
-
-        if (serverItems && serverItems.length) {
-          queryClient.setQueryData<PlaylistItemsQueryData>(
-            [PLAYLIST_ITEMS_QUERY_KEY, uuid],
-            {
-              pages: [
-                {
-                  data: {
-                    items: serverItems,
-                    totalCount: totalCount ?? serverItems.length,
-                  },
-                },
-              ],
-              pageParams: [0],
-            },
-          );
-        } else {
-          const orderedItems = variables.values.order;
-          queryClient.setQueryData<PlaylistItemsQueryData>(
-            [PLAYLIST_ITEMS_QUERY_KEY, uuid],
-            (oldData) => updateItemsOrderInCache(oldData, orderedItems),
-          );
-        }
-        queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
-      }
-    },
-    onError: (_, __, context) => {
+    onError: (_, variables, context) => {
       if (context?.itemsSnapshot) {
         queryClient.setQueryData(
-          [PLAYLIST_ITEMS_QUERY_KEY, uuid],
+          [PLAYLIST_ITEMS_QUERY_KEY, variables.uuid],
           context.itemsSnapshot,
         );
       }
     },
+    onSettled: (_data, _error, variables) =>
+      Promise.all([
+        queryClient.invalidateQueries({
+          queryKey: [PLAYLIST_ITEMS_QUERY_KEY, variables.uuid],
+        }),
+        queryClient.invalidateQueries({
+          queryKey: [PLAYLIST_QUERY_KEY, variables.uuid],
+        }),
+      ]),
   });
 };

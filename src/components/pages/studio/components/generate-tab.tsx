@@ -2,8 +2,6 @@ import React, { useEffect, useMemo } from "react";
 import { useStudioStore, comboKeyOf } from "@/stores/studio.store";
 import { useBatchSubmit } from "../hooks/useBatchSubmit";
 import { isAnimatableFrame, isRunnableAction } from "../utils/batch-selectors";
-import { useUserPlaylists } from "../hooks/useUserPlaylists";
-import { axiosClient } from "@/client/axios.client";
 import type { VideoModel } from "@/types/studio.types";
 import {
   clampDurationToAllowed,
@@ -44,7 +42,6 @@ import {
   CellThumb,
   CellCheckbox,
   SettingsGrid,
-  PlaylistRow,
   DescriptionText,
   SubmittedLabel,
   ComboCountText,
@@ -76,13 +73,10 @@ export const GenerateTab: React.FC = () => {
   const setVideoGenParams = useStudioStore((s) => s.setVideoGenParams);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
   const toggleComboExcluded = useStudioStore((s) => s.toggleComboExcluded);
-  const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
-  const setOutputPlaylistId = useStudioStore((s) => s.setOutputPlaylistId);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const jobs = useStudioStore((s) => s.jobs);
 
   const { submit, isSubmitting, getPendingCombinations } = useBatchSubmit();
-  const { playlists, addPlaylistToCache } = useUserPlaylists();
 
   const frames = useMemo(() => images.filter(isAnimatableFrame), [images]);
   const runnableActions = useMemo(
@@ -157,19 +151,6 @@ export const GenerateTab: React.FC = () => {
   };
 
   const totalPossible = frames.length * runnableActions.length;
-
-  const handleCreatePlaylist = async () => {
-    const now = new Date();
-    const name = `Studio ${now.toISOString().slice(0, 16).replace("T", " ")}`;
-    try {
-      const { data } = await axiosClient.post("/v1/playlist", { name });
-      const playlist = data.data.playlist;
-      setOutputPlaylistId(playlist.uuid);
-      await addPlaylistToCache(playlist);
-    } catch (err) {
-      console.error("Failed to create playlist:", err);
-    }
-  };
 
   return (
     <>
@@ -319,22 +300,6 @@ export const GenerateTab: React.FC = () => {
             />
           )}
         </SettingsGrid>
-
-        <PlaylistRow>
-          <FieldLabel>Output playlist:</FieldLabel>
-          <StyledSelect
-            value={outputPlaylistId || ""}
-            onChange={(e) => setOutputPlaylistId(e.target.value || null)}
-          >
-            <option value="">Select playlist...</option>
-            {playlists.map((p) => (
-              <option key={p.uuid} value={p.uuid}>
-                {p.name}
-              </option>
-            ))}
-          </StyledSelect>
-          <NavButton onClick={handleCreatePlaylist}>+ Create New</NavButton>
-        </PlaylistRow>
       </GenerateSection>
 
       <CreditLimitNotice

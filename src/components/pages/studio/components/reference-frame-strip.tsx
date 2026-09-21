@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
   DndContext,
   closestCenter,
@@ -18,11 +18,21 @@ import { ReferenceFrameCard } from "./reference-frame-card";
 import { ReferenceFrameLightbox } from "./reference-frame-lightbox";
 import { TransitionGapEnhanced } from "./transition-gap";
 import { describeMismatch } from "../utils/frame-aspect";
-import { FlowReset } from "./flow-reset";
+import { ForceSettingsDialog } from "./force-settings-dialog";
+import {
+  forcedFieldPatch,
+  mismatchedFields,
+  type TransitionField,
+} from "../utils/transition-field-values";
+import { isTransitionStale } from "../utils/transition-staleness";
 import {
   StripSection,
   SectionHeader,
   SectionLabel,
+  SectionActions,
+  SelectionButton,
+  SelectionCount,
+  StaleCount,
   StripContainer,
   TransitionGap,
   GapLine,
@@ -40,7 +50,6 @@ interface Props {
   onAddGenerate: () => void;
   onAddFromPlaylist: () => void;
   onAddFromLibrary: () => void;
-  onRetry: (index: number) => void;
 }
 
 export const ReferenceFrameStrip: React.FC<Props> = ({
@@ -48,23 +57,85 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
   onAddGenerate,
   onAddFromPlaylist,
   onAddFromLibrary,
-  onRetry,
 }) => {
   // Actions (stable refs)
   const removeReferenceFrame = useFlowStore((s) => s.removeReferenceFrame);
   const reorderReferenceFrames = useFlowStore((s) => s.reorderReferenceFrames);
   const setLoop = useFlowStore((s) => s.setLoop);
   const selectTransition = useFlowStore((s) => s.selectTransition);
+  const toggleTransitionSelection = useFlowStore(
+    (s) => s.toggleTransitionSelection,
+  );
+  const selectAllTransitions = useFlowStore((s) => s.selectAllTransitions);
+  const clearTransitionSelection = useFlowStore(
+    (s) => s.clearTransitionSelection,
+  );
 
   // Data
   const rawFrames = useFlowStore((s) => s.referenceFrames);
   const loop = useFlowStore((s) => s.loop);
   const transitions = useFlowStore((s) => s.transitions);
-  const globalDuration = useFlowStore((s) => s.globalDuration);
+  const selectedIndices = useFlowStore((s) => s.selectedTransitionIndices);
+
+  const staleFlags = useMemo(
+    () => transitions.map((transition) => isTransitionStale(transition)),
+    [transitions],
+  );
+  const staleCount = staleFlags.filter(Boolean).length;
 
   const displayFrames = useMemo(
     () => buildFramesWithLoop(rawFrames, loop),
     [rawFrames, loop],
+  );
+
+  /** A selection held back until the user confirms unifying its settings. */
+  const [pendingSelection, setPendingSelection] = useState<{
+    confirm: () => void;
+  } | null>(null);
+
+  const playTransition = useCallback((index: number) => {
+    const store = useFlowStore.getState();
+    const transition = store.transitions[index];
+    if (transition?.status === "processed" && transition.dreamUuid) {
+      store.requestPreviewPlay(transition.dreamUuid);
+    }
+  }, []);
+
+  /**
+   * Select `next`, but only once those transitions agree about every setting:
+   * the panel edits a selection as one thing, and there is no honest way to
+   * show two values in one field. Anything they disagree about is settled here,
+   * before the selection exists — confirm and the source's settings are forced
+   * onto all of them, cancel and the selection is left alone.
+   *
+   * `source` is the primary of the selection being extended, so the values the
+   * panel is already showing are the ones that win.
+   */
+  const selectWhenAligned = useCallback(
+    (next: readonly number[], source: number, apply: () => void) => {
+      const state = useFlowStore.getState();
+      const selected = next
+        .map((index) => state.transitions[index])
+        .filter((transition): transition is NonNullable<typeof transition> =>
+          Boolean(transition),
+        );
+      const clashes: TransitionField[] = mismatchedFields(selected);
+      if (clashes.length === 0) {
+        apply();
+        return;
+      }
+      setPendingSelection({
+        confirm: () => {
+          const store = useFlowStore.getState();
+          const from = store.transitions[source];
+          if (from) {
+            store.setTransitionSettings(next, forcedFieldPatch(from, clashes));
+          }
+          apply();
+        },
+      });
+    },
+    [],
   );
 
   const sensors = useSensors(
@@ -100,19 +171,41 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
       const transitionIndex = i - 1;
       const transition = transitions[transitionIndex];
       if (transition) {
-        const effectiveDuration = transition.durationOverride ?? globalDuration;
+        const effectiveDuration = transition.settings.duration;
         stripItems.push(
           <TransitionGapEnhanced
             key={`gap-${transitionIndex}`}
             transition={transition}
             effectiveDuration={effectiveDuration}
             mismatch={describeMismatch(displayFrames[i - 1], frame)}
-            onClick={() => {
-              if (transition.status === "failed") {
-                onRetry(transitionIndex);
-              } else {
+            selected={selectedIndices.includes(transitionIndex)}
+            stale={staleFlags[transitionIndex]}
+            onClick={({ toggle }) => {
+              // Clicking a transition plays it, every time — including when it
+              // was already the selected one, where nothing about the
+              // selection changes and there is no state transition to react
+              // to. A shift-click that removed it is the one exception:
+              // playing what you just deselected is not what was asked for.
+              const current = useFlowStore.getState().selectedTransitionIndices;
+              if (!toggle) {
                 selectTransition(transitionIndex);
+                playTransition(transitionIndex);
+                return;
               }
+              if (current.includes(transitionIndex)) {
+                toggleTransitionSelection(transitionIndex);
+                return;
+              }
+              selectWhenAligned(
+                [...current, transitionIndex],
+                current.length > 0
+                  ? current[current.length - 1]
+                  : transitionIndex,
+                () => {
+                  toggleTransitionSelection(transitionIndex);
+                  playTransition(transitionIndex);
+                },
+              );
             }}
           />,
         );
@@ -139,7 +232,45 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
     <StripSection>
       <SectionHeader>
         <SectionLabel>Reference Frames</SectionLabel>
-        <FlowReset />
+        <SectionActions>
+          {selectedIndices.length > 1 && (
+            <SelectionCount>{selectedIndices.length} selected</SelectionCount>
+          )}
+          {staleCount > 0 && (
+            <StaleCount title="Rendered, then edited. Generate with nothing selected to bring them up to date.">
+              {staleCount} edited
+            </StaleCount>
+          )}
+          {transitions.length > 0 && (
+            <>
+              <SelectionButton
+                type="button"
+                disabled={selectedIndices.length === transitions.length}
+                onClick={() => {
+                  const current =
+                    useFlowStore.getState().selectedTransitionIndices;
+                  selectWhenAligned(
+                    transitions.map((_, i) => i),
+                    // Nothing selected yet, so nothing on screen to preserve:
+                    // the first transition sets the value the rest take.
+                    current.length > 0 ? current[current.length - 1] : 0,
+                    selectAllTransitions,
+                  );
+                }}
+              >
+                Select all
+              </SelectionButton>
+              <SelectionButton
+                type="button"
+                disabled={selectedIndices.length === 0}
+                title="Edit nothing; Generate then covers the whole flow"
+                onClick={clearTransitionSelection}
+              >
+                Clear all
+              </SelectionButton>
+            </>
+          )}
+        </SectionActions>
       </SectionHeader>
 
       {displayFrames.length === 0 ? (
@@ -164,6 +295,16 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
             <StripContainer>{stripItems}</StripContainer>
           </SortableContext>
         </DndContext>
+      )}
+
+      {pendingSelection && (
+        <ForceSettingsDialog
+          onConfirm={() => {
+            pendingSelection.confirm();
+            setPendingSelection(null);
+          }}
+          onCancel={() => setPendingSelection(null)}
+        />
       )}
 
       <StripControls>

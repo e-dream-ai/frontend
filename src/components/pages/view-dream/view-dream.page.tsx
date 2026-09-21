@@ -88,6 +88,8 @@ import { useDreamVote } from "@/api/dream/query/useDreamVote";
 import { VoteType } from "@/types/vote.types";
 import { FilmstripGallery } from "@/components/shared/filmstrip-gallery/filmstrip-gallery";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
+import { OpenInStudio } from "@/components/shared/open-in-studio";
+import { useEditorProjectForDream } from "@/api/editor-project/query/useEditorProjectForDream";
 import { NotFound } from "@/components/shared/not-found/not-found";
 import {
   formatDreamForm,
@@ -429,6 +431,8 @@ const ViewDreamPage: React.FC = () => {
 
   const showEditButton = !editMode;
   const showSaveAndCancelButtons = editMode && !isDreamProcessingRaw;
+
+  const studioProject = useEditorProjectForDream(dream, isOwner);
 
   const showRemixButton = isCreator && !isOwner && hasPrompt;
   // Handlers
@@ -1237,6 +1241,7 @@ const ViewDreamPage: React.FC = () => {
                             </Button>
                           </>
                         ))}
+                      <OpenInStudio project={studioProject} />
                       {!isDreamProcessing && (
                         <Restricted
                           to={DREAM_PERMISSIONS.CAN_EDIT_DREAM}
@@ -1288,6 +1293,7 @@ const ViewDreamPage: React.FC = () => {
               </Row>
 
               <ViewDreamInputs
+                studioProject={studioProject}
                 dream={displayDream}
                 processingPhase={dreamProcessingPhase}
                 editMode={editMode}

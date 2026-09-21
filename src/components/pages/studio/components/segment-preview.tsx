@@ -28,6 +28,7 @@ interface PreviewLightboxProps {
   onMeasured: (key: string, ratio: string) => void;
   onClose: () => void;
   onEnded: () => void;
+  replayToken?: number;
 }
 
 function PreviewLightbox({
@@ -38,6 +39,7 @@ function PreviewLightbox({
   onMeasured,
   onClose,
   onEnded,
+  replayToken,
 }: PreviewLightboxProps) {
   const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
 
@@ -58,6 +60,7 @@ function PreviewLightbox({
           loop={loop}
           onMeasured={onMeasured}
           onEnded={onEnded}
+          replayToken={replayToken}
         />
       </LightboxVideo>
     </LightboxOverlay>,
@@ -82,6 +85,8 @@ export interface SegmentPreviewProps {
   /** Which edge carries the separating rule: the flow preview sits at the
    *  bottom of its panel, the results preview at the top of its tab. */
   divider?: "top" | "bottom";
+  /** Bump to restart the current segment, even when it is already showing. */
+  replayToken?: number;
 }
 
 /**
@@ -102,6 +107,7 @@ export function SegmentPreview({
   hint = "Click to expand",
   keyboardDisabled = false,
   divider = "top",
+  replayToken,
 }: SegmentPreviewProps) {
   // A file's header is the last word on its shape; the recorded dimensions are
   // only a hint used until it arrives.
@@ -173,6 +179,7 @@ export function SegmentPreview({
             muted
             loop={segmentCount === 1}
             onEnded={advance}
+            replayToken={replayToken}
           />
 
           {showNav && (
@@ -233,6 +240,7 @@ export function SegmentPreview({
           onMeasured={handleMeasured}
           onClose={() => onLightboxOpenChange(false)}
           onEnded={advance}
+          replayToken={replayToken}
         />
       )}
     </>

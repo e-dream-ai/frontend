@@ -28,6 +28,8 @@ import {
   handleFileUploaderTypeError,
 } from "@/utils/file-uploader.util";
 import { isUuid } from "@/utils/string.util";
+import { StudioBadge } from "@/components/shared/studio-badge";
+import type { EditorProjectSummary } from "@/types/editor-project.types";
 import { ROUTES } from "@/constants/routes.constants";
 import { Video, VideoPlaceholder } from "./view-dream.styled";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -48,7 +50,6 @@ import {
   faMicrochip,
   faPhotoVideo,
   faRankingStar,
-  faSave,
   faShield,
   faStopwatch,
   faThumbsDown,
@@ -93,6 +94,7 @@ export interface JobProgressData {
 
 type ViewDreamInputsProps = {
   dream?: Dream;
+  studioProject?: EditorProjectSummary;
   processingPhase?: DreamProcessingPhase;
   // values: UpdateDreamFormValues;
   // register: UseFormRegister<UpdateDreamFormValues>;
@@ -114,6 +116,7 @@ const resolveDreamSourceLink = (value: string): string | null =>
 
 export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
   dream,
+  studioProject,
   processingPhase,
   editMode,
   // thumbnail
@@ -235,13 +238,18 @@ export const ViewDreamInputs: React.FC<ViewDreamInputsProps> = ({
             placeholder={t("page.view_dream.name")}
             type="text"
             before={<FontAwesomeIcon icon={faFileVideo} />}
+            after={
+              studioProject ? (
+                <StudioBadge mode={studioProject.editorId} />
+              ) : null
+            }
             {...register("name")}
           />
           <Input
             disabled
             placeholder={t("page.view_dream.owner")}
             type="text"
-            before={<FontAwesomeIcon icon={faSave} />}
+            before={<FontAwesomeIcon icon={faUser} />}
             after={
               getUserProfileRoute(dream?.user) ? (
                 <AnchorLink

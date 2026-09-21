@@ -10,7 +10,7 @@ export const Wrapper = styled.div<{ $compact?: boolean }>`
   ${({ $compact }) =>
     $compact &&
     css`
-      max-width: 220px;
+      max-width: 110px;
     `}
 `;
 
@@ -61,7 +61,11 @@ const emberGlow = keyframes`
   50% { opacity: 1; }
 `;
 
-export const Fill = styled.div<{ $pct: number; $low?: boolean }>`
+export const Fill = styled.div<{
+  $pct: number;
+  $low?: boolean;
+  $compact?: boolean;
+}>`
   position: absolute;
   inset: 0 auto 0 0;
   width: ${({ $pct }) => `${$pct}%`};
@@ -74,8 +78,9 @@ export const Fill = styled.div<{ $pct: number; $low?: boolean }>`
   box-shadow: ${({ theme, $low }) =>
     $low ? "none" : `0 0 8px ${theme.colorDarkPrimary}80`};
 
-  ${({ $low }) =>
+  ${({ $low, $compact }) =>
     !$low &&
+    !$compact &&
     css`
       animation: ${emberGlow} 3.2s ease-in-out infinite;
     `}

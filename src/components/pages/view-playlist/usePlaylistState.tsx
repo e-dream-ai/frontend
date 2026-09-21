@@ -1,4 +1,5 @@
 import { useState, useMemo } from "react";
+import { useDebounce } from "@/hooks/useDebounce";
 import { FileState } from "@/constants/file.constants";
 import { MultiMediaState } from "@/types/media.types";
 import { useParams } from "react-router-dom";
@@ -28,11 +29,9 @@ export const usePlaylistState = () => {
   const [thumbnail, setTumbnail] = useState<MultiMediaState>();
   const [showConfirmDeleteModal, setShowConfirmDeleteModal] =
     useState<boolean>(false);
-  const [isJumpingToEnd, setIsJumpingToEnd] = useState<boolean>(false);
-  const [hasJumpedToEndItems, setHasJumpedToEndItems] =
-    useState<boolean>(false);
-  const [hasJumpedToEndKeyframes, setHasJumpedToEndKeyframes] =
-    useState<boolean>(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [order, setOrder] = useState<"asc" | "desc">("asc");
+  const search = useDebounce(searchValue.trim(), 300);
 
   /**
    * videos data
@@ -59,13 +58,19 @@ export const usePlaylistState = () => {
     isLoading: isPlaylistItemsLoading,
     fetchNextPage: fetchNextPlaylistItemsPage,
     hasNextPage: hasNextPlaylistItemsPage,
-  } = usePlaylistItems({ uuid });
+    isFetchingNextPage: isFetchingNextPlaylistItemsPage,
+    isError: isPlaylistItemsError,
+    refetch: refetchPlaylistItems,
+  } = usePlaylistItems({ uuid, search, order });
   const {
     data: playlistKeyframesData,
     isLoading: isPlaylistKeyframesLoading,
     fetchNextPage: fetchNextPlaylistKeyframesPage,
     hasNextPage: hasNextPlaylistKeyframesPage,
-  } = usePlaylistKeyframes({ uuid });
+    isFetchingNextPage: isFetchingNextPlaylistKeyframesPage,
+    isError: isPlaylistKeyframesError,
+    refetch: refetchPlaylistKeyframes,
+  } = usePlaylistKeyframes({ uuid, search, order });
   const { data: usersData, isLoading: isUsersLoading } = useUsers({
     search: userSearch,
   });
@@ -80,19 +85,7 @@ export const usePlaylistState = () => {
     };
   }, [data, playlistReferencesData]);
 
-  const isPlaylistLoading = useMemo(
-    () =>
-      isLoading ||
-      isPlaylistReferencesLoading ||
-      isPlaylistItemsLoading ||
-      isPlaylistKeyframesLoading,
-    [
-      isLoading,
-      isPlaylistReferencesLoading,
-      isPlaylistItemsLoading,
-      isPlaylistKeyframesLoading,
-    ],
-  );
+  const isPlaylistLoading = isLoading || isPlaylistReferencesLoading;
 
   const thumbnailUrl = useImage(playlist?.thumbnail, {
     width: 500,
@@ -128,8 +121,10 @@ export const usePlaylistState = () => {
     () =>
       playlistItemsData?.pages
         .flatMap((page) => page.data?.items ?? [])
-        .sort((a, b) => a.order - b.order) ?? [],
-    [playlistItemsData?.pages],
+        .sort((a, b) =>
+          order === "desc" ? b.order - a.order : a.order - b.order,
+        ) ?? [],
+    [playlistItemsData?.pages, order],
   );
 
   const playlistItemsTotalCount = useMemo(
@@ -141,8 +136,10 @@ export const usePlaylistState = () => {
     () =>
       playlistKeyframesData?.pages
         .flatMap((page) => page.data?.keyframes ?? [])
-        .sort((a, b) => a.order - b.order) ?? [],
-    [playlistKeyframesData?.pages],
+        .sort((a, b) =>
+          order === "desc" ? b.order - a.order : a.order - b.order,
+        ) ?? [],
+    [playlistKeyframesData?.pages, order],
   );
 
   const playlistKeyframesTotalCount = useMemo(
@@ -190,11 +187,18 @@ export const usePlaylistState = () => {
     totalVideos,
     totalUploadedVideos,
     totalUploadedVideosPercentage,
-    isJumpingToEnd,
-    setIsJumpingToEnd,
-    hasJumpedToEndItems,
-    setHasJumpedToEndItems,
-    hasJumpedToEndKeyframes,
-    setHasJumpedToEndKeyframes,
+    searchValue,
+    setSearchValue,
+    search,
+    order,
+    setOrder,
+    isPlaylistItemsLoading,
+    isPlaylistKeyframesLoading,
+    isPlaylistItemsError,
+    isPlaylistKeyframesError,
+    refetchPlaylistItems,
+    refetchPlaylistKeyframes,
+    isFetchingNextPlaylistItemsPage,
+    isFetchingNextPlaylistKeyframesPage,
   };
 };

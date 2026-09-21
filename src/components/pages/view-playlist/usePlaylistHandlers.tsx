@@ -15,17 +15,11 @@ import { ItemOrder, SetItemOrder } from "@/types/dnd.types";
 import {
   formatPlaylistRequest,
   getOrderedItemsPlaylistRequest,
-  sortPlaylistItemsByDate,
-  sortPlaylistItemsByName,
 } from "@/utils/playlist.util";
 import { useOrderPlaylist } from "@/api/playlist/mutation/useOrderPlaylist";
 import { useDeletePlaylistItem } from "@/api/playlist/mutation/useDeletePlaylistItem";
 import { useDeletePlaylistKeyframe } from "@/api/playlist/mutation/useDeletePlaylistKeyframe";
-import {
-  Playlist,
-  PlaylistItem,
-  PlaylistKeyframe,
-} from "@/types/playlist.types";
+import { Playlist, PlaylistItem } from "@/types/playlist.types";
 import { User } from "@/types/auth.types";
 import { useDeletePlaylist } from "@/api/playlist/mutation/useDeletePlaylist";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
@@ -39,9 +33,6 @@ import { emitPlayPlaylist } from "@/utils/socket.util";
 import { createAddFileHandler } from "@/utils/file.util";
 import useAuth from "@/hooks/useAuth";
 import { isAdmin } from "@/utils/user.util";
-import { axiosClient } from "@/client/axios.client";
-import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
-import { PAGINATION } from "@/constants/pagination.constants";
 
 type HookParams = {
   uuid?: string;
@@ -56,22 +47,7 @@ type HookParams = {
   setVideos: (value: SetStateAction<FileState[]>) => void;
   setIsUploadingFiles: (value: SetStateAction<boolean>) => void;
   onHideConfirmDeleteModal: () => void;
-  fetchNextPlaylistItemsPage: () => void;
-  hasNextPlaylistItemsPage: boolean | undefined;
-  fetchNextPlaylistKeyframesPage: () => void;
-  hasNextPlaylistKeyframesPage: boolean | undefined;
-  playlistItemsTotalCount: number;
-  playlistKeyframesTotalCount: number;
-  playlistKeyframes: any[];
-  isJumpingToEnd: boolean;
-  setIsJumpingToEnd: (value: SetStateAction<boolean>) => void;
-  hasJumpedToEndItems: boolean;
-  setHasJumpedToEndItems: (value: SetStateAction<boolean>) => void;
-  hasJumpedToEndKeyframes: boolean;
-  setHasJumpedToEndKeyframes: (value: SetStateAction<boolean>) => void;
 };
-
-type SortType = "name" | "date";
 
 export const usePlaylistHandlers = ({
   uuid,
@@ -86,12 +62,6 @@ export const usePlaylistHandlers = ({
   setVideos,
   setIsUploadingFiles,
   onHideConfirmDeleteModal,
-  playlistItemsTotalCount,
-  playlistKeyframesTotalCount,
-  isJumpingToEnd,
-  setIsJumpingToEnd,
-  setHasJumpedToEndItems,
-  setHasJumpedToEndKeyframes,
 }: HookParams) => {
   const { t } = useTranslation();
   const { socket } = useSocket();
@@ -196,58 +166,7 @@ export const usePlaylistHandlers = ({
         {
           onSuccess: (response) => {
             if (response.success) {
-              queryClient.setQueryData<{
-                pages: Array<{
-                  data?: { items: PlaylistItem[]; totalCount: number };
-                }>;
-                pageParams: unknown[];
-              }>([PLAYLIST_ITEMS_QUERY_KEY, uuid], (oldData) => {
-                if (!oldData) return oldData;
-
-                const allItems: PlaylistItem[] = [];
-                oldData.pages.forEach((page) => {
-                  if (page.data?.items) {
-                    allItems.push(...page.data.items);
-                  }
-                });
-
-                const remainingItems = allItems
-                  .filter((item) => item.id !== itemId)
-                  .sort((a, b) => a.order - b.order);
-
-                const reorderedItems = remainingItems.map((item, index) => ({
-                  ...item,
-                  order: index,
-                }));
-
-                const take = PAGINATION.TAKE;
-                const updatedPages = oldData.pages.map((page, pageIndex) => {
-                  if (!page.data) return page;
-
-                  // Calculate which items belong to this page
-                  const startIndex = pageIndex * take;
-                  const endIndex = startIndex + take;
-                  const pageItems = reorderedItems.slice(startIndex, endIndex);
-
-                  const newTotalCount =
-                    pageIndex === 0
-                      ? Math.max(0, (page.data.totalCount ?? 0) - 1)
-                      : page.data.totalCount;
-
-                  return {
-                    ...page,
-                    data: {
-                      items: pageItems,
-                      totalCount: newTotalCount,
-                    },
-                  };
-                });
-
-                return {
-                  ...oldData,
-                  pages: updatedPages,
-                };
-              });
+              queryClient.invalidateQueries([PLAYLIST_ITEMS_QUERY_KEY, uuid]);
 
               queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
 
@@ -298,62 +217,10 @@ export const usePlaylistHandlers = ({
         {
           onSuccess: (response) => {
             if (response.success) {
-              queryClient.setQueryData<{
-                pages: Array<{
-                  data?: { keyframes: PlaylistKeyframe[]; totalCount: number };
-                }>;
-                pageParams: unknown[];
-              }>([PLAYLIST_KEYFRAMES_QUERY_KEY, uuid], (oldData) => {
-                if (!oldData) return oldData;
-
-                const allKeyframes: PlaylistKeyframe[] = [];
-                oldData.pages.forEach((page) => {
-                  if (page.data?.keyframes) {
-                    allKeyframes.push(...page.data.keyframes);
-                  }
-                });
-
-                const remainingKeyframes = allKeyframes
-                  .filter((keyframe) => keyframe.id !== playlistKeyframeId)
-                  .sort((a, b) => a.order - b.order);
-
-                const reorderedKeyframes = remainingKeyframes.map(
-                  (keyframe, index) => ({
-                    ...keyframe,
-                    order: index,
-                  }),
-                );
-
-                const take = PAGINATION.TAKE;
-                const updatedPages = oldData.pages.map((page, pageIndex) => {
-                  if (!page.data) return page;
-
-                  const startIndex = pageIndex * take;
-                  const endIndex = startIndex + take;
-                  const pageKeyframes = reorderedKeyframes.slice(
-                    startIndex,
-                    endIndex,
-                  );
-
-                  const newTotalCount =
-                    pageIndex === 0
-                      ? Math.max(0, (page.data.totalCount ?? 0) - 1)
-                      : page.data.totalCount;
-
-                  return {
-                    ...page,
-                    data: {
-                      keyframes: pageKeyframes,
-                      totalCount: newTotalCount,
-                    },
-                  };
-                });
-
-                return {
-                  ...oldData,
-                  pages: updatedPages,
-                };
-              });
+              queryClient.invalidateQueries([
+                PLAYLIST_KEYFRAMES_QUERY_KEY,
+                uuid,
+              ]);
 
               queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, uuid]);
 
@@ -424,15 +291,7 @@ export const usePlaylistHandlers = ({
     );
 
     try {
-      // Mutation handles optimistic update and rollback
-      toast.update(toastId, {
-        render: t("page.view_playlist.playlist_items_ordered_successfully"),
-        type: "success",
-        isLoading: false,
-        ...TOAST_DEFAULT_CONFIG,
-      });
-
-      const response = await orderPlaylistMutation.mutateAsync({
+      await orderPlaylistMutation.mutateAsync({
         uuid: playlist!.uuid,
         values: {
           order: requestPlaylistItems,
@@ -440,67 +299,13 @@ export const usePlaylistHandlers = ({
         mode: "optimistic",
       });
 
-      if (!response.success) {
-        toast.update(toastId, {
-          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
-            response.message
-          }`,
-          type: "error",
-          isLoading: false,
-          ...TOAST_DEFAULT_CONFIG,
-        });
-      }
-    } catch (_) {
       toast.update(toastId, {
-        render: `${t("page.view_playlist.error_ordering_playlist_items")}`,
-        type: "error",
+        render: t("page.view_playlist.playlist_items_ordered_successfully"),
+        type: "success",
         isLoading: false,
         ...TOAST_DEFAULT_CONFIG,
       });
-    }
-  };
-
-  const handleOrderPlaylistBy = (type: SortType) => async () => {
-    const sourceItems = items;
-    let orderedItems: ItemOrder[] | undefined;
-    if (type === "name") orderedItems = sortPlaylistItemsByName(sourceItems);
-    else orderedItems = sortPlaylistItemsByDate(sourceItems);
-
-    if (!orderedItems) {
-      return;
-    }
-
-    const toastId = toast.loading(
-      t("page.view_playlist.ordering_playlist_items"),
-    );
-    try {
-      // Mutation handles server-driven cache update
-      const response = await orderPlaylistMutation.mutateAsync({
-        uuid: playlist!.uuid,
-        values: {
-          order: orderedItems,
-        },
-        mode: "server-driven",
-      });
-
-      if (response.success) {
-        toast.update(toastId, {
-          render: t("page.view_playlist.playlist_items_ordered_successfully"),
-          type: "success",
-          isLoading: false,
-          ...TOAST_DEFAULT_CONFIG,
-        });
-      } else {
-        toast.update(toastId, {
-          render: `${t("page.view_playlist.error_ordering_playlist_items")} ${
-            response.message
-          }`,
-          type: "error",
-          isLoading: false,
-          ...TOAST_DEFAULT_CONFIG,
-        });
-      }
-    } catch (_) {
+    } catch {
       toast.update(toastId, {
         render: `${t("page.view_playlist.error_ordering_playlist_items")}`,
         type: "error",
@@ -609,110 +414,6 @@ export const usePlaylistHandlers = ({
     );
   };
 
-  const handleJumpToEndItems = async () => {
-    if (isJumpingToEnd) return;
-
-    setIsJumpingToEnd(true);
-
-    try {
-      const response = await axiosClient.get(`/v1/playlist/${uuid}/items`, {
-        params: {
-          take: playlistItemsTotalCount,
-          skip: 0,
-        },
-        headers: getRequestHeaders({
-          contentType: ContentType.json,
-        }),
-      });
-
-      if (response.data.success) {
-        queryClient.setQueryData([PLAYLIST_ITEMS_QUERY_KEY, uuid], {
-          pages: [
-            {
-              data: {
-                items: response.data.data.items,
-                totalCount: playlistItemsTotalCount,
-              },
-            },
-          ],
-          pageParams: [0],
-        });
-      }
-
-      setTimeout(() => {
-        window.scrollTo({
-          top: document.body.scrollHeight,
-          behavior: "smooth",
-        });
-      }, 100);
-
-      // Mark that we've jumped to end for items
-      setHasJumpedToEndItems(true);
-
-      setTimeout(() => {
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: "smooth",
-        });
-      }, 200);
-    } finally {
-      setIsJumpingToEnd(false);
-    }
-  };
-
-  const handleJumpToEndKeyframes = async () => {
-    if (isJumpingToEnd) return;
-
-    setIsJumpingToEnd(true);
-
-    try {
-      // Make a single API call to get ALL keyframes
-      const response = await axiosClient.get(`/v1/playlist/${uuid}/keyframes`, {
-        params: {
-          take: playlistKeyframesTotalCount,
-          skip: 0,
-        },
-        headers: getRequestHeaders({
-          contentType: ContentType.json,
-        }),
-      });
-
-      if (response.data.success) {
-        // Replace the query cache with all keyframes in a single page
-        queryClient.setQueryData([PLAYLIST_KEYFRAMES_QUERY_KEY, uuid], {
-          pages: [
-            {
-              data: {
-                keyframes: response.data.data.keyframes,
-                totalCount: playlistKeyframesTotalCount,
-              },
-            },
-          ],
-          pageParams: [0],
-        });
-      }
-
-      setTimeout(() => {
-        window.scrollTo({
-          top: document.body.scrollHeight,
-          behavior: "smooth",
-        });
-      }, 100);
-
-      setHasJumpedToEndKeyframes(true);
-
-      // Scroll to the bottom after loading all keyframes
-      setTimeout(() => {
-        window.scrollTo({
-          top: document.documentElement.scrollHeight,
-          behavior: "smooth",
-        });
-      }, 200);
-    } finally {
-      setIsJumpingToEnd(false);
-    }
-  };
-
   return {
     isLoading,
     uploadProgress,
@@ -723,7 +424,6 @@ export const usePlaylistHandlers = ({
     handleDeletePlaylistItem,
     handleDeleteKeyframe,
     handleOrderPlaylist,
-    handleOrderPlaylistBy,
     handleFileUploaderChange,
     handleUploadVideos,
     handleDeleteVideo,
@@ -731,7 +431,5 @@ export const usePlaylistHandlers = ({
     handlePlayPlaylist,
     handleNavigateAddToPlaylist,
     handleNavigateAddKeyframeToPlaylist,
-    handleJumpToEndItems,
-    handleJumpToEndKeyframes,
   };
 };

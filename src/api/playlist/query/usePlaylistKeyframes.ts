@@ -12,28 +12,57 @@ type QueryFunctionParams = {
   uuid: string;
   take: number;
   skip: number;
+  search?: string;
+  order?: "asc" | "desc";
+  signal?: AbortSignal;
 };
 
-const getPlaylistKeyframes = ({ uuid, take, skip }: QueryFunctionParams) => {
+const getPlaylistKeyframes = ({
+  uuid,
+  take,
+  skip,
+  search,
+  order,
+  signal,
+}: QueryFunctionParams) => {
   return async () =>
     axiosClient
-      .get(`/v1/playlist/${uuid}/keyframes`, {
-        params: {
-          take,
-          skip,
+      .get<ApiResponse<{ keyframes: PlaylistKeyframe[]; totalCount: number }>>(
+        `/v1/playlist/${uuid}/keyframes`,
+        {
+          params: {
+            take,
+            skip,
+            search: search || undefined,
+            order,
+          },
+          signal,
+          headers: getRequestHeaders({
+            contentType: ContentType.json,
+          }),
         },
-        headers: getRequestHeaders({
-          contentType: ContentType.json,
-        }),
-      })
-      .then((res) => res.data);
+      )
+      .then((res) => {
+        if (!res.data.success || !res.data.data) {
+          throw new Error(
+            res.data.message || "Could not load playlist keyframes",
+          );
+        }
+        return res.data;
+      });
 };
 
 type HookParams = {
   uuid?: string;
+  search?: string;
+  order?: "asc" | "desc";
 };
 
-export const usePlaylistKeyframes = ({ uuid }: HookParams) => {
+export const usePlaylistKeyframes = ({
+  uuid,
+  search = "",
+  order = "asc",
+}: HookParams) => {
   const { user } = useAuth();
   const take = PAGINATION.TAKE;
 
@@ -41,16 +70,23 @@ export const usePlaylistKeyframes = ({ uuid }: HookParams) => {
     ApiResponse<{ keyframes: PlaylistKeyframe[]; totalCount: number }>,
     Error
   >(
-    [PLAYLIST_KEYFRAMES_QUERY_KEY, uuid],
-    ({ pageParam = 0 }) =>
+    search || order !== "asc"
+      ? [PLAYLIST_KEYFRAMES_QUERY_KEY, uuid, { search, order }]
+      : [PLAYLIST_KEYFRAMES_QUERY_KEY, uuid],
+    ({ pageParam = 0, signal }) =>
       getPlaylistKeyframes({
         uuid: uuid!,
         take,
         skip: pageParam * take,
+        search,
+        order,
+        signal,
       })(),
     {
       enabled: Boolean(user) && Boolean(uuid),
       getNextPageParam: (lastPage, allPages) => {
+        if (!lastPage.data?.keyframes.length) return undefined;
+
         const totalItems = lastPage.data?.totalCount ?? 0;
         const currentItemCount = allPages.reduce(
           (total, page) => total + (page?.data?.keyframes?.length ?? 0),
