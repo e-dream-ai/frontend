@@ -3,6 +3,8 @@ import { useDreamRooms } from "@/hooks/useDreamRooms";
 import { useEffect, useCallback, useMemo, useRef } from "react";
 import { useQueries, type QueryFunctionContext } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import queryClient from "@/api/query-client";
+import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import { useFlowStore } from "@/stores/flow.store";
 import { useSocket } from "@/hooks/useSocket";
 import {
@@ -31,12 +33,12 @@ export function useFlowJobProgress() {
 
   const toastedFailuresRef = useRef<Set<string>>(new Set());
   const toastFailure = useCallback((uuid: string, error?: string | null) => {
-    if (toastedFailuresRef.current.has(uuid)) return;
+    if (!error || toastedFailuresRef.current.has(uuid)) return;
     toastedFailuresRef.current.add(uuid);
-    if (error) toast.error(error);
+    toast.error(error);
   }, []);
 
-  const { pendingEntries, pendingUuids, uuidMap } = useMemo(() => {
+  const { pendingEntries, pendingUuids } = useMemo(() => {
     const entries: Array<{ uuid: string; index: number; isUprez: boolean }> =
       [];
     transitions.forEach((t, i) => {
@@ -48,10 +50,7 @@ export function useFlowJobProgress() {
       }
     });
     const uuids = entries.map((e) => e.uuid);
-    const map = new Map(
-      entries.map((e) => [e.uuid, { index: e.index, isUprez: e.isUprez }]),
-    );
-    return { pendingEntries: entries, pendingUuids: uuids, uuidMap: map };
+    return { pendingEntries: entries, pendingUuids: uuids };
   }, [transitions]);
 
   const applyStatus = useCallback(
@@ -80,6 +79,9 @@ export function useFlowJobProgress() {
       } else {
         store.updateTransitionStatus(idx, nextStatus, progress);
       }
+      if (nextStatus === "failed" || nextStatus === "processed") {
+        void queryClient.invalidateQueries([USER_QUERY_KEY]);
+      }
       return nextStatus;
     },
     [],
@@ -95,12 +97,16 @@ export function useFlowJobProgress() {
       const uuid = data.dreamUuid || data.dream_uuid;
       if (!uuid) return;
 
-      const entry = uuidMap.get(uuid);
-      if (!entry) return;
+      const transition = useFlowStore
+        .getState()
+        .transitions.find(
+          (entry) => entry.dreamUuid === uuid || entry.uprezDreamUuid === uuid,
+        );
+      if (!transition) return;
 
       const nextStatus = applyStatus(
         uuid,
-        entry.isUprez,
+        transition.uprezDreamUuid === uuid,
         data.status,
         data.progress ?? undefined,
       );
@@ -111,7 +117,7 @@ export function useFlowJobProgress() {
           .catch(() => {});
       }
     },
-    [uuidMap, applyStatus, toastFailure],
+    [applyStatus, toastFailure],
   );
 
   useEffect(() => {

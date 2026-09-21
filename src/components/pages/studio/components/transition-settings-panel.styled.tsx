@@ -1,4 +1,5 @@
 import styled from "styled-components";
+import { Link } from "react-router-dom";
 import { FLOW, flowSlideIn } from "@/constants/flow-theme.constants";
 import { HISTORY_ROW_HEIGHT } from "./transition-history.styled";
 
@@ -186,6 +187,26 @@ export const GenerateButton = styled.button<{ $disabled?: boolean }>`
   &:hover:not(:disabled) {
     background: ${FLOW.accent};
     color: ${FLOW.bg};
+  }
+`;
+
+export const OpenDreamLink = styled(Link)`
+  color: ${FLOW.textDim};
+  font-family: ${FLOW.fontFamily};
+  font-size: 12px;
+  padding: 6px 0;
+  white-space: nowrap;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    color: ${FLOW.text};
+  }
+
+  &:focus-visible {
+    outline: 2px solid ${FLOW.selected};
+    outline-offset: 3px;
+    border-radius: ${FLOW.radiusSm};
   }
 `;
 

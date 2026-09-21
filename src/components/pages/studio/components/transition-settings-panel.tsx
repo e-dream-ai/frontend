@@ -13,6 +13,7 @@ import { CostEstimate } from "@/components/shared/cost-estimate/cost-estimate";
 import { CreditLimitNotice } from "@/components/shared/credit-limit-notice/credit-limit-notice";
 import { useCostEstimate } from "@/hooks/useCostEstimate";
 import { useCreditGuard } from "@/hooks/useCreditGuard";
+import { ROUTES } from "@/constants/routes.constants";
 import { ACTION_PRESETS } from "@/components/pages/studio/constants/action-presets";
 import {
   getAllowedDurationsForActions,
@@ -59,6 +60,7 @@ import {
   Select,
   PromptTextarea,
   GenerateButton,
+  OpenDreamLink,
   ToggleLink,
   ResetLink,
   ExpandedSection,
@@ -532,6 +534,16 @@ export function TransitionSettingsPanel({
         >
           {isRetry ? "Retry" : "Generate"}
         </GenerateButton>
+        {isRetry && selectedTransition?.dreamUuid ? (
+          <OpenDreamLink
+            to={`${ROUTES.VIEW_DREAM}/${selectedTransition.dreamUuid}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label="Open failed dream to view its error in a new tab"
+          >
+            Open dream
+          </OpenDreamLink>
+        ) : null}
       </FieldRow>
 
       {needsPrompt && (
