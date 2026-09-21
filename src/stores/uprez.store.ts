@@ -1,18 +1,10 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import type { RunPlaylistResult } from "@/api/playlist/mutation/useRunPlaylist";
 import type { PlaylistSummary } from "@/components/pages/studio/hooks/useUserPlaylists";
 import type {
   InterpolationFactor,
   UpscaleFactor,
 } from "@/components/pages/studio/constants/uprez-factor-options";
-
-export type UprezResult = {
-  uuid: string;
-  name: string;
-  run: RunPlaylistResult | null;
-  runFailed: boolean;
-};
 
 export const uprezPlaylistName = (sourceName: string) =>
   `${sourceName} (uprez)`;
@@ -22,7 +14,6 @@ export type UprezFormState = {
   nameOverride: string | null;
   upscaleFactor: UpscaleFactor;
   interpolationFactor: InterpolationFactor;
-  result: UprezResult | null;
 };
 
 export type UprezStoreState = UprezFormState & {
@@ -30,7 +21,6 @@ export type UprezStoreState = UprezFormState & {
   setNameOverride: (name: string) => void;
   setUpscaleFactor: (factor: UpscaleFactor) => void;
   setInterpolationFactor: (factor: InterpolationFactor) => void;
-  setResult: (result: UprezResult | null) => void;
   restoreUprez: (snapshot: Partial<UprezFormState>) => void;
   resetUprez: () => void;
 };
@@ -40,7 +30,6 @@ const UPREZ_DEFAULTS: UprezFormState = {
   nameOverride: null,
   upscaleFactor: 2,
   interpolationFactor: 2,
-  result: null,
 };
 
 export const uprezPartialize = (state: UprezStoreState): UprezFormState => ({
@@ -48,7 +37,6 @@ export const uprezPartialize = (state: UprezStoreState): UprezFormState => ({
   nameOverride: state.nameOverride,
   upscaleFactor: state.upscaleFactor,
   interpolationFactor: state.interpolationFactor,
-  result: state.result,
 });
 
 export const useUprezStore = create<UprezStoreState>()(
@@ -67,14 +55,12 @@ export const useUprezStore = create<UprezStoreState>()(
             nameOverride: followedSource
               ? uprezPlaylistName(playlist.name)
               : s.nameOverride,
-            result: null,
           };
         }),
       setNameOverride: (nameOverride) => set({ nameOverride }),
       setUpscaleFactor: (upscaleFactor) => set({ upscaleFactor }),
       setInterpolationFactor: (interpolationFactor) =>
         set({ interpolationFactor }),
-      setResult: (result) => set({ result }),
 
       restoreUprez: (snapshot) =>
         set({
@@ -87,7 +73,6 @@ export const useUprezStore = create<UprezStoreState>()(
           upscaleFactor: snapshot.upscaleFactor ?? UPREZ_DEFAULTS.upscaleFactor,
           interpolationFactor:
             snapshot.interpolationFactor ?? UPREZ_DEFAULTS.interpolationFactor,
-          result: snapshot.result ?? null,
         }),
       resetUprez: () => set({ ...UPREZ_DEFAULTS }),
     }),

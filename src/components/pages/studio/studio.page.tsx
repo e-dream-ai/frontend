@@ -204,7 +204,10 @@ export const StudioPage: React.FC = () => {
           )}
           {isUprez && (
             <UprezFrame>
-              <UprezApp onCreated={sync.attachPlaylist} />
+              <UprezApp
+                playlist={sync.playlist}
+                onCreated={sync.attachPlaylist}
+              />
             </UprezFrame>
           )}
         </Suspense>

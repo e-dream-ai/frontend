@@ -39,7 +39,7 @@ export type UpdatePlaylistRequestValues = {
   values: {
     name: string;
     description?: string;
-    prompt?: string;
+    prompt?: Record<string, unknown> | string;
     featureRank?: number;
     loops?: number;
     displayedOwner?: number;

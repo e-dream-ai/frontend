@@ -2,17 +2,30 @@ import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { Loader2 } from "lucide-react";
 import Bugsnag from "@bugsnag/js";
+import { useQueryClient } from "@tanstack/react-query";
 import { NO_OP_HINT } from "../constants/uprez-factor-options";
-import { ROUTES } from "@/constants/routes.constants";
-import { generateCloudflareImageURL } from "@/utils/image-handler";
 import { useUprezStore } from "@/stores/uprez.store";
 import type { EditorProjectPlaylistRef } from "@/types/editor-project.types";
-import { usePlaylistMetadata } from "../hooks/usePlaylistMetadata";
+import {
+  PLAYLIST_QUERY_KEY,
+  usePlaylist,
+} from "@/api/playlist/query/usePlaylist";
+import { useRunPlaylist } from "@/api/playlist/mutation/useRunPlaylist";
+import { useUpdatePlaylist } from "@/api/playlist/mutation/useUpdatePlaylist";
+import { PlaylistProgress } from "@/components/shared/dream-progress/playlist-progress";
+import {
+  describePlaylistContents,
+  usePlaylistMetadata,
+} from "../hooks/usePlaylistMetadata";
 import { useAddPlaylistToCache } from "../hooks/useUserPlaylists";
 import { useCreateUprezPlaylist } from "../hooks/useCreateUprezPlaylist";
 import { SelectPlaylistModal } from "./select-playlist-modal";
 import { UprezFactorFields } from "./uprez-factor-row";
-import { isNoOpUprez } from "../utils/uprez-playlist-prompt";
+import { UprezPlaylistCard } from "./uprez-playlist-card";
+import {
+  buildUprezPlaylistPrompt,
+  isNoOpUprez,
+} from "../utils/uprez-playlist-prompt";
 import {
   AppBody,
   AppHeader,
@@ -24,63 +37,52 @@ import {
   Intro,
   LinkButton,
   PrimaryButton,
-  ResultLink,
-  ResultPanel,
-  ResultText,
-  ResultTitle,
+  ProgressPanel,
   Section,
   SectionLabel,
-  SourceCard,
-  SourceInfo,
-  SourceMeta,
-  SourceName,
-  SourceThumb,
   SpinningIcon,
   TitleRow,
 } from "./uprez-app.styled";
 
-const CARD_THUMB = { width: 200, fit: "cover" as const };
-
-/**
- * "Uprez" studio app: name the output, pick the factors, and start a derived
- * playlist that tracks a source playlist and uprezes each of its dreams.
- */
 type Props = {
+  playlist: EditorProjectPlaylistRef | null;
   onCreated?: (playlist: EditorProjectPlaylistRef) => Promise<boolean>;
 };
 
-export const UprezApp: React.FC<Props> = ({ onCreated }) => {
+export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
+  const queryClient = useQueryClient();
   const addPlaylistToCache = useAddPlaylistToCache();
   const { createAndRun, isSubmitting } = useCreateUprezPlaylist();
+  const updatePlaylist = useUpdatePlaylist();
+  const runPlaylist = useRunPlaylist();
 
   const selected = useUprezStore((s) => s.sourcePlaylist);
   const nameOverride = useUprezStore((s) => s.nameOverride);
   const upscaleFactor = useUprezStore((s) => s.upscaleFactor);
   const interpolationFactor = useUprezStore((s) => s.interpolationFactor);
-  const result = useUprezStore((s) => s.result);
   const setSourcePlaylist = useUprezStore((s) => s.setSourcePlaylist);
   const setUpscaleFactor = useUprezStore((s) => s.setUpscaleFactor);
   const setInterpolationFactor = useUprezStore((s) => s.setInterpolationFactor);
-  const setResult = useUprezStore((s) => s.setResult);
 
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const selectedUuid = selected?.uuid ?? "";
-  const countText = usePlaylistMetadata(selectedUuid);
+  const sourceMeta = usePlaylistMetadata(selectedUuid);
+
+  const { data: outputData } = usePlaylist(playlist?.uuid, Boolean(playlist));
+  const output = outputData?.data?.playlist;
+  const progress =
+    output?.uuid === playlist?.uuid ? output?.progress : undefined;
 
   const name = nameOverride ?? "";
-
   const isNoOp = isNoOpUprez(upscaleFactor, interpolationFactor);
-  const canSubmit =
-    Boolean(selected) && name.trim().length > 0 && !isNoOp && !isSubmitting;
+  const isBusy =
+    isSubmitting || updatePlaylist.isLoading || runPlaylist.isLoading;
+  const canRun = Boolean(selected) && !isNoOp && !isBusy;
+  const canCreate = canRun && name.trim().length > 0;
 
-  const handleSubmit = async () => {
-    if (!canSubmit) return;
-    setResult(null);
-
-    // Opened synchronously so the popup blocker still counts this as
-    // user-initiated; it's navigated once the create call returns a uuid.
-    const newTab = window.open("", "_blank");
+  const handleCreate = async () => {
+    if (!canCreate) return;
 
     try {
       const created = await createAndRun({
@@ -91,23 +93,10 @@ export const UprezApp: React.FC<Props> = ({ onCreated }) => {
       });
 
       await addPlaylistToCache(created);
-      setResult({
-        uuid: created.uuid,
-        name: created.name,
-        run: created.run,
-        runFailed: Boolean(created.runError),
-      });
-
-      const href = `${window.location.origin}${ROUTES.VIEW_PLAYLIST}/${created.uuid}`;
-      if (newTab) {
-        newTab.location.href = href;
-      } else {
-        toast.info("Pop-up blocked — use the link below to open the playlist.");
-      }
 
       if (created.runError) {
         toast.error(
-          `${created.name} was created but didn't start — press “Run uprez” on its page.`,
+          `${created.name} was created but didn't start — press “Rerun uprez” to try again.`,
         );
       } else {
         toast.success(`Uprezing into ${created.name}.`);
@@ -121,15 +110,41 @@ export const UprezApp: React.FC<Props> = ({ onCreated }) => {
         );
       }
     } catch (err) {
-      newTab?.close();
       Bugsnag.notify(err as Error);
       toast.error("Failed to create the uprez playlist.");
     }
   };
 
-  const sourceThumb = selected?.thumbnail
-    ? generateCloudflareImageURL(selected.thumbnail, CARD_THUMB)
-    : undefined;
+  const handleRerun = async () => {
+    if (!canRun || !playlist) return;
+
+    try {
+      await updatePlaylist.mutateAsync({
+        uuid: playlist.uuid,
+        values: {
+          name: playlist.name,
+          prompt: buildUprezPlaylistPrompt({
+            sourcePlaylistUuid: selectedUuid,
+            upscaleFactor,
+            interpolationFactor,
+          }),
+        },
+      });
+
+      const { data } = await runPlaylist.mutateAsync(playlist.uuid);
+      const result = data?.result;
+      toast.success(
+        result
+          ? `Uprez run started: ${result.created} new, ${result.requeued} re-queued, ${result.kept} kept, ${result.removed} removed, ${result.skipped} skipped.`
+          : "Uprez run started.",
+      );
+
+      await queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlist.uuid]);
+    } catch (err) {
+      Bugsnag.notify(err as Error);
+      toast.error("Failed to rerun the uprez playlist.");
+    }
+  };
 
   return (
     <AppBody>
@@ -149,12 +164,11 @@ export const UprezApp: React.FC<Props> = ({ onCreated }) => {
           Source playlist
         </SectionLabel>
         {selected ? (
-          <SourceCard>
-            {sourceThumb && <SourceThumb src={sourceThumb} alt="" />}
-            <SourceInfo>
-              <SourceName>{selected.name}</SourceName>
-              <SourceMeta>{countText}</SourceMeta>
-            </SourceInfo>
+          <UprezPlaylistCard
+            name={selected.name}
+            meta={sourceMeta}
+            thumbnail={selected.thumbnail}
+          >
             <LinkButton
               id="uprez-source-playlist"
               type="button"
@@ -162,17 +176,37 @@ export const UprezApp: React.FC<Props> = ({ onCreated }) => {
             >
               Change
             </LinkButton>
-          </SourceCard>
+          </UprezPlaylistCard>
         ) : (
           <EmptySource
             id="uprez-source-playlist"
             type="button"
             onClick={() => setPickerOpen(true)}
           >
-            Choose a playlist…
+            Choose a playlist&hellip;
           </EmptySource>
         )}
       </Section>
+
+      {playlist && (
+        <Section>
+          <SectionLabel as="h3">Uprez playlist</SectionLabel>
+          <UprezPlaylistCard
+            name={output?.name ?? playlist.name}
+            meta={describePlaylistContents(output)}
+            thumbnail={output?.thumbnail}
+          />
+        </Section>
+      )}
+
+      {progress?.remaining ? (
+        <Section>
+          <SectionLabel as="h3">In progress</SectionLabel>
+          <ProgressPanel>
+            <PlaylistProgress progress={progress} />
+          </ProgressPanel>
+        </Section>
+      ) : null}
 
       <Section>
         <SectionLabel as="h3">Settings</SectionLabel>
@@ -188,14 +222,16 @@ export const UprezApp: React.FC<Props> = ({ onCreated }) => {
 
       <Footer>
         <PrimaryButton
-          onClick={handleSubmit}
-          disabled={!canSubmit}
-          aria-label={isSubmitting ? "Creating uprez playlist" : undefined}
+          onClick={playlist ? handleRerun : handleCreate}
+          disabled={playlist ? !canRun : !canCreate}
+          aria-label={isBusy ? "Starting uprez run" : undefined}
         >
-          {isSubmitting ? (
+          {isBusy ? (
             <SpinningIcon>
               <Loader2 size={14} strokeWidth={2.4} />
             </SpinningIcon>
+          ) : playlist ? (
+            "Rerun uprez"
           ) : (
             "Create & run uprez"
           )}
@@ -203,31 +239,6 @@ export const UprezApp: React.FC<Props> = ({ onCreated }) => {
         {isNoOp && <Hint>{NO_OP_HINT}</Hint>}
         {!isNoOp && !selectedUuid && <Hint>Pick a source playlist first.</Hint>}
       </Footer>
-
-      {result && (
-        <ResultPanel role="status" $error={result.runFailed}>
-          <ResultTitle>
-            {result.runFailed
-              ? `${result.name} created, but didn't start`
-              : `${result.name} is uprezing`}
-          </ResultTitle>
-          {result.run && (
-            <ResultText>
-              {result.run.created} queued, {result.run.requeued} re-queued,{" "}
-              {result.run.kept} already done, {result.run.skipped} skipped
-              (source dream not processed yet).
-            </ResultText>
-          )}
-          {result.runFailed && (
-            <ResultText>
-              Open the playlist and press “Run uprez” to start it.
-            </ResultText>
-          )}
-          <ResultLink to={`${ROUTES.VIEW_PLAYLIST}/${result.uuid}`}>
-            Open playlist
-          </ResultLink>
-        </ResultPanel>
-      )}
 
       {pickerOpen && (
         <SelectPlaylistModal

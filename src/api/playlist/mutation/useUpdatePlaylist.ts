@@ -6,6 +6,7 @@ import { Playlist } from "@/types/playlist.types";
 import { axiosClient } from "@/client/axios.client";
 import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
 import { PLAYLISTS_QUERY_KEY } from "@/api/playlist/query/usePlaylists";
+import { editorProjectKeys } from "@/api/editor-project/editor-project.keys";
 
 export const UPDATE_PLAYLIST_MUTATION_KEY = "updatePlaylist";
 
@@ -38,6 +39,7 @@ export const useUpdatePlaylist = () => {
         queryKey: [PLAYLIST_QUERY_KEY, uuid],
       });
       void queryClient.invalidateQueries({ queryKey: [PLAYLISTS_QUERY_KEY] });
+      void queryClient.invalidateQueries({ queryKey: editorProjectKeys.all });
     },
   });
 };

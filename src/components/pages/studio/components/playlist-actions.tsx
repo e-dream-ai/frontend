@@ -63,7 +63,7 @@ export const PlaylistActions: React.FC<Props> = ({
                 : "No client connected"
             }
           >
-            <PlaylistPlay width="1em" height="1em" />
+            <PlaylistPlay width="1.7em" height="1em" />
             Play
           </ActionButton>
         </>
