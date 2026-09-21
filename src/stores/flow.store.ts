@@ -130,8 +130,16 @@ function nextSelection(
   nextCount: number,
 ): number[] {
   if (nextCount === 0) return indices.length === 0 ? indices : [];
+  // The first transitions in a flow arrive selected, so the settings panel
+  // opens on them the moment they appear instead of asking the user to click
+  // a gap they can already see. Only the 0 -> n step does this: once
+  // transitions exist, an empty selection is a deliberate clear (or a
+  // "Generate covers everything" scope) and stays empty.
+  if (previousCount === 0) {
+    return Array.from({ length: nextCount }, (_, i) => i);
+  }
   if (indices.length === 0) return indices;
-  if (previousCount > 0 && indices.length >= previousCount) {
+  if (indices.length >= previousCount) {
     return Array.from({ length: nextCount }, (_, i) => i);
   }
   const kept = indices.filter((i) => i >= 0 && i < nextCount);
