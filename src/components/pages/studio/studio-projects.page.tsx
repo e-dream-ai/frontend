@@ -5,7 +5,6 @@ import { usePrefetchEditorProject } from "@/api/editor-project/query/usePrefetch
 import { preloadEditor } from "./components/lazy-editors";
 import { NewProjectMenu } from "./components/new-project-menu";
 import { ProjectControls } from "./components/project-controls";
-import { useSessionMigration } from "./hooks/useSessionMigration";
 import { buildStudioProjectPath, ROUTES } from "@/constants/routes.constants";
 import type { StudioMode } from "@/types/flow.types";
 import { STUDIO_MODE_LABELS } from "./constants/studio-modes";
@@ -67,7 +66,6 @@ const formatUpdated = (iso: string) =>
   });
 
 export const StudioProjectsPage: React.FC = () => {
-  useSessionMigration();
   const [editorFilter, setEditorFilter] = useState<StudioMode | undefined>();
   const [searchDraft, setSearchDraft] = useState("");
   const search = useDebounce(searchDraft.trim(), 400);

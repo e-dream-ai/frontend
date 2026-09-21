@@ -27,7 +27,6 @@ import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
 import { useEditorProjectSync } from "./hooks/useEditorProjectSync";
 import { useEditorProjectLock } from "./hooks/useEditorProjectLock";
 import { useEditorProjectPlaylist } from "./hooks/useEditorProjectPlaylist";
-import { useSessionMigration } from "./hooks/useSessionMigration";
 import { useFileDropUpload } from "./hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import useAuth from "@/hooks/useAuth";
@@ -86,7 +85,6 @@ export const StudioPage: React.FC = () => {
     },
     [isUprez, sync.playlist, setUprezName, setPlaylistName],
   );
-  useSessionMigration();
 
   const activeTab = useStudioStore((s) => s.activeTab);
   useStudioJobProgress();
