@@ -357,19 +357,32 @@ describe("Phase 1: transitions", () => {
   });
 
   describe("selection follows the transition list", () => {
-    it("starts with nothing selected, which means the whole flow", () => {
+    it("selects the first transition the moment two frames make one", () => {
       const store = useFlowStore.getState();
       store.addReferenceFrame(makeKf("a"));
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
       store.addReferenceFrame(makeKf("b"));
       expect(useFlowStore.getState().transitions).toHaveLength(1);
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0]);
     });
 
-    it("leaves an empty selection empty as frames are added", () => {
+    it("selects every transition of a flow built in one go", () => {
       const store = useFlowStore.getState();
       for (const id of ["a", "b", "c", "d"])
         store.addReferenceFrame(makeKf(id));
       expect(useFlowStore.getState().transitions).toHaveLength(3);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
+        0, 1, 2,
+      ]);
+    });
+
+    it("leaves a cleared selection empty when the next frame lands", () => {
+      const store = useFlowStore.getState();
+      for (const id of ["a", "b"]) store.addReferenceFrame(makeKf(id));
+      store.clearTransitionSelection();
+
+      store.addReferenceFrame(makeKf("c"));
+      expect(useFlowStore.getState().transitions).toHaveLength(2);
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
     });
 
