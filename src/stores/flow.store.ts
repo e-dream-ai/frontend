@@ -73,6 +73,8 @@ type FlowStoreState = {
   toggleTransitionSelection: (index: number) => void;
   selectAllTransitions: () => void;
   clearTransitionSelection: () => void;
+  /** Drop these transitions from the selection, leaving the rest as it was. */
+  deselectTransitions: (indices: readonly number[]) => void;
   pruneTransitionSelection: () => void;
   setSettingsExpanded: (expanded: boolean) => void;
   setPreviewLightboxOpen: (open: boolean) => void;
@@ -124,26 +126,39 @@ const PHASE_1_DEFAULTS = {
 // where a user is still comparing takes.
 export const MAX_TRANSITION_HISTORY = 20;
 
+const transitionKey = (t: FlowTransition) => `${t.fromFrameId}:${t.toFrameId}`;
+
+/**
+ * Carry the selection across a rebuilt transition list. Selection follows the
+ * transitions themselves (their frame pair), not their positions, so deleting
+ * or reordering frames never slides it onto a neighbour. A transition that did
+ * not exist before arrives selected: new work is what the user wants to set up
+ * next, and it lands as the primary so the settings panel opens on it. What was
+ * selected and still exists stays selected; everything else stays unselected
+ * until clicked.
+ */
 function nextSelection(
   indices: number[],
-  previousCount: number,
-  nextCount: number,
+  previous: readonly FlowTransition[],
+  next: readonly FlowTransition[],
 ): number[] {
-  if (nextCount === 0) return indices.length === 0 ? indices : [];
-  // The first transitions in a flow arrive selected, so the settings panel
-  // opens on them the moment they appear instead of asking the user to click
-  // a gap they can already see. Only the 0 -> n step does this: once
-  // transitions exist, an empty selection is a deliberate clear (or a
-  // "Generate covers everything" scope) and stays empty.
-  if (previousCount === 0) {
-    return Array.from({ length: nextCount }, (_, i) => i);
+  const nextIndexByKey = new Map(next.map((t, i) => [transitionKey(t), i]));
+  const previousKeys = new Set(previous.map(transitionKey));
+  const kept: number[] = [];
+  for (const i of indices) {
+    const t = previous[i];
+    const at = t ? nextIndexByKey.get(transitionKey(t)) : undefined;
+    if (at !== undefined) kept.push(at);
   }
-  if (indices.length === 0) return indices;
-  if (indices.length >= previousCount) {
-    return Array.from({ length: nextCount }, (_, i) => i);
-  }
-  const kept = indices.filter((i) => i >= 0 && i < nextCount);
-  return kept.length === indices.length ? indices : kept;
+  const added: number[] = [];
+  next.forEach((t, i) => {
+    if (!previousKeys.has(transitionKey(t))) added.push(i);
+  });
+  const result = [...kept, ...added];
+  return result.length === indices.length &&
+    result.every((v, i) => v === indices[i])
+    ? indices
+    : result;
 }
 
 function markHistoryCompleted(
@@ -442,8 +457,8 @@ export const useFlowStore = create<FlowStoreState>()(
             transitions,
             selectedTransitionIndices: nextSelection(
               s.selectedTransitionIndices,
-              s.transitions.length,
-              transitions.length,
+              s.transitions,
+              transitions,
             ),
           };
         }),
@@ -471,8 +486,8 @@ export const useFlowStore = create<FlowStoreState>()(
             transitions,
             selectedTransitionIndices: nextSelection(
               s.selectedTransitionIndices,
-              s.transitions.length,
-              transitions.length,
+              s.transitions,
+              transitions,
             ),
           };
         }),
@@ -496,8 +511,8 @@ export const useFlowStore = create<FlowStoreState>()(
             transitions,
             selectedTransitionIndices: nextSelection(
               s.selectedTransitionIndices,
-              s.transitions.length,
-              transitions.length,
+              s.transitions,
+              transitions,
             ),
           };
         }),
@@ -513,8 +528,8 @@ export const useFlowStore = create<FlowStoreState>()(
             transitions,
             selectedTransitionIndices: nextSelection(
               s.selectedTransitionIndices,
-              s.transitions.length,
-              transitions.length,
+              s.transitions,
+              transitions,
             ),
           };
         }),
@@ -578,6 +593,15 @@ export const useFlowStore = create<FlowStoreState>()(
         })),
 
       clearTransitionSelection: () => set({ selectedTransitionIndices: [] }),
+
+      deselectTransitions: (indices) =>
+        set((s) => {
+          const drop = new Set(indices);
+          const kept = s.selectedTransitionIndices.filter((i) => !drop.has(i));
+          return kept.length === s.selectedTransitionIndices.length
+            ? s
+            : { selectedTransitionIndices: kept };
+        }),
 
       pruneTransitionSelection: () =>
         set((s) => {
@@ -732,8 +756,8 @@ export const useFlowStore = create<FlowStoreState>()(
             transitions,
             selectedTransitionIndices: nextSelection(
               s.selectedTransitionIndices,
-              s.transitions.length,
-              transitions.length,
+              s.transitions,
+              transitions,
             ),
           };
         }),

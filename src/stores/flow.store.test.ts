@@ -376,14 +376,14 @@ describe("Phase 1: transitions", () => {
       ]);
     });
 
-    it("leaves a cleared selection empty when the next frame lands", () => {
+    it("selects the new transition when a frame lands on a cleared selection", () => {
       const store = useFlowStore.getState();
       for (const id of ["a", "b"]) store.addReferenceFrame(makeKf(id));
       store.clearTransitionSelection();
 
       store.addReferenceFrame(makeKf("c"));
       expect(useFlowStore.getState().transitions).toHaveLength(2);
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([1]);
     });
 
     it("extends an all-selection onto transitions added after it", () => {
@@ -398,42 +398,70 @@ describe("Phase 1: transitions", () => {
       ]);
     });
 
-    it("leaves a narrowed selection narrow when a frame is added", () => {
+    it("adds the new transition to a narrowed selection, as the primary", () => {
       const store = useFlowStore.getState();
       for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
       store.selectTransition(0);
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0]);
 
       store.addReferenceFrame(makeKf("d"));
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0, 2]);
+    });
+
+    it("follows a selected transition when a frame before it is removed", () => {
+      const store = useFlowStore.getState();
+      for (const id of ["a", "b", "c", "d"])
+        store.addReferenceFrame(makeKf(id));
+      store.selectTransition(2); // c -> d
+      store.removeReferenceFrame("a");
+      // b -> c, c -> d: the selection moves with c -> d to index 1.
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([1]);
+    });
+
+    it("selects the bridging transition a removed frame leaves behind", () => {
+      const store = useFlowStore.getState();
+      for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
+      store.clearTransitionSelection();
+      store.removeReferenceFrame("b");
+      // a -> c never existed before, so it arrives selected.
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0]);
     });
 
-    it("keeps the selection whole when reordering frames", () => {
+    it("keeps surviving pairs selected and selects new ones on reorder", () => {
       const store = useFlowStore.getState();
       for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
-      store.selectAllTransitions();
+      store.clearTransitionSelection();
+      store.selectTransition(0); // a -> b
       store.reorderReferenceFrames(["c", "a", "b"]);
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([0, 1]);
+      // c -> a is new; a -> b survives at index 1 and stays selected.
+      // Survivors first, then the new one as primary.
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([1, 0]);
     });
 
-    it("grows the selection when looping adds a transition", () => {
+    it("selects the loop transition when looping adds it", () => {
       const store = useFlowStore.getState();
       for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
-      store.selectAllTransitions();
+      store.clearTransitionSelection();
       store.setLoop(true);
       expect(useFlowStore.getState().transitions).toHaveLength(3);
-      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([
-        0, 1, 2,
-      ]);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([2]);
     });
 
-    it("drops indices the rebuilt list no longer has", () => {
+    it("drops a selected transition the rebuilt list no longer has", () => {
       const store = useFlowStore.getState();
       for (const id of ["a", "b", "c"]) store.addReferenceFrame(makeKf(id));
       store.selectTransition(1);
       store.removeReferenceFrame("c");
       expect(useFlowStore.getState().transitions).toHaveLength(1);
       expect(useFlowStore.getState().selectedTransitionIndices).toEqual([]);
+    });
+
+    it("deselects only the given transitions", () => {
+      const store = useFlowStore.getState();
+      for (const id of ["a", "b", "c", "d"])
+        store.addReferenceFrame(makeKf(id));
+      store.selectAllTransitions();
+      store.deselectTransitions([0, 2]);
+      expect(useFlowStore.getState().selectedTransitionIndices).toEqual([1]);
     });
   });
 

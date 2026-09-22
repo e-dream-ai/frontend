@@ -20,6 +20,7 @@ const mocks = vi.hoisted(() => {
   );
   const recordTransitionRun = vi.fn();
   const updateTransitionStatus = vi.fn();
+  const deselectTransitions = vi.fn();
   const store = {
     transitions: [
       {
@@ -48,6 +49,7 @@ const mocks = vi.hoisted(() => {
     ensureFlowKeyframe,
     recordTransitionRun,
     updateTransitionStatus,
+    deselectTransitions,
     store,
   };
 });
@@ -83,6 +85,7 @@ vi.mock("../../../../stores/flow.store", () => ({
         state: typeof mocks.store & {
           recordTransitionRun: typeof mocks.recordTransitionRun;
           updateTransitionStatus: typeof mocks.updateTransitionStatus;
+          deselectTransitions: typeof mocks.deselectTransitions;
         },
       ) => unknown,
     ) =>
@@ -90,6 +93,7 @@ vi.mock("../../../../stores/flow.store", () => ({
         ...mocks.store,
         recordTransitionRun: mocks.recordTransitionRun,
         updateTransitionStatus: mocks.updateTransitionStatus,
+        deselectTransitions: mocks.deselectTransitions,
       }),
     { getState: () => mocks.store },
   ),
@@ -191,6 +195,57 @@ describe("useFlowGeneration", () => {
         status: "idle",
         settings: SETTINGS,
       },
+    ];
+  });
+
+  it("deselects what it queues, but leaves a mismatch selected", async () => {
+    // frame-3 is portrait, so frame-2 → frame-3 cannot be rendered.
+    mocks.store.referenceFrames = [
+      {
+        id: "frame-1",
+        dreamUuid: "dream-1",
+        name: "One",
+        naturalWidth: 1280,
+        naturalHeight: 720,
+      },
+      {
+        id: "frame-2",
+        dreamUuid: "dream-2",
+        name: "Two",
+        naturalWidth: 1280,
+        naturalHeight: 720,
+      },
+      {
+        id: "frame-3",
+        dreamUuid: "dream-3",
+        name: "Three",
+        naturalWidth: 720,
+        naturalHeight: 1280,
+      },
+    ];
+
+    const { generateMany } = useFlowGeneration();
+    await generateMany([0, 1]);
+
+    expect(mocks.post).toHaveBeenCalledTimes(1);
+    expect(mocks.deselectTransitions).toHaveBeenCalledWith([0]);
+  });
+
+  it("deselects a selected transition that is already in flight", async () => {
+    mocks.store.transitions = [
+      { ...mocks.store.transitions[0], status: "processing" },
+      mocks.store.transitions[1],
+    ];
+
+    const { generateMany } = useFlowGeneration();
+    await generateMany([0, 1]);
+
+    expect(mocks.post).toHaveBeenCalledTimes(1);
+    expect(mocks.deselectTransitions).toHaveBeenCalledWith([1, 0]);
+
+    mocks.store.transitions = [
+      { ...mocks.store.transitions[0], status: "idle" },
+      mocks.store.transitions[1],
     ];
   });
 
