@@ -150,18 +150,25 @@ export const ResultsTab: React.FC = () => {
 
   const segments = useDreamSegments(completedUuids);
 
-  const [previewIndex, setPreviewIndex] = useState(0);
+  // Track what is on screen by dream uuid, not by position. The matrix fills
+  // in reading order, so a job in an earlier cell finishing inserts a segment
+  // ahead of the one playing and a stored index slides onto a different clip
+  // mid-playback. Deriving the index each render keeps the same clip up.
+  const [currentUuid, setCurrentUuid] = useState<string | null>(null);
+  const foundIndex = segments.findIndex((s) => s.key === currentUuid);
+  const previewIndex = foundIndex >= 0 ? foundIndex : 0;
+
   const [lightboxOpen, setLightboxOpen] = useState(false);
 
-  // Segments only exist once a dream's video has resolved, so positions here
-  // don't line up with `completedUuids` — a cell has to look itself up.
-  const segmentIndexByUuid = useMemo(
-    () => new Map(segments.map((s, i) => [s.key, i])),
+  // Segments only exist once a dream's video has resolved, so a cell can't
+  // assume its job has one — it has to look itself up.
+  const segmentKeys = useMemo(
+    () => new Set(segments.map((s) => s.key)),
     [segments],
   );
 
-  const openPreviewAt = useCallback((index: number) => {
-    setPreviewIndex(index);
+  const openPreviewAt = useCallback((dreamUuid: string) => {
+    setCurrentUuid(dreamUuid);
     setLightboxOpen(true);
   }, []);
 
@@ -268,7 +275,7 @@ export const ResultsTab: React.FC = () => {
       <SegmentPreview
         segments={segments}
         index={previewIndex}
-        onIndexChange={setPreviewIndex}
+        onIndexChange={(next) => setCurrentUuid(segments[next]?.key ?? null)}
         lightboxOpen={lightboxOpen}
         onLightboxOpenChange={setLightboxOpen}
         label="Preview"
@@ -327,14 +334,9 @@ export const ResultsTab: React.FC = () => {
                         );
                       }
 
-                      const segmentIndex = segmentIndexByUuid.get(
-                        job.dreamUuid,
-                      );
-                      const openable = segmentIndex !== undefined;
+                      const openable = segmentKeys.has(job.dreamUuid);
                       const open = () => {
-                        if (segmentIndex !== undefined) {
-                          openPreviewAt(segmentIndex);
-                        }
+                        if (openable) openPreviewAt(job.dreamUuid);
                       };
 
                       return (
