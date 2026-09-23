@@ -106,7 +106,7 @@ export const useStudioJobProgress = () => {
             })
             .catch(() => {});
 
-          if (wasPending && state.activeTab !== "results") {
+          if (wasPending && state.activeTab !== "generate") {
             state.incrementNewCompleted();
           }
         }

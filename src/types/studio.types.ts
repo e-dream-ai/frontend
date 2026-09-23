@@ -1,4 +1,4 @@
-export type StudioTab = "images" | "actions" | "generate" | "results";
+export type StudioTab = "images" | "actions" | "generate";
 
 export interface StudioImage {
   uuid: string;

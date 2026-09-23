@@ -20,7 +20,6 @@ import {
   FlowBuilder,
   GenerateTab,
   ImagesTab,
-  ResultsTab,
   UprezApp,
 } from "./components/lazy-editors";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
@@ -197,7 +196,6 @@ export const StudioPage: React.FC = () => {
               {activeTab === "images" && <ImagesTab />}
               {activeTab === "actions" && <ActionsTab />}
               {activeTab === "generate" && <GenerateTab />}
-              {activeTab === "results" && <ResultsTab />}
             </StudioFrame>
           )}
           {isUprez && (

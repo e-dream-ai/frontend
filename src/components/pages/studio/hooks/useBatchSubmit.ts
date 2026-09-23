@@ -151,7 +151,7 @@ export const useBatchSubmit = () => {
       }
 
       if (jobsAdded > 0) {
-        setActiveTab("results");
+        setActiveTab("generate");
       }
     } finally {
       setIsSubmitting(false);

@@ -59,7 +59,13 @@ const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
   model: "ltx-i2v",
   duration: 5,
   numInferenceSteps: 30,
-  guidance: 1.0,
+  // Deliberately unset: the model catalog decides. A number here is a second,
+  // competing default that silently outranks the model's own — which is how
+  // every new project started LTX at the bottom of its range while the catalog
+  // said otherwise. The guidance helpers already read a non-finite value as
+  // "use constraint.default", and JSON round-trips it to null, which is still
+  // non-finite, so a rehydrated session stays unset too.
+  guidance: Number.NaN,
   seed: -1,
 };
 
@@ -95,7 +101,7 @@ export const useStudioStore = create<StudioState>()(
     (set) => ({
       activeTab: "images" as StudioTab,
       setActiveTab: (tab: StudioTab) => {
-        if (tab === "results") set({ newCompletedCount: 0 });
+        if (tab === "generate") set({ newCompletedCount: 0 });
         set({ activeTab: tab });
       },
 
@@ -198,7 +204,7 @@ export const useStudioStore = create<StudioState>()(
     }),
     {
       name: "studio-session",
-      version: 10,
+      version: 11,
       partialize: studioPartialize,
       storage: {
         getItem: (name) => {
@@ -326,6 +332,13 @@ export const useStudioStore = create<StudioState>()(
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             for (const a of state.actions as any[]) delete a.enabled;
           }
+        }
+        if (version < 11) {
+          // The Results tab was folded into Generate, which is now the results
+          // matrix. `activeTab` is persisted, so anyone whose last session
+          // ended on Results would otherwise reopen the studio to a blank
+          // frame: no tab matches and nothing renders.
+          if (state.activeTab === "results") state.activeTab = "generate";
         }
         return state as Record<string, unknown>;
       },

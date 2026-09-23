@@ -28,7 +28,8 @@ const DEFAULT_VIDEO_PARAMS = {
   model: "ltx-i2v",
   duration: 5,
   numInferenceSteps: 30,
-  guidance: 1.0,
+  // Unset — resolved from the model catalog, not carried by the store.
+  guidance: Number.NaN,
   seed: -1,
 };
 
@@ -49,10 +50,10 @@ describe("studio.store", () => {
       expect(useStudioStore.getState().newCompletedCount).toBe(0);
     });
 
-    it("clears when switching to results tab", () => {
+    it("clears when switching to the results matrix", () => {
       useStudioStore.getState().incrementNewCompleted();
       useStudioStore.getState().incrementNewCompleted();
-      useStudioStore.getState().setActiveTab("results");
+      useStudioStore.getState().setActiveTab("generate");
       expect(useStudioStore.getState().newCompletedCount).toBe(0);
     });
   });
@@ -128,7 +129,7 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
-        guidance: 1.0,
+        guidance: Number.NaN,
         seed: -1,
       });
       expect(migrated.wanParams).toBeUndefined();
@@ -291,7 +292,7 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(8);
       expect(params.numInferenceSteps).toBe(30); // from defaults
-      expect(params.guidance).toBe(1.0); // LTX default, from defaults
+      expect(params.guidance).toBeNaN(); // unset, for the catalog to fill
       expect(params.seed).toBe(-1);
     });
 
@@ -305,7 +306,7 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(5);
       expect(params.numInferenceSteps).toBe(30);
-      expect(params.guidance).toBe(1.0);
+      expect(params.guidance).toBeNaN();
       expect(params.seed).toBe(-1);
     });
   });
@@ -323,8 +324,9 @@ describe("studio.store", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
       const migrated = migrate(v6State, 6) as Record<string, unknown>;
+      // Cleared rather than pinned to a number: the catalog now supplies it.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((migrated.videoGenParams as any).guidance).toBe(1.0);
+      expect((migrated.videoGenParams as any).guidance).toBeNaN();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((migrated.videoGenParams as any).seed).toBe(-1);
     });
@@ -377,7 +379,7 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
-        guidance: 1.0,
+        guidance: Number.NaN,
         seed: -1,
       });
     });

@@ -90,27 +90,6 @@ export const NavButton = styled.button<{ $side: "left" | "right" }>`
   }
 `;
 
-// "01 / 03" clapboard counter in the bottom-right.
-export const SegmentCounter = styled.span`
-  position: absolute;
-  bottom: 8px;
-  right: 10px;
-  font-family: ${FLOW.fontFamily};
-  font-size: 10px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  color: ${FLOW.text};
-  background: rgba(12, 12, 14, 0.55);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  padding: 3px 8px;
-  border-radius: 999px;
-  font-variant-numeric: tabular-nums;
-  pointer-events: none;
-  opacity: 0.85;
-  z-index: 2;
-`;
-
 // Clickable numbered chip rail under the video.
 export const ChipRail = styled.div`
   display: flex;
@@ -145,15 +124,11 @@ export const SegmentChip = styled.button<{ $active: boolean }>`
     color: ${(p) => (p.$active ? FLOW.bg : FLOW.text)};
     border-color: ${(p) => (p.$active ? FLOW.accent : FLOW.borderHover)};
   }
-`;
 
-export const ClickHint = styled.span`
-  font-family: ${FLOW.fontFamily};
-  font-size: 11px;
-  color: ${FLOW.textMuted};
-  padding-top: 2px;
-  text-align: center;
-  letter-spacing: 0.04em;
+  &:disabled {
+    opacity: 0.35;
+    cursor: default;
+  }
 `;
 
 export const LightboxOverlay = styled.div`
