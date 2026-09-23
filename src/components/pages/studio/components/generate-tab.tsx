@@ -38,7 +38,6 @@ import {
   FieldLabel,
   StyledSelect,
   NavButton,
-  SecondaryNavButton,
   BottomRow,
 } from "./images-tab.styled";
 import {
@@ -107,9 +106,7 @@ export const GenerateTab: React.FC = () => {
   const setVideoGenParams = useStudioStore((s) => s.setVideoGenParams);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
   const toggleComboExcluded = useStudioStore((s) => s.toggleComboExcluded);
-  const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const jobs = useStudioStore((s) => s.jobs);
-  const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
 
   const { submit, isSubmitting, getPendingCombinations } = useBatchSubmit();
 
@@ -393,8 +390,36 @@ export const GenerateTab: React.FC = () => {
           </ProgressBar>
         )}
 
+        <CreditLimitNotice
+          overBudget={overBudget}
+          canManageKey={canManageKey}
+          resetIn={resetIn}
+        />
+
+        <BottomRow>
+          {/* Sole child of a space-between row; keep it on the right. */}
+          <ActionGroup style={{ marginLeft: "auto" }}>
+            <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
+            <NavButton
+              onClick={() => {
+                if (guardOverBudget()) return;
+                submit();
+              }}
+              disabled={isSubmitting || newCombos.length === 0 || overBudget}
+              style={{
+                background:
+                  newCombos.length === 0 || overBudget ? "#555" : undefined,
+              }}
+            >
+              {isSubmitting
+                ? "Submitting..."
+                : `Generate ${newCombos.length} Videos`}
+            </NavButton>
+          </ActionGroup>
+        </BottomRow>
+
         <GenerateSection>
-          <SectionTitle>Output Settings</SectionTitle>
+          <SectionTitle>Settings</SectionTitle>
           {showLtxHint && (
             <HintText>
               LTX works best with motion presets. Add a camera LoRA for better
@@ -474,53 +499,11 @@ export const GenerateTab: React.FC = () => {
           </SettingsGrid>
         </GenerateSection>
 
-        <CreditLimitNotice
-          overBudget={overBudget}
-          canManageKey={canManageKey}
-          resetIn={resetIn}
-        />
-
-        <BottomRow>
-          <SecondaryNavButton onClick={() => setActiveTab("actions")}>
-            &larr; Back to Actions
-          </SecondaryNavButton>
-          <ActionGroup>
-            <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
-            <NavButton
-              onClick={() => {
-                if (guardOverBudget()) return;
-                submit();
-              }}
-              disabled={isSubmitting || newCombos.length === 0 || overBudget}
-              style={{
-                background:
-                  newCombos.length === 0 || overBudget ? "#555" : undefined,
-              }}
-            >
-              {isSubmitting
-                ? "Submitting..."
-                : `Generate ${newCombos.length} Videos →`}
-            </NavButton>
-          </ActionGroup>
-        </BottomRow>
-
-        {(failedCount > 0 || outputPlaylistId) && (
+        {failedCount > 0 && (
           <JobActions>
-            {failedCount > 0 && (
-              <ActionButton onClick={retryFailed} disabled={isRetrying}>
-                {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
-              </ActionButton>
-            )}
-            {outputPlaylistId && (
-              <ActionButton
-                $accent
-                onClick={() =>
-                  window.open(`/playlist/${outputPlaylistId}`, "_blank")
-                }
-              >
-                View Playlist
-              </ActionButton>
-            )}
+            <ActionButton onClick={retryFailed} disabled={isRetrying}>
+              {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
+            </ActionButton>
           </JobActions>
         )}
       </TabColumn>

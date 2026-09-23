@@ -6,7 +6,7 @@ import { TabBar, Tab } from "./studio-tabs.styled";
 const TABS: { key: StudioTab; label: string }[] = [
   { key: "images", label: "Images" },
   { key: "actions", label: "Actions" },
-  { key: "generate", label: "Results Matrix" },
+  { key: "generate", label: "Matrix" },
 ];
 
 export const StudioTabs: React.FC = () => {

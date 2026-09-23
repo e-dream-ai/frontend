@@ -49,6 +49,7 @@ const ActionRowItem = React.memo(function ActionRowItem({
 
   return (
     <ActionRow>
+      <DeleteButton onClick={() => onRemove(action.id)}>&times;</DeleteButton>
       <ActionLoraSelect
         value={action.highNoiseLoras?.[0]?.path ?? NO_LORA_OPTION.key}
         onChange={handleLoraChange}
@@ -67,7 +68,6 @@ const ActionRowItem = React.memo(function ActionRowItem({
         placeholder="Describe motion or transformation..."
         onChange={(e) => onUpdate(action.id, { prompt: e.target.value })}
       />
-      <DeleteButton onClick={() => onRemove(action.id)}>&times;</DeleteButton>
     </ActionRow>
   );
 });
@@ -142,7 +142,7 @@ export const ActionsTab: React.FC = () => {
           &larr; Back to Images
         </NavButton>
         <NavButton onClick={() => setActiveTab("generate")}>
-          Continue to Generate &rarr;
+          Continue to Matrix &rarr;
         </NavButton>
       </BottomRow>
     </>
