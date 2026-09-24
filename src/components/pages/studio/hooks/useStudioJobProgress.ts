@@ -45,11 +45,13 @@ export const useStudioJobProgress = () => {
     (data: {
       dream_uuid: string;
       status?: string;
+      stage?: string;
       progress?: number | null;
       preview_frame?: string;
     }) => {
       const { dream_uuid, progress, preview_frame } = data;
-      const mappedStatus = mapSocketStatus(data.status);
+      const mappedStatus = mapSocketStatus(data.status, data.stage);
+      const ingesting = data.stage === "ingesting";
       const state = useStudioStore.getState();
 
       const image = state.images.find((img) => img.uuid === dream_uuid);
@@ -89,6 +91,7 @@ export const useStudioJobProgress = () => {
 
         state.updateJob(dream_uuid, {
           progress: progress ?? undefined,
+          ingesting,
           previewFrame: preview_frame,
           ...(applyStatus && mappedStatus ? { status: mappedStatus } : {}),
         });
@@ -151,9 +154,14 @@ export const useStudioJobProgress = () => {
       onSuccess: (response: ApiResponse<{ dream: Dream }>) => {
         const dream = response.data?.dream;
         if (!dream) return;
+        // A processed dream is done whatever its last progress snapshot said.
+        const done = dream.status === "processed";
         handleProgress({
           dream_uuid: uuid,
-          status: dream.jobProgress?.status ?? dream.status,
+          status: done
+            ? dream.status
+            : dream.jobProgress?.status ?? dream.status,
+          stage: done ? undefined : dream.jobProgress?.stage,
           progress: dream.jobProgress?.progress,
         });
       },

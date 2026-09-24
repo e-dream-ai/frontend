@@ -61,11 +61,16 @@ const actionAdapter: EditorAdapter = {
       studioPartialize(useStudioStore.getState()),
     ) as EditorProjectState,
   write: (state) => {
-    useStudioStore.setState(
-      fromPersistedActionState(state as PersistedActionState) as Parameters<
+    useStudioStore.setState({
+      // Projects saved before history existed carry none; without this the
+      // previous project's history would stay on screen.
+      historyJobs: [],
+      ...(fromPersistedActionState(state as PersistedActionState) as Parameters<
         typeof useStudioStore.setState
-      >[0],
-    );
+      >[0]),
+      // A pending re-render pick belongs to the project being left.
+      rerenderCombos: new Set<string>(),
+    });
   },
   reset: () => useStudioStore.getState().resetSession(),
   subscribe: (listener) => useStudioStore.subscribe(listener),

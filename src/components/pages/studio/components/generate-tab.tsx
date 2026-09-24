@@ -2,7 +2,13 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { Eye } from "lucide-react";
 import { useStudioStore, comboKeyOf } from "@/stores/studio.store";
 import { useBatchSubmit } from "../hooks/useBatchSubmit";
-import { isAnimatableFrame, isRunnableAction } from "../utils/batch-selectors";
+import {
+  findCellJob,
+  isAnimatableFrame,
+  isCellChecked,
+  isJobInFlight,
+  isRunnableAction,
+} from "../utils/batch-selectors";
 import type { StudioJob, VideoModel } from "@/types/studio.types";
 import {
   clampDurationToAllowed,
@@ -31,6 +37,8 @@ import { useHoverTooltip } from "./hover-tooltip";
 import { ChipRail, SegmentChip } from "./segment-preview.styled";
 import { useDreamSegments } from "../hooks/useDreamSegments";
 import { useRetryFailedJobs } from "../hooks/useRetryFailedJobs";
+import { useDiscardStudioClip } from "../hooks/useStudioClipActions";
+import { ClipHistory } from "./clip-history";
 import {
   GenerateSection,
   SectionTitle,
@@ -74,6 +82,7 @@ import {
   TimeEstimate,
   JobActions,
   ActionButton,
+  CellDiscard,
 } from "./generate-tab.styled";
 
 const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
@@ -99,6 +108,15 @@ const JOB_STATUS_LABELS: Record<StudioJob["status"], string> = {
   failed: "failed",
 };
 
+// A rendering job shows how far along it is once the worker reports it.
+const jobStatusLabel = (job: StudioJob) => {
+  if (job.status !== "processing") return JOB_STATUS_LABELS[job.status];
+  if (job.ingesting) return "ingesting";
+  return job.progress !== undefined
+    ? `${Math.round(job.progress)}%`
+    : JOB_STATUS_LABELS[job.status];
+};
+
 export const GenerateTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const actions = useStudioStore((s) => s.actions);
@@ -106,6 +124,8 @@ export const GenerateTab: React.FC = () => {
   const setVideoGenParams = useStudioStore((s) => s.setVideoGenParams);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
   const toggleComboExcluded = useStudioStore((s) => s.toggleComboExcluded);
+  const rerenderCombos = useStudioStore((s) => s.rerenderCombos);
+  const toggleComboRerender = useStudioStore((s) => s.toggleComboRerender);
   const jobs = useStudioStore((s) => s.jobs);
 
   const { submit, isSubmitting, getPendingCombinations } = useBatchSubmit();
@@ -193,16 +213,24 @@ export const GenerateTab: React.FC = () => {
   };
 
   const totalPossible = frames.length * runnableActions.length;
+  const renderedCount = useMemo(
+    () =>
+      frames.reduce(
+        (sum, image) =>
+          sum +
+          runnableActions.filter(
+            (action) =>
+              findCellJob(jobs, image.uuid, action.id)?.status === "processed",
+          ).length,
+        0,
+      ),
+    [frames, runnableActions, jobs],
+  );
 
   const jobFor = useCallback(
     (imageUuid: string, actionId: string) =>
-      jobs.find(
-        (j) =>
-          j.imageId === imageUuid &&
-          j.actionId === actionId &&
-          j.jobType === videoGenParams.model,
-      ),
-    [jobs, videoGenParams.model],
+      findCellJob(jobs, imageUuid, actionId),
+    [jobs],
   );
 
   const completedUuids = useMemo(() => {
@@ -219,10 +247,8 @@ export const GenerateTab: React.FC = () => {
     for (const image of frames) {
       for (const action of runnableActions) push(jobFor(image.uuid, action.id));
     }
-    // Then every other clip that rendered. A cell only matches a job on the
-    // model currently selected, but a clip made with another model, or one
-    // whose image or action has since been removed, is still yours to watch —
-    // the preview would otherwise empty out on a dropdown change.
+    // Then every other clip that rendered: one whose image or action has since
+    // been removed is still yours to watch.
     for (const job of jobs) {
       if (job.jobType !== "uprez") push(job);
     }
@@ -257,6 +283,7 @@ export const GenerateTab: React.FC = () => {
   }, []);
 
   const { retryFailed, isRetrying, failedCount } = useRetryFailedJobs();
+  const discardClip = useDiscardStudioClip();
   const hoverTip = useHoverTooltip();
 
   const playingJob = useMemo(
@@ -418,6 +445,8 @@ export const GenerateTab: React.FC = () => {
           </ActionGroup>
         </BottomRow>
 
+        <ClipHistory />
+
         <GenerateSection>
           <SectionTitle>Settings</SectionTitle>
           {showLtxHint && (
@@ -512,9 +541,10 @@ export const GenerateTab: React.FC = () => {
         <GenerateSection>
           <SectionTitle>Combination Preview</SectionTitle>
           <DescriptionText>
-            Review all image &times; action combinations before generating.
-            Uncheck any you want to skip, and click a finished filmstrip to play
-            it.
+            Checked cells run on the next Generate. Finished clips start
+            unchecked &mdash; check one to re-render it with the current
+            settings, or &times; to discard it. Click a finished filmstrip to
+            play it.
           </DescriptionText>
 
           <CombinationGrid>
@@ -563,8 +593,20 @@ export const GenerateTab: React.FC = () => {
                     </GridRowHeader>
                     {runnableActions.map((action) => {
                       const comboKey = comboKeyOf(image.uuid, action.id);
-                      const excluded = excludedCombos.has(comboKey);
                       const job = jobFor(image.uuid, action.id);
+                      const inFlight = job !== undefined && isJobInFlight(job);
+                      const checked = isCellChecked(
+                        job,
+                        comboKey,
+                        excludedCombos,
+                        rerenderCombos,
+                      );
+                      const toggleChecked = () => {
+                        if (inFlight) return;
+                        if (job) toggleComboRerender(comboKey);
+                        else toggleComboExcluded(comboKey);
+                      };
+                      const actionNumber = runnableActions.indexOf(action) + 1;
                       // A processed job whose video has not resolved yet has
                       // no segment to seek to, so it is not playable.
                       const playable =
@@ -578,13 +620,13 @@ export const GenerateTab: React.FC = () => {
                           playSegment(job.dreamUuid);
                           return;
                         }
-                        if (!job) toggleComboExcluded(comboKey);
+                        toggleChecked();
                       };
 
                       return (
                         <GridCell
                           key={comboKey}
-                          $excluded={excluded}
+                          $excluded={!job && !checked}
                           title={playable ? "Play in preview" : undefined}
                           role={playable ? "button" : undefined}
                           tabIndex={playable ? 0 : undefined}
@@ -599,30 +641,50 @@ export const GenerateTab: React.FC = () => {
                           <CellFilmstrip
                             $rendered={job?.status === "processed"}
                           >
-                            <FilmstripIcon size={28} />
+                            <FilmstripIcon size={42} />
+                            {/* Gold already says done; anything else is
+                                spelled out on the glyph itself. */}
+                            {job && job.status !== "processed" && (
+                              <CellStatus $status={job.status}>
+                                {jobStatusLabel(job)}
+                              </CellStatus>
+                            )}
+                            {job && !inFlight && (
+                              <CellDiscard
+                                type="button"
+                                title="Discard this clip"
+                                aria-label={`Discard ${image.name} with action ${actionNumber}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  discardClip(job);
+                                }}
+                                onKeyDown={(e) => e.stopPropagation()}
+                              >
+                                &times;
+                              </CellDiscard>
+                            )}
                             {playing && (
                               <PlayingEye title="Showing in the preview">
                                 <Eye size={11} strokeWidth={2.6} />
                               </PlayingEye>
                             )}
                           </CellFilmstrip>
-                          {/* Shown for submitted combinations too, not just
-                              pending ones: the exclusion outlives the job, and
-                              it is what decides whether this pair is picked up
-                              again on the next model. */}
                           <CellCheckbox
-                            checked={!excluded}
-                            aria-label={`Include ${image.name} with action ${
-                              runnableActions.indexOf(action) + 1
-                            }`}
-                            onChange={() => toggleComboExcluded(comboKey)}
+                            checked={checked}
+                            disabled={inFlight}
+                            title={
+                              inFlight
+                                ? "Generating"
+                                : job
+                                  ? "Re-render with the current settings"
+                                  : "Generate this combination"
+                            }
+                            aria-label={`${job ? "Re-render" : "Generate"} ${
+                              image.name
+                            } with action ${actionNumber}`}
+                            onChange={toggleChecked}
                             onClick={(e) => e.stopPropagation()}
                           />
-                          {job && (
-                            <CellStatus $status={job.status}>
-                              {JOB_STATUS_LABELS[job.status]}
-                            </CellStatus>
-                          )}
                         </GridCell>
                       );
                     })}
@@ -633,8 +695,9 @@ export const GenerateTab: React.FC = () => {
           </CombinationGrid>
 
           <ComboCountText>
-            {newCombos.length} of {totalPossible} combinations selected
-            {jobs.length > 0 && ` (${jobs.length} already submitted)`}
+            {newCombos.length} of {totalPossible} combinations checked to
+            generate
+            {renderedCount > 0 && ` (${renderedCount} rendered)`}
           </ComboCountText>
         </GenerateSection>
       </TabColumn>

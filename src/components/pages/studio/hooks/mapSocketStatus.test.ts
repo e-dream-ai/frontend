@@ -6,6 +6,14 @@ describe("mapSocketStatus", () => {
     expect(mapSocketStatus("COMPLETED")).toBe("processed");
   });
 
+  it("keeps a COMPLETED job that is still ingesting as processing", () => {
+    expect(mapSocketStatus("COMPLETED", "ingesting")).toBe("processing");
+  });
+
+  it("maps COMPLETED at the completed stage to processed", () => {
+    expect(mapSocketStatus("COMPLETED", "completed")).toBe("processed");
+  });
+
   it("maps IN_PROGRESS to processing", () => {
     expect(mapSocketStatus("IN_PROGRESS")).toBe("processing");
   });

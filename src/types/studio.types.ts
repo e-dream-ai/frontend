@@ -44,6 +44,8 @@ export interface StudioJob {
   jobType: StudioJobType;
   status: "queue" | "processing" | "processed" | "failed";
   progress?: number;
+  /** Rendered, and waiting on the video service before it can play. */
+  ingesting?: boolean;
   previewFrame?: string;
   thumbnailUrl?: string;
   startedAt?: number;

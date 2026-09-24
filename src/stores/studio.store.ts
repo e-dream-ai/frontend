@@ -36,11 +36,33 @@ type StudioState = {
 
   excludedCombos: Set<string>;
   toggleComboExcluded: (key: string) => void;
+  setComboExcluded: (key: string, excluded: boolean) => void;
+  /**
+   * Rendered cells picked to render again with the current settings. Not
+   * persisted: it is a selection for the next Generate, not project state.
+   */
+  rerenderCombos: Set<string>;
+  toggleComboRerender: (key: string) => void;
 
   jobs: StudioJob[];
   addJob: (job: StudioJob) => void;
   updateJob: (dreamUuid: string, updates: Partial<StudioJob>) => void;
   removeJob: (dreamUuid: string) => void;
+  /**
+   * Rendered clips taken out of the matrix, by discard or by a re-render
+   * replacing them. Newest first. Each can be put back in its cell.
+   */
+  historyJobs: StudioJob[];
+  /** Moves a job out of the matrix; a rendered one is kept in history. */
+  archiveJob: (dreamUuid: string) => void;
+  /**
+   * Puts a history clip back in its cell, archiving whatever the cell held.
+   * Refuses while the cell is still rendering. Returns the displaced job, or
+   * null if nothing was restored.
+   */
+  restoreJob: (
+    dreamUuid: string,
+  ) => { restored: StudioJob; displaced?: StudioJob } | null;
 
   newCompletedCount: number;
   incrementNewCompleted: () => void;
@@ -94,11 +116,15 @@ export const studioPartialize = (state: StudioState) => ({
   outputPlaylistId: state.outputPlaylistId,
   excludedCombos: [...(state.excludedCombos as Set<string>)],
   jobs: state.jobs.map((j) => ({ ...j, previewFrame: undefined })),
+  historyJobs: state.historyJobs.map((j) => ({
+    ...j,
+    previewFrame: undefined,
+  })),
 });
 
 export const useStudioStore = create<StudioState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       activeTab: "images" as StudioTab,
       setActiveTab: (tab: StudioTab) => {
         if (tab === "generate") set({ newCompletedCount: 0 });
@@ -123,6 +149,7 @@ export const useStudioStore = create<StudioState>()(
         set((s) => ({
           images: s.images.filter((img) => img.uuid !== uuid),
           excludedCombos: pruneCombosForImage(s.excludedCombos, uuid),
+          rerenderCombos: pruneCombosForImage(s.rerenderCombos, uuid),
         })),
 
       actions: [] as StudioAction[],
@@ -162,9 +189,32 @@ export const useStudioStore = create<StudioState>()(
           else next.add(key);
           return { excludedCombos: next };
         }),
+      setComboExcluded: (key: string, excluded: boolean) =>
+        set((s) => {
+          if (s.excludedCombos.has(key) === excluded) return s;
+          const next = new Set(s.excludedCombos);
+          if (excluded) next.add(key);
+          else next.delete(key);
+          return { excludedCombos: next };
+        }),
+      rerenderCombos: new Set<string>(),
+      toggleComboRerender: (key: string) =>
+        set((s) => {
+          const next = new Set(s.rerenderCombos);
+          if (next.has(key)) next.delete(key);
+          else next.add(key);
+          return { rerenderCombos: next };
+        }),
 
       jobs: [] as StudioJob[],
-      addJob: (job: StudioJob) => set((s) => ({ jobs: [...s.jobs, job] })),
+      addJob: (job: StudioJob) =>
+        set((s) => {
+          const key = comboKeyOf(job.imageId, job.actionId);
+          if (!s.rerenderCombos.has(key)) return { jobs: [...s.jobs, job] };
+          const rerenderCombos = new Set(s.rerenderCombos);
+          rerenderCombos.delete(key);
+          return { jobs: [...s.jobs, job], rerenderCombos };
+        }),
       updateJob: (dreamUuid: string, updates: Partial<StudioJob>) =>
         set((s) => ({
           jobs: s.jobs.map((j) => {
@@ -183,6 +233,60 @@ export const useStudioStore = create<StudioState>()(
         set((s) => ({
           jobs: s.jobs.filter((j) => j.dreamUuid !== dreamUuid),
         })),
+      historyJobs: [] as StudioJob[],
+      archiveJob: (dreamUuid: string) =>
+        set((s) => {
+          const job = s.jobs.find((j) => j.dreamUuid === dreamUuid);
+          if (!job) return s;
+          const jobs = s.jobs.filter((j) => j.dreamUuid !== dreamUuid);
+          // Only a clip that rendered has anything to go back to.
+          if (job.status !== "processed") return { jobs };
+          return {
+            jobs,
+            historyJobs: [
+              { ...job, previewFrame: undefined, progress: undefined },
+              ...s.historyJobs.filter((j) => j.dreamUuid !== dreamUuid),
+            ],
+          };
+        }),
+      restoreJob: (dreamUuid: string) => {
+        const s = get();
+        const restored = s.historyJobs.find((j) => j.dreamUuid === dreamUuid);
+        if (!restored) return null;
+        const displaced = s.jobs.find(
+          (j) =>
+            j.imageId === restored.imageId &&
+            j.actionId === restored.actionId &&
+            j.jobType !== "uprez",
+        );
+        if (
+          displaced &&
+          (displaced.status === "queue" || displaced.status === "processing")
+        ) {
+          return null;
+        }
+        let historyJobs = s.historyJobs.filter(
+          (j) => j.dreamUuid !== dreamUuid,
+        );
+        if (displaced?.status === "processed") {
+          historyJobs = [
+            { ...displaced, previewFrame: undefined, progress: undefined },
+            ...historyJobs,
+          ];
+        }
+        const key = comboKeyOf(restored.imageId, restored.actionId);
+        const rerenderCombos = new Set(s.rerenderCombos);
+        rerenderCombos.delete(key);
+        set({
+          jobs: [
+            ...s.jobs.filter((j) => j.dreamUuid !== displaced?.dreamUuid),
+            restored,
+          ],
+          historyJobs,
+          rerenderCombos,
+        });
+        return { restored, displaced };
+      },
       newCompletedCount: 0,
       incrementNewCompleted: () =>
         set((s) => ({ newCompletedCount: s.newCompletedCount + 1 })),
@@ -198,7 +302,9 @@ export const useStudioStore = create<StudioState>()(
           videoGenParams: DEFAULT_VIDEO_GEN_PARAMS,
           outputPlaylistId: null,
           excludedCombos: new Set<string>(),
+          rerenderCombos: new Set<string>(),
           jobs: [],
+          historyJobs: [],
           newCompletedCount: 0,
         }),
     }),

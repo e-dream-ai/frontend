@@ -89,6 +89,50 @@ describe("studio.store", () => {
     });
   });
 
+  describe("clip history", () => {
+    const clip = (dreamUuid: string, status = "processed" as const) => ({
+      imageId: "img",
+      actionId: "act",
+      dreamUuid,
+      jobType: "ltx-i2v" as const,
+      status,
+    });
+
+    it("archives a rendered clip newest first, and drops a failed one", () => {
+      const s = useStudioStore.getState();
+      s.addJob(clip("a"));
+      s.archiveJob("a");
+      s.addJob(clip("b"));
+      s.archiveJob("b");
+      s.addJob({ ...clip("c"), status: "failed" });
+      s.archiveJob("c");
+      const state = useStudioStore.getState();
+      expect(state.jobs).toEqual([]);
+      expect(state.historyJobs.map((j) => j.dreamUuid)).toEqual(["b", "a"]);
+    });
+
+    it("restores into the cell and archives what it displaces", () => {
+      const s = useStudioStore.getState();
+      s.addJob(clip("old"));
+      s.archiveJob("old");
+      s.addJob(clip("new"));
+      const result = useStudioStore.getState().restoreJob("old");
+      expect(result?.displaced?.dreamUuid).toBe("new");
+      const state = useStudioStore.getState();
+      expect(state.jobs.map((j) => j.dreamUuid)).toEqual(["old"]);
+      expect(state.historyJobs.map((j) => j.dreamUuid)).toEqual(["new"]);
+    });
+
+    it("will not restore over a cell that is still rendering", () => {
+      const s = useStudioStore.getState();
+      s.addJob(clip("old"));
+      s.archiveJob("old");
+      s.addJob({ ...clip("busy"), status: "processing" });
+      expect(useStudioStore.getState().restoreJob("old")).toBeNull();
+      expect(useStudioStore.getState().historyJobs).toHaveLength(1);
+    });
+  });
+
   describe("excludedCombos", () => {
     it("toggles combo exclusion", () => {
       useStudioStore.getState().toggleComboExcluded("key1");

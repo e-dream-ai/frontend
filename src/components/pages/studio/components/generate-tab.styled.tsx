@@ -1,5 +1,6 @@
 import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
+import { HistoryThumb } from "./transition-history.styled";
 import type { StudioJob } from "@/types/studio.types";
 
 // Preview and settings on the left, the matrix on the right. The right track
@@ -117,7 +118,7 @@ export const RowName = styled.span`
 `;
 
 export const GridCell = styled.td<{ $excluded?: boolean }>`
-  padding: 0.5rem 0.375rem;
+  padding: 0.875rem 1.125rem;
   text-align: center;
   border-bottom: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
   opacity: ${(props) => (props.$excluded ? 0.4 : 1)};
@@ -136,6 +137,12 @@ export const CellFilmstrip = styled.div<{ $rendered?: boolean }>`
   justify-content: center;
   color: ${(p) => (p.$rendered ? FLOW.accent : FLOW.textDim)};
   opacity: ${(p) => (p.$rendered ? 1 : 0.55)};
+
+  /* Above the discard button, which sits behind the glyph. */
+  > svg {
+    position: relative;
+    z-index: 1;
+  }
 `;
 
 // Marks the one clip currently in the preview. Sits on the filmstrip rather
@@ -146,6 +153,7 @@ export const CellFilmstrip = styled.div<{ $rendered?: boolean }>`
 // disappeared.
 export const PlayingEye = styled.span`
   position: absolute;
+  z-index: 2;
   top: -7px;
   right: -9px;
   display: flex;
@@ -157,6 +165,34 @@ export const PlayingEye = styled.span`
   box-shadow: 0 0 0 2px ${FLOW.bgCard};
 `;
 
+// Discards the clip. Top-left, opposite the eye, tucked behind the filmstrip
+// so only its corner shows.
+export const CellDiscard = styled.button`
+  position: absolute;
+  z-index: 0;
+  top: -13px;
+  left: -17px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 17px;
+  height: 17px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  color: #ddd;
+  background: #555;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+
+  &:hover,
+  &:focus-visible {
+    color: #fff;
+    background: #e55;
+  }
+`;
+
 // Block-level, or it shares a line with the inline-flex filmstrip above it
 // instead of sitting under it.
 export const CellCheckbox = styled.input.attrs({ type: "checkbox" })`
@@ -164,17 +200,22 @@ export const CellCheckbox = styled.input.attrs({ type: "checkbox" })`
   margin: 0.25rem auto 0;
 `;
 
+// Sits over the middle of the filmstrip glyph, on a dark chip so it reads on
+// both the muted and the gold strip.
 export const CellStatus = styled.span<{ $status: StudioJob["status"] }>`
-  display: block;
-  margin-top: 0.25rem;
+  position: absolute;
+  z-index: 2;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: ${FLOW.bg};
   font-size: 0.625rem;
   line-height: 1.2;
-  color: ${(p) =>
-    p.$status === "processed"
-      ? "#6c6"
-      : p.$status === "failed"
-        ? "#c66"
-        : FLOW.textDim};
+  white-space: nowrap;
+  pointer-events: none;
+  color: ${(p) => (p.$status === "failed" ? "#e66" : FLOW.text)};
 `;
 
 export const SettingsGrid = styled.div`
@@ -366,4 +407,23 @@ export const CaptionName = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+`;
+
+// Wraps rather than scrolling: it has the column's full width, unlike the
+// flow studio's rail squeezed into a header row.
+export const ClipHistoryGrid = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+
+  > button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+`;
+
+// Half the flow studio's take thumbnail: many clips pile up here.
+export const ClipHistoryThumb = styled(HistoryThumb)`
+  width: 63px;
+  height: 36px;
 `;
