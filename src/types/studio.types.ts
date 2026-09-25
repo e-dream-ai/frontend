@@ -58,7 +58,18 @@ export interface VideoGenParams {
   seed: number;
 }
 
-export type ImageModel = "qwen-image" | "z-image-turbo" | "flux-schnell";
+export const STUDIO_IMAGE_MODELS = [
+  "qwen-image",
+  "z-image-turbo",
+  "flux-schnell",
+  "krea-2-turbo",
+  "krea-2-turbo-style",
+] as const;
+
+export type ImageModel = (typeof STUDIO_IMAGE_MODELS)[number];
+
+export const isStudioImageModel = (model: string): model is ImageModel =>
+  STUDIO_IMAGE_MODELS.some((supported) => supported === model);
 
 export interface ImageGenParams {
   model: ImageModel;
