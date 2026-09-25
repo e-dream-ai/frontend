@@ -110,6 +110,13 @@ export function useRetryFailedJobs() {
               actionId: job.actionId,
               dreamUuid: dream.uuid,
               jobType: retryModel,
+              settings: {
+                model: retryModel,
+                duration,
+                numInferenceSteps: videoGenParams.numInferenceSteps,
+                guidance,
+                seed: videoGenParams.seed,
+              },
               status: (dream.status as StudioJob["status"]) || "queue",
             });
 

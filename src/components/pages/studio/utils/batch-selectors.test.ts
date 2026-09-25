@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { StudioJob } from "../../../../types/studio.types";
-import { findCellJob, isCellChecked } from "./batch-selectors";
+import { findCellJob, isCellChecked, jobCompletion } from "./batch-selectors";
 
 const job = (overrides: Partial<StudioJob> = {}): StudioJob => ({
   imageId: "img",
@@ -47,5 +47,19 @@ describe("findCellJob", () => {
     expect(
       findCellJob([job({ jobType: "uprez" })], "img", "act"),
     ).toBeUndefined();
+  });
+});
+
+describe("jobCompletion", () => {
+  it("weights rendering by its percent and ingest after it", () => {
+    expect(jobCompletion(job({ status: "queue" }))).toBe(0);
+    expect(jobCompletion(job({ status: "processing", progress: 50 }))).toBe(
+      0.45,
+    );
+    expect(
+      jobCompletion(job({ status: "processing", ingesting: true })),
+    ).toBeCloseTo(0.9);
+    expect(jobCompletion(job({ status: "processed" }))).toBe(1);
+    expect(jobCompletion(job({ status: "failed" }))).toBe(1);
   });
 });

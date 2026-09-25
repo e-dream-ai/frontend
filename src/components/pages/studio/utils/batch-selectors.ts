@@ -47,3 +47,29 @@ export const isCellChecked = (
   if (isJobInFlight(job)) return true;
   return rerenderCombos.has(comboKey);
 };
+
+/** Share of a job's work that is rendering; ingesting is the rest. */
+const RENDER_SHARE = 0.9;
+
+/**
+ * How far along one job is, 0–1, for the batch progress meter. Rendering
+ * counts by the worker's reported percent, and ingesting sits between the end
+ * of the render and done, using its own percent when the ingest reports one.
+ * A failed job counts as finished: it is not going to move any further, and
+ * the meter would otherwise never reach the end.
+ */
+export const jobCompletion = (job: StudioJob): number => {
+  const percent =
+    job.progress !== undefined ? Math.min(Math.max(job.progress, 0), 100) : 0;
+  switch (job.status) {
+    case "processed":
+    case "failed":
+      return 1;
+    case "queue":
+      return 0;
+    case "processing":
+      return job.ingesting
+        ? RENDER_SHARE + (1 - RENDER_SHARE) * (percent / 100)
+        : RENDER_SHARE * (percent / 100);
+  }
+};

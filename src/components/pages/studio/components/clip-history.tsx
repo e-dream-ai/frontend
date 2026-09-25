@@ -46,7 +46,12 @@ type DreamQueryOptions = UseQueryOptions<
  * ticking a cell is how you look through its earlier takes. Clicking one puts
  * it back in its cell.
  */
-export function ClipHistory() {
+export function ClipHistory({
+  onRestore,
+}: {
+  /** Called with the dream once it is back in its cell, to play it. */
+  onRestore?: (dreamUuid: string) => void;
+}) {
   const allHistoryJobs = useStudioStore((s) => s.historyJobs);
   const jobs = useStudioStore((s) => s.jobs);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
@@ -142,7 +147,9 @@ export function ClipHistory() {
                     : `${cell} — generated ${time}. Click to restore it.`
                 }
                 aria-label={`${cell}, generated ${time}. Activate to restore it.`}
-                onClick={() => restore(job.dreamUuid)}
+                onClick={() => {
+                  if (restore(job.dreamUuid)) onRestore?.(job.dreamUuid);
+                }}
               >
                 <ClipHistoryThumb $current={false}>
                   {thumb ? (

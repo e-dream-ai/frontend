@@ -3,6 +3,7 @@ import { v4 as uuidv4 } from "uuid";
 import type { StudioAction } from "@/types/studio.types";
 import { useStudioStore } from "@/stores/studio.store";
 import {
+  getDefaultLoraOption,
   getLoraOptionsForModel,
   NO_LORA_OPTION,
   type LoraOption,
@@ -27,6 +28,7 @@ import {
 
 interface ActionRowItemProps {
   action: StudioAction;
+  /** Empty for a model without LoRAs, which hides the menu. */
   loraOptions: readonly LoraOption[];
   onUpdate: (id: string, updates: Partial<StudioAction>) => void;
   onRemove: (id: string) => void;
@@ -50,19 +52,20 @@ const ActionRowItem = React.memo(function ActionRowItem({
   return (
     <ActionRow>
       <DeleteButton onClick={() => onRemove(action.id)}>&times;</DeleteButton>
-      <ActionLoraSelect
-        value={action.highNoiseLoras?.[0]?.path ?? NO_LORA_OPTION.key}
-        onChange={handleLoraChange}
-        disabled={loraOptions.length === 0}
-        title="Camera-control LoRA applied to this action"
-      >
-        <option value={NO_LORA_OPTION.key}>{NO_LORA_OPTION.label}</option>
-        {loraOptions.map((option) => (
-          <option key={option.key} value={option.key}>
-            {option.label}
-          </option>
-        ))}
-      </ActionLoraSelect>
+      {loraOptions.length > 0 && (
+        <ActionLoraSelect
+          value={action.highNoiseLoras?.[0]?.path ?? NO_LORA_OPTION.key}
+          onChange={handleLoraChange}
+          title="Camera-control LoRA applied to this action"
+        >
+          <option value={NO_LORA_OPTION.key}>{NO_LORA_OPTION.label}</option>
+          {loraOptions.map((option) => (
+            <option key={option.key} value={option.key}>
+              {option.label}
+            </option>
+          ))}
+        </ActionLoraSelect>
+      )}
       <ActionInput
         value={action.prompt}
         placeholder="Describe motion or transformation..."
@@ -94,7 +97,13 @@ export const ActionsTab: React.FC = () => {
   const totalVideos = frameCount * actionCount;
 
   const handleAddAction = () => {
-    addAction({ id: uuidv4(), prompt: "" });
+    const lora = getDefaultLoraOption(model);
+    addAction({
+      id: uuidv4(),
+      prompt: "",
+      highNoiseLoras: [...lora.highNoiseLoras],
+      lowNoiseLoras: [...lora.lowNoiseLoras],
+    });
   };
 
   return (

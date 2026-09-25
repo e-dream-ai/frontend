@@ -8,12 +8,12 @@ import {
   isCellChecked,
   isJobInFlight,
   isRunnableAction,
+  jobCompletion,
 } from "../utils/batch-selectors";
 import type { StudioJob, VideoModel } from "@/types/studio.types";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
-  hasActionLoras,
 } from "../constants/duration-options";
 import {
   GUIDANCE_PARAM,
@@ -39,6 +39,16 @@ import { useDreamSegments } from "../hooks/useDreamSegments";
 import { useRetryFailedJobs } from "../hooks/useRetryFailedJobs";
 import { useDiscardStudioClip } from "../hooks/useStudioClipActions";
 import { ClipHistory } from "./clip-history";
+import { ForceSettingsDialog } from "./force-settings-dialog";
+import queryClient from "@/api/query-client";
+import { DREAM_QUERY_KEY } from "@/api/dream/query/useDream";
+import type { Dream } from "@/types/dream.types";
+import type { ApiResponse } from "@/types/api.types";
+import {
+  resolveJobSettings,
+  settingsDiffer,
+  settingsPatch,
+} from "../utils/job-settings";
 import {
   GenerateSection,
   SectionTitle,
@@ -46,7 +56,8 @@ import {
   FieldLabel,
   StyledSelect,
   NavButton,
-  BottomRow,
+  SectionHeaderRow,
+  ButtonRow,
 } from "./images-tab.styled";
 import {
   TabLayout,
@@ -70,9 +81,7 @@ import {
   CellCheckbox,
   CellStatus,
   SettingsGrid,
-  DescriptionText,
   ComboCountText,
-  HintText,
   ActionGroup,
   SeedInput,
   ProgressBar,
@@ -83,6 +92,9 @@ import {
   JobActions,
   ActionButton,
   CellDiscard,
+  SettingsSection,
+  MatrixCheckButton,
+  GenerateRow,
 } from "./generate-tab.styled";
 
 const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
@@ -91,6 +103,20 @@ const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
   "kling-i2v": "Kling 3.0 Pro",
   "kling-25-i2v": "Kling 2.5 Turbo Pro",
 };
+
+/**
+ * A job's settings, reading an older job's back from its dream's prompt when
+ * the dream is already cached — the preview and the progress tracker fetch
+ * every rendered and in-flight one.
+ */
+const jobSettingsOf = (job: StudioJob) =>
+  resolveJobSettings(
+    job,
+    queryClient.getQueryData<ApiResponse<{ dream: Dream }>>([
+      DREAM_QUERY_KEY,
+      job.dreamUuid,
+    ])?.data?.dream?.prompt,
+  );
 
 const VIDEO_MODELS: VideoModel[] = [
   "ltx-i2v",
@@ -126,6 +152,7 @@ export const GenerateTab: React.FC = () => {
   const toggleComboExcluded = useStudioStore((s) => s.toggleComboExcluded);
   const rerenderCombos = useStudioStore((s) => s.rerenderCombos);
   const toggleComboRerender = useStudioStore((s) => s.toggleComboRerender);
+  const setComboChecks = useStudioStore((s) => s.setComboChecks);
   const jobs = useStudioStore((s) => s.jobs);
 
   const { submit, isSubmitting, getPendingCombinations } = useBatchSubmit();
@@ -174,13 +201,6 @@ export const GenerateTab: React.FC = () => {
   const seedInput = useSeedInput(videoGenParams.seed, (seed) =>
     setVideoGenParams({ seed }),
   );
-  const showLtxHint = useMemo(() => {
-    if (videoGenParams.model !== "ltx-i2v") return false;
-    return (
-      runnableActions.length > 0 &&
-      runnableActions.some((a) => !hasActionLoras(a))
-    );
-  }, [videoGenParams.model, runnableActions]);
 
   // A new project carries no guidance of its own, so take the model's
   // catalog default once the constraints have arrived.
@@ -283,6 +303,103 @@ export const GenerateTab: React.FC = () => {
   }, []);
 
   const { retryFailed, isRetrying, failedCount } = useRetryFailedJobs();
+
+  // A check held back until the combine dialog is answered.
+  const [pendingCombine, setPendingCombine] = useState<{
+    confirm: () => void;
+    single: boolean;
+  } | null>(null);
+
+  /**
+   * Checks or unchecks a rendered cell for re-rendering, keeping Settings in
+   * step with the checked clips. The first one checked loads how it was made.
+   * One made differently from what Settings now shows asks first: the checked
+   * clips re-render together, with one set of settings.
+   */
+  /** Every matrix cell, with the clip it holds if any. */
+  const matrixCells = () =>
+    frames.flatMap((image) =>
+      runnableActions.map((action) => ({
+        key: comboKeyOf(image.uuid, action.id),
+        job: jobFor(image.uuid, action.id),
+      })),
+    );
+
+  /**
+   * Checks every cell, finished ones included — which re-renders them. Same
+   * rule as checking them one by one: with none picked yet, the first clip in
+   * reading order sets Settings, and clips made differently ask first.
+   */
+  const checkAll = () => {
+    const cells = matrixCells();
+    const excluded = new Set(excludedCombos);
+    const rerender = new Set(rerenderCombos);
+    const clips: ReturnType<typeof jobSettingsOf>[] = [];
+    for (const { key, job } of cells) {
+      if (!job) excluded.delete(key);
+      else if (!isJobInFlight(job)) {
+        rerender.add(key);
+        if (!rerenderCombos.has(key)) clips.push(jobSettingsOf(job));
+      }
+    }
+    const known = clips.filter((c): c is NonNullable<typeof c> => !!c);
+    const patch =
+      rerenderCombos.size === 0 && known[0] ? settingsPatch(known[0]) : {};
+    const reference = { ...videoGenParams, ...patch };
+    const apply = () => {
+      if (Object.keys(patch).length > 0) setVideoGenParams(patch);
+      setComboChecks({ excludedCombos: excluded, rerenderCombos: rerender });
+    };
+    if (known.some((clip) => settingsDiffer(clip, reference))) {
+      setPendingCombine({ confirm: apply, single: false });
+    } else {
+      apply();
+    }
+  };
+
+  const uncheckAll = () => {
+    const excluded = new Set(excludedCombos);
+    for (const { key, job } of matrixCells()) if (!job) excluded.add(key);
+    setComboChecks({ excludedCombos: excluded, rerenderCombos: new Set() });
+  };
+
+  /**
+   * Checks a rendered cell for re-rendering by the rule above. Reads the store
+   * fresh rather than this render's values, so it is also right when called
+   * straight after a restore has just changed them.
+   */
+  const checkRenderedCell = (comboKey: string, job: StudioJob) => {
+    const { rerenderCombos: picked, videoGenParams: panel } =
+      useStudioStore.getState();
+    if (picked.has(comboKey)) return;
+    const clip = jobSettingsOf(job);
+    if (clip) {
+      if (picked.size === 0) {
+        setVideoGenParams(settingsPatch(clip));
+      } else if (settingsDiffer(clip, panel)) {
+        setPendingCombine({
+          confirm: () => toggleComboRerender(comboKey),
+          single: true,
+        });
+        return;
+      }
+    }
+    toggleComboRerender(comboKey);
+  };
+
+  const toggleRenderedCell = (comboKey: string, job: StudioJob) => {
+    if (rerenderCombos.has(comboKey)) toggleComboRerender(comboKey);
+    else checkRenderedCell(comboKey, job);
+  };
+
+  /** A clip back from history plays, and is checked like a click would. */
+  const handleRestore = (dreamUuid: string) => {
+    playSegment(dreamUuid);
+    const job = useStudioStore
+      .getState()
+      .jobs.find((j) => j.dreamUuid === dreamUuid);
+    if (job) checkRenderedCell(comboKeyOf(job.imageId, job.actionId), job);
+  };
   const discardClip = useDiscardStudioClip();
   const hoverTip = useHoverTooltip();
 
@@ -307,9 +424,15 @@ export const GenerateTab: React.FC = () => {
   const doneCount = submittedJobs.filter(
     (j) => j.status === "processed",
   ).length;
+  // Each job's own render and ingest progress, not just which have finished,
+  // so the meter moves while clips are still rendering.
   const progressPercent =
     submittedJobs.length > 0
-      ? Math.round((doneCount / submittedJobs.length) * 100)
+      ? Math.floor(
+          (submittedJobs.reduce((sum, j) => sum + jobCompletion(j), 0) /
+            submittedJobs.length) *
+            100,
+        )
       : 0;
 
   const timeEstimate = useMemo(() => {
@@ -423,7 +546,7 @@ export const GenerateTab: React.FC = () => {
           resetIn={resetIn}
         />
 
-        <BottomRow>
+        <GenerateRow>
           {/* Sole child of a space-between row; keep it on the right. */}
           <ActionGroup style={{ marginLeft: "auto" }}>
             <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
@@ -443,18 +566,22 @@ export const GenerateTab: React.FC = () => {
                 : `Generate ${newCombos.length} Videos`}
             </NavButton>
           </ActionGroup>
-        </BottomRow>
+        </GenerateRow>
 
-        <ClipHistory />
+        <ClipHistory onRestore={handleRestore} />
 
-        <GenerateSection>
+        {failedCount > 0 && (
+          <JobActions>
+            <ActionButton onClick={retryFailed} disabled={isRetrying}>
+              {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
+            </ActionButton>
+          </JobActions>
+        )}
+      </TabColumn>
+
+      <TabColumn>
+        <SettingsSection $hidden={newCombos.length === 0}>
           <SectionTitle>Settings</SectionTitle>
-          {showLtxHint && (
-            <HintText>
-              LTX works best with motion presets. Add a camera LoRA for better
-              results.
-            </HintText>
-          )}
           <SettingsGrid>
             <FormField>
               <FieldLabel>Model:</FieldLabel>
@@ -526,26 +653,22 @@ export const GenerateTab: React.FC = () => {
               />
             )}
           </SettingsGrid>
-        </GenerateSection>
-
-        {failedCount > 0 && (
-          <JobActions>
-            <ActionButton onClick={retryFailed} disabled={isRetrying}>
-              {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
-            </ActionButton>
-          </JobActions>
-        )}
+        </SettingsSection>
       </TabColumn>
 
       <TabColumn>
         <GenerateSection>
-          <SectionTitle>Combination Preview</SectionTitle>
-          <DescriptionText>
-            Checked cells run on the next Generate. Finished clips start
-            unchecked &mdash; check one to re-render it with the current
-            settings, or &times; to discard it. Click a finished filmstrip to
-            play it.
-          </DescriptionText>
+          <SectionHeaderRow>
+            <SectionTitle>Matrix</SectionTitle>
+            <ButtonRow>
+              <MatrixCheckButton type="button" onClick={checkAll}>
+                Check all
+              </MatrixCheckButton>
+              <MatrixCheckButton type="button" onClick={uncheckAll}>
+                Uncheck all
+              </MatrixCheckButton>
+            </ButtonRow>
+          </SectionHeaderRow>
 
           <CombinationGrid>
             <GridTable>
@@ -603,7 +726,7 @@ export const GenerateTab: React.FC = () => {
                       );
                       const toggleChecked = () => {
                         if (inFlight) return;
-                        if (job) toggleComboRerender(comboKey);
+                        if (job) toggleRenderedCell(comboKey, job);
                         else toggleComboExcluded(comboKey);
                       };
                       const actionNumber = runnableActions.indexOf(action) + 1;
@@ -627,8 +750,8 @@ export const GenerateTab: React.FC = () => {
                         <GridCell
                           key={comboKey}
                           $excluded={!job && !checked}
-                          title={playable ? "Play in preview" : undefined}
                           role={playable ? "button" : undefined}
+                          title={playable ? "Play in preview" : undefined}
                           tabIndex={playable ? 0 : undefined}
                           onClick={activate}
                           onKeyDown={(e) => {
@@ -702,6 +825,24 @@ export const GenerateTab: React.FC = () => {
         </GenerateSection>
       </TabColumn>
       {hoverTip.tooltip}
+      {pendingCombine && (
+        <ForceSettingsDialog
+          title="Clips have different settings"
+          body={
+            <>
+              Checked clips re-render together with one set of settings &mdash;
+              the ones shown now. Cancel leaves{" "}
+              {pendingCombine.single ? "this clip" : "the clips"} unchecked.
+            </>
+          }
+          confirmLabel="Combine"
+          onConfirm={() => {
+            pendingCombine.confirm();
+            setPendingCombine(null);
+          }}
+          onCancel={() => setPendingCombine(null)}
+        />
+      )}
     </TabLayout>
   );
 };

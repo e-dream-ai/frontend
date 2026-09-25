@@ -1,3 +1,4 @@
+import type React from "react";
 import { createPortal } from "react-dom";
 import { useLightboxA11y } from "../hooks/useLightboxA11y";
 import {
@@ -13,6 +14,10 @@ import {
 interface ForceSettingsDialogProps {
   onConfirm: () => void;
   onCancel: () => void;
+  /** Wording for what is being grouped; the flow's transitions by default. */
+  title?: string;
+  body?: React.ReactNode;
+  confirmLabel?: string;
 }
 
 /**
@@ -24,6 +29,14 @@ interface ForceSettingsDialogProps {
 export function ForceSettingsDialog({
   onConfirm,
   onCancel,
+  title = "Transitions have different settings",
+  body = (
+    <>
+      Editing them together forces one value on all of them &mdash; the settings
+      shown now. Cancel leaves them as they are.
+    </>
+  ),
+  confirmLabel = "OK",
 }: ForceSettingsDialogProps) {
   const overlayRef = useLightboxA11y<HTMLDivElement>(onCancel);
 
@@ -48,19 +61,14 @@ export function ForceSettingsDialog({
       aria-describedby="force-settings-body"
     >
       <DialogCard onClick={(e) => e.stopPropagation()}>
-        <DialogTitle id="force-settings-title">
-          Transitions have different settings
-        </DialogTitle>
-        <DialogBody id="force-settings-body">
-          Editing them together forces one value on all of them &mdash; the
-          settings shown now. Cancel leaves them as they are.
-        </DialogBody>
+        <DialogTitle id="force-settings-title">{title}</DialogTitle>
+        <DialogBody id="force-settings-body">{body}</DialogBody>
         <DialogActions>
           <CancelButton type="button" onClick={onCancel}>
             Cancel
           </CancelButton>
           <ConfirmButton type="button" onClick={onConfirm}>
-            OK
+            {confirmLabel}
           </ConfirmButton>
         </DialogActions>
       </DialogCard>

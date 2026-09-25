@@ -24,6 +24,17 @@ export interface StudioAction {
   negativePrompt?: string;
   highNoiseLoras?: LoRAConfig[];
   lowNoiseLoras?: LoRAConfig[];
+  /**
+   * A LoRA pick that had no equivalent on the model switched to (LTX Static on
+   * Wan, Wan Orbit on LTX), kept by the model it belongs to so switching back
+   * restores it.
+   */
+  loraMemory?: Partial<Record<VideoModel, ActionLoraPick>>;
+}
+
+export interface ActionLoraPick {
+  highNoiseLoras: LoRAConfig[];
+  lowNoiseLoras: LoRAConfig[];
 }
 
 export type VideoModel = "wan-i2v" | "ltx-i2v" | "kling-i2v" | "kling-25-i2v";
@@ -50,6 +61,11 @@ export interface StudioJob {
   thumbnailUrl?: string;
   startedAt?: number;
   completedAt?: number;
+  /**
+   * The settings it was submitted with, as sent — after duration clamping and
+   * guidance resolution. Missing on jobs from before these were recorded.
+   */
+  settings?: VideoGenParams;
 }
 
 export interface VideoGenParams {

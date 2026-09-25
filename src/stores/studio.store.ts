@@ -1,6 +1,9 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { reconcileActionLoras } from "@/components/pages/studio/constants/lora-options";
+import {
+  reconcileActionLoras,
+  retargetActionsLoras,
+} from "@/components/pages/studio/constants/lora-options";
 import type {
   StudioTab,
   StudioImage,
@@ -43,6 +46,11 @@ type StudioState = {
    */
   rerenderCombos: Set<string>;
   toggleComboRerender: (key: string) => void;
+  /** Replaces both check sets at once, for check all / uncheck all. */
+  setComboChecks: (checks: {
+    excludedCombos?: Set<string>;
+    rerenderCombos?: Set<string>;
+  }) => void;
 
   jobs: StudioJob[];
   addJob: (job: StudioJob) => void;
@@ -175,7 +183,7 @@ export const useStudioStore = create<StudioState>()(
           }
           return {
             videoGenParams,
-            actions: reconcileActionLoras(s.actions, videoGenParams.model),
+            actions: retargetActionsLoras(s.actions, videoGenParams.model),
           };
         }),
       outputPlaylistId: null,
@@ -205,6 +213,7 @@ export const useStudioStore = create<StudioState>()(
           else next.add(key);
           return { rerenderCombos: next };
         }),
+      setComboChecks: (checks) => set(checks),
 
       jobs: [] as StudioJob[],
       addJob: (job: StudioJob) =>

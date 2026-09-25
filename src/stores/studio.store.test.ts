@@ -199,7 +199,7 @@ describe("studio.store", () => {
       expect(params.numInferenceSteps).toBe(30); // preserved
     });
 
-    it("clears per-action LoRAs the newly selected model cannot run", () => {
+    it("carries a LoRA to the same camera move on the new model", () => {
       useStudioStore.getState().addAction({
         id: "a1",
         prompt: "dolly in",
@@ -215,8 +215,7 @@ describe("studio.store", () => {
       useStudioStore.getState().setVideoGenParams({ model: "wan-i2v" });
 
       const [action] = useStudioStore.getState().actions;
-      expect(action.highNoiseLoras).toEqual([]);
-      expect(action.lowNoiseLoras).toEqual([]);
+      expect(action.highNoiseLoras?.[0]?.path).toContain("zoom_in");
       expect(action.prompt).toBe("dolly in");
     });
 

@@ -139,6 +139,13 @@ export const useBatchSubmit = () => {
               actionId: action.id,
               dreamUuid: dream.uuid,
               jobType: videoGenParams.model,
+              settings: {
+                model: videoGenParams.model,
+                duration,
+                numInferenceSteps: videoGenParams.numInferenceSteps,
+                guidance,
+                seed: videoGenParams.seed,
+              },
               status:
                 (dream.status as
                   | "queue"

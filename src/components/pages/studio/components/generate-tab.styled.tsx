@@ -1,19 +1,49 @@
 import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 import { HistoryThumb } from "./transition-history.styled";
+import { BottomRow, GenerateSection } from "./images-tab.styled";
 import type { StudioJob } from "@/types/studio.types";
 
-// Preview and settings on the left, the matrix on the right. The right track
-// takes `minmax(0, 1fr)` so the grid inside can overflow and scroll rather than
-// forcing the whole column wider.
+// Preview, settings and matrix side by side at 25% / 25% / 50%. The matrix
+// track is `minmax(0, …)` so the grid inside can overflow and scroll rather
+// than forcing its column wider. Narrower, preview and settings share the left
+// column; narrower still, everything stacks.
 export const TabLayout = styled.div`
   display: grid;
-  grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) minmax(0, 2fr);
   gap: 1.25rem;
   align-items: start;
 
+  /* Too narrow for 25% columns: preview and settings stack on the left, as
+     they did before settings had a column of their own, with the matrix
+     spanning both rows on the right. The second row takes any spare height
+     so a tall matrix never opens a gap between the two. */
+  @media (max-width: 1280px) {
+    grid-template-columns: minmax(300px, 400px) minmax(0, 1fr);
+    grid-template-rows: auto 1fr;
+
+    > :nth-child(1) {
+      grid-column: 1;
+      grid-row: 1;
+    }
+    > :nth-child(2) {
+      grid-column: 1;
+      grid-row: 2;
+    }
+    > :nth-child(3) {
+      grid-column: 2;
+      grid-row: 1 / span 2;
+    }
+  }
+
   @media (max-width: 900px) {
     grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: none;
+
+    > :nth-child(n) {
+      grid-column: auto;
+      grid-row: auto;
+    }
   }
 `;
 
@@ -246,22 +276,10 @@ export const PlaylistRow = styled.div`
   }
 `;
 
-export const DescriptionText = styled.p`
-  font-size: 0.8125rem;
-  color: #888;
-  margin-bottom: 1rem;
-`;
-
 export const ComboCountText = styled.p`
   font-size: 0.8125rem;
   color: #888;
   text-align: center;
-`;
-
-export const HintText = styled.p`
-  font-size: 0.8125rem;
-  color: #c9a84c;
-  margin-bottom: 0.75rem;
 `;
 
 export const SeedInput = styled.input`
@@ -293,7 +311,9 @@ export const ProgressBar = styled.div`
   border: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
   border-radius: 8px;
   padding: 0.75rem 1rem;
-  margin-bottom: 1.25rem;
+  /* Clear of the preview's divider above; the Generate row's own padding
+     is enough below. */
+  margin-top: 1rem;
 `;
 
 export const ProgressInfo = styled.div`
@@ -426,4 +446,23 @@ export const ClipHistoryGrid = styled.div`
 export const ClipHistoryThumb = styled(HistoryThumb)`
   width: 63px;
   height: 36px;
+`;
+
+// With nothing checked there is nothing for the settings to apply to, so they
+// hide. Visibility rather than display: the column keeps its size and nothing
+// around it moves, and hidden fields drop out of the tab order.
+export const SettingsSection = styled(GenerateSection)<{ $hidden: boolean }>`
+  visibility: ${(p) => (p.$hidden ? "hidden" : "visible")};
+`;
+
+// Compact sibling of ActionButton for the matrix header row.
+export const MatrixCheckButton = styled(ActionButton)`
+  font-size: 12px;
+  padding: 4px 10px;
+`;
+
+// The Generate row, without the rule the other tabs' bottom rows carry: here
+// it sits mid-column, under the progress meter, not at the foot of the tab.
+export const GenerateRow = styled(BottomRow)`
+  border-top: none;
 `;
