@@ -45,6 +45,7 @@ export function useFlowGeneration() {
   // Actions are stable refs — subscribe individually, not via useShallow.
   const recordTransitionRun = useFlowStore((s) => s.recordTransitionRun);
   const updateTransitionStatus = useFlowStore((s) => s.updateTransitionStatus);
+  const deselectTransitions = useFlowStore((s) => s.deselectTransitions);
 
   const generateTransition = useCallback(
     async (index: number, transition: FlowTransition) => {
@@ -182,6 +183,18 @@ export function useFlowGeneration() {
           transitions,
           referenceFrames,
         );
+        // What is queued — by this click or already in flight — is done being
+        // set up, so it leaves the selection now, before the requests go out.
+        // Only a mismatch stays selected: it still wants attention. With the
+        // selection empty, Generate goes back to covering just the
+        // transitions whose video is behind their settings.
+        deselectTransitions([
+          ...targets.map((t) => t.index),
+          ...indices.filter((i) => {
+            const status = transitions[i]?.status;
+            return status === "queue" || status === "processing";
+          }),
+        ]);
 
         if (skippedForMismatch > 0) {
           toast.info(
@@ -199,7 +212,7 @@ export function useFlowGeneration() {
         stopGenerating();
       }
     },
-    [generateTransition, startGenerating, stopGenerating],
+    [deselectTransitions, generateTransition, startGenerating, stopGenerating],
   );
 
   return { generateAll, generateMany, isGenerating };
