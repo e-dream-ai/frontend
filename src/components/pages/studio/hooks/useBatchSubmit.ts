@@ -13,7 +13,14 @@ import {
 } from "../constants/guidance-options";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
-import { isAnimatableFrame, isRunnableAction } from "../utils/batch-selectors";
+import {
+  findCellJob,
+  isAnimatableFrame,
+  isCellChecked,
+  isJobInFlight,
+  isRunnableAction,
+} from "../utils/batch-selectors";
+import { removeFromOutputPlaylist } from "./useStudioClipActions";
 
 // Serialized to avoid concurrent auth refresh races (see fix/session-refresh-race on backend)
 const BATCH_SIZE = 1;
@@ -23,6 +30,7 @@ export const useBatchSubmit = () => {
   const actions = useStudioStore((s) => s.actions);
   const videoGenParams = useStudioStore((s) => s.videoGenParams);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
+  const rerenderCombos = useStudioStore((s) => s.rerenderCombos);
   const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
   const addJob = useStudioStore((s) => s.addJob);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
@@ -36,12 +44,6 @@ export const useBatchSubmit = () => {
     const frames = images.filter(isAnimatableFrame);
     const runnableActions = actions.filter(isRunnableAction);
 
-    const existingJobKeys = new Set(
-      jobs
-        .filter((j) => j.jobType === videoGenParams.model)
-        .map((j) => `${j.imageId}:${j.actionId}`),
-    );
-
     const combos: Array<{
       image: (typeof frames)[0];
       action: (typeof runnableActions)[0];
@@ -50,14 +52,16 @@ export const useBatchSubmit = () => {
     for (const image of frames) {
       for (const action of runnableActions) {
         const comboKey = comboKeyOf(image.uuid, action.id);
-        if (!excludedCombos.has(comboKey) && !existingJobKeys.has(comboKey)) {
+        const job = findCellJob(jobs, image.uuid, action.id);
+        if (job && isJobInFlight(job)) continue;
+        if (isCellChecked(job, comboKey, excludedCombos, rerenderCombos)) {
           combos.push({ image, action });
         }
       }
     }
 
     return combos;
-  }, [images, actions, excludedCombos, jobs, videoGenParams.model]);
+  }, [images, actions, excludedCombos, rerenderCombos, jobs]);
 
   const submit = useCallback(async () => {
     setIsSubmitting(true);
@@ -117,7 +121,17 @@ export const useBatchSubmit = () => {
                   j.jobType !== "uprez",
               );
             if (existingJob) {
-              useStudioStore.getState().removeJob(existingJob.dreamUuid);
+              useStudioStore.getState().archiveJob(existingJob.dreamUuid);
+              // The re-render replaces it, so it leaves the playlist too; it
+              // stays in history.
+              if (outputPlaylistId) {
+                removeFromOutputPlaylist(
+                  outputPlaylistId,
+                  existingJob.dreamUuid,
+                ).catch((error) =>
+                  console.error("Failed to remove replaced clip:", error),
+                );
+              }
             }
 
             addJob({
@@ -125,6 +139,13 @@ export const useBatchSubmit = () => {
               actionId: action.id,
               dreamUuid: dream.uuid,
               jobType: videoGenParams.model,
+              settings: {
+                model: videoGenParams.model,
+                duration,
+                numInferenceSteps: videoGenParams.numInferenceSteps,
+                guidance,
+                seed: videoGenParams.seed,
+              },
               status:
                 (dream.status as
                   | "queue"
@@ -151,7 +172,7 @@ export const useBatchSubmit = () => {
       }
 
       if (jobsAdded > 0) {
-        setActiveTab("results");
+        setActiveTab("generate");
       }
     } finally {
       setIsSubmitting(false);

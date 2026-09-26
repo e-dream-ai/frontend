@@ -1,5 +1,6 @@
 import type { StudioAction, VideoModel } from "@/types/studio.types";
 import { hasActionLoras } from "../constants/duration-options";
+import { actionLorasFitModel } from "../constants/lora-options";
 import { GUIDANCE_PARAM } from "../constants/guidance-options";
 
 interface BuildVideoAlgoParamsInput {
@@ -37,7 +38,10 @@ export const buildVideoAlgoParams = ({
   seed,
   negativePrompt,
 }: BuildVideoAlgoParamsInput): Record<string, unknown> => {
-  const hasLoras = hasActionLoras(action);
+  // An action keeps its LoRA across model switches, so it can carry one the
+  // current model cannot load (e.g. an LTX pick while on Kling). Only a LoRA
+  // made for this model is sent.
+  const hasLoras = hasActionLoras(action) && actionLorasFitModel(action, model);
   const trimmedNegative = negativePrompt?.trim();
 
   if (model === "kling-i2v" || model === "kling-25-i2v") {

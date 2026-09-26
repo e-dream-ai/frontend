@@ -109,6 +109,19 @@ export function CrossfadeVideo({
     front.play().catch(() => undefined);
   }, [buf.front, active, layerRefs]);
 
+  // Native controls belong to whichever layer is in front, so advancing a
+  // segment hands the attribute to the other <video> — a fresh, just-loaded
+  // element, which the browser greets by showing its control bar and fading it
+  // out again. That is the flash at every swap. Gating the bar on the viewer
+  // instead removes the transition entirely: while they are on the video it
+  // stays up across the swap, and while they are not it never appears.
+  const [hovered, setHovered] = useState(false);
+  const [focused, setFocused] = useState(false);
+  // Without this a viewer who pauses and moves the pointer away is left with a
+  // frozen frame and no way back.
+  const [paused, setPaused] = useState(false);
+  const showControls = controls && (hovered || focused || paused);
+
   // Replay only when the requested segment is the one already up front. If the
   // token arrived alongside an index change, the segment is still loading into
   // the back layer and the effect above plays it from the start anyway.
@@ -125,7 +138,12 @@ export function CrossfadeVideo({
   }, [replayToken]);
 
   return (
-    <LayerStack>
+    <LayerStack
+      onMouseEnter={controls ? () => setHovered(true) : undefined}
+      onMouseLeave={controls ? () => setHovered(false) : undefined}
+      onFocus={controls ? () => setFocused(true) : undefined}
+      onBlur={controls ? () => setFocused(false) : undefined}
+    >
       {LAYERS.map((layer) => {
         const isFront = buf.front === layer;
         const loadedKey = buf.loaded[layer];
@@ -143,7 +161,7 @@ export function CrossfadeVideo({
             playsInline
             muted={muted}
             loop={loop}
-            controls={controls && isFront}
+            controls={showControls && isFront}
             aria-hidden={!isFront}
             tabIndex={isFront ? undefined : -1}
             onLoadedMetadata={(e) => {
@@ -160,6 +178,19 @@ export function CrossfadeVideo({
               );
               if (decodedKey === undefined) return;
               setBuf((s) => markReady(s, layer, decodedKey));
+            }}
+            onPlay={() => {
+              if (buf.front === layer) setPaused(false);
+            }}
+            onPause={(e) => {
+              // Only a deliberate pause of the visible clip counts. The back
+              // layer is paused on every swap, the front one whenever the
+              // player goes inactive, and some browsers fire pause as a clip
+              // ends — that last one would raise the bar just in time for the
+              // advance to drop it again, which is the flash we came for.
+              if (buf.front !== layer || !active) return;
+              if (e.currentTarget.ended) return;
+              setPaused(true);
             }}
             onEnded={() => {
               if (buf.front !== layer || !active) return;

@@ -27,6 +27,23 @@ export const clampGuidance = (
   return roundToStep(Math.min(max, snapped));
 };
 
+/**
+ * The guidance a model starts on when it is picked from the menu: the
+ * catalog's recommendation for it, snapped to its own step grid.
+ *
+ * Distinct from `guidanceForModel`, which keeps whatever the user had set and
+ * reaches for the default only when that value no longer fits the model. That
+ * is the right rule for validating a value already chosen — at submit time, or
+ * per transition — but it makes a deliberate switch of model inherit a number
+ * tuned for a different one. A model with no guidance constraint has nothing
+ * to recommend, so the current value carries over.
+ */
+export const defaultGuidanceForModel = (
+  guidance: number,
+  constraint: GuidanceConstraint | undefined,
+): number =>
+  constraint ? clampGuidance(constraint.default, constraint) : guidance;
+
 export const guidanceForModel = (
   guidance: number,
   constraint: GuidanceConstraint | undefined,

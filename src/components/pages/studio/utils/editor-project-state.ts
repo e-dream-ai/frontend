@@ -50,7 +50,12 @@ const VOLATILE_TRANSITION_KEYS = ["progress"] as const;
 
 const VOLATILE_IMAGE_KEYS = ["url", "previewFrame", "progress"] as const;
 
-const VOLATILE_JOB_KEYS = ["previewFrame", "progress", "thumbnailUrl"] as const;
+const VOLATILE_JOB_KEYS = [
+  "previewFrame",
+  "progress",
+  "ingesting",
+  "thumbnailUrl",
+] as const;
 
 const stripFrame = (frame: FlowReferenceFrame): PersistedReferenceFrame =>
   omit(frame, VOLATILE_FRAME_KEYS);

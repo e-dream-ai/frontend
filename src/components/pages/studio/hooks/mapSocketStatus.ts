@@ -14,8 +14,19 @@ const SOCKET_TO_STATUS: Record<string, DreamJobStatus> = {
   CANCELLED: "failed",
 };
 
-export const mapSocketStatus = (raw?: string): DreamJobStatus | undefined =>
-  raw ? SOCKET_TO_STATUS[raw.toUpperCase()] : undefined;
+/**
+ * The backend's `stage` outranks the raw status. When the GPU finishes, the
+ * status reads COMPLETED while the stage is still "ingesting": the video
+ * service has yet to transcode it, so there is nothing to play. Treating that
+ * as done turned cells gold before their clip existed.
+ */
+export const mapSocketStatus = (
+  raw?: string,
+  stage?: string,
+): DreamJobStatus | undefined => {
+  if (stage === "ingesting") return "processing";
+  return raw ? SOCKET_TO_STATUS[raw.toUpperCase()] : undefined;
+};
 
 const STATUS_RANK: Record<string, number> = {
   queue: 0,

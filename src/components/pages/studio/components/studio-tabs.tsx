@@ -6,8 +6,7 @@ import { TabBar, Tab } from "./studio-tabs.styled";
 const TABS: { key: StudioTab; label: string }[] = [
   { key: "images", label: "Images" },
   { key: "actions", label: "Actions" },
-  { key: "generate", label: "Generate" },
-  { key: "results", label: "Results" },
+  { key: "generate", label: "Matrix" },
 ];
 
 export const StudioTabs: React.FC = () => {
@@ -22,7 +21,7 @@ export const StudioTabs: React.FC = () => {
           key={tab.key}
           $active={activeTab === tab.key}
           $badge={
-            tab.key === "results" && activeTab !== "results"
+            tab.key === "generate" && activeTab !== "generate"
               ? newCompletedCount
               : undefined
           }

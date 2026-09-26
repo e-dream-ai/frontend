@@ -28,7 +28,8 @@ const DEFAULT_VIDEO_PARAMS = {
   model: "ltx-i2v",
   duration: 5,
   numInferenceSteps: 30,
-  guidance: 1.0,
+  // Unset — resolved from the model catalog, not carried by the store.
+  guidance: Number.NaN,
   seed: -1,
 };
 
@@ -49,10 +50,10 @@ describe("studio.store", () => {
       expect(useStudioStore.getState().newCompletedCount).toBe(0);
     });
 
-    it("clears when switching to results tab", () => {
+    it("clears when switching to the results matrix", () => {
       useStudioStore.getState().incrementNewCompleted();
       useStudioStore.getState().incrementNewCompleted();
-      useStudioStore.getState().setActiveTab("results");
+      useStudioStore.getState().setActiveTab("generate");
       expect(useStudioStore.getState().newCompletedCount).toBe(0);
     });
   });
@@ -85,6 +86,50 @@ describe("studio.store", () => {
       useStudioStore.getState().updateJob("dream1", { status: "processed" });
       const job = useStudioStore.getState().jobs[0];
       expect(job.completedAt).toBeDefined();
+    });
+  });
+
+  describe("clip history", () => {
+    const clip = (dreamUuid: string, status = "processed" as const) => ({
+      imageId: "img",
+      actionId: "act",
+      dreamUuid,
+      jobType: "ltx-i2v" as const,
+      status,
+    });
+
+    it("archives a rendered clip newest first, and drops a failed one", () => {
+      const s = useStudioStore.getState();
+      s.addJob(clip("a"));
+      s.archiveJob("a");
+      s.addJob(clip("b"));
+      s.archiveJob("b");
+      s.addJob({ ...clip("c"), status: "failed" });
+      s.archiveJob("c");
+      const state = useStudioStore.getState();
+      expect(state.jobs).toEqual([]);
+      expect(state.historyJobs.map((j) => j.dreamUuid)).toEqual(["b", "a"]);
+    });
+
+    it("restores into the cell and archives what it displaces", () => {
+      const s = useStudioStore.getState();
+      s.addJob(clip("old"));
+      s.archiveJob("old");
+      s.addJob(clip("new"));
+      const result = useStudioStore.getState().restoreJob("old");
+      expect(result?.displaced?.dreamUuid).toBe("new");
+      const state = useStudioStore.getState();
+      expect(state.jobs.map((j) => j.dreamUuid)).toEqual(["old"]);
+      expect(state.historyJobs.map((j) => j.dreamUuid)).toEqual(["new"]);
+    });
+
+    it("will not restore over a cell that is still rendering", () => {
+      const s = useStudioStore.getState();
+      s.addJob(clip("old"));
+      s.archiveJob("old");
+      s.addJob({ ...clip("busy"), status: "processing" });
+      expect(useStudioStore.getState().restoreJob("old")).toBeNull();
+      expect(useStudioStore.getState().historyJobs).toHaveLength(1);
     });
   });
 
@@ -128,7 +173,7 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
-        guidance: 1.0,
+        guidance: Number.NaN,
         seed: -1,
       });
       expect(migrated.wanParams).toBeUndefined();
@@ -154,7 +199,7 @@ describe("studio.store", () => {
       expect(params.numInferenceSteps).toBe(30); // preserved
     });
 
-    it("clears per-action LoRAs the newly selected model cannot run", () => {
+    it("carries a LoRA to the same camera move on the new model", () => {
       useStudioStore.getState().addAction({
         id: "a1",
         prompt: "dolly in",
@@ -170,8 +215,7 @@ describe("studio.store", () => {
       useStudioStore.getState().setVideoGenParams({ model: "wan-i2v" });
 
       const [action] = useStudioStore.getState().actions;
-      expect(action.highNoiseLoras).toEqual([]);
-      expect(action.lowNoiseLoras).toEqual([]);
+      expect(action.highNoiseLoras?.[0]?.path).toContain("zoom_in");
       expect(action.prompt).toBe("dolly in");
     });
 
@@ -291,7 +335,7 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(8);
       expect(params.numInferenceSteps).toBe(30); // from defaults
-      expect(params.guidance).toBe(1.0); // LTX default, from defaults
+      expect(params.guidance).toBeNaN(); // unset, for the catalog to fill
       expect(params.seed).toBe(-1);
     });
 
@@ -305,7 +349,7 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(5);
       expect(params.numInferenceSteps).toBe(30);
-      expect(params.guidance).toBe(1.0);
+      expect(params.guidance).toBeNaN();
       expect(params.seed).toBe(-1);
     });
   });
@@ -323,8 +367,9 @@ describe("studio.store", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
       const migrated = migrate(v6State, 6) as Record<string, unknown>;
+      // Cleared rather than pinned to a number: the catalog now supplies it.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((migrated.videoGenParams as any).guidance).toBe(1.0);
+      expect((migrated.videoGenParams as any).guidance).toBeNaN();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((migrated.videoGenParams as any).seed).toBe(-1);
     });
@@ -377,7 +422,7 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
-        guidance: 1.0,
+        guidance: Number.NaN,
         seed: -1,
       });
     });
