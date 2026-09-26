@@ -1,7 +1,7 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { axiosClient } from "@/client/axios.client";
 import { useStudioStore } from "@/stores/studio.store";
-import type { ImageModel, StudioImage } from "@/types/studio.types";
+import { isStudioImageModel, type StudioImage } from "@/types/studio.types";
 import { useModels } from "@/api/model/query/useModels";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { CostEstimate } from "@/components/shared/cost-estimate/cost-estimate";
@@ -15,6 +15,7 @@ import {
 import { buildImageAlgoParams } from "../utils/build-image-algo-params";
 import { resolveNegativePromptSupport } from "../utils/negative-prompt-support";
 import { SizeSelect } from "./size-select";
+import { StyleReferenceField } from "./style-reference-field";
 import {
   Overlay,
   Panel,
@@ -59,21 +60,37 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
   const prompt = useStudioStore((s) => s.imagePrompt);
   const setPrompt = useStudioStore((s) => s.setImagePrompt);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const styleReference = useStudioStore((s) => s.styleReference);
+  const setStyleReference = useStudioStore((s) => s.setStyleReference);
+  const requiresStyleReference = imageGenParams.model === "krea-2-turbo-style";
 
   const { data: modelsData } = useModels({ mediaType: "image" });
   const modelOptions = useMemo(
-    () => modelsData?.data?.models ?? [],
+    () =>
+      (modelsData?.data?.models ?? []).filter((model) =>
+        isStudioImageModel(model.id),
+      ),
     [modelsData?.data?.models],
   );
   const modelConstraints = useModelConstraints({ mediaType: "image" });
   const sizeOptions =
     modelConstraints.get(imageGenParams.model)?.imageSizes ?? [];
+  const selectedModel = modelOptions.find(
+    (model) => model.id === imageGenParams.model,
+  );
+  const hasRequiredReference =
+    !requiresStyleReference || styleReference !== null;
+  const canGenerate =
+    !isSubmitting &&
+    prompt.trim().length > 0 &&
+    selectedModel !== undefined &&
+    hasRequiredReference;
 
   const { enabled: negativePromptEnabled, hint: negativePromptHint } =
     resolveNegativePromptSupport(modelOptions, imageGenParams.model);
 
   const { totalCostUsd, costBreakdown } = useCostEstimate({
-    model: modelOptions.find((m) => m.id === imageGenParams.model),
+    model: selectedModel,
     params: { imageSize: imageGenParams.size },
     count: imageGenParams.seedCount,
     breakdownKey: "components.cost_estimate.images",
@@ -83,7 +100,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
     useCreditGuard(totalCostUsd);
 
   const handleGenerate = useCallback(async () => {
-    if (!prompt.trim() || isSubmitting) return;
+    if (!canGenerate) return;
     if (guardOverBudget()) return;
     setIsSubmitting(true);
 
@@ -101,6 +118,9 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
           prompt,
           size: imageGenParams.size,
           seed,
+          sourceDreamUuid: requiresStyleReference
+            ? styleReference?.uuid
+            : undefined,
           negativePrompt: negativePromptEnabled
             ? imageGenParams.negativePrompt
             : undefined,
@@ -137,7 +157,9 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
     onClose();
   }, [
     prompt,
-    isSubmitting,
+    canGenerate,
+    requiresStyleReference,
+    styleReference,
     guardOverBudget,
     imageGenParams,
     negativePromptEnabled,
@@ -163,11 +185,13 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
           />
           <FieldRow style={{ marginTop: 14 }}>
             <FieldGroup>
-              <FieldLabel>Model</FieldLabel>
+              <FieldLabel htmlFor="reference-frame-model">Model</FieldLabel>
               <Select
+                id="reference-frame-model"
                 value={imageGenParams.model}
                 onChange={(e) => {
-                  const newModel = e.target.value as ImageModel;
+                  const newModel = e.target.value;
+                  if (!isStudioImageModel(newModel)) return;
                   const newSizes =
                     modelConstraints.get(newModel)?.imageSizes ?? [];
                   setImageGenParams({
@@ -207,6 +231,12 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
               />
             </FieldGroup>
           </FieldRow>
+          {requiresStyleReference ? (
+            <StyleReferenceField
+              value={styleReference}
+              onChange={setStyleReference}
+            />
+          ) : null}
           <FieldLabel
             htmlFor="reference-frame-negative-prompt"
             style={{ display: "block", marginTop: 14, marginBottom: 8 }}
@@ -242,10 +272,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
           <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
           <FooterButtons>
             <CancelBtn onClick={onClose}>Cancel</CancelBtn>
-            <AddBtn
-              onClick={handleGenerate}
-              disabled={!prompt.trim() || isSubmitting}
-            >
+            <AddBtn onClick={handleGenerate} disabled={!canGenerate}>
               {isSubmitting ? "Generating..." : "Generate"}
             </AddBtn>
           </FooterButtons>

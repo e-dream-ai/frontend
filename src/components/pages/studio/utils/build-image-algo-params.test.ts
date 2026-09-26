@@ -42,4 +42,50 @@ describe("buildImageAlgoParams", () => {
       negative_prompt: "blurry, text",
     });
   });
+
+  it("builds Krea Turbo params without a stale reference or negative prompt", () => {
+    expect(
+      buildImageAlgoParams({
+        ...base,
+        model: "krea-2-turbo",
+        sourceDreamUuid: "old-reference",
+        negativePrompt: "blur",
+      }),
+    ).toEqual({
+      infinidream_algorithm: "krea-2-turbo",
+      prompt: "a crystal cave",
+      size: "1280*720",
+      seed: 42,
+    });
+  });
+
+  it("sends a style reference with the requested Krea output size", () => {
+    expect(
+      buildImageAlgoParams({
+        ...base,
+        model: "krea-2-turbo-style",
+        sourceDreamUuid: "reference-uuid",
+        negativePrompt: "blur",
+      }),
+    ).toEqual({
+      infinidream_algorithm: "krea-2-turbo-style",
+      prompt: "a crystal cave",
+      size: "1280*720",
+      seed: 42,
+      source_dream_uuid: "reference-uuid",
+    });
+  });
+
+  it.each([undefined, "", "   "])(
+    "rejects Krea Style without a reference (%s)",
+    (sourceDreamUuid) => {
+      expect(() =>
+        buildImageAlgoParams({
+          ...base,
+          model: "krea-2-turbo-style",
+          sourceDreamUuid,
+        }),
+      ).toThrow(/reference/i);
+    },
+  );
 });
