@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import type { Dream } from "@/types/dream.types";
+import type { StyleReference } from "@/types/studio.types";
 import { SelectImageDreamModal } from "./select-image-dream-modal";
 import { CancelBtn } from "./select-modal.styled";
 import { FieldLabel, FieldHint } from "./transition-settings-panel.styled";
@@ -11,8 +11,6 @@ import {
   ReferenceName,
   ReferenceActions,
 } from "./style-reference-field.styled";
-
-export type StyleReference = Pick<Dream, "uuid" | "name">;
 
 interface Props {
   value: StyleReference | null;

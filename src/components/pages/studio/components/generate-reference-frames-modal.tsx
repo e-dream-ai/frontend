@@ -15,10 +15,7 @@ import {
 import { buildImageAlgoParams } from "../utils/build-image-algo-params";
 import { resolveNegativePromptSupport } from "../utils/negative-prompt-support";
 import { SizeSelect } from "./size-select";
-import {
-  StyleReferenceField,
-  type StyleReference,
-} from "./style-reference-field";
+import { StyleReferenceField } from "./style-reference-field";
 import {
   Overlay,
   Panel,
@@ -63,9 +60,8 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
   const prompt = useStudioStore((s) => s.imagePrompt);
   const setPrompt = useStudioStore((s) => s.setImagePrompt);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [styleReference, setStyleReference] = useState<StyleReference | null>(
-    null,
-  );
+  const styleReference = useStudioStore((s) => s.styleReference);
+  const setStyleReference = useStudioStore((s) => s.setStyleReference);
   const requiresStyleReference = imageGenParams.model === "krea-2-turbo-style";
 
   const { data: modelsData } = useModels({ mediaType: "image" });

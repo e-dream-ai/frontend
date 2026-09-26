@@ -11,6 +11,8 @@ export interface StudioImage {
   previewFrame?: string;
 }
 
+export type StyleReference = Pick<StudioImage, "uuid" | "name">;
+
 export interface LoRAConfig {
   path: string;
   scale: number;
