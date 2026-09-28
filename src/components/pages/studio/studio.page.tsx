@@ -173,6 +173,11 @@ export const StudioPage: React.FC = () => {
           name={projectName}
           disabled={sync.status === "loading"}
           onRename={handleRename}
+          onSubmit={
+            isUprez || playlistSave.status === "saving"
+              ? undefined
+              : playlistSave.save
+          }
         />
         <PlaylistActions
           playlist={sync.playlist}
