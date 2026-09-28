@@ -328,6 +328,9 @@ export const PendingRowThumb = styled.div`
 // exists, muted while it is still only a possibility.
 export const CellFilmstrip = styled.div<{ $rendered?: boolean }>`
   position: relative;
+  /* Keeps the eye, status and discard layered within the cell, so a cell
+     scrolled under the sticky headings stays under them. */
+  isolation: isolate;
   display: inline-flex;
   justify-content: center;
   color: ${(p) => (p.$rendered ? FLOW.accent : FLOW.textDim)};
