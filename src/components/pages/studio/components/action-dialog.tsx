@@ -28,6 +28,7 @@ import {
   ActionPromptText,
   ActionMeta,
   LoraField,
+  DeleteBtn,
 } from "./action-dialog.styled";
 
 interface Draft {
@@ -47,6 +48,8 @@ interface Props {
   /** Check or uncheck every cell in its column, then close. */
   onCheckColumn: () => void;
   onUncheckColumn: () => void;
+  /** Remove the action, discarding its clips; asks first if it has any. */
+  onDelete: () => void;
 }
 
 /**
@@ -63,6 +66,7 @@ export const ActionDialog: React.FC<Props> = ({
   onClose,
   onCheckColumn,
   onUncheckColumn,
+  onDelete,
 }) => {
   const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
   const model = useStudioStore((s) => s.videoGenParams.model);
@@ -182,6 +186,7 @@ export const ActionDialog: React.FC<Props> = ({
             <FooterButtons>
               <CancelBtn onClick={onCheckColumn}>Check all</CancelBtn>
               <CancelBtn onClick={onUncheckColumn}>Uncheck all</CancelBtn>
+              <DeleteBtn onClick={onDelete}>Delete</DeleteBtn>
             </FooterButtons>
           ) : (
             <span />
@@ -193,7 +198,7 @@ export const ActionDialog: React.FC<Props> = ({
                 <AddBtn
                   onClick={() => setDraft({ prompt: action.prompt, loraKey })}
                 >
-                  {copies ? "Duplicate & edit" : "Edit"}
+                  {copies ? "Remix" : "Edit"}
                 </AddBtn>
               </>
             ) : (

@@ -1,10 +1,7 @@
 import type { StudioImage } from "@/types/studio.types";
-import { useStudioStore } from "@/stores/studio.store";
-import { useDream } from "@/api/dream/query/useDream";
-import { useModels } from "@/api/model/query/useModels";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import { useLightboxA11y } from "../hooks/useLightboxA11y";
-import { imageOriginFromDreamPrompt } from "../utils/image-prompt";
+import { useImageOrigin } from "../hooks/useImageOrigin";
 import {
   Overlay,
   Header,
@@ -21,6 +18,7 @@ import {
   ActionPromptText,
   ActionMeta,
   ImageDialogThumb,
+  DeleteBtn,
 } from "./action-dialog.styled";
 
 interface Props {
@@ -33,6 +31,8 @@ interface Props {
   onUncheckRow: () => void;
   /** Close, and open the generate dialog loaded with this frame's prompt. */
   onGenerateMore: () => void;
+  /** Remove the frame, discarding its clips; asks first if it has any. */
+  onDelete: () => void;
 }
 
 /**
@@ -47,54 +47,22 @@ export const ImageDialog: React.FC<Props> = ({
   onCheckRow,
   onUncheckRow,
   onGenerateMore,
+  onDelete,
 }) => {
   const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
-  const { data, isLoading } = useDream(image.uuid);
-  const dream = data?.data?.dream;
-  const origin = dream ? imageOriginFromDreamPrompt(dream.prompt) : undefined;
-  const { data: modelsData } = useModels({ mediaType: "image" });
-  const images = useStudioStore((s) => s.images);
-  const setImagePrompt = useStudioStore((s) => s.setImagePrompt);
-  const setImageGenParams = useStudioStore((s) => s.setImageGenParams);
-  const setStyleReference = useStudioStore((s) => s.setStyleReference);
-
-  const generated = origin?.kind === "generated" ? origin : undefined;
-  const modelLabel = generated
-    ? modelsData?.data?.models?.find((m) => m.id === generated.algorithm)
-        ?.label ?? generated.algorithm
-    : undefined;
+  const { loading, generated, settings, remix } = useImageOrigin(image.uuid);
 
   const generateMore = () => {
-    if (!generated) return;
-    setImagePrompt(generated.prompt);
-    // Only a model the studio offers is carried over; otherwise the prompt
-    // goes to whichever model the generate dialog already has.
-    if (generated.model) {
-      setImageGenParams({
-        model: generated.model,
-        ...(generated.size ? { size: generated.size } : {}),
-        negativePrompt: generated.negativePrompt ?? "",
-      });
-      if (generated.styleReferenceUuid) {
-        const reference = generated.styleReferenceUuid;
-        setStyleReference({
-          uuid: reference,
-          name:
-            images.find((i) => i.uuid === reference)?.name ?? "Style reference",
-        });
-      }
-    }
+    remix();
     onGenerateMore();
   };
 
   const meta = [
-    modelLabel,
-    generated?.size?.replace("*", "×"),
-    generated?.seed !== undefined ? `seed ${generated.seed}` : undefined,
+    ...settings,
     clipCount === 0
       ? "No clips in the matrix yet."
       : `${clipCount} ${clipCount === 1 ? "clip" : "clips"} in the matrix.`,
-  ].filter(Boolean);
+  ];
 
   return (
     <Overlay ref={overlayRef} tabIndex={-1} onClick={onClose}>
@@ -112,7 +80,7 @@ export const ImageDialog: React.FC<Props> = ({
         </Header>
         <ActionDialogBody>
           <ImageDialogThumb as={PresignedImage} dreamUuid={image.uuid} alt="" />
-          {isLoading && !origin ? (
+          {loading ? (
             <ActionMeta>Loading…</ActionMeta>
           ) : generated ? (
             <>
@@ -130,10 +98,11 @@ export const ImageDialog: React.FC<Props> = ({
           <FooterButtons>
             <CancelBtn onClick={onCheckRow}>Check all</CancelBtn>
             <CancelBtn onClick={onUncheckRow}>Uncheck all</CancelBtn>
+            <DeleteBtn onClick={onDelete}>Remove</DeleteBtn>
           </FooterButtons>
           <FooterButtons>
             <CancelBtn onClick={onClose}>Close</CancelBtn>
-            {generated && <AddBtn onClick={generateMore}>Generate more</AddBtn>}
+            {generated && <AddBtn onClick={generateMore}>Remix</AddBtn>}
           </FooterButtons>
         </Footer>
       </ActionDialogPanel>

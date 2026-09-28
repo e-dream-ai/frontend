@@ -112,6 +112,12 @@ export const EditCopyButton = styled.button`
   }
 `;
 
+// Holds the pencil's place on a row without one, so the prompts line up.
+export const EditCopySpacer = styled.span`
+  flex-shrink: 0;
+  width: calc(14px + 0.5rem);
+`;
+
 export const SummaryBox = styled.div`
   border: 1px solid ${FLOW.border};
   border-radius: ${FLOW.radiusSm};

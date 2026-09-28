@@ -1,6 +1,6 @@
 import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
-import { Panel, Body } from "./select-modal.styled";
+import { Panel, Body, CancelBtn } from "./select-modal.styled";
 import { FieldGroup } from "./transition-settings-panel.styled";
 
 export const ActionDialogPanel = styled(Panel)`
@@ -41,4 +41,11 @@ export const ImageDialogThumb = styled.img`
   object-fit: contain;
   align-self: center;
   border-radius: 6px;
+`;
+
+export const DeleteBtn = styled(CancelBtn)`
+  &:hover {
+    border-color: ${FLOW.error};
+    color: ${FLOW.error};
+  }
 `;

@@ -31,6 +31,7 @@ import {
   ActionIndex,
   DeleteButton,
   EditCopyButton,
+  EditCopySpacer,
   SummaryBox,
   SummaryHighlight,
 } from "./actions-tab.styled";
@@ -77,7 +78,7 @@ const ActionRowItem = React.memo(function ActionRowItem({
         {column}
       </ActionIndex>
       <DeleteButton onClick={() => onRemove(action.id)}>&times;</DeleteButton>
-      {locked && (
+      {locked ? (
         <EditCopyButton
           onClick={() => onEditCopy(action)}
           aria-label="Edit a copy of this action"
@@ -85,6 +86,8 @@ const ActionRowItem = React.memo(function ActionRowItem({
         >
           <Pencil size={14} />
         </EditCopyButton>
+      ) : (
+        <EditCopySpacer aria-hidden="true" />
       )}
       {loraOptions.length > 0 && (
         <ActionLoraSelect

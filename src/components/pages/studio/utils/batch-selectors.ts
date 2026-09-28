@@ -53,6 +53,22 @@ export const findCellJob = (
   );
 
 /**
+ * How many clips an image has in its matrix row: one per column whose cell
+ * holds a job. A job for an action with no column (a blank prompt, or one
+ * left from before removal discarded clips) is not in the row.
+ */
+export const imageClipCount = (
+  jobs: readonly StudioJob[],
+  actions: readonly StudioAction[],
+  imageUuid: string,
+) =>
+  actions.filter(
+    (action) =>
+      isRunnableAction(action) &&
+      findCellJob(jobs, imageUuid, action.id) !== undefined,
+  ).length;
+
+/**
  * Whether the cell's checkbox is ticked, i.e. whether the next Generate runs
  * it. An empty cell is on unless unchecked; a rendered or failed one is off
  * unless picked to re-render with the current settings; an in-flight one is

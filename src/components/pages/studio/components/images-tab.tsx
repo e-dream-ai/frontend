@@ -31,6 +31,8 @@ import { AddFromPlaylistModal } from "./add-from-playlist-modal";
 import { SelectImageDreamModal } from "./select-image-dream-modal";
 import { GenerateReferenceFramesModal } from "./generate-reference-frames-modal";
 import { ImageLightbox } from "./image-lightbox";
+import { ConfirmModal } from "@/components/modals/confirm.modal";
+import { imageClipCount } from "../utils/batch-selectors";
 import type { Dream } from "@/types/dream.types";
 
 export const ImagesTab: React.FC = () => {
@@ -38,6 +40,19 @@ export const ImagesTab: React.FC = () => {
   const addImage = useStudioStore((s) => s.addImage);
   const removeImage = useRemoveStudioImage();
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
+  const jobs = useStudioStore((s) => s.jobs);
+  const actions = useStudioStore((s) => s.actions);
+  const [confirmRemove, setConfirmRemove] = useState<{
+    uuid: string;
+    clipCount: number;
+  } | null>(null);
+
+  // An image in use takes its clips with it, so that asks first.
+  const handleRemove = (uuid: string) => {
+    const clipCount = imageClipCount(jobs, actions, uuid);
+    if (clipCount > 0) setConfirmRemove({ uuid, clipCount });
+    else removeImage(uuid);
+  };
 
   const updateImage = useStudioStore((s) => s.updateImage);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -181,7 +196,7 @@ export const ImagesTab: React.FC = () => {
                   aria-label={`Remove ${img.name}`}
                   onClick={(e) => {
                     e.stopPropagation();
-                    removeImage(img.uuid);
+                    handleRemove(img.uuid);
                   }}
                 >
                   &times;
@@ -215,6 +230,21 @@ export const ImagesTab: React.FC = () => {
         onChange={handleFileSelected}
       />
 
+      <ConfirmModal
+        isOpen={confirmRemove !== null}
+        title="Remove image?"
+        text={`This image has ${confirmRemove?.clipCount ?? 0} ${
+          confirmRemove?.clipCount === 1 ? "clip" : "clips"
+        } in the matrix. Removing it from this playlist does not delete it.`}
+        confirmText="Remove"
+        confirmButtonType="danger"
+        onCancel={() => setConfirmRemove(null)}
+        onConfirm={() => {
+          if (confirmRemove) removeImage(confirmRemove.uuid);
+          setConfirmRemove(null);
+        }}
+      />
+
       {showPlaylistModal && (
         <AddFromPlaylistModal onClose={() => setShowPlaylistModal(false)} />
       )}
@@ -239,6 +269,14 @@ export const ImagesTab: React.FC = () => {
           openUuid={expandedImageUuid}
           onClose={() => setExpandedImageUuid(null)}
           onOpenChange={setExpandedImageUuid}
+          onRemix={() => {
+            setExpandedImageUuid(null);
+            setShowGenerateModal(true);
+          }}
+          onDelete={(uuid) => {
+            setExpandedImageUuid(null);
+            handleRemove(uuid);
+          }}
         />
       )}
     </ImagesTabContainer>

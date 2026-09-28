@@ -16,12 +16,14 @@ const STOPWORDS = new Set(
 const MAX_CHARS = 22;
 const MAX_WORDS = 5;
 
-const words = (prompt: string) =>
+/** A prompt's meaningful words, lowercased, in order. */
+export const words = (prompt: string) =>
   (prompt.toLowerCase().match(/[a-z0-9]+(?:'[a-z]+)?/g) ?? [])
     .map((w) => w.replace(/'s$/, ""))
     .filter((w) => w.length > 1 && !STOPWORDS.has(w));
 
-const take = (candidates: string[]) => {
+/** As many of `candidates` as fit a heading: a few words, two lines. */
+export const take = (candidates: string[]) => {
   const picked: string[] = [];
   let length = 0;
   for (const word of candidates) {

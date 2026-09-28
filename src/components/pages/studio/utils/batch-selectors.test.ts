@@ -5,6 +5,7 @@ import {
   isCellChecked,
   jobCompletion,
   actionClipCounts,
+  imageClipCount,
 } from "./batch-selectors";
 
 const job = (overrides: Partial<StudioJob> = {}): StudioJob => ({
@@ -100,5 +101,24 @@ describe("actionClipCounts", () => {
       ],
     );
     expect(counts.size).toBe(0);
+  });
+});
+
+describe("imageClipCount", () => {
+  const action = (id: string, prompt = "move") => ({ id, prompt });
+
+  it("counts only cells in the image's row", () => {
+    const jobs = [
+      job({ actionId: "a", dreamUuid: "1" }),
+      job({ actionId: "b", dreamUuid: "2", status: "queue" }),
+      // An action with a blank prompt has no column.
+      job({ actionId: "blank", dreamUuid: "3" }),
+      // Nor does one no longer in the project.
+      job({ actionId: "gone", dreamUuid: "4" }),
+      job({ imageId: "other", actionId: "a", dreamUuid: "5" }),
+      job({ actionId: "a", dreamUuid: "6", jobType: "uprez" }),
+    ];
+    const actions = [action("a"), action("b"), action("blank", "  ")];
+    expect(imageClipCount(jobs, actions, "img")).toBe(2);
   });
 });

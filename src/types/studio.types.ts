@@ -6,6 +6,8 @@ export interface StudioImage {
   name: string;
   seed?: number;
   size?: string;
+  /** What it was generated from; absent for uploads and older frames. */
+  prompt?: string;
   status: "queue" | "processing" | "processed" | "failed";
   progress?: number;
   previewFrame?: string;

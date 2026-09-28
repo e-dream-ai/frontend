@@ -5,6 +5,7 @@ import { useBatchSubmit } from "../hooks/useBatchSubmit";
 import {
   actionClipCounts,
   findCellJob,
+  imageClipCount,
   isAnimatableFrame,
   isCellChecked,
   isJobInFlight,
@@ -47,7 +48,12 @@ import { SegmentPreview } from "./segment-preview";
 import { useHoverTooltip } from "./hover-tooltip";
 import { ChipRail, SegmentChip } from "./segment-preview.styled";
 import { useDreamSegments } from "../hooks/useDreamSegments";
-import { useDiscardStudioClip } from "../hooks/useStudioClipActions";
+import {
+  useDiscardStudioClip,
+  useRemoveStudioAction,
+  useRemoveStudioImage,
+} from "../hooks/useStudioClipActions";
+import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { ClipHistory } from "./clip-history";
 import { ForceSettingsDialog } from "./force-settings-dialog";
 import queryClient from "@/api/query-client";
@@ -195,6 +201,12 @@ export const GenerateTab: React.FC = () => {
   const [openActionId, setOpenActionId] = useState<string | null>(null);
   const [openImageUuid, setOpenImageUuid] = useState<string | null>(null);
   const [generateOpen, setGenerateOpen] = useState(false);
+  // A row or column with clips, waiting on the go-ahead to delete it.
+  const [pendingDelete, setPendingDelete] = useState<{
+    kind: "image" | "action";
+    id: string;
+    clipCount: number;
+  } | null>(null);
   // The cell under the pointer, whose heading and image name light up.
   const [hoverCell, setHoverCell] = useState<{
     imageUuid: string;
@@ -204,6 +216,9 @@ export const GenerateTab: React.FC = () => {
     (a) => a.id === openActionId,
   );
   const openImage = frames.find((i) => i.uuid === openImageUuid);
+  const openImageClipCount = openImage
+    ? imageClipCount(jobs, runnableActions, openImage.uuid)
+    : 0;
 
   const newCombos = useMemo(
     () => getPendingCombinations(),
@@ -448,6 +463,19 @@ export const GenerateTab: React.FC = () => {
     if (job) checkRenderedCell(comboKeyOf(job.imageId, job.actionId), job);
   };
   const discardClip = useDiscardStudioClip();
+  const removeImage = useRemoveStudioImage();
+  const removeAction = useRemoveStudioAction();
+
+  /** Deletes a row or column; one with clips asks first, as its × would. */
+  const requestDelete = (
+    kind: "image" | "action",
+    id: string,
+    clipCount: number,
+  ) => {
+    if (clipCount > 0) setPendingDelete({ kind, id, clipCount });
+    else if (kind === "image") removeImage(id);
+    else removeAction(id);
+  };
   const hoverTip = useHoverTooltip();
 
   const playingJob = useMemo(
@@ -944,16 +972,17 @@ export const GenerateTab: React.FC = () => {
             setOpenActionId(null);
             uncheckAll({ actionId: runnableActions[openActionIndex].id });
           }}
+          onDelete={() => {
+            const action = runnableActions[openActionIndex];
+            setOpenActionId(null);
+            requestDelete("action", action.id, clipCounts.get(action.id) ?? 0);
+          }}
         />
       )}
       {openImage && (
         <ImageDialog
           image={openImage}
-          clipCount={
-            jobs.filter(
-              (j) => j.jobType !== "uprez" && j.imageId === openImage.uuid,
-            ).length
-          }
+          clipCount={openImageClipCount}
           onClose={() => setOpenImageUuid(null)}
           onCheckRow={() => {
             setOpenImageUuid(null);
@@ -967,8 +996,33 @@ export const GenerateTab: React.FC = () => {
             setOpenImageUuid(null);
             setGenerateOpen(true);
           }}
+          onDelete={() => {
+            setOpenImageUuid(null);
+            requestDelete("image", openImage.uuid, openImageClipCount);
+          }}
         />
       )}
+      <ConfirmModal
+        isOpen={pendingDelete !== null}
+        title={
+          pendingDelete?.kind === "image" ? "Remove image?" : "Remove action?"
+        }
+        text={`This ${pendingDelete?.kind ?? "action"} has ${
+          pendingDelete?.clipCount ?? 0
+        } ${pendingDelete?.clipCount === 1 ? "clip" : "clips"} in the matrix. ${
+          pendingDelete?.kind === "image"
+            ? "Removing it from this playlist does not delete it."
+            : "Removing it discards them: they leave the matrix and the output playlist."
+        }`}
+        confirmText="Remove"
+        confirmButtonType="danger"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete?.kind === "image") removeImage(pendingDelete.id);
+          else if (pendingDelete) removeAction(pendingDelete.id);
+          setPendingDelete(null);
+        }}
+      />
       {generateOpen && (
         <GenerateReferenceFramesModal onClose={() => setGenerateOpen(false)} />
       )}

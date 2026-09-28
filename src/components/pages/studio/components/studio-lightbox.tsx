@@ -8,16 +8,13 @@ import {
   ImageFrame,
   Caption,
   CaptionName,
-  Counter,
   NavButton,
   CloseButton,
 } from "./reference-frame-lightbox.styled";
 
-const pad = (n: number) => String(n).padStart(2, "0");
-
 interface Props {
-  /** Position of the open item, and how many there are, for the counter and
-   *  for deciding whether the arrows can still step. */
+  /** Position of the open item, and how many there are, for deciding
+   *  whether the arrows can still step. */
   index: number;
   count: number;
   name: string;
@@ -27,6 +24,9 @@ interface Props {
   prevUrl?: string;
   nextUrl?: string;
   label?: string;
+  /** Shown in place of the caption, e.g. the name, prompt and what can be
+   *  done with it. */
+  details?: React.ReactNode;
   /** The resolved image. Flow frames carry a URL; studio images may need a
    *  presigned fetch — so each caller renders its own <img>. */
   children: React.ReactNode;
@@ -34,7 +34,8 @@ interface Props {
 
 /**
  * Lightbox chrome shared by the flow and action studios: portal, focus trap,
- * escape-to-close, arrow-key stepping, prev/next buttons, caption + counter.
+ * escape-to-close, arrow-key stepping, prev/next buttons, caption. Only the
+ * close button and Escape close it; a stray click on the backdrop does not.
  * Only the image element differs between the two, so that comes in as
  * children rather than being resolved here.
  */
@@ -47,6 +48,7 @@ export const StudioLightbox: React.FC<Props> = ({
   prevUrl,
   nextUrl,
   label = "Image preview",
+  details,
   children,
 }) => {
   const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
@@ -78,51 +80,36 @@ export const StudioLightbox: React.FC<Props> = ({
     <Overlay
       ref={overlayRef}
       tabIndex={-1}
-      onClick={onClose}
       role="dialog"
       aria-modal="true"
       aria-label={label}
     >
-      <CloseButton
-        onClick={(e) => {
-          e.stopPropagation();
-          onClose();
-        }}
-        aria-label="Close"
-      >
+      <CloseButton onClick={onClose} aria-label="Close">
         &times;
       </CloseButton>
 
       <NavButton
         $side="left"
         disabled={!canStep(index, -1, count)}
-        onClick={(e) => {
-          e.stopPropagation();
-          onStep(-1);
-        }}
+        onClick={() => onStep(-1)}
         aria-label="Previous image"
       >
         <ChevronLeft size={22} strokeWidth={2.4} />
       </NavButton>
 
-      <ImageFrame onClick={(e) => e.stopPropagation()}>{children}</ImageFrame>
+      <ImageFrame $compact={!!details}>{children}</ImageFrame>
 
-      <Caption onClick={(e) => e.stopPropagation()}>
-        <CaptionName>{name}</CaptionName>
-        {count > 1 && (
-          <Counter>
-            {pad(index + 1)} / {pad(count)}
-          </Counter>
-        )}
-      </Caption>
+      {/* Details carry the name themselves, on one line with its settings. */}
+      {details ?? (
+        <Caption>
+          <CaptionName>{name}</CaptionName>
+        </Caption>
+      )}
 
       <NavButton
         $side="right"
         disabled={!canStep(index, 1, count)}
-        onClick={(e) => {
-          e.stopPropagation();
-          onStep(1);
-        }}
+        onClick={() => onStep(1)}
         aria-label="Next image"
       >
         <ChevronRight size={22} strokeWidth={2.4} />
