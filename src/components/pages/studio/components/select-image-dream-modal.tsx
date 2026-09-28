@@ -37,12 +37,15 @@ interface Props {
   /** Receives the selected dreams that are not already present. The caller
    *  owns the mapping into its own store shape (flow frame vs studio image). */
   onAdd: (dreams: Dream[]) => void;
+  /** A single pick replaces the previous selection; the default allows many. */
+  selectionLimit?: 1;
 }
 
 export const SelectImageDreamModal: React.FC<Props> = ({
   onClose,
   existingDreamUuids,
   onAdd,
+  selectionLimit,
 }) => {
   const [search, setSearch] = useState("");
   const debouncedSearch = useDebounce(search, 350);
@@ -72,7 +75,17 @@ export const SelectImageDreamModal: React.FC<Props> = ({
     [dreams],
   );
 
-  const { selectedUuids, toggle } = useUuidSelection();
+  const { selectedUuids, toggle, replace } = useUuidSelection();
+  const handleToggle = useCallback(
+    (uuid: string) => {
+      if (selectionLimit === 1) {
+        replace(selectedUuids.has(uuid) ? [] : [uuid]);
+      } else {
+        toggle(uuid);
+      }
+    },
+    [selectionLimit, selectedUuids, replace, toggle],
+  );
 
   const handleAdd = useCallback(() => {
     const picked = dreams.filter(
@@ -139,7 +152,7 @@ export const SelectImageDreamModal: React.FC<Props> = ({
                     made={madeByUuid.get(dream.uuid) ?? dream.name}
                     isSelected={selectedUuids.has(dream.uuid)}
                     alreadyAdded={existingDreamUuids.has(dream.uuid)}
-                    onToggle={toggle}
+                    onToggle={selectionLimit === 1 ? handleToggle : toggle}
                   />
                 ))}
               </Grid>
@@ -158,7 +171,11 @@ export const SelectImageDreamModal: React.FC<Props> = ({
           <FooterButtons>
             <CancelBtn onClick={onClose}>Cancel</CancelBtn>
             <AddBtn onClick={handleAdd} disabled={selectedUuids.size === 0}>
-              Add{selectedUuids.size > 0 ? ` (${selectedUuids.size})` : ""}
+              {selectionLimit === 1
+                ? "Use image"
+                : `Add${
+                    selectedUuids.size > 0 ? ` (${selectedUuids.size})` : ""
+                  }`}
             </AddBtn>
           </FooterButtons>
         </Footer>

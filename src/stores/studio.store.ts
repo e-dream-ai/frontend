@@ -7,6 +7,7 @@ import {
 import type {
   StudioTab,
   StudioImage,
+  StyleReference,
   StudioAction,
   StudioJob,
   ImageGenParams,
@@ -19,6 +20,8 @@ type StudioState = {
 
   imagePrompt: string;
   setImagePrompt: (prompt: string) => void;
+  styleReference: StyleReference | null;
+  setStyleReference: (reference: StyleReference | null) => void;
   imageGenParams: ImageGenParams;
   setImageGenParams: (params: Partial<ImageGenParams>) => void;
   images: StudioImage[];
@@ -114,6 +117,7 @@ const pruneCombosForImage = (combos: Set<string>, imageUuid: string) => {
 export const studioPartialize = (state: StudioState) => ({
   activeTab: state.activeTab,
   imagePrompt: state.imagePrompt,
+  styleReference: state.styleReference,
   imageGenParams: state.imageGenParams,
   images: state.images.map((img) => ({
     ...img,
@@ -141,6 +145,8 @@ export const useStudioStore = create<StudioState>()(
 
       imagePrompt: "",
       setImagePrompt: (prompt: string) => set({ imagePrompt: prompt }),
+      styleReference: null,
+      setStyleReference: (reference) => set({ styleReference: reference }),
       imageGenParams: DEFAULT_IMAGE_GEN_PARAMS,
       setImageGenParams: (params: Partial<ImageGenParams>) =>
         set((s) => ({ imageGenParams: { ...s.imageGenParams, ...params } })),
@@ -305,6 +311,7 @@ export const useStudioStore = create<StudioState>()(
         set({
           activeTab: "images" as StudioTab,
           imagePrompt: "",
+          styleReference: null,
           imageGenParams: DEFAULT_IMAGE_GEN_PARAMS,
           images: [],
           actions: [],

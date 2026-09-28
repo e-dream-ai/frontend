@@ -25,11 +25,12 @@ const SelectImageDreamCardComponent: React.FC<Props> = ({
   onToggle,
 }) => {
   const imageUrl = dream.thumbnail || dream.video || dream.original_video || "";
-  const label = alreadyAdded ? `${made} — already in strip` : made;
+  const label = alreadyAdded ? `${made} — already selected` : made;
 
   return (
     <Card
       type="button"
+      disabled={alreadyAdded}
       aria-pressed={isSelected}
       aria-disabled={alreadyAdded || undefined}
       aria-label={`${dream.name}, ${label}`}
