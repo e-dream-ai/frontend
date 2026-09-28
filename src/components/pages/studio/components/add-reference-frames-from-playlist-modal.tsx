@@ -25,6 +25,7 @@ import {
   ImageSelectThumbnail,
   StatusMessage,
 } from "./add-from-playlist-modal.styled";
+import { CARD_THUMB, sizedImageUrl } from "../utils/sized-image";
 
 interface Props {
   onClose: () => void;
@@ -117,7 +118,7 @@ export const AddReferenceFramesFromPlaylistModal: React.FC<Props> = ({
                       title={alreadyAdded ? "Already in strip" : dream.name}
                     >
                       <ImageSelectThumbnail
-                        src={dream.thumbnail}
+                        src={sizedImageUrl(dream.thumbnail, CARD_THUMB)}
                         alt={dream.name}
                         $ratio={mediaAspectRatio(
                           dream.processedMediaWidth,

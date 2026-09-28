@@ -238,9 +238,9 @@ export const RowThumb = styled.img`
   border-radius: 4px;
 `;
 
-// Capped and clipped rather than left to size the column: names run long, and
-// the matrix is the thing worth the width. Hovering the row gives the whole
-// name back.
+// Capped rather than left to size the column: names run long, and the matrix
+// is the thing worth the width. Up to three lines, then clipped; the row's
+// dialog has the whole name.
 export const RowName = styled.span<{ $lit?: boolean }>`
   ${matrixLabel}
   ${(p) => p.$lit && `color: ${FLOW.accent};`}
@@ -248,9 +248,12 @@ export const RowName = styled.span<{ $lit?: boolean }>`
     color: ${FLOW.accent};
   }
   max-width: 130px;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  overflow-wrap: anywhere;
 `;
 
 export const GridCell = styled.td<{

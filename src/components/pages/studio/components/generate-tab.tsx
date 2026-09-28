@@ -116,6 +116,7 @@ import {
   MatrixCheckButton,
   GenerateRow,
 } from "./generate-tab.styled";
+import { ROW_THUMB } from "../utils/sized-image";
 
 /**
  * A job's settings, reading an older job's back from its dream's prompt when
@@ -545,6 +546,7 @@ export const GenerateTab: React.FC = () => {
                     <CaptionThumb
                       as={PresignedImage}
                       dreamUuid={playingImage.uuid}
+                      resizeOptions={ROW_THUMB}
                       alt=""
                     />
                   )}
@@ -810,6 +812,7 @@ export const GenerateTab: React.FC = () => {
                             <RowThumb
                               as={PresignedImage}
                               dreamUuid={image.uuid}
+                              resizeOptions={ROW_THUMB}
                               alt=""
                             />
                           )}

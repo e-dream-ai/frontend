@@ -20,6 +20,7 @@ import {
   ImageDialogThumb,
   DeleteBtn,
 } from "./action-dialog.styled";
+import { DIALOG_THUMB } from "../utils/sized-image";
 
 interface Props {
   image: StudioImage;
@@ -79,7 +80,12 @@ export const ImageDialog: React.FC<Props> = ({
           </CloseBtn>
         </Header>
         <ActionDialogBody>
-          <ImageDialogThumb as={PresignedImage} dreamUuid={image.uuid} alt="" />
+          <ImageDialogThumb
+            as={PresignedImage}
+            dreamUuid={image.uuid}
+            resizeOptions={DIALOG_THUMB}
+            alt=""
+          />
           {loading ? (
             <ActionMeta>Loading…</ActionMeta>
           ) : generated ? (

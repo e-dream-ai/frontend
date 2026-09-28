@@ -34,6 +34,7 @@ import { ImageLightbox } from "./image-lightbox";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { imageClipCount } from "../utils/batch-selectors";
 import type { Dream } from "@/types/dream.types";
+import { CARD_THUMB, sizedImageUrl } from "../utils/sized-image";
 
 export const ImagesTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
@@ -176,11 +177,15 @@ export const ImagesTab: React.FC = () => {
                     onClick={() => setExpandedImageUuid(img.uuid)}
                   >
                     {img.url.startsWith("http") ? (
-                      <ImageThumbnail src={img.url} alt={img.name} />
+                      <ImageThumbnail
+                        src={sizedImageUrl(img.url, CARD_THUMB)}
+                        alt={img.name}
+                      />
                     ) : (
                       <ImageThumbnail
                         as={PresignedImage}
                         dreamUuid={img.uuid}
+                        resizeOptions={CARD_THUMB}
                         alt={img.name}
                       />
                     )}

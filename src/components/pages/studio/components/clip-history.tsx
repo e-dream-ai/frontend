@@ -29,6 +29,7 @@ import {
   HistoryEmpty,
 } from "./transition-history.styled";
 import { ClipHistoryGrid, ClipHistoryThumb } from "./generate-tab.styled";
+import { HISTORY_THUMB, sizedImageUrl } from "../utils/sized-image";
 
 /**
  * Must store the whole ApiResponse: `[DREAM_QUERY_KEY, uuid]` is one cache
@@ -199,7 +200,11 @@ export function ClipHistory({
                 >
                   <ClipHistoryThumb $current={false}>
                     {thumb ? (
-                      <img src={thumb} alt="" loading="lazy" />
+                      <img
+                        src={sizedImageUrl(thumb, HISTORY_THUMB)}
+                        alt=""
+                        loading="lazy"
+                      />
                     ) : (
                       <HistoryPlaceholder>…</HistoryPlaceholder>
                     )}

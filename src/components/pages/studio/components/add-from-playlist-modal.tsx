@@ -25,6 +25,7 @@ import {
   ImageSelectThumbnail,
   StatusMessage,
 } from "./add-from-playlist-modal.styled";
+import { CARD_THUMB } from "../utils/sized-image";
 
 interface Props {
   onClose: () => void;
@@ -140,6 +141,7 @@ export const AddFromPlaylistModal: React.FC<Props> = ({ onClose }) => {
                       <ImageSelectThumbnail
                         as={PresignedImage}
                         dreamUuid={dream.uuid}
+                        resizeOptions={CARD_THUMB}
                         alt={dream.name}
                         $ratio={mediaAspectRatio(
                           dream.processedMediaWidth,

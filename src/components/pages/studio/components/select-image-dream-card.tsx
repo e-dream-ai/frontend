@@ -8,6 +8,7 @@ import {
   CardCheckmark,
   CardName,
 } from "./select-image-dream-modal.styled";
+import { CARD_THUMB, sizedImageUrl } from "../utils/sized-image";
 
 interface Props {
   dream: Dream;
@@ -24,7 +25,10 @@ const SelectImageDreamCardComponent: React.FC<Props> = ({
   alreadyAdded,
   onToggle,
 }) => {
-  const imageUrl = dream.thumbnail || dream.video || dream.original_video || "";
+  const imageUrl = sizedImageUrl(
+    dream.thumbnail || dream.video || dream.original_video || "",
+    CARD_THUMB,
+  );
   const label = alreadyAdded ? `${made} — already selected` : made;
 
   return (
