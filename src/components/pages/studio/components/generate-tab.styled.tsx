@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 import { HistoryThumb } from "./transition-history.styled";
 import { BottomRow, GenerateSection } from "./images-tab.styled";
@@ -73,26 +73,86 @@ export const GridTable = styled.table`
   font-size: 0.8125rem;
 `;
 
-// An action column is only as wide as its number — the prompt itself is a
-// sentence and there may be dozens of them, so spelling each one out across
-// the header turned the matrix into something you could only read sideways.
-// Hovering a column gives you the prompt.
-export const GridHeader = styled.th`
+// Every other action column is faintly lit, so each action reads as a strip
+// running down from its heading. Layered over the card colour because the
+// sticky heading cells have to stay opaque.
+const BAND = "rgba(255, 255, 255, 0.035)";
+const banded = (band?: boolean) =>
+  band ? `linear-gradient(${BAND}, ${BAND}), ${FLOW.bgCard}` : FLOW.bgCard;
+
+// An action column is headed by its number and a few words — the prompt
+// itself is a sentence and there may be dozens of them, so spelling each one
+// out across the header turned the matrix into something you could only read
+// sideways. Clicking the heading shows the whole prompt.
+export const GridHeader = styled.th<{ $band?: boolean; $lit?: boolean }>`
   padding: 0.5rem 0.375rem;
   text-align: center;
   font-weight: 500;
   vertical-align: bottom;
-  color: ${(props) => props.theme.textBodyColor};
-  border-bottom: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
+  color: ${(p) => (p.$lit ? FLOW.accent : p.theme.textBodyColor)};
+  border-bottom: 2px solid ${(p) => (p.$lit ? FLOW.accent : FLOW.connector)};
   min-width: 56px;
   cursor: default;
 
   position: sticky;
   top: 0;
   z-index: 2;
-  background: ${FLOW.bgCard};
+  background: ${(p) => banded(p.$band)};
 
   &:hover {
+    color: ${FLOW.accent};
+  }
+`;
+
+/** Opens the action's dialog: its number over a few words of its prompt. */
+/** Column headings and row names read as one set of labels. */
+const matrixLabel = css`
+  font-family: ${FLOW.fontFamily};
+  font-size: 12px;
+  font-weight: 600;
+  color: ${FLOW.text};
+`;
+
+export const GridHeaderButton = styled.button`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  width: 8rem;
+  margin: 0 auto;
+  padding: 2px 4px;
+  background: none;
+  border: none;
+  border-radius: 4px;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 1px solid ${FLOW.accent};
+  }
+`;
+
+export const GridHeaderIndex = styled.span`
+  font-size: 11px;
+  opacity: 0.6;
+`;
+
+// Always two lines tall, so headings of different lengths line up.
+export const GridHeaderLabel = styled.span<{ $lit?: boolean }>`
+  ${matrixLabel}
+  ${(p) => p.$lit && `color: ${FLOW.accent};`}
+  font-size: 14px;
+  font-weight: 700;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.3;
+  min-height: 2.6em;
+  overflow-wrap: anywhere;
+
+  ${GridHeaderButton}:hover & {
     color: ${FLOW.accent};
   }
 `;
@@ -101,17 +161,39 @@ export const GridHeader = styled.th`
 export const GridCorner = styled(GridHeader)`
   left: 0;
   z-index: 3;
+  border-right: 2px solid ${FLOW.connector};
 
   &:hover {
     color: inherit;
   }
 `;
 
-export const GridRowHeader = styled.td`
+/** Says which way is which: actions run across the top, images down the side. */
+export const CornerKey = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  font-family: ${FLOW.fontFamily};
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: ${FLOW.textMuted};
+
+  & > :first-child {
+    align-self: flex-end;
+  }
+
+  & > :last-child {
+    align-self: flex-start;
+  }
+`;
+
+export const GridRowHeader = styled.td<{ $lit?: boolean }>`
   padding: 0.5rem 0.375rem;
   font-weight: 500;
   color: ${(props) => props.theme.textBodyColor};
-  border-right: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
+  border-right: 2px solid ${(p) => (p.$lit ? FLOW.accent : FLOW.connector)};
   border-bottom: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
   min-width: 100px;
 
@@ -140,17 +222,20 @@ export const RowThumb = styled.img`
 // Capped and clipped rather than left to size the column: names run long, and
 // the matrix is the thing worth the width. Hovering the row gives the whole
 // name back.
-export const RowName = styled.span`
+export const RowName = styled.span<{ $lit?: boolean }>`
+  ${matrixLabel}
+  ${(p) => p.$lit && `color: ${FLOW.accent};`}
   max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
 
-export const GridCell = styled.td<{ $excluded?: boolean }>`
+export const GridCell = styled.td<{ $excluded?: boolean; $band?: boolean }>`
   padding: 0.875rem 1.125rem;
   text-align: center;
   border-bottom: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
+  background: ${(p) => (p.$band ? BAND : "transparent")};
   opacity: ${(props) => (props.$excluded ? 0.4 : 1)};
   cursor: pointer;
 
@@ -342,13 +427,6 @@ export const ProgressFill = styled.div<{ $percent: number }>`
 export const TimeEstimate = styled.span`
   margin-right: 1rem;
   color: #888;
-`;
-
-export const JobActions = styled.div`
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  margin-top: 1rem;
 `;
 
 export const ActionButton = styled.button<{ $accent?: boolean }>`

@@ -65,6 +65,8 @@ const actionAdapter: EditorAdapter = {
       // Projects saved before history existed carry none; without this the
       // previous project's history would stay on screen.
       historyJobs: [],
+      removedImages: [],
+      removedActions: [],
       ...(fromPersistedActionState(state as PersistedActionState) as Parameters<
         typeof useStudioStore.setState
       >[0]),

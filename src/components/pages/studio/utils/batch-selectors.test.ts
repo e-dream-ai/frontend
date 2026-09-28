@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
-import type { StudioJob } from "../../../../types/studio.types";
-import { findCellJob, isCellChecked, jobCompletion } from "./batch-selectors";
+import type { StudioImage, StudioJob } from "../../../../types/studio.types";
+import {
+  findCellJob,
+  isCellChecked,
+  jobCompletion,
+  actionClipCounts,
+} from "./batch-selectors";
 
 const job = (overrides: Partial<StudioJob> = {}): StudioJob => ({
   imageId: "img",
@@ -61,5 +66,39 @@ describe("jobCompletion", () => {
     ).toBeCloseTo(0.9);
     expect(jobCompletion(job({ status: "processed" }))).toBe(1);
     expect(jobCompletion(job({ status: "failed" }))).toBe(1);
+  });
+});
+
+describe("actionClipCounts", () => {
+  const frame = (uuid: string, status: StudioImage["status"] = "processed") =>
+    ({ uuid, status }) as StudioImage;
+
+  it("counts any clip in a visible cell, whatever its status", () => {
+    const counts = actionClipCounts(
+      [frame("img"), frame("img2")],
+      [
+        job({ actionId: "done" }),
+        job({ actionId: "done", imageId: "img2" }),
+        job({ actionId: "queued", status: "queue" }),
+        job({ actionId: "failed", status: "failed" }),
+      ],
+    );
+    expect(Object.fromEntries(counts)).toEqual({
+      done: 2,
+      queued: 1,
+      failed: 1,
+    });
+  });
+
+  it("ignores clips of frames the matrix does not show, and uprez jobs", () => {
+    const counts = actionClipCounts(
+      [frame("img"), frame("pending", "processing")],
+      [
+        job({ actionId: "gone", imageId: "removed" }),
+        job({ actionId: "hidden", imageId: "pending" }),
+        job({ actionId: "uprez-1", jobType: "uprez" }),
+      ],
+    );
+    expect(counts.size).toBe(0);
   });
 });

@@ -9,14 +9,25 @@ import type { StudioJob } from "@/types/studio.types";
  * id, which the studio never kept, so it is looked up by dream uuid. The dream
  * itself stays on the account.
  */
-export const removeFromOutputPlaylist = async (
+export const removeFromOutputPlaylist = (
   playlistId: string,
   dreamUuid: string,
+) => removeManyFromOutputPlaylist(playlistId, [dreamUuid]);
+
+/** Takes several clips out at once, looking the playlist up only once. */
+const removeManyFromOutputPlaylist = async (
+  playlistId: string,
+  dreamUuids: string[],
 ) => {
+  const wanted = new Set(dreamUuids);
   const items = await fetchAllPlaylistItems(playlistId);
-  const item = items.find((i) => i.dreamItem?.uuid === dreamUuid);
-  if (!item) return;
-  await axiosClient.delete(`/v1/playlist/${playlistId}/remove-item/${item.id}`);
+  for (const item of items) {
+    const uuid = item.dreamItem?.uuid;
+    if (!uuid || !wanted.has(uuid)) continue;
+    await axiosClient.delete(
+      `/v1/playlist/${playlistId}/remove-item/${item.id}`,
+    );
+  }
 };
 
 const addToOutputPlaylist = (playlistId: string, dreamUuid: string) =>
@@ -52,6 +63,60 @@ export const useDiscardStudioClip = () => {
       }
     },
     [outputPlaylistId],
+  );
+};
+
+/**
+ * Discards every clip of the matching cells, as the × on each would: out of
+ * the matrix, the preview and the output playlist, rendered ones into history.
+ * Clips still rendering are dropped; the playlist already holds them, since
+ * they are added on submit.
+ */
+const useDiscardStudioClipsWhere = () => {
+  const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
+
+  return useCallback(
+    (matches: (job: StudioJob) => boolean) => {
+      const store = useStudioStore.getState();
+      const discarded = store.jobs.filter(
+        (j) => j.jobType !== "uprez" && matches(j),
+      );
+      for (const job of discarded) store.archiveJob(job.dreamUuid);
+
+      if (outputPlaylistId && discarded.length > 0) {
+        removeManyFromOutputPlaylist(
+          outputPlaylistId,
+          discarded.map((j) => j.dreamUuid),
+        ).catch((error) =>
+          console.error("Failed to remove clips from playlist:", error),
+        );
+      }
+    },
+    [outputPlaylistId],
+  );
+};
+
+/** Removes an action, discarding the clips it rendered. */
+export const useRemoveStudioAction = () => {
+  const discardWhere = useDiscardStudioClipsWhere();
+  return useCallback(
+    (actionId: string) => {
+      discardWhere((j) => j.actionId === actionId);
+      useStudioStore.getState().removeAction(actionId);
+    },
+    [discardWhere],
+  );
+};
+
+/** Removes a reference image, discarding the clips rendered from it. */
+export const useRemoveStudioImage = () => {
+  const discardWhere = useDiscardStudioClipsWhere();
+  return useCallback(
+    (imageUuid: string) => {
+      discardWhere((j) => j.imageId === imageUuid);
+      useStudioStore.getState().removeImage(imageUuid);
+    },
+    [discardWhere],
   );
 };
 

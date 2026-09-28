@@ -15,6 +15,27 @@ export const isJobInFlight = (job: StudioJob) =>
   job.status === "queue" || job.status === "processing";
 
 /**
+ * How many clips each action has in visible matrix cells, queued, rendering or
+ * done. An action with any is in use: its settings are what made those clips,
+ * so it is no longer edited in place (editing makes a copy), and removing it
+ * asks first.
+ */
+export const actionClipCounts = (
+  images: readonly StudioImage[],
+  jobs: readonly StudioJob[],
+) => {
+  const frameIds = new Set(
+    images.filter(isAnimatableFrame).map((image) => image.uuid),
+  );
+  const counts = new Map<string, number>();
+  for (const j of jobs) {
+    if (j.jobType === "uprez" || !frameIds.has(j.imageId)) continue;
+    counts.set(j.actionId, (counts.get(j.actionId) ?? 0) + 1);
+  }
+  return counts;
+};
+
+/**
  * The clip a matrix cell holds, whatever model made it. A cell holds at most
  * one — submitting a cell replaces the job it had — and it keeps showing when
  * the model dropdown changes, rather than the cell reading as empty.

@@ -3,6 +3,7 @@ import { Eye } from "lucide-react";
 import { useStudioStore, comboKeyOf } from "@/stores/studio.store";
 import { useBatchSubmit } from "../hooks/useBatchSubmit";
 import {
+  actionClipCounts,
   findCellJob,
   isAnimatableFrame,
   isCellChecked,
@@ -10,6 +11,13 @@ import {
   isRunnableAction,
   jobCompletion,
 } from "../utils/batch-selectors";
+import { actionHeadings } from "../utils/action-headings";
+import { VIDEO_MODEL_LABELS } from "../constants/video-model-labels";
+import {
+  getLoraOptionsForModel,
+  NO_LORA_OPTION,
+} from "../constants/lora-options";
+import { ActionDialog } from "./action-dialog";
 import type { StudioJob, VideoModel } from "@/types/studio.types";
 import {
   clampDurationToAllowed,
@@ -36,7 +44,6 @@ import { SegmentPreview } from "./segment-preview";
 import { useHoverTooltip } from "./hover-tooltip";
 import { ChipRail, SegmentChip } from "./segment-preview.styled";
 import { useDreamSegments } from "../hooks/useDreamSegments";
-import { useRetryFailedJobs } from "../hooks/useRetryFailedJobs";
 import { useDiscardStudioClip } from "../hooks/useStudioClipActions";
 import { ClipHistory } from "./clip-history";
 import { ForceSettingsDialog } from "./force-settings-dialog";
@@ -65,7 +72,11 @@ import {
   CombinationGrid,
   GridTable,
   GridHeader,
+  GridHeaderButton,
+  GridHeaderIndex,
+  GridHeaderLabel,
   GridCorner,
+  CornerKey,
   GridRowHeader,
   RowHeaderInner,
   RowThumb,
@@ -89,20 +100,11 @@ import {
   ProgressTrack,
   ProgressFill,
   TimeEstimate,
-  JobActions,
-  ActionButton,
   CellDiscard,
   SettingsSection,
   MatrixCheckButton,
   GenerateRow,
 } from "./generate-tab.styled";
-
-const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
-  "ltx-i2v": "LTX 2.3",
-  "wan-i2v": "Wan I2V",
-  "kling-i2v": "Kling 3.0 Pro",
-  "kling-25-i2v": "Kling 2.5 Turbo Pro",
-};
 
 /**
  * A job's settings, reading an older job's back from its dream's prompt when
@@ -161,6 +163,29 @@ export const GenerateTab: React.FC = () => {
   const runnableActions = useMemo(
     () => actions.filter(isRunnableAction),
     [actions],
+  );
+
+  const headings = useMemo(() => {
+    const loraOptions = getLoraOptionsForModel(videoGenParams.model);
+    if (loraOptions.length === 0) return actionHeadings(runnableActions);
+    return actionHeadings(runnableActions, (action) => {
+      const path = action.highNoiseLoras?.[0]?.path;
+      if (!path) return NO_LORA_OPTION.label;
+      return loraOptions.find((o) => o.key === path)?.label;
+    });
+  }, [runnableActions, videoGenParams.model]);
+  const clipCounts = useMemo(
+    () => actionClipCounts(images, jobs),
+    [images, jobs],
+  );
+  const [openActionId, setOpenActionId] = useState<string | null>(null);
+  // The cell under the pointer, whose heading and image name light up.
+  const [hoverCell, setHoverCell] = useState<{
+    imageUuid: string;
+    actionId: string;
+  } | null>(null);
+  const openActionIndex = runnableActions.findIndex(
+    (a) => a.id === openActionId,
   );
 
   const newCombos = useMemo(
@@ -262,18 +287,14 @@ export const GenerateTab: React.FC = () => {
       uuids.push(job.dreamUuid);
     };
 
-    // Grid reading order first — row by row, left to right — so stepping
-    // through the preview walks the matrix the way it looks on screen.
+    // Grid reading order — row by row, left to right — so stepping through the
+    // preview walks the matrix the way it looks on screen. Only what the matrix
+    // shows plays: removing an image or action discards its clips.
     for (const image of frames) {
       for (const action of runnableActions) push(jobFor(image.uuid, action.id));
     }
-    // Then every other clip that rendered: one whose image or action has since
-    // been removed is still yours to watch.
-    for (const job of jobs) {
-      if (job.jobType !== "uprez") push(job);
-    }
     return uuids;
-  }, [frames, runnableActions, jobFor, jobs]);
+  }, [frames, runnableActions, jobFor]);
 
   const segments = useDreamSegments(completedUuids);
 
@@ -302,8 +323,6 @@ export const GenerateTab: React.FC = () => {
     setReplayToken((n) => n + 1);
   }, []);
 
-  const { retryFailed, isRetrying, failedCount } = useRetryFailedJobs();
-
   // A check held back until the combine dialog is answered.
   const [pendingCombine, setPendingCombine] = useState<{
     confirm: () => void;
@@ -317,21 +336,25 @@ export const GenerateTab: React.FC = () => {
    * clips re-render together, with one set of settings.
    */
   /** Every matrix cell, with the clip it holds if any. */
-  const matrixCells = () =>
+  /** Every cell, or only one action's column. */
+  const matrixCells = (actionId?: string) =>
     frames.flatMap((image) =>
-      runnableActions.map((action) => ({
-        key: comboKeyOf(image.uuid, action.id),
-        job: jobFor(image.uuid, action.id),
-      })),
+      runnableActions
+        .filter((action) => actionId === undefined || action.id === actionId)
+        .map((action) => ({
+          key: comboKeyOf(image.uuid, action.id),
+          job: jobFor(image.uuid, action.id),
+        })),
     );
 
   /**
-   * Checks every cell, finished ones included — which re-renders them. Same
-   * rule as checking them one by one: with none picked yet, the first clip in
-   * reading order sets Settings, and clips made differently ask first.
+   * Checks every cell, or every cell of one column, finished ones included —
+   * which re-renders them. Same rule as checking them one by one: with none
+   * picked yet, the first clip in reading order sets Settings, and clips made
+   * differently ask first.
    */
-  const checkAll = () => {
-    const cells = matrixCells();
+  const checkAll = (actionId?: string) => {
+    const cells = matrixCells(actionId);
     const excluded = new Set(excludedCombos);
     const rerender = new Set(rerenderCombos);
     const clips: ReturnType<typeof jobSettingsOf>[] = [];
@@ -357,10 +380,16 @@ export const GenerateTab: React.FC = () => {
     }
   };
 
-  const uncheckAll = () => {
+  /** Unchecks every cell, or every cell of one column. */
+  const uncheckAll = (actionId?: string) => {
     const excluded = new Set(excludedCombos);
-    for (const { key, job } of matrixCells()) if (!job) excluded.add(key);
-    setComboChecks({ excludedCombos: excluded, rerenderCombos: new Set() });
+    const rerender =
+      actionId === undefined ? new Set<string>() : new Set(rerenderCombos);
+    for (const { key, job } of matrixCells(actionId)) {
+      if (!job) excluded.add(key);
+      rerender.delete(key);
+    }
+    setComboChecks({ excludedCombos: excluded, rerenderCombos: rerender });
   };
 
   /**
@@ -568,15 +597,10 @@ export const GenerateTab: React.FC = () => {
           </ActionGroup>
         </GenerateRow>
 
-        <ClipHistory onRestore={handleRestore} />
-
-        {failedCount > 0 && (
-          <JobActions>
-            <ActionButton onClick={retryFailed} disabled={isRetrying}>
-              {isRetrying ? "Retrying..." : `Retry Failed (${failedCount})`}
-            </ActionButton>
-          </JobActions>
-        )}
+        <ClipHistory
+          onRestore={handleRestore}
+          showRemoved={newCombos.length === 0}
+        />
       </TabColumn>
 
       <TabColumn>
@@ -661,10 +685,10 @@ export const GenerateTab: React.FC = () => {
           <SectionHeaderRow>
             <SectionTitle>Matrix</SectionTitle>
             <ButtonRow>
-              <MatrixCheckButton type="button" onClick={checkAll}>
+              <MatrixCheckButton type="button" onClick={() => checkAll()}>
                 Check all
               </MatrixCheckButton>
-              <MatrixCheckButton type="button" onClick={uncheckAll}>
+              <MatrixCheckButton type="button" onClick={() => uncheckAll()}>
                 Uncheck all
               </MatrixCheckButton>
             </ButtonRow>
@@ -674,35 +698,38 @@ export const GenerateTab: React.FC = () => {
             <GridTable>
               <thead>
                 <tr>
-                  <GridCorner />
+                  <GridCorner>
+                    <CornerKey>
+                      <span>Actions &rarr;</span>
+                      <span>Images &darr;</span>
+                    </CornerKey>
+                  </GridCorner>
                   {runnableActions.map((action, i) => (
                     <GridHeader
                       key={action.id}
-                      aria-label={action.prompt}
-                      tabIndex={0}
-                      onMouseEnter={(e) =>
-                        hoverTip.show(e.currentTarget, action.prompt)
-                      }
-                      onMouseLeave={hoverTip.hide}
-                      onFocus={(e) =>
-                        hoverTip.show(e.currentTarget, action.prompt)
-                      }
-                      onBlur={hoverTip.hide}
+                      $band={i % 2 === 1}
+                      $lit={hoverCell?.actionId === action.id}
                     >
-                      {i + 1}
+                      <GridHeaderButton
+                        type="button"
+                        aria-label={`Action ${i + 1}: ${action.prompt}`}
+                        onClick={() => setOpenActionId(action.id)}
+                      >
+                        <GridHeaderIndex>{i + 1}</GridHeaderIndex>
+                        <GridHeaderLabel
+                          $lit={hoverCell?.actionId === action.id}
+                        >
+                          {headings[i]}
+                        </GridHeaderLabel>
+                      </GridHeaderButton>
                     </GridHeader>
                   ))}
                 </tr>
               </thead>
-              <tbody>
+              <tbody onMouseLeave={() => setHoverCell(null)}>
                 {frames.map((image) => (
                   <tr key={image.uuid}>
-                    <GridRowHeader
-                      onMouseEnter={(e) =>
-                        hoverTip.show(e.currentTarget, image.name)
-                      }
-                      onMouseLeave={hoverTip.hide}
-                    >
+                    <GridRowHeader $lit={hoverCell?.imageUuid === image.uuid}>
                       <RowHeaderInner>
                         {image.status === "processed" && (
                           <RowThumb
@@ -711,7 +738,9 @@ export const GenerateTab: React.FC = () => {
                             alt=""
                           />
                         )}
-                        <RowName>{image.name}</RowName>
+                        <RowName $lit={hoverCell?.imageUuid === image.uuid}>
+                          {image.name}
+                        </RowName>
                       </RowHeaderInner>
                     </GridRowHeader>
                     {runnableActions.map((action) => {
@@ -750,6 +779,13 @@ export const GenerateTab: React.FC = () => {
                         <GridCell
                           key={comboKey}
                           $excluded={!job && !checked}
+                          $band={actionNumber % 2 === 0}
+                          onMouseEnter={() =>
+                            setHoverCell({
+                              imageUuid: image.uuid,
+                              actionId: action.id,
+                            })
+                          }
                           role={playable ? "button" : undefined}
                           title={playable ? "Play in preview" : undefined}
                           tabIndex={playable ? 0 : undefined}
@@ -841,6 +877,23 @@ export const GenerateTab: React.FC = () => {
             setPendingCombine(null);
           }}
           onCancel={() => setPendingCombine(null)}
+        />
+      )}
+      {openActionIndex >= 0 && (
+        <ActionDialog
+          action={runnableActions[openActionIndex]}
+          index={openActionIndex + 1}
+          heading={headings[openActionIndex]}
+          clipCount={clipCounts.get(runnableActions[openActionIndex].id) ?? 0}
+          onClose={() => setOpenActionId(null)}
+          onCheckColumn={() => {
+            setOpenActionId(null);
+            checkAll(runnableActions[openActionIndex].id);
+          }}
+          onUncheckColumn={() => {
+            setOpenActionId(null);
+            uncheckAll(runnableActions[openActionIndex].id);
+          }}
         />
       )}
     </TabLayout>

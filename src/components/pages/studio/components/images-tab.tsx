@@ -2,6 +2,7 @@ import { DreamProgressOverlay } from "@/components/shared/dream-progress/dream-p
 import React, { useCallback, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { useStudioStore } from "@/stores/studio.store";
+import { useRemoveStudioImage } from "../hooks/useStudioClipActions";
 import type { StudioImage } from "@/types/studio.types";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
@@ -35,7 +36,7 @@ import type { Dream } from "@/types/dream.types";
 export const ImagesTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
   const addImage = useStudioStore((s) => s.addImage);
-  const removeImage = useStudioStore((s) => s.removeImage);
+  const removeImage = useRemoveStudioImage();
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
 
   const updateImage = useStudioStore((s) => s.updateImage);

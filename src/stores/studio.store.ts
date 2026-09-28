@@ -28,6 +28,12 @@ type StudioState = {
   addImage: (image: StudioImage) => void;
   updateImage: (uuid: string, updates: Partial<StudioImage>) => void;
   removeImage: (uuid: string) => void;
+  /**
+   * Images and actions taken out of the project, with where they stood, so
+   * restoring one of their clips from history can put them back.
+   */
+  removedImages: Removed<StudioImage>[];
+  removedActions: Removed<StudioAction>[];
 
   actions: StudioAction[];
   addAction: (action: StudioAction) => void;
@@ -102,6 +108,36 @@ const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
   seed: -1,
 };
 
+/** Something taken out of a list, and the position it had there. */
+export interface Removed<T> {
+  item: T;
+  index: number;
+}
+
+/**
+ * Adds the item `pick` names to a removed list, with its position, replacing
+ * any earlier entry for the same item.
+ */
+const remember = <T>(
+  removed: readonly Removed<T>[],
+  list: readonly T[],
+  pick: (item: T) => string | undefined,
+): Removed<T>[] => {
+  const index = list.findIndex((item) => pick(item) !== undefined);
+  if (index < 0) return [...removed];
+  const id = pick(list[index]);
+  return [
+    ...removed.filter((r) => pick(r.item) !== id),
+    { item: list[index], index },
+  ];
+};
+
+const insertAt = <T>(list: readonly T[], item: T, index: number) => [
+  ...list.slice(0, index),
+  item,
+  ...list.slice(index),
+];
+
 export const comboKeyOf = (imageUuid: string, actionId: string) =>
   `${imageUuid}:${actionId}`;
 
@@ -110,6 +146,15 @@ const pruneCombosForImage = (combos: Set<string>, imageUuid: string) => {
   const next = new Set<string>();
   for (const key of combos) {
     if (!key.startsWith(prefix)) next.add(key);
+  }
+  return next;
+};
+
+const pruneCombosForAction = (combos: Set<string>, actionId: string) => {
+  const suffix = `:${actionId}`;
+  const next = new Set<string>();
+  for (const key of combos) {
+    if (!key.endsWith(suffix)) next.add(key);
   }
   return next;
 };
@@ -132,6 +177,8 @@ export const studioPartialize = (state: StudioState) => ({
     ...j,
     previewFrame: undefined,
   })),
+  removedImages: state.removedImages,
+  removedActions: state.removedActions,
 });
 
 export const useStudioStore = create<StudioState>()(
@@ -151,6 +198,8 @@ export const useStudioStore = create<StudioState>()(
       setImageGenParams: (params: Partial<ImageGenParams>) =>
         set((s) => ({ imageGenParams: { ...s.imageGenParams, ...params } })),
       images: [] as StudioImage[],
+      removedImages: [] as Removed<StudioImage>[],
+      removedActions: [] as Removed<StudioAction>[],
       addImage: (image: StudioImage) =>
         set((s) => ({ images: [...s.images, image] })),
       updateImage: (uuid: string, updates: Partial<StudioImage>) =>
@@ -162,6 +211,9 @@ export const useStudioStore = create<StudioState>()(
       removeImage: (uuid: string) =>
         set((s) => ({
           images: s.images.filter((img) => img.uuid !== uuid),
+          removedImages: remember(s.removedImages, s.images, (img) =>
+            img.uuid === uuid ? uuid : undefined,
+          ),
           excludedCombos: pruneCombosForImage(s.excludedCombos, uuid),
           rerenderCombos: pruneCombosForImage(s.rerenderCombos, uuid),
         })),
@@ -176,7 +228,14 @@ export const useStudioStore = create<StudioState>()(
           ),
         })),
       removeAction: (id: string) =>
-        set((s) => ({ actions: s.actions.filter((a) => a.id !== id) })),
+        set((s) => ({
+          actions: s.actions.filter((a) => a.id !== id),
+          removedActions: remember(s.removedActions, s.actions, (a) =>
+            a.id === id ? id : undefined,
+          ),
+          excludedCombos: pruneCombosForAction(s.excludedCombos, id),
+          rerenderCombos: pruneCombosForAction(s.rerenderCombos, id),
+        })),
       loadPresetPack: (newActions: StudioAction[]) =>
         set((s) => ({ actions: [...s.actions, ...newActions] })),
 
@@ -280,6 +339,38 @@ export const useStudioStore = create<StudioState>()(
         ) {
           return null;
         }
+        // A clip whose image or action has since been removed brings it back,
+        // at the place it had.
+        const imageGone = !s.images.some((i) => i.uuid === restored.imageId);
+        const actionGone = !s.actions.some((a) => a.id === restored.actionId);
+        const imageBack = imageGone
+          ? s.removedImages.find((r) => r.item.uuid === restored.imageId)
+          : undefined;
+        const actionBack = actionGone
+          ? s.removedActions.find((r) => r.item.id === restored.actionId)
+          : undefined;
+        const images = imageBack
+          ? insertAt(s.images, imageBack.item, imageBack.index)
+          : s.images;
+        const actions = actionBack
+          ? insertAt(s.actions, actionBack.item, actionBack.index)
+          : s.actions;
+        const key = comboKeyOf(restored.imageId, restored.actionId);
+        // The row or column comes back holding just this clip; its empty cells
+        // start unchecked rather than queued to generate.
+        const excludedCombos = new Set(s.excludedCombos);
+        if (imageBack || actionBack) {
+          for (const image of images) {
+            for (const action of actions) {
+              const other = comboKeyOf(image.uuid, action.id);
+              const returning =
+                (imageBack && image.uuid === restored.imageId) ||
+                (actionBack && action.id === restored.actionId);
+              if (returning && other !== key) excludedCombos.add(other);
+            }
+          }
+        }
+
         let historyJobs = s.historyJobs.filter(
           (j) => j.dreamUuid !== dreamUuid,
         );
@@ -289,10 +380,14 @@ export const useStudioStore = create<StudioState>()(
             ...historyJobs,
           ];
         }
-        const key = comboKeyOf(restored.imageId, restored.actionId);
         const rerenderCombos = new Set(s.rerenderCombos);
         rerenderCombos.delete(key);
         set({
+          images,
+          actions,
+          removedImages: s.removedImages.filter((r) => r !== imageBack),
+          removedActions: s.removedActions.filter((r) => r !== actionBack),
+          excludedCombos,
           jobs: [
             ...s.jobs.filter((j) => j.dreamUuid !== displaced?.dreamUuid),
             restored,
@@ -321,6 +416,8 @@ export const useStudioStore = create<StudioState>()(
           rerenderCombos: new Set<string>(),
           jobs: [],
           historyJobs: [],
+          removedImages: [],
+          removedActions: [],
           newCompletedCount: 0,
         }),
     }),

@@ -123,19 +123,31 @@ export const fromPersistedFlowState = (
 type ActionStateInput = Record<string, unknown> & {
   excludedCombos?: Set<string> | string[];
   images?: StudioImage[];
+  removedImages?: { item: StudioImage; index: number }[];
   jobs?: StudioJob[];
 };
 
 export type PersistedActionState = Record<string, unknown> & {
   excludedCombos: string[];
   images: Omit<StudioImage, "url" | "previewFrame" | "progress">[];
+  /** Missing from projects saved before removals were remembered. */
+  removedImages?: {
+    item: Omit<StudioImage, "url" | "previewFrame" | "progress">;
+    index: number;
+  }[];
   jobs: Omit<StudioJob, "previewFrame" | "progress" | "thumbnailUrl">[];
 };
 
 export const toPersistedActionState = (
   state: ActionStateInput,
 ): PersistedActionState => {
-  const { excludedCombos, images = [], jobs = [], ...rest } = state;
+  const {
+    excludedCombos,
+    images = [],
+    removedImages = [],
+    jobs = [],
+    ...rest
+  } = state;
 
   return {
     ...rest,
@@ -143,6 +155,10 @@ export const toPersistedActionState = (
       ? [...excludedCombos]
       : [...(excludedCombos ?? [])],
     images: images.map((image) => omit(image, VOLATILE_IMAGE_KEYS)),
+    removedImages: removedImages.map((removed) => ({
+      ...removed,
+      item: omit(removed.item, VOLATILE_IMAGE_KEYS),
+    })),
     jobs: jobs.map((job) => omit(job, VOLATILE_JOB_KEYS)),
   };
 };
@@ -150,11 +166,20 @@ export const toPersistedActionState = (
 export const fromPersistedActionState = (
   persisted: PersistedActionState,
 ): Record<string, unknown> & { excludedCombos: Set<string> } => {
-  const { excludedCombos = [], images = [], ...rest } = persisted;
+  const {
+    excludedCombos = [],
+    images = [],
+    removedImages = [],
+    ...rest
+  } = persisted;
 
   return {
     ...rest,
     excludedCombos: new Set(excludedCombos),
     images: images.map((image) => ({ ...image, url: "" })),
+    removedImages: removedImages.map((removed) => ({
+      ...removed,
+      item: { ...removed.item, url: "" },
+    })),
   };
 };

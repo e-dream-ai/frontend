@@ -1,4 +1,5 @@
-import styled, { css } from "styled-components";
+import styled from "styled-components";
+import { ratioBox } from "../utils/ratio-box";
 import { FLOW, flowFadeIn } from "@/constants/flow-theme.constants";
 
 export const PreviewContainer = styled.div<{ $divider: "top" | "bottom" }>`
@@ -20,19 +21,6 @@ export const PreviewLabel = styled.span`
   letter-spacing: 0.12em;
   align-self: flex-start;
 `;
-
-const ratioBox = (
-  ratio: string | undefined,
-  widthCaps: readonly string[],
-  maxHeight: string,
-) => {
-  const r = ratio ?? "16 / 9";
-  const caps = [...widthCaps, `calc(${maxHeight} * (${r}))`];
-  return css`
-    width: min(${caps.join(", ")});
-    aspect-ratio: ${r};
-  `;
-};
 
 export const VideoWrapper = styled.div<{ $ratio?: string }>`
   ${(p) => ratioBox(p.$ratio, ["100%", "480px"], "60vh")}

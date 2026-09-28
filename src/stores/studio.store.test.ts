@@ -123,6 +123,45 @@ describe("studio.store", () => {
       expect(state.historyJobs.map((j) => j.dreamUuid)).toEqual(["new"]);
     });
 
+    it("brings a removed action back in place with its clip", () => {
+      const s = useStudioStore.getState();
+      s.addImage({ uuid: "img", url: "", name: "I", status: "processed" });
+      s.addImage({ uuid: "img2", url: "", name: "J", status: "processed" });
+      s.addAction({ id: "a1", prompt: "one" });
+      s.addAction({ id: "act", prompt: "two" });
+      s.addAction({ id: "a3", prompt: "three" });
+      s.addJob(clip("x"));
+      s.archiveJob("x");
+      s.removeAction("act");
+      expect(useStudioStore.getState().removedActions).toHaveLength(1);
+
+      useStudioStore.getState().restoreJob("x");
+      const state = useStudioStore.getState();
+      expect(state.actions.map((a) => a.id)).toEqual(["a1", "act", "a3"]);
+      expect(state.removedActions).toEqual([]);
+      expect(state.jobs.map((j) => j.dreamUuid)).toEqual(["x"]);
+      // The column's other cell comes back unchecked, not queued.
+      expect(state.excludedCombos.has("img2:act")).toBe(true);
+      expect(state.excludedCombos.has("img:act")).toBe(false);
+    });
+
+    it("brings a removed image back in place with its clip", () => {
+      const s = useStudioStore.getState();
+      s.addImage({ uuid: "img0", url: "", name: "H", status: "processed" });
+      s.addImage({ uuid: "img", url: "", name: "I", status: "processed" });
+      s.addAction({ id: "act", prompt: "two" });
+      s.addAction({ id: "a2", prompt: "three" });
+      s.addJob(clip("x"));
+      s.archiveJob("x");
+      s.removeImage("img");
+
+      useStudioStore.getState().restoreJob("x");
+      const state = useStudioStore.getState();
+      expect(state.images.map((i) => i.uuid)).toEqual(["img0", "img"]);
+      expect(state.removedImages).toEqual([]);
+      expect(state.excludedCombos.has("img:a2")).toBe(true);
+    });
+
     it("will not restore over a cell that is still rendering", () => {
       const s = useStudioStore.getState();
       s.addJob(clip("old"));
@@ -140,6 +179,18 @@ describe("studio.store", () => {
 
       useStudioStore.getState().toggleComboExcluded("key1");
       expect(useStudioStore.getState().excludedCombos.has("key1")).toBe(false);
+    });
+
+    it("drops a removed action's combos and keeps the others", () => {
+      const s = useStudioStore.getState();
+      s.addAction({ id: "act1", prompt: "p" });
+      s.setComboExcluded("img1:act1", true);
+      s.setComboExcluded("img1:act2", true);
+      s.toggleComboRerender("img2:act1");
+      useStudioStore.getState().removeAction("act1");
+      const state = useStudioStore.getState();
+      expect([...state.excludedCombos]).toEqual(["img1:act2"]);
+      expect(state.rerenderCombos.size).toBe(0);
     });
   });
 
