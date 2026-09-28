@@ -13,6 +13,10 @@ import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
 } from "../constants/duration-options";
+import {
+  guidanceForModel,
+  resolveGuidanceConstraint,
+} from "../constants/guidance-options";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 import { PresignedImage } from "@/components/shared/presigned-image";
@@ -208,7 +212,13 @@ export const ResultsTab: React.FC = () => {
               imageSize: image.size,
               duration,
               numInferenceSteps: videoGenParams.numInferenceSteps,
-              guidance: videoGenParams.guidance,
+              guidance: guidanceForModel(
+                videoGenParams.guidance,
+                resolveGuidanceConstraint(
+                  retryModel,
+                  modelConstraints.get(retryModel),
+                ),
+              ),
               seed: videoGenParams.seed,
             });
 

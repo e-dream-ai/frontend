@@ -56,7 +56,7 @@ export interface VideoGenParams {
   model: VideoModel;
   duration: number;
   numInferenceSteps: number;
-  guidance: number;
+  guidance: number | null;
   seed: number;
 }
 

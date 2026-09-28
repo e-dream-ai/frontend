@@ -10,6 +10,7 @@ import {
 } from "../constants/duration-options";
 import {
   GUIDANCE_PARAM,
+  carryGuidance,
   guidanceForModel,
   resolveGuidanceConstraint,
 } from "../constants/guidance-options";
@@ -143,7 +144,7 @@ export const GenerateTab: React.FC = () => {
   const handleModelChange = (model: VideoModel) => {
     setVideoGenParams({
       model,
-      guidance: guidanceForModel(
+      guidance: carryGuidance(
         videoGenParams.guidance,
         resolveGuidanceConstraint(model, modelConstraints.get(model)),
       ),
@@ -295,7 +296,10 @@ export const GenerateTab: React.FC = () => {
             <GuidanceField
               param={guidanceParam}
               constraint={guidanceConstraint}
-              value={videoGenParams.guidance}
+              value={guidanceForModel(
+                videoGenParams.guidance,
+                guidanceConstraint,
+              )}
               onChange={(guidance) => setVideoGenParams({ guidance })}
             />
           )}

@@ -62,7 +62,7 @@ const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
   model: "ltx-i2v",
   duration: 5,
   numInferenceSteps: 30,
-  guidance: 1.0,
+  guidance: null,
   seed: -1,
 };
 
@@ -205,7 +205,7 @@ export const useStudioStore = create<StudioState>()(
     }),
     {
       name: "studio-session",
-      version: 10,
+      version: 11,
       partialize: studioPartialize,
       storage: {
         getItem: (name) => {
@@ -332,6 +332,16 @@ export const useStudioStore = create<StudioState>()(
           if (Array.isArray(state.actions)) {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             for (const a of state.actions as any[]) delete a.enabled;
+          }
+        }
+        if (version < 11) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const videoGenParams = state.videoGenParams as any;
+          if (
+            videoGenParams?.model === "ltx-i2v" &&
+            videoGenParams.guidance === 1.0
+          ) {
+            videoGenParams.guidance = null;
           }
         }
         return state as Record<string, unknown>;

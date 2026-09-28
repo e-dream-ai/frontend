@@ -28,14 +28,25 @@ export const clampGuidance = (
 };
 
 export const guidanceForModel = (
-  guidance: number,
+  guidance: number | null,
   constraint: GuidanceConstraint | undefined,
 ): number => {
-  if (!constraint) return guidance;
-  if (!Number.isFinite(guidance)) return constraint.default;
+  if (!constraint) return guidance ?? Number.NaN;
+  if (guidance === null || !Number.isFinite(guidance)) {
+    return constraint.default;
+  }
   if (guidance < constraint.min || guidance > constraint.max) {
     return constraint.default;
   }
+  return clampGuidance(guidance, constraint);
+};
+
+export const carryGuidance = (
+  guidance: number | null,
+  constraint: GuidanceConstraint | undefined,
+): number | null => {
+  if (guidance === null || !constraint) return guidance;
+  if (guidance < constraint.min || guidance > constraint.max) return null;
   return clampGuidance(guidance, constraint);
 };
 
