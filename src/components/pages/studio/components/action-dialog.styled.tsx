@@ -33,3 +33,12 @@ export const ActionMeta = styled.p`
   font-size: 12px;
   color: ${FLOW.textDim};
 `;
+
+export const ImageDialogThumb = styled.img`
+  display: block;
+  max-width: 100%;
+  max-height: 280px;
+  object-fit: contain;
+  align-self: center;
+  border-radius: 6px;
+`;

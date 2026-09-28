@@ -2,6 +2,13 @@ import styled, { css } from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 import { HistoryThumb } from "./transition-history.styled";
 import { BottomRow, GenerateSection } from "./images-tab.styled";
+import {
+  IndeterminateTrack,
+  ProgressContent,
+  ProgressEta,
+  ProgressMeter,
+  ProgressOverlay,
+} from "@/components/shared/dream-progress/dream-progress.styled";
 import type { StudioJob } from "@/types/studio.types";
 
 // Preview, settings and matrix side by side at 25% / 25% / 50%. The matrix
@@ -205,10 +212,22 @@ export const GridRowHeader = styled.td<{ $lit?: boolean }>`
 
 // The source frame now identifies its row here, rather than repeating in every
 // cell across it.
-export const RowHeaderInner = styled.div`
+// A button: clicking the frame or its name opens its dialog.
+export const RowHeaderInner = styled.button`
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  padding: 0;
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 1px solid ${FLOW.accent};
+  }
 `;
 
 export const RowThumb = styled.img`
@@ -225,22 +244,83 @@ export const RowThumb = styled.img`
 export const RowName = styled.span<{ $lit?: boolean }>`
   ${matrixLabel}
   ${(p) => p.$lit && `color: ${FLOW.accent};`}
+  ${RowHeaderInner}:hover & {
+    color: ${FLOW.accent};
+  }
   max-width: 130px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 `;
 
-export const GridCell = styled.td<{ $excluded?: boolean; $band?: boolean }>`
+export const GridCell = styled.td<{
+  $excluded?: boolean;
+  $band?: boolean;
+  /** A row whose frame is not ready yet: nothing to pick. */
+  $inert?: boolean;
+}>`
   padding: 0.875rem 1.125rem;
   text-align: center;
   border-bottom: 1px solid ${(props) => props.theme.colorBackgroundQuaternary};
   background: ${(p) => (p.$band ? BAND : "transparent")};
-  opacity: ${(props) => (props.$excluded ? 0.4 : 1)};
-  cursor: pointer;
+  opacity: ${(p) => (p.$inert ? 0.2 : p.$excluded ? 0.4 : 1)};
+  cursor: ${(p) => (p.$inert ? "default" : "pointer")};
 
   &:hover {
-    background: ${(props) => props.theme.colorBackgroundQuaternary};
+    background: ${(p) =>
+      p.$inert
+        ? p.$band
+          ? BAND
+          : "transparent"
+        : p.theme.colorBackgroundQuaternary};
+  }
+`;
+
+export const PendingRowHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+// The Images tab's card and progress overlay, cut down to fit a matrix row.
+export const PendingRowThumb = styled.div`
+  position: relative;
+  width: 96px;
+  aspect-ratio: 16 / 9;
+  flex: none;
+  overflow: hidden;
+  border-radius: 4px;
+  border: 1px solid ${FLOW.border};
+  background: ${FLOW.bgElevated};
+
+  > img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.5;
+  }
+
+  ${ProgressOverlay} {
+    padding: 8px 5px 4px;
+  }
+
+  ${ProgressContent} {
+    gap: 3px;
+    font-size: 9px;
+    line-height: 1.2;
+  }
+
+  ${ProgressEta} {
+    display: none;
+  }
+
+  ${IndeterminateTrack} {
+    height: 3px;
+  }
+
+  /* The meter sets its height inline on its track. */
+  ${ProgressMeter} > div {
+    height: 3px !important;
   }
 `;
 

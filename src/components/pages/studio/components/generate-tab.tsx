@@ -18,6 +18,8 @@ import {
   NO_LORA_OPTION,
 } from "../constants/lora-options";
 import { ActionDialog } from "./action-dialog";
+import { ImageDialog } from "./image-dialog";
+import { GenerateReferenceFramesModal } from "./generate-reference-frames-modal";
 import type { StudioJob, VideoModel } from "@/types/studio.types";
 import {
   clampDurationToAllowed,
@@ -39,6 +41,7 @@ import { CreditLimitNotice } from "@/components/shared/credit-limit-notice/credi
 import { useCostEstimate } from "@/hooks/useCostEstimate";
 import { useCreditGuard } from "@/hooks/useCreditGuard";
 import { PresignedImage } from "@/components/shared/presigned-image";
+import { DreamProgressOverlay } from "@/components/shared/dream-progress/dream-progress";
 import { FilmstripIcon } from "./filmstrip-icon";
 import { SegmentPreview } from "./segment-preview";
 import { useHoverTooltip } from "./hover-tooltip";
@@ -82,6 +85,8 @@ import {
   RowThumb,
   RowName,
   GridCell,
+  PendingRowHeader,
+  PendingRowThumb,
   PreviewPlaceholder,
   PreviewCaption,
   CaptionFrame,
@@ -119,6 +124,9 @@ const jobSettingsOf = (job: StudioJob) =>
       job.dreamUuid,
     ])?.data?.dream?.prompt,
   );
+
+/** Which cells a check or uncheck covers: all, one column, or one row. */
+type CellScope = { actionId?: string; imageUuid?: string };
 
 const VIDEO_MODELS: VideoModel[] = [
   "ltx-i2v",
@@ -160,6 +168,12 @@ export const GenerateTab: React.FC = () => {
   const { submit, isSubmitting, getPendingCombinations } = useBatchSubmit();
 
   const frames = useMemo(() => images.filter(isAnimatableFrame), [images]);
+  // Frames still generating or uploading get a row straight away, showing
+  // their progress; its cells wake up once the frame is ready.
+  const matrixRows = useMemo(
+    () => images.filter((i) => i.status !== "failed"),
+    [images],
+  );
   const runnableActions = useMemo(
     () => actions.filter(isRunnableAction),
     [actions],
@@ -179,6 +193,8 @@ export const GenerateTab: React.FC = () => {
     [images, jobs],
   );
   const [openActionId, setOpenActionId] = useState<string | null>(null);
+  const [openImageUuid, setOpenImageUuid] = useState<string | null>(null);
+  const [generateOpen, setGenerateOpen] = useState(false);
   // The cell under the pointer, whose heading and image name light up.
   const [hoverCell, setHoverCell] = useState<{
     imageUuid: string;
@@ -187,6 +203,7 @@ export const GenerateTab: React.FC = () => {
   const openActionIndex = runnableActions.findIndex(
     (a) => a.id === openActionId,
   );
+  const openImage = frames.find((i) => i.uuid === openImageUuid);
 
   const newCombos = useMemo(
     () => getPendingCombinations(),
@@ -335,26 +352,27 @@ export const GenerateTab: React.FC = () => {
    * One made differently from what Settings now shows asks first: the checked
    * clips re-render together, with one set of settings.
    */
-  /** Every matrix cell, with the clip it holds if any. */
-  /** Every cell, or only one action's column. */
-  const matrixCells = (actionId?: string) =>
-    frames.flatMap((image) =>
-      runnableActions
-        .filter((action) => actionId === undefined || action.id === actionId)
-        .map((action) => ({
-          key: comboKeyOf(image.uuid, action.id),
-          job: jobFor(image.uuid, action.id),
-        })),
-    );
+  /** The cells in scope, each with the clip it holds if any. */
+  const matrixCells = ({ actionId, imageUuid }: CellScope = {}) =>
+    frames
+      .filter((image) => imageUuid === undefined || image.uuid === imageUuid)
+      .flatMap((image) =>
+        runnableActions
+          .filter((action) => actionId === undefined || action.id === actionId)
+          .map((action) => ({
+            key: comboKeyOf(image.uuid, action.id),
+            job: jobFor(image.uuid, action.id),
+          })),
+      );
 
   /**
-   * Checks every cell, or every cell of one column, finished ones included —
+   * Checks every cell, or every cell of one column or row, finished ones included —
    * which re-renders them. Same rule as checking them one by one: with none
    * picked yet, the first clip in reading order sets Settings, and clips made
    * differently ask first.
    */
-  const checkAll = (actionId?: string) => {
-    const cells = matrixCells(actionId);
+  const checkAll = (scope: CellScope = {}) => {
+    const cells = matrixCells(scope);
     const excluded = new Set(excludedCombos);
     const rerender = new Set(rerenderCombos);
     const clips: ReturnType<typeof jobSettingsOf>[] = [];
@@ -380,12 +398,12 @@ export const GenerateTab: React.FC = () => {
     }
   };
 
-  /** Unchecks every cell, or every cell of one column. */
-  const uncheckAll = (actionId?: string) => {
+  /** Unchecks every cell, or every cell of one column or row. */
+  const uncheckAll = (scope: CellScope = {}) => {
+    const whole = scope.actionId === undefined && scope.imageUuid === undefined;
     const excluded = new Set(excludedCombos);
-    const rerender =
-      actionId === undefined ? new Set<string>() : new Set(rerenderCombos);
-    for (const { key, job } of matrixCells(actionId)) {
+    const rerender = whole ? new Set<string>() : new Set(rerenderCombos);
+    for (const { key, job } of matrixCells(scope)) {
       if (!job) excluded.add(key);
       rerender.delete(key);
     }
@@ -727,128 +745,160 @@ export const GenerateTab: React.FC = () => {
                 </tr>
               </thead>
               <tbody onMouseLeave={() => setHoverCell(null)}>
-                {frames.map((image) => (
-                  <tr key={image.uuid}>
-                    <GridRowHeader $lit={hoverCell?.imageUuid === image.uuid}>
-                      <RowHeaderInner>
-                        {image.status === "processed" && (
-                          <RowThumb
-                            as={PresignedImage}
-                            dreamUuid={image.uuid}
-                            alt=""
-                          />
-                        )}
-                        <RowName $lit={hoverCell?.imageUuid === image.uuid}>
-                          {image.name}
-                        </RowName>
-                      </RowHeaderInner>
-                    </GridRowHeader>
-                    {runnableActions.map((action) => {
-                      const comboKey = comboKeyOf(image.uuid, action.id);
-                      const job = jobFor(image.uuid, action.id);
-                      const inFlight = job !== undefined && isJobInFlight(job);
-                      const checked = isCellChecked(
-                        job,
-                        comboKey,
-                        excludedCombos,
-                        rerenderCombos,
-                      );
-                      const toggleChecked = () => {
-                        if (inFlight) return;
-                        if (job) toggleRenderedCell(comboKey, job);
-                        else toggleComboExcluded(comboKey);
-                      };
-                      const actionNumber = runnableActions.indexOf(action) + 1;
-                      // A processed job whose video has not resolved yet has
-                      // no segment to seek to, so it is not playable.
-                      const playable =
-                        job?.status === "processed" &&
-                        segmentKeys.has(job.dreamUuid);
-                      const playing =
-                        job !== undefined && job.dreamUuid === playingUuid;
-
-                      const activate = () => {
-                        if (playable && job) {
-                          playSegment(job.dreamUuid);
-                          return;
-                        }
-                        toggleChecked();
-                      };
-
-                      return (
+                {matrixRows.map((image) =>
+                  !isAnimatableFrame(image) ? (
+                    <tr key={image.uuid}>
+                      <GridRowHeader>
+                        <PendingRowHeader>
+                          <PendingRowThumb>
+                            {image.url && <img src={image.url} alt="" />}
+                            <DreamProgressOverlay dream={image} />
+                          </PendingRowThumb>
+                          <RowName>{image.name}</RowName>
+                        </PendingRowHeader>
+                      </GridRowHeader>
+                      {runnableActions.map((action, i) => (
                         <GridCell
-                          key={comboKey}
-                          $excluded={!job && !checked}
-                          $band={actionNumber % 2 === 0}
-                          onMouseEnter={() =>
-                            setHoverCell({
-                              imageUuid: image.uuid,
-                              actionId: action.id,
-                            })
-                          }
-                          role={playable ? "button" : undefined}
-                          title={playable ? "Play in preview" : undefined}
-                          tabIndex={playable ? 0 : undefined}
-                          onClick={activate}
-                          onKeyDown={(e) => {
-                            if (!playable) return;
-                            if (e.key !== "Enter" && e.key !== " ") return;
-                            e.preventDefault();
-                            activate();
-                          }}
+                          key={action.id}
+                          $excluded
+                          $band={i % 2 === 1}
+                          $inert
                         >
-                          <CellFilmstrip
-                            $rendered={job?.status === "processed"}
-                          >
+                          <CellFilmstrip>
                             <FilmstripIcon size={42} />
-                            {/* Gold already says done; anything else is
-                                spelled out on the glyph itself. */}
-                            {job && job.status !== "processed" && (
-                              <CellStatus $status={job.status}>
-                                {jobStatusLabel(job)}
-                              </CellStatus>
-                            )}
-                            {job && !inFlight && (
-                              <CellDiscard
-                                type="button"
-                                title="Discard this clip"
-                                aria-label={`Discard ${image.name} with action ${actionNumber}`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  discardClip(job);
-                                }}
-                                onKeyDown={(e) => e.stopPropagation()}
-                              >
-                                &times;
-                              </CellDiscard>
-                            )}
-                            {playing && (
-                              <PlayingEye title="Showing in the preview">
-                                <Eye size={11} strokeWidth={2.6} />
-                              </PlayingEye>
-                            )}
                           </CellFilmstrip>
-                          <CellCheckbox
-                            checked={checked}
-                            disabled={inFlight}
-                            title={
-                              inFlight
-                                ? "Generating"
-                                : job
-                                  ? "Re-render with the current settings"
-                                  : "Generate this combination"
-                            }
-                            aria-label={`${job ? "Re-render" : "Generate"} ${
-                              image.name
-                            } with action ${actionNumber}`}
-                            onChange={toggleChecked}
-                            onClick={(e) => e.stopPropagation()}
-                          />
                         </GridCell>
-                      );
-                    })}
-                  </tr>
-                ))}
+                      ))}
+                    </tr>
+                  ) : (
+                    <tr key={image.uuid}>
+                      <GridRowHeader $lit={hoverCell?.imageUuid === image.uuid}>
+                        <RowHeaderInner
+                          type="button"
+                          aria-label={image.name}
+                          onClick={() => setOpenImageUuid(image.uuid)}
+                        >
+                          {image.status === "processed" && (
+                            <RowThumb
+                              as={PresignedImage}
+                              dreamUuid={image.uuid}
+                              alt=""
+                            />
+                          )}
+                          <RowName $lit={hoverCell?.imageUuid === image.uuid}>
+                            {image.name}
+                          </RowName>
+                        </RowHeaderInner>
+                      </GridRowHeader>
+                      {runnableActions.map((action) => {
+                        const comboKey = comboKeyOf(image.uuid, action.id);
+                        const job = jobFor(image.uuid, action.id);
+                        const inFlight =
+                          job !== undefined && isJobInFlight(job);
+                        const checked = isCellChecked(
+                          job,
+                          comboKey,
+                          excludedCombos,
+                          rerenderCombos,
+                        );
+                        const toggleChecked = () => {
+                          if (inFlight) return;
+                          if (job) toggleRenderedCell(comboKey, job);
+                          else toggleComboExcluded(comboKey);
+                        };
+                        const actionNumber =
+                          runnableActions.indexOf(action) + 1;
+                        // A processed job whose video has not resolved yet has
+                        // no segment to seek to, so it is not playable.
+                        const playable =
+                          job?.status === "processed" &&
+                          segmentKeys.has(job.dreamUuid);
+                        const playing =
+                          job !== undefined && job.dreamUuid === playingUuid;
+
+                        const activate = () => {
+                          if (playable && job) {
+                            playSegment(job.dreamUuid);
+                            return;
+                          }
+                          toggleChecked();
+                        };
+
+                        return (
+                          <GridCell
+                            key={comboKey}
+                            $excluded={!job && !checked}
+                            $band={actionNumber % 2 === 0}
+                            onMouseEnter={() =>
+                              setHoverCell({
+                                imageUuid: image.uuid,
+                                actionId: action.id,
+                              })
+                            }
+                            role={playable ? "button" : undefined}
+                            title={playable ? "Play in preview" : undefined}
+                            tabIndex={playable ? 0 : undefined}
+                            onClick={activate}
+                            onKeyDown={(e) => {
+                              if (!playable) return;
+                              if (e.key !== "Enter" && e.key !== " ") return;
+                              e.preventDefault();
+                              activate();
+                            }}
+                          >
+                            <CellFilmstrip
+                              $rendered={job?.status === "processed"}
+                            >
+                              <FilmstripIcon size={42} />
+                              {/* Gold already says done; anything else is
+                                spelled out on the glyph itself. */}
+                              {job && job.status !== "processed" && (
+                                <CellStatus $status={job.status}>
+                                  {jobStatusLabel(job)}
+                                </CellStatus>
+                              )}
+                              {job && !inFlight && (
+                                <CellDiscard
+                                  type="button"
+                                  title="Discard this clip"
+                                  aria-label={`Discard ${image.name} with action ${actionNumber}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    discardClip(job);
+                                  }}
+                                  onKeyDown={(e) => e.stopPropagation()}
+                                >
+                                  &times;
+                                </CellDiscard>
+                              )}
+                              {playing && (
+                                <PlayingEye title="Showing in the preview">
+                                  <Eye size={11} strokeWidth={2.6} />
+                                </PlayingEye>
+                              )}
+                            </CellFilmstrip>
+                            <CellCheckbox
+                              checked={checked}
+                              disabled={inFlight}
+                              title={
+                                inFlight
+                                  ? "Generating"
+                                  : job
+                                    ? "Re-render with the current settings"
+                                    : "Generate this combination"
+                              }
+                              aria-label={`${job ? "Re-render" : "Generate"} ${
+                                image.name
+                              } with action ${actionNumber}`}
+                              onChange={toggleChecked}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </GridCell>
+                        );
+                      })}
+                    </tr>
+                  ),
+                )}
               </tbody>
             </GridTable>
           </CombinationGrid>
@@ -888,13 +938,39 @@ export const GenerateTab: React.FC = () => {
           onClose={() => setOpenActionId(null)}
           onCheckColumn={() => {
             setOpenActionId(null);
-            checkAll(runnableActions[openActionIndex].id);
+            checkAll({ actionId: runnableActions[openActionIndex].id });
           }}
           onUncheckColumn={() => {
             setOpenActionId(null);
-            uncheckAll(runnableActions[openActionIndex].id);
+            uncheckAll({ actionId: runnableActions[openActionIndex].id });
           }}
         />
+      )}
+      {openImage && (
+        <ImageDialog
+          image={openImage}
+          clipCount={
+            jobs.filter(
+              (j) => j.jobType !== "uprez" && j.imageId === openImage.uuid,
+            ).length
+          }
+          onClose={() => setOpenImageUuid(null)}
+          onCheckRow={() => {
+            setOpenImageUuid(null);
+            checkAll({ imageUuid: openImage.uuid });
+          }}
+          onUncheckRow={() => {
+            setOpenImageUuid(null);
+            uncheckAll({ imageUuid: openImage.uuid });
+          }}
+          onGenerateMore={() => {
+            setOpenImageUuid(null);
+            setGenerateOpen(true);
+          }}
+        />
+      )}
+      {generateOpen && (
+        <GenerateReferenceFramesModal onClose={() => setGenerateOpen(false)} />
       )}
     </TabLayout>
   );
