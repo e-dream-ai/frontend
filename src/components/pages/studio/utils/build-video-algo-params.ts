@@ -11,7 +11,7 @@ interface BuildVideoAlgoParamsInput {
   imageSize: string | undefined;
   duration: number;
   numInferenceSteps: number;
-  guidance?: number;
+  guidance: number;
   seed?: number;
   negativePrompt?: string;
 }
@@ -19,10 +19,10 @@ interface BuildVideoAlgoParamsInput {
 const setGuidance = (
   params: Record<string, unknown>,
   model: VideoModel,
-  guidance: number | undefined,
+  guidance: number,
 ): void => {
   const param = GUIDANCE_PARAM[model];
-  if (!param || guidance === undefined || !Number.isFinite(guidance)) return;
+  if (!param || !Number.isFinite(guidance)) return;
   params[param] = guidance;
 };
 

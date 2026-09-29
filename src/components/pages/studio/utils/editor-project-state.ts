@@ -1,7 +1,6 @@
 import type { FlowReferenceFrame, FlowTransition } from "@/types/flow.types";
 import { DEFAULT_TRANSITION_SETTINGS } from "../constants/default-transition-settings";
 import type { Removed, StudioImage, StudioJob } from "@/types/studio.types";
-import { withoutUnsetGuidance } from "../constants/guidance-options";
 
 export const EDITOR_STATE_SCHEMA_VERSION = 1;
 
@@ -170,15 +169,11 @@ export const fromPersistedActionState = (
     excludedCombos = [],
     images = [],
     removedImages = [],
-    videoGenParams,
     ...rest
   } = persisted;
 
   return {
     ...rest,
-    ...(videoGenParams && typeof videoGenParams === "object"
-      ? { videoGenParams: withoutUnsetGuidance(videoGenParams) }
-      : {}),
     excludedCombos: new Set(excludedCombos),
     images: images.map((image) => ({ ...image, url: "" })),
     removedImages: removedImages.map((removed) => ({

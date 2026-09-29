@@ -3,7 +3,8 @@ import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import type { VideoModel } from "@/types/studio.types";
 import {
   GUIDANCE_PARAM,
-  defaultGuidanceForModel,
+  carryGuidance,
+  guidanceForModel,
   resolveGuidanceConstraint,
 } from "../constants/guidance-options";
 import { SEED_HINT } from "../constants/seed-options";
@@ -54,7 +55,7 @@ export function MatrixSettings({ durationOptions, hidden }: Props) {
   const handleModelChange = (model: VideoModel) => {
     setVideoGenParams({
       model,
-      guidance: defaultGuidanceForModel(
+      guidance: carryGuidance(
         videoGenParams.guidance,
         resolveGuidanceConstraint(model, modelConstraints.get(model)),
       ),
@@ -128,7 +129,10 @@ export function MatrixSettings({ durationOptions, hidden }: Props) {
             <GuidanceField
               param={guidanceParam}
               constraint={guidanceConstraint}
-              value={videoGenParams.guidance ?? guidanceConstraint.default}
+              value={guidanceForModel(
+                videoGenParams.guidance,
+                guidanceConstraint,
+              )}
               onChange={(guidance) => setVideoGenParams({ guidance })}
             />
           </SettingFieldWide>

@@ -5,7 +5,6 @@ import {
   reconcileActionLoras,
   retargetActionsLoras,
 } from "@/components/pages/studio/constants/lora-options";
-import { withoutUnsetGuidance } from "@/components/pages/studio/constants/guidance-options";
 import {
   comboKeyOf,
   findCellJob,
@@ -107,6 +106,7 @@ const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
   model: "ltx-i2v",
   duration: 5,
   numInferenceSteps: 30,
+  guidance: null,
   seed: -1,
 };
 
@@ -458,7 +458,7 @@ export const useStudioStore = create<StudioState>()(
     }),
     {
       name: "studio-session",
-      version: 11,
+      version: 12,
       partialize: studioPartialize,
       storage: {
         getItem: (name) => {
@@ -592,19 +592,21 @@ export const useStudioStore = create<StudioState>()(
           }
         }
         if (version < 11) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const videoGenParams = state.videoGenParams as any;
+          if (
+            videoGenParams?.model === "ltx-i2v" &&
+            videoGenParams.guidance === 1.0
+          ) {
+            videoGenParams.guidance = null;
+          }
+        }
+        if (version < 12) {
           // The Results tab was folded into Generate, which is now the results
           // matrix. `activeTab` is persisted, so anyone whose last session
           // ended on Results would otherwise reopen the studio to a blank
           // frame: no tab matches and nothing renders.
           if (state.activeTab === "results") state.activeTab = "generate";
-          if (
-            state.videoGenParams &&
-            typeof state.videoGenParams === "object"
-          ) {
-            state.videoGenParams = withoutUnsetGuidance(
-              state.videoGenParams as Partial<VideoGenParams>,
-            );
-          }
         }
         return state as Record<string, unknown>;
       },

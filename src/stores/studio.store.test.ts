@@ -28,6 +28,7 @@ const DEFAULT_VIDEO_PARAMS = {
   model: "ltx-i2v",
   duration: 5,
   numInferenceSteps: 30,
+  guidance: null,
   seed: -1,
 };
 
@@ -262,6 +263,7 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
+        guidance: null,
         seed: -1,
       });
       expect(migrated.wanParams).toBeUndefined();
@@ -423,7 +425,7 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(8);
       expect(params.numInferenceSteps).toBe(30); // from defaults
-      expect(params.guidance).toBeUndefined();
+      expect(params.guidance).toBeNull();
       expect(params.seed).toBe(-1);
     });
 
@@ -437,7 +439,7 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(5);
       expect(params.numInferenceSteps).toBe(30);
-      expect(params.guidance).toBeUndefined();
+      expect(params.guidance).toBeNull();
       expect(params.seed).toBe(-1);
     });
   });
@@ -457,7 +459,7 @@ describe("studio.store", () => {
       const migrated = migrate(v6State, 6) as Record<string, unknown>;
       // Cleared rather than pinned to a number: the catalog now supplies it.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((migrated.videoGenParams as any).guidance).toBeUndefined();
+      expect((migrated.videoGenParams as any).guidance).toBeNull();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((migrated.videoGenParams as any).seed).toBe(-1);
     });
@@ -478,6 +480,42 @@ describe("studio.store", () => {
       expect((migrated.videoGenParams as any).guidance).toBe(7.0);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((migrated.videoGenParams as any).seed).toBe(-1);
+    });
+  });
+
+  describe("migration v10 to v11", () => {
+    it("clears the old hardcoded LTX guidance so the API default applies", () => {
+      const v10State = {
+        videoGenParams: { ...DEFAULT_VIDEO_PARAMS, guidance: 1.0 },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v10State, 10) as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((migrated.videoGenParams as any).guidance).toBeNull();
+    });
+
+    it("keeps an explicitly picked LTX guidance", () => {
+      const v10State = {
+        videoGenParams: { ...DEFAULT_VIDEO_PARAMS, guidance: 3.5 },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v10State, 10) as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((migrated.videoGenParams as any).guidance).toBe(3.5);
+    });
+  });
+
+  describe("migration v11 to v12", () => {
+    it("moves a session left on the removed Results tab to the Matrix", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate({ activeTab: "results" }, 11) as Record<
+        string,
+        unknown
+      >;
+      expect(migrated.activeTab).toBe("generate");
     });
   });
 
@@ -510,6 +548,7 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
+        guidance: null,
         seed: -1,
       });
     });

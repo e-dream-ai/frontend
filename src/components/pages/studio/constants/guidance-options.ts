@@ -27,63 +27,27 @@ export const clampGuidance = (
   return roundToStep(Math.min(max, snapped));
 };
 
-/**
- * The guidance a model starts on when it is picked from the menu: the
- * catalog's recommendation for it, snapped to its own step grid.
- *
- * Distinct from `guidanceForModel`, which keeps whatever the user had set and
- * reaches for the default only when that value no longer fits the model. That
- * is the right rule for validating a value already chosen — at submit time, or
- * per transition — but it makes a deliberate switch of model inherit a number
- * tuned for a different one. A model with no guidance constraint has nothing
- * to recommend, so the current value carries over.
- */
-export function defaultGuidanceForModel(
-  guidance: number,
+export const guidanceForModel = (
+  guidance: number | null,
   constraint: GuidanceConstraint | undefined,
-): number;
-export function defaultGuidanceForModel(
-  guidance: number | undefined,
-  constraint: GuidanceConstraint | undefined,
-): number | undefined;
-export function defaultGuidanceForModel(
-  guidance: number | undefined,
-  constraint: GuidanceConstraint | undefined,
-): number | undefined {
-  return constraint ? clampGuidance(constraint.default, constraint) : guidance;
-}
-
-export function guidanceForModel(
-  guidance: number,
-  constraint: GuidanceConstraint | undefined,
-): number;
-export function guidanceForModel(
-  guidance: number | undefined,
-  constraint: GuidanceConstraint | undefined,
-): number | undefined;
-export function guidanceForModel(
-  guidance: number | undefined,
-  constraint: GuidanceConstraint | undefined,
-): number | undefined {
-  if (!constraint) return guidance;
-  if (guidance === undefined || !Number.isFinite(guidance)) {
+): number => {
+  if (!constraint) return guidance ?? Number.NaN;
+  if (guidance === null || !Number.isFinite(guidance)) {
     return constraint.default;
   }
   if (guidance < constraint.min || guidance > constraint.max) {
     return constraint.default;
   }
   return clampGuidance(guidance, constraint);
-}
+};
 
-export const withoutUnsetGuidance = <T extends { guidance?: unknown }>(
-  params: T,
-): T => {
-  if (typeof params.guidance === "number" && Number.isFinite(params.guidance)) {
-    return params;
-  }
-  const next = { ...params };
-  delete next.guidance;
-  return next;
+export const carryGuidance = (
+  guidance: number | null,
+  constraint: GuidanceConstraint | undefined,
+): number | null => {
+  if (guidance === null || !constraint) return guidance;
+  if (guidance < constraint.min || guidance > constraint.max) return null;
+  return clampGuidance(guidance, constraint);
 };
 
 export const GUIDANCE_TITLE = "Classifier-Free Guidance Scale";

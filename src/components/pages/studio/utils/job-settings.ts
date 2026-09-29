@@ -89,7 +89,11 @@ export const settingsDiffer = (
   if (clip.model !== panel.model) return true;
   return SETTING_FIELDS[clip.model].some((field) => {
     const value = clip[field];
-    return value !== undefined && value !== panel[field];
+    return (
+      typeof value === "number" &&
+      Number.isFinite(value) &&
+      value !== panel[field]
+    );
   });
 };
 
@@ -98,7 +102,9 @@ export const settingsPatch = (clip: JobSettings): Partial<VideoGenParams> => {
   const patch: Partial<VideoGenParams> = { model: clip.model };
   for (const field of SETTING_FIELDS[clip.model]) {
     const value = clip[field];
-    if (value !== undefined) patch[field] = value;
+    if (typeof value === "number" && Number.isFinite(value)) {
+      patch[field] = value;
+    }
   }
   return patch;
 };
