@@ -6,7 +6,6 @@ const importUprezApp = () => import("./uprez-app");
 const importImagesTab = () => import("./images-tab");
 const importActionsTab = () => import("./actions-tab");
 const importGenerateTab = () => import("./generate-tab");
-const importResultsTab = () => import("./results-tab");
 
 export const FlowBuilder = lazy(() =>
   importFlowBuilder().then((m) => ({ default: m.FlowBuilder })),
@@ -22,9 +21,6 @@ export const ActionsTab = lazy(() =>
 );
 export const GenerateTab = lazy(() =>
   importGenerateTab().then((m) => ({ default: m.GenerateTab })),
-);
-export const ResultsTab = lazy(() =>
-  importResultsTab().then((m) => ({ default: m.ResultsTab })),
 );
 
 const EDITOR_IMPORTS: Record<StudioMode, () => Promise<unknown>> = {

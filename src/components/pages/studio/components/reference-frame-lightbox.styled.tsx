@@ -12,20 +12,20 @@ export const Overlay = styled.div`
   gap: 14px;
   z-index: 1000;
   animation: ${flowFadeIn} 0.25s ease;
-  cursor: pointer;
 `;
 
-export const ImageFrame = styled.div`
+// Leaves room below for details when there are any.
+export const ImageFrame = styled.div<{ $compact?: boolean }>`
   cursor: default;
   display: flex;
   align-items: center;
   justify-content: center;
   max-width: 90vw;
-  max-height: 80vh;
+  max-height: ${(p) => (p.$compact ? "62vh" : "80vh")};
 
   img {
     max-width: 90vw;
-    max-height: 80vh;
+    max-height: ${(p) => (p.$compact ? "62vh" : "80vh")};
     width: auto;
     height: auto;
     object-fit: contain;
@@ -49,14 +49,6 @@ export const CaptionName = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-`;
-
-export const Counter = styled.span`
-  font-size: 11px;
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  color: ${FLOW.textMuted};
-  font-variant-numeric: tabular-nums;
 `;
 
 // Left/right navigation arrows, pinned to the viewport edges and always visible.
@@ -92,8 +84,6 @@ export const NavButton = styled.button<{ $side: "left" | "right" }>`
   &:disabled {
     opacity: 0.2;
     cursor: default;
-    /* Not pointer-events: none — that would let the click fall through to the
-       overlay behind it and close the lightbox instead of doing nothing. */
   }
 `;
 

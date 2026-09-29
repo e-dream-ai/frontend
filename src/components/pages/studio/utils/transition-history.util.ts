@@ -40,3 +40,18 @@ export function formatRunTime(createdAt: number, now: number = Date.now()) {
   });
   return `${day} ${time}`;
 }
+
+/**
+ * The clip's closing filmstrip frame: where an action clip has gone by its
+ * end, which is how takes of the same image and action differ most. Falls back
+ * to the poster thumbnail while the filmstrip is missing.
+ */
+export function lastFilmstripUrl(dream?: Dream): string | undefined {
+  const frames = dream?.filmstrip;
+  if (frames && frames.length > 0) {
+    return frames.reduce((last, f) =>
+      f.frameNumber > last.frameNumber ? f : last,
+    ).url;
+  }
+  return dream?.thumbnail || undefined;
+}

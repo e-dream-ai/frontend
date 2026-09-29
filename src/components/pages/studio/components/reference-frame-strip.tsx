@@ -335,7 +335,7 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
         )}
       </StripControls>
 
-      <ReferenceFrameLightbox />
+      <ReferenceFrameLightbox onRemix={onAddGenerate} />
     </StripSection>
   );
 };

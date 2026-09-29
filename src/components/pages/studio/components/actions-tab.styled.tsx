@@ -38,6 +38,11 @@ export const ActionLoraSelect = styled.select`
     outline: none;
     border-color: ${(props) => props.theme.colorPrimary};
   }
+
+  &:disabled {
+    cursor: default;
+    opacity: 0.6;
+  }
 `;
 
 export const ActionInput = styled.input`
@@ -54,6 +59,26 @@ export const ActionInput = styled.input`
     outline: none;
     border-color: ${(props) => props.theme.colorPrimary};
   }
+
+  /* Still selectable and copyable, just visibly not for typing into. */
+  &:read-only {
+    background: transparent;
+    color: ${(props) => props.theme.textBodyColor};
+  }
+
+  &:read-only:focus {
+    border-color: ${(props) => props.theme.colorBackgroundQuaternary};
+  }
+`;
+
+export const ActionIndex = styled.span`
+  flex-shrink: 0;
+  width: 1.25rem;
+  text-align: right;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: ${(props) => props.theme.textBodyColor};
+  opacity: 0.6;
 `;
 
 export const DeleteButton = styled.button`
@@ -69,6 +94,28 @@ export const DeleteButton = styled.button`
     opacity: 1;
     color: ${(props) => props.theme.colorDanger || "#e55"};
   }
+`;
+
+export const EditCopyButton = styled.button`
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: ${(props) => props.theme.textBodyColor};
+  cursor: pointer;
+  padding: 0.25rem;
+  opacity: 0.6;
+
+  &:hover {
+    opacity: 1;
+    color: ${(props) => props.theme.colorPrimary};
+  }
+`;
+
+// Holds the pencil's place on a row without one, so the prompts line up.
+export const EditCopySpacer = styled.span`
+  flex-shrink: 0;
+  width: calc(14px + 0.5rem);
 `;
 
 export const SummaryBox = styled.div`

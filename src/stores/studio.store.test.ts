@@ -28,7 +28,7 @@ const DEFAULT_VIDEO_PARAMS = {
   model: "ltx-i2v",
   duration: 5,
   numInferenceSteps: 30,
-  guidance: 1.0,
+  guidance: null,
   seed: -1,
 };
 
@@ -49,10 +49,10 @@ describe("studio.store", () => {
       expect(useStudioStore.getState().newCompletedCount).toBe(0);
     });
 
-    it("clears when switching to results tab", () => {
+    it("clears when switching to the results matrix", () => {
       useStudioStore.getState().incrementNewCompleted();
       useStudioStore.getState().incrementNewCompleted();
-      useStudioStore.getState().setActiveTab("results");
+      useStudioStore.getState().setActiveTab("generate");
       expect(useStudioStore.getState().newCompletedCount).toBe(0);
     });
   });
@@ -88,6 +88,129 @@ describe("studio.store", () => {
     });
   });
 
+  describe("clip history", () => {
+    const clip = (dreamUuid: string, status = "processed" as const) => ({
+      imageId: "img",
+      actionId: "act",
+      dreamUuid,
+      jobType: "ltx-i2v" as const,
+      status,
+    });
+
+    it("archives a rendered clip newest first, and drops a failed one", () => {
+      const s = useStudioStore.getState();
+      s.addJob(clip("a"));
+      s.archiveJob("a");
+      s.addJob(clip("b"));
+      s.archiveJob("b");
+      s.addJob({ ...clip("c"), status: "failed" });
+      s.archiveJob("c");
+      const state = useStudioStore.getState();
+      expect(state.jobs).toEqual([]);
+      expect(state.historyJobs.map((j) => j.dreamUuid)).toEqual(["b", "a"]);
+    });
+
+    it("restores into the cell and archives what it displaces", () => {
+      const s = useStudioStore.getState();
+      s.addJob(clip("old"));
+      s.archiveJob("old");
+      s.addJob(clip("new"));
+      const result = useStudioStore.getState().restoreJob("old");
+      expect(result?.displaced?.dreamUuid).toBe("new");
+      const state = useStudioStore.getState();
+      expect(state.jobs.map((j) => j.dreamUuid)).toEqual(["old"]);
+      expect(state.historyJobs.map((j) => j.dreamUuid)).toEqual(["new"]);
+    });
+
+    it("brings a removed action back in place with its clip", () => {
+      const s = useStudioStore.getState();
+      s.addImage({ uuid: "img", url: "", name: "I", status: "processed" });
+      s.addImage({ uuid: "img2", url: "", name: "J", status: "processed" });
+      s.addAction({ id: "a1", prompt: "one" });
+      s.addAction({ id: "act", prompt: "two" });
+      s.addAction({ id: "a3", prompt: "three" });
+      s.addJob(clip("x"));
+      s.archiveJob("x");
+      s.removeAction("act");
+      expect(useStudioStore.getState().removedActions).toHaveLength(1);
+
+      useStudioStore.getState().restoreJob("x");
+      const state = useStudioStore.getState();
+      expect(state.actions.map((a) => a.id)).toEqual(["a1", "act", "a3"]);
+      expect(state.removedActions).toEqual([]);
+      expect(state.jobs.map((j) => j.dreamUuid)).toEqual(["x"]);
+      // The column's other cell comes back unchecked, not queued.
+      expect(state.excludedCombos.has("img2:act")).toBe(true);
+      expect(state.excludedCombos.has("img:act")).toBe(false);
+    });
+
+    it("brings a removed image back in place with its clip", () => {
+      const s = useStudioStore.getState();
+      s.addImage({ uuid: "img0", url: "", name: "H", status: "processed" });
+      s.addImage({ uuid: "img", url: "", name: "I", status: "processed" });
+      s.addAction({ id: "act", prompt: "two" });
+      s.addAction({ id: "a2", prompt: "three" });
+      s.addJob(clip("x"));
+      s.archiveJob("x");
+      s.removeImage("img");
+
+      useStudioStore.getState().restoreJob("x");
+      const state = useStudioStore.getState();
+      expect(state.images.map((i) => i.uuid)).toEqual(["img0", "img"]);
+      expect(state.removedImages).toEqual([]);
+      expect(state.excludedCombos.has("img:a2")).toBe(true);
+    });
+
+    it("archives several clips in one update, newest first", () => {
+      const s = useStudioStore.getState();
+      s.addJob(clip("a"));
+      s.addJob(clip("b"));
+      s.addJob({ ...clip("c"), status: "processing" });
+      let updates = 0;
+      const unsubscribe = useStudioStore.subscribe(() => updates++);
+      useStudioStore.getState().archiveJobs(["a", "b", "c"]);
+      unsubscribe();
+      const state = useStudioStore.getState();
+      expect(updates).toBe(1);
+      expect(state.jobs).toEqual([]);
+      expect(state.historyJobs.map((j) => j.dreamUuid)).toEqual(["b", "a"]);
+    });
+
+    it("keeps history to the newest HISTORY_LIMIT clips", async () => {
+      const { HISTORY_LIMIT } = await import("./studio.store");
+      const s = useStudioStore.getState();
+      const uuids = Array.from(
+        { length: HISTORY_LIMIT + 5 },
+        (_, i) => `clip-${i}`,
+      );
+      for (const uuid of uuids) s.addJob(clip(uuid));
+      useStudioStore.getState().archiveJobs(uuids);
+      const { historyJobs } = useStudioStore.getState();
+      expect(historyJobs).toHaveLength(HISTORY_LIMIT);
+      expect(historyJobs[0].dreamUuid).toBe(uuids[uuids.length - 1]);
+    });
+
+    it("forgets a removed image or action no history clip needs", () => {
+      const s = useStudioStore.getState();
+      s.addImage({ uuid: "img", url: "", name: "I", status: "processed" });
+      s.addAction({ id: "act", prompt: "two" });
+      s.removeImage("img");
+      s.removeAction("act");
+      const state = useStudioStore.getState();
+      expect(state.removedImages).toEqual([]);
+      expect(state.removedActions).toEqual([]);
+    });
+
+    it("will not restore over a cell that is still rendering", () => {
+      const s = useStudioStore.getState();
+      s.addJob(clip("old"));
+      s.archiveJob("old");
+      s.addJob({ ...clip("busy"), status: "processing" });
+      expect(useStudioStore.getState().restoreJob("old")).toBeNull();
+      expect(useStudioStore.getState().historyJobs).toHaveLength(1);
+    });
+  });
+
   describe("excludedCombos", () => {
     it("toggles combo exclusion", () => {
       useStudioStore.getState().toggleComboExcluded("key1");
@@ -95,6 +218,18 @@ describe("studio.store", () => {
 
       useStudioStore.getState().toggleComboExcluded("key1");
       expect(useStudioStore.getState().excludedCombos.has("key1")).toBe(false);
+    });
+
+    it("drops a removed action's combos and keeps the others", () => {
+      const s = useStudioStore.getState();
+      s.addAction({ id: "act1", prompt: "p" });
+      s.setComboExcluded("img1:act1", true);
+      s.setComboExcluded("img1:act2", true);
+      s.toggleComboRerender("img2:act1");
+      useStudioStore.getState().removeAction("act1");
+      const state = useStudioStore.getState();
+      expect([...state.excludedCombos]).toEqual(["img1:act2"]);
+      expect(state.rerenderCombos.size).toBe(0);
     });
   });
 
@@ -128,7 +263,7 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
-        guidance: 1.0,
+        guidance: null,
         seed: -1,
       });
       expect(migrated.wanParams).toBeUndefined();
@@ -154,7 +289,7 @@ describe("studio.store", () => {
       expect(params.numInferenceSteps).toBe(30); // preserved
     });
 
-    it("clears per-action LoRAs the newly selected model cannot run", () => {
+    it("carries a LoRA to the same camera move on the new model", () => {
       useStudioStore.getState().addAction({
         id: "a1",
         prompt: "dolly in",
@@ -170,8 +305,7 @@ describe("studio.store", () => {
       useStudioStore.getState().setVideoGenParams({ model: "wan-i2v" });
 
       const [action] = useStudioStore.getState().actions;
-      expect(action.highNoiseLoras).toEqual([]);
-      expect(action.lowNoiseLoras).toEqual([]);
+      expect(action.highNoiseLoras?.[0]?.path).toContain("zoom_in");
       expect(action.prompt).toBe("dolly in");
     });
 
@@ -291,7 +425,7 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(8);
       expect(params.numInferenceSteps).toBe(30); // from defaults
-      expect(params.guidance).toBe(1.0); // LTX default, from defaults
+      expect(params.guidance).toBeNull();
       expect(params.seed).toBe(-1);
     });
 
@@ -305,7 +439,7 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(5);
       expect(params.numInferenceSteps).toBe(30);
-      expect(params.guidance).toBe(1.0);
+      expect(params.guidance).toBeNull();
       expect(params.seed).toBe(-1);
     });
   });
@@ -323,8 +457,9 @@ describe("studio.store", () => {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
       const migrated = migrate(v6State, 6) as Record<string, unknown>;
+      // Cleared rather than pinned to a number: the catalog now supplies it.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((migrated.videoGenParams as any).guidance).toBe(1.0);
+      expect((migrated.videoGenParams as any).guidance).toBeNull();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((migrated.videoGenParams as any).seed).toBe(-1);
     });
@@ -345,6 +480,42 @@ describe("studio.store", () => {
       expect((migrated.videoGenParams as any).guidance).toBe(7.0);
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((migrated.videoGenParams as any).seed).toBe(-1);
+    });
+  });
+
+  describe("migration v10 to v11", () => {
+    it("clears the old hardcoded LTX guidance so the API default applies", () => {
+      const v10State = {
+        videoGenParams: { ...DEFAULT_VIDEO_PARAMS, guidance: 1.0 },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v10State, 10) as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((migrated.videoGenParams as any).guidance).toBeNull();
+    });
+
+    it("keeps an explicitly picked LTX guidance", () => {
+      const v10State = {
+        videoGenParams: { ...DEFAULT_VIDEO_PARAMS, guidance: 3.5 },
+      };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate(v10State, 10) as Record<string, unknown>;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      expect((migrated.videoGenParams as any).guidance).toBe(3.5);
+    });
+  });
+
+  describe("migration v11 to v12", () => {
+    it("moves a session left on the removed Results tab to the Matrix", () => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const migrate = (useStudioStore as any).persist?.getOptions?.()?.migrate;
+      const migrated = migrate({ activeTab: "results" }, 11) as Record<
+        string,
+        unknown
+      >;
+      expect(migrated.activeTab).toBe("generate");
     });
   });
 
@@ -377,7 +548,7 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
-        guidance: 1.0,
+        guidance: null,
         seed: -1,
       });
     });

@@ -13,9 +13,11 @@ import {
   clampSizeToAllowed,
 } from "../constants/size-options";
 import { buildImageAlgoParams } from "../utils/build-image-algo-params";
+import { imageNames } from "../utils/image-names";
 import { resolveNegativePromptSupport } from "../utils/negative-prompt-support";
 import { SizeSelect } from "./size-select";
 import { StyleReferenceField } from "./style-reference-field";
+import { useLightboxA11y } from "../hooks/useLightboxA11y";
 import {
   Overlay,
   Panel,
@@ -54,6 +56,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
   const imageGenParams = useStudioStore((s) => s.imageGenParams);
   const setImageGenParams = useStudioStore((s) => s.setImageGenParams);
   const addImage = useStudioStore((s) => s.addImage);
+  const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
 
   // Shared with the batch Images tab so the prompt survives reopening the
   // dialog and carries over between the two generate UIs.
@@ -105,10 +108,11 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
     setIsSubmitting(true);
 
     const baseSeed = Math.floor(Math.random() * 99_000) + 1;
-    const currentImageCount = useStudioStore.getState().images.length;
-    const modelLabel =
-      modelOptions.find((m) => m.id === imageGenParams.model)?.label ??
-      imageGenParams.model;
+    const names = imageNames(
+      prompt,
+      imageGenParams.seedCount,
+      useStudioStore.getState().images,
+    );
 
     await Promise.all(
       Array.from({ length: imageGenParams.seedCount }, (_, i) => {
@@ -128,7 +132,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
 
         return axiosClient
           .post("/v1/dream", {
-            name: `${modelLabel} ${currentImageCount + i + 1}`,
+            name: names[i],
             prompt: JSON.stringify(algoParams),
             description: "Studio generated image",
           })
@@ -143,6 +147,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
               name: dream.name,
               seed,
               size: imageGenParams.size,
+              prompt,
               status: (dream.status as StudioImage["status"]) || "queue",
             });
             onCreated?.(dream);
@@ -163,15 +168,18 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
     guardOverBudget,
     imageGenParams,
     negativePromptEnabled,
-    modelOptions,
     addImage,
     onCreated,
     onClose,
   ]);
 
   return (
-    <Overlay>
-      <Panel>
+    <Overlay ref={overlayRef} tabIndex={-1}>
+      <Panel
+        role="dialog"
+        aria-modal="true"
+        aria-label="Generate Reference Frames"
+      >
         <Header>
           <Title>Generate Reference Frames</Title>
           <CloseBtn onClick={onClose}>&times;</CloseBtn>
@@ -181,7 +189,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
             placeholder="Describe the image you want to generate..."
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            autoFocus
+            data-autofocus
           />
           <FieldRow style={{ marginTop: 14 }}>
             <FieldGroup>

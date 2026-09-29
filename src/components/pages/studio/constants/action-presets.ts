@@ -1,4 +1,4 @@
-import type { PresetAction, PresetPack } from "./preset-packs";
+import type { CameraMove, PresetAction, PresetPack } from "./preset-packs";
 
 const OSTRIS_BASE = "https://huggingface.co/ostris/wan22_i2v_14b";
 
@@ -24,6 +24,16 @@ export const ltxCameraLoraFile = (
 
 export const LTX_CAMERA_LORA_SCALE = 0.4;
 
+const LTX_CAMERA_MOVES: Record<LtxCameraDirection, CameraMove> = {
+  static: "static",
+  "dolly-in": "push-in",
+  "dolly-out": "pull-out",
+  "dolly-left": "left",
+  "dolly-right": "right",
+  "jib-up": "up",
+  "jib-down": "down",
+};
+
 const ltxCameraAction = (
   direction: LtxCameraDirection,
   loraLabel: string,
@@ -31,6 +41,7 @@ const ltxCameraAction = (
 ): PresetAction => ({
   prompt,
   loraLabel,
+  cameraMove: LTX_CAMERA_MOVES[direction],
   highNoiseLoras: [
     { path: ltxCameraLoraFile(direction), scale: LTX_CAMERA_LORA_SCALE },
   ],
@@ -45,6 +56,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "slow zoom in, camera gently pushing forward",
         loraLabel: "Zoom In",
+        cameraMove: "push-in",
         highNoiseLoras: [
           {
             path: loraUrl("zoom_in_lora", "wan22_14b_i2v_zoom_in.safetensors"),
@@ -55,6 +67,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "slow zoom out, camera pulling back to reveal",
         loraLabel: "Zoom Out",
+        cameraMove: "pull-out",
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -68,6 +81,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "pan left to right, smooth motion",
         loraLabel: "Pan Right",
+        cameraMove: "right",
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -81,6 +95,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "pan right to left, smooth motion",
         loraLabel: "Pan Left",
+        cameraMove: "left",
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -94,6 +109,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "pan upward, revealing sky",
         loraLabel: "Tilt Up",
+        cameraMove: "up",
         highNoiseLoras: [
           {
             path: loraUrl("tilt_up_lora", "wan22_14b_i2v_tilt_up.safetensors"),
@@ -104,6 +120,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "pan downward, descending",
         loraLabel: "Tilt Down",
+        cameraMove: "down",
         highNoiseLoras: [
           {
             path: loraUrl(
@@ -127,6 +144,7 @@ export const ACTION_PRESETS: PresetPack[] = [
       {
         prompt: "orbit around subject, 180 degrees, smooth motion",
         loraLabel: "Orbit",
+        cameraMove: "orbit",
         highNoiseLoras: [
           {
             path: loraUrl(

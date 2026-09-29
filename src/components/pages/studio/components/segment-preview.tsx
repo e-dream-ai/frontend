@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -5,11 +6,9 @@ import {
   PreviewContainer,
   PreviewLabel,
   VideoWrapper,
-  ClickHint,
   LightboxOverlay,
   LightboxVideo,
   NavButton,
-  SegmentCounter,
   ChipRail,
   SegmentChip,
 } from "./segment-preview.styled";
@@ -79,7 +78,13 @@ export interface SegmentPreviewProps {
   lightboxOpen: boolean;
   onLightboxOpenChange: (open: boolean) => void;
   label?: string;
-  hint?: string;
+  /**
+   * Replaces the numbered chip rail under the video. The rail names segments
+   * by position, which says nothing once a segment is an image-and-action
+   * pair; a caller that can describe its own clips passes that description
+   * here instead.
+   */
+  caption?: ReactNode;
   /** Suppress arrow-key stepping while another overlay owns the keyboard. */
   keyboardDisabled?: boolean;
   /** Which edge carries the separating rule: the flow preview sits at the
@@ -104,7 +109,7 @@ export function SegmentPreview({
   lightboxOpen,
   onLightboxOpenChange,
   label = "Preview",
-  hint = "Click to expand",
+  caption,
   keyboardDisabled = false,
   divider = "top",
   replayToken,
@@ -204,31 +209,27 @@ export function SegmentPreview({
               >
                 <ChevronRight size={16} strokeWidth={2.4} />
               </NavButton>
-              <SegmentCounter>
-                {pad(targetIndex + 1)} / {pad(segmentCount)}
-              </SegmentCounter>
             </>
           )}
         </VideoWrapper>
 
-        {showNav && (
-          <ChipRail role="tablist" aria-label="Segments">
-            {segments.map((segment, i) => (
-              <SegmentChip
-                key={segment.key}
-                $active={i === targetIndex}
-                onClick={() => goTo(i)}
-                role="tab"
-                aria-selected={i === targetIndex}
-                aria-label={`Segment ${i + 1}`}
-              >
-                {pad(i + 1)}
-              </SegmentChip>
-            ))}
-          </ChipRail>
-        )}
-
-        <ClickHint>{hint}</ClickHint>
+        {caption ??
+          (showNav && (
+            <ChipRail role="tablist" aria-label="Segments">
+              {segments.map((segment, i) => (
+                <SegmentChip
+                  key={segment.key}
+                  $active={i === targetIndex}
+                  onClick={() => goTo(i)}
+                  role="tab"
+                  aria-selected={i === targetIndex}
+                  aria-label={`Segment ${i + 1}`}
+                >
+                  {pad(i + 1)}
+                </SegmentChip>
+              ))}
+            </ChipRail>
+          ))}
       </PreviewContainer>
 
       {lightboxOpen && (

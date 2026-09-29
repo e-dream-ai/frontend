@@ -1,70 +1,67 @@
-import React, { useEffect, useMemo } from "react";
-import { useStudioStore, comboKeyOf } from "@/stores/studio.store";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useStudioStore } from "@/stores/studio.store";
 import { useBatchSubmit } from "../hooks/useBatchSubmit";
-import { isAnimatableFrame, isRunnableAction } from "../utils/batch-selectors";
-import type { VideoModel } from "@/types/studio.types";
+import {
+  actionClipCounts,
+  comboKeyOf,
+  imageClipCount,
+  indexCellJobs,
+  isAnimatableFrame,
+  isRunnableAction,
+} from "../utils/batch-selectors";
+import { actionHeadings } from "../utils/action-headings";
+import {
+  getLoraOptionsForModel,
+  NO_LORA_OPTION,
+} from "../constants/lora-options";
+import { ActionDialog } from "./action-dialog";
+import { ImageDialog } from "./image-dialog";
+import { GenerateReferenceFramesModal } from "./generate-reference-frames-modal";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
-  hasActionLoras,
 } from "../constants/duration-options";
-import {
-  GUIDANCE_PARAM,
-  guidanceForModel,
-  resolveGuidanceConstraint,
-} from "../constants/guidance-options";
-import { SEED_HINT } from "../constants/seed-options";
-import { useSeedInput } from "../hooks/useSeedInput";
-import { GuidanceField } from "./guidance-field";
 import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { useModels } from "@/api/model/query/useModels";
 import { CostEstimate } from "@/components/shared/cost-estimate/cost-estimate";
 import { CreditLimitNotice } from "@/components/shared/credit-limit-notice/credit-limit-notice";
 import { useCostEstimate } from "@/hooks/useCostEstimate";
 import { useCreditGuard } from "@/hooks/useCreditGuard";
-import { PresignedImage } from "@/components/shared/presigned-image";
+import { useDreamSegments } from "../hooks/useDreamSegments";
+import { useMatrixChecks } from "../hooks/useMatrixChecks";
+import { useMatrixPreview } from "../hooks/useMatrixPreview";
+import {
+  useDiscardStudioClip,
+  useRemoveStudioAction,
+  useRemoveStudioImage,
+} from "../hooks/useStudioClipActions";
+import { ConfirmModal } from "@/components/modals/confirm.modal";
+import { ClipHistory } from "./clip-history";
+import { ForceSettingsDialog } from "./force-settings-dialog";
+import { MatrixGrid } from "./matrix-grid";
+import { MatrixPreview } from "./matrix-preview";
+import { MatrixSettings } from "./matrix-settings";
+import { BatchProgress } from "./batch-progress";
 import {
   GenerateSection,
   SectionTitle,
-  FormField,
-  FieldLabel,
-  StyledSelect,
-  NavButton,
-  SecondaryNavButton,
-  BottomRow,
+  SectionHeaderRow,
+  ButtonRow,
 } from "./images-tab.styled";
 import {
-  CombinationGrid,
-  GridTable,
-  GridHeader,
-  GridRowHeader,
-  GridCell,
-  CellThumb,
-  CellCheckbox,
-  SettingsGrid,
-  DescriptionText,
-  SubmittedLabel,
+  TabLayout,
+  TabColumn,
   ComboCountText,
-  HintText,
-  ActionGroup,
-  SeedInput,
+  MatrixCheckButton,
+  GenerateRow,
+  GenerateButton,
 } from "./generate-tab.styled";
 
-const VIDEO_MODEL_LABELS: Record<VideoModel, string> = {
-  "ltx-i2v": "LTX 2.3",
-  "wan-i2v": "Wan I2V",
-  "kling-i2v": "Kling 3.0 Pro",
-  "kling-25-i2v": "Kling 2.5 Turbo Pro",
-};
-
-const VIDEO_MODELS: VideoModel[] = [
-  "ltx-i2v",
-  "wan-i2v",
-  "kling-25-i2v",
-  "kling-i2v",
-];
-
-const STEPS_OPTIONS = [20, 25, 30, 40];
+interface PendingDelete {
+  kind: "image" | "action";
+  id: string;
+  clipCount: number;
+}
 
 export const GenerateTab: React.FC = () => {
   const images = useStudioStore((s) => s.images);
@@ -72,17 +69,55 @@ export const GenerateTab: React.FC = () => {
   const videoGenParams = useStudioStore((s) => s.videoGenParams);
   const setVideoGenParams = useStudioStore((s) => s.setVideoGenParams);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
-  const toggleComboExcluded = useStudioStore((s) => s.toggleComboExcluded);
-  const setActiveTab = useStudioStore((s) => s.setActiveTab);
+  const rerenderCombos = useStudioStore((s) => s.rerenderCombos);
   const jobs = useStudioStore((s) => s.jobs);
 
   const { submit, isSubmitting, getPendingCombinations } = useBatchSubmit();
+  const checks = useMatrixChecks();
 
   const frames = useMemo(() => images.filter(isAnimatableFrame), [images]);
+  // Frames still generating or uploading get a row straight away, showing
+  // their progress; its cells wake up once the frame is ready.
+  const matrixRows = useMemo(
+    () => images.filter((i) => i.status !== "failed"),
+    [images],
+  );
   const runnableActions = useMemo(
     () => actions.filter(isRunnableAction),
     [actions],
   );
+  const cellJobs = useMemo(() => indexCellJobs(jobs), [jobs]);
+
+  const headings = useMemo(() => {
+    const loraOptions = getLoraOptionsForModel(videoGenParams.model);
+    if (loraOptions.length === 0) return actionHeadings(runnableActions);
+    return actionHeadings(runnableActions, (action) => {
+      const path = action.highNoiseLoras?.[0]?.path;
+      if (!path) return NO_LORA_OPTION.label;
+      return loraOptions.find((o) => o.key === path)?.label;
+    });
+  }, [runnableActions, videoGenParams.model]);
+  const clipCounts = useMemo(
+    () => actionClipCounts(images, jobs),
+    [images, jobs],
+  );
+
+  const [openActionId, setOpenActionId] = useState<string | null>(null);
+  const [openImageUuid, setOpenImageUuid] = useState<string | null>(null);
+  const [generateOpen, setGenerateOpen] = useState(false);
+  // A row or column with clips, waiting on the go-ahead to delete it.
+  const [pendingDelete, setPendingDelete] = useState<PendingDelete | null>(
+    null,
+  );
+  const openActionIndex = runnableActions.findIndex(
+    (a) => a.id === openActionId,
+  );
+  const openAction =
+    openActionIndex >= 0 ? runnableActions[openActionIndex] : undefined;
+  const openImage = frames.find((i) => i.uuid === openImageUuid);
+  const openImageClipCount = openImage
+    ? imageClipCount(cellJobs, runnableActions, openImage.uuid)
+    : 0;
 
   const newCombos = useMemo(
     () => getPendingCombinations(),
@@ -111,25 +146,6 @@ export const GenerateTab: React.FC = () => {
   const { overBudget, canManageKey, resetIn, guardOverBudget } =
     useCreditGuard(totalCostUsd);
 
-  const supportsSteps =
-    modelConstraints.get(videoGenParams.model)?.supportsSteps ?? true;
-
-  const guidanceConstraint = resolveGuidanceConstraint(
-    videoGenParams.model,
-    modelConstraints.get(videoGenParams.model),
-  );
-  const guidanceParam = GUIDANCE_PARAM[videoGenParams.model];
-  const seedInput = useSeedInput(videoGenParams.seed, (seed) =>
-    setVideoGenParams({ seed }),
-  );
-  const showLtxHint = useMemo(() => {
-    if (videoGenParams.model !== "ltx-i2v") return false;
-    return (
-      runnableActions.length > 0 &&
-      runnableActions.some((a) => !hasActionLoras(a))
-    );
-  }, [videoGenParams.model, runnableActions]);
-
   useEffect(() => {
     const nextDuration = clampDurationToAllowed(
       videoGenParams.duration,
@@ -140,197 +156,256 @@ export const GenerateTab: React.FC = () => {
     }
   }, [durationOptions, videoGenParams.duration, setVideoGenParams]);
 
-  const handleModelChange = (model: VideoModel) => {
-    setVideoGenParams({
-      model,
-      guidance: guidanceForModel(
-        videoGenParams.guidance,
-        resolveGuidanceConstraint(model, modelConstraints.get(model)),
-      ),
-    });
-  };
-
   const totalPossible = frames.length * runnableActions.length;
 
+  const { completedUuids, renderedCount } = useMemo(() => {
+    const uuids: string[] = [];
+    const seen = new Set<string>();
+    let rendered = 0;
+    for (const image of frames) {
+      for (const action of runnableActions) {
+        const job = cellJobs.get(comboKeyOf(image.uuid, action.id));
+        if (job?.status !== "processed") continue;
+        rendered++;
+        if (seen.has(job.dreamUuid)) continue;
+        seen.add(job.dreamUuid);
+        uuids.push(job.dreamUuid);
+      }
+    }
+    return { completedUuids: uuids, renderedCount: rendered };
+  }, [frames, runnableActions, cellJobs]);
+
+  const segments = useDreamSegments(completedUuids);
+  const preview = useMatrixPreview(segments);
+  const { playSegment } = preview;
+  const { checkRenderedCell } = checks;
+
+  /** A clip back from history plays, and is checked like a click would. */
+  const handleRestore = useCallback(
+    (dreamUuid: string) => {
+      playSegment(dreamUuid);
+      const job = useStudioStore
+        .getState()
+        .jobs.find((j) => j.dreamUuid === dreamUuid);
+      if (job) checkRenderedCell(comboKeyOf(job.imageId, job.actionId), job);
+    },
+    [playSegment, checkRenderedCell],
+  );
+  const discardClip = useDiscardStudioClip();
+  const removeImage = useRemoveStudioImage();
+  const removeAction = useRemoveStudioAction();
+
+  /** Deletes a row or column; one with clips asks first, as its × would. */
+  const requestDelete = (
+    kind: PendingDelete["kind"],
+    id: string,
+    clipCount: number,
+  ) => {
+    if (clipCount > 0) setPendingDelete({ kind, id, clipCount });
+    else if (kind === "image") removeImage(id);
+    else removeAction(id);
+  };
+
+  const submittedJobs = useMemo(
+    () => jobs.filter((j) => j.jobType !== "uprez"),
+    [jobs],
+  );
+
   return (
-    <>
-      <GenerateSection>
-        <SectionTitle>Combination Preview</SectionTitle>
-        <DescriptionText>
-          Review all image &times; action combinations before generating.
-          Uncheck any you want to skip.
-        </DescriptionText>
+    <TabLayout>
+      <TabColumn>
+        <MatrixPreview
+          segments={segments}
+          previewIndex={preview.previewIndex}
+          replayToken={preview.replayToken}
+          playingUuid={preview.playingUuid}
+          segmentKeys={preview.segmentKeys}
+          images={images}
+          actions={runnableActions}
+          jobs={jobs}
+          cellJobs={cellJobs}
+          hasSubmitted={submittedJobs.length > 0}
+          onIndexChange={preview.showIndex}
+          onPlay={playSegment}
+        />
 
-        <CombinationGrid>
-          <GridTable>
-            <thead>
-              <tr>
-                <GridHeader />
-                {runnableActions.map((action) => (
-                  <GridHeader key={action.id} title={action.prompt}>
-                    {action.prompt.slice(0, 20)}...
-                  </GridHeader>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {frames.map((image) => (
-                <tr key={image.uuid}>
-                  <GridRowHeader>{image.name}</GridRowHeader>
-                  {runnableActions.map((action) => {
-                    const comboKey = comboKeyOf(image.uuid, action.id);
-                    const excluded = excludedCombos.has(comboKey);
-                    const existingJob = jobs.find(
-                      (j) =>
-                        j.imageId === image.uuid &&
-                        j.actionId === action.id &&
-                        j.jobType === videoGenParams.model,
-                    );
+        <BatchProgress jobs={submittedJobs} />
 
-                    return (
-                      <GridCell
-                        key={comboKey}
-                        $excluded={excluded}
-                        onClick={() =>
-                          !existingJob && toggleComboExcluded(comboKey)
-                        }
-                      >
-                        {image.status === "processed" && (
-                          <CellThumb
-                            as={PresignedImage}
-                            dreamUuid={image.uuid}
-                            alt=""
-                          />
-                        )}
-                        <br />
-                        {existingJob ? (
-                          <SubmittedLabel>submitted</SubmittedLabel>
-                        ) : (
-                          <CellCheckbox
-                            checked={!excluded}
-                            onChange={() => toggleComboExcluded(comboKey)}
-                            onClick={(e) => e.stopPropagation()}
-                          />
-                        )}
-                      </GridCell>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </GridTable>
-        </CombinationGrid>
+        <CreditLimitNotice
+          overBudget={overBudget}
+          canManageKey={canManageKey}
+          resetIn={resetIn}
+        />
 
-        <ComboCountText>
-          {newCombos.length} of {totalPossible} combinations selected
-          {jobs.length > 0 && ` (${jobs.length} already submitted)`}
-        </ComboCountText>
-      </GenerateSection>
-
-      <GenerateSection>
-        <SectionTitle>Output Settings</SectionTitle>
-        {showLtxHint && (
-          <HintText>
-            LTX works best with motion presets. Add a camera LoRA for better
-            results.
-          </HintText>
-        )}
-        <SettingsGrid>
-          <FormField>
-            <FieldLabel>Model:</FieldLabel>
-            <StyledSelect
-              value={videoGenParams.model}
-              onChange={(e) => handleModelChange(e.target.value as VideoModel)}
-            >
-              {VIDEO_MODELS.map((m) => (
-                <option key={m} value={m}>
-                  {VIDEO_MODEL_LABELS[m]}
-                </option>
-              ))}
-            </StyledSelect>
-          </FormField>
-          <FormField>
-            <FieldLabel>Duration:</FieldLabel>
-            <StyledSelect
-              value={videoGenParams.duration}
-              onChange={(e) =>
-                setVideoGenParams({ duration: Number(e.target.value) })
-              }
-            >
-              {durationOptions.map((d) => (
-                <option key={d} value={d}>
-                  {d} seconds
-                </option>
-              ))}
-            </StyledSelect>
-          </FormField>
-          {supportsSteps && (
-            <FormField>
-              <FieldLabel>Steps:</FieldLabel>
-              <StyledSelect
-                value={videoGenParams.numInferenceSteps}
-                onChange={(e) =>
-                  setVideoGenParams({
-                    numInferenceSteps: Number(e.target.value),
-                  })
-                }
-              >
-                {STEPS_OPTIONS.map((s) => (
-                  <option key={s} value={s}>
-                    {s}
-                  </option>
-                ))}
-              </StyledSelect>
-            </FormField>
-          )}
-          {videoGenParams.model === "ltx-i2v" && (
-            <FormField>
-              <FieldLabel htmlFor="batch-seed" title={SEED_HINT}>
-                Seed:
-              </FieldLabel>
-              <SeedInput id="batch-seed" title={SEED_HINT} {...seedInput} />
-            </FormField>
-          )}
-          {guidanceConstraint && guidanceParam && (
-            <GuidanceField
-              param={guidanceParam}
-              constraint={guidanceConstraint}
-              value={videoGenParams.guidance}
-              onChange={(guidance) => setVideoGenParams({ guidance })}
-            />
-          )}
-        </SettingsGrid>
-      </GenerateSection>
-
-      <CreditLimitNotice
-        overBudget={overBudget}
-        canManageKey={canManageKey}
-        resetIn={resetIn}
-      />
-
-      <BottomRow>
-        <SecondaryNavButton onClick={() => setActiveTab("actions")}>
-          &larr; Back to Actions
-        </SecondaryNavButton>
-        <ActionGroup>
+        <GenerateRow>
           <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
-          <NavButton
+          <GenerateButton
+            type="button"
             onClick={() => {
               if (guardOverBudget()) return;
               submit();
             }}
             disabled={isSubmitting || newCombos.length === 0 || overBudget}
-            style={{
-              background:
-                newCombos.length === 0 || overBudget ? "#555" : undefined,
-            }}
           >
             {isSubmitting
-              ? "Submitting..."
-              : `Generate ${newCombos.length} Videos \u2192`}
-          </NavButton>
-        </ActionGroup>
-      </BottomRow>
-    </>
+              ? "Submitting…"
+              : `Generate ${newCombos.length} ${
+                  newCombos.length === 1 ? "video" : "videos"
+                }`}
+          </GenerateButton>
+        </GenerateRow>
+
+        <ClipHistory
+          onRestore={handleRestore}
+          showRemoved={newCombos.length === 0}
+        />
+      </TabColumn>
+
+      <TabColumn>
+        <MatrixSettings
+          durationOptions={durationOptions}
+          hidden={newCombos.length === 0}
+        />
+      </TabColumn>
+
+      <TabColumn>
+        <GenerateSection>
+          <SectionHeaderRow>
+            <SectionTitle>Matrix</SectionTitle>
+            <ButtonRow>
+              <MatrixCheckButton
+                type="button"
+                onClick={() => checks.checkAll()}
+              >
+                Check all
+              </MatrixCheckButton>
+              <MatrixCheckButton
+                type="button"
+                onClick={() => checks.uncheckAll()}
+              >
+                Uncheck all
+              </MatrixCheckButton>
+            </ButtonRow>
+          </SectionHeaderRow>
+
+          <MatrixGrid
+            rows={matrixRows}
+            actions={runnableActions}
+            headings={headings}
+            cellJobs={cellJobs}
+            excludedCombos={excludedCombos}
+            rerenderCombos={rerenderCombos}
+            segmentKeys={preview.segmentKeys}
+            playingUuid={preview.playingUuid}
+            onOpenAction={setOpenActionId}
+            onOpenImage={setOpenImageUuid}
+            onPlay={playSegment}
+            onToggle={checks.toggleCell}
+            onDiscard={discardClip}
+          />
+
+          <ComboCountText>
+            <strong>{newCombos.length}</strong> of{" "}
+            <strong>{totalPossible}</strong> combinations checked to generate
+            {renderedCount > 0 && (
+              <>
+                {" · "}
+                <strong>{renderedCount}</strong> rendered
+              </>
+            )}
+          </ComboCountText>
+        </GenerateSection>
+      </TabColumn>
+      {checks.pendingCombine && (
+        <ForceSettingsDialog
+          title="Clips have different settings"
+          body={
+            <>
+              Checked clips re-render together with one set of settings &mdash;
+              the ones shown now. Cancel leaves{" "}
+              {checks.pendingCombine.kind === "cell"
+                ? "this clip"
+                : "the clips"}{" "}
+              unchecked.
+            </>
+          }
+          confirmLabel="Combine"
+          onConfirm={checks.confirmCombine}
+          onCancel={checks.cancelCombine}
+        />
+      )}
+      {openAction && (
+        <ActionDialog
+          action={openAction}
+          index={openActionIndex + 1}
+          heading={headings[openActionIndex]}
+          clipCount={clipCounts.get(openAction.id) ?? 0}
+          onClose={() => setOpenActionId(null)}
+          onCheckColumn={() => {
+            setOpenActionId(null);
+            checks.checkAll({ actionId: openAction.id });
+          }}
+          onUncheckColumn={() => {
+            setOpenActionId(null);
+            checks.uncheckAll({ actionId: openAction.id });
+          }}
+          onDelete={() => {
+            setOpenActionId(null);
+            requestDelete(
+              "action",
+              openAction.id,
+              clipCounts.get(openAction.id) ?? 0,
+            );
+          }}
+        />
+      )}
+      {openImage && (
+        <ImageDialog
+          image={openImage}
+          clipCount={openImageClipCount}
+          onClose={() => setOpenImageUuid(null)}
+          onCheckRow={() => {
+            setOpenImageUuid(null);
+            checks.checkAll({ imageUuid: openImage.uuid });
+          }}
+          onUncheckRow={() => {
+            setOpenImageUuid(null);
+            checks.uncheckAll({ imageUuid: openImage.uuid });
+          }}
+          onGenerateMore={() => {
+            setOpenImageUuid(null);
+            setGenerateOpen(true);
+          }}
+          onDelete={() => {
+            setOpenImageUuid(null);
+            requestDelete("image", openImage.uuid, openImageClipCount);
+          }}
+        />
+      )}
+      <ConfirmModal
+        isOpen={pendingDelete !== null}
+        title={
+          pendingDelete?.kind === "image" ? "Remove image?" : "Remove action?"
+        }
+        text={`This ${pendingDelete?.kind ?? "action"} has ${
+          pendingDelete?.clipCount ?? 0
+        } ${pendingDelete?.clipCount === 1 ? "clip" : "clips"} in the matrix. ${
+          pendingDelete?.kind === "image"
+            ? "Removing it from this playlist does not delete it."
+            : "Removing it discards them: they leave the matrix and the output playlist."
+        }`}
+        confirmText="Remove"
+        confirmButtonType="danger"
+        onCancel={() => setPendingDelete(null)}
+        onConfirm={() => {
+          if (pendingDelete?.kind === "image") removeImage(pendingDelete.id);
+          else if (pendingDelete) removeAction(pendingDelete.id);
+          setPendingDelete(null);
+        }}
+      />
+      {generateOpen && (
+        <GenerateReferenceFramesModal onClose={() => setGenerateOpen(false)} />
+      )}
+    </TabLayout>
   );
 };

@@ -37,7 +37,13 @@ export const Modal: React.FC<ModalProps> = ({
   hideModal,
 }) => {
   return (
-    <StyledReactModal size={size} isOpen={isOpen} onBackgroundClick={hideModal}>
+    <StyledReactModal
+      size={size}
+      isOpen={isOpen}
+      onBackgroundClick={hideModal}
+      // Escape dismisses, as a click outside does: a confirm reads it as Cancel.
+      onEscapeKeydown={hideModal}
+    >
       <ModalHeader>
         <ModalTitle>{title}</ModalTitle>
         <ModalClose onClick={hideModal} />

@@ -8,8 +8,23 @@ export const PRESET_GROUPS = [
 
 export type PresetGroup = (typeof PRESET_GROUPS)[number]["id"];
 
+/**
+ * The camera motion a LoRA produces, shared across models so a pick can follow
+ * the model dropdown: LTX's Dolly In and Wan's Zoom In are the same move.
+ */
+export type CameraMove =
+  | "static"
+  | "push-in"
+  | "pull-out"
+  | "left"
+  | "right"
+  | "up"
+  | "down"
+  | "orbit";
+
 export interface PresetAction extends Omit<StudioAction, "id"> {
   loraLabel?: string;
+  cameraMove?: CameraMove;
 }
 
 export interface PresetPack {

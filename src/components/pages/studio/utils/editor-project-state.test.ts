@@ -128,4 +128,19 @@ describe("action state persistence", () => {
     expect(persisted.images[0]).not.toHaveProperty("previewFrame");
     expect(persisted.images[0].uuid).toBe("i1");
   });
+
+  it("opens a project saved on the removed Results tab on the Matrix", () => {
+    const persisted = toPersistedActionState({ activeTab: "results" });
+    expect(fromPersistedActionState(persisted).activeTab).toBe("generate");
+  });
+
+  it("keeps a saved tab that still exists", () => {
+    const persisted = toPersistedActionState({ activeTab: "actions" });
+    expect(fromPersistedActionState(persisted).activeTab).toBe("actions");
+  });
+
+  it("drops a saved tab it does not know, keeping the current one", () => {
+    const persisted = toPersistedActionState({ activeTab: "nope" });
+    expect(fromPersistedActionState(persisted)).not.toHaveProperty("activeTab");
+  });
 });
