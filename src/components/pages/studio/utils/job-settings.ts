@@ -22,13 +22,13 @@ export const SETTING_FIELDS: Record<VideoModel, readonly SettingField[]> = {
   "kling-25-i2v": ["duration", "guidance"],
 };
 
-const ALGORITHM_MODELS: Record<string, VideoModel> = {
-  "ltx-i2v": "ltx-i2v",
-  "wan-i2v": "wan-i2v",
-  "wan-i2v-lora": "wan-i2v",
-  "kling-i2v": "kling-i2v",
-  "kling-25-i2v": "kling-25-i2v",
-};
+const ALGORITHM_MODELS: ReadonlyMap<string, VideoModel> = new Map([
+  ["ltx-i2v", "ltx-i2v"],
+  ["wan-i2v", "wan-i2v"],
+  ["wan-i2v-lora", "wan-i2v"],
+  ["kling-i2v", "kling-i2v"],
+  ["kling-25-i2v", "kling-25-i2v"],
+]);
 
 const asNumber = (value: unknown) =>
   typeof value === "number" && Number.isFinite(value) ? value : undefined;
@@ -50,7 +50,7 @@ export const settingsFromDreamPrompt = (
   }
   if (!params || typeof params !== "object") return undefined;
   const p = params as Record<string, unknown>;
-  const model = ALGORITHM_MODELS[String(p.infinidream_algorithm)];
+  const model = ALGORITHM_MODELS.get(String(p.infinidream_algorithm));
   if (!model) return undefined;
 
   const settings: JobSettings = { model };

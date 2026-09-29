@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Pencil } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
 import type { StudioAction } from "@/types/studio.types";
@@ -22,6 +22,7 @@ import {
   isAnimatableFrame,
   isRunnableAction,
   actionClipCounts,
+  actionColumns,
 } from "../utils/batch-selectors";
 import {
   ActionList,
@@ -135,23 +136,21 @@ export const ActionsTab: React.FC = () => {
   );
   const [copiedId, setCopiedId] = useState<string | null>(null);
   // Numbered as the matrix numbers its columns, which skip empty prompts.
-  const columns = useMemo(() => {
-    const byId = new Map<string, number>();
-    for (const action of actions.filter(isRunnableAction)) {
-      byId.set(action.id, byId.size + 1);
-    }
-    return byId;
-  }, [actions]);
+  const columns = useMemo(() => actionColumns(actions), [actions]);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const confirmRemoveCount = confirmRemoveId
     ? clipCounts.get(confirmRemoveId) ?? 0
     : 0;
 
   // An action in use takes its clips with it, so that asks first.
-  const handleRemove = (id: string) => {
-    if (clipCounts.has(id)) setConfirmRemoveId(id);
-    else removeAction(id);
-  };
+  const handleRemove = useCallback(
+    (id: string) => {
+      const { images, jobs } = useStudioStore.getState();
+      if (actionClipCounts(images, jobs).has(id)) setConfirmRemoveId(id);
+      else removeAction(id);
+    },
+    [removeAction],
+  );
 
   const loraOptions = getLoraOptionsForModel(model);
 
@@ -175,16 +174,19 @@ export const ActionsTab: React.FC = () => {
     });
   };
 
-  const handleEditCopy = (action: StudioAction) => {
-    const id = uuidv4();
-    addAction({
-      ...action,
-      id,
-      highNoiseLoras: action.highNoiseLoras?.map((l) => ({ ...l })),
-      lowNoiseLoras: action.lowNoiseLoras?.map((l) => ({ ...l })),
-    });
-    setCopiedId(id);
-  };
+  const handleEditCopy = useCallback(
+    (action: StudioAction) => {
+      const id = uuidv4();
+      addAction({
+        ...action,
+        id,
+        highNoiseLoras: action.highNoiseLoras?.map((l) => ({ ...l })),
+        lowNoiseLoras: action.lowNoiseLoras?.map((l) => ({ ...l })),
+      });
+      setCopiedId(id);
+    },
+    [addAction],
+  );
 
   return (
     <>

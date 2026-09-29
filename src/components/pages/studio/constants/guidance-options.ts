@@ -38,22 +38,52 @@ export const clampGuidance = (
  * tuned for a different one. A model with no guidance constraint has nothing
  * to recommend, so the current value carries over.
  */
-export const defaultGuidanceForModel = (
+export function defaultGuidanceForModel(
   guidance: number,
   constraint: GuidanceConstraint | undefined,
-): number =>
-  constraint ? clampGuidance(constraint.default, constraint) : guidance;
+): number;
+export function defaultGuidanceForModel(
+  guidance: number | undefined,
+  constraint: GuidanceConstraint | undefined,
+): number | undefined;
+export function defaultGuidanceForModel(
+  guidance: number | undefined,
+  constraint: GuidanceConstraint | undefined,
+): number | undefined {
+  return constraint ? clampGuidance(constraint.default, constraint) : guidance;
+}
 
-export const guidanceForModel = (
+export function guidanceForModel(
   guidance: number,
   constraint: GuidanceConstraint | undefined,
-): number => {
+): number;
+export function guidanceForModel(
+  guidance: number | undefined,
+  constraint: GuidanceConstraint | undefined,
+): number | undefined;
+export function guidanceForModel(
+  guidance: number | undefined,
+  constraint: GuidanceConstraint | undefined,
+): number | undefined {
   if (!constraint) return guidance;
-  if (!Number.isFinite(guidance)) return constraint.default;
+  if (guidance === undefined || !Number.isFinite(guidance)) {
+    return constraint.default;
+  }
   if (guidance < constraint.min || guidance > constraint.max) {
     return constraint.default;
   }
   return clampGuidance(guidance, constraint);
+}
+
+export const withoutUnsetGuidance = <T extends { guidance?: unknown }>(
+  params: T,
+): T => {
+  if (typeof params.guidance === "number" && Number.isFinite(params.guidance)) {
+    return params;
+  }
+  const next = { ...params };
+  delete next.guidance;
+  return next;
 };
 
 export const GUIDANCE_TITLE = "Classifier-Free Guidance Scale";

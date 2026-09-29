@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useStudioStore, comboKeyOf } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
 import { axiosClient } from "@/client/axios.client";
@@ -15,12 +15,13 @@ import { useModelConstraints } from "@/api/model/query/useModelConstraints";
 import { buildVideoAlgoParams } from "../utils/build-video-algo-params";
 import {
   findCellJob,
+  indexCellJobs,
   isAnimatableFrame,
   isCellChecked,
   isJobInFlight,
   isRunnableAction,
 } from "../utils/batch-selectors";
-import { removeFromOutputPlaylist } from "./useStudioClipActions";
+import { useOutputPlaylistSync } from "./useStudioClipActions";
 
 // Serialized to avoid concurrent auth refresh races (see fix/session-refresh-race on backend)
 const BATCH_SIZE = 1;
@@ -35,6 +36,8 @@ export const useBatchSubmit = () => {
   const addJob = useStudioStore((s) => s.addJob);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const jobs = useStudioStore((s) => s.jobs);
+  const cellJobs = useMemo(() => indexCellJobs(jobs), [jobs]);
+  const playlist = useOutputPlaylistSync();
 
   const createDream = useCreateDreamFromPrompt();
   const modelConstraints = useModelConstraints({ mediaType: "video" });
@@ -52,7 +55,7 @@ export const useBatchSubmit = () => {
     for (const image of frames) {
       for (const action of runnableActions) {
         const comboKey = comboKeyOf(image.uuid, action.id);
-        const job = findCellJob(jobs, image.uuid, action.id);
+        const job = cellJobs.get(comboKey);
         if (job && isJobInFlight(job)) continue;
         if (isCellChecked(job, comboKey, excludedCombos, rerenderCombos)) {
           combos.push({ image, action });
@@ -61,7 +64,7 @@ export const useBatchSubmit = () => {
     }
 
     return combos;
-  }, [images, actions, excludedCombos, rerenderCombos, jobs]);
+  }, [images, actions, excludedCombos, rerenderCombos, cellJobs]);
 
   const submit = useCallback(async () => {
     setIsSubmitting(true);
@@ -84,6 +87,7 @@ export const useBatchSubmit = () => {
         ),
       );
       let jobsAdded = 0;
+      const replaced: string[] = [];
 
       for (let i = 0; i < combos.length; i += BATCH_SIZE) {
         const batch = combos.slice(i, i + BATCH_SIZE);
@@ -112,26 +116,16 @@ export const useBatchSubmit = () => {
             const dream = response.data?.dream;
             if (!dream) return;
 
-            const existingJob = useStudioStore
-              .getState()
-              .jobs.find(
-                (j) =>
-                  j.imageId === image.uuid &&
-                  j.actionId === action.id &&
-                  j.jobType !== "uprez",
-              );
+            const existingJob = findCellJob(
+              useStudioStore.getState().jobs,
+              image.uuid,
+              action.id,
+            );
             if (existingJob) {
               useStudioStore.getState().archiveJob(existingJob.dreamUuid);
               // The re-render replaces it, so it leaves the playlist too; it
               // stays in history.
-              if (outputPlaylistId) {
-                removeFromOutputPlaylist(
-                  outputPlaylistId,
-                  existingJob.dreamUuid,
-                ).catch((error) =>
-                  console.error("Failed to remove replaced clip:", error),
-                );
-              }
+              replaced.push(existingJob.dreamUuid);
             }
 
             addJob({
@@ -171,6 +165,10 @@ export const useBatchSubmit = () => {
         }
       }
 
+      if (outputPlaylistId && replaced.length > 0) {
+        playlist.remove(outputPlaylistId, replaced);
+      }
+
       if (jobsAdded > 0) {
         setActiveTab("generate");
       }
@@ -185,6 +183,7 @@ export const useBatchSubmit = () => {
     createDream,
     addJob,
     setActiveTab,
+    playlist,
   ]);
 
   return { submit, isSubmitting, getPendingCombinations };

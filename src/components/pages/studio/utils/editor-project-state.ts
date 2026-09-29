@@ -1,6 +1,7 @@
 import type { FlowReferenceFrame, FlowTransition } from "@/types/flow.types";
 import { DEFAULT_TRANSITION_SETTINGS } from "../constants/default-transition-settings";
-import type { StudioImage, StudioJob } from "@/types/studio.types";
+import type { Removed, StudioImage, StudioJob } from "@/types/studio.types";
+import { withoutUnsetGuidance } from "../constants/guidance-options";
 
 export const EDITOR_STATE_SCHEMA_VERSION = 1;
 
@@ -123,7 +124,7 @@ export const fromPersistedFlowState = (
 type ActionStateInput = Record<string, unknown> & {
   excludedCombos?: Set<string> | string[];
   images?: StudioImage[];
-  removedImages?: { item: StudioImage; index: number }[];
+  removedImages?: Removed<StudioImage>[];
   jobs?: StudioJob[];
 };
 
@@ -131,10 +132,9 @@ export type PersistedActionState = Record<string, unknown> & {
   excludedCombos: string[];
   images: Omit<StudioImage, "url" | "previewFrame" | "progress">[];
   /** Missing from projects saved before removals were remembered. */
-  removedImages?: {
-    item: Omit<StudioImage, "url" | "previewFrame" | "progress">;
-    index: number;
-  }[];
+  removedImages?: Removed<
+    Omit<StudioImage, "url" | "previewFrame" | "progress">
+  >[];
   jobs: Omit<StudioJob, "previewFrame" | "progress" | "thumbnailUrl">[];
 };
 
@@ -170,11 +170,15 @@ export const fromPersistedActionState = (
     excludedCombos = [],
     images = [],
     removedImages = [],
+    videoGenParams,
     ...rest
   } = persisted;
 
   return {
     ...rest,
+    ...(videoGenParams && typeof videoGenParams === "object"
+      ? { videoGenParams: withoutUnsetGuidance(videoGenParams) }
+      : {}),
     excludedCombos: new Set(excludedCombos),
     images: images.map((image) => ({ ...image, url: "" })),
     removedImages: removedImages.map((removed) => ({

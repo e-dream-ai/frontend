@@ -4,7 +4,7 @@ import {
   type QueryFunctionContext,
   type UseQueryOptions,
 } from "@tanstack/react-query";
-import { useStudioStore, comboKeyOf } from "@/stores/studio.store";
+import { useStudioStore } from "@/stores/studio.store";
 import { DREAM_QUERY_KEY, getDreamResponse } from "@/api/dream/query/useDream";
 import type { Dream } from "@/types/dream.types";
 import type { ApiResponse } from "@/types/api.types";
@@ -13,11 +13,12 @@ import {
   lastFilmstripUrl,
 } from "../utils/transition-history.util";
 import {
-  findCellJob,
+  actionColumns,
+  comboKeyOf,
+  indexCellJobs,
   isAnimatableFrame,
   isCellChecked,
   isJobInFlight,
-  isRunnableAction,
 } from "../utils/batch-selectors";
 import { useRestoreStudioClip } from "../hooks/useStudioClipActions";
 import { GenerateSection, SectionTitle } from "./images-tab.styled";
@@ -71,27 +72,31 @@ export function ClipHistory({
   const restore = useRestoreStudioClip();
   const [openUuid, setOpenUuid] = useState<string | null>(null);
 
+  const cellJobs = useMemo(() => indexCellJobs(jobs), [jobs]);
+  const columns = useMemo(() => actionColumns(actions), [actions]);
+
   // A cell whose image or action is gone has no checkbox, so its clips drop
   // out along with it.
   const checkedJobs = useMemo(() => {
     const imageIds = new Set(
       images.filter(isAnimatableFrame).map((i) => i.uuid),
     );
-    const actionIds = new Set(
-      actions.filter(isRunnableAction).map((a) => a.id),
-    );
-    return allHistoryJobs.filter(
-      (job) =>
+    return allHistoryJobs.filter((job) => {
+      const key = comboKeyOf(job.imageId, job.actionId);
+      return (
         imageIds.has(job.imageId) &&
-        actionIds.has(job.actionId) &&
-        isCellChecked(
-          findCellJob(jobs, job.imageId, job.actionId),
-          comboKeyOf(job.imageId, job.actionId),
-          excludedCombos,
-          rerenderCombos,
-        ),
-    );
-  }, [allHistoryJobs, images, actions, jobs, excludedCombos, rerenderCombos]);
+        columns.has(job.actionId) &&
+        isCellChecked(cellJobs.get(key), key, excludedCombos, rerenderCombos)
+      );
+    });
+  }, [
+    allHistoryJobs,
+    images,
+    columns,
+    cellJobs,
+    excludedCombos,
+    rerenderCombos,
+  ]);
 
   // Every removed clip that can go back in a cell: its image and action are
   // there, or were removed and can come back with it.
@@ -117,6 +122,10 @@ export function ClipHistory({
 
   // Tracked by dream, so the dialog closes by itself if its clip leaves the list.
   const openIndex = historyJobs.findIndex((j) => j.dreamUuid === openUuid);
+  const openJob = openIndex >= 0 ? historyJobs[openIndex] : undefined;
+  const openCellJob = openJob
+    ? cellJobs.get(comboKeyOf(openJob.imageId, openJob.actionId))
+    : undefined;
 
   const dreamQueries = useQueries({
     queries: historyJobs.map(
@@ -176,15 +185,13 @@ export function ClipHistory({
               const time = Number.isFinite(generatedAt)
                 ? formatRunTime(generatedAt)
                 : "…";
-              const actionIndex = actions
-                .filter(isRunnableAction)
-                .findIndex((a) => a.id === job.actionId);
+              const column = columns.get(job.actionId);
               const removedPrompt = removedPrompts.get(job.actionId);
               const cell = `${
                 imageNames.get(job.imageId) ?? "Removed image"
               }, ${
-                actionIndex >= 0
-                  ? `action ${actionIndex + 1}`
+                column !== undefined
+                  ? `action ${column}`
                   : removedPrompt
                     ? `removed action "${removedPrompt.slice(0, 60)}"`
                     : "removed action"
@@ -216,34 +223,27 @@ export function ClipHistory({
           </ClipHistoryGrid>
         </>
       )}
-      {openIndex >= 0 &&
-        (() => {
-          const job = historyJobs[openIndex];
-          const runnable = actions.filter(isRunnableAction);
-          const actionIndex = runnable.findIndex((a) => a.id === job.actionId);
-          const current = findCellJob(jobs, job.imageId, job.actionId);
-          return (
-            <HistoryClipDialog
-              job={job}
-              dream={dreamQueries[openIndex]?.data}
-              imageName={imageNames.get(job.imageId) ?? "Unknown image"}
-              imageRemoved={!images.some((i) => i.uuid === job.imageId)}
-              actionNumber={actionIndex >= 0 ? actionIndex + 1 : undefined}
-              actionPrompt={
-                actions.find((a) => a.id === job.actionId)?.prompt ??
-                removedPrompts.get(job.actionId)
-              }
-              actionRemoved={!actions.some((a) => a.id === job.actionId)}
-              current={current}
-              blocked={current !== undefined && isJobInFlight(current)}
-              onPutBack={() => {
-                setOpenUuid(null);
-                if (restore(job.dreamUuid)) onRestore?.(job.dreamUuid);
-              }}
-              onClose={() => setOpenUuid(null)}
-            />
-          );
-        })()}
+      {openJob && (
+        <HistoryClipDialog
+          job={openJob}
+          dream={dreamQueries[openIndex]?.data}
+          imageName={imageNames.get(openJob.imageId) ?? "Unknown image"}
+          imageRemoved={!images.some((i) => i.uuid === openJob.imageId)}
+          actionNumber={columns.get(openJob.actionId)}
+          actionPrompt={
+            actions.find((a) => a.id === openJob.actionId)?.prompt ??
+            removedPrompts.get(openJob.actionId)
+          }
+          actionRemoved={!actions.some((a) => a.id === openJob.actionId)}
+          current={openCellJob}
+          blocked={openCellJob !== undefined && isJobInFlight(openCellJob)}
+          onPutBack={() => {
+            setOpenUuid(null);
+            if (restore(openJob.dreamUuid)) onRestore?.(openJob.dreamUuid);
+          }}
+          onClose={() => setOpenUuid(null)}
+        />
+      )}
     </GenerateSection>
   );
 }

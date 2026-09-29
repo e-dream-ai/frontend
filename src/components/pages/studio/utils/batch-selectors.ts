@@ -4,6 +4,29 @@ import type {
   StudioJob,
 } from "@/types/studio.types";
 
+export const comboKeyOf = (imageUuid: string, actionId: string) =>
+  `${imageUuid}:${actionId}`;
+
+export type CellJobs = ReadonlyMap<string, StudioJob>;
+
+export const indexCellJobs = (jobs: readonly StudioJob[]): CellJobs => {
+  const index = new Map<string, StudioJob>();
+  for (const job of jobs) {
+    if (job.jobType === "uprez") continue;
+    const key = comboKeyOf(job.imageId, job.actionId);
+    if (!index.has(key)) index.set(key, job);
+  }
+  return index;
+};
+
+export const actionColumns = (actions: readonly StudioAction[]) => {
+  const columns = new Map<string, number>();
+  for (const action of actions) {
+    if (isRunnableAction(action)) columns.set(action.id, columns.size + 1);
+  }
+  return columns;
+};
+
 export const isAnimatableFrame = (image: StudioImage) =>
   image.status === "processed";
 
@@ -58,14 +81,14 @@ export const findCellJob = (
  * left from before removal discarded clips) is not in the row.
  */
 export const imageClipCount = (
-  jobs: readonly StudioJob[],
+  cellJobs: CellJobs,
   actions: readonly StudioAction[],
   imageUuid: string,
 ) =>
   actions.filter(
     (action) =>
       isRunnableAction(action) &&
-      findCellJob(jobs, imageUuid, action.id) !== undefined,
+      cellJobs.has(comboKeyOf(imageUuid, action.id)),
   ).length;
 
 /**
@@ -83,30 +106,4 @@ export const isCellChecked = (
   if (!job) return !excludedCombos.has(comboKey);
   if (isJobInFlight(job)) return true;
   return rerenderCombos.has(comboKey);
-};
-
-/** Share of a job's work that is rendering; ingesting is the rest. */
-const RENDER_SHARE = 0.9;
-
-/**
- * How far along one job is, 0–1, for the batch progress meter. Rendering
- * counts by the worker's reported percent, and ingesting sits between the end
- * of the render and done, using its own percent when the ingest reports one.
- * A failed job counts as finished: it is not going to move any further, and
- * the meter would otherwise never reach the end.
- */
-export const jobCompletion = (job: StudioJob): number => {
-  const percent =
-    job.progress !== undefined ? Math.min(Math.max(job.progress, 0), 100) : 0;
-  switch (job.status) {
-    case "processed":
-    case "failed":
-      return 1;
-    case "queue":
-      return 0;
-    case "processing":
-      return job.ingesting
-        ? RENDER_SHARE + (1 - RENDER_SHARE) * (percent / 100)
-        : RENDER_SHARE * (percent / 100);
-  }
 };

@@ -1,10 +1,18 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import Bugsnag from "@bugsnag/js";
 import {
   reconcileActionLoras,
   retargetActionsLoras,
 } from "@/components/pages/studio/constants/lora-options";
+import { withoutUnsetGuidance } from "@/components/pages/studio/constants/guidance-options";
+import {
+  comboKeyOf,
+  findCellJob,
+  isJobInFlight,
+} from "@/components/pages/studio/utils/batch-selectors";
 import type {
+  Removed,
   StudioTab,
   StudioImage,
   StyleReference,
@@ -72,6 +80,7 @@ type StudioState = {
   historyJobs: StudioJob[];
   /** Moves a job out of the matrix; a rendered one is kept in history. */
   archiveJob: (dreamUuid: string) => void;
+  archiveJobs: (dreamUuids: readonly string[]) => void;
   /**
    * Puts a history clip back in its cell, archiving whatever the cell held.
    * Refuses while the cell is still rendering. Returns the displaced job, or
@@ -98,39 +107,56 @@ const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
   model: "ltx-i2v",
   duration: 5,
   numInferenceSteps: 30,
-  // Deliberately unset: the model catalog decides. A number here is a second,
-  // competing default that silently outranks the model's own — which is how
-  // every new project started LTX at the bottom of its range while the catalog
-  // said otherwise. The guidance helpers already read a non-finite value as
-  // "use constraint.default", and JSON round-trips it to null, which is still
-  // non-finite, so a rehydrated session stays unset too.
-  guidance: Number.NaN,
   seed: -1,
 };
 
-/** Something taken out of a list, and the position it had there. */
-export interface Removed<T> {
-  item: T;
-  index: number;
-}
+export const HISTORY_LIMIT = 100;
 
 /**
  * Adds the item `pick` names to a removed list, with its position, replacing
  * any earlier entry for the same item.
  */
 const remember = <T>(
-  removed: readonly Removed<T>[],
+  removed: Removed<T>[],
   list: readonly T[],
-  pick: (item: T) => string | undefined,
+  id: string,
+  idOf: (item: T) => string,
 ): Removed<T>[] => {
-  const index = list.findIndex((item) => pick(item) !== undefined);
-  if (index < 0) return [...removed];
-  const id = pick(list[index]);
+  const index = list.findIndex((item) => idOf(item) === id);
+  if (index < 0) return removed;
   return [
-    ...removed.filter((r) => pick(r.item) !== id),
+    ...removed.filter((r) => idOf(r.item) !== id),
     { item: list[index], index },
   ];
 };
+
+const keepIfUnchanged = <T>(previous: T[], next: T[]) =>
+  next.length === previous.length ? previous : next;
+
+const pruneRemovals = (
+  historyJobs: readonly StudioJob[],
+  removedImages: Removed<StudioImage>[],
+  removedActions: Removed<StudioAction>[],
+) => {
+  const imageIds = new Set(historyJobs.map((job) => job.imageId));
+  const actionIds = new Set(historyJobs.map((job) => job.actionId));
+  return {
+    removedImages: keepIfUnchanged(
+      removedImages,
+      removedImages.filter((r) => imageIds.has(r.item.uuid)),
+    ),
+    removedActions: keepIfUnchanged(
+      removedActions,
+      removedActions.filter((r) => actionIds.has(r.item.id)),
+    ),
+  };
+};
+
+const toHistoryEntry = (job: StudioJob): StudioJob => ({
+  ...job,
+  previewFrame: undefined,
+  progress: undefined,
+});
 
 const insertAt = <T>(list: readonly T[], item: T, index: number) => [
   ...list.slice(0, index),
@@ -138,8 +164,7 @@ const insertAt = <T>(list: readonly T[], item: T, index: number) => [
   ...list.slice(index),
 ];
 
-export const comboKeyOf = (imageUuid: string, actionId: string) =>
-  `${imageUuid}:${actionId}`;
+export { comboKeyOf };
 
 const pruneCombosForImage = (combos: Set<string>, imageUuid: string) => {
   const prefix = `${imageUuid}:`;
@@ -211,8 +236,10 @@ export const useStudioStore = create<StudioState>()(
       removeImage: (uuid: string) =>
         set((s) => ({
           images: s.images.filter((img) => img.uuid !== uuid),
-          removedImages: remember(s.removedImages, s.images, (img) =>
-            img.uuid === uuid ? uuid : undefined,
+          ...pruneRemovals(
+            s.historyJobs,
+            remember(s.removedImages, s.images, uuid, (img) => img.uuid),
+            s.removedActions,
           ),
           excludedCombos: pruneCombosForImage(s.excludedCombos, uuid),
           rerenderCombos: pruneCombosForImage(s.rerenderCombos, uuid),
@@ -230,8 +257,10 @@ export const useStudioStore = create<StudioState>()(
       removeAction: (id: string) =>
         set((s) => ({
           actions: s.actions.filter((a) => a.id !== id),
-          removedActions: remember(s.removedActions, s.actions, (a) =>
-            a.id === id ? id : undefined,
+          ...pruneRemovals(
+            s.historyJobs,
+            s.removedImages,
+            remember(s.removedActions, s.actions, id, (a) => a.id),
           ),
           excludedCombos: pruneCombosForAction(s.excludedCombos, id),
           rerenderCombos: pruneCombosForAction(s.rerenderCombos, id),
@@ -308,37 +337,40 @@ export const useStudioStore = create<StudioState>()(
           jobs: s.jobs.filter((j) => j.dreamUuid !== dreamUuid),
         })),
       historyJobs: [] as StudioJob[],
-      archiveJob: (dreamUuid: string) =>
+      archiveJob: (dreamUuid: string) => get().archiveJobs([dreamUuid]),
+      archiveJobs: (dreamUuids: readonly string[]) =>
         set((s) => {
-          const job = s.jobs.find((j) => j.dreamUuid === dreamUuid);
-          if (!job) return s;
-          const jobs = s.jobs.filter((j) => j.dreamUuid !== dreamUuid);
+          const wanted = new Set(dreamUuids);
+          const archived = s.jobs.filter((j) => wanted.has(j.dreamUuid));
+          if (archived.length === 0) return s;
+          const jobs = s.jobs.filter((j) => !wanted.has(j.dreamUuid));
           // Only a clip that rendered has anything to go back to.
-          if (job.status !== "processed") return { jobs };
+          const rendered = archived
+            .filter((j) => j.status === "processed")
+            .map(toHistoryEntry)
+            .reverse();
+          if (rendered.length === 0) return { jobs };
+          const renderedIds = new Set(rendered.map((j) => j.dreamUuid));
+          const historyJobs = [
+            ...rendered,
+            ...s.historyJobs.filter((j) => !renderedIds.has(j.dreamUuid)),
+          ].slice(0, HISTORY_LIMIT);
           return {
             jobs,
-            historyJobs: [
-              { ...job, previewFrame: undefined, progress: undefined },
-              ...s.historyJobs.filter((j) => j.dreamUuid !== dreamUuid),
-            ],
+            historyJobs,
+            ...pruneRemovals(historyJobs, s.removedImages, s.removedActions),
           };
         }),
       restoreJob: (dreamUuid: string) => {
         const s = get();
         const restored = s.historyJobs.find((j) => j.dreamUuid === dreamUuid);
         if (!restored) return null;
-        const displaced = s.jobs.find(
-          (j) =>
-            j.imageId === restored.imageId &&
-            j.actionId === restored.actionId &&
-            j.jobType !== "uprez",
+        const displaced = findCellJob(
+          s.jobs,
+          restored.imageId,
+          restored.actionId,
         );
-        if (
-          displaced &&
-          (displaced.status === "queue" || displaced.status === "processing")
-        ) {
-          return null;
-        }
+        if (displaced && isJobInFlight(displaced)) return null;
         // A clip whose image or action has since been removed brings it back,
         // at the place it had.
         const imageGone = !s.images.some((i) => i.uuid === restored.imageId);
@@ -375,18 +407,21 @@ export const useStudioStore = create<StudioState>()(
           (j) => j.dreamUuid !== dreamUuid,
         );
         if (displaced?.status === "processed") {
-          historyJobs = [
-            { ...displaced, previewFrame: undefined, progress: undefined },
-            ...historyJobs,
-          ];
+          historyJobs = [toHistoryEntry(displaced), ...historyJobs].slice(
+            0,
+            HISTORY_LIMIT,
+          );
         }
         const rerenderCombos = new Set(s.rerenderCombos);
         rerenderCombos.delete(key);
         set({
           images,
           actions,
-          removedImages: s.removedImages.filter((r) => r !== imageBack),
-          removedActions: s.removedActions.filter((r) => r !== actionBack),
+          ...pruneRemovals(
+            historyJobs,
+            s.removedImages.filter((r) => r !== imageBack),
+            s.removedActions.filter((r) => r !== actionBack),
+          ),
           excludedCombos,
           jobs: [
             ...s.jobs.filter((j) => j.dreamUuid !== displaced?.dreamUuid),
@@ -447,7 +482,11 @@ export const useStudioStore = create<StudioState>()(
                   : [],
             },
           };
-          localStorage.setItem(name, JSON.stringify(serializable));
+          try {
+            localStorage.setItem(name, JSON.stringify(serializable));
+          } catch (error) {
+            Bugsnag.notify(error as Error);
+          }
         },
         removeItem: (name) => localStorage.removeItem(name),
       },
@@ -558,6 +597,14 @@ export const useStudioStore = create<StudioState>()(
           // ended on Results would otherwise reopen the studio to a blank
           // frame: no tab matches and nothing renders.
           if (state.activeTab === "results") state.activeTab = "generate";
+          if (
+            state.videoGenParams &&
+            typeof state.videoGenParams === "object"
+          ) {
+            state.videoGenParams = withoutUnsetGuidance(
+              state.videoGenParams as Partial<VideoGenParams>,
+            );
+          }
         }
         return state as Record<string, unknown>;
       },

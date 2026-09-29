@@ -28,8 +28,6 @@ const DEFAULT_VIDEO_PARAMS = {
   model: "ltx-i2v",
   duration: 5,
   numInferenceSteps: 30,
-  // Unset — resolved from the model catalog, not carried by the store.
-  guidance: Number.NaN,
   seed: -1,
 };
 
@@ -162,6 +160,46 @@ describe("studio.store", () => {
       expect(state.excludedCombos.has("img:a2")).toBe(true);
     });
 
+    it("archives several clips in one update, newest first", () => {
+      const s = useStudioStore.getState();
+      s.addJob(clip("a"));
+      s.addJob(clip("b"));
+      s.addJob({ ...clip("c"), status: "processing" });
+      let updates = 0;
+      const unsubscribe = useStudioStore.subscribe(() => updates++);
+      useStudioStore.getState().archiveJobs(["a", "b", "c"]);
+      unsubscribe();
+      const state = useStudioStore.getState();
+      expect(updates).toBe(1);
+      expect(state.jobs).toEqual([]);
+      expect(state.historyJobs.map((j) => j.dreamUuid)).toEqual(["b", "a"]);
+    });
+
+    it("keeps history to the newest HISTORY_LIMIT clips", async () => {
+      const { HISTORY_LIMIT } = await import("./studio.store");
+      const s = useStudioStore.getState();
+      const uuids = Array.from(
+        { length: HISTORY_LIMIT + 5 },
+        (_, i) => `clip-${i}`,
+      );
+      for (const uuid of uuids) s.addJob(clip(uuid));
+      useStudioStore.getState().archiveJobs(uuids);
+      const { historyJobs } = useStudioStore.getState();
+      expect(historyJobs).toHaveLength(HISTORY_LIMIT);
+      expect(historyJobs[0].dreamUuid).toBe(uuids[uuids.length - 1]);
+    });
+
+    it("forgets a removed image or action no history clip needs", () => {
+      const s = useStudioStore.getState();
+      s.addImage({ uuid: "img", url: "", name: "I", status: "processed" });
+      s.addAction({ id: "act", prompt: "two" });
+      s.removeImage("img");
+      s.removeAction("act");
+      const state = useStudioStore.getState();
+      expect(state.removedImages).toEqual([]);
+      expect(state.removedActions).toEqual([]);
+    });
+
     it("will not restore over a cell that is still rendering", () => {
       const s = useStudioStore.getState();
       s.addJob(clip("old"));
@@ -224,7 +262,6 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
-        guidance: Number.NaN,
         seed: -1,
       });
       expect(migrated.wanParams).toBeUndefined();
@@ -386,7 +423,7 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(8);
       expect(params.numInferenceSteps).toBe(30); // from defaults
-      expect(params.guidance).toBeNaN(); // unset, for the catalog to fill
+      expect(params.guidance).toBeUndefined();
       expect(params.seed).toBe(-1);
     });
 
@@ -400,7 +437,7 @@ describe("studio.store", () => {
       expect(params.model).toBe("ltx-i2v");
       expect(params.duration).toBe(5);
       expect(params.numInferenceSteps).toBe(30);
-      expect(params.guidance).toBeNaN();
+      expect(params.guidance).toBeUndefined();
       expect(params.seed).toBe(-1);
     });
   });
@@ -420,7 +457,7 @@ describe("studio.store", () => {
       const migrated = migrate(v6State, 6) as Record<string, unknown>;
       // Cleared rather than pinned to a number: the catalog now supplies it.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      expect((migrated.videoGenParams as any).guidance).toBeNaN();
+      expect((migrated.videoGenParams as any).guidance).toBeUndefined();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       expect((migrated.videoGenParams as any).seed).toBe(-1);
     });
@@ -473,7 +510,6 @@ describe("studio.store", () => {
         model: "ltx-i2v",
         duration: 5,
         numInferenceSteps: 30,
-        guidance: Number.NaN,
         seed: -1,
       });
     });

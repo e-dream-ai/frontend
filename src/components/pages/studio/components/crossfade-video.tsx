@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   initialPreviewBuffer,
   backLayer,
@@ -97,18 +97,6 @@ export function CrossfadeVideo({
   const layer1 = useRef<HTMLVideoElement>(null);
   const layerRefs = useMemo(() => [layer0, layer1] as const, []);
 
-  useEffect(() => {
-    const front = layerRefs[buf.front].current;
-    layerRefs[backLayer(buf.front)].current?.pause();
-    if (!front) return;
-    if (!active) {
-      front.pause();
-      return;
-    }
-    if (front.paused && front.currentTime > 0.05) front.currentTime = 0;
-    front.play().catch(() => undefined);
-  }, [buf.front, active, layerRefs]);
-
   // Native controls belong to whichever layer is in front, so advancing a
   // segment hands the attribute to the other <video> — a fresh, just-loaded
   // element, which the browser greets by showing its control bar and fading it
@@ -122,6 +110,26 @@ export function CrossfadeVideo({
   const [paused, setPaused] = useState(false);
   const showControls = controls && (hovered || focused || paused);
 
+  const playFront = useCallback((front: HTMLVideoElement) => {
+    front.play().catch((error: unknown) => {
+      if (error instanceof DOMException && error.name === "NotAllowedError") {
+        setPaused(true);
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    const front = layerRefs[buf.front].current;
+    layerRefs[backLayer(buf.front)].current?.pause();
+    if (!front) return;
+    if (!active) {
+      front.pause();
+      return;
+    }
+    if (front.paused && front.currentTime > 0.05) front.currentTime = 0;
+    playFront(front);
+  }, [buf.front, active, layerRefs, playFront]);
+
   // Replay only when the requested segment is the one already up front. If the
   // token arrived alongside an index change, the segment is still loading into
   // the back layer and the effect above plays it from the start anyway.
@@ -131,7 +139,7 @@ export function CrossfadeVideo({
     const front = layerRefs[buf.front].current;
     if (!front) return;
     front.currentTime = 0;
-    front.play().catch(() => undefined);
+    playFront(front);
     // Deliberately keyed on the token alone: this fires on request, not on
     // every buffer change that happens to leave the same segment up front.
     // eslint-disable-next-line react-hooks/exhaustive-deps

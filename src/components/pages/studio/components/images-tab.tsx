@@ -32,7 +32,7 @@ import { SelectImageDreamModal } from "./select-image-dream-modal";
 import { GenerateReferenceFramesModal } from "./generate-reference-frames-modal";
 import { ImageLightbox } from "./image-lightbox";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
-import { imageClipCount } from "../utils/batch-selectors";
+import { imageClipCount, indexCellJobs } from "../utils/batch-selectors";
 import type { Dream } from "@/types/dream.types";
 import { CARD_THUMB, sizedImageUrl } from "../utils/sized-image";
 
@@ -41,8 +41,6 @@ export const ImagesTab: React.FC = () => {
   const addImage = useStudioStore((s) => s.addImage);
   const removeImage = useRemoveStudioImage();
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
-  const jobs = useStudioStore((s) => s.jobs);
-  const actions = useStudioStore((s) => s.actions);
   const [confirmRemove, setConfirmRemove] = useState<{
     uuid: string;
     clipCount: number;
@@ -50,7 +48,8 @@ export const ImagesTab: React.FC = () => {
 
   // An image in use takes its clips with it, so that asks first.
   const handleRemove = (uuid: string) => {
-    const clipCount = imageClipCount(jobs, actions, uuid);
+    const { jobs, actions } = useStudioStore.getState();
+    const clipCount = imageClipCount(indexCellJobs(jobs), actions, uuid);
     if (clipCount > 0) setConfirmRemove({ uuid, clipCount });
     else removeImage(uuid);
   };

@@ -3,9 +3,10 @@ import type { StudioImage, StudioJob } from "../../../../types/studio.types";
 import {
   findCellJob,
   isCellChecked,
-  jobCompletion,
   actionClipCounts,
+  actionColumns,
   imageClipCount,
+  indexCellJobs,
 } from "./batch-selectors";
 
 const job = (overrides: Partial<StudioJob> = {}): StudioJob => ({
@@ -56,17 +57,31 @@ describe("findCellJob", () => {
   });
 });
 
-describe("jobCompletion", () => {
-  it("weights rendering by its percent and ingest after it", () => {
-    expect(jobCompletion(job({ status: "queue" }))).toBe(0);
-    expect(jobCompletion(job({ status: "processing", progress: 50 }))).toBe(
-      0.45,
-    );
-    expect(
-      jobCompletion(job({ status: "processing", ingesting: true })),
-    ).toBeCloseTo(0.9);
-    expect(jobCompletion(job({ status: "processed" }))).toBe(1);
-    expect(jobCompletion(job({ status: "failed" }))).toBe(1);
+describe("indexCellJobs", () => {
+  it("keys each cell's first clip, as findCellJob does, and skips uprez", () => {
+    const first = job({ dreamUuid: "first" });
+    const jobs = [
+      job({ dreamUuid: "up", jobType: "uprez" }),
+      first,
+      job({ dreamUuid: "second" }),
+      job({ imageId: "img2", dreamUuid: "other" }),
+    ];
+    const index = indexCellJobs(jobs);
+    expect(index.get("img:act")).toBe(first);
+    expect(index.get("img:act")).toBe(findCellJob(jobs, "img", "act"));
+    expect(index.get("img2:act")?.dreamUuid).toBe("other");
+    expect(index.size).toBe(2);
+  });
+});
+
+describe("actionColumns", () => {
+  it("numbers runnable actions from 1, skipping blank prompts", () => {
+    const columns = actionColumns([
+      { id: "a", prompt: "move" },
+      { id: "blank", prompt: "  " },
+      { id: "b", prompt: "turn" },
+    ]);
+    expect(Object.fromEntries(columns)).toEqual({ a: 1, b: 2 });
   });
 });
 
@@ -119,6 +134,6 @@ describe("imageClipCount", () => {
       job({ actionId: "a", dreamUuid: "6", jobType: "uprez" }),
     ];
     const actions = [action("a"), action("b"), action("blank", "  ")];
-    expect(imageClipCount(jobs, actions, "img")).toBe(2);
+    expect(imageClipCount(indexCellJobs(jobs), actions, "img")).toBe(2);
   });
 });

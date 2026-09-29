@@ -15,6 +15,11 @@ const panel: VideoGenParams = {
 };
 
 describe("settingsFromDreamPrompt", () => {
+  it("does not read an algorithm name off the object prototype", () => {
+    const prompt = JSON.stringify({ infinidream_algorithm: "constructor" });
+    expect(settingsFromDreamPrompt(prompt)).toBeUndefined();
+  });
+
   it("reads LTX params back out of the dream's prompt", () => {
     const prompt = JSON.stringify({
       infinidream_algorithm: "ltx-i2v",

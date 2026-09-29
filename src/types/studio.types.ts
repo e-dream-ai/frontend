@@ -76,8 +76,13 @@ export interface VideoGenParams {
   model: VideoModel;
   duration: number;
   numInferenceSteps: number;
-  guidance: number;
+  guidance?: number;
   seed: number;
+}
+
+export interface Removed<T> {
+  item: T;
+  index: number;
 }
 
 export const STUDIO_IMAGE_MODELS = [
