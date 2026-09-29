@@ -1,6 +1,6 @@
-import { flowPartialize, useFlowStore } from "@/stores/flow.store";
-import { studioPartialize, useStudioStore } from "@/stores/studio.store";
-import { uprezPartialize, useUprezStore } from "@/stores/uprez.store";
+import { selectFlowProject, useFlowStore } from "@/stores/flow.store";
+import { selectStudioProject, useStudioStore } from "@/stores/studio.store";
+import { selectUprezProject, useUprezStore } from "@/stores/uprez.store";
 import type { UprezFormState } from "@/stores/uprez.store";
 import type { StudioMode } from "@/types/flow.types";
 import type { EditorProjectState } from "@/types/editor-project.types";
@@ -25,7 +25,7 @@ export type EditorAdapter = {
 const flowAdapter: EditorAdapter = {
   read: () =>
     toPersistedFlowState(
-      flowPartialize(useFlowStore.getState()),
+      selectFlowProject(useFlowStore.getState()),
     ) as EditorProjectState,
   write: (state) => {
     // `setState` merges, so the transient view state of whatever project was
@@ -58,7 +58,7 @@ const flowAdapter: EditorAdapter = {
 const actionAdapter: EditorAdapter = {
   read: () =>
     toPersistedActionState(
-      studioPartialize(useStudioStore.getState()),
+      selectStudioProject(useStudioStore.getState()),
     ) as EditorProjectState,
   write: (state) => {
     useStudioStore.setState({
@@ -87,7 +87,8 @@ const actionAdapter: EditorAdapter = {
 };
 
 const uprezAdapter: EditorAdapter = {
-  read: () => uprezPartialize(useUprezStore.getState()) as EditorProjectState,
+  read: () =>
+    selectUprezProject(useUprezStore.getState()) as EditorProjectState,
   write: (state) =>
     useUprezStore.getState().restoreUprez(state as Partial<UprezFormState>),
   reset: () => useUprezStore.getState().resetUprez(),

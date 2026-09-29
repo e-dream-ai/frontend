@@ -10,13 +10,6 @@ import {
 
 export const EDITOR_STATE_SCHEMA_VERSION = 1;
 
-export type PersistedReferenceFrame = Omit<
-  FlowReferenceFrame,
-  "imageUrl" | "uploadStatus" | "uploadProgress"
->;
-
-export type PersistedTransition = Omit<FlowTransition, "progress">;
-
 export type PersistedFlowState = Record<string, unknown> & {
   referenceFrames: PersistedReferenceFrame[];
   transitions: Record<string, PersistedTransition>;
@@ -50,24 +43,49 @@ const VOLATILE_FRAME_KEYS = [
   "imageUrl",
   "uploadStatus",
   "uploadProgress",
-] as const;
+] as const satisfies readonly (keyof FlowReferenceFrame)[];
 
-const VOLATILE_TRANSITION_KEYS = ["progress"] as const;
+const VOLATILE_TRANSITION_KEYS = [
+  "progress",
+] as const satisfies readonly (keyof FlowTransition)[];
 
-const VOLATILE_IMAGE_KEYS = ["url", "previewFrame", "progress"] as const;
+const VOLATILE_IMAGE_KEYS = [
+  "url",
+  "previewFrame",
+  "progress",
+] as const satisfies readonly (keyof StudioImage)[];
 
 const VOLATILE_JOB_KEYS = [
   "previewFrame",
   "progress",
   "ingesting",
   "thumbnailUrl",
-] as const;
+] as const satisfies readonly (keyof StudioJob)[];
+
+export type PersistedReferenceFrame = Omit<
+  FlowReferenceFrame,
+  (typeof VOLATILE_FRAME_KEYS)[number]
+>;
+
+export type PersistedTransition = Omit<
+  FlowTransition,
+  (typeof VOLATILE_TRANSITION_KEYS)[number]
+>;
+
+type PersistedImage = Omit<StudioImage, (typeof VOLATILE_IMAGE_KEYS)[number]>;
+
+type PersistedJob = Omit<StudioJob, (typeof VOLATILE_JOB_KEYS)[number]>;
 
 const stripFrame = (frame: FlowReferenceFrame): PersistedReferenceFrame =>
   omit(frame, VOLATILE_FRAME_KEYS);
 
 const stripTransition = (transition: FlowTransition): PersistedTransition =>
   omit(transition, VOLATILE_TRANSITION_KEYS);
+
+const stripImage = (image: StudioImage): PersistedImage =>
+  omit(image, VOLATILE_IMAGE_KEYS);
+
+const stripJob = (job: StudioJob): PersistedJob => omit(job, VOLATILE_JOB_KEYS);
 
 export const toPersistedFlowState = (
   state: FlowStateInput,
@@ -127,44 +145,45 @@ export const fromPersistedFlowState = (
 };
 
 type ActionStateInput = Record<string, unknown> & {
-  excludedCombos?: Set<string> | string[];
-  images?: StudioImage[];
-  removedImages?: Removed<StudioImage>[];
-  jobs?: StudioJob[];
+  excludedCombos?: ReadonlySet<string> | readonly string[];
+  images?: readonly StudioImage[];
+  removedImages?: readonly Removed<StudioImage>[];
+  jobs?: readonly StudioJob[];
+  historyJobs?: readonly StudioJob[];
 };
 
 export type PersistedActionState = Record<string, unknown> & {
   excludedCombos: string[];
-  images: Omit<StudioImage, "url" | "previewFrame" | "progress">[];
+  images: PersistedImage[];
   /** Missing from projects saved before removals were remembered. */
-  removedImages?: Removed<
-    Omit<StudioImage, "url" | "previewFrame" | "progress">
-  >[];
-  jobs: Omit<StudioJob, "previewFrame" | "progress" | "thumbnailUrl">[];
+  removedImages?: Removed<PersistedImage>[];
+  jobs: PersistedJob[];
+  /** Missing from projects saved before history existed. */
+  historyJobs?: PersistedJob[];
 };
 
 export const toPersistedActionState = (
   state: ActionStateInput,
 ): PersistedActionState => {
   const {
-    excludedCombos,
+    excludedCombos = [],
     images = [],
     removedImages = [],
     jobs = [],
+    historyJobs = [],
     ...rest
   } = state;
 
   return {
     ...rest,
-    excludedCombos: Array.isArray(excludedCombos)
-      ? [...excludedCombos]
-      : [...(excludedCombos ?? [])],
-    images: images.map((image) => omit(image, VOLATILE_IMAGE_KEYS)),
+    excludedCombos: [...excludedCombos],
+    images: images.map(stripImage),
     removedImages: removedImages.map((removed) => ({
       ...removed,
-      item: omit(removed.item, VOLATILE_IMAGE_KEYS),
+      item: stripImage(removed.item),
     })),
-    jobs: jobs.map((job) => omit(job, VOLATILE_JOB_KEYS)),
+    jobs: jobs.map(stripJob),
+    historyJobs: historyJobs.map(stripJob),
   };
 };
 
