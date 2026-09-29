@@ -5,6 +5,8 @@ type Props = {
   name: string;
   disabled?: boolean;
   onRename: (name: string) => void;
+  /** Return in the name field: commits the name, then does this (Save). */
+  onSubmit?: () => void;
   children?: React.ReactNode;
 };
 
@@ -12,6 +14,7 @@ export const ProjectBar: React.FC<Props> = ({
   name,
   disabled = false,
   onRename,
+  onSubmit,
   children,
 }) => {
   const [draft, setDraft] = useState(name);
@@ -35,13 +38,16 @@ export const ProjectBar: React.FC<Props> = ({
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       if (event.key === "Enter") {
+        // Commit before saving, so a new name is what gets saved.
+        commit();
         event.currentTarget.blur();
+        onSubmit?.();
       } else if (event.key === "Escape") {
         setDraft(committedRef.current);
         event.currentTarget.blur();
       }
     },
-    [],
+    [commit, onSubmit],
   );
 
   return (

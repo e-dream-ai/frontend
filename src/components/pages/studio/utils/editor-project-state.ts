@@ -1,6 +1,6 @@
 import type { FlowReferenceFrame, FlowTransition } from "@/types/flow.types";
 import { DEFAULT_TRANSITION_SETTINGS } from "../constants/default-transition-settings";
-import type { StudioImage, StudioJob } from "@/types/studio.types";
+import type { Removed, StudioImage, StudioJob } from "@/types/studio.types";
 
 export const EDITOR_STATE_SCHEMA_VERSION = 1;
 
@@ -50,7 +50,12 @@ const VOLATILE_TRANSITION_KEYS = ["progress"] as const;
 
 const VOLATILE_IMAGE_KEYS = ["url", "previewFrame", "progress"] as const;
 
-const VOLATILE_JOB_KEYS = ["previewFrame", "progress", "thumbnailUrl"] as const;
+const VOLATILE_JOB_KEYS = [
+  "previewFrame",
+  "progress",
+  "ingesting",
+  "thumbnailUrl",
+] as const;
 
 const stripFrame = (frame: FlowReferenceFrame): PersistedReferenceFrame =>
   omit(frame, VOLATILE_FRAME_KEYS);
@@ -118,19 +123,30 @@ export const fromPersistedFlowState = (
 type ActionStateInput = Record<string, unknown> & {
   excludedCombos?: Set<string> | string[];
   images?: StudioImage[];
+  removedImages?: Removed<StudioImage>[];
   jobs?: StudioJob[];
 };
 
 export type PersistedActionState = Record<string, unknown> & {
   excludedCombos: string[];
   images: Omit<StudioImage, "url" | "previewFrame" | "progress">[];
+  /** Missing from projects saved before removals were remembered. */
+  removedImages?: Removed<
+    Omit<StudioImage, "url" | "previewFrame" | "progress">
+  >[];
   jobs: Omit<StudioJob, "previewFrame" | "progress" | "thumbnailUrl">[];
 };
 
 export const toPersistedActionState = (
   state: ActionStateInput,
 ): PersistedActionState => {
-  const { excludedCombos, images = [], jobs = [], ...rest } = state;
+  const {
+    excludedCombos,
+    images = [],
+    removedImages = [],
+    jobs = [],
+    ...rest
+  } = state;
 
   return {
     ...rest,
@@ -138,6 +154,10 @@ export const toPersistedActionState = (
       ? [...excludedCombos]
       : [...(excludedCombos ?? [])],
     images: images.map((image) => omit(image, VOLATILE_IMAGE_KEYS)),
+    removedImages: removedImages.map((removed) => ({
+      ...removed,
+      item: omit(removed.item, VOLATILE_IMAGE_KEYS),
+    })),
     jobs: jobs.map((job) => omit(job, VOLATILE_JOB_KEYS)),
   };
 };
@@ -145,11 +165,20 @@ export const toPersistedActionState = (
 export const fromPersistedActionState = (
   persisted: PersistedActionState,
 ): Record<string, unknown> & { excludedCombos: Set<string> } => {
-  const { excludedCombos = [], images = [], ...rest } = persisted;
+  const {
+    excludedCombos = [],
+    images = [],
+    removedImages = [],
+    ...rest
+  } = persisted;
 
   return {
     ...rest,
     excludedCombos: new Set(excludedCombos),
     images: images.map((image) => ({ ...image, url: "" })),
+    removedImages: removedImages.map((removed) => ({
+      ...removed,
+      item: { ...removed.item, url: "" },
+    })),
   };
 };

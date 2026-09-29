@@ -23,6 +23,7 @@ import {
   HistoryTime,
   HistoryEmpty,
 } from "./transition-history.styled";
+import { HISTORY_THUMB, sizedImageUrl } from "../utils/sized-image";
 
 /**
  * `[DREAM_QUERY_KEY, uuid]` is one cache entry shared with `useDreamSegments`,
@@ -130,7 +131,11 @@ export function TransitionHistory() {
               >
                 <HistoryThumb $current={isCurrent}>
                   {thumb ? (
-                    <img src={thumb} alt="" loading="lazy" />
+                    <img
+                      src={sizedImageUrl(thumb, HISTORY_THUMB)}
+                      alt=""
+                      loading="lazy"
+                    />
                   ) : (
                     <HistoryPlaceholder>…</HistoryPlaceholder>
                   )}

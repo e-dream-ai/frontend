@@ -54,7 +54,13 @@ export function useFlowJobProgress() {
   }, [transitions]);
 
   const applyStatus = useCallback(
-    (uuid: string, isUprez: boolean, rawStatus?: string, progress?: number) => {
+    (
+      uuid: string,
+      isUprez: boolean,
+      rawStatus?: string,
+      progress?: number,
+      stage?: string,
+    ) => {
       const { transitions: current } = useFlowStore.getState();
       const idx = findTransitionIndexByDream(current, uuid, isUprez);
       if (idx === -1) return;
@@ -62,7 +68,7 @@ export function useFlowJobProgress() {
       const currentStatus = isUprez
         ? current[idx].uprezStatus
         : current[idx].status;
-      const mappedStatus = mapSocketStatus(rawStatus);
+      const mappedStatus = mapSocketStatus(rawStatus, stage);
 
       const currentTracked =
         currentStatus === "queue" || currentStatus === "processing"
@@ -92,6 +98,7 @@ export function useFlowJobProgress() {
       dreamUuid?: string;
       dream_uuid?: string;
       status?: string;
+      stage?: string;
       progress?: number | null;
     }) => {
       const uuid = data.dreamUuid || data.dream_uuid;
@@ -109,6 +116,7 @@ export function useFlowJobProgress() {
         transition.uprezDreamUuid === uuid,
         data.status,
         data.progress ?? undefined,
+        data.stage,
       );
 
       if (nextStatus === "failed") {
@@ -140,8 +148,13 @@ export function useFlowJobProgress() {
       refetchIntervalInBackground: false,
       onSuccess: (dream: Dream | undefined) => {
         if (!dream) return;
-        const status = dream.jobProgress?.status ?? dream.status;
-        if (mapSocketStatus(status) === "failed") {
+        // A processed dream is done whatever its last progress snapshot said.
+        const done = dream.status === "processed";
+        const status = done
+          ? dream.status
+          : dream.jobProgress?.status ?? dream.status;
+        const stage = done ? undefined : dream.jobProgress?.stage;
+        if (mapSocketStatus(status, stage) === "failed") {
           toastFailure(entry.uuid, dream.error);
         }
         applyStatus(
@@ -149,6 +162,7 @@ export function useFlowJobProgress() {
           entry.isUprez,
           status,
           dream.jobProgress?.progress ?? undefined,
+          stage,
         );
       },
     })),

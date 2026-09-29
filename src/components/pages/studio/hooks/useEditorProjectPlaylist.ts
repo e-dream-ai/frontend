@@ -33,6 +33,9 @@ export const useEditorProjectPlaylist = ({
   const [status, setStatus] = useState<PlaylistSaveStatus>("idle");
   const [pendingName, setPendingName] = useState("");
   const pendingNameRef = useRef("");
+  // A rename just sent, which a save straight after it should report rather
+  // than the name `playlist` still holds.
+  const renamedToRef = useRef<string | null>(null);
 
   const pushDreams = useCallback(
     async (playlistUuid: string) => {
@@ -112,13 +115,14 @@ export const useEditorProjectPlaylist = ({
       return;
     }
 
+    const name = renamedToRef.current ?? playlist.name;
     setStatus("saving");
     try {
       await pushDreams(playlist.uuid);
-      toast.success(`Saved to ${playlist.name}`);
+      toast.success(`Saved to ${name}`);
     } catch (error) {
       Bugsnag.notify(error as Error);
-      toast.error(`Could not add the dreams to ${playlist.name}. Try again.`);
+      toast.error(`Could not add the dreams to ${name}. Try again.`);
     } finally {
       setStatus("idle");
     }
@@ -130,6 +134,7 @@ export const useEditorProjectPlaylist = ({
       if (!playlist || !trimmed || trimmed === playlist.name) return;
 
       const previous = playlist;
+      renamedToRef.current = trimmed;
       void attachPlaylist({ uuid: playlist.uuid, name: trimmed });
 
       try {
@@ -141,6 +146,8 @@ export const useEditorProjectPlaylist = ({
         Bugsnag.notify(error as Error);
         toast.error(`Could not rename to "${trimmed}". Try again.`);
         void attachPlaylist(previous);
+      } finally {
+        renamedToRef.current = null;
       }
     },
     [attachPlaylist, playlist, updatePlaylist],
