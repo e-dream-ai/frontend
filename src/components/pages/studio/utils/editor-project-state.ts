@@ -1,6 +1,12 @@
 import type { FlowReferenceFrame, FlowTransition } from "@/types/flow.types";
 import { DEFAULT_TRANSITION_SETTINGS } from "../constants/default-transition-settings";
-import type { Removed, StudioImage, StudioJob } from "@/types/studio.types";
+import {
+  isStudioTab,
+  type Removed,
+  type StudioImage,
+  type StudioJob,
+  type StudioTab,
+} from "@/types/studio.types";
 
 export const EDITOR_STATE_SCHEMA_VERSION = 1;
 
@@ -162,6 +168,11 @@ export const toPersistedActionState = (
   };
 };
 
+const restoredTab = (tab: unknown): StudioTab | undefined => {
+  if (tab === "results") return "generate";
+  return isStudioTab(tab) ? tab : undefined;
+};
+
 export const fromPersistedActionState = (
   persisted: PersistedActionState,
 ): Record<string, unknown> & { excludedCombos: Set<string> } => {
@@ -169,11 +180,14 @@ export const fromPersistedActionState = (
     excludedCombos = [],
     images = [],
     removedImages = [],
+    activeTab,
     ...rest
   } = persisted;
+  const tab = restoredTab(activeTab);
 
   return {
     ...rest,
+    ...(tab ? { activeTab: tab } : {}),
     excludedCombos: new Set(excludedCombos),
     images: images.map((image) => ({ ...image, url: "" })),
     removedImages: removedImages.map((removed) => ({

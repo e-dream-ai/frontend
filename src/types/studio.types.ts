@@ -1,4 +1,10 @@
-export type StudioTab = "images" | "actions" | "generate";
+export const STUDIO_TABS = ["images", "actions", "generate"] as const;
+
+export type StudioTab = (typeof STUDIO_TABS)[number];
+
+export const isStudioTab = (value: unknown): value is StudioTab =>
+  typeof value === "string" &&
+  (STUDIO_TABS as readonly string[]).includes(value);
 
 export interface StudioImage {
   uuid: string;
