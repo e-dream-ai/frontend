@@ -68,29 +68,6 @@ export const getDefaultLoraOption = (model: VideoModel): LoraOption =>
     (option) => option.key === ltxCameraLoraFile("static"),
   ) ?? NO_LORA_OPTION;
 
-export const reconcileActionLoras = (
-  actions: StudioAction[],
-  model: VideoModel,
-): StudioAction[] => {
-  const validPaths = new Set(getLoraOptionsForModel(model).map((o) => o.key));
-  let changed = false;
-
-  const next = actions.map((action) => {
-    const hasLoras =
-      (action.highNoiseLoras?.length ?? 0) > 0 ||
-      (action.lowNoiseLoras?.length ?? 0) > 0;
-    if (!hasLoras) return action;
-
-    const path = action.highNoiseLoras?.[0]?.path;
-    if (path && validPaths.has(path)) return action;
-
-    changed = true;
-    return { ...action, highNoiseLoras: [], lowNoiseLoras: [] };
-  });
-
-  return changed ? next : actions;
-};
-
 const LORA_MODELS: readonly VideoModel[] = ["ltx-i2v", "wan-i2v"];
 
 /** Whether the model takes LoRAs at all. Kling does not. */
