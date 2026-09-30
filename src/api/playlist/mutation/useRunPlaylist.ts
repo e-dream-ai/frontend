@@ -5,10 +5,14 @@ import { axiosClient } from "@/client/axios.client";
 
 export const RUN_PLAYLIST_MUTATION_KEY = "runPlaylist";
 
+/** Counts from a run, or from a preview of one (useUprezRunPreview). */
 export type RunPlaylistResult = {
   created: number;
   requeued: number;
   kept: number;
+  reused: number;
+  replaced: number;
+  cancelled: number;
   removed: number;
   skipped: number;
   linked: number;
