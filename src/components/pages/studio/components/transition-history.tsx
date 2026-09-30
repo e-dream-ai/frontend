@@ -1,11 +1,15 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   useQueries,
   type QueryFunctionContext,
   type UseQueryOptions,
 } from "@tanstack/react-query";
 import { useShallow } from "zustand/react/shallow";
-import { useFlowStore } from "@/stores/flow.store";
+import {
+  buildFramesWithLoop,
+  LOOP_FRAME_ID,
+  useFlowStore,
+} from "@/stores/flow.store";
 import { DREAM_QUERY_KEY, getDreamResponse } from "@/api/dream/query/useDream";
 import type { Dream } from "@/types/dream.types";
 import type { ApiResponse } from "@/types/api.types";
@@ -24,6 +28,7 @@ import {
   HistoryEmpty,
 } from "./transition-history.styled";
 import { HISTORY_THUMB, sizedImageUrl } from "../utils/sized-image";
+import { FlowTakeDialog } from "./flow-take-dialog";
 
 /**
  * `[DREAM_QUERY_KEY, uuid]` is one cache entry shared with `useDreamSegments`,
@@ -39,12 +44,15 @@ type DreamQueryOptions = UseQueryOptions<
 >;
 
 export function TransitionHistory() {
-  const { transitions, selectedIndices } = useFlowStore(
+  const { transitions, selectedIndices, referenceFrames, loop } = useFlowStore(
     useShallow((s) => ({
       transitions: s.transitions,
       selectedIndices: s.selectedTransitionIndices,
+      referenceFrames: s.referenceFrames,
+      loop: s.loop,
     })),
   );
+  const [openUuid, setOpenUuid] = useState<string | null>(null);
 
   // Restoring a take rewrites one position's settings, so it only makes sense
   // against a single transition. With several selected there is no "this one".
@@ -89,6 +97,18 @@ export function TransitionHistory() {
 
   if (index === null || !transition) return null;
 
+  // Tracked by dream, so the dialog closes by itself if its take leaves the
+  // list — another transition selected, or the take aged out of history.
+  const openIndex = entries.findIndex((e) => e.dreamUuid === openUuid);
+  const openEntry = openIndex >= 0 ? entries[openIndex] : undefined;
+  const frameName = (id: string) => {
+    const frame = buildFramesWithLoop(referenceFrames, loop).find(
+      (f) => f.id === id,
+    );
+    if (!frame) return "Unknown frame";
+    return id === LOOP_FRAME_ID ? `${frame.name} (loop)` : frame.name;
+  };
+
   return (
     <HistoryInline>
       <HistoryTitle>History</HistoryTitle>
@@ -111,7 +131,7 @@ export function TransitionHistory() {
                 title={
                   isCurrent
                     ? `Current take, generated ${time}`
-                    : `Restore the take generated ${time}`
+                    : `View the take generated ${time}`
                 }
                 aria-label={
                   isCurrent
@@ -120,14 +140,9 @@ export function TransitionHistory() {
                       }, generated ${time}. Currently in the flow.`
                     : `Take ${i + 1} of ${
                         entries.length
-                      }, generated ${time}. Activate to restore it.`
+                      }, generated ${time}. Activate to view it.`
                 }
-                onClick={() => {
-                  if (isCurrent) return;
-                  useFlowStore
-                    .getState()
-                    .restoreTransitionRun(index, entry.dreamUuid);
-                }}
+                onClick={() => setOpenUuid(entry.dreamUuid)}
               >
                 <HistoryThumb $current={isCurrent}>
                   {thumb ? (
@@ -145,6 +160,28 @@ export function TransitionHistory() {
             );
           })}
         </HistoryRail>
+      )}
+      {openEntry && (
+        <FlowTakeDialog
+          entry={openEntry}
+          dream={dreamQueries[openIndex]?.data}
+          takeNumber={openIndex + 1}
+          takeCount={entries.length}
+          fromName={frameName(transition.fromFrameId)}
+          toName={frameName(transition.toFrameId)}
+          isCurrent={openEntry.dreamUuid === transition.dreamUuid}
+          dropsUprez={transition.uprezDreamUuid !== undefined}
+          blocked={
+            transition.status === "queue" || transition.status === "processing"
+          }
+          onPutBack={() => {
+            setOpenUuid(null);
+            useFlowStore
+              .getState()
+              .restoreTransitionRun(index, openEntry.dreamUuid);
+          }}
+          onClose={() => setOpenUuid(null)}
+        />
       )}
     </HistoryInline>
   );
