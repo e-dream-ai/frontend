@@ -10,6 +10,7 @@ export type ConfirmModalTypes = {
   onConfirm?: VoidFunctionType;
   confirmText?: string;
   confirmButtonType?: Types;
+  confirmDisabled?: boolean;
   onCancel?: VoidFunctionType;
   cancelText?: string;
   text?: React.ReactNode;

@@ -10,6 +10,7 @@ export const ConfirmModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({
   onConfirm = VoidFunction,
   confirmText,
   confirmButtonType = "primary",
+  confirmDisabled = false,
   onCancel = VoidFunction,
   text,
   cancelText,
@@ -37,6 +38,7 @@ export const ConfirmModal: React.FC<ModalComponent<ConfirmModalTypes>> = ({
         <Button
           buttonType={confirmButtonType}
           isLoading={isConfirming}
+          disabled={confirmDisabled}
           ml={cancelText !== "" ? "1rem" : "0"}
           onClick={isConfirming ? VoidFunction : onConfirm}
         >
