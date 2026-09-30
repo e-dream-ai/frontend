@@ -1,4 +1,4 @@
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 
 /**
@@ -73,12 +73,6 @@ export const HistoryItem = styled.button<{ $current: boolean }>`
     outline: 2px solid ${FLOW.selected};
     outline-offset: 1px;
   }
-
-  ${(p) =>
-    p.$current &&
-    css`
-      cursor: default;
-    `}
 `;
 
 export const HistoryThumb = styled.div<{ $current: boolean }>`
