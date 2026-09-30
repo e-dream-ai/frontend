@@ -1,5 +1,6 @@
-import React, { useMemo, useState } from "react";
+import React, { useState } from "react";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import Bugsnag from "@bugsnag/js";
 import { useQueryClient } from "@tanstack/react-query";
@@ -21,7 +22,6 @@ import {
   describePlaylistContents,
   usePlaylistMetadata,
 } from "../hooks/usePlaylistMetadata";
-import { useAddPlaylistToCache } from "../hooks/useUserPlaylists";
 import { useCreateUprezPlaylist } from "../hooks/useCreateUprezPlaylist";
 import { SelectPlaylistModal } from "./select-playlist-modal";
 import { UprezFactorFields } from "./uprez-factor-row";
@@ -30,10 +30,7 @@ import {
   buildUprezPlaylistPrompt,
   isNoOpUprez,
 } from "../utils/uprez-playlist-prompt";
-import {
-  formatUprezRunSummary,
-  uprezRunHasWork,
-} from "../utils/uprez-run-summary";
+import { formatUprezRunSummary } from "@/utils/uprez-run-summary";
 import {
   AppBody,
   AppHeader,
@@ -58,9 +55,9 @@ type Props = {
 };
 
 export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const addPlaylistToCache = useAddPlaylistToCache();
-  const { createAndRun, isSubmitting } = useCreateUprezPlaylist();
+  const createUprezPlaylist = useCreateUprezPlaylist();
   const updatePlaylist = useUpdatePlaylist();
   const runPlaylist = useRunPlaylist();
 
@@ -85,46 +82,41 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
   const name = nameOverride ?? "";
   const isNoOp = isNoOpUprez(upscaleFactor, interpolationFactor);
   const isBusy =
-    isSubmitting || updatePlaylist.isLoading || runPlaylist.isLoading;
+    createUprezPlaylist.isLoading ||
+    updatePlaylist.isLoading ||
+    runPlaylist.isLoading;
   const canRun = Boolean(selected) && !isNoOp && !isBusy;
   const canCreate = canRun && name.trim().length > 0;
 
   // What "Rerun" would do with the settings as they are on screen, saved or not.
-  const previewOverrides = useMemo(
-    () => ({
+  const preview = useUprezRunPreview(playlist?.uuid, {
+    overrides: {
       source_playlist_uuid: selectedUuid || undefined,
       params: {
         upscale_factor: upscaleFactor,
         interpolation_factor: interpolationFactor,
       },
-    }),
-    [selectedUuid, upscaleFactor, interpolationFactor],
-  );
-  const preview = useUprezRunPreview(
-    playlist?.uuid,
-    previewOverrides,
-    Boolean(playlist && selectedUuid) && !isNoOp,
-  );
-  const planned = preview.isPreviousData
-    ? undefined
-    : preview.data?.data?.result;
+    },
+    enabled: Boolean(playlist && selectedUuid) && !isNoOp,
+    refreshKey: progress?.failed,
+  });
+  const planned = preview.data;
   // Unknown until the preview lands (or if it fails): leave the button usable.
-  const canRerun = canRun && (!planned || uprezRunHasWork(planned));
+  const canRerun = canRun && (!planned || planned.hasWork);
 
   const handleCreate = async () => {
     if (!canCreate) return;
 
     try {
-      const created = await createAndRun({
-        name: name.trim(),
-        sourcePlaylistUuid: selectedUuid,
-        upscaleFactor,
-        interpolationFactor,
-      });
+      const { playlist: created, runError } =
+        await createUprezPlaylist.mutateAsync({
+          name: name.trim(),
+          sourcePlaylistUuid: selectedUuid,
+          upscaleFactor,
+          interpolationFactor,
+        });
 
-      await addPlaylistToCache(created);
-
-      if (created.runError) {
+      if (runError) {
         toast.error(
           `${created.name} was created but didn't start — press “Rerun uprez” to try again.`,
         );
@@ -164,7 +156,7 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
       const { data } = await runPlaylist.mutateAsync(playlist.uuid);
       const result = data?.result;
       toast.success(
-        result ? formatUprezRunSummary(result) : "Uprez run started.",
+        result ? formatUprezRunSummary(t, result) : "Uprez run started.",
       );
 
       await Promise.all([
@@ -273,7 +265,7 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
         {isNoOp && <Hint>{NO_OP_HINT}</Hint>}
         {!isNoOp && !selectedUuid && <Hint>Pick a source playlist first.</Hint>}
         {!isNoOp && playlist && planned && (
-          <Hint>{formatUprezRunSummary(planned, true)}</Hint>
+          <Hint>{formatUprezRunSummary(t, planned, "preview")}</Hint>
         )}
       </Footer>
 

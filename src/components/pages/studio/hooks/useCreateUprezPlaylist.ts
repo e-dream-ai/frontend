@@ -1,16 +1,18 @@
-import { useCallback } from "react";
 import Bugsnag from "@bugsnag/js";
-import { useCreatePlaylist } from "@/api/playlist/mutation/useCreatePlaylist";
+import { useMutation } from "@tanstack/react-query";
+import { createPlaylistRequest } from "@/api/playlist/mutation/useCreatePlaylist";
+import { runPlaylistRequest } from "@/api/playlist/mutation/useRunPlaylist";
 import {
-  useRunPlaylist,
-  type RunPlaylistResult,
-} from "@/api/playlist/mutation/useRunPlaylist";
-import type { PlaylistSummary } from "./useUserPlaylists";
+  useAddPlaylistToCache,
+  type PlaylistSummary,
+} from "./useUserPlaylists";
 import type {
   InterpolationFactor,
   UpscaleFactor,
 } from "../constants/uprez-factor-options";
 import { buildUprezPlaylistPrompt } from "../utils/uprez-playlist-prompt";
+
+export const CREATE_UPREZ_PLAYLIST_MUTATION_KEY = "createUprezPlaylist";
 
 export type CreateUprezPlaylistArgs = {
   name: string;
@@ -19,41 +21,29 @@ export type CreateUprezPlaylistArgs = {
   interpolationFactor: InterpolationFactor;
 };
 
-export interface CreatedUprezPlaylist extends PlaylistSummary {
-  run: RunPlaylistResult | null;
+export type CreatedUprezPlaylist = {
+  playlist: PlaylistSummary;
   runError: Error | null;
-}
+};
 
 /** A run failure preserves the created playlist so it can be started again. */
 export const useCreateUprezPlaylist = () => {
-  const { mutateAsync: createPlaylist, isLoading: isCreating } =
-    useCreatePlaylist();
-  const { mutateAsync: runPlaylist, isLoading: isRunning } = useRunPlaylist();
+  const addPlaylistToCache = useAddPlaylistToCache();
 
-  const createAndRun = useCallback(
-    async ({
-      name,
-      sourcePlaylistUuid,
-      upscaleFactor,
-      interpolationFactor,
-    }: CreateUprezPlaylistArgs): Promise<CreatedUprezPlaylist> => {
-      const created = await createPlaylist({
+  return useMutation<CreatedUprezPlaylist, Error, CreateUprezPlaylistArgs>({
+    mutationKey: [CREATE_UPREZ_PLAYLIST_MUTATION_KEY],
+    mutationFn: async ({ name, ...factors }) => {
+      const created = await createPlaylistRequest({
         name,
-        prompt: buildUprezPlaylistPrompt({
-          sourcePlaylistUuid,
-          upscaleFactor,
-          interpolationFactor,
-        }),
+        prompt: buildUprezPlaylistPrompt(factors),
       });
 
       const playlist = created.data?.playlist;
       if (!playlist) throw new Error("No playlist in create response");
 
-      let run: RunPlaylistResult | null = null;
       let runError: Error | null = null;
       try {
-        const started = await runPlaylist(playlist.uuid);
-        run = started.data?.result ?? null;
+        await runPlaylistRequest(playlist.uuid);
       } catch (err) {
         runError =
           err instanceof Error
@@ -63,16 +53,15 @@ export const useCreateUprezPlaylist = () => {
       }
 
       return {
-        uuid: playlist.uuid,
-        name: playlist.name,
-        thumbnail: playlist.thumbnail,
-        prompt: playlist.prompt,
-        run,
+        playlist: {
+          uuid: playlist.uuid,
+          name: playlist.name,
+          thumbnail: playlist.thumbnail,
+          prompt: playlist.prompt,
+        },
         runError,
       };
     },
-    [createPlaylist, runPlaylist],
-  );
-
-  return { createAndRun, isSubmitting: isCreating || isRunning };
+    onSuccess: ({ playlist }) => addPlaylistToCache(playlist),
+  });
 };
