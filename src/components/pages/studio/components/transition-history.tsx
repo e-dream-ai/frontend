@@ -5,11 +5,7 @@ import {
   type UseQueryOptions,
 } from "@tanstack/react-query";
 import { useShallow } from "zustand/react/shallow";
-import {
-  buildFramesWithLoop,
-  LOOP_FRAME_ID,
-  useFlowStore,
-} from "@/stores/flow.store";
+import { LOOP_FRAME_ID, useFlowStore } from "@/stores/flow.store";
 import { DREAM_QUERY_KEY, getDreamResponse } from "@/api/dream/query/useDream";
 import type { Dream } from "@/types/dream.types";
 import type { ApiResponse } from "@/types/api.types";
@@ -29,6 +25,7 @@ import {
 } from "./transition-history.styled";
 import { HISTORY_THUMB, sizedImageUrl } from "../utils/sized-image";
 import { FlowTakeDialog } from "./flow-take-dialog";
+import { isPendingStatus } from "../hooks/mapSocketStatus";
 
 /**
  * `[DREAM_QUERY_KEY, uuid]` is one cache entry shared with `useDreamSegments`,
@@ -44,12 +41,11 @@ type DreamQueryOptions = UseQueryOptions<
 >;
 
 export function TransitionHistory() {
-  const { transitions, selectedIndices, referenceFrames, loop } = useFlowStore(
+  const { transitions, selectedIndices, referenceFrames } = useFlowStore(
     useShallow((s) => ({
       transitions: s.transitions,
       selectedIndices: s.selectedTransitionIndices,
       referenceFrames: s.referenceFrames,
-      loop: s.loop,
     })),
   );
   const [openUuid, setOpenUuid] = useState<string | null>(null);
@@ -95,19 +91,18 @@ export function TransitionHistory() {
     currentRef.current?.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [currentUuid, entries.length]);
 
-  if (index === null || !transition) return null;
-
   // Tracked by dream, so the dialog closes by itself if its take leaves the
   // list — another transition selected, or the take aged out of history.
   const openIndex = entries.findIndex((e) => e.dreamUuid === openUuid);
+  if (openUuid !== null && openIndex === -1) setOpenUuid(null);
+
+  if (index === null || !transition) return null;
+
   const openEntry = openIndex >= 0 ? entries[openIndex] : undefined;
-  const frameName = (id: string) => {
-    const frame = buildFramesWithLoop(referenceFrames, loop).find(
-      (f) => f.id === id,
-    );
-    if (!frame) return "Unknown frame";
-    return id === LOOP_FRAME_ID ? `${frame.name} (loop)` : frame.name;
-  };
+  const frameName = (id: string) =>
+    id === LOOP_FRAME_ID
+      ? `${referenceFrames[0]?.name ?? "Unknown frame"} (loop)`
+      : referenceFrames.find((f) => f.id === id)?.name ?? "Unknown frame";
 
   return (
     <HistoryInline>
@@ -128,6 +123,7 @@ export function TransitionHistory() {
                 role="listitem"
                 $current={isCurrent}
                 aria-current={isCurrent}
+                aria-haspopup="dialog"
                 title={
                   isCurrent
                     ? `Current take, generated ${time}`
@@ -137,7 +133,7 @@ export function TransitionHistory() {
                   isCurrent
                     ? `Take ${i + 1} of ${
                         entries.length
-                      }, generated ${time}. Currently in the flow.`
+                      }, generated ${time}. Currently in the flow. Activate to view it.`
                     : `Take ${i + 1} of ${
                         entries.length
                       }, generated ${time}. Activate to view it.`
@@ -170,10 +166,11 @@ export function TransitionHistory() {
           fromName={frameName(transition.fromFrameId)}
           toName={frameName(transition.toFrameId)}
           isCurrent={openEntry.dreamUuid === transition.dreamUuid}
-          dropsUprez={transition.uprezDreamUuid !== undefined}
-          blocked={
-            transition.status === "queue" || transition.status === "processing"
+          dropsUprez={
+            transition.uprezDreamUuid !== undefined &&
+            transition.uprezStatus !== "failed"
           }
+          blocked={isPendingStatus(transition.status)}
           onPutBack={() => {
             setOpenUuid(null);
             useFlowStore
