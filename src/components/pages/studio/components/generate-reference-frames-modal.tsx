@@ -1,4 +1,5 @@
 import React, { useCallback, useMemo, useState } from "react";
+import { History, Palette } from "lucide-react";
 import { axiosClient } from "@/client/axios.client";
 import { useStudioStore } from "@/stores/studio.store";
 import { isStudioImageModel, type StudioImage } from "@/types/studio.types";
@@ -17,6 +18,10 @@ import { imageNames } from "../utils/image-names";
 import { resolveNegativePromptSupport } from "../utils/negative-prompt-support";
 import { SizeSelect } from "./size-select";
 import { StyleReferenceField } from "./style-reference-field";
+import { PromptHistoryModal } from "./prompt-history-modal";
+import { StylePresetsModal } from "./style-presets-modal";
+import { PromptToolButton, PromptTools } from "./prompt-library.styled";
+import { usePrefetchStylePresets } from "../hooks/useStylePresets";
 import { useLightboxA11y } from "../hooks/useLightboxA11y";
 import {
   Overlay,
@@ -63,9 +68,11 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
   const prompt = useStudioStore((s) => s.imagePrompt);
   const setPrompt = useStudioStore((s) => s.setImagePrompt);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [library, setLibrary] = useState<"history" | "styles" | null>(null);
   const styleReference = useStudioStore((s) => s.styleReference);
   const setStyleReference = useStudioStore((s) => s.setStyleReference);
   const requiresStyleReference = imageGenParams.model === "krea-2-turbo-style";
+  const prefetchStylePresets = usePrefetchStylePresets();
 
   const { data: modelsData } = useModels({ mediaType: "image" });
   const modelOptions = useMemo(
@@ -191,6 +198,26 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
             onChange={(e) => setPrompt(e.target.value)}
             data-autofocus
           />
+          <PromptTools>
+            <PromptToolButton
+              type="button"
+              onClick={() => setLibrary("history")}
+            >
+              <History size={13} aria-hidden="true" />
+              Prompt history
+            </PromptToolButton>
+            <PromptToolButton
+              type="button"
+              onPointerEnter={() =>
+                void prefetchStylePresets(imageGenParams.model)
+              }
+              onFocus={() => void prefetchStylePresets(imageGenParams.model)}
+              onClick={() => setLibrary("styles")}
+            >
+              <Palette size={13} aria-hidden="true" />
+              Apply style
+            </PromptToolButton>
+          </PromptTools>
           <FieldRow style={{ marginTop: 14 }}>
             <FieldGroup>
               <FieldLabel htmlFor="reference-frame-model">Model</FieldLabel>
@@ -286,6 +313,12 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
           </FooterButtons>
         </Footer>
       </Panel>
+      {library === "history" ? (
+        <PromptHistoryModal onClose={() => setLibrary(null)} />
+      ) : null}
+      {library === "styles" ? (
+        <StylePresetsModal onClose={() => setLibrary(null)} />
+      ) : null}
     </Overlay>
   );
 };
