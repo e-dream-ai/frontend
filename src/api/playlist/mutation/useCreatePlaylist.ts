@@ -8,19 +8,16 @@ import { PLAYLISTS_QUERY_KEY } from "@/api/playlist/query/usePlaylists";
 
 export const CREATE_PLAYLIST_MUTATION_KEY = "createPlaylist";
 
-const createPlaylist = () => {
-  return async (params: CreatePlaylistFormValues) => {
-    return axiosClient
-      .post(`/v1/playlist`, params, {
-        headers: getRequestHeaders({
-          contentType: ContentType.none,
-        }),
-      })
-      .then((res) => {
-        return res.data;
-      });
-  };
-};
+export const createPlaylistRequest = async (
+  params: CreatePlaylistFormValues,
+): Promise<ApiResponse<{ playlist: Playlist }>> =>
+  axiosClient
+    .post(`/v1/playlist`, params, {
+      headers: getRequestHeaders({
+        contentType: ContentType.none,
+      }),
+    })
+    .then((res) => res.data);
 
 export const useCreatePlaylist = () => {
   const queryClient = useQueryClient();
@@ -29,7 +26,7 @@ export const useCreatePlaylist = () => {
     ApiResponse<{ playlist: Playlist }>,
     Error,
     CreatePlaylistFormValues
-  >(createPlaylist(), {
+  >(createPlaylistRequest, {
     mutationKey: [CREATE_PLAYLIST_MUTATION_KEY],
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: [PLAYLISTS_QUERY_KEY] });

@@ -129,6 +129,34 @@ describe("action state persistence", () => {
     expect(persisted.images[0].uuid).toBe("i1");
   });
 
+  it("drops the same volatile fields from matrix and history jobs", () => {
+    const job = {
+      imageId: "i1",
+      actionId: "a1",
+      dreamUuid: "d1",
+      jobType: "ltx-i2v" as const,
+      status: "processed" as const,
+      progress: 100,
+      ingesting: false,
+      previewFrame: "data:image/jpeg;base64,zzz",
+      thumbnailUrl: "https://r2.example/d1?X-Amz-Expires=1800",
+      completedAt: 1,
+    };
+
+    const persisted = toPersistedActionState({
+      jobs: [job],
+      historyJobs: [{ ...job, dreamUuid: "d0" }],
+    });
+
+    for (const saved of [persisted.jobs[0], persisted.historyJobs?.[0]]) {
+      expect(saved).not.toHaveProperty("previewFrame");
+      expect(saved).not.toHaveProperty("progress");
+      expect(saved).not.toHaveProperty("ingesting");
+      expect(saved).not.toHaveProperty("thumbnailUrl");
+      expect(saved?.completedAt).toBe(1);
+    }
+  });
+
   it("opens a project saved on the removed Results tab on the Matrix", () => {
     const persisted = toPersistedActionState({ activeTab: "results" });
     expect(fromPersistedActionState(persisted).activeTab).toBe("generate");

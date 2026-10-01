@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { toast } from "react-toastify";
+import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import Bugsnag from "@bugsnag/js";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -12,6 +13,11 @@ import { useCancelPlaylist } from "@/api/playlist/mutation/useCancelPlaylist";
 import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
 import { PLAYLIST_ITEMS_QUERY_KEY } from "@/api/playlist/query/usePlaylistItems";
 import { PLAYLIST_KEYFRAMES_QUERY_KEY } from "@/api/playlist/query/usePlaylistKeyframes";
+import {
+  UPREZ_RUN_PREVIEW_QUERY_KEY,
+  useUprezRunPreview,
+} from "@/api/playlist/query/useUprezRunPreview";
+import { formatUprezRunSummary } from "@/utils/uprez-run-summary";
 
 interface Props {
   playlist: Playlist;
@@ -27,6 +33,7 @@ export const UprezPlaylistControls: React.FC<Props> = ({
   isUserAdmin,
   isRunning,
 }) => {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const runPlaylist = useRunPlaylist();
   const cancelPlaylist = useCancelPlaylist();
@@ -36,6 +43,12 @@ export const UprezPlaylistControls: React.FC<Props> = ({
     () => parseUprezPlaylistPrompt(playlist.prompt),
     [playlist.prompt],
   );
+
+  // Fetched when the dialog opens, against the saved settings.
+  const preview = useUprezRunPreview(playlist.uuid, {
+    enabled: confirmRunOpen && Boolean(uprezPrompt),
+  });
+  const planned = preview.data;
 
   if (!uprezPrompt || !(isOwner || isUserAdmin)) {
     return null;
@@ -49,21 +62,27 @@ export const UprezPlaylistControls: React.FC<Props> = ({
         PLAYLIST_KEYFRAMES_QUERY_KEY,
         playlist.uuid,
       ]),
+      queryClient.invalidateQueries([
+        UPREZ_RUN_PREVIEW_QUERY_KEY,
+        playlist.uuid,
+      ]),
     ]);
   };
+
+  const runDialogText = planned
+    ? formatUprezRunSummary(t, planned, "preview")
+    : preview.isFetching
+      ? "Checking what a run would do…"
+      : "This will queue uprez jobs for the dreams in this playlist. New or changed source dreams get uprezed and any obsolete ones are removed. Continue?";
 
   const handleRun = async () => {
     setConfirmRunOpen(false);
     try {
       const { data } = await runPlaylist.mutateAsync(playlist.uuid);
       const result = data?.result;
-      if (result) {
-        toast.success(
-          `Uprez run started: ${result.created} new, ${result.requeued} re-queued, ${result.kept} kept, ${result.removed} removed, ${result.skipped} skipped.`,
-        );
-      } else {
-        toast.success("Uprez run started.");
-      }
+      toast.success(
+        result ? formatUprezRunSummary(t, result) : "Uprez run started.",
+      );
       await invalidatePlaylist();
     } catch (err) {
       Bugsnag.notify(err as Error);
@@ -122,7 +141,8 @@ export const UprezPlaylistControls: React.FC<Props> = ({
         isConfirming={runPlaylist.isLoading}
         title="Run uprez playlist"
         confirmText="Run uprez"
-        text="This will queue uprez jobs for the dreams in this playlist. New or changed source dreams get uprezed and any obsolete ones are removed. Continue?"
+        confirmDisabled={planned !== undefined && !planned.hasWork}
+        text={runDialogText}
       />
     </>
   );

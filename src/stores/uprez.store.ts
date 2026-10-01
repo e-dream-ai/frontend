@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 import type { PlaylistSummary } from "@/components/pages/studio/hooks/useUserPlaylists";
 import type {
   InterpolationFactor,
@@ -32,50 +31,44 @@ const UPREZ_DEFAULTS: UprezFormState = {
   interpolationFactor: 2,
 };
 
-export const uprezPartialize = (state: UprezStoreState): UprezFormState => ({
+export const selectUprezProject = (state: UprezStoreState): UprezFormState => ({
   sourcePlaylist: state.sourcePlaylist,
   nameOverride: state.nameOverride,
   upscaleFactor: state.upscaleFactor,
   interpolationFactor: state.interpolationFactor,
 });
 
-export const useUprezStore = create<UprezStoreState>()(
-  persist(
-    (set) => ({
-      ...UPREZ_DEFAULTS,
+export const useUprezStore = create<UprezStoreState>()((set) => ({
+  ...UPREZ_DEFAULTS,
 
-      setSourcePlaylist: (playlist) =>
-        set((s) => {
-          const followedSource =
-            !s.nameOverride?.trim() ||
-            (s.sourcePlaylist !== null &&
-              s.nameOverride === uprezPlaylistName(s.sourcePlaylist.name));
-          return {
-            sourcePlaylist: playlist,
-            nameOverride: followedSource
-              ? uprezPlaylistName(playlist.name)
-              : s.nameOverride,
-          };
-        }),
-      setNameOverride: (nameOverride) => set({ nameOverride }),
-      setUpscaleFactor: (upscaleFactor) => set({ upscaleFactor }),
-      setInterpolationFactor: (interpolationFactor) =>
-        set({ interpolationFactor }),
-
-      restoreUprez: (snapshot) =>
-        set({
-          sourcePlaylist: snapshot.sourcePlaylist ?? null,
-          nameOverride:
-            snapshot.nameOverride ??
-            (snapshot.sourcePlaylist
-              ? uprezPlaylistName(snapshot.sourcePlaylist.name)
-              : null),
-          upscaleFactor: snapshot.upscaleFactor ?? UPREZ_DEFAULTS.upscaleFactor,
-          interpolationFactor:
-            snapshot.interpolationFactor ?? UPREZ_DEFAULTS.interpolationFactor,
-        }),
-      resetUprez: () => set({ ...UPREZ_DEFAULTS }),
+  setSourcePlaylist: (playlist) =>
+    set((s) => {
+      const followedSource =
+        !s.nameOverride?.trim() ||
+        (s.sourcePlaylist !== null &&
+          s.nameOverride === uprezPlaylistName(s.sourcePlaylist.name));
+      return {
+        sourcePlaylist: playlist,
+        nameOverride: followedSource
+          ? uprezPlaylistName(playlist.name)
+          : s.nameOverride,
+      };
     }),
-    { name: "uprez-session", version: 1, partialize: uprezPartialize },
-  ),
-);
+  setNameOverride: (nameOverride) => set({ nameOverride }),
+  setUpscaleFactor: (upscaleFactor) => set({ upscaleFactor }),
+  setInterpolationFactor: (interpolationFactor) => set({ interpolationFactor }),
+
+  restoreUprez: (snapshot) =>
+    set({
+      sourcePlaylist: snapshot.sourcePlaylist ?? null,
+      nameOverride:
+        snapshot.nameOverride ??
+        (snapshot.sourcePlaylist
+          ? uprezPlaylistName(snapshot.sourcePlaylist.name)
+          : null),
+      upscaleFactor: snapshot.upscaleFactor ?? UPREZ_DEFAULTS.upscaleFactor,
+      interpolationFactor:
+        snapshot.interpolationFactor ?? UPREZ_DEFAULTS.interpolationFactor,
+    }),
+  resetUprez: () => set({ ...UPREZ_DEFAULTS }),
+}));

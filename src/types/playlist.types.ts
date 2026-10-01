@@ -66,6 +66,22 @@ export type UprezPlaylistPrompt = {
   params?: Record<string, unknown>;
 };
 
+export type UprezRunSummary = {
+  created: number;
+  requeued: number;
+  kept: number;
+  reused: number;
+  replaced: number;
+  cancelled: number;
+  removed: number;
+  skipped: number;
+  hasWork: boolean;
+};
+
+export type RunPlaylistResult = UprezRunSummary & {
+  linked: number;
+};
+
 export const parseUprezPlaylistPrompt = (
   prompt?: string | null,
 ): UprezPlaylistPrompt | null => {

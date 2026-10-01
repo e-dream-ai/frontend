@@ -748,6 +748,22 @@
       "count_queued": "{{count}} queued",
       "count_failed": "{{count}} failed",
       "count_idle": "{{count}} not started"
+    },
+    "uprez_run_summary": {
+      "up_to_date_preview": "Everything is up to date at these settings.",
+      "up_to_date_started": "Everything was already up to date.",
+      "summary_preview": "Running will {{actions, list}}.",
+      "summary_started": "Uprez run started: {{actions, list}}.",
+      "render_one": "render {{count}} dream",
+      "render_other": "render {{count}} dreams",
+      "reuse_one": "reuse {{count}} earlier render",
+      "reuse_other": "reuse {{count}} earlier renders",
+      "replace_one": "swap out {{count}} dream at other settings",
+      "replace_other": "swap out {{count}} dreams at other settings",
+      "replace_cancelling_one": "swap out {{count}} dream at other settings (cancelling {{cancelled}} in progress)",
+      "replace_cancelling_other": "swap out {{count}} dreams at other settings (cancelling {{cancelled}} in progress)",
+      "remove_one": "remove {{count}} dream no longer in the source",
+      "remove_other": "remove {{count}} dreams no longer in the source"
     }
   },
   "units": {
