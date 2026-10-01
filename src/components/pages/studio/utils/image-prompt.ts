@@ -16,6 +16,18 @@ export type ImageOrigin =
   /** No prompt at all: an uploaded file. */
   | { kind: "uploaded" };
 
+export type GeneratedImageOrigin = Extract<ImageOrigin, { kind: "generated" }>;
+
+export const imageSettings = (
+  origin: GeneratedImageOrigin,
+  modelLabel: string,
+) =>
+  [
+    modelLabel,
+    origin.size?.replace("*", "×"),
+    origin.seed !== undefined ? `seed ${origin.seed}` : undefined,
+  ].filter((setting): setting is string => Boolean(setting));
+
 const asString = (value: unknown) =>
   typeof value === "string" && value.trim().length > 0 ? value : undefined;
 

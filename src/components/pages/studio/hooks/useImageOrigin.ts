@@ -1,8 +1,11 @@
 import { useCallback } from "react";
-import { useStudioStore } from "@/stores/studio.store";
 import { useDream } from "@/api/dream/query/useDream";
 import { useModels } from "@/api/model/query/useModels";
-import { imageOriginFromDreamPrompt } from "../utils/image-prompt";
+import {
+  imageOriginFromDreamPrompt,
+  imageSettings,
+} from "../utils/image-prompt";
+import { applyImageOrigin } from "../utils/apply-image-origin";
 
 /**
  * How a frame was made, read from its dream: the prompt, a line of settings
@@ -16,38 +19,17 @@ export const useImageOrigin = (dreamUuid?: string) => {
   const generated = origin?.kind === "generated" ? origin : undefined;
   const { data: modelsData } = useModels({ mediaType: "image" });
 
-  const modelLabel = generated
-    ? modelsData?.data?.models?.find((m) => m.id === generated.algorithm)
-        ?.label ?? generated.algorithm
-    : undefined;
-  const settings = [
-    modelLabel,
-    generated?.size?.replace("*", "×"),
-    generated?.seed !== undefined ? `seed ${generated.seed}` : undefined,
-  ].filter((s): s is string => !!s);
+  const settings = generated
+    ? imageSettings(
+        generated,
+        modelsData?.data?.models?.find((m) => m.id === generated.algorithm)
+          ?.label ?? generated.algorithm,
+      )
+    : [];
 
   /** Loads the frame's prompt and settings into the generate dialog. */
   const remix = useCallback(() => {
-    if (!generated) return;
-    const store = useStudioStore.getState();
-    store.setImagePrompt(generated.prompt);
-    // Only a model the studio offers is carried over; otherwise the prompt
-    // goes to whichever model the generate dialog already has.
-    if (!generated.model) return;
-    store.setImageGenParams({
-      model: generated.model,
-      ...(generated.size ? { size: generated.size } : {}),
-      negativePrompt: generated.negativePrompt ?? "",
-    });
-    const reference = generated.styleReferenceUuid;
-    if (reference) {
-      store.setStyleReference({
-        uuid: reference,
-        name:
-          store.images.find((i) => i.uuid === reference)?.name ??
-          "Style reference",
-      });
-    }
+    if (generated) applyImageOrigin(generated);
   }, [generated]);
 
   return {

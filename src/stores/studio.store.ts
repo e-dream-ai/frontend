@@ -92,7 +92,7 @@ type StudioState = {
 };
 
 const DEFAULT_IMAGE_GEN_PARAMS: ImageGenParams = {
-  model: "z-image-turbo",
+  model: "krea-2-turbo",
   seedCount: 8,
   size: "1280*720",
   negativePrompt: "",

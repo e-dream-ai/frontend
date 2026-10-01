@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 
 let scrollLockCount = 0;
 let scrollLockPrevious = "";
+const openLayers: symbol[] = [];
 
 const FOCUSABLE = [
   "a[href]",
@@ -45,7 +46,10 @@ export function useLightboxA11y<T extends HTMLElement>(onClose: () => void) {
   }, []);
 
   useEffect(() => {
+    const layer = Symbol("lightbox-layer");
+    openLayers.push(layer);
     const onKey = (e: KeyboardEvent) => {
+      if (openLayers[openLayers.length - 1] !== layer) return;
       if (e.key === "Escape") {
         e.stopPropagation();
         onCloseRef.current();
@@ -74,7 +78,10 @@ export function useLightboxA11y<T extends HTMLElement>(onClose: () => void) {
       }
     };
     window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      openLayers.splice(openLayers.indexOf(layer), 1);
+    };
   }, []);
 
   return containerRef;
