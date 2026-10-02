@@ -104,10 +104,8 @@ export const FeedPage: React.FC = () => {
     };
   }, [feedData, radioGroupState]);
 
-  const feedDataLength = useMemo(
-    () => feedItems.length + virtualPlaylists.length,
-    [feedItems, virtualPlaylists],
-  );
+  const feedDataLength = feedItems.length + virtualPlaylists.length;
+  const feedPagesLength = feedData?.pages.length ?? 0;
 
   const {
     data: usersData,
@@ -188,7 +186,7 @@ export const FeedPage: React.FC = () => {
 
           {!showUserList ? (
             <InfiniteScroll
-              dataLength={feedDataLength}
+              dataLength={feedPagesLength}
               next={() => {
                 if (!isFetchingNextPage) {
                   fetchNextFeedPage();

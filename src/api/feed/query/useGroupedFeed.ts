@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { PAGINATION } from "@/constants/pagination.constants";
@@ -9,6 +10,7 @@ import {
   dedupeGroupedFeedPages,
   getGroupedFeedNextPageParam,
   GroupedFeedResponse,
+  isEmptyGroupedFeedPage,
 } from "@/helpers/groupedFeed.helpers";
 
 export const GROUPED_FEED_QUERY_KEY = "getGroupedFeed";
@@ -106,6 +108,16 @@ export const useGroupedFeed = ({
         getGroupedFeedNextPageParam(lastPage, allPages, take),
     },
   );
+
+  const { data, hasNextPage, isFetching, fetchNextPage } = queryResult;
+  const lastPage = data?.pages[data.pages.length - 1];
+  const isLastPageEmpty = Boolean(lastPage) && isEmptyGroupedFeedPage(lastPage);
+
+  useEffect(() => {
+    if (isLastPageEmpty && hasNextPage && !isFetching) {
+      fetchNextPage();
+    }
+  }, [isLastPageEmpty, hasNextPage, isFetching, fetchNextPage]);
 
   return queryResult;
 };
