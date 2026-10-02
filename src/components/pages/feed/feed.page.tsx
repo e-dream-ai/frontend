@@ -22,6 +22,8 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useScrollRestoration } from "@/hooks/useScrollRestoration";
 import { Loader } from "@/components/shared/loader/loader";
 import { useTheme } from "styled-components";
+import { PAGINATION } from "@/constants/pagination.constants";
+import { shouldAutoFetchGroupedFeed } from "@/helpers/groupedFeed.helpers";
 
 const USER_TAKE = {
   SEARCH: 3,
@@ -78,6 +80,7 @@ export const FeedPage: React.FC = () => {
     fetchNextPage: fetchNextFeedPage,
     hasNextPage: hasNextFeedPage,
     isFetchingNextPage,
+    isError: isFeedError,
   } = useGroupedFeed({
     search,
     type:
@@ -87,6 +90,9 @@ export const FeedPage: React.FC = () => {
     mediaType,
   });
 
+  // Only use virtual playlists when showing all items (not filtered)
+  const shouldUseVirtualPlaylists = radioGroupState === FEED_FILTERS.ALL;
+
   // Extract feed items and virtual playlists from the grouped feed response
   const { feedItems, virtualPlaylists } = useMemo(() => {
     const allFeedItems =
@@ -95,19 +101,41 @@ export const FeedPage: React.FC = () => {
       feedData?.pages.flatMap((page) => page.data?.virtualPlaylists ?? []) ??
       [];
 
-    // Only use virtual playlists when showing all items (not filtered)
-    const shouldUseVirtualPlaylists = radioGroupState === FEED_FILTERS.ALL;
-
     return {
       feedItems: allFeedItems,
       virtualPlaylists: shouldUseVirtualPlaylists ? allVirtualPlaylists : [],
     };
-  }, [feedData, radioGroupState]);
+  }, [feedData, shouldUseVirtualPlaylists]);
 
   const feedDataLength = useMemo(
     () => feedItems.length + virtualPlaylists.length,
     [feedItems, virtualPlaylists],
   );
+
+  // A run of dreams from one playlist collapses into one card, which can leave
+  // the list too short to scroll, or a page that adds no cards; InfiniteScroll
+  // never asks for more in either case, so keep loading until it can.
+  useEffect(() => {
+    if (
+      hasNextFeedPage &&
+      !isFetchingNextPage &&
+      !isFeedError &&
+      shouldAutoFetchGroupedFeed(
+        feedData,
+        shouldUseVirtualPlaylists,
+        PAGINATION.TAKE,
+      )
+    ) {
+      fetchNextFeedPage();
+    }
+  }, [
+    feedData,
+    shouldUseVirtualPlaylists,
+    hasNextFeedPage,
+    isFetchingNextPage,
+    isFeedError,
+    fetchNextFeedPage,
+  ]);
 
   const {
     data: usersData,
