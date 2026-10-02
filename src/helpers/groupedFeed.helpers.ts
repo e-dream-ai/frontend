@@ -80,3 +80,28 @@ export const dedupeGroupedFeedPages = (
     pages: processedPages,
   };
 };
+
+/**
+ * Whether the feed should load another page without waiting for a scroll.
+ *
+ * Dreams from one playlist collapse into a single card, and later pages drop
+ * playlists already shown, so a page can add few or no cards. InfiniteScroll
+ * only asks for more on a scroll that changes its dataLength, so it stalls when
+ * the list is too short to scroll or the last page added nothing. Call this
+ * with already-deduped pages (the useGroupedFeed `select` output).
+ */
+export const shouldAutoFetchGroupedFeed = (
+  data: GroupedFeedData | undefined,
+  includeVirtualPlaylists: boolean,
+  minCards: number,
+): boolean => {
+  const pages = data?.pages ?? [];
+  if (!pages.length) {
+    return false;
+  }
+  const cardsOn = (page: GroupedFeedPage) =>
+    (page.data?.feedItems?.length ?? 0) +
+    (includeVirtualPlaylists ? page.data?.virtualPlaylists?.length ?? 0 : 0);
+  const total = pages.reduce((sum, page) => sum + cardsOn(page), 0);
+  return cardsOn(pages[pages.length - 1]) === 0 || total < minCards;
+};
