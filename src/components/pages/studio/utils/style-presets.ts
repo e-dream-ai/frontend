@@ -2,16 +2,16 @@ import type { StylePreset } from "@/types/style-preset.types";
 
 export type StylePresetSort = "recent" | "name" | "shuffle";
 
+const STYLED_PROMPT = /^Style:.*\r?\n\s*Subject:([\s\S]*)$/;
+
 export const applyStylePrompt = (
   prompt: string,
-  stylePrompt: string,
-  knownStylePrompts: readonly string[],
+  { name, stylePrompt }: Pick<StylePreset, "name" | "stylePrompt">,
 ) => {
-  const subject = knownStylePrompts
-    .reduce((text, known) => text.split(known).join(""), prompt)
-    .replace(/\n{3,}/g, "\n\n")
-    .trim();
-  return subject ? `${subject}\n\n${stylePrompt}` : stylePrompt;
+  const current = prompt.trim();
+  const subject = (STYLED_PROMPT.exec(current)?.[1] ?? current).trim();
+  const style = stylePrompt.trim().replace(/\.+$/, "");
+  return `Style: ${name} ${style}.\nSubject: ${subject}`;
 };
 
 export const matchesStyleSearch = (preset: StylePreset, query: string) => {
