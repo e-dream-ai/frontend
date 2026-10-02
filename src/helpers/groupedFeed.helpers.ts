@@ -23,6 +23,9 @@ export const getGroupedFeedNextPageParam = (
   return loadedRawItems < totalRawItems ? allPages.length : undefined;
 };
 
+export const isEmptyGroupedFeedPage = (page?: GroupedFeedPage): boolean =>
+  !page?.data?.feedItems?.length && !page?.data?.virtualPlaylists?.length;
+
 export const dedupeGroupedFeedPages = (
   data: GroupedFeedData,
 ): GroupedFeedData => {
