@@ -127,13 +127,7 @@ export const StylePresetsModal: React.FC<Props> = ({ onClose }) => {
 
   const applyStyle = (preset: StylePreset) => {
     const { imagePrompt, setImagePrompt } = useStudioStore.getState();
-    setImagePrompt(
-      applyStylePrompt(
-        imagePrompt,
-        preset.stylePrompt,
-        presets.map((known) => known.stylePrompt),
-      ),
-    );
+    setImagePrompt(applyStylePrompt(imagePrompt, preset));
     touchRecentItem({ type: "style", dreamUuid: preset.uuid });
     onClose();
   };
