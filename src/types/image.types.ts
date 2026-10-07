@@ -7,3 +7,10 @@ export type ResizeOptions = {
   quality?: number;
   format?: "auto" | "webp" | "avif" | "jpeg" | "png";
 };
+
+export type ImagePresetName = "dream" | "thumbnail" | "avatar";
+
+export type ImagePreset = {
+  maxDimension: number;
+  quality: number;
+};
