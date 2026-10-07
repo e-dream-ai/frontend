@@ -7,6 +7,8 @@ import gitInfo from "./git-info.json";
 // https://vitejs.dev/config/
 export default defineConfig({
   server: { host: true },
+  worker: { format: "es", plugins: () => [tsconfigPaths()] },
+  optimizeDeps: { exclude: ["@jsquash/webp"] },
   plugins: [
     react(),
     tsconfigPaths(),
