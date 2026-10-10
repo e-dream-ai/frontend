@@ -389,6 +389,7 @@
       "upvote": "Liked",
       "downvote": "Disliked",
       "hidden": "Hidden",
+      "orphans": "Orphan",
       "empty_feed": "No items to show",
       "empty_users": "No users to show"
     },
