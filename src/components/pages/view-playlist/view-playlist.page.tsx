@@ -107,11 +107,17 @@ const FilmstripRow = styled.div`
 /**
  * Playlist tabs handling
  */
-type PlaylistTabs = "items" | "filmstrips" | "keyframes" | "appears_in";
+type PlaylistTabs =
+  | "items"
+  | "filmstrips"
+  | "grid"
+  | "keyframes"
+  | "appears_in";
 
 const PLAYLIST_TABS: Record<Uppercase<PlaylistTabs>, PlaylistTabs> = {
   ITEMS: "items",
   FILMSTRIPS: "filmstrips",
+  GRID: "grid",
   KEYFRAMES: "keyframes",
   APPEARS_IN: "appears_in",
 } as const;
@@ -119,6 +125,7 @@ const PLAYLIST_TABS: Record<Uppercase<PlaylistTabs>, PlaylistTabs> = {
 const PLAYLIST_TAB_LABELS: Record<Uppercase<PlaylistTabs>, string> = {
   ITEMS: "page.view_playlist.items",
   FILMSTRIPS: "page.view_playlist.filmstrips",
+  GRID: "page.view_playlist.grid",
   KEYFRAMES: "page.view_playlist.keyframes",
   APPEARS_IN: "page.view_playlist.playlists",
 };
@@ -1037,6 +1044,7 @@ const ViewPlaylistContent = () => {
                     [
                       PLAYLIST_TABS.ITEMS,
                       PLAYLIST_TABS.FILMSTRIPS,
+                      PLAYLIST_TABS.GRID,
                       PLAYLIST_TABS.KEYFRAMES,
                       PLAYLIST_TABS.APPEARS_IN,
                     ] as PlaylistTabs[]
@@ -1234,6 +1242,49 @@ const ViewPlaylistContent = () => {
                               ))}
                           </FilmstripRows>
                         </FilmstripScrollContainer>
+                      </InfiniteScroll>
+                    ) : (
+                      <Text mb={4}>{emptyMessage}</Text>
+                    )}
+                  </Row>
+                )}
+              {radioGroupState === "grid" &&
+                !isBrowseLoading &&
+                !isBrowseError && (
+                  <Row style={{ display: "block" }}>
+                    {items.length ? (
+                      <InfiniteScroll
+                        key={browseKey}
+                        dataLength={items.length}
+                        next={() => {
+                          if (!isFetchingNextPlaylistItemsPage)
+                            fetchNextPlaylistItemsPage();
+                        }}
+                        hasMore={hasNextPlaylistItemsPage ?? false}
+                        loader={<Loader />}
+                        endMessage={
+                          <Row justifyContent="center" mt="2rem">
+                            <Text color={theme.textPrimaryColor}>
+                              {t("components.infinite_scroll.end_message")}
+                            </Text>
+                          </Row>
+                        }
+                      >
+                        <ItemCardList grid columns={3}>
+                          {items.map((item) => (
+                            <ItemCard
+                              key={item.id}
+                              showPlayButton
+                              size="lg"
+                              type={item.type}
+                              item={
+                                item.type === "dream"
+                                  ? item.dreamItem
+                                  : item.playlistItem
+                              }
+                            />
+                          ))}
+                        </ItemCardList>
                       </InfiniteScroll>
                     ) : (
                       <Text mb={4}>{emptyMessage}</Text>
