@@ -7,6 +7,7 @@ export const STUDIO_MODES: readonly StudioMode[] = [
   "flow",
   "action",
   "uprez",
+  "deforum",
 ] as const;
 
 /**
@@ -17,6 +18,7 @@ export const STUDIO_MODE_LABELS: Record<StudioMode, string> = {
   flow: "Flow",
   action: "Action",
   uprez: "Uprez",
+  deforum: "Deforum",
 };
 
 export const DEFAULT_STUDIO_MODE: StudioMode = "flow";
@@ -31,4 +33,5 @@ export const STUDIO_MODE_DESCRIPTIONS: Record<StudioMode, string> = {
   flow: "Animate transitions between reference frames",
   action: "Generate images and turn them into clips",
   uprez: "Upscale every dream in a playlist",
+  deforum: "Animate prompt keyframes with deforum",
 };
