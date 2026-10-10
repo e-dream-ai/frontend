@@ -20,12 +20,9 @@ const flowSaveAdapter: EditorSaveAdapter = {
   defaultName: () => timestampedName("Flow"),
 };
 
+// useActionPlaylistSync fills the playlist once it is linked.
 const actionSaveAdapter: EditorSaveAdapter = {
-  pendingDreamUuids: () =>
-    useStudioStore
-      .getState()
-      .jobs.filter((job) => job.status === "processed")
-      .map((job) => job.dreamUuid),
+  pendingDreamUuids: () => [],
   link: (playlistUuid) =>
     useStudioStore.getState().setOutputPlaylistId(playlistUuid),
   defaultName: () => timestampedName("Action"),

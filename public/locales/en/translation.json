@@ -319,6 +319,7 @@
       "upload_file": "Upload file(s)",
       "add_dreams_to_playlist": "Add dreams to this playlist",
       "filmstrips": "Filmstrips",
+      "grid": "Grid",
       "add_keyframes_to_playlist": "Add keyframes to this playlist",
       "play_playlist": "Play this playlist",
       "delete_playlist_tooltip": "Delete playlist",
@@ -389,6 +390,7 @@
       "upvote": "Liked",
       "downvote": "Disliked",
       "hidden": "Hidden",
+      "orphans": "Orphan",
       "empty_feed": "No items to show",
       "empty_users": "No users to show"
     },

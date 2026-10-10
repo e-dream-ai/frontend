@@ -24,6 +24,7 @@ import {
   UprezApp,
 } from "./components/lazy-editors";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
+import { useActionPlaylistSync } from "./hooks/useActionPlaylistSync";
 import { useEditorProjectSync } from "./hooks/useEditorProjectSync";
 import { useEditorProjectLock } from "./hooks/useEditorProjectLock";
 import { useEditorProjectPlaylist } from "./hooks/useEditorProjectPlaylist";
@@ -88,6 +89,7 @@ export const StudioPage: React.FC = () => {
 
   const activeTab = useStudioStore((s) => s.activeTab);
   useStudioJobProgress();
+  useActionPlaylistSync(mode === "action");
 
   const { user: authUser } = useAuth();
   const canManageProviderKey = usePermission({
