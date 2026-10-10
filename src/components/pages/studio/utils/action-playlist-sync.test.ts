@@ -10,6 +10,7 @@ import {
   matrixDreamUuids,
   planPlaylistChanges,
   planPlaylistOrder,
+  studioDreamUuids,
 } from "./action-playlist-sync";
 
 const image = (uuid: string, status: StudioImage["status"] = "processed") =>
@@ -75,6 +76,24 @@ describe("matrixDreamUuids", () => {
   });
 });
 
+describe("studioDreamUuids", () => {
+  it("lists rendered matrix clips from jobs and history, not uprez or unfinished ones", () => {
+    expect(
+      studioDreamUuids(
+        [
+          job("i1", "a1", "done"),
+          job("i1", "a2", "queued", { status: "queue" }),
+          job("i1", "a3", "up", { jobType: "uprez" }),
+        ],
+        [
+          job("i2", "a1", "archived"),
+          job("i2", "a2", "old-up", { jobType: "uprez" }),
+        ],
+      ),
+    ).toEqual(["done", "archived"]);
+  });
+});
+
 describe("planPlaylistChanges", () => {
   it("adds missing clips and removes studio clips the matrix no longer shows", () => {
     const items = [
@@ -97,7 +116,6 @@ describe("planPlaylistOrder", () => {
     // d12 was re-rendered and appended at the end.
     const items = [item(1, "d11", 0), item(3, "d21", 2), item(9, "d12", 5)];
     expect(planPlaylistOrder(items, ["d11", "d12", "d21"])).toEqual([
-      { id: 1, order: 0 },
       { id: 9, order: 2 },
       { id: 3, order: 5 },
     ]);

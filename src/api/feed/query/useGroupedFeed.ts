@@ -4,7 +4,11 @@ import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { PAGINATION } from "@/constants/pagination.constants";
 import useAuth from "@/hooks/useAuth";
 import { ApiResponse } from "@/types/api.types";
-import { FeedItemFilterType, RequestFeedItemType } from "@/types/feed.types";
+import {
+  FeedItemFilterType,
+  FeedOrphansFilter,
+  RequestFeedItemType,
+} from "@/types/feed.types";
 import { axiosClient } from "@/client/axios.client";
 import {
   dedupeGroupedFeedPages,
@@ -15,6 +19,13 @@ import {
 
 export const GROUPED_FEED_QUERY_KEY = "getGroupedFeed";
 
+const ORPHANS_BY_FILTER: Partial<
+  Record<FeedItemFilterType, FeedOrphansFilter>
+> = {
+  all: "hide",
+  orphans: "only",
+};
+
 type QueryFunctionParams = {
   take: number;
   skip: number;
@@ -23,7 +34,7 @@ type QueryFunctionParams = {
   type?: FeedItemFilterType;
   onlyHidden?: boolean;
   mediaType?: "image" | "video";
-  orphans?: "hide" | "only";
+  orphans?: FeedOrphansFilter;
 };
 
 const getGroupedFeed = ({
@@ -62,6 +73,7 @@ type HookParams = {
   search?: string;
   type?: FeedItemFilterType;
   mediaType?: "image" | "video";
+  showVirtualPlaylists: boolean;
 };
 
 export function isRequestFeedItemType(
@@ -75,6 +87,7 @@ export const useGroupedFeed = ({
   userUUID,
   type,
   mediaType,
+  showVirtualPlaylists,
 }: HookParams) => {
   const { user } = useAuth();
   // Increase take size for grouped feed to reduce API calls due to deduplication
@@ -83,10 +96,7 @@ export const useGroupedFeed = ({
   // Don't send onlyHidden if is not needed
   const onlyHidden = type === "hidden" ? true : undefined;
   // Dreams no playlist kept (#788) only show under their own filter
-  const orphans =
-    type === "all" ? "hide" : type === "orphans" ? "only" : undefined;
-  // The feed page shows virtual playlists only on the All filter
-  const showsVirtualPlaylists = type === "all";
+  const orphans = type ? ORPHANS_BY_FILTER[type] : undefined;
   const feedItemType: FeedItemFilterType | undefined = isRequestFeedItemType(
     type,
   )
@@ -121,7 +131,7 @@ export const useGroupedFeed = ({
   const { data, hasNextPage, isFetching, isError, fetchNextPage } = queryResult;
   const needsMore = shouldAutoFetchGroupedFeed(
     data,
-    showsVirtualPlaylists,
+    showVirtualPlaylists,
     PAGINATION.TAKE,
   );
 

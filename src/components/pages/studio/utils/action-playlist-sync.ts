@@ -32,6 +32,14 @@ export const matrixDreamUuids = (
   return uuids;
 };
 
+export const studioDreamUuids = (
+  jobs: readonly StudioJob[],
+  historyJobs: readonly StudioJob[],
+): string[] =>
+  [...jobs, ...historyJobs]
+    .filter((job) => job.status === "processed" && job.jobType !== "uprez")
+    .map((job) => job.dreamUuid);
+
 /**
  * What the output playlist is missing, and which of its items the studio
  * made but no longer shows (discarded, replaced, or in a removed row or
@@ -56,7 +64,7 @@ export const planPlaylistChanges = (
 };
 
 /**
- * New orders that put the matrix clips in matrix order, reusing the slots
+ * New orders for the clips that move into matrix order, reusing the slots
  * they already hold so anything else in the playlist keeps its place. Null
  * when they are already in order.
  */
@@ -65,14 +73,16 @@ export const planPlaylistOrder = (
   desired: readonly string[],
 ): Array<{ id: number; order: number }> | null => {
   const byUuid = new Map(
-    items
-      .filter((item) => item.dreamItem?.uuid)
-      .map((item) => [item.dreamItem!.uuid, item]),
+    items.flatMap((item) =>
+      item.dreamItem?.uuid ? [[item.dreamItem.uuid, item] as const] : [],
+    ),
   );
   const clips = desired
     .map((uuid) => byUuid.get(uuid))
     .filter((item): item is PlaylistItem => Boolean(item));
   const slots = clips.map((item) => item.order).sort((a, b) => a - b);
-  const order = clips.map((item, i) => ({ id: item.id, order: slots[i] }));
-  return order.some((o, i) => clips[i].order !== o.order) ? order : null;
+  const moves = clips.flatMap((item, i) =>
+    item.order === slots[i] ? [] : [{ id: item.id, order: slots[i] }],
+  );
+  return moves.length ? moves : null;
 };

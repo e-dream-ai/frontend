@@ -31,6 +31,8 @@ export type FeedItemFilterType =
   | "hidden"
   | "orphans";
 
+export type FeedOrphansFilter = "hide" | "only";
+
 export type FeedItem = {
   id: number;
   user: Omit<User, "token">;

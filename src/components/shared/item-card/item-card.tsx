@@ -286,7 +286,8 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       event?.dataTransfer?.setData(DND_METADATA.UUID, uuid!);
       event?.dataTransfer?.setData(DND_METADATA.ITEM_ID, String(itemId));
       event?.dataTransfer?.setData(DND_METADATA.ORDER, String(order));
-      event.dataTransfer?.setDragImage(tooltipRef.current as HTMLElement, 0, 0);
+      const dragImage = tooltipRef.current ?? cardRef.current;
+      if (dragImage) event.dataTransfer?.setDragImage(dragImage, 0, 0);
       return false;
     },
     [draggable, itemId, uuid, type, order, dndMode, setDragging],

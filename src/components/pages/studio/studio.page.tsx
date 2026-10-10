@@ -22,8 +22,8 @@ import {
   ImagesTab,
   UprezApp,
 } from "./components/lazy-editors";
+import { ActionPlaylistSync } from "./components/action-playlist-sync";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
-import { useActionPlaylistSync } from "./hooks/useActionPlaylistSync";
 import { useEditorProjectSync } from "./hooks/useEditorProjectSync";
 import { useEditorProjectLock } from "./hooks/useEditorProjectLock";
 import { useEditorProjectPlaylist } from "./hooks/useEditorProjectPlaylist";
@@ -58,11 +58,8 @@ export const StudioPage: React.FC = () => {
   }>();
   const mode = parseStudioMode(editorId);
   const lock = useEditorProjectLock(projectUuid);
-  const sync = useEditorProjectSync(
-    mode,
-    projectUuid,
-    lock.status === "held" || lock.status === "idle",
-  );
+  const canEditProject = lock.status === "held" || lock.status === "idle";
+  const sync = useEditorProjectSync(mode, projectUuid, canEditProject);
   const playlistSave = useEditorProjectPlaylist({
     mode,
     playlist: sync.playlist,
@@ -88,7 +85,6 @@ export const StudioPage: React.FC = () => {
 
   const activeTab = useStudioStore((s) => s.activeTab);
   useStudioJobProgress();
-  useActionPlaylistSync(mode === "action");
 
   const { user: authUser } = useAuth();
   const canManageProviderKey = usePermission({
@@ -221,6 +217,15 @@ export const StudioPage: React.FC = () => {
           </BodyOverlay>
         ) : null}
       </StudioBody>
+
+      <ActionPlaylistSync
+        enabled={
+          mode === "action" &&
+          canEditProject &&
+          sync.status !== "loading" &&
+          !sync.conflict
+        }
+      />
 
       {lock.status === "blocked" ? (
         <ProjectLockedModal
