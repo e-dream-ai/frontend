@@ -1,8 +1,6 @@
 import { useCallback, useMemo, useState } from "react";
 import { useStudioStore, comboKeyOf } from "@/stores/studio.store";
 import { useCreateDreamFromPrompt } from "@/api/dream/mutation/useCreateDreamFromPrompt";
-import { axiosClient } from "@/client/axios.client";
-import { createComboKey } from "@/types/studio.types";
 import {
   clampDurationToAllowed,
   getAllowedDurationsForActions,
@@ -21,7 +19,6 @@ import {
   isJobInFlight,
   isRunnableAction,
 } from "../utils/batch-selectors";
-import { useOutputPlaylistSync } from "./useStudioClipActions";
 
 // Serialized to avoid concurrent auth refresh races (see fix/session-refresh-race on backend)
 const BATCH_SIZE = 1;
@@ -32,12 +29,10 @@ export const useBatchSubmit = () => {
   const videoGenParams = useStudioStore((s) => s.videoGenParams);
   const excludedCombos = useStudioStore((s) => s.excludedCombos);
   const rerenderCombos = useStudioStore((s) => s.rerenderCombos);
-  const outputPlaylistId = useStudioStore((s) => s.outputPlaylistId);
   const addJob = useStudioStore((s) => s.addJob);
   const setActiveTab = useStudioStore((s) => s.setActiveTab);
   const jobs = useStudioStore((s) => s.jobs);
   const cellJobs = useMemo(() => indexCellJobs(jobs), [jobs]);
-  const playlist = useOutputPlaylistSync();
 
   const createDream = useCreateDreamFromPrompt();
   const modelConstraints = useModelConstraints({ mediaType: "video" });
@@ -87,15 +82,12 @@ export const useBatchSubmit = () => {
         ),
       );
       let jobsAdded = 0;
-      const replaced: string[] = [];
 
       for (let i = 0; i < combos.length; i += BATCH_SIZE) {
         const batch = combos.slice(i, i + BATCH_SIZE);
 
         const results = await Promise.allSettled(
           batch.map(async ({ image, action }) => {
-            const batchIdentifier = createComboKey(image.uuid, action.prompt);
-
             const algoParams = buildVideoAlgoParams({
               model: videoGenParams.model,
               action,
@@ -110,7 +102,6 @@ export const useBatchSubmit = () => {
             const response = await createDream.mutateAsync({
               name: `${image.name} - ${action.prompt.slice(0, 40)}`,
               prompt: JSON.stringify(algoParams),
-              description: `Studio batch. BATCH_IDENTIFIER:${batchIdentifier}`,
             });
 
             const dream = response.data?.dream;
@@ -122,10 +113,8 @@ export const useBatchSubmit = () => {
               action.id,
             );
             if (existingJob) {
+              // The re-render replaces it; it stays in history.
               useStudioStore.getState().archiveJob(existingJob.dreamUuid);
-              // The re-render replaces it, so it leaves the playlist too; it
-              // stays in history.
-              replaced.push(existingJob.dreamUuid);
             }
 
             addJob({
@@ -148,13 +137,6 @@ export const useBatchSubmit = () => {
                   | "failed") || "queue",
             });
             jobsAdded++;
-
-            if (outputPlaylistId) {
-              await axiosClient.put(
-                `/v1/playlist/${outputPlaylistId}/add-item`,
-                { type: "dream", uuid: dream.uuid },
-              );
-            }
           }),
         );
 
@@ -165,10 +147,6 @@ export const useBatchSubmit = () => {
         }
       }
 
-      if (outputPlaylistId && replaced.length > 0) {
-        playlist.remove(outputPlaylistId, replaced);
-      }
-
       if (jobsAdded > 0) {
         setActiveTab("generate");
       }
@@ -176,14 +154,12 @@ export const useBatchSubmit = () => {
       setIsSubmitting(false);
     }
   }, [
-    outputPlaylistId,
     getPendingCombinations,
     videoGenParams,
     modelConstraints,
     createDream,
     addJob,
     setActiveTab,
-    playlist,
   ]);
 
   return { submit, isSubmitting, getPendingCombinations };

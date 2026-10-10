@@ -141,7 +141,6 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
           .post("/v1/dream", {
             name: names[i],
             prompt: JSON.stringify(algoParams),
-            description: "Studio generated image",
           })
           .then(({ data }) => {
             const dream = data.data?.dream;
