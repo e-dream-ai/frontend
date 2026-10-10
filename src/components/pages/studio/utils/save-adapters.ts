@@ -1,5 +1,7 @@
 import { useFlowStore } from "@/stores/flow.store";
 import { useStudioStore } from "@/stores/studio.store";
+import { useDeforumStore } from "@/stores/deforum.store";
+import { deforumPlaylistDreams } from "../hooks/useDeforumPlaylistSync";
 import type { StudioMode } from "@/types/flow.types";
 
 export type EditorSaveAdapter = {
@@ -35,8 +37,23 @@ const uprezSaveAdapter: EditorSaveAdapter = {
   defaultName: () => timestampedName("Uprez"),
 };
 
+const deforumSaveAdapter: EditorSaveAdapter = {
+  pendingDreamUuids: () =>
+    deforumPlaylistDreams(useDeforumStore.getState().clips),
+  // The dreams were just pushed by the save, so they start out synced.
+  link: (playlistUuid) =>
+    useDeforumStore
+      .getState()
+      .linkSavedPlaylist(
+        playlistUuid,
+        deforumPlaylistDreams(useDeforumStore.getState().clips),
+      ),
+  defaultName: () => timestampedName("Deforum"),
+};
+
 export const SAVE_ADAPTERS: Record<StudioMode, EditorSaveAdapter> = {
   flow: flowSaveAdapter,
   action: actionSaveAdapter,
   uprez: uprezSaveAdapter,
+  deforum: deforumSaveAdapter,
 };

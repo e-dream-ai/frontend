@@ -17,6 +17,7 @@ import { PlaylistActions } from "./components/playlist-actions";
 import { StudioSkeleton } from "./components/studio-skeleton";
 import {
   ActionsTab,
+  DeforumApp,
   FlowBuilder,
   GenerateTab,
   ImagesTab,
@@ -105,8 +106,9 @@ export const StudioPage: React.FC = () => {
 
   const handleStudioDrop = useCallback(
     async (files: File[]) => {
-      // The uprez app takes a playlist, not files — nothing to drop onto.
-      if (isUprez) return;
+      // Uprez takes a playlist and deforum takes prompts — neither has
+      // anything to drop an image onto.
+      if (isUprez || mode === "deforum") return;
 
       for (const file of files) {
         if (mode === "action") {
@@ -203,6 +205,7 @@ export const StudioPage: React.FC = () => {
               {activeTab === "generate" && <GenerateTab />}
             </StudioFrame>
           )}
+          {mode === "deforum" && <DeforumApp />}
           {isUprez && (
             <UprezFrame>
               <UprezApp

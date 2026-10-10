@@ -2,6 +2,11 @@ import { selectFlowProject, useFlowStore } from "@/stores/flow.store";
 import { selectStudioProject, useStudioStore } from "@/stores/studio.store";
 import { selectUprezProject, useUprezStore } from "@/stores/uprez.store";
 import type { UprezFormState } from "@/stores/uprez.store";
+import {
+  selectDeforumProject,
+  useDeforumStore,
+  type DeforumProjectState,
+} from "@/stores/deforum.store";
 import type { StudioMode } from "@/types/flow.types";
 import type { EditorProjectState } from "@/types/editor-project.types";
 import {
@@ -97,8 +102,27 @@ const uprezAdapter: EditorAdapter = {
   isEmpty: () => !useUprezStore.getState().sourcePlaylist,
 };
 
+const deforumAdapter: EditorAdapter = {
+  read: () =>
+    selectDeforumProject(useDeforumStore.getState()) as EditorProjectState,
+  write: (state) =>
+    useDeforumStore
+      .getState()
+      .restoreDeforum(state as Partial<DeforumProjectState>),
+  reset: () => useDeforumStore.getState().resetDeforum(),
+  subscribe: (listener) => useDeforumStore.subscribe(listener),
+  thumbnailDreamUuid: () => {
+    const clip = useDeforumStore
+      .getState()
+      .clips.find((c) => c.final?.status === "processed");
+    return clip?.final?.dreamUuid ?? null;
+  },
+  isEmpty: () => useDeforumStore.getState().clips.length === 0,
+};
+
 export const EDITOR_ADAPTERS: Record<StudioMode, EditorAdapter> = {
   flow: flowAdapter,
   action: actionAdapter,
   uprez: uprezAdapter,
+  deforum: deforumAdapter,
 };
