@@ -18,13 +18,18 @@ export type FeedItemType =
   | "playlist"
   | "stills"
   | "hidden"
+  | "orphans"
   | "user"
   | "creator"
   | "admin";
 
 export type RequestFeedItemType = "playlist" | "dream";
 
-export type FeedItemFilterType = RequestFeedItemType | "all" | "hidden";
+export type FeedItemFilterType =
+  | RequestFeedItemType
+  | "all"
+  | "hidden"
+  | "orphans";
 
 export type FeedItem = {
   id: number;
