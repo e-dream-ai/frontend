@@ -1275,6 +1275,7 @@ const ViewPlaylistContent = () => {
                             <ItemCard
                               key={item.id}
                               showPlayButton
+                              hideMetadata
                               size="lg"
                               type={item.type}
                               item={
