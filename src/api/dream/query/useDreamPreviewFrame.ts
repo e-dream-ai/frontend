@@ -1,5 +1,4 @@
-import { useRef } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import type { ApiResponse } from "@/types/api.types";
 import { axiosClient } from "@/client/axios.client";
@@ -8,6 +7,11 @@ export const DREAM_PREVIEW_FRAME_QUERY_KEY = "getDreamPreviewFrame";
 
 /** How often a running render's latest frame is fetched. */
 export const PREVIEW_FRAME_POLL_MS = 15_000;
+
+export interface PreviewFrame {
+  src: string;
+  changedAt: number;
+}
 
 const fetchPreviewFrame = async (
   uuid: string,
@@ -35,21 +39,19 @@ const fetchPreviewFrame = async (
 export const useDreamPreviewFrame = (
   uuid: string | undefined,
   enabled: boolean,
-): string | null => {
-  const last = useRef<{ uuid?: string; frame: string | null }>({
-    frame: null,
-  });
-  const { data } = useQuery(
-    [DREAM_PREVIEW_FRAME_QUERY_KEY, uuid],
-    ({ signal }) => fetchPreviewFrame(uuid!, signal),
-    {
-      enabled: Boolean(uuid) && enabled,
-      refetchInterval: PREVIEW_FRAME_POLL_MS,
-      refetchIntervalInBackground: false,
-      staleTime: 0,
+): PreviewFrame | null => {
+  const queryClient = useQueryClient();
+  const { data } = useQuery({
+    queryKey: [DREAM_PREVIEW_FRAME_QUERY_KEY, uuid],
+    queryFn: async ({ queryKey, signal }): Promise<PreviewFrame | null> => {
+      const src = await fetchPreviewFrame(uuid!, signal);
+      const last = queryClient.getQueryData<PreviewFrame | null>(queryKey);
+      if (!src || src === last?.src) return last ?? null;
+      return { src, changedAt: Date.now() };
     },
-  );
-  if (last.current.uuid !== uuid) last.current = { uuid, frame: null };
-  if (data) last.current.frame = data;
-  return last.current.frame;
+    enabled: Boolean(uuid) && enabled,
+    refetchInterval: PREVIEW_FRAME_POLL_MS,
+    refetchIntervalInBackground: false,
+  });
+  return data ?? null;
 };

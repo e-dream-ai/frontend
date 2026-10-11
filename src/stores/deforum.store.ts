@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { v4 as uuidv4 } from "uuid";
 import type {
   DeforumClip,
+  DeforumPrompt,
   DeforumRender,
   DeforumRenderKind,
   DeforumRenderStatus,
@@ -26,6 +27,17 @@ export const copyDeforumSettings = (
   ...settings,
   prompts: settings.prompts.map((p) => ({ ...p, id: uuidv4() })),
 });
+
+const ownPrompts = (prompts: readonly DeforumPrompt[]): DeforumPrompt[] =>
+  prompts.map((p, i) => ({ ...p, frame: i === 0 ? 0 : p.frame }));
+
+const completeSettings = (settings: DeforumSettings): DeforumSettings => {
+  const complete = { ...newDeforumSettings(), ...settings };
+  return { ...complete, prompts: ownPrompts(complete.prompts) };
+};
+
+const completeRender = (render?: DeforumRender): DeforumRender | undefined =>
+  render && { ...render, settings: completeSettings(render.settings) };
 
 type DeforumStoreState = {
   clips: DeforumClip[];
@@ -194,9 +206,7 @@ export const useDeforumStore = create<DeforumStoreState>()((set) => ({
                 ...patch,
                 // Each clip owns its prompt rows; a shared array would make a
                 // later single-clip edit leak into every clip it was set on.
-                ...(patch.prompts && {
-                  prompts: patch.prompts.map((p) => ({ ...p })),
-                }),
+                ...(patch.prompts && { prompts: ownPrompts(patch.prompts) }),
               },
             }
           : clip,
@@ -262,7 +272,9 @@ export const useDeforumStore = create<DeforumStoreState>()((set) => ({
       clips: withClipNames(
         (state.clips ?? []).map((clip) => ({
           ...clip,
-          settings: { ...newDeforumSettings(), ...clip.settings },
+          settings: completeSettings(clip.settings),
+          test: completeRender(clip.test),
+          final: completeRender(clip.final),
         })),
       ),
       selectedIds: [],

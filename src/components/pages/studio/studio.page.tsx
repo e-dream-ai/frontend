@@ -59,11 +59,8 @@ export const StudioPage: React.FC = () => {
   }>();
   const mode = parseStudioMode(editorId);
   const lock = useEditorProjectLock(projectUuid);
-  const sync = useEditorProjectSync(
-    mode,
-    projectUuid,
-    lock.status === "held" || lock.status === "idle",
-  );
+  const canEditProject = lock.status === "held" || lock.status === "idle";
+  const sync = useEditorProjectSync(mode, projectUuid, canEditProject);
   const playlistSave = useEditorProjectPlaylist({
     mode,
     playlist: sync.playlist,
@@ -207,7 +204,13 @@ export const StudioPage: React.FC = () => {
               {activeTab === "generate" && <GenerateTab />}
             </StudioFrame>
           )}
-          {mode === "deforum" && <DeforumApp />}
+          {mode === "deforum" && (
+            <DeforumApp
+              canSyncPlaylist={
+                canEditProject && sync.status !== "loading" && !sync.conflict
+              }
+            />
+          )}
           {isUprez && (
             <UprezFrame>
               <UprezApp

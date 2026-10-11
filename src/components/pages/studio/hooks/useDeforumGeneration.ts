@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import Bugsnag from "@bugsnag/js";
 import { toast } from "react-toastify";
 import { useDeforumStore } from "@/stores/deforum.store";
@@ -6,6 +6,8 @@ import { axiosClient } from "@/client/axios.client";
 import { getRequestHeaders, ContentType } from "@/constants/auth.constants";
 import queryClient from "@/api/query-client";
 import { USER_QUERY_KEY } from "@/api/user/query/useUser";
+import type { ApiResponse } from "@/types/api.types";
+import type { Dream } from "@/types/dream.types";
 import type { DeforumClip, DeforumRenderKind } from "@/types/deforum.types";
 import { buildDeforumAlgoParams } from "../utils/deforum-params";
 import { resolveDeforumTargets } from "../utils/deforum-targets";
@@ -15,7 +17,6 @@ const GENERATE_CONCURRENCY = 4;
 
 export function useDeforumGeneration() {
   const [busy, setBusy] = useState(0);
-  const busyRef = useRef(0);
   const recordRender = useDeforumStore((s) => s.recordRender);
 
   const renderClip = useCallback(
@@ -23,7 +24,7 @@ export function useDeforumGeneration() {
       const settings = clip.settings;
       const name = kind === "test" ? `${clip.name} (test)` : clip.name;
       try {
-        const { data } = await axiosClient.post(
+        const { data } = await axiosClient.post<ApiResponse<{ dream: Dream }>>(
           "/v1/dream",
           {
             name,
@@ -31,7 +32,7 @@ export function useDeforumGeneration() {
           },
           { headers: getRequestHeaders({ contentType: ContentType.json }) },
         );
-        const dreamUuid = data?.data?.dream?.uuid;
+        const dreamUuid = data.data?.dream?.uuid;
         if (!dreamUuid) throw new Error("No dream UUID returned from API");
         recordRender(clip.id, kind, {
           dreamUuid,
@@ -52,8 +53,7 @@ export function useDeforumGeneration() {
       const targets = resolveDeforumTargets(clips, selectedIds, kind);
       if (targets.length === 0) return;
 
-      busyRef.current += 1;
-      setBusy(busyRef.current);
+      setBusy((n) => n + 1);
       try {
         let cursor = 0;
         const worker = async () => {
@@ -69,8 +69,7 @@ export function useDeforumGeneration() {
         );
         await queryClient.invalidateQueries([USER_QUERY_KEY]);
       } finally {
-        busyRef.current -= 1;
-        setBusy(busyRef.current);
+        setBusy((n) => n - 1);
       }
     },
     [renderClip],

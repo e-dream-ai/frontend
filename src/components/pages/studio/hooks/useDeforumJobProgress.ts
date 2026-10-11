@@ -3,7 +3,6 @@ import { useQueries, type QueryFunctionContext } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import type { ApiResponse } from "@/types/api.types";
 import type { Dream } from "@/types/dream.types";
-import type { DeforumRenderStatus } from "@/types/deforum.types";
 import queryClient from "@/api/query-client";
 import { USER_QUERY_KEY } from "@/api/user/query/useUser";
 import {
@@ -41,9 +40,9 @@ export function useDeforumJobProgress() {
   const pendingUuids = useMemo(
     () =>
       clips.flatMap((clip) =>
-        [clip.test, clip.final]
-          .filter((r) => r && isPendingStatus(r.status))
-          .map((r) => r!.dreamUuid),
+        [clip.test, clip.final].flatMap((r) =>
+          r && isPendingStatus(r.status) ? [r.dreamUuid] : [],
+        ),
       ),
     [clips],
   );
@@ -59,9 +58,8 @@ export function useDeforumJobProgress() {
     (uuid: string, raw?: string, progress?: number, stage?: string) => {
       const current = findRenderStatus(uuid);
       if (current === null) return;
-      const mapped = mapSocketStatus(raw, stage);
-      if (!shouldApplyStatus(current, mapped)) return;
-      const next = mapped as DeforumRenderStatus;
+      const next = mapSocketStatus(raw, stage);
+      if (!next || !shouldApplyStatus(current, next)) return;
       useDeforumStore.getState().updateRenderStatus(uuid, next, progress);
       if (next === "failed" || next === "processed") {
         void queryClient.invalidateQueries([USER_QUERY_KEY]);

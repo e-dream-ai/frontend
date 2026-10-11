@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
-import { useDeforumStore } from "./deforum.store";
-import { resolveDeforumTargets } from "../components/pages/studio/utils/deforum-targets";
+import type { DeforumSettings } from "@/types/deforum.types";
+import { selectDeforumProject, useDeforumStore } from "./deforum.store";
+import {
+  isRenderBehind,
+  resolveDeforumTargets,
+} from "../components/pages/studio/utils/deforum-targets";
 
 const store = () => useDeforumStore.getState();
 
@@ -56,6 +60,63 @@ describe("deforum store", () => {
     const after = store().clips[0];
     expect(after.test).toMatchObject({ status: "processed" });
     expect(after.final).toMatchObject({ status: "processing", progress: 40 });
+  });
+
+  it("keeps the first prompt at frame 0", () => {
+    store().addClip();
+    const clip = store().clips[0];
+    store().setClipSettings([clip.id], {
+      prompts: [
+        { id: "a", frame: 40, text: "first" },
+        { id: "b", frame: 90, text: "second" },
+      ],
+    });
+    expect(store().clips[0].settings.prompts.map((p) => p.frame)).toEqual([
+      0, 90,
+    ]);
+  });
+
+  it("keeps a render current through a save and reload", () => {
+    store().addClip();
+    const clip = store().clips[0];
+    store().setClipSettings([clip.id], {
+      prompts: [{ id: "p", frame: 0, text: "moths" }],
+    });
+    const edited = store().clips[0];
+    store().recordRender(edited.id, "final", {
+      dreamUuid: "f1",
+      createdAt: 1,
+      settings: edited.settings,
+      status: "processed",
+    });
+
+    const jsonbOrder = (value: object) =>
+      Object.fromEntries(
+        Object.entries(value).sort(
+          ([a], [b]) => a.length - b.length || (a < b ? -1 : 1),
+        ),
+      );
+    const saved = selectDeforumProject(store());
+    const [savedClip] = saved.clips;
+    const renderSettings: Partial<DeforumSettings> = {
+      ...savedClip.final!.settings,
+    };
+    delete renderSettings.fps;
+    store().restoreDeforum({
+      ...saved,
+      clips: [
+        {
+          ...savedClip,
+          settings: jsonbOrder(savedClip.settings) as DeforumSettings,
+          final: {
+            ...savedClip.final!,
+            settings: jsonbOrder(renderSettings) as DeforumSettings,
+          },
+        },
+      ],
+    });
+
+    expect(isRenderBehind(store().clips[0], "final")).toBe(false);
   });
 });
 

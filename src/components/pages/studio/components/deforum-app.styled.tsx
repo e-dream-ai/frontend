@@ -1,5 +1,9 @@
 import styled from "styled-components";
 import { FLOW, flowFadeSlideUp } from "@/constants/flow-theme.constants";
+import {
+  PanelContainer,
+  PanelSubtitle,
+} from "./transition-settings-panel.styled";
 
 export const ClipStrip = styled.div`
   display: flex;
@@ -7,6 +11,10 @@ export const ClipStrip = styled.div`
   padding: 20px ${FLOW.inset};
   overflow-x: auto;
   align-items: stretch;
+
+  @media (max-width: 480px) {
+    padding: 16px ${FLOW.insetNarrow};
+  }
 `;
 
 export const ClipCard = styled.button<{ $selected: boolean }>`
@@ -35,12 +43,11 @@ export const ClipCard = styled.button<{ $selected: boolean }>`
   }
 `;
 
-export const ClipThumb = styled.div<{ $ratio: string; $src?: string }>`
+export const ClipThumb = styled.div<{ $ratio: string }>`
   aspect-ratio: ${(p) => p.$ratio};
   max-height: 120px;
   border-radius: ${FLOW.radiusSm};
-  background: ${FLOW.bgInput}
-    ${(p) => (p.$src ? `url("${p.$src}") center / cover no-repeat` : "")};
+  background: ${FLOW.bgInput} center / cover no-repeat;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,6 +113,10 @@ export const StripActions = styled.div`
   gap: 8px;
   padding: 0 ${FLOW.inset} 16px;
   flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    padding: 0 ${FLOW.insetNarrow} 16px;
+  }
 `;
 
 export const SmallButton = styled.button`
@@ -130,6 +141,70 @@ export const SmallButton = styled.button`
 `;
 
 /** One block of the settings form, set off from the one above by a rule. */
+export const DeforumPanel = styled(PanelContainer)`
+  @media (max-width: 480px) {
+    padding: 20px ${FLOW.insetNarrow};
+
+    input,
+    textarea,
+    select {
+      font-size: 16px;
+    }
+  }
+`;
+
+export const PanelTop = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+
+  @media (max-width: 480px) {
+    flex-direction: column-reverse;
+    align-items: stretch;
+    gap: 12px;
+  }
+`;
+
+export const RenderControls = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  @media (max-width: 480px) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    & > button {
+      min-height: 40px;
+    }
+
+    & > a {
+      grid-column: 1 / -1;
+    }
+  }
+`;
+
+export const FramesField = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  @media (max-width: 480px) {
+    grid-column: 1 / -1;
+  }
+`;
+
+export const EditingLabel = styled(PanelSubtitle)`
+  @media (max-width: 480px) {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+`;
+
 export const Section = styled.section`
   margin-top: 20px;
   padding-top: 16px;
@@ -189,13 +264,39 @@ export const PromptList = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
+
+  @media (max-width: 480px) {
+    gap: 16px;
+  }
 `;
+
+const PROMPT_ROW_HEIGHT = "44px";
 
 export const PromptRow = styled.div`
   display: grid;
   grid-template-columns: auto 88px 1fr;
+  grid-template-areas: "remove frame text";
   gap: 8px;
   align-items: start;
+
+  @media (max-width: 480px) {
+    grid-template-columns: 88px 1fr auto;
+    grid-template-areas:
+      "frame . remove"
+      "text text text";
+    gap: 6px 8px;
+  }
+`;
+
+export const PromptRemove = styled(SmallButton)`
+  grid-area: remove;
+  width: ${PROMPT_ROW_HEIGHT};
+  height: ${PROMPT_ROW_HEIGHT};
+  padding: 0;
+`;
+
+export const PromptFrame = styled.div`
+  grid-area: frame;
 `;
 
 export const FrameInput = styled.input<{ $invalid?: boolean }>`
@@ -205,7 +306,8 @@ export const FrameInput = styled.input<{ $invalid?: boolean }>`
   color: ${FLOW.text};
   font-family: ${FLOW.fontFamilyMono};
   font-size: 13px;
-  padding: 8px 10px;
+  height: ${PROMPT_ROW_HEIGHT};
+  padding: 0 10px;
   width: 100%;
 
   &:focus {
@@ -220,15 +322,16 @@ export const FrameInput = styled.input<{ $invalid?: boolean }>`
 `;
 
 export const PromptText = styled.textarea`
+  grid-area: text;
   background: ${FLOW.bgInput};
   border: 1px solid ${FLOW.border};
   border-radius: ${FLOW.radiusSm};
   color: ${FLOW.text};
   font-family: ${FLOW.fontFamily};
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 22px;
   padding: 10px 12px;
-  min-height: 44px;
+  min-height: ${PROMPT_ROW_HEIGHT};
   resize: vertical;
   field-sizing: content;
 
@@ -311,6 +414,10 @@ export const MotionRow = styled.div`
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 12px;
   margin-bottom: 12px;
+
+  @media (max-width: 480px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
 `;
 
 export const SecondaryButton = styled.button<{ $disabled?: boolean }>`
@@ -336,6 +443,10 @@ export const EmptyState = styled.div`
   color: ${FLOW.textDim};
   font-family: ${FLOW.fontFamily};
   font-size: 14px;
+
+  @media (max-width: 480px) {
+    padding: 32px ${FLOW.insetNarrow};
+  }
 `;
 
 export const LivePreviewBox = styled.div`
@@ -345,20 +456,26 @@ export const LivePreviewBox = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 8px;
+
+  @media (max-width: 480px) {
+    padding: 16px ${FLOW.insetNarrow};
+  }
 `;
 
-export const LiveFrame = styled.img`
+export const LiveFrame = styled.img<{ $ratio: string }>`
   display: block;
   width: 100%;
   max-width: 720px;
+  aspect-ratio: ${(p) => p.$ratio};
   border-radius: ${FLOW.radiusSm};
   background: ${FLOW.bgInput};
   object-fit: contain;
 `;
 
-export const LivePlaceholder = styled.div`
+export const LivePlaceholder = styled.div<{ $ratio: string }>`
   width: 100%;
   max-width: 720px;
+  aspect-ratio: ${(p) => p.$ratio};
   border-radius: ${FLOW.radiusSm};
   background: ${FLOW.bgInput};
   display: flex;

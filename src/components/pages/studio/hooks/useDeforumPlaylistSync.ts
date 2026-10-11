@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
+import axios from "axios";
 import Bugsnag from "@bugsnag/js";
-import { useShallow } from "zustand/react/shallow";
+import { toast } from "react-toastify";
 import { useQueryClient } from "@tanstack/react-query";
 import { useDeforumStore } from "@/stores/deforum.store";
 import { useAddPlaylistItem } from "@/api/playlist/mutation/useAddPlaylistItem";
@@ -11,111 +12,152 @@ import {
   fetchAllPlaylistItems,
 } from "@/api/playlist/query/usePlaylistItems";
 import { PLAYLIST_QUERY_KEY } from "@/api/playlist/query/usePlaylist";
+import {
+  planPlaylistChanges,
+  planPlaylistOrder,
+} from "../utils/action-playlist-sync";
+import { deforumPlaylistDreams } from "../utils/deforum-targets";
 
-const isConflict = (err: unknown): boolean =>
-  (err as { response?: { status?: number } })?.response?.status === 409;
+const SYNC_DELAY_MS = 500;
+const RETRY_DELAY_MS = 5000;
+const MAX_RETRIES = 3;
+const SYNC_ERROR_TOAST_ID = "deforum-playlist-sync-error";
 
-/** The dreams the playlist should hold: each clip's finished final render. */
-export const deforumPlaylistDreams = (
-  clips: ReturnType<typeof useDeforumStore.getState>["clips"],
-): string[] =>
-  clips
-    .filter((clip) => clip.final?.status === "processed")
-    .map((clip) => clip.final!.dreamUuid)
-    .filter((uuid, i, all) => all.indexOf(uuid) === i);
+const statusOf = (err: unknown): number | undefined =>
+  axios.isAxiosError(err) ? err.response?.status : undefined;
+
+const isRetryable = (err: unknown): boolean => {
+  if (!axios.isAxiosError(err)) return true;
+  const status = err.response?.status;
+  return status === undefined || status >= 500;
+};
+
+const wait = (ms: number) =>
+  new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 /**
  * Keep the linked playlist in step with the clips: a new final render goes in,
  * the one it replaced comes out, and the order follows the clip list. Tests
  * never reach the playlist. Items this editor didn't put there are untouched.
  */
-export function useDeforumPlaylistSync() {
+export function useDeforumPlaylistSync(enabled: boolean) {
   const queryClient = useQueryClient();
-  const addPlaylistItem = useAddPlaylistItem();
-  const deletePlaylistItem = useDeletePlaylistItem();
-  const orderPlaylist = useOrderPlaylist();
+  const { mutateAsync: addItem } = useAddPlaylistItem();
+  const { mutateAsync: deleteItem } = useDeletePlaylistItem();
+  const { mutateAsync: orderPlaylist } = useOrderPlaylist();
 
-  const { savedPlaylistUuid, clips, synced } = useDeforumStore(
-    useShallow((s) => ({
-      savedPlaylistUuid: s.savedPlaylistUuid,
-      clips: s.clips,
-      synced: s.syncedPlaylistDreamUuids,
-    })),
+  const playlistUuid = useDeforumStore((s) => s.savedPlaylistUuid);
+  const desiredKey = useDeforumStore((s) =>
+    deforumPlaylistDreams(s.clips).join(","),
   );
 
-  const desired = useMemo(() => deforumPlaylistDreams(clips), [clips]);
-  const desiredKey = desired.join(",");
-  const syncedKey = synced.join(",");
-  const syncing = useRef(false);
+  const enabledRef = useRef(enabled);
+  const isSyncingRef = useRef(false);
+  const rerunRef = useRef(false);
 
   useEffect(() => {
-    if (!savedPlaylistUuid || desiredKey === syncedKey) return;
-    if (syncing.current) return;
-    syncing.current = true;
+    enabledRef.current = enabled;
+    return () => {
+      enabledRef.current = false;
+    };
+  }, [enabled]);
 
-    (async () => {
-      try {
-        const desiredSet = new Set(desired);
-        const stale = synced.filter((uuid) => !desiredSet.has(uuid));
-        const itemsByDream = async () =>
-          new Map(
-            (await fetchAllPlaylistItems(savedPlaylistUuid))
-              .filter((it) => it.dreamItem?.uuid)
-              .map((it) => [it.dreamItem!.uuid, it]),
-          );
+  const syncOnce = useCallback(async () => {
+    const s = useDeforumStore.getState();
+    const playlistUUID = s.savedPlaylistUuid;
+    if (!enabledRef.current || !playlistUUID) return;
+    const desired = deforumPlaylistDreams(s.clips);
+    const synced = s.syncedPlaylistDreamUuids;
+    if (desired.join(",") === synced.join(",")) return;
 
-        let items = await itemsByDream();
-        for (const uuid of desired.filter((u) => !items.has(u))) {
-          try {
-            await addPlaylistItem.mutateAsync({
-              playlistUUID: savedPlaylistUuid,
-              values: { type: "dream", uuid },
-            });
-          } catch (err) {
-            if (!isConflict(err)) Bugsnag.notify(err as Error);
-          }
+    let items = await fetchAllPlaylistItems(playlistUUID);
+    const { add, remove } = planPlaylistChanges(
+      items,
+      desired,
+      new Set(synced),
+    );
+    let staleCache = false;
+
+    try {
+      for (const uuid of add) {
+        try {
+          await addItem({ playlistUUID, values: { type: "dream", uuid } });
+          staleCache = true;
+        } catch (err) {
+          const status = statusOf(err);
+          if (status !== 404 && status !== 409) throw err;
+          if (status === 404) Bugsnag.notify(err as Error);
         }
-        for (const uuid of stale) {
-          const item = items.get(uuid);
-          if (!item) continue;
-          try {
-            await deletePlaylistItem.mutateAsync({
-              playlistUUID: savedPlaylistUuid,
-              itemId: item.id,
-            });
-          } catch (err) {
-            Bugsnag.notify(err as Error);
-          }
-        }
-
-        // Reorder within the slots our items already occupy, so anything else
-        // in the playlist keeps its place.
-        items = await itemsByDream();
-        const ours = desired
-          .map((uuid) => items.get(uuid))
-          .filter((it): it is NonNullable<typeof it> => Boolean(it));
-        const slots = ours.map((it) => it.order).sort((a, b) => a - b);
-        const order = ours.map((it, i) => ({ id: it.id, order: slots[i] }));
-        if (order.some((o, i) => ours[i].order !== o.order)) {
-          await orderPlaylist.mutateAsync({
-            uuid: savedPlaylistUuid,
-            values: { order },
-            mode: "server-driven",
-          });
-        }
-
-        queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, savedPlaylistUuid]);
-        queryClient.invalidateQueries([
-          PLAYLIST_ITEMS_QUERY_KEY,
-          savedPlaylistUuid,
-        ]);
-        useDeforumStore.getState().setPlaylistDreamsSynced(desired);
-      } catch (err) {
-        Bugsnag.notify(err as Error);
-      } finally {
-        syncing.current = false;
       }
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the uuid lists, not array identity
-  }, [savedPlaylistUuid, desiredKey, syncedKey]);
+
+      for (const item of remove) {
+        try {
+          await deleteItem({ playlistUUID, itemId: item.id });
+          staleCache = true;
+        } catch (err) {
+          if (statusOf(err) !== 404) throw err;
+        }
+      }
+
+      if (add.length > 0 || remove.length > 0) {
+        items = await fetchAllPlaylistItems(playlistUUID);
+      }
+      const order = planPlaylistOrder(items, desired);
+      if (order) {
+        staleCache = false;
+        await orderPlaylist({
+          uuid: playlistUUID,
+          values: { order },
+          mode: "server-driven",
+        });
+      }
+      useDeforumStore.getState().setPlaylistDreamsSynced(desired);
+    } finally {
+      if (staleCache) {
+        void queryClient.invalidateQueries([PLAYLIST_QUERY_KEY, playlistUUID]);
+        void queryClient.invalidateQueries([
+          PLAYLIST_ITEMS_QUERY_KEY,
+          playlistUUID,
+        ]);
+      }
+    }
+  }, [queryClient, addItem, deleteItem, orderPlaylist]);
+
+  const runSync = useCallback(async () => {
+    if (isSyncingRef.current) {
+      rerunRef.current = true;
+      return;
+    }
+    isSyncingRef.current = true;
+    let failures = 0;
+
+    try {
+      do {
+        rerunRef.current = false;
+        try {
+          await syncOnce();
+          failures = 0;
+        } catch (err) {
+          Bugsnag.notify(err as Error);
+          failures += 1;
+          if (!isRetryable(err) || failures > MAX_RETRIES) {
+            toast.error("Could not update the playlist.", {
+              toastId: SYNC_ERROR_TOAST_ID,
+            });
+            break;
+          }
+          await wait(RETRY_DELAY_MS * failures);
+          rerunRef.current = true;
+        }
+      } while (rerunRef.current && enabledRef.current);
+    } finally {
+      isSyncingRef.current = false;
+    }
+  }, [syncOnce]);
+
+  useEffect(() => {
+    if (!enabled || !playlistUuid) return;
+    const timer = setTimeout(() => void runSync(), SYNC_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [enabled, playlistUuid, desiredKey, runSync]);
 }

@@ -1,8 +1,32 @@
-import type { DeforumRenderKind, DeforumSettings } from "@/types/deforum.types";
+import type {
+  DeforumAnimationMode,
+  DeforumRenderKind,
+  DeforumSettings,
+} from "@/types/deforum.types";
 import {
   DEFORUM_SCHEDULE_FIELDS,
   DEFORUM_TEST_FRAMES,
 } from "../constants/deforum-options";
+
+type DeforumScheduleParam = (typeof DEFORUM_SCHEDULE_FIELDS)[number]["param"];
+
+export interface DeforumAlgoParams
+  extends Record<DeforumScheduleParam, string> {
+  infinidream_algorithm: "deforum";
+  width: number;
+  height: number;
+  seed: number;
+  steps: number;
+  sampler_name: string;
+  scheduler: string;
+  prompts: Record<string, string>;
+  animation_prompts_positive: string;
+  animation_prompts_negative: string;
+  animation_mode: DeforumAnimationMode;
+  max_frames: number;
+  fps: number;
+  border: DeforumSettings["border"];
+}
 
 /**
  * Map a frame of a `fromFrames`-long timeline onto a `toFrames`-long one. The
@@ -38,6 +62,8 @@ const spreadFrames = (frames: number[], maxFrame: number): number[] => {
   return out;
 };
 
+type ScheduleEntry = { raw: string; frame?: number; value?: string };
+
 /** Split a schedule on its top-level commas — values can hold `f(a, b)`. */
 const splitSchedule = (schedule: string): string[] => {
   const parts: string[] = [];
@@ -70,20 +96,25 @@ export const scaleSchedule = (
   fromFrames: number,
   toFrames: number,
 ): string => {
-  const entries = splitSchedule(schedule).map((entry) => {
-    const match = /^(\d+)\s*:\s*([\s\S]*)$/.exec(entry);
-    return match
-      ? { frame: Number(match[1]), value: match[2], raw: entry }
-      : { frame: undefined, value: undefined, raw: entry };
+  const entries: ScheduleEntry[] = splitSchedule(schedule).map((raw) => {
+    const match = /^(\d+)\s*:\s*([\s\S]*)$/.exec(raw);
+    return match ? { raw, frame: Number(match[1]), value: match[2] } : { raw };
   });
-  const numeric = entries.filter((e) => e.frame !== undefined);
-  const scaled = spreadFrames(
-    numeric.map((e) => scaleFrame(e.frame!, fromFrames, toFrames)),
+  const keyed = entries
+    .filter((e): e is Required<ScheduleEntry> => e.frame !== undefined)
+    .sort((a, b) => a.frame - b.frame);
+  const spread = spreadFrames(
+    keyed.map((e) => scaleFrame(e.frame, fromFrames, toFrames)),
     toFrames - 1,
   );
-  let n = 0;
+  const scaled = new Map<ScheduleEntry, number>(
+    keyed.map((e, i) => [e, spread[i]]),
+  );
   return entries
-    .map((e) => (e.frame === undefined ? e.raw : `${scaled[n++]}: ${e.value}`))
+    .map((e) => {
+      const frame = scaled.get(e);
+      return frame === undefined ? e.raw : `${frame}: ${e.value}`;
+    })
     .join(", ");
 };
 
@@ -127,14 +158,20 @@ export const renderFrames = (
 export const buildDeforumAlgoParams = (
   settings: DeforumSettings,
   kind: DeforumRenderKind,
-): Record<string, unknown> => {
+): DeforumAlgoParams => {
   const frames = renderFrames(settings, kind);
   const scale = (schedule: string) =>
     frames === settings.maxFrames
       ? schedule
       : scaleSchedule(schedule, settings.maxFrames, frames);
+  const schedules = Object.fromEntries(
+    DEFORUM_SCHEDULE_FIELDS.map(({ field, param }) => [
+      param,
+      scale(settings[field]),
+    ]),
+  ) as Record<DeforumScheduleParam, string>;
 
-  const params: Record<string, unknown> = {
+  return {
     infinidream_algorithm: "deforum",
     width: settings.width,
     height: settings.height,
@@ -149,16 +186,15 @@ export const buildDeforumAlgoParams = (
     max_frames: frames,
     fps: settings.fps,
     border: settings.border,
+    ...schedules,
   };
-  for (const { field, param } of DEFORUM_SCHEDULE_FIELDS) {
-    params[param] = scale(settings[field]);
-  }
-  return params;
 };
 
 /** Settings compared by value — to tell when a clip has moved past a render. */
 export const deforumSettingsKey = (settings: DeforumSettings): string =>
-  JSON.stringify({
-    ...settings,
-    prompts: settings.prompts.map(({ frame, text }) => ({ frame, text })),
-  });
+  JSON.stringify(
+    Object.entries({
+      ...settings,
+      prompts: settings.prompts.map(({ frame, text }) => [frame, text]),
+    }).sort(([a], [b]) => (a < b ? -1 : 1)),
+  );

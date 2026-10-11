@@ -3,6 +3,7 @@ import type { DeforumSettings } from "@/types/deforum.types";
 import { DEFAULT_DEFORUM_SETTINGS } from "../constants/deforum-options";
 import {
   buildDeforumAlgoParams,
+  deforumSettingsKey,
   promptMap,
   scaleFrame,
   scaleSchedule,
@@ -95,6 +96,34 @@ describe("scaleSchedule", () => {
   it("leaves quoted expression keys alone", () => {
     expect(scaleSchedule('0:(s), 150:(-1), "max_f-2":(-1)', 300, 50)).toBe(
       '0: (s), 25: (-1), "max_f-2":(-1)',
+    );
+  });
+
+  it("scales keys written out of order without moving frame 0", () => {
+    expect(scaleSchedule("100: (1), 0: (2)", 300, 50)).toBe("16: (1), 0: (2)");
+  });
+});
+
+describe("deforumSettingsKey", () => {
+  it("ignores key order and prompt ids", () => {
+    const a = settings();
+    const reordered = Object.fromEntries(
+      Object.entries(a).reverse(),
+    ) as unknown as DeforumSettings;
+    const reprompted = {
+      ...reordered,
+      prompts: a.prompts.map((p) => ({
+        text: p.text,
+        frame: p.frame,
+        id: "x",
+      })),
+    };
+    expect(deforumSettingsKey(reprompted)).toBe(deforumSettingsKey(a));
+  });
+
+  it("changes with any setting", () => {
+    expect(deforumSettingsKey(settings({ steps: 30 }))).not.toBe(
+      deforumSettingsKey(settings()),
     );
   });
 });

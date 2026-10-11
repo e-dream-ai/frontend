@@ -1,7 +1,7 @@
 import { useFlowStore } from "@/stores/flow.store";
 import { useStudioStore } from "@/stores/studio.store";
 import { useDeforumStore } from "@/stores/deforum.store";
-import { deforumPlaylistDreams } from "../hooks/useDeforumPlaylistSync";
+import { deforumPlaylistDreams } from "./deforum-targets";
 import type { StudioMode } from "@/types/flow.types";
 
 export type EditorSaveAdapter = {

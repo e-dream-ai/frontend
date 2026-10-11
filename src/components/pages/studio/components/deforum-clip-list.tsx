@@ -1,4 +1,4 @@
-import type React from "react";
+import { useState, type MouseEvent } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useDeforumStore } from "@/stores/deforum.store";
 import type { DeforumClip, DeforumRenderKind } from "@/types/deforum.types";
@@ -8,6 +8,7 @@ import {
   latestRender,
   pendingRender,
 } from "../utils/deforum-targets";
+import { ForceSettingsDialog } from "./force-settings-dialog";
 import {
   AddClipCard,
   ClipCard,
@@ -71,13 +72,13 @@ function ClipThumbnail({
   poster?: string;
   placeholder: string;
 }) {
-  const pending = pendingRender(clip);
+  const pending = pendingRender(clip)?.render;
   const liveFrame = useDreamPreviewFrame(pending?.dreamUuid, Boolean(pending));
-  const src = (pending && liveFrame) || poster;
+  const src = (pending && liveFrame?.src) || poster;
   return (
     <ClipThumb
       $ratio={`${clip.settings.width} / ${clip.settings.height}`}
-      $src={src}
+      style={src ? { backgroundImage: `url("${src}")` } : undefined}
     >
       {!src && placeholder}
     </ClipThumb>
@@ -95,8 +96,9 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
   );
   const store = useDeforumStore.getState;
   const selected = new Set(selectedIds);
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
 
-  const handleClick = (e: React.MouseEvent, id: string) => {
+  const handleClick = (e: MouseEvent, id: string) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey) store().toggleClipSelection(id);
     else if (selected.size === 1 && selected.has(id)) store().selectClip(null);
     else store().selectClip(id);
@@ -108,7 +110,7 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
     <>
       <ClipStrip role="listbox" aria-multiselectable aria-label="Animations">
         {clips.map((clip) => {
-          const shown = latestRender(clip);
+          const shown = latestRender(clip)?.render;
           const firstPrompt = clip.settings.prompts.find((p) => p.text.trim());
           return (
             <ClipCard
@@ -172,22 +174,26 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
           </SmallButton>
           <SmallButton
             disabled={selectedIds.length === 0}
-            onClick={() => {
-              const n = selectedIds.length;
-              if (
-                window.confirm(
-                  `Remove ${n} animation${
-                    n === 1 ? "" : "s"
-                  }? Their final renders leave the playlist.`,
-                )
-              ) {
-                store().removeClips(selectedIds);
-              }
-            }}
+            onClick={() => setConfirmingRemove(true)}
           >
             Remove
           </SmallButton>
         </StripActions>
+      )}
+
+      {confirmingRemove && (
+        <ForceSettingsDialog
+          title={`Remove ${selectedIds.length} animation${
+            selectedIds.length === 1 ? "" : "s"
+          }?`}
+          body="Their final renders leave the playlist."
+          confirmLabel="Remove"
+          onConfirm={() => {
+            store().removeClips(selectedIds);
+            setConfirmingRemove(false);
+          }}
+          onCancel={() => setConfirmingRemove(false)}
+        />
       )}
     </>
   );
