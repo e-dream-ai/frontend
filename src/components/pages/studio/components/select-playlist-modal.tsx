@@ -70,7 +70,7 @@ export const SelectPlaylistModal: React.FC<Props> = ({
   const totalCount = data?.pages[0]?.count ?? 0;
   const metadata = usePlaylistMetadata(highlighted?.uuid ?? "");
   const countLabel = highlighted
-    ? `${highlighted.name} — ${metadata}`
+    ? `${highlighted.name} — ${metadata.join(" \u00b7 ")}`
     : `${totalCount} playlist${totalCount === 1 ? "" : "s"}`;
 
   // Escape closes, Tab stays inside, the page behind stops scrolling.

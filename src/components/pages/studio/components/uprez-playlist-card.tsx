@@ -12,7 +12,8 @@ const CARD_THUMB = { width: 200, fit: "cover" as const };
 
 type Props = {
   name: string;
-  meta: string;
+  /** One line each, under the name. */
+  meta: string[];
   thumbnail?: string | null;
   children?: React.ReactNode;
 };
@@ -32,7 +33,9 @@ export const UprezPlaylistCard: React.FC<Props> = ({
     ) : null}
     <PlaylistCardInfo>
       <PlaylistCardName>{name}</PlaylistCardName>
-      <PlaylistCardMeta>{meta}</PlaylistCardMeta>
+      {meta.map((line) => (
+        <PlaylistCardMeta key={line}>{line}</PlaylistCardMeta>
+      ))}
     </PlaylistCardInfo>
     {children}
   </PlaylistCardShell>
