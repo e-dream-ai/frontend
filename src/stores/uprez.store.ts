@@ -67,8 +67,8 @@ export const useUprezStore = create<UprezStoreState>()((set) => ({
           ? uprezPlaylistName(snapshot.sourcePlaylist.name)
           : null),
       upscaleFactor: snapshot.upscaleFactor ?? UPREZ_DEFAULTS.upscaleFactor,
-      interpolationFactor:
-        snapshot.interpolationFactor ?? UPREZ_DEFAULTS.interpolationFactor,
+      // Always the default rather than the saved value (frontend#782).
+      interpolationFactor: UPREZ_DEFAULTS.interpolationFactor,
     }),
   resetUprez: () => set({ ...UPREZ_DEFAULTS }),
 }));

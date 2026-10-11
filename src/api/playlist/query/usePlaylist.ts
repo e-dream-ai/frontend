@@ -12,23 +12,20 @@ type PlaylistResponse = {
   playlist?: Playlist;
 };
 
-export const fetchPlaylist = async (uuid?: string) => {
-  const data = await queryClient.fetchQuery<
-    ApiResponse<{ playlist: Playlist }>
-  >({
-    queryKey: [PLAYLIST_QUERY_KEY, uuid],
-    queryFn: () =>
-      axiosClient
-        .get(`/v1/dream/${uuid ?? ""}`, {
-          headers: getRequestHeaders({
-            contentType: ContentType.json,
-          }),
-        })
-        .then((res) => {
-          return res.data;
+export const playlistQueryOptions = (uuid: string) => ({
+  queryKey: [PLAYLIST_QUERY_KEY, uuid],
+  queryFn: () =>
+    axiosClient
+      .get<ApiResponse<PlaylistResponse>>(`/v1/playlist/${uuid}`, {
+        headers: getRequestHeaders({
+          contentType: ContentType.json,
         }),
-  });
+      })
+      .then((res) => res.data),
+});
 
+export const fetchPlaylist = async (uuid: string) => {
+  const data = await queryClient.fetchQuery(playlistQueryOptions(uuid));
   return data?.data?.playlist;
 };
 

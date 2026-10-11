@@ -1,14 +1,19 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
 import Bugsnag from "@bugsnag/js";
 import { useQueryClient } from "@tanstack/react-query";
-import { NO_OP_HINT } from "../constants/uprez-factor-options";
+import {
+  NO_OP_HINT,
+  type UpscaleFactor,
+} from "../constants/uprez-factor-options";
+import type { PlaylistSummary } from "../hooks/useUserPlaylists";
 import { useUprezStore } from "@/stores/uprez.store";
 import type { EditorProjectPlaylistRef } from "@/types/editor-project.types";
 import {
   PLAYLIST_QUERY_KEY,
+  playlistQueryOptions,
   usePlaylist,
 } from "@/api/playlist/query/usePlaylist";
 import { useRunPlaylist } from "@/api/playlist/mutation/useRunPlaylist";
@@ -30,6 +35,10 @@ import {
   buildUprezPlaylistPrompt,
   isNoOpUprez,
 } from "../utils/uprez-playlist-prompt";
+import {
+  defaultUpscaleFactor,
+  describeUprezResult,
+} from "../utils/uprez-media";
 import { formatUprezRunSummary } from "@/utils/uprez-run-summary";
 import {
   AppBody,
@@ -70,9 +79,42 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
   const setInterpolationFactor = useUprezStore((s) => s.setInterpolationFactor);
 
   const [pickerOpen, setPickerOpen] = useState(false);
+  const pendingUpscaleDefault = useRef<string | null>(null);
 
   const selectedUuid = selected?.uuid ?? "";
-  const sourceMeta = usePlaylistMetadata(selectedUuid);
+  const { playlist: source, meta: sourceMeta } =
+    usePlaylistMetadata(selectedUuid);
+  const sourceMedia = source?.media;
+
+  const applyUpscaleDefault = async (uuid: string) => {
+    pendingUpscaleDefault.current = uuid;
+    const response = await queryClient
+      .ensureQueryData(playlistQueryOptions(uuid))
+      .catch(() => undefined);
+    if (pendingUpscaleDefault.current !== uuid) return;
+    pendingUpscaleDefault.current = null;
+
+    const current = useUprezStore.getState();
+    if (
+      !response ||
+      current.sourcePlaylist?.uuid !== uuid ||
+      current.interpolationFactor === 1
+    ) {
+      return;
+    }
+    setUpscaleFactor(defaultUpscaleFactor(response.data?.playlist?.media));
+  };
+
+  const handleSelectSource = (picked: PlaylistSummary) => {
+    const changed = picked.uuid !== selected?.uuid;
+    setSourcePlaylist(picked);
+    if (changed) void applyUpscaleDefault(picked.uuid);
+  };
+
+  const handleUpscaleChange = (factor: UpscaleFactor) => {
+    pendingUpscaleDefault.current = null;
+    setUpscaleFactor(factor);
+  };
 
   const { data: outputData } = usePlaylist(playlist?.uuid, Boolean(playlist));
   const output = outputData?.data?.playlist;
@@ -240,7 +282,7 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
           <UprezFactorFields
             upscaleFactor={upscaleFactor}
             interpolationFactor={interpolationFactor}
-            onUpscaleChange={setUpscaleFactor}
+            onUpscaleChange={handleUpscaleChange}
             onInterpolationChange={setInterpolationFactor}
           />
         </FactorFields>
@@ -262,6 +304,15 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
             "Create & run uprez"
           )}
         </PrimaryButton>
+        {!isNoOp && sourceMedia && (
+          <Hint>
+            {describeUprezResult(
+              sourceMedia,
+              upscaleFactor,
+              interpolationFactor,
+            )}
+          </Hint>
+        )}
         {isNoOp && <Hint>{NO_OP_HINT}</Hint>}
         {!isNoOp && !selectedUuid && <Hint>Pick a source playlist first.</Hint>}
         {!isNoOp && playlist && planned && (
@@ -273,7 +324,7 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
         <SelectPlaylistModal
           onClose={() => setPickerOpen(false)}
           selectedPlaylist={selected}
-          onSelect={setSourcePlaylist}
+          onSelect={handleSelectSource}
         />
       )}
     </AppBody>

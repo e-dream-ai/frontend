@@ -54,9 +54,24 @@ export type Playlist = {
   hidden?: boolean;
   totalDurationSeconds?: number;
   totalDurationFormatted?: string;
+  totalFrames?: number;
   totalDreamCount?: number;
+  /** Null when no dream in the playlist has a known resolution. */
+  media?: PlaylistMediaSummary | null;
   progress?: PlaylistProgress;
   prompt?: string | null;
+};
+
+/** Resolution and fps across a playlist's processed videos. */
+export type PlaylistMediaSummary = {
+  /** Largest resolution by pixel count. */
+  width: number;
+  height: number;
+  minShortSide: number;
+  /** Highest fps, or null when no dream reports one. */
+  fps: number | null;
+  mixedResolution: boolean;
+  mixedFps: boolean;
 };
 
 export type UprezPlaylistPrompt = {
