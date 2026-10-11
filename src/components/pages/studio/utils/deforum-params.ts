@@ -96,8 +96,11 @@ export const promptMap = (
     .filter((p) => p.text.trim())
     .slice()
     .sort((a, b) => a.frame - b.frame);
+  // The first prompt always starts the animation, whatever frame it carries.
   const frames = spreadFrames(
-    sorted.map((p) => scaleFrame(p.frame, settings.maxFrames, toFrames)),
+    sorted.map((p, i) =>
+      i === 0 ? 0 : scaleFrame(p.frame, settings.maxFrames, toFrames),
+    ),
     toFrames - 1,
   );
   const map: Record<string, string> = {};
@@ -144,6 +147,7 @@ export const buildDeforumAlgoParams = (
     animation_prompts_negative: settings.negativePrompt.trim(),
     animation_mode: settings.animationMode,
     max_frames: frames,
+    fps: settings.fps,
     border: settings.border,
   };
   for (const { field, param } of DEFORUM_SCHEDULE_FIELDS) {

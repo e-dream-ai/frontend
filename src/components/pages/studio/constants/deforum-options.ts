@@ -3,8 +3,6 @@ import type { DeforumSettings } from "@/types/deforum.types";
 /** A test render squeezes the whole timeline into this many frames. */
 export const DEFORUM_TEST_FRAMES = 50;
 
-export const DEFORUM_FRAME_PRESETS = [120, 300, 600, 1200, 3000] as const;
-
 export const DEFORUM_SIZES = [
   { label: "16:9 — 1344×768", width: 1344, height: 768 },
   { label: "16:9 — 1024×576", width: 1024, height: 576 },
@@ -32,16 +30,16 @@ export const DEFORUM_SCHEDULERS = [
   "simple",
 ] as const;
 
-/** The schedule fields, in panel order, with the deforum key each one sends. */
+/** The schedule fields, with the deforum key each one sends. */
 export const DEFORUM_SCHEDULE_FIELDS = [
   { field: "zoom", param: "zoom", label: "Zoom" },
   { field: "angle", param: "angle", label: "Angle" },
   { field: "translationX", param: "translation_x", label: "Translation X" },
   { field: "translationY", param: "translation_y", label: "Translation Y" },
   { field: "translationZ", param: "translation_z", label: "Translation Z" },
-  { field: "rotation3dX", param: "rotation_3d_x", label: "Rotation 3D X" },
-  { field: "rotation3dY", param: "rotation_3d_y", label: "Rotation 3D Y" },
-  { field: "rotation3dZ", param: "rotation_3d_z", label: "Rotation 3D Z" },
+  { field: "rotation3dX", param: "rotation_3d_x", label: "Rotation X" },
+  { field: "rotation3dY", param: "rotation_3d_y", label: "Rotation Y" },
+  { field: "rotation3dZ", param: "rotation_3d_z", label: "Rotation Z" },
   { field: "strengthSchedule", param: "strength_schedule", label: "Strength" },
   {
     field: "cfgScaleSchedule",
@@ -57,6 +55,31 @@ export const DEFORUM_SCHEDULE_FIELDS = [
 export type DeforumScheduleField =
   (typeof DEFORUM_SCHEDULE_FIELDS)[number]["field"];
 
+/**
+ * Motion schedules shown per animation mode, row by row. Deforum only reads
+ * these in their own mode: 2D warps the canvas by zoom/angle, 3D moves a
+ * camera by translation/rotation and ignores zoom and angle entirely.
+ */
+export const DEFORUM_MOTION_ROWS: Record<
+  DeforumSettings["animationMode"],
+  DeforumScheduleField[][]
+> = {
+  "3D": [
+    ["translationX", "translationY", "translationZ"],
+    ["rotation3dX", "rotation3dY", "rotation3dZ"],
+  ],
+  "2D": [
+    ["translationX", "translationY"],
+    ["zoom", "angle"],
+  ],
+};
+
+/** Schedules that apply in every mode; they live with the global parameters. */
+export const DEFORUM_GLOBAL_SCHEDULES: DeforumScheduleField[] = [
+  "strengthSchedule",
+  "cfgScaleSchedule",
+];
+
 /** A seed for a new clip — fixed, so its test and final render agree. */
 export const randomDeforumSeed = (): number =>
   Math.floor(Math.random() * 2 ** 31);
@@ -67,6 +90,8 @@ export const DEFAULT_DEFORUM_SETTINGS: Omit<
 > = {
   negativePrompt: "nsfw, nude",
   maxFrames: 300,
+  // Deforum's own default, so renders keep their pace unless it is changed.
+  fps: 15,
   width: 1344,
   height: 768,
   steps: 25,
@@ -78,7 +103,8 @@ export const DEFAULT_DEFORUM_SETTINGS: Omit<
   angle: "0: (0)",
   translationX: "0: (0)",
   translationY: "0: (0)",
-  translationZ: "0: (0)",
+  // Deforum's own default: a steady push forward, the 3D counterpart of zoom.
+  translationZ: "0: (5)",
   rotation3dX: "0: (0)",
   rotation3dY: "0: (0)",
   rotation3dZ: "0: (0)",

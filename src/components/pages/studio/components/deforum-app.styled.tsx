@@ -129,25 +129,71 @@ export const SmallButton = styled.button`
   }
 `;
 
+/** One block of the settings form, set off from the one above by a rule. */
+export const Section = styled.section`
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid ${FLOW.border};
+`;
+
+/** A section's title row; a section-wide control sits just after the title. */
+export const SectionHeader = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+`;
+
+/**
+ * Brighter and larger than field labels, so the sections read as the top
+ * level of the form and the labels as what sits inside them.
+ */
 export const SectionTitle = styled.h3`
-  margin: 20px 0 10px;
+  margin: 0;
   font-family: ${FLOW.fontFamily};
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 600;
-  color: ${FLOW.textMuted};
+  color: ${FLOW.text};
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
+`;
+
+/** Two-way switch for a section-wide setting, e.g. 3D | 2D. */
+export const SegmentedControl = styled.div`
+  display: inline-flex;
+  border: 1px solid ${FLOW.border};
+  border-radius: ${FLOW.radiusSm};
+  overflow: hidden;
+`;
+
+export const SegmentButton = styled.button<{ $active: boolean }>`
+  background: ${(p) => (p.$active ? FLOW.accentDim : "transparent")};
+  border: 0;
+  color: ${(p) => (p.$active ? FLOW.accent : FLOW.textMuted)};
+  font-family: ${FLOW.fontFamily};
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 12px;
+  cursor: pointer;
+
+  & + & {
+    border-left: 1px solid ${FLOW.border};
+  }
+
+  &:hover {
+    color: ${(p) => (p.$active ? FLOW.accent : FLOW.text)};
+  }
 `;
 
 export const PromptList = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 12px;
 `;
 
 export const PromptRow = styled.div`
   display: grid;
-  grid-template-columns: 88px 1fr auto;
+  grid-template-columns: auto 88px 1fr;
   gap: 8px;
   align-items: start;
 `;
@@ -166,6 +212,11 @@ export const FrameInput = styled.input<{ $invalid?: boolean }>`
     outline: none;
     border-color: ${FLOW.accent};
   }
+
+  &:read-only {
+    color: ${FLOW.textMuted};
+    cursor: default;
+  }
 `;
 
 export const PromptText = styled.textarea`
@@ -174,9 +225,10 @@ export const PromptText = styled.textarea`
   border-radius: ${FLOW.radiusSm};
   color: ${FLOW.text};
   font-family: ${FLOW.fontFamily};
-  font-size: 13px;
-  padding: 8px 10px;
-  min-height: 38px;
+  font-size: 15px;
+  line-height: 1.5;
+  padding: 10px 12px;
+  min-height: 44px;
   resize: vertical;
   field-sizing: content;
 
@@ -213,15 +265,52 @@ export const ParamGrid = styled.div`
   gap: 12px;
 `;
 
-export const ScheduleGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 12px;
+/** Fold-out for parameters most animations leave at their defaults. */
+export const AdvancedDetails = styled.details`
+  &[open] > summary {
+    margin-bottom: 12px;
+  }
+
+  &[open] > summary::before {
+    transform: rotate(90deg);
+  }
 `;
 
-export const FrameHint = styled.span`
-  font-size: 11px;
-  color: ${FLOW.textMuted};
+/** The fold-out's heading, styled as a section title with a disclosure arrow. */
+export const AdvancedSummary = styled.summary`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: ${FLOW.fontFamily};
+  font-size: 13px;
+  font-weight: 600;
+  color: ${FLOW.text};
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::before {
+    content: "▸";
+    color: ${FLOW.textMuted};
+    transition: transform 0.15s ease;
+  }
+
+  &:hover {
+    color: ${FLOW.accent};
+  }
+`;
+
+export const MotionRow = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
 `;
 
 export const SecondaryButton = styled.button<{ $disabled?: boolean }>`

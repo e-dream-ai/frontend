@@ -11,6 +11,7 @@ import {
   DEFAULT_DEFORUM_SETTINGS,
   randomDeforumSeed,
 } from "@/components/pages/studio/constants/deforum-options";
+import { withClipNames } from "@/components/pages/studio/utils/deforum-names";
 
 export const newDeforumSettings = (): DeforumSettings => ({
   ...DEFAULT_DEFORUM_SETTINGS,
@@ -38,7 +39,6 @@ type DeforumStoreState = {
   duplicateClips: (ids: readonly string[]) => void;
   removeClips: (ids: readonly string[]) => void;
   moveClip: (id: string, delta: number) => void;
-  renameClip: (id: string, name: string) => void;
 
   /** Write settings fields onto every given clip. The only settings write. */
   setClipSettings: (
@@ -95,9 +95,6 @@ export const selectDeforumProject = (
   syncedPlaylistDreamUuids: state.syncedPlaylistDreamUuids,
 });
 
-const clipName = (clips: readonly DeforumClip[]) =>
-  `Animation ${clips.length + 1}`;
-
 const mapRenders = (
   clips: DeforumClip[],
   dreamUuid: string,
@@ -126,7 +123,8 @@ export const useDeforumStore = create<DeforumStoreState>()((set) => ({
         s.clips.find((c) => c.id === primaryId) ?? s.clips[s.clips.length - 1];
       const clip: DeforumClip = {
         id: uuidv4(),
-        name: clipName(s.clips),
+        // Named from its prompts, like every clip: see withClipNames.
+        name: "",
         // Carry the look over but not the seed: a copy with the same seed and
         // prompts would render the same video.
         settings: source
@@ -136,7 +134,10 @@ export const useDeforumStore = create<DeforumStoreState>()((set) => ({
             }
           : newDeforumSettings(),
       };
-      return { clips: [...s.clips, clip], selectedIds: [clip.id] };
+      return {
+        clips: withClipNames([...s.clips, clip]),
+        selectedIds: [clip.id],
+      };
     }),
 
   duplicateClips: (ids) =>
@@ -149,20 +150,22 @@ export const useDeforumStore = create<DeforumStoreState>()((set) => ({
         if (!wanted.has(clip.id)) continue;
         const copy: DeforumClip = {
           id: uuidv4(),
-          name: `${clip.name} copy`,
+          name: "",
           settings: copyDeforumSettings(clip.settings),
         };
         clips.push(copy);
         added.push(copy.id);
       }
-      return added.length ? { clips, selectedIds: added } : s;
+      return added.length
+        ? { clips: withClipNames(clips), selectedIds: added }
+        : s;
     }),
 
   removeClips: (ids) =>
     set((s) => {
       const drop = new Set(ids);
       return {
-        clips: s.clips.filter((c) => !drop.has(c.id)),
+        clips: withClipNames(s.clips.filter((c) => !drop.has(c.id))),
         selectedIds: s.selectedIds.filter((id) => !drop.has(id)),
       };
     }),
@@ -175,36 +178,31 @@ export const useDeforumStore = create<DeforumStoreState>()((set) => ({
       const clips = [...s.clips];
       const [clip] = clips.splice(from, 1);
       clips.splice(to, 0, clip);
-      return { clips };
+      return { clips: withClipNames(clips) };
     }),
-
-  renameClip: (id, name) =>
-    set((s) => ({
-      clips: s.clips.map((c) => (c.id === id ? { ...c, name } : c)),
-    })),
 
   setClipSettings: (ids, patch) =>
     set((s) => {
       if (ids.length === 0) return s;
       const touched = new Set(ids);
-      return {
-        clips: s.clips.map((clip) =>
-          touched.has(clip.id)
-            ? {
-                ...clip,
-                settings: {
-                  ...clip.settings,
-                  ...patch,
-                  // Each clip owns its prompt rows; a shared array would make a
-                  // later single-clip edit leak into every clip it was set on.
-                  ...(patch.prompts && {
-                    prompts: patch.prompts.map((p) => ({ ...p })),
-                  }),
-                },
-              }
-            : clip,
-        ),
-      };
+      const clips = s.clips.map((clip) =>
+        touched.has(clip.id)
+          ? {
+              ...clip,
+              settings: {
+                ...clip.settings,
+                ...patch,
+                // Each clip owns its prompt rows; a shared array would make a
+                // later single-clip edit leak into every clip it was set on.
+                ...(patch.prompts && {
+                  prompts: patch.prompts.map((p) => ({ ...p })),
+                }),
+              },
+            }
+          : clip,
+      );
+      // Names come from prompts, so only a prompt edit can change them.
+      return { clips: patch.prompts ? withClipNames(clips) : clips };
     }),
 
   selectClip: (id) =>
@@ -261,10 +259,12 @@ export const useDeforumStore = create<DeforumStoreState>()((set) => ({
       ...state,
       // Fill fields added since the project was saved, so every clip's
       // settings stay complete.
-      clips: (state.clips ?? []).map((clip) => ({
-        ...clip,
-        settings: { ...newDeforumSettings(), ...clip.settings },
-      })),
+      clips: withClipNames(
+        (state.clips ?? []).map((clip) => ({
+          ...clip,
+          settings: { ...newDeforumSettings(), ...clip.settings },
+        })),
+      ),
       selectedIds: [],
     }),
 

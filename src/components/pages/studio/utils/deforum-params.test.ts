@@ -136,10 +136,37 @@ describe("buildDeforumAlgoParams", () => {
     const params = buildDeforumAlgoParams(
       settings({
         maxFrames: 30,
-        prompts: [{ id: "a", frame: 10, text: "x" }],
+        prompts: [
+          { id: "a", frame: 0, text: "x" },
+          { id: "b", frame: 10, text: "y" },
+        ],
       }),
       "test",
     );
-    expect(params).toMatchObject({ max_frames: 30, prompts: { "10": "x" } });
+    expect(params).toMatchObject({
+      max_frames: 30,
+      prompts: { "0": "x", "10": "y" },
+    });
+  });
+
+  it("sends the frame rate, the same for a test as for the final", () => {
+    for (const kind of ["test", "final"] as const) {
+      expect(buildDeforumAlgoParams(settings({ fps: 24 }), kind)).toMatchObject(
+        { fps: 24 },
+      );
+    }
+  });
+
+  it("always starts the first prompt at frame 0", () => {
+    const params = buildDeforumAlgoParams(
+      settings({
+        prompts: [
+          { id: "a", frame: 40, text: "x" },
+          { id: "b", frame: 90, text: "y" },
+        ],
+      }),
+      "final",
+    );
+    expect(params.prompts).toEqual({ "0": "x", "90": "y" });
   });
 });

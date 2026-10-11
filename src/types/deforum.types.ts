@@ -19,6 +19,8 @@ export interface DeforumSettings {
   prompts: DeforumPrompt[];
   negativePrompt: string;
   maxFrames: number;
+  /** Playback rate of the rendered video. */
+  fps: number;
   width: number;
   height: number;
   /** -1 picks a new seed every render. */
