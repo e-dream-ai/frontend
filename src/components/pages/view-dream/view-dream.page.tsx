@@ -434,7 +434,9 @@ const ViewDreamPage: React.FC = () => {
 
   const studioProject = useEditorProjectForDream(dream, isOwner);
 
-  const showRemixButton = isCreator && !isOwner && hasPrompt;
+  // Owners remix too: a copy to tweak and rerun, leaving the original intact.
+  // Admins can create dreams as well (the backend allows both roles).
+  const showRemixButton = (isCreator || isUserAdmin) && hasPrompt;
   // Handlers
   const handleMutateVideoDream = async (data: UpdateDreamFormValues) => {
     if (isImageDream) {
@@ -890,11 +892,16 @@ const ViewDreamPage: React.FC = () => {
   };
 
   /**
-   * Setting api values to form
+   * Setting api values to form. While editing, only the first load of a dream
+   * fills the form: an unprocessed dream is re-fetched every few seconds, and
+   * resetting on each of those would silently throw away the user's edits.
    */
+  const formDreamUuidRef = useRef<string | undefined>(undefined);
   useEffect(() => {
+    if (editMode && formDreamUuidRef.current === dream?.uuid) return;
+    formDreamUuidRef.current = dream?.uuid;
     resetRemoteDreamForm();
-  }, [resetRemoteDreamForm]);
+  }, [resetRemoteDreamForm, editMode, dream?.uuid]);
 
   if (!uuid) return <Navigate to={ROUTES.ROOT} replace />;
 
@@ -1259,6 +1266,7 @@ const ViewDreamPage: React.FC = () => {
                       {showRemixButton && (
                         <Button
                           type="button"
+                          ml="2"
                           after={<FontAwesomeIcon icon={faCopy} />}
                           isLoading={remixDreamMutation.isLoading}
                           onClick={() => openModal("remix")}
