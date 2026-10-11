@@ -309,7 +309,7 @@ export const GenerateTab: React.FC = () => {
             <strong>{totalPossible}</strong> combinations checked to generate
             {renderedCount > 0 && (
               <>
-                {" · "}
+                {" • "}
                 <strong>{renderedCount}</strong> rendered
               </>
             )}

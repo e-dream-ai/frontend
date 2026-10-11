@@ -55,7 +55,7 @@ const metaLine = (entry: PromptHistoryEntry, modelLabel: string) =>
     moment(entry.createdAt).format(FORMAT),
   ]
     .filter(Boolean)
-    .join(" · ");
+    .join(" • ");
 
 const PromptHistoryTextListComponent: React.FC<Props> = ({
   entries,

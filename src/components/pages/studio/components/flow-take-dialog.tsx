@@ -80,7 +80,7 @@ export const FlowTakeDialog: React.FC<Props> = ({
     fields.includes("seed") && `seed ${settings.seed}`,
   ]
     .filter(Boolean)
-    .join(" · ");
+    .join(" • ");
 
   const note = isCurrent
     ? "This is the take in the flow now."

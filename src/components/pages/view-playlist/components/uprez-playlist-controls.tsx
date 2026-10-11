@@ -70,7 +70,7 @@ export const UprezPlaylistControls: React.FC<Props> = ({
   };
 
   const runDialogText = planned
-    ? formatUprezRunSummary(t, planned, "preview")
+    ? formatUprezRunSummary(t, planned, "preview", isRunning)
     : preview.isFetching
       ? "Checking what a run would do…"
       : "This will queue uprez jobs for the dreams in this playlist. New or changed source dreams get uprezed and any obsolete ones are removed. Continue?";
@@ -81,7 +81,9 @@ export const UprezPlaylistControls: React.FC<Props> = ({
       const { data } = await runPlaylist.mutateAsync(playlist.uuid);
       const result = data?.result;
       toast.success(
-        result ? formatUprezRunSummary(t, result) : "Uprez run started.",
+        result
+          ? formatUprezRunSummary(t, result, "started", isRunning)
+          : "Uprez run started.",
       );
       await invalidatePlaylist();
     } catch (err) {

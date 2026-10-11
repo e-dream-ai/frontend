@@ -92,7 +92,7 @@ export const HistoryClipDialog: React.FC<Props> = ({
         settings.seed !== undefined && `seed ${settings.seed}`,
       ]
         .filter(Boolean)
-        .join(" · ")
+        .join(" • ")
     : undefined;
 
   const comesBack = [
@@ -154,7 +154,7 @@ export const HistoryClipDialog: React.FC<Props> = ({
             <dt>Generated</dt>
             <dd>
               {Number.isFinite(generatedAt) ? formatRunTime(generatedAt) : "…"}
-              {renderMs !== undefined && ` · took ${formatDuration(renderMs)}`}
+              {renderMs !== undefined && ` • took ${formatDuration(renderMs)}`}
             </dd>
           </HistoryClipInfo>
           <HistoryClipNote>

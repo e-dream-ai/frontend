@@ -754,6 +754,7 @@
     "uprez_run_summary": {
       "up_to_date_preview": "Everything is up to date at these settings.",
       "up_to_date_started": "Everything was already up to date.",
+      "in_progress": "Already rendering at these settings.",
       "summary_preview": "Running will {{actions, list}}.",
       "summary_started": "Uprez run started: {{actions, list}}.",
       "render_one": "render {{count}} dream",

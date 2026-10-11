@@ -98,7 +98,7 @@ export const ImageDialog: React.FC<Props> = ({
           ) : (
             <ActionPromptText>Uploaded image, no prompt.</ActionPromptText>
           )}
-          <ActionMeta>{meta.join(" · ")}</ActionMeta>
+          <ActionMeta>{meta.join(" • ")}</ActionMeta>
         </ActionDialogBody>
         <Footer>
           <FooterButtons>

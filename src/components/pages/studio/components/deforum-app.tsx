@@ -71,8 +71,8 @@ export function DeforumApp({ canSyncPlaylist }: DeforumAppProps) {
   );
   const caption = playing
     ? playing.kind === "final"
-      ? `${playing.clip.name} · final · ${playing.render.settings.maxFrames} frames`
-      : `${playing.clip.name} · test · ${renderFrames(
+      ? `${playing.clip.name} • final • ${playing.render.settings.maxFrames} frames`
+      : `${playing.clip.name} • test • ${renderFrames(
           playing.render.settings,
           "test",
         )} of ${playing.render.settings.maxFrames} frames`

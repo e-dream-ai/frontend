@@ -71,7 +71,7 @@ const PromptHistoryDetails: React.FC<DetailsProps> = ({
   onUsePrompt,
   onUseAllSettings,
 }) => {
-  const settings = imageSettings(entry.origin, modelLabel).join(" · ");
+  const settings = imageSettings(entry.origin, modelLabel).join(" • ");
 
   return (
     <Details>
