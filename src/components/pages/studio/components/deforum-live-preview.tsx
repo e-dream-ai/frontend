@@ -67,10 +67,10 @@ export function DeforumLivePreview({
         </LivePlaceholder>
       )}
       <LiveCaption>
-        {clip.name} · {kind} · {frames} frames · {status}
+        {clip.name} • {kind} • {frames} frames • {status}
         {frame && (
           <>
-            {" · frame changed "}
+            {" • frame changed "}
             <SecondsSince since={frame.changedAt} />
             {`s ago, checked every ${PREVIEW_FRAME_POLL_MS / 1000}s`}
           </>

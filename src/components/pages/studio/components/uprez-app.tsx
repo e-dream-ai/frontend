@@ -120,6 +120,7 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
   const output = outputData?.data?.playlist;
   const progress =
     output?.uuid === playlist?.uuid ? output?.progress : undefined;
+  const isRendering = Boolean(progress?.remaining);
 
   const name = nameOverride ?? "";
   const isNoOp = isNoOpUprez(upscaleFactor, interpolationFactor);
@@ -198,7 +199,9 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
       const { data } = await runPlaylist.mutateAsync(playlist.uuid);
       const result = data?.result;
       toast.success(
-        result ? formatUprezRunSummary(t, result) : "Uprez run started.",
+        result
+          ? formatUprezRunSummary(t, result, "started", isRendering)
+          : "Uprez run started.",
       );
 
       await Promise.all([
@@ -316,7 +319,9 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
         {isNoOp && <Hint>{NO_OP_HINT}</Hint>}
         {!isNoOp && !selectedUuid && <Hint>Pick a source playlist first.</Hint>}
         {!isNoOp && playlist && planned && (
-          <Hint>{formatUprezRunSummary(t, planned, "preview")}</Hint>
+          <Hint>
+            {formatUprezRunSummary(t, planned, "preview", isRendering)}
+          </Hint>
         )}
       </Footer>
 

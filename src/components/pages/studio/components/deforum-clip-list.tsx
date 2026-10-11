@@ -119,7 +119,7 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
               aria-selected={selected.has(clip.id)}
               $selected={selected.has(clip.id)}
               onClick={(e) => handleClick(e, clip.id)}
-              title="Click to edit · ⌘/Shift-click to edit several together"
+              title="Click to edit • ⌘/Shift-click to edit several together"
             >
               <ClipThumbnail
                 clip={clip}

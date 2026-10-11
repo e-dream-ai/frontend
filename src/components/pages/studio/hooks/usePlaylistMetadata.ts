@@ -9,10 +9,10 @@ import {
 const UNAVAILABLE = "dream count unavailable";
 
 const joinParts = (parts: Array<string | null>) =>
-  parts.filter(Boolean).join(" \u00b7 ");
+  parts.filter(Boolean).join(" \u2022 ");
 
 /**
- * Summary lines: `12 dreams · 1280×720`, then `00:03:40 · 24 fps · 5,280 frames`.
+ * Summary lines: `12 dreams • 1280×720`, then `00:03:40 • 24 fps • 5,280 frames`.
  * The second line is left out when there is nothing to show on it.
  */
 export function describePlaylistContents(playlist?: Playlist | null): string[] {

@@ -37,7 +37,7 @@ export const ImageDetails: React.FC<Props> = ({
         <DetailsTitleLine>
           <DetailsName>{name}</DetailsName>
           {settings.length > 0 && (
-            <DetailsMeta>{settings.join(" · ")}</DetailsMeta>
+            <DetailsMeta>{settings.join(" • ")}</DetailsMeta>
           )}
         </DetailsTitleLine>
         <DetailsPrompt>

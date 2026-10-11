@@ -93,11 +93,11 @@ function ActionDetails({
 
   return (
     <>
-      <DialogHeader title={`Action ${index} · ${heading}`} onClose={onClose} />
+      <DialogHeader title={`Action ${index} • ${heading}`} onClose={onClose} />
       <ActionDialogBody>
         <ActionPromptText>{action.prompt}</ActionPromptText>
         <ActionMeta>
-          {lora ? `LoRA: ${lora.label} · ` : ""}
+          {lora ? `LoRA: ${lora.label} • ` : ""}
           {clipCountText(clipCount)}
         </ActionMeta>
       </ActionDialogBody>

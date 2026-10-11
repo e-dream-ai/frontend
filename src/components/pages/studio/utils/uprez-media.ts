@@ -32,7 +32,7 @@ export const defaultUpscaleFactor = (
 ): UpscaleFactor => (media && media.minShortSide >= HD_SHORT_SIDE ? 1 : 2);
 
 /**
- * What the uprez will produce, e.g. `1280×720 → 2560×1440 · 24 → 48 fps`.
+ * What the uprez will produce, e.g. `1280×720 → 2560×1440 • 24 fps → 48 fps`.
  * Mixed playlists use the largest resolution and highest fps.
  */
 export const describeUprezResult = (
@@ -58,7 +58,7 @@ export const describeUprezResult = (
     media.mixedFps,
     targetFps === media.fps
       ? `${sourceFps} fps`
-      : `${sourceFps} → ${targetFps} fps`,
+      : `${sourceFps} fps → ${targetFps} fps`,
   );
-  return `${resolution} · ${fps}`;
+  return `${resolution} • ${fps}`;
 };

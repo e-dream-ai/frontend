@@ -7,8 +7,13 @@ export const formatUprezRunSummary = (
   t: TFunction,
   result: UprezRunSummary,
   mode: "preview" | "started" = "started",
+  inProgress = false,
 ): string => {
-  if (!result.hasWork) return t(`${KEY}.up_to_date`, { context: mode });
+  if (!result.hasWork) {
+    return inProgress
+      ? t(`${KEY}.in_progress`)
+      : t(`${KEY}.up_to_date`, { context: mode });
+  }
 
   const actions = [
     { key: "render", count: result.created + result.requeued },
