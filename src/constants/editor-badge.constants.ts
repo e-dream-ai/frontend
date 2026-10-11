@@ -5,4 +5,5 @@ export const EDITOR_BADGE: Record<StudioMode, string> = {
   flow: FLOW.accent,
   action: FLOW.processing,
   uprez: FLOW.success,
+  deforum: FLOW.coral,
 };

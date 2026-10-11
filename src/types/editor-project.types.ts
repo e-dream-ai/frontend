@@ -1,4 +1,4 @@
-export const EDITOR_IDS = ["flow", "action", "uprez"] as const;
+export const EDITOR_IDS = ["flow", "action", "uprez", "deforum"] as const;
 
 export type EditorId = (typeof EDITOR_IDS)[number];
 
