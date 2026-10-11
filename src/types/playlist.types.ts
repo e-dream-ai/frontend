@@ -67,6 +67,7 @@ export type PlaylistMediaSummary = {
   /** Largest resolution by pixel count. */
   width: number;
   height: number;
+  minShortSide: number;
   /** Highest fps, or null when no dream reports one. */
   fps: number | null;
   mixedResolution: boolean;

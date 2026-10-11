@@ -12,6 +12,7 @@ const media = (
 ): PlaylistMediaSummary => ({
   width: 1280,
   height: 720,
+  minShortSide: 720,
   fps: 24,
   mixedResolution: false,
   mixedFps: false,
@@ -53,14 +54,17 @@ describe("defaultUpscaleFactor", () => {
     expect(defaultUpscaleFactor(media())).toBe(2);
   });
 
-  it("skips upscaling at 1080p and above", () => {
-    expect(defaultUpscaleFactor(media({ width: 1920, height: 1080 }))).toBe(1);
-    expect(defaultUpscaleFactor(media({ width: 3840, height: 2160 }))).toBe(1);
+  it("skips upscaling when every dream is 1080p or above", () => {
+    expect(defaultUpscaleFactor(media({ minShortSide: 1080 }))).toBe(1);
+    expect(defaultUpscaleFactor(media({ minShortSide: 2160 }))).toBe(1);
   });
 
-  it("uses the short side, so portrait 1080p counts", () => {
-    expect(defaultUpscaleFactor(media({ width: 1080, height: 1920 }))).toBe(1);
-    expect(defaultUpscaleFactor(media({ width: 720, height: 1920 }))).toBe(2);
+  it("upscales a mixed playlist when any dream is below 1080p", () => {
+    expect(
+      defaultUpscaleFactor(
+        media({ width: 1920, height: 1080, mixedResolution: true }),
+      ),
+    ).toBe(2);
   });
 
   it("upscales when the resolution is unknown", () => {
@@ -84,12 +88,28 @@ describe("describeUprezResult", () => {
     );
   });
 
-  it("leaves out fps when unknown, and rounds fractional rates", () => {
+  it("leaves out fps when unknown, and rounds the source fps like the worker", () => {
     expect(describeUprezResult(media({ fps: null }), 2, 2)).toBe(
       "1280×720 → 2560×1440",
     );
     expect(describeUprezResult(media({ fps: 29.97 }), 2, 2)).toBe(
-      "1280×720 → 2560×1440 · 29.97 → 59.94 fps",
+      "1280×720 → 2560×1440 · 29.97 → 60 fps",
     );
+  });
+
+  it("shows the highest values as up to for a mixed playlist", () => {
+    expect(
+      describeUprezResult(
+        media({
+          width: 1920,
+          height: 1080,
+          fps: 30,
+          mixedResolution: true,
+          mixedFps: true,
+        }),
+        2,
+        2,
+      ),
+    ).toBe("up to 1920×1080 → 3840×2160 · up to 30 → 60 fps");
   });
 });

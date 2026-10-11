@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useRef, useState } from "react";
 import { toast } from "react-toastify";
 import { useTranslation } from "react-i18next";
 import { Loader2 } from "lucide-react";
@@ -13,6 +13,7 @@ import { useUprezStore } from "@/stores/uprez.store";
 import type { EditorProjectPlaylistRef } from "@/types/editor-project.types";
 import {
   PLAYLIST_QUERY_KEY,
+  playlistQueryOptions,
   usePlaylist,
 } from "@/api/playlist/query/usePlaylist";
 import { useRunPlaylist } from "@/api/playlist/mutation/useRunPlaylist";
@@ -78,35 +79,40 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
   const setInterpolationFactor = useUprezStore((s) => s.setInterpolationFactor);
 
   const [pickerOpen, setPickerOpen] = useState(false);
-  // A playlist picked in this session whose upscale default still waits on
-  // its resolution. Restored projects keep their saved factor.
-  const [defaultsPendingFor, setDefaultsPendingFor] = useState<string | null>(
-    null,
-  );
+  const pendingUpscaleDefault = useRef<string | null>(null);
 
   const selectedUuid = selected?.uuid ?? "";
-  const sourceMeta = usePlaylistMetadata(selectedUuid);
-  const { data: sourceData } = usePlaylist(selectedUuid, Boolean(selectedUuid));
-  const source = sourceData?.data?.playlist;
-  const sourceMedia = source?.uuid === selectedUuid ? source.media : undefined;
+  const { playlist: source, meta: sourceMeta } =
+    usePlaylistMetadata(selectedUuid);
+  const sourceMedia = source?.media;
 
-  useEffect(() => {
-    if (!defaultsPendingFor || defaultsPendingFor !== source?.uuid) return;
-    setDefaultsPendingFor(null);
-    const upscale = defaultUpscaleFactor(source.media);
-    setUpscaleFactor(upscale);
-    if (upscale === 1 && useUprezStore.getState().interpolationFactor === 1) {
-      setInterpolationFactor(2);
+  const applyUpscaleDefault = async (uuid: string) => {
+    pendingUpscaleDefault.current = uuid;
+    const response = await queryClient
+      .ensureQueryData(playlistQueryOptions(uuid))
+      .catch(() => undefined);
+    if (pendingUpscaleDefault.current !== uuid) return;
+    pendingUpscaleDefault.current = null;
+
+    const current = useUprezStore.getState();
+    if (
+      !response ||
+      current.sourcePlaylist?.uuid !== uuid ||
+      current.interpolationFactor === 1
+    ) {
+      return;
     }
-  }, [defaultsPendingFor, source, setUpscaleFactor, setInterpolationFactor]);
+    setUpscaleFactor(defaultUpscaleFactor(response.data?.playlist?.media));
+  };
 
   const handleSelectSource = (picked: PlaylistSummary) => {
+    const changed = picked.uuid !== selected?.uuid;
     setSourcePlaylist(picked);
-    setDefaultsPendingFor(picked.uuid);
+    if (changed) void applyUpscaleDefault(picked.uuid);
   };
 
   const handleUpscaleChange = (factor: UpscaleFactor) => {
-    setDefaultsPendingFor(null);
+    pendingUpscaleDefault.current = null;
     setUpscaleFactor(factor);
   };
 

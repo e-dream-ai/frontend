@@ -1,4 +1,4 @@
-import type { PlaylistMediaSummary } from "../../../../types/playlist.types";
+import type { PlaylistMediaSummary } from "@/types/playlist.types";
 import type {
   InterpolationFactor,
   UpscaleFactor,
@@ -9,8 +9,10 @@ const HD_SHORT_SIDE = 1080;
 
 const formatFps = (fps: number) => String(Math.round(fps * 100) / 100);
 
-export const formatResolution = (width: number, height: number) =>
+const formatResolution = (width: number, height: number) =>
   `${width}×${height}`;
+
+const upTo = (mixed: boolean, text: string) => (mixed ? `up to ${text}` : text);
 
 /** `1280×720`, or `up to 1920×1080 (mixed)` when the dreams differ. */
 export const describePlaylistResolution = (media: PlaylistMediaSummary) => {
@@ -27,8 +29,7 @@ export const describePlaylistFps = (media: PlaylistMediaSummary) => {
 
 export const defaultUpscaleFactor = (
   media: PlaylistMediaSummary | null | undefined,
-): UpscaleFactor =>
-  media && Math.min(media.width, media.height) >= HD_SHORT_SIDE ? 1 : 2;
+): UpscaleFactor => (media && media.minShortSide >= HD_SHORT_SIDE ? 1 : 2);
 
 /**
  * What the uprez will produce, e.g. `1280×720 → 2560×1440 · 24 → 48 fps`.
@@ -40,20 +41,24 @@ export const describeUprezResult = (
   interpolationFactor: InterpolationFactor,
 ) => {
   const source = formatResolution(media.width, media.height);
-  const resolution =
+  const resolution = upTo(
+    media.mixedResolution,
     upscaleFactor === 1
       ? source
       : `${source} → ${formatResolution(
           media.width * upscaleFactor,
           media.height * upscaleFactor,
-        )}`;
+        )}`,
+  );
   if (media.fps === null) return resolution;
 
-  const fps =
-    interpolationFactor === 1
-      ? `${formatFps(media.fps)} fps`
-      : `${formatFps(media.fps)} → ${formatFps(
-          media.fps * interpolationFactor,
-        )} fps`;
+  const sourceFps = formatFps(media.fps);
+  const targetFps = Math.round(media.fps) * interpolationFactor;
+  const fps = upTo(
+    media.mixedFps,
+    targetFps === media.fps
+      ? `${sourceFps} fps`
+      : `${sourceFps} → ${targetFps} fps`,
+  );
   return `${resolution} · ${fps}`;
 };

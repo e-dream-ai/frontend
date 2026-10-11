@@ -30,7 +30,11 @@ export function describePlaylistContents(playlist?: Playlist | null): string[] {
       ? secondsToTimeFormat(totalDurationSeconds)
       : null,
     media ? describePlaylistFps(media) : null,
-    totalFrames ? `${totalFrames.toLocaleString("en-US")} frames` : null,
+    totalFrames
+      ? `${totalFrames.toLocaleString("en-US")} frame${
+          totalFrames === 1 ? "" : "s"
+        }`
+      : null,
   ]);
 
   return [
@@ -39,13 +43,18 @@ export function describePlaylistContents(playlist?: Playlist | null): string[] {
   ];
 }
 
-export function usePlaylistMetadata(uuid: string): string[] {
+export function usePlaylistMetadata(uuid: string): {
+  playlist: Playlist | undefined;
+  meta: string[];
+} {
   const { data, isFetching } = usePlaylist(uuid, Boolean(uuid));
-  const playlist = data?.data?.playlist;
+  const fetched = data?.data?.playlist;
+  const playlist = fetched?.uuid === uuid ? fetched : undefined;
 
-  if (!playlist || playlist.uuid !== uuid) {
-    return [isFetching ? "counting dreams\u2026" : UNAVAILABLE];
-  }
-
-  return describePlaylistContents(playlist);
+  return {
+    playlist,
+    meta: playlist
+      ? describePlaylistContents(playlist)
+      : [isFetching ? "counting dreams\u2026" : UNAVAILABLE],
+  };
 }
