@@ -30,7 +30,10 @@ import {
 } from "./components/lazy-editors";
 import { ActionPlaylistSync } from "./components/action-playlist-sync";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
-import { useEditorProjectSync } from "./hooks/useEditorProjectSync";
+import {
+  UNTITLED_PROJECT_NAME,
+  useEditorProjectSync,
+} from "./hooks/useEditorProjectSync";
 import { useEditorProjectLock } from "./hooks/useEditorProjectLock";
 import { useEditorProjectPlaylist } from "./hooks/useEditorProjectPlaylist";
 import { useEditorProjectAccess } from "./hooks/useEditorProjectAccess";
@@ -103,15 +106,13 @@ const StudioEditor: React.FC<{ mode: StudioMode }> = ({ mode }) => {
     mode,
     playlist: sync.playlist,
     attachPlaylist: sync.attachPlaylist,
+    fallbackName: sync.name === UNTITLED_PROJECT_NAME ? "" : sync.name,
   });
   const isEnhance = mode === "enhance";
   const setEnhanceName = useEnhanceStore((s) => s.setNameOverride);
   const enhanceDraftName = useEnhanceStore((s) => s.nameOverride);
   const projectName =
     isEnhance && !sync.playlist ? enhanceDraftName ?? "" : playlistSave.name;
-  const displayName = readOnly
-    ? projectName || access.project.name
-    : projectName;
 
   const setPlaylistName = playlistSave.setName;
   const handleRename = useCallback(
@@ -214,7 +215,7 @@ const StudioEditor: React.FC<{ mode: StudioMode }> = ({ mode }) => {
         {missing ? null : (
           <>
             <ProjectBar
-              name={displayName}
+              name={projectName}
               disabled={sync.status === "loading" || !isEditable}
               onRename={handleRename}
               onSubmit={
@@ -237,7 +238,7 @@ const StudioEditor: React.FC<{ mode: StudioMode }> = ({ mode }) => {
                   remixing={isRemixing}
                   onRemix={() => {
                     setViewOnlyOpen(false);
-                    void remix(displayName);
+                    void remix(projectName);
                   }}
                 />
               ) : null}

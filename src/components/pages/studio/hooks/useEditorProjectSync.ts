@@ -307,6 +307,7 @@ export const useEditorProjectSync = (
 
   return {
     status: displayStatus,
+    name: projectName,
     canWrite: canSave && ready && !conflict && displayStatus !== "loading",
     conflict,
     playlist,

@@ -25,12 +25,13 @@ export const useRemixEditorProject = (mode: StudioMode) => {
   const remix = useCallback(
     async (name: string) => {
       const adapter = EDITOR_ADAPTERS[mode];
+      const copyName = remixProjectName(name);
 
       try {
         const created = await mutateAsync({
           editorId: mode,
-          name: remixProjectName(name),
-          state: { ...adapter.read(), ...adapter.unlinked },
+          name: copyName,
+          state: { ...adapter.read(), ...adapter.forCopy(copyName) },
           schemaVersion: EDITOR_STATE_SCHEMA_VERSION,
           thumbnailDreamUuid: adapter.thumbnailDreamUuid(),
         });

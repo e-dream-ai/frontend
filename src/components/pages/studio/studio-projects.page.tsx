@@ -35,7 +35,6 @@ import {
 } from "./studio-projects.page.styled";
 
 const PROJECTS_PAGE_SIZE = 60;
-const UNSAVED_PLAYLIST_NAME = "Untitled";
 const SKELETON_COUNT = 6;
 
 type ThumbnailProps = {
@@ -138,7 +137,7 @@ export const StudioProjectsPage: React.FC = () => {
           <Grid>
             {projects.map((project) => {
               const mode = project.editorId;
-              const name = project.playlist?.name ?? UNSAVED_PLAYLIST_NAME;
+              const name = project.playlist?.name ?? project.name;
 
               return (
                 <Card key={project.uuid}>

@@ -1,3 +1,4 @@
+import { useStudioEditLock } from "../hooks/useStudioEditLock";
 import { useImageOrigin } from "../hooks/useImageOrigin";
 import {
   Details,
@@ -30,6 +31,7 @@ export const ImageDetails: React.FC<Props> = ({
   onDelete,
 }) => {
   const { loading, generated, settings, remix } = useImageOrigin(dreamUuid);
+  const { locked } = useStudioEditLock();
 
   return (
     <Details>
@@ -51,22 +53,24 @@ export const ImageDetails: React.FC<Props> = ({
           <DetailsMeta>Negative: {generated.negativePrompt}</DetailsMeta>
         )}
       </DetailsText>
-      <DetailsButtons>
-        <DetailsDeleteButton type="button" onClick={onDelete}>
-          Remove
-        </DetailsDeleteButton>
-        {generated && (
-          <DetailsButton
-            type="button"
-            onClick={() => {
-              remix();
-              onRemix();
-            }}
-          >
-            Remix
-          </DetailsButton>
-        )}
-      </DetailsButtons>
+      {locked ? null : (
+        <DetailsButtons>
+          <DetailsDeleteButton type="button" onClick={onDelete}>
+            Remove
+          </DetailsDeleteButton>
+          {generated && (
+            <DetailsButton
+              type="button"
+              onClick={() => {
+                remix();
+                onRemix();
+              }}
+            >
+              Remix
+            </DetailsButton>
+          )}
+        </DetailsButtons>
+      )}
     </Details>
   );
 };

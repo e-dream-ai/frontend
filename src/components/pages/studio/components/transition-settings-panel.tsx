@@ -570,6 +570,7 @@ export function TransitionSettingsPanel({
       {/* Expand/collapse toggle */}
       {!isPerTransition ? null : !settingsExpanded ? (
         <ToggleLink
+          data-edit-lock-allow
           onClick={() => useFlowStore.getState().setSettingsExpanded(true)}
         >
           &#9662; Customize
@@ -577,6 +578,7 @@ export function TransitionSettingsPanel({
       ) : (
         <>
           <ToggleLink
+            data-edit-lock-allow
             onClick={() => useFlowStore.getState().setSettingsExpanded(false)}
           >
             &#9652; Collapse

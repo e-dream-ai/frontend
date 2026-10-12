@@ -25,6 +25,7 @@ import {
   type TransitionField,
 } from "../utils/transition-field-values";
 import { isTransitionStale } from "../utils/transition-staleness";
+import { useStudioEditLock } from "../hooks/useStudioEditLock";
 import {
   StripSection,
   SectionHeader,
@@ -58,6 +59,7 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
   onAddFromPlaylist,
   onAddFromLibrary,
 }) => {
+  const { locked } = useStudioEditLock();
   // Actions (stable refs)
   const removeReferenceFrame = useFlowStore((s) => s.removeReferenceFrame);
   const reorderReferenceFrames = useFlowStore((s) => s.reorderReferenceFrames);
@@ -187,7 +189,7 @@ export const ReferenceFrameStrip: React.FC<Props> = ({
               // to. A shift-click that removed it is the one exception:
               // playing what you just deselected is not what was asked for.
               const current = useFlowStore.getState().selectedTransitionIndices;
-              if (!toggle) {
+              if (!toggle || locked) {
                 selectTransition(transitionIndex);
                 playTransition(transitionIndex);
                 return;

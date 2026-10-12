@@ -10,6 +10,7 @@ import {
   GapStatusLabel,
   StaleDot,
 } from "./transition-gap.styled";
+import { ALLOW_ATTRIBUTE } from "../utils/edit-lock-targets";
 
 /** Click selects; shift-click (or ctrl/cmd-click) toggles this one in or out. */
 export interface TransitionClickModifiers {
@@ -42,6 +43,7 @@ export function TransitionGapEnhanced({
   const staleSuffix = stale ? " Edited since it was rendered." : "";
 
   const activate = {
+    [ALLOW_ATTRIBUTE]: true,
     role: "button" as const,
     tabIndex: 0,
     $selected: selected,

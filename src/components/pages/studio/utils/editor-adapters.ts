@@ -20,7 +20,7 @@ import {
 
 export type EditorAdapter = {
   read: () => EditorProjectState;
-  unlinked: EditorProjectState;
+  forCopy: (name: string) => EditorProjectState;
   write: (state: EditorProjectState) => void;
   reset: () => void;
   subscribe: (listener: () => void) => () => void;
@@ -28,13 +28,13 @@ export type EditorAdapter = {
   thumbnailDreamUuid: () => string | null;
 };
 
-const UNLINKED_PLAYLIST: EditorProjectState = {
+const unlinkedPlaylist = (): EditorProjectState => ({
   savedPlaylistUuid: null,
   syncedPlaylistDreamUuids: [],
-};
+});
 
 const flowAdapter: EditorAdapter = {
-  unlinked: UNLINKED_PLAYLIST,
+  forCopy: unlinkedPlaylist,
   read: () =>
     toPersistedFlowState(
       selectFlowProject(useFlowStore.getState()),
@@ -68,7 +68,7 @@ const flowAdapter: EditorAdapter = {
 };
 
 const actionAdapter: EditorAdapter = {
-  unlinked: { outputPlaylistId: null },
+  forCopy: () => ({ outputPlaylistId: null }),
   read: () =>
     toPersistedActionState(
       selectStudioProject(useStudioStore.getState()),
@@ -100,7 +100,7 @@ const actionAdapter: EditorAdapter = {
 };
 
 const enhanceAdapter: EditorAdapter = {
-  unlinked: {},
+  forCopy: (name) => ({ nameOverride: name }),
   read: () =>
     selectEnhanceProject(useEnhanceStore.getState()) as EditorProjectState,
   write: (state) =>
@@ -114,7 +114,7 @@ const enhanceAdapter: EditorAdapter = {
 };
 
 const deforumAdapter: EditorAdapter = {
-  unlinked: UNLINKED_PLAYLIST,
+  forCopy: unlinkedPlaylist,
   read: () =>
     selectDeforumProject(useDeforumStore.getState()) as EditorProjectState,
   write: (state) =>

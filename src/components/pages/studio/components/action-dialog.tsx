@@ -1,3 +1,4 @@
+import { useStudioEditLock } from "../hooks/useStudioEditLock";
 import { useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import type { StudioAction } from "@/types/studio.types";
@@ -86,6 +87,7 @@ function ActionDetails({
   editsCopy: boolean;
   onEdit: () => void;
 }) {
+  const { locked } = useStudioEditLock();
   const model = useStudioStore((s) => s.videoGenParams.model);
   const lora = getLoraOptionsForModel(model).find(
     (o) => o.key === loraKeyOf(action),
@@ -102,14 +104,20 @@ function ActionDetails({
         </ActionMeta>
       </ActionDialogBody>
       <Footer>
-        <FooterButtons>
-          <CancelBtn onClick={onCheckColumn}>Check all</CancelBtn>
-          <CancelBtn onClick={onUncheckColumn}>Uncheck all</CancelBtn>
-          <DeleteBtn onClick={onDelete}>Delete</DeleteBtn>
-        </FooterButtons>
+        {locked ? (
+          <span />
+        ) : (
+          <FooterButtons>
+            <CancelBtn onClick={onCheckColumn}>Check all</CancelBtn>
+            <CancelBtn onClick={onUncheckColumn}>Uncheck all</CancelBtn>
+            <DeleteBtn onClick={onDelete}>Delete</DeleteBtn>
+          </FooterButtons>
+        )}
         <FooterButtons>
           <CancelBtn onClick={onClose}>Close</CancelBtn>
-          <AddBtn onClick={onEdit}>{editsCopy ? "Remix" : "Edit"}</AddBtn>
+          {locked ? null : (
+            <AddBtn onClick={onEdit}>{editsCopy ? "Remix" : "Edit"}</AddBtn>
+          )}
         </FooterButtons>
       </Footer>
     </>

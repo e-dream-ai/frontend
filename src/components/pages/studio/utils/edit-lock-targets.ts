@@ -20,4 +20,6 @@ export const INTERACTIVE_SELECTOR = [
   "[draggable='true']",
 ].join(", ");
 
-export const LINK_SELECTOR = "a[href]";
+export const ALLOW_ATTRIBUTE = "data-edit-lock-allow";
+
+export const ALLOW_SELECTOR = `a[href], [${ALLOW_ATTRIBUTE}]`;

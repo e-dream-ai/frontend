@@ -18,12 +18,14 @@ type Options = {
   mode: StudioMode;
   playlist: EditorProjectPlaylistRef | null;
   attachPlaylist: (next: EditorProjectPlaylistRef) => Promise<boolean>;
+  fallbackName?: string;
 };
 
 export const useEditorProjectPlaylist = ({
   mode,
   playlist,
   attachPlaylist,
+  fallbackName = "",
 }: Options) => {
   const adapter = SAVE_ADAPTERS[mode];
   const createPlaylist = useCreatePlaylist();
@@ -70,7 +72,7 @@ export const useEditorProjectPlaylist = ({
 
   const createAndSave = useCallback(
     async (name: string) => {
-      const trimmed = name.trim() || adapter.defaultName();
+      const trimmed = name.trim() || fallbackName || adapter.defaultName();
 
       setStatus("saving");
       let next;
@@ -106,7 +108,7 @@ export const useEditorProjectPlaylist = ({
         setStatus("idle");
       }
     },
-    [adapter, attachPlaylist, createPlaylist, pushDreams],
+    [adapter, attachPlaylist, createPlaylist, fallbackName, pushDreams],
   );
 
   const save = useCallback(async () => {
@@ -167,7 +169,7 @@ export const useEditorProjectPlaylist = ({
 
   return {
     status,
-    name: playlist?.name ?? pendingName,
+    name: playlist?.name ?? (pendingName || fallbackName),
     setName,
     save,
   };

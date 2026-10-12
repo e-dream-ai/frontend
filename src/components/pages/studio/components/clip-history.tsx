@@ -200,6 +200,7 @@ export function ClipHistory({
                 <HistoryItem
                   key={job.dreamUuid}
                   type="button"
+                  data-edit-lock-allow
                   role="listitem"
                   $current={false}
                   aria-label={`${cell}, generated ${time}. Activate to view it.`}

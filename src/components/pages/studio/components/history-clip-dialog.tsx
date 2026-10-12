@@ -1,3 +1,4 @@
+import { useStudioEditLock } from "../hooks/useStudioEditLock";
 import type { Dream } from "@/types/dream.types";
 import type { StudioJob } from "@/types/studio.types";
 import { useLightboxA11y } from "../hooks/useLightboxA11y";
@@ -66,6 +67,7 @@ export const HistoryClipDialog: React.FC<Props> = ({
   onClose,
 }) => {
   const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
+  const { locked } = useStudioEditLock();
   const url = dream?.original_video || dream?.video;
   const ratio = mediaAspectRatio(
     dream?.processedMediaWidth,
@@ -101,7 +103,12 @@ export const HistoryClipDialog: React.FC<Props> = ({
   ].filter(Boolean);
 
   return (
-    <Overlay ref={overlayRef} tabIndex={-1} onClick={onClose}>
+    <Overlay
+      ref={overlayRef}
+      tabIndex={-1}
+      data-edit-lock-allow
+      onClick={onClose}
+    >
       <HistoryClipPanel
         role="dialog"
         aria-modal="true"
@@ -157,28 +164,32 @@ export const HistoryClipDialog: React.FC<Props> = ({
               {renderMs !== undefined && ` • took ${formatDuration(renderMs)}`}
             </dd>
           </HistoryClipInfo>
-          <HistoryClipNote>
-            {blocked
-              ? "Its cell is still rendering; this can go back once that finishes."
-              : [
-                  current?.status === "processed" &&
-                    "Putting this back moves the clip now in its cell to History.",
-                  comesBack.length > 0 &&
-                    `Putting this back also brings back ${comesBack.join(
-                      " and ",
-                    )}.`,
-                ]
-                  .filter(Boolean)
-                  .join(" ")}
-          </HistoryClipNote>
+          {locked ? null : (
+            <HistoryClipNote>
+              {blocked
+                ? "Its cell is still rendering; this can go back once that finishes."
+                : [
+                    current?.status === "processed" &&
+                      "Putting this back moves the clip now in its cell to History.",
+                    comesBack.length > 0 &&
+                      `Putting this back also brings back ${comesBack.join(
+                        " and ",
+                      )}.`,
+                  ]
+                    .filter(Boolean)
+                    .join(" ")}
+            </HistoryClipNote>
+          )}
         </HistoryClipBody>
         <Footer>
           <span />
           <FooterButtons>
             <CancelBtn onClick={onClose}>Close</CancelBtn>
-            <AddBtn onClick={onPutBack} disabled={blocked}>
-              Put back
-            </AddBtn>
+            {locked ? null : (
+              <AddBtn onClick={onPutBack} disabled={blocked}>
+                Put back
+              </AddBtn>
+            )}
           </FooterButtons>
         </Footer>
       </HistoryClipPanel>

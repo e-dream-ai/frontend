@@ -80,6 +80,7 @@ export const StudioLightbox: React.FC<Props> = ({
     <Overlay
       ref={overlayRef}
       tabIndex={-1}
+      data-edit-lock-allow
       role="dialog"
       aria-modal="true"
       aria-label={label}

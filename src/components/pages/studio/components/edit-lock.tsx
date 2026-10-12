@@ -1,9 +1,9 @@
 import React from "react";
 import { useStudioEditLock } from "../hooks/useStudioEditLock";
 import {
+  ALLOW_SELECTOR,
   EDITABLE_SELECTOR,
   INTERACTIVE_SELECTOR,
-  LINK_SELECTOR,
 } from "../utils/edit-lock-targets";
 import { Region } from "./edit-lock.styled";
 
@@ -26,19 +26,35 @@ const blockInteractive = (event: React.SyntheticEvent) => {
   if (matches(event, INTERACTIVE_SELECTOR)) block(event);
 };
 
+const isAllowed = (event: React.SyntheticEvent) => {
+  const { target, currentTarget } = event;
+  if (!(target instanceof Element)) return false;
+
+  const allow = target.closest(ALLOW_SELECTOR);
+  if (allow === null || !currentTarget.contains(allow)) return false;
+  if (!allow.matches(INTERACTIVE_SELECTOR)) return true;
+
+  return target.closest(INTERACTIVE_SELECTOR) === allow;
+};
+
+const unlessAllowed =
+  <E extends React.SyntheticEvent>(handler: (event: E) => void) =>
+  (event: E) => {
+    if (!isAllowed(event)) handler(event);
+  };
+
 const lockGuards = (onBlocked?: () => void) => ({
-  onClickCapture: (event: React.MouseEvent) => {
-    if (matches(event, LINK_SELECTOR)) return;
+  onClickCapture: unlessAllowed((event: React.MouseEvent) => {
     block(event);
     if (matches(event, INTERACTIVE_SELECTOR)) onBlocked?.();
-  },
-  onDoubleClickCapture: block,
-  onPointerDownCapture: blockInteractive,
-  onMouseDownCapture: blockInteractive,
-  onTouchStartCapture: (event: React.TouchEvent) => {
+  }),
+  onDoubleClickCapture: unlessAllowed(block),
+  onPointerDownCapture: unlessAllowed(blockInteractive),
+  onMouseDownCapture: unlessAllowed(blockInteractive),
+  onTouchStartCapture: unlessAllowed((event: React.TouchEvent) => {
     if (matches(event, INTERACTIVE_SELECTOR)) event.stopPropagation();
-  },
-  onKeyDownCapture: (event: React.KeyboardEvent) => {
+  }),
+  onKeyDownCapture: unlessAllowed((event: React.KeyboardEvent) => {
     if (event.key === "Tab") return;
     if (
       (event.metaKey || event.ctrlKey) &&
@@ -55,7 +71,7 @@ const lockGuards = (onBlocked?: () => void) => ({
 
     block(event);
     onBlocked?.();
-  },
+  }),
   onBeforeInputCapture: block,
   onPasteCapture: block,
   onCutCapture: block,
