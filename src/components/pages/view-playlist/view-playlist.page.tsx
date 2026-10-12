@@ -6,6 +6,7 @@ import { PlaylistBrowseList } from "./components/playlist-browse-list";
 import { OpenInStudio } from "@/components/shared/open-in-studio";
 import { StudioBadge } from "@/components/shared/studio-badge";
 import { useEditorProjectByPlaylist } from "@/api/editor-project/query/useEditorProjects";
+import usePermission from "@/hooks/usePermission";
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
@@ -30,7 +31,10 @@ import Restricted from "@/components/shared/restricted/restricted";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import Text from "@/components/shared/text/text";
 import { ThumbnailInput } from "@/components/shared/thumbnail-input/thumbnail-input";
-import { PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
+import {
+  DREAM_PERMISSIONS,
+  PLAYLIST_PERMISSIONS,
+} from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import { HandleChangeFile } from "@/types/media.types";
@@ -247,8 +251,11 @@ const ViewPlaylistContent = () => {
     isFetchingNextPlaylistItemsPage,
     isFetchingNextPlaylistKeyframesPage,
   } = usePlaylistState();
+  const canOpenStudio = usePermission({
+    permission: DREAM_PERMISSIONS.CAN_CREATE_DREAM,
+  });
   const { project: studioProject, isInitialLoading: isStudioLoading } =
-    useEditorProjectByPlaylist(playlist?.uuid, isOwner);
+    useEditorProjectByPlaylist(playlist?.uuid, isOwner || canOpenStudio);
   const isStudioBacked = isStudioLoading || Boolean(studioProject);
   const canReorderItems =
     allowedEditPlaylist &&

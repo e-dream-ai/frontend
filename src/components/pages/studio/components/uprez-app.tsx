@@ -40,6 +40,7 @@ import {
   describeUprezResult,
 } from "../utils/uprez-media";
 import { formatUprezRunSummary } from "@/utils/uprez-run-summary";
+import { useStudioEditLock } from "../hooks/useStudioEditLock";
 import {
   AppBody,
   AppHeader,
@@ -65,6 +66,7 @@ type Props = {
 
 export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
   const { t } = useTranslation();
+  const { locked } = useStudioEditLock();
   const queryClient = useQueryClient();
   const createUprezPlaylist = useCreateUprezPlaylist();
   const updatePlaylist = useUpdatePlaylist();
@@ -140,7 +142,7 @@ export const UprezApp: React.FC<Props> = ({ playlist, onCreated }) => {
         interpolation_factor: interpolationFactor,
       },
     },
-    enabled: Boolean(playlist && selectedUuid) && !isNoOp,
+    enabled: Boolean(playlist && selectedUuid) && !isNoOp && !locked,
     refreshKey: progress?.failed,
   });
   const planned = preview.data;

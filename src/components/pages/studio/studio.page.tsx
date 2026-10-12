@@ -1,4 +1,4 @@
-import React, { Suspense, useCallback } from "react";
+import React, { Suspense, useCallback, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { v4 as uuidv4 } from "uuid";
@@ -15,6 +15,9 @@ import { ProjectConflictModal } from "./components/project-conflict-modal";
 import { ProjectLockedModal } from "./components/project-locked-modal";
 import { PlaylistActions } from "./components/playlist-actions";
 import { StudioSkeleton } from "./components/studio-skeleton";
+import { EditLock } from "./components/edit-lock";
+import { ViewOnlyMenu } from "./components/view-only-menu";
+import { ProjectUnavailable } from "./components/project-unavailable";
 import {
   ActionsTab,
   DeforumApp,
@@ -28,6 +31,12 @@ import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
 import { useEditorProjectSync } from "./hooks/useEditorProjectSync";
 import { useEditorProjectLock } from "./hooks/useEditorProjectLock";
 import { useEditorProjectPlaylist } from "./hooks/useEditorProjectPlaylist";
+import { useEditorProjectAccess } from "./hooks/useEditorProjectAccess";
+import { useRemixEditorProject } from "./hooks/useRemixEditorProject";
+import {
+  StudioEditLockContext,
+  type StudioEditLock,
+} from "./hooks/useStudioEditLock";
 import { useFileDropUpload } from "./hooks/useFileDropUpload";
 import { useUploadImageDream } from "@/api/dream/mutation/useUploadImageDream";
 import useAuth from "@/hooks/useAuth";
@@ -58,9 +67,32 @@ export const StudioPage: React.FC = () => {
     projectUuid?: string;
   }>();
   const mode = parseStudioMode(editorId);
-  const lock = useEditorProjectLock(projectUuid);
-  const canEditProject = lock.status === "held" || lock.status === "idle";
-  const sync = useEditorProjectSync(mode, projectUuid, canEditProject);
+  const access = useEditorProjectAccess(projectUuid);
+  const readOnly = access.status === "readOnly";
+  const missing = access.status === "missing";
+  const isEditable = access.status === "editable";
+  const lock = useEditorProjectLock(isEditable ? projectUuid : undefined);
+  const sync = useEditorProjectSync(
+    mode,
+    projectUuid,
+    isEditable && (lock.status === "held" || lock.status === "idle"),
+  );
+  const locked = !sync.canWrite;
+  const { remix, isRemixing } = useRemixEditorProject(mode);
+
+  const [viewOnlyOpenFor, setViewOnlyOpenFor] = useState<string>();
+  const viewOnlyOpen = readOnly && viewOnlyOpenFor === projectUuid;
+  const setViewOnlyOpen = useCallback(
+    (open: boolean) => setViewOnlyOpenFor(open ? projectUuid : undefined),
+    [projectUuid],
+  );
+  const editLock = useMemo<StudioEditLock>(
+    () => ({
+      locked,
+      onBlocked: readOnly ? () => setViewOnlyOpen(true) : undefined,
+    }),
+    [locked, readOnly, setViewOnlyOpen],
+  );
   const playlistSave = useEditorProjectPlaylist({
     mode,
     playlist: sync.playlist,
@@ -71,6 +103,9 @@ export const StudioPage: React.FC = () => {
   const uprezDraftName = useUprezStore((s) => s.nameOverride);
   const projectName =
     isUprez && !sync.playlist ? uprezDraftName ?? "" : playlistSave.name;
+  const displayName = readOnly
+    ? projectName || access.project.name
+    : projectName;
 
   const setPlaylistName = playlistSave.setName;
   const handleRename = useCallback(
@@ -154,6 +189,7 @@ export const StudioPage: React.FC = () => {
   const { isDragOver, dropHandlers } = useFileDropUpload({
     accept: ["image/jpeg", "image/png", "image/webp"],
     onFiles: handleStudioDrop,
+    disabled: locked,
   });
 
   return (
@@ -169,72 +205,86 @@ export const StudioPage: React.FC = () => {
           <StudioTitle>Studio</StudioTitle>
           <EditorBadge $mode={mode}>{STUDIO_MODE_LABELS[mode]}</EditorBadge>
         </TitleGroup>
-        <ProjectBar
-          name={projectName}
-          disabled={sync.status === "loading"}
-          onRename={handleRename}
-          onSubmit={
-            isUprez || playlistSave.status === "saving"
-              ? undefined
-              : playlistSave.save
-          }
-        />
-        <PlaylistActions
-          playlist={sync.playlist}
-          canSave={!isUprez}
-          saving={playlistSave.status === "saving"}
-          onSave={playlistSave.save}
-        />
+        {missing ? null : (
+          <>
+            <ProjectBar
+              name={displayName}
+              disabled={sync.status === "loading" || !isEditable}
+              onRename={handleRename}
+              onSubmit={
+                isUprez || playlistSave.status === "saving"
+                  ? undefined
+                  : playlistSave.save
+              }
+            />
+            <PlaylistActions
+              playlist={sync.playlist}
+              canSave={!isUprez && isEditable}
+              saving={playlistSave.status === "saving"}
+              onSave={playlistSave.save}
+            >
+              {readOnly ? (
+                <ViewOnlyMenu
+                  owner={access.project.owner}
+                  open={viewOnlyOpen}
+                  onOpenChange={setViewOnlyOpen}
+                  remixing={isRemixing}
+                  onRemix={() => {
+                    setViewOnlyOpen(false);
+                    void remix(displayName);
+                  }}
+                />
+              ) : null}
+            </PlaylistActions>
+          </>
+        )}
         <HeaderSpacer />
-        <SaveStatus status={sync.status} />
+        {readOnly ? null : <SaveStatus status={sync.status} />}
         {canManageProviderKey ? (
           <CreditsMeter user={currentUser} compact />
         ) : null}
       </StudioHeader>
 
-      <StudioBody>
-        <Suspense fallback={<StudioSkeleton />}>
-          {mode === "flow" && <FlowBuilder />}
-          {mode === "action" && (
-            <StudioFrame>
-              <StudioTabs />
-              {activeTab === "images" && <ImagesTab />}
-              {activeTab === "actions" && <ActionsTab />}
-              {activeTab === "generate" && <GenerateTab />}
-            </StudioFrame>
+      <StudioEditLockContext.Provider value={editLock}>
+        <StudioBody>
+          {missing ? (
+            <ProjectUnavailable />
+          ) : (
+            <Suspense fallback={<StudioSkeleton />}>
+              {mode === "flow" && <FlowBuilder />}
+              {mode === "action" && (
+                <StudioFrame>
+                  <StudioTabs />
+                  <EditLock>
+                    {activeTab === "images" && <ImagesTab />}
+                    {activeTab === "actions" && <ActionsTab />}
+                  </EditLock>
+                  {activeTab === "generate" && <GenerateTab />}
+                </StudioFrame>
+              )}
+              {mode === "deforum" && <DeforumApp />}
+              {isUprez && (
+                <UprezFrame>
+                  <EditLock>
+                    <UprezApp
+                      playlist={sync.playlist}
+                      onCreated={sync.attachPlaylist}
+                    />
+                  </EditLock>
+                </UprezFrame>
+              )}
+            </Suspense>
           )}
-          {mode === "deforum" && (
-            <DeforumApp
-              canSyncPlaylist={
-                canEditProject && sync.status !== "loading" && !sync.conflict
-              }
-            />
-          )}
-          {isUprez && (
-            <UprezFrame>
-              <UprezApp
-                playlist={sync.playlist}
-                onCreated={sync.attachPlaylist}
-              />
-            </UprezFrame>
-          )}
-        </Suspense>
 
-        {sync.status === "loading" ? (
-          <BodyOverlay>
-            <StudioSkeleton />
-          </BodyOverlay>
-        ) : null}
-      </StudioBody>
+          {sync.status === "loading" ? (
+            <BodyOverlay>
+              <StudioSkeleton />
+            </BodyOverlay>
+          ) : null}
+        </StudioBody>
+      </StudioEditLockContext.Provider>
 
-      <ActionPlaylistSync
-        enabled={
-          mode === "action" &&
-          canEditProject &&
-          sync.status !== "loading" &&
-          !sync.conflict
-        }
-      />
+      <ActionPlaylistSync enabled={mode === "action" && !locked} />
 
       {lock.status === "blocked" ? (
         <ProjectLockedModal
