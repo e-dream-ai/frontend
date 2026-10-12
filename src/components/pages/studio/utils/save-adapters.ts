@@ -28,10 +28,10 @@ const actionSaveAdapter: EditorSaveAdapter = {
   defaultName: () => timestampedName("Action"),
 };
 
-const uprezSaveAdapter: EditorSaveAdapter = {
+const enhanceSaveAdapter: EditorSaveAdapter = {
   pendingDreamUuids: () => [],
   link: () => {},
-  defaultName: () => timestampedName("Uprez"),
+  defaultName: () => timestampedName("Enhance"),
 };
 
 const deforumSaveAdapter: EditorSaveAdapter = {
@@ -51,6 +51,6 @@ const deforumSaveAdapter: EditorSaveAdapter = {
 export const SAVE_ADAPTERS: Record<StudioMode, EditorSaveAdapter> = {
   flow: flowSaveAdapter,
   action: actionSaveAdapter,
-  uprez: uprezSaveAdapter,
+  enhance: enhanceSaveAdapter,
   deforum: deforumSaveAdapter,
 };

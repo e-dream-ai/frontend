@@ -87,6 +87,18 @@ const stripImage = (image: StudioImage): PersistedImage =>
 
 const stripJob = (job: StudioJob): PersistedJob => omit(job, VOLATILE_JOB_KEYS);
 
+// Flow and Action once queued an upscale of their own clips; that lives in
+// Enhance now. Projects saved back then still carry it, so loading drops it.
+const DROPPED_TRANSITION_KEYS = [
+  "uprezDreamUuid",
+  "uprezStatus",
+  "uprezProgress",
+] as const;
+
+const withoutDroppedJobs = <T extends Pick<StudioJob, "jobType">>(
+  jobs: readonly T[] = [],
+): T[] => jobs.filter((job) => (job.jobType as string) !== "uprez");
+
 export const toPersistedFlowState = (
   state: FlowStateInput,
 ): PersistedFlowState => {
@@ -117,7 +129,12 @@ export const fromPersistedFlowState = (
     const stored = transitions[transitionKey(fromFrameId, toFrameId)];
 
     if (stored) {
-      ordered.push({ ...stored });
+      ordered.push(
+        omit(
+          stored as Record<string, unknown>,
+          DROPPED_TRANSITION_KEYS,
+        ) as PersistedTransition,
+      );
       continue;
     }
 
@@ -199,6 +216,8 @@ export const fromPersistedActionState = (
     excludedCombos = [],
     images = [],
     removedImages = [],
+    jobs,
+    historyJobs,
     activeTab,
     ...rest
   } = persisted;
@@ -208,6 +227,10 @@ export const fromPersistedActionState = (
     ...rest,
     ...(tab ? { activeTab: tab } : {}),
     excludedCombos: new Set(excludedCombos),
+    jobs: withoutDroppedJobs(jobs),
+    ...(historyJobs && {
+      historyJobs: withoutDroppedJobs(historyJobs),
+    }),
     images: images.map((image) => ({ ...image, url: "" })),
     removedImages: removedImages.map((removed) => ({
       ...removed,

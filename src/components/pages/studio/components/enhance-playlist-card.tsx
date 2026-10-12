@@ -6,7 +6,7 @@ import {
   PlaylistCardName,
   PlaylistCardShell,
   PlaylistCardThumb,
-} from "./uprez-app.styled";
+} from "./enhance-app.styled";
 
 const CARD_THUMB = { width: 200, fit: "cover" as const };
 
@@ -18,7 +18,7 @@ type Props = {
   children?: React.ReactNode;
 };
 
-export const UprezPlaylistCard: React.FC<Props> = ({
+export const EnhancePlaylistCard: React.FC<Props> = ({
   name,
   meta,
   thumbnail,

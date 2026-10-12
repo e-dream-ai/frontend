@@ -71,7 +71,6 @@ export const resolveJobSettings = (
   job: StudioJob,
   dreamPrompt?: unknown,
 ): JobSettings | undefined => {
-  if (job.jobType === "uprez") return undefined;
   return (
     job.settings ??
     settingsFromDreamPrompt(dreamPrompt) ?? { model: job.jobType }

@@ -12,7 +12,6 @@ export type CellJobs = ReadonlyMap<string, StudioJob>;
 export const indexCellJobs = (jobs: readonly StudioJob[]): CellJobs => {
   const index = new Map<string, StudioJob>();
   for (const job of jobs) {
-    if (job.jobType === "uprez") continue;
     const key = comboKeyOf(job.imageId, job.actionId);
     if (!index.has(key)) index.set(key, job);
   }
@@ -52,7 +51,7 @@ export const actionClipCounts = (
   );
   const counts = new Map<string, number>();
   for (const j of jobs) {
-    if (j.jobType === "uprez" || !frameIds.has(j.imageId)) continue;
+    if (!frameIds.has(j.imageId)) continue;
     counts.set(j.actionId, (counts.get(j.actionId) ?? 0) + 1);
   }
   return counts;
@@ -67,13 +66,7 @@ export const findCellJob = (
   jobs: readonly StudioJob[],
   imageUuid: string,
   actionId: string,
-) =>
-  jobs.find(
-    (j) =>
-      j.imageId === imageUuid &&
-      j.actionId === actionId &&
-      j.jobType !== "uprez",
-  );
+) => jobs.find((j) => j.imageId === imageUuid && j.actionId === actionId);
 
 /**
  * How many clips an image has in its matrix row: one per column whose cell

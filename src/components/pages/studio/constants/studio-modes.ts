@@ -6,7 +6,7 @@ import type { StudioMode } from "@/types/flow.types";
 export const STUDIO_MODES: readonly StudioMode[] = [
   "flow",
   "action",
-  "uprez",
+  "enhance",
   "deforum",
 ] as const;
 
@@ -17,21 +17,16 @@ export const STUDIO_MODES: readonly StudioMode[] = [
 export const STUDIO_MODE_LABELS: Record<StudioMode, string> = {
   flow: "Flow",
   action: "Action",
-  uprez: "Uprez",
+  enhance: "Enhance",
   deforum: "Deforum",
 };
-
-export const DEFAULT_STUDIO_MODE: StudioMode = "flow";
 
 export const isStudioMode = (value?: string): value is StudioMode =>
   STUDIO_MODES.includes(value as StudioMode);
 
-export const parseStudioMode = (value?: string): StudioMode =>
-  isStudioMode(value) ? value : DEFAULT_STUDIO_MODE;
-
 export const STUDIO_MODE_DESCRIPTIONS: Record<StudioMode, string> = {
   flow: "Animate transitions between reference frames",
   action: "Generate images and turn them into clips",
-  uprez: "Upscale every dream in a playlist",
+  enhance: "Upscale every dream in a playlist",
   deforum: "Animate prompt keyframes with deforum",
 };

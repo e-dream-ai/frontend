@@ -48,20 +48,16 @@ describe("isCellChecked", () => {
 });
 
 describe("findCellJob", () => {
-  it("finds the cell's clip whatever model made it, but not an uprez", () => {
-    const wan = job({ jobType: "wan-i2v" });
-    expect(findCellJob([wan], "img", "act")).toBe(wan);
-    expect(
-      findCellJob([job({ jobType: "uprez" })], "img", "act"),
-    ).toBeUndefined();
+  it("finds the cell's clip whatever model made it", () => {
+    const ltx = job({ jobType: "ltx-i2v" });
+    expect(findCellJob([ltx], "img", "act")).toBe(ltx);
   });
 });
 
 describe("indexCellJobs", () => {
-  it("keys each cell's first clip, as findCellJob does, and skips uprez", () => {
+  it("keys each cell's first clip, as findCellJob does", () => {
     const first = job({ dreamUuid: "first" });
     const jobs = [
-      job({ dreamUuid: "up", jobType: "uprez" }),
       first,
       job({ dreamUuid: "second" }),
       job({ imageId: "img2", dreamUuid: "other" }),
@@ -106,13 +102,12 @@ describe("actionClipCounts", () => {
     });
   });
 
-  it("ignores clips of frames the matrix does not show, and uprez jobs", () => {
+  it("ignores clips of frames the matrix does not show", () => {
     const counts = actionClipCounts(
       [frame("img"), frame("pending", "processing")],
       [
         job({ actionId: "gone", imageId: "removed" }),
         job({ actionId: "hidden", imageId: "pending" }),
-        job({ actionId: "uprez-1", jobType: "uprez" }),
       ],
     );
     expect(counts.size).toBe(0);
@@ -131,7 +126,6 @@ describe("imageClipCount", () => {
       // Nor does one no longer in the project.
       job({ actionId: "gone", dreamUuid: "4" }),
       job({ imageId: "other", actionId: "a", dreamUuid: "5" }),
-      job({ actionId: "a", dreamUuid: "6", jobType: "uprez" }),
     ];
     const actions = [action("a"), action("b"), action("blank", "  ")];
     expect(imageClipCount(indexCellJobs(jobs), actions, "img")).toBe(2);

@@ -1,16 +1,16 @@
 import type {
   InterpolationFactor,
   UpscaleFactor,
-} from "../constants/uprez-factor-options";
-import type { UprezPlaylistPrompt } from "@/types/playlist.types";
+} from "../constants/enhance-factor-options";
+import type { EnhancePlaylistPrompt } from "@/types/playlist.types";
 
 /**
- * The prompt the backend recognises as a runnable uprez playlist
- * (`isUprezPlaylistPrompt` in backend/src/utils/playlist-prompt.util.ts).
- * Built in one place so the Uprez app and the flow's save-to-playlist modal
+ * The prompt the backend recognises as a runnable enhance playlist
+ * (`isEnhancePlaylistPrompt` in backend/src/utils/playlist-prompt.util.ts).
+ * Built in one place so the Enhance app and the flow's save-to-playlist modal
  * can't drift on the field names the run endpoint reads.
  */
-export const buildUprezPlaylistPrompt = ({
+export const buildEnhancePlaylistPrompt = ({
   sourcePlaylistUuid,
   upscaleFactor,
   interpolationFactor,
@@ -18,17 +18,17 @@ export const buildUprezPlaylistPrompt = ({
   sourcePlaylistUuid: string;
   upscaleFactor: UpscaleFactor;
   interpolationFactor: InterpolationFactor;
-}): UprezPlaylistPrompt => ({
-  infinidream_algorithm: "uprez_playlist",
+}): EnhancePlaylistPrompt => ({
+  infinidream_algorithm: "enhance_playlist",
   source_playlist_uuid: sourcePlaylistUuid,
-  dream_algorithm: "uprez",
+  dream_algorithm: "enhance",
   params: {
     upscale_factor: upscaleFactor,
     interpolation_factor: interpolationFactor,
   },
 });
 
-export const isNoOpUprez = (
+export const isNoOpEnhance = (
   upscaleFactor: UpscaleFactor,
   interpolationFactor: InterpolationFactor,
 ): boolean => upscaleFactor === 1 && interpolationFactor === 1;

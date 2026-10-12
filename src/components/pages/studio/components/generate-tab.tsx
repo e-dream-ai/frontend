@@ -206,11 +206,6 @@ export const GenerateTab: React.FC = () => {
     else removeAction(id);
   };
 
-  const submittedJobs = useMemo(
-    () => jobs.filter((j) => j.jobType !== "uprez"),
-    [jobs],
-  );
-
   return (
     <TabLayout>
       <TabColumn>
@@ -224,12 +219,12 @@ export const GenerateTab: React.FC = () => {
           actions={runnableActions}
           jobs={jobs}
           cellJobs={cellJobs}
-          hasSubmitted={submittedJobs.length > 0}
+          hasSubmitted={jobs.length > 0}
           onIndexChange={preview.showIndex}
           onPlay={playSegment}
         />
 
-        <BatchProgress jobs={submittedJobs} />
+        <BatchProgress jobs={jobs} />
 
         <CreditLimitNotice
           overBudget={overBudget}

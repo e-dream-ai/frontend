@@ -4,6 +4,8 @@ import {
   fromPersistedFlowState,
   toPersistedActionState,
   toPersistedFlowState,
+  transitionKey,
+  type PersistedActionState,
 } from "./editor-project-state";
 import type { FlowReferenceFrame, FlowTransition } from "@/types/flow.types";
 
@@ -96,6 +98,25 @@ describe("flow state persistence", () => {
     expect(restored.transitions).toHaveLength(1);
     expect(restored.transitions[0].settings).toBeDefined();
   });
+
+  it("drops the upscale a flow saved before Enhance replaced it", () => {
+    const persisted = toPersistedFlowState({
+      referenceFrames: [frame("a"), frame("b")],
+      transitions: [transition("a", "b", { dreamUuid: "d1" })],
+    });
+    Object.assign(persisted.transitions[transitionKey("a", "b")], {
+      uprezDreamUuid: "u1",
+      uprezStatus: "processed",
+      uprezProgress: 100,
+    });
+
+    const [restored] = fromPersistedFlowState(persisted).transitions;
+
+    expect(restored.dreamUuid).toBe("d1");
+    expect(restored).not.toHaveProperty("uprezDreamUuid");
+    expect(restored).not.toHaveProperty("uprezStatus");
+    expect(restored).not.toHaveProperty("uprezProgress");
+  });
 });
 
 describe("action state persistence", () => {
@@ -155,6 +176,34 @@ describe("action state persistence", () => {
       expect(saved).not.toHaveProperty("thumbnailUrl");
       expect(saved?.completedAt).toBe(1);
     }
+  });
+
+  it("drops upscale jobs an action project saved before Enhance replaced them", () => {
+    const clip = {
+      imageId: "i1",
+      actionId: "a1",
+      jobType: "wan-i2v",
+      status: "processed",
+    };
+    const persisted = {
+      excludedCombos: [],
+      images: [],
+      jobs: [
+        { ...clip, dreamUuid: "d1" },
+        { ...clip, dreamUuid: "u1", jobType: "uprez" },
+      ],
+      historyJobs: [
+        { ...clip, dreamUuid: "d0" },
+        { ...clip, dreamUuid: "u0", jobType: "uprez" },
+      ],
+    } as unknown as PersistedActionState;
+
+    const restored = fromPersistedActionState(persisted);
+
+    const uuids = (jobs: unknown) =>
+      (jobs as { dreamUuid: string }[]).map((job) => job.dreamUuid);
+    expect(uuids(restored.jobs)).toEqual(["d1"]);
+    expect(uuids(restored.historyJobs)).toEqual(["d0"]);
   });
 
   it("opens a project saved on the removed Results tab on the Matrix", () => {

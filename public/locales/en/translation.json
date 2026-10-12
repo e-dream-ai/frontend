@@ -751,12 +751,12 @@
       "count_failed": "{{count}} failed",
       "count_idle": "{{count}} not started"
     },
-    "uprez_run_summary": {
+    "enhance_run_summary": {
       "up_to_date_preview": "Everything is up to date at these settings.",
       "up_to_date_started": "Everything was already up to date.",
       "in_progress": "Already rendering at these settings.",
       "summary_preview": "Running will {{actions, list}}.",
-      "summary_started": "Uprez run started: {{actions, list}}.",
+      "summary_started": "Enhance run started: {{actions, list}}.",
       "render_one": "render {{count}} dream",
       "render_other": "render {{count}} dreams",
       "reuse_one": "reuse {{count}} earlier render",

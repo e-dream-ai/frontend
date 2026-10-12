@@ -5,9 +5,11 @@ import { v4 as uuidv4 } from "uuid";
 import Bugsnag from "@bugsnag/js";
 import { useStudioStore } from "@/stores/studio.store";
 import { useFlowStore } from "@/stores/flow.store";
-import { useUprezStore } from "@/stores/uprez.store";
+import { useEnhanceStore } from "@/stores/enhance.store";
 import { ROUTES } from "@/constants/routes.constants";
-import { parseStudioMode, STUDIO_MODE_LABELS } from "./constants/studio-modes";
+import { isStudioMode, STUDIO_MODE_LABELS } from "./constants/studio-modes";
+import type { StudioMode } from "@/types/flow.types";
+import { NotFound } from "@/components/shared/not-found/not-found";
 import { StudioTabs } from "./components/studio-tabs";
 import { ProjectBar } from "./components/project-bar";
 import { SaveStatus } from "./components/save-status";
@@ -21,7 +23,7 @@ import {
   FlowBuilder,
   GenerateTab,
   ImagesTab,
-  UprezApp,
+  EnhanceApp,
 } from "./components/lazy-editors";
 import { ActionPlaylistSync } from "./components/action-playlist-sync";
 import { useStudioJobProgress } from "./hooks/useStudioJobProgress";
@@ -46,18 +48,22 @@ import {
   HeaderSpacer,
   StudioBody,
   StudioFrame,
-  UprezFrame,
+  EnhanceFrame,
   EditorBadge,
   BodyOverlay,
 } from "./studio.page.styled";
 
+// Checks the editor before any of the editor's hooks run, so an unknown one
+// never loads or locks a project.
 export const StudioPage: React.FC = () => {
+  const { editorId } = useParams<{ editorId?: string }>();
+  if (!isStudioMode(editorId)) return <NotFound />;
+  return <StudioEditor mode={editorId} />;
+};
+
+const StudioEditor: React.FC<{ mode: StudioMode }> = ({ mode }) => {
   const navigate = useNavigate();
-  const { editorId, projectUuid } = useParams<{
-    editorId?: string;
-    projectUuid?: string;
-  }>();
-  const mode = parseStudioMode(editorId);
+  const { projectUuid } = useParams<{ projectUuid?: string }>();
   const lock = useEditorProjectLock(projectUuid);
   const canEditProject = lock.status === "held" || lock.status === "idle";
   const sync = useEditorProjectSync(mode, projectUuid, canEditProject);
@@ -66,22 +72,22 @@ export const StudioPage: React.FC = () => {
     playlist: sync.playlist,
     attachPlaylist: sync.attachPlaylist,
   });
-  const isUprez = mode === "uprez";
-  const setUprezName = useUprezStore((s) => s.setNameOverride);
-  const uprezDraftName = useUprezStore((s) => s.nameOverride);
+  const isEnhance = mode === "enhance";
+  const setEnhanceName = useEnhanceStore((s) => s.setNameOverride);
+  const enhanceDraftName = useEnhanceStore((s) => s.nameOverride);
   const projectName =
-    isUprez && !sync.playlist ? uprezDraftName ?? "" : playlistSave.name;
+    isEnhance && !sync.playlist ? enhanceDraftName ?? "" : playlistSave.name;
 
   const setPlaylistName = playlistSave.setName;
   const handleRename = useCallback(
     (next: string) => {
-      if (isUprez && !sync.playlist) {
-        setUprezName(next);
+      if (isEnhance && !sync.playlist) {
+        setEnhanceName(next);
         return;
       }
       setPlaylistName(next);
     },
-    [isUprez, sync.playlist, setUprezName, setPlaylistName],
+    [isEnhance, sync.playlist, setEnhanceName, setPlaylistName],
   );
 
   const activeTab = useStudioStore((s) => s.activeTab);
@@ -104,9 +110,9 @@ export const StudioPage: React.FC = () => {
 
   const handleStudioDrop = useCallback(
     async (files: File[]) => {
-      // Uprez takes a playlist and deforum takes prompts — neither has
+      // Enhance takes a playlist and deforum takes prompts — neither has
       // anything to drop an image onto.
-      if (isUprez || mode === "deforum") return;
+      if (isEnhance || mode === "deforum") return;
 
       for (const file of files) {
         if (mode === "action") {
@@ -148,7 +154,7 @@ export const StudioPage: React.FC = () => {
         }
       }
     },
-    [isUprez, mode, addImage, updateImage, addReferenceFrame, uploadDream],
+    [isEnhance, mode, addImage, updateImage, addReferenceFrame, uploadDream],
   );
 
   const { isDragOver, dropHandlers } = useFileDropUpload({
@@ -174,14 +180,14 @@ export const StudioPage: React.FC = () => {
           disabled={sync.status === "loading"}
           onRename={handleRename}
           onSubmit={
-            isUprez || playlistSave.status === "saving"
+            isEnhance || playlistSave.status === "saving"
               ? undefined
               : playlistSave.save
           }
         />
         <PlaylistActions
           playlist={sync.playlist}
-          canSave={!isUprez}
+          canSave={!isEnhance}
           saving={playlistSave.status === "saving"}
           onSave={playlistSave.save}
         />
@@ -210,13 +216,13 @@ export const StudioPage: React.FC = () => {
               }
             />
           )}
-          {isUprez && (
-            <UprezFrame>
-              <UprezApp
+          {isEnhance && (
+            <EnhanceFrame>
+              <EnhanceApp
                 playlist={sync.playlist}
                 onCreated={sync.attachPlaylist}
               />
-            </UprezFrame>
+            </EnhanceFrame>
           )}
         </Suspense>
 

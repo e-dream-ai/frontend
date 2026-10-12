@@ -3,28 +3,30 @@ import { AxiosError } from "axios";
 import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import useAuth from "@/hooks/useAuth";
 import { ApiResponse } from "@/types/api.types";
-import type { UprezRunSummary } from "@/types/playlist.types";
+import type { EnhanceRunSummary } from "@/types/playlist.types";
 import { axiosClient } from "@/client/axios.client";
 
-export const UPREZ_RUN_PREVIEW_QUERY_KEY = "getUprezRunPreview";
+export const ENHANCE_RUN_PREVIEW_QUERY_KEY = "getEnhanceRunPreview";
 
 /** Unsaved settings to preview; omitted ones fall back to the saved prompt. */
-export type UprezRunPreviewOverrides = {
+export type EnhanceRunPreviewOverrides = {
   source_playlist_uuid?: string;
   params?: Record<string, number>;
 };
 
-type UprezRunPreviewOptions = {
-  overrides?: UprezRunPreviewOverrides;
+type EnhanceRunPreviewOptions = {
+  overrides?: EnhanceRunPreviewOverrides;
   enabled?: boolean;
   refreshKey?: string | number;
 };
 
-type UprezRunPreviewResponse = ApiResponse<{ result: UprezRunSummary }>;
+type EnhanceRunPreviewResponse = ApiResponse<{ result: EnhanceRunSummary }>;
 
-const getUprezRunPreview =
-  (uuid: string | undefined, overrides: UprezRunPreviewOverrides) =>
-  async ({ signal }: QueryFunctionContext): Promise<UprezRunPreviewResponse> =>
+const getEnhanceRunPreview =
+  (uuid: string | undefined, overrides: EnhanceRunPreviewOverrides) =>
+  async ({
+    signal,
+  }: QueryFunctionContext): Promise<EnhanceRunPreviewResponse> =>
     axiosClient
       .post(`/v1/playlist/${uuid}/run/preview`, overrides, {
         headers: getRequestHeaders({ contentType: ContentType.json }),
@@ -32,22 +34,22 @@ const getUprezRunPreview =
       })
       .then((res) => res.data);
 
-const selectResult = (response: UprezRunPreviewResponse) =>
+const selectResult = (response: EnhanceRunPreviewResponse) =>
   response.data?.result;
 
-/** What running this uprez playlist would do. Changes nothing. */
-export const useUprezRunPreview = (
+/** What running this enhance playlist would do. Changes nothing. */
+export const useEnhanceRunPreview = (
   uuid: string | undefined,
-  { overrides = {}, enabled = true, refreshKey }: UprezRunPreviewOptions = {},
+  { overrides = {}, enabled = true, refreshKey }: EnhanceRunPreviewOptions = {},
 ) => {
   const { user } = useAuth();
   return useQuery<
-    UprezRunPreviewResponse,
+    EnhanceRunPreviewResponse,
     AxiosError,
-    UprezRunSummary | undefined
+    EnhanceRunSummary | undefined
   >(
-    [UPREZ_RUN_PREVIEW_QUERY_KEY, uuid, overrides, refreshKey],
-    getUprezRunPreview(uuid, overrides),
+    [ENHANCE_RUN_PREVIEW_QUERY_KEY, uuid, overrides, refreshKey],
+    getEnhanceRunPreview(uuid, overrides),
     {
       select: selectResult,
       enabled: enabled && Boolean(user) && Boolean(uuid),

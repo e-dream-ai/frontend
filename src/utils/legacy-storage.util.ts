@@ -1,8 +1,4 @@
-const LEGACY_STORAGE_KEYS = [
-  "studio-session",
-  "flow-session",
-  "uprez-session",
-] as const;
+const LEGACY_STORAGE_KEYS = ["studio-session", "flow-session"] as const;
 
 export const clearLegacyStorage = (): void => {
   try {

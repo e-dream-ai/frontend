@@ -166,10 +166,6 @@ export function TransitionHistory() {
           fromName={frameName(transition.fromFrameId)}
           toName={frameName(transition.toFrameId)}
           isCurrent={openEntry.dreamUuid === transition.dreamUuid}
-          dropsUprez={
-            transition.uprezDreamUuid !== undefined &&
-            transition.uprezStatus !== "failed"
-          }
           blocked={isPendingStatus(transition.status)}
           onPutBack={() => {
             setOpenUuid(null);

@@ -4,7 +4,7 @@ import { secondsToTimeFormat } from "@/utils/video.utils";
 import {
   describePlaylistFps,
   describePlaylistResolution,
-} from "../utils/uprez-media";
+} from "../utils/enhance-media";
 
 const UNAVAILABLE = "dream count unavailable";
 

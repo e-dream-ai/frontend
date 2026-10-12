@@ -3,9 +3,9 @@ import { FLOW } from "@/constants/flow-theme.constants";
 import {
   FactorToggle,
   FactorToggleGroup,
-  UprezParamLabel,
-  UprezParamRow,
-} from "./uprez-factor-row.styled";
+  EnhanceParamLabel,
+  EnhanceParamRow,
+} from "./enhance-factor-row.styled";
 
 const spin = keyframes`
   to { transform: rotate(360deg); }
@@ -207,11 +207,11 @@ export const FactorFields = styled.div`
   @media (max-width: 480px) {
     gap: 10px;
 
-    ${UprezParamRow} {
+    ${EnhanceParamRow} {
       gap: 8px;
     }
 
-    ${UprezParamLabel} {
+    ${EnhanceParamLabel} {
       font-size: 12px;
     }
 
@@ -224,7 +224,7 @@ export const FactorFields = styled.div`
   }
 
   @media (max-width: 360px) {
-    ${UprezParamRow} {
+    ${EnhanceParamRow} {
       align-items: flex-start;
       flex-direction: column;
       gap: 6px;

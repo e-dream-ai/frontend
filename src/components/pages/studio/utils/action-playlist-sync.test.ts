@@ -63,7 +63,6 @@ describe("matrixDreamUuids", () => {
       job("i1", "a2", "failed", { status: "failed" }),
       job("i1", "blank", "blank-col"),
       job("pending", "a1", "pending-row"),
-      job("i1", "a3", "up", { jobType: "uprez" }),
       job("i1", "a3", "d13"),
     ];
     expect(
@@ -77,18 +76,14 @@ describe("matrixDreamUuids", () => {
 });
 
 describe("studioDreamUuids", () => {
-  it("lists rendered matrix clips from jobs and history, not uprez or unfinished ones", () => {
+  it("lists rendered matrix clips from jobs and history, not unfinished ones", () => {
     expect(
       studioDreamUuids(
         [
           job("i1", "a1", "done"),
           job("i1", "a2", "queued", { status: "queue" }),
-          job("i1", "a3", "up", { jobType: "uprez" }),
         ],
-        [
-          job("i2", "a1", "archived"),
-          job("i2", "a2", "old-up", { jobType: "uprez" }),
-        ],
+        [job("i2", "a1", "archived")],
       ),
     ).toEqual(["done", "archived"]);
   });

@@ -2,7 +2,7 @@ import type { PlaylistMediaSummary } from "@/types/playlist.types";
 import type {
   InterpolationFactor,
   UpscaleFactor,
-} from "../constants/uprez-factor-options";
+} from "../constants/enhance-factor-options";
 
 /** Short side at or above this counts as already HD, so upscaling is off by default. */
 const HD_SHORT_SIDE = 1080;
@@ -32,10 +32,10 @@ export const defaultUpscaleFactor = (
 ): UpscaleFactor => (media && media.minShortSide >= HD_SHORT_SIDE ? 1 : 2);
 
 /**
- * What the uprez will produce, e.g. `1280×720 → 2560×1440 • 24 fps → 48 fps`.
+ * What enhancing will produce, e.g. `1280×720 → 2560×1440 • 24 fps → 48 fps`.
  * Mixed playlists use the largest resolution and highest fps.
  */
-export const describeUprezResult = (
+export const describeEnhanceResult = (
   media: PlaylistMediaSummary,
   upscaleFactor: UpscaleFactor,
   interpolationFactor: InterpolationFactor,
