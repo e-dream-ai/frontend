@@ -6,21 +6,20 @@ import { useDeforumGeneration } from "../hooks/useDeforumGeneration";
 import { useDeforumJobProgress } from "../hooks/useDeforumJobProgress";
 import { useDeforumPlaylistSync } from "../hooks/useDeforumPlaylistSync";
 import { useDreamSegments } from "../hooks/useDreamSegments";
+import { useStudioEditLock } from "../hooks/useStudioEditLock";
 import { renderFrames } from "../utils/deforum-params";
 import { latestRender, liveRender } from "../utils/deforum-targets";
 import { DeforumLivePreview } from "./deforum-live-preview";
 import { DeforumClipList } from "./deforum-clip-list";
 import { DeforumSettingsPanel } from "./deforum-settings-panel";
 import { SegmentPreview } from "./segment-preview";
+import { EditLock } from "./edit-lock";
 import { EmptyState, SmallButton } from "./deforum-app.styled";
 
-interface DeforumAppProps {
-  canSyncPlaylist: boolean;
-}
-
-export function DeforumApp({ canSyncPlaylist }: DeforumAppProps) {
+export function DeforumApp() {
+  const { locked } = useStudioEditLock();
   useDeforumJobProgress();
-  useDeforumPlaylistSync(canSyncPlaylist);
+  useDeforumPlaylistSync(!locked);
   const { generate, isGenerating } = useDeforumGeneration();
 
   const { clips, selectedIds } = useDeforumStore(
@@ -89,9 +88,11 @@ export function DeforumApp({ canSyncPlaylist }: DeforumAppProps) {
             frames, plus global parameters. Test renders squeeze the whole
             timeline into 50 frames; final renders go into the playlist.
           </p>
-          <SmallButton onClick={() => useDeforumStore.getState().addClip()}>
-            + New animation
-          </SmallButton>
+          <EditLock>
+            <SmallButton onClick={() => useDeforumStore.getState().addClip()}>
+              + New animation
+            </SmallButton>
+          </EditLock>
         </EmptyState>
       </StudioFrame>
     );
@@ -99,11 +100,13 @@ export function DeforumApp({ canSyncPlaylist }: DeforumAppProps) {
 
   return (
     <StudioFrame>
-      <DeforumClipList posters={posters} />
-      <DeforumSettingsPanel
-        onGenerate={(kind) => void generate(kind)}
-        isGenerating={isGenerating}
-      />
+      <EditLock>
+        <DeforumClipList posters={posters} />
+        <DeforumSettingsPanel
+          onGenerate={(kind) => void generate(kind)}
+          isGenerating={isGenerating}
+        />
+      </EditLock>
       {live && (
         <DeforumLivePreview
           key={live.render.dreamUuid}

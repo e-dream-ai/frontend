@@ -19,7 +19,7 @@ const PLAYLIST_PLAYBACK_ITEMS_QUERY_KEY = "getPlaylistPlaybackItems";
 const isConflict = (err: unknown): boolean =>
   (err as { response?: { status?: number } })?.response?.status === 409;
 
-export function useSavedPlaylistSync() {
+export function useSavedPlaylistSync(enabled = true) {
   const queryClient = useQueryClient();
   const addPlaylistItem = useAddPlaylistItem();
   const deletePlaylistItem = useDeletePlaylistItem();
@@ -55,7 +55,7 @@ export function useSavedPlaylistSync() {
     .join(",");
 
   useEffect(() => {
-    if (!savedPlaylistUuid) return;
+    if (!enabled || !savedPlaylistUuid) return;
 
     const desiredSet = new Set(desiredUuids);
     const staleUuids = syncedPlaylistDreamUuids.filter(
@@ -195,5 +195,5 @@ export function useSavedPlaylistSync() {
       }
     })();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [savedPlaylistUuid, desiredKey, syncedKey, frameKey]);
+  }, [enabled, savedPlaylistUuid, desiredKey, syncedKey, frameKey]);
 }

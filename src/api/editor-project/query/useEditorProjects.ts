@@ -16,12 +16,14 @@ type EditorProjectsResponse = {
 
 type Params = EditorProjectListFilters & {
   enabled?: boolean;
+  keepPreviousData?: boolean;
 };
 
 const buildQueryString = (filters: EditorProjectListFilters) => {
   const params = new URLSearchParams();
   if (filters.editorId) params.set("editorId", filters.editorId);
   if (filters.playlistUuid) params.set("playlistUuid", filters.playlistUuid);
+  if (filters.dreamUuid) params.set("dreamUuid", filters.dreamUuid);
   if (filters.search) params.set("search", filters.search);
   if (filters.take !== undefined) params.set("take", String(filters.take));
   if (filters.skip !== undefined) params.set("skip", String(filters.skip));
@@ -31,6 +33,7 @@ const buildQueryString = (filters: EditorProjectListFilters) => {
 
 export const useEditorProjects = ({
   enabled = true,
+  keepPreviousData = true,
   ...filters
 }: Params = {}) => {
   const { user } = useAuth();
@@ -43,19 +46,29 @@ export const useEditorProjects = ({
     {
       enabled: enabled && Boolean(user),
       staleTime: EDITOR_PROJECT_LIST_STALE_TIME,
+      keepPreviousData,
     },
   );
+};
+
+const useFirstEditorProject = (
+  filters: EditorProjectListFilters,
+  enabled: boolean,
+) => {
+  const query = useEditorProjects({
+    ...filters,
+    take: 1,
+    enabled,
+    keepPreviousData: false,
+  });
+
+  return { ...query, project: query.data?.data?.projects?.[0] };
 };
 
 export const useEditorProjectByPlaylist = (
   playlistUuid?: string,
   enabled = true,
-) => {
-  const query = useEditorProjects({
-    playlistUuid,
-    take: 1,
-    enabled: enabled && Boolean(playlistUuid),
-  });
+) => useFirstEditorProject({ playlistUuid }, enabled && Boolean(playlistUuid));
 
-  return { ...query, project: query.data?.data?.projects?.[0] };
-};
+export const useEditorProjectByDream = (dreamUuid?: string, enabled = true) =>
+  useFirstEditorProject({ dreamUuid }, enabled && Boolean(dreamUuid));

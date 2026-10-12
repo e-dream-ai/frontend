@@ -20,9 +20,12 @@ import { useFlowJobProgress } from "@/components/pages/studio/hooks/useFlowJobPr
 import { useSavedPlaylistSync } from "@/components/pages/studio/hooks/useSavedPlaylistSync";
 import { useFileDropUpload } from "../hooks/useFileDropUpload";
 import { useExistingDreamUuids } from "../hooks/useExistingDreamUuids";
+import { useStudioEditLock } from "../hooks/useStudioEditLock";
+import { EditLock } from "./edit-lock";
 import type { Dream } from "@/types/dream.types";
 
 export const FlowBuilder: React.FC = () => {
+  const { locked } = useStudioEditLock();
   const addReferenceFrame = useFlowStore((s) => s.addReferenceFrame);
   const updateReferenceFrame = useFlowStore((s) => s.updateReferenceFrame);
   const removeReferenceFrame = useFlowStore((s) => s.removeReferenceFrame);
@@ -30,7 +33,7 @@ export const FlowBuilder: React.FC = () => {
   // Mount progress tracking
   useFlowJobProgress();
 
-  useSavedPlaylistSync();
+  useSavedPlaylistSync(!locked);
 
   // Fill in progress/thumbnails for referenceFrames created by the Generate dialog
   useGeneratedFrameSync();
@@ -160,22 +163,25 @@ export const FlowBuilder: React.FC = () => {
   const { isDragOver, dropHandlers } = useFileDropUpload({
     accept: ["image/jpeg", "image/png", "image/webp"],
     onFiles: uploadFiles,
+    disabled: locked,
   });
 
   return (
     <StudioFrame $dragOver={isDragOver} {...dropHandlers}>
-      <ReferenceFrameStrip
-        onAddUpload={handleAddUpload}
-        onAddGenerate={() => setShowGenerateModal(true)}
-        onAddFromPlaylist={handleAddFromPlaylist}
-        onAddFromLibrary={handleAddFromLibrary}
-      />
+      <EditLock>
+        <ReferenceFrameStrip
+          onAddUpload={handleAddUpload}
+          onAddGenerate={() => setShowGenerateModal(true)}
+          onAddFromPlaylist={handleAddFromPlaylist}
+          onAddFromLibrary={handleAddFromLibrary}
+        />
 
-      <TransitionSettingsPanel
-        onGenerateAll={generateAll}
-        onGenerateSelected={generateMany}
-        isGenerating={isGenerating}
-      />
+        <TransitionSettingsPanel
+          onGenerateAll={generateAll}
+          onGenerateSelected={generateMany}
+          isGenerating={isGenerating}
+        />
+      </EditLock>
 
       <FlowPreview />
       <FlowActionBar />
