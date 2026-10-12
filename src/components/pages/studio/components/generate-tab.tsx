@@ -42,6 +42,7 @@ import { MatrixGrid } from "./matrix-grid";
 import { MatrixPreview } from "./matrix-preview";
 import { MatrixSettings } from "./matrix-settings";
 import { BatchProgress } from "./batch-progress";
+import { EditLock } from "./edit-lock";
 import {
   GenerateSection,
   SectionTitle,
@@ -232,84 +233,90 @@ export const GenerateTab: React.FC = () => {
           resetIn={resetIn}
         />
 
-        <GenerateRow>
-          <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
-          <GenerateButton
-            type="button"
-            onClick={() => {
-              if (guardOverBudget()) return;
-              submit();
-            }}
-            disabled={isSubmitting || newCombos.length === 0 || overBudget}
-          >
-            {isSubmitting
-              ? "Submitting…"
-              : `Generate ${newCombos.length} ${
-                  newCombos.length === 1 ? "video" : "videos"
-                }`}
-          </GenerateButton>
-        </GenerateRow>
+        <EditLock>
+          <GenerateRow>
+            <CostEstimate amountUsd={totalCostUsd} breakdown={costBreakdown} />
+            <GenerateButton
+              type="button"
+              onClick={() => {
+                if (guardOverBudget()) return;
+                submit();
+              }}
+              disabled={isSubmitting || newCombos.length === 0 || overBudget}
+            >
+              {isSubmitting
+                ? "Submitting…"
+                : `Generate ${newCombos.length} ${
+                    newCombos.length === 1 ? "video" : "videos"
+                  }`}
+            </GenerateButton>
+          </GenerateRow>
 
-        <ClipHistory
-          onRestore={handleRestore}
-          showRemoved={newCombos.length === 0}
-        />
-      </TabColumn>
-
-      <TabColumn>
-        <MatrixSettings
-          durationOptions={durationOptions}
-          hidden={newCombos.length === 0}
-        />
-      </TabColumn>
-
-      <TabColumn>
-        <GenerateSection>
-          <SectionHeaderRow>
-            <SectionTitle>Matrix</SectionTitle>
-            <ButtonRow>
-              <MatrixCheckButton
-                type="button"
-                onClick={() => checks.checkAll()}
-              >
-                Check all
-              </MatrixCheckButton>
-              <MatrixCheckButton
-                type="button"
-                onClick={() => checks.uncheckAll()}
-              >
-                Uncheck all
-              </MatrixCheckButton>
-            </ButtonRow>
-          </SectionHeaderRow>
-
-          <MatrixGrid
-            rows={matrixRows}
-            actions={runnableActions}
-            headings={headings}
-            cellJobs={cellJobs}
-            excludedCombos={excludedCombos}
-            rerenderCombos={rerenderCombos}
-            segmentKeys={preview.segmentKeys}
-            playingUuid={preview.playingUuid}
-            onOpenAction={setOpenActionId}
-            onOpenImage={setOpenImageUuid}
-            onPlay={playSegment}
-            onToggle={checks.toggleCell}
-            onDiscard={discardClip}
+          <ClipHistory
+            onRestore={handleRestore}
+            showRemoved={newCombos.length === 0}
           />
+        </EditLock>
+      </TabColumn>
 
-          <ComboCountText>
-            <strong>{newCombos.length}</strong> of{" "}
-            <strong>{totalPossible}</strong> combinations checked to generate
-            {renderedCount > 0 && (
-              <>
-                {" • "}
-                <strong>{renderedCount}</strong> rendered
-              </>
-            )}
-          </ComboCountText>
-        </GenerateSection>
+      <TabColumn>
+        <EditLock>
+          <MatrixSettings
+            durationOptions={durationOptions}
+            hidden={newCombos.length === 0}
+          />
+        </EditLock>
+      </TabColumn>
+
+      <TabColumn>
+        <EditLock>
+          <GenerateSection>
+            <SectionHeaderRow>
+              <SectionTitle>Matrix</SectionTitle>
+              <ButtonRow>
+                <MatrixCheckButton
+                  type="button"
+                  onClick={() => checks.checkAll()}
+                >
+                  Check all
+                </MatrixCheckButton>
+                <MatrixCheckButton
+                  type="button"
+                  onClick={() => checks.uncheckAll()}
+                >
+                  Uncheck all
+                </MatrixCheckButton>
+              </ButtonRow>
+            </SectionHeaderRow>
+
+            <MatrixGrid
+              rows={matrixRows}
+              actions={runnableActions}
+              headings={headings}
+              cellJobs={cellJobs}
+              excludedCombos={excludedCombos}
+              rerenderCombos={rerenderCombos}
+              segmentKeys={preview.segmentKeys}
+              playingUuid={preview.playingUuid}
+              onOpenAction={setOpenActionId}
+              onOpenImage={setOpenImageUuid}
+              onPlay={playSegment}
+              onToggle={checks.toggleCell}
+              onDiscard={discardClip}
+            />
+
+            <ComboCountText>
+              <strong>{newCombos.length}</strong> of{" "}
+              <strong>{totalPossible}</strong> combinations checked to generate
+              {renderedCount > 0 && (
+                <>
+                  {" • "}
+                  <strong>{renderedCount}</strong> rendered
+                </>
+              )}
+            </ComboCountText>
+          </GenerateSection>
+        </EditLock>
       </TabColumn>
       {checks.pendingCombine && (
         <ForceSettingsDialog

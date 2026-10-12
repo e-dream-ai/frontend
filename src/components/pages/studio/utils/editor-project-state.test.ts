@@ -206,6 +206,18 @@ describe("action state persistence", () => {
     expect(uuids(restored.historyJobs)).toEqual(["d0"]);
   });
 
+  it("leaves history unset for a project saved before history existed", () => {
+    const persisted = {
+      excludedCombos: [],
+      images: [],
+      jobs: [],
+    } as unknown as PersistedActionState;
+
+    expect(fromPersistedActionState(persisted)).not.toHaveProperty(
+      "historyJobs",
+    );
+  });
+
   it("opens a project saved on the removed Results tab on the Matrix", () => {
     const persisted = toPersistedActionState({ activeTab: "results" });
     expect(fromPersistedActionState(persisted).activeTab).toBe("generate");

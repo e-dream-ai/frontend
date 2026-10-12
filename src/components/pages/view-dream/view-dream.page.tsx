@@ -71,6 +71,7 @@ import {
   ErrorTextArea,
 } from "./view-dream.styled";
 import { isAdmin } from "@/utils/user.util";
+import usePermission from "@/hooks/usePermission";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import useSocket from "@/hooks/useSocket";
 import { emitPlayDream } from "@/utils/socket.util";
@@ -89,7 +90,7 @@ import { VoteType } from "@/types/vote.types";
 import { FilmstripGallery } from "@/components/shared/filmstrip-gallery/filmstrip-gallery";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 import { OpenInStudio } from "@/components/shared/open-in-studio";
-import { useEditorProjectForDream } from "@/api/editor-project/query/useEditorProjectForDream";
+import { useEditorProjectByDream } from "@/api/editor-project/query/useEditorProjects";
 import { NotFound } from "@/components/shared/not-found/not-found";
 import {
   formatDreamForm,
@@ -436,7 +437,13 @@ const ViewDreamPage: React.FC = () => {
   const showEditButton = !editMode;
   const showSaveAndCancelButtons = editMode && !isDreamProcessingRaw;
 
-  const studioProject = useEditorProjectForDream(dream, isOwner);
+  const canOpenStudio = usePermission({
+    permission: DREAM_PERMISSIONS.CAN_CREATE_DREAM,
+  });
+  const { project: studioProject } = useEditorProjectByDream(
+    dream?.uuid,
+    (isOwner || canOpenStudio) && Boolean(dream?.playlistItems?.length),
+  );
 
   // Owners remix too: a copy to tweak and rerun, leaving the original intact.
   // Admins can create dreams as well (the backend allows both roles).

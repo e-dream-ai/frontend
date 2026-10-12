@@ -9,6 +9,12 @@ export type EditorProjectPlaylistRef = {
   name: string;
 };
 
+export type EditorProjectOwner = {
+  uuid: string;
+  name: string | null;
+  avatar: string | null;
+};
+
 export type EditorProjectSummary = {
   uuid: string;
   editorId: EditorId;
@@ -17,6 +23,8 @@ export type EditorProjectSummary = {
   schemaVersion: number;
   thumbnail?: string | null;
   playlist?: EditorProjectPlaylistRef | null;
+  owner: EditorProjectOwner | null;
+  canEdit: boolean;
   created_at: string;
   updated_at: string;
 };

@@ -40,6 +40,7 @@ import {
   describeEnhanceResult,
 } from "../utils/enhance-media";
 import { formatEnhanceRunSummary } from "@/utils/enhance-run-summary";
+import { useStudioEditLock } from "../hooks/useStudioEditLock";
 import {
   AppBody,
   AppHeader,
@@ -65,6 +66,7 @@ type Props = {
 
 export const EnhanceApp: React.FC<Props> = ({ playlist, onCreated }) => {
   const { t } = useTranslation();
+  const { locked } = useStudioEditLock();
   const queryClient = useQueryClient();
   const createEnhancePlaylist = useCreateEnhancePlaylist();
   const updatePlaylist = useUpdatePlaylist();
@@ -142,7 +144,7 @@ export const EnhanceApp: React.FC<Props> = ({ playlist, onCreated }) => {
         interpolation_factor: interpolationFactor,
       },
     },
-    enabled: Boolean(playlist && selectedUuid) && !isNoOp,
+    enabled: Boolean(playlist && selectedUuid) && !isNoOp && !locked,
     refreshKey: progress?.failed,
   });
   const planned = preview.data;

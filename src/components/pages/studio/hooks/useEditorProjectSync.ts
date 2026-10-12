@@ -29,6 +29,8 @@ export type ProjectSyncStatus =
 
 export const UNTITLED_PROJECT_NAME = "Untitled";
 
+const NEW_PROJECT = "new";
+
 export const useEditorProjectSync = (
   mode: StudioMode,
   projectUuid?: string,
@@ -47,6 +49,7 @@ export const useEditorProjectSync = (
   const [playlist, setPlaylist] = useState<EditorProjectPlaylistRef | null>(
     null,
   );
+  const [storeFor, setStoreFor] = useState<string | null>(null);
 
   const revisionRef = useRef<number>(0);
   const hydratingRef = useRef(false);
@@ -55,6 +58,11 @@ export const useEditorProjectSync = (
   const timerRef = useRef<ReturnType<typeof setTimeout>>();
   const lastSavedRef = useRef<string>("");
   const persistRef = useRef<() => Promise<void>>(async () => {});
+
+  const markHydrated = useCallback((uuid: string) => {
+    hydratedUuidRef.current = uuid;
+    setStoreFor(uuid);
+  }, []);
 
   const loadedProject = data?.data?.project;
   const displayStatus: ProjectSyncStatus =
@@ -69,11 +77,11 @@ export const useEditorProjectSync = (
       lastSavedRef.current = JSON.stringify(adapter.read());
       setProjectName(project.name);
       setPlaylist(project.playlist ?? null);
-      hydratedUuidRef.current = project.uuid;
+      markHydrated(project.uuid);
       setStatus("saved");
       hydratingRef.current = false;
     },
-    [adapter],
+    [adapter, markHydrated],
   );
 
   useEffect(() => {
@@ -82,6 +90,7 @@ export const useEditorProjectSync = (
     hydratingRef.current = true;
     adapter.reset();
     hydratedUuidRef.current = undefined;
+    setStoreFor(projectUuid ? null : NEW_PROJECT);
     revisionRef.current = 0;
     lastSavedRef.current = "";
     setProjectName("");
@@ -119,7 +128,7 @@ export const useEditorProjectSync = (
 
       revisionRef.current = project.revision;
       lastSavedRef.current = JSON.stringify(state);
-      hydratedUuidRef.current = project.uuid;
+      markHydrated(project.uuid);
       setProjectName(project.name);
       setStatus("saved");
       navigate(buildStudioProjectPath(mode, project.uuid), { replace: true });
@@ -131,7 +140,7 @@ export const useEditorProjectSync = (
     } finally {
       creatingRef.current = false;
     }
-  }, [adapter, createProject, mode, navigate]);
+  }, [adapter, createProject, markHydrated, mode, navigate]);
 
   const persist = useCallback(async () => {
     if (hydratingRef.current || conflict || !canSave) return;
@@ -252,7 +261,7 @@ export const useEditorProjectSync = (
 
       revisionRef.current = project.revision;
       lastSavedRef.current = JSON.stringify(state);
-      hydratedUuidRef.current = project.uuid;
+      markHydrated(project.uuid);
       setProjectName(project.name);
       setConflict(null);
       setStatus("saved");
@@ -261,7 +270,7 @@ export const useEditorProjectSync = (
       Bugsnag.notify(error as Error);
       setStatus("error");
     }
-  }, [adapter, createProject, mode, navigate, projectName]);
+  }, [adapter, createProject, markHydrated, mode, navigate, projectName]);
 
   const attachPlaylist = useCallback(
     async (next: EditorProjectPlaylistRef): Promise<boolean> => {
@@ -294,8 +303,11 @@ export const useEditorProjectSync = (
     [ensureProject, updateProject],
   );
 
+  const ready = storeFor === (projectUuid ?? NEW_PROJECT);
+
   return {
     status: displayStatus,
+    canWrite: canSave && ready && !conflict && displayStatus !== "loading",
     conflict,
     playlist,
     attachPlaylist,

@@ -3,11 +3,13 @@ import { useState, useCallback, useRef, type DragEvent } from "react";
 interface UseFileDropUploadOptions {
   accept: string[];
   onFiles: (files: File[]) => void;
+  disabled?: boolean;
 }
 
 export const useFileDropUpload = ({
   accept,
   onFiles,
+  disabled = false,
 }: UseFileDropUploadOptions) => {
   const [isDragOver, setIsDragOver] = useState(false);
   const dragCounter = useRef(0);
@@ -17,14 +19,18 @@ export const useFileDropUpload = ({
     e.stopPropagation();
   }, []);
 
-  const handleDragEnter = useCallback((e: DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    dragCounter.current += 1;
-    if (dragCounter.current === 1) {
-      setIsDragOver(true);
-    }
-  }, []);
+  const handleDragEnter = useCallback(
+    (e: DragEvent) => {
+      e.preventDefault();
+      e.stopPropagation();
+      if (disabled) return;
+      dragCounter.current += 1;
+      if (dragCounter.current === 1) {
+        setIsDragOver(true);
+      }
+    },
+    [disabled],
+  );
 
   const handleDragLeave = useCallback((e: DragEvent) => {
     e.preventDefault();
@@ -42,13 +48,14 @@ export const useFileDropUpload = ({
       e.stopPropagation();
       dragCounter.current = 0;
       setIsDragOver(false);
+      if (disabled) return;
 
       const files = Array.from(e.dataTransfer.files).filter((f) =>
         accept.some((type) => f.type === type),
       );
       if (files.length > 0) onFiles(files);
     },
-    [accept, onFiles],
+    [accept, disabled, onFiles],
   );
 
   return {
