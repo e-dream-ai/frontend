@@ -74,14 +74,14 @@ export type PlaylistMediaSummary = {
   mixedFps: boolean;
 };
 
-export type UprezPlaylistPrompt = {
-  infinidream_algorithm: "uprez_playlist";
+export type EnhancePlaylistPrompt = {
+  infinidream_algorithm: "enhance_playlist";
   source_playlist_uuid: string;
   dream_algorithm?: string;
   params?: Record<string, unknown>;
 };
 
-export type UprezRunSummary = {
+export type EnhanceRunSummary = {
   created: number;
   requeued: number;
   kept: number;
@@ -93,21 +93,21 @@ export type UprezRunSummary = {
   hasWork: boolean;
 };
 
-export type RunPlaylistResult = UprezRunSummary & {
+export type RunPlaylistResult = EnhanceRunSummary & {
   linked: number;
 };
 
-export const parseUprezPlaylistPrompt = (
+export const parseEnhancePlaylistPrompt = (
   prompt?: string | null,
-): UprezPlaylistPrompt | null => {
+): EnhancePlaylistPrompt | null => {
   if (!prompt) return null;
   try {
     const parsed = typeof prompt === "string" ? JSON.parse(prompt) : prompt;
     if (
-      parsed?.infinidream_algorithm === "uprez_playlist" &&
+      parsed?.infinidream_algorithm === "enhance_playlist" &&
       typeof parsed?.source_playlist_uuid === "string"
     ) {
-      return parsed as UprezPlaylistPrompt;
+      return parsed as EnhancePlaylistPrompt;
     }
     return null;
   } catch {

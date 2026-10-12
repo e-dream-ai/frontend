@@ -37,7 +37,7 @@ export const studioDreamUuids = (
   historyJobs: readonly StudioJob[],
 ): string[] =>
   [...jobs, ...historyJobs]
-    .filter((job) => job.status === "processed" && job.jobType !== "uprez")
+    .filter((job) => job.status === "processed")
     .map((job) => job.dreamUuid);
 
 /**

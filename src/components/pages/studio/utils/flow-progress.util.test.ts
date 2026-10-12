@@ -12,20 +12,12 @@ const t = (over: Partial<FlowTransition>): FlowTransition => ({
 describe("findTransitionIndexByDream", () => {
   it("finds a transition by its video dream uuid", () => {
     const transitions = [t({ dreamUuid: "v1" }), t({ dreamUuid: "v2" })];
-    expect(findTransitionIndexByDream(transitions, "v2", false)).toBe(1);
-  });
-
-  it("finds a transition by its uprez dream uuid", () => {
-    const transitions = [
-      t({ dreamUuid: "v1", uprezDreamUuid: "u1" }),
-      t({ dreamUuid: "v2", uprezDreamUuid: "u2" }),
-    ];
-    expect(findTransitionIndexByDream(transitions, "u1", true)).toBe(0);
+    expect(findTransitionIndexByDream(transitions, "v2")).toBe(1);
   });
 
   it("returns -1 when no transition owns the uuid", () => {
     const transitions = [t({ dreamUuid: "v1" })];
-    expect(findTransitionIndexByDream(transitions, "missing", false)).toBe(-1);
+    expect(findTransitionIndexByDream(transitions, "missing")).toBe(-1);
   });
 
   it("resolves the correct edge after a reorder shifts positions", () => {
@@ -37,6 +29,6 @@ describe("findTransitionIndexByDream", () => {
       t({ dreamUuid: "new-b" }),
       t({ dreamUuid: "v-pending" }),
     ];
-    expect(findTransitionIndexByDream(reordered, "v-pending", false)).toBe(2);
+    expect(findTransitionIndexByDream(reordered, "v-pending")).toBe(2);
   });
 });

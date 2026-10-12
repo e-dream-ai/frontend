@@ -3,8 +3,8 @@ import {
   defaultUpscaleFactor,
   describePlaylistFps,
   describePlaylistResolution,
-  describeUprezResult,
-} from "./uprez-media";
+  describeEnhanceResult,
+} from "./enhance-media";
 import type { PlaylistMediaSummary } from "../../../../types/playlist.types";
 
 const media = (
@@ -72,34 +72,34 @@ describe("defaultUpscaleFactor", () => {
   });
 });
 
-describe("describeUprezResult", () => {
+describe("describeEnhanceResult", () => {
   it("shows the resolution and fps change", () => {
-    expect(describeUprezResult(media(), 2, 2)).toBe(
+    expect(describeEnhanceResult(media(), 2, 2)).toBe(
       "1280×720 → 2560×1440 • 24 fps → 48 fps",
     );
   });
 
   it("does not show a change for a 1× factor", () => {
     expect(
-      describeUprezResult(media({ width: 1920, height: 1080 }), 1, 4),
+      describeEnhanceResult(media({ width: 1920, height: 1080 }), 1, 4),
     ).toBe("1920×1080 • 24 fps → 96 fps");
-    expect(describeUprezResult(media(), 4, 1)).toBe(
+    expect(describeEnhanceResult(media(), 4, 1)).toBe(
       "1280×720 → 5120×2880 • 24 fps",
     );
   });
 
   it("leaves out fps when unknown, and rounds the source fps like the worker", () => {
-    expect(describeUprezResult(media({ fps: null }), 2, 2)).toBe(
+    expect(describeEnhanceResult(media({ fps: null }), 2, 2)).toBe(
       "1280×720 → 2560×1440",
     );
-    expect(describeUprezResult(media({ fps: 29.97 }), 2, 2)).toBe(
+    expect(describeEnhanceResult(media({ fps: 29.97 }), 2, 2)).toBe(
       "1280×720 → 2560×1440 • 29.97 fps → 60 fps",
     );
   });
 
   it("shows the highest values as up to for a mixed playlist", () => {
     expect(
-      describeUprezResult(
+      describeEnhanceResult(
         media({
           width: 1920,
           height: 1080,

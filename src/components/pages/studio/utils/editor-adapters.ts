@@ -1,7 +1,7 @@
 import { selectFlowProject, useFlowStore } from "@/stores/flow.store";
 import { selectStudioProject, useStudioStore } from "@/stores/studio.store";
-import { selectUprezProject, useUprezStore } from "@/stores/uprez.store";
-import type { UprezFormState } from "@/stores/uprez.store";
+import { selectEnhanceProject, useEnhanceStore } from "@/stores/enhance.store";
+import type { EnhanceFormState } from "@/stores/enhance.store";
 import {
   selectDeforumProject,
   useDeforumStore,
@@ -99,16 +99,18 @@ const actionAdapter: EditorAdapter = {
   },
 };
 
-const uprezAdapter: EditorAdapter = {
+const enhanceAdapter: EditorAdapter = {
   unlinked: {},
   read: () =>
-    selectUprezProject(useUprezStore.getState()) as EditorProjectState,
+    selectEnhanceProject(useEnhanceStore.getState()) as EditorProjectState,
   write: (state) =>
-    useUprezStore.getState().restoreUprez(state as Partial<UprezFormState>),
-  reset: () => useUprezStore.getState().resetUprez(),
-  subscribe: (listener) => useUprezStore.subscribe(listener),
+    useEnhanceStore
+      .getState()
+      .restoreEnhance(state as Partial<EnhanceFormState>),
+  reset: () => useEnhanceStore.getState().resetEnhance(),
+  subscribe: (listener) => useEnhanceStore.subscribe(listener),
   thumbnailDreamUuid: () => null,
-  isEmpty: () => !useUprezStore.getState().sourcePlaylist,
+  isEmpty: () => !useEnhanceStore.getState().sourcePlaylist,
 };
 
 const deforumAdapter: EditorAdapter = {
@@ -133,6 +135,6 @@ const deforumAdapter: EditorAdapter = {
 export const EDITOR_ADAPTERS: Record<StudioMode, EditorAdapter> = {
   flow: flowAdapter,
   action: actionAdapter,
-  uprez: uprezAdapter,
+  enhance: enhanceAdapter,
   deforum: deforumAdapter,
 };

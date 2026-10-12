@@ -138,14 +138,6 @@ export function TransitionGapEnhanced({
           <FilmstripIcon />
         </StatusNode>
         {stale && <StaleDot aria-hidden="true" />}
-        {transition.uprezDreamUuid && transition.uprezStatus && (
-          <DreamCardProgress
-            dream={{
-              uuid: transition.uprezDreamUuid,
-              status: transition.uprezStatus,
-            }}
-          />
-        )}
       </GapContainer>
     );
   }

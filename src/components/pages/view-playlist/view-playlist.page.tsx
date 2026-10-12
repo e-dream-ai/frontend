@@ -1,7 +1,7 @@
 import { PlaylistProgress } from "@/components/shared/dream-progress/playlist-progress";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, ItemCardList, Row } from "@/components/shared";
-import { UprezPlaylistControls } from "./components/uprez-playlist-controls";
+import { EnhancePlaylistControls } from "./components/enhance-playlist-controls";
 import { PlaylistBrowseList } from "./components/playlist-browse-list";
 import { OpenInStudio } from "@/components/shared/open-in-studio";
 import { StudioBadge } from "@/components/shared/studio-badge";
@@ -284,7 +284,7 @@ const ViewPlaylistContent = () => {
   };
 
   const playlistReferences = playlist?.playlistItems ?? [];
-  const isUprezRunning =
+  const isEnhanceRunning =
     Boolean(playlist?.progress?.remaining) ||
     items.some(
       (item) =>
@@ -760,11 +760,11 @@ const ViewPlaylistContent = () => {
                   ) : (
                     <>
                       <OpenInStudio project={studioProject} />
-                      <UprezPlaylistControls
+                      <EnhancePlaylistControls
                         playlist={playlist}
                         isOwner={isOwner}
                         isUserAdmin={isUserAdmin}
-                        isRunning={isUprezRunning}
+                        isRunning={isEnhanceRunning}
                       />
                       <Restricted
                         to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}

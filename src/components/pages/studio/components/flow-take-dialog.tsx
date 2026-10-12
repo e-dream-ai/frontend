@@ -34,8 +34,6 @@ interface Props {
   toName: string;
   /** It is the take in the flow now, so there is nothing to put back. */
   isCurrent: boolean;
-  /** The flow's take has an upscale, which putting this back would drop. */
-  dropsUprez: boolean;
   /** The transition is still rendering, so nothing can go back in it yet. */
   blocked: boolean;
   onPutBack: () => void;
@@ -55,7 +53,6 @@ export const FlowTakeDialog: React.FC<Props> = ({
   fromName,
   toName,
   isCurrent,
-  dropsUprez,
   blocked,
   onPutBack,
   onClose,
@@ -86,12 +83,7 @@ export const FlowTakeDialog: React.FC<Props> = ({
     ? "This is the take in the flow now."
     : blocked
       ? "This transition is still rendering; this can go back once that finishes."
-      : [
-          "Putting this back makes it the take in the flow and loads its settings into the panel.",
-          dropsUprez && "The upscale of the current take is dropped.",
-        ]
-          .filter(Boolean)
-          .join(" ");
+      : "Putting this back makes it the take in the flow and loads its settings into the panel.";
 
   // Portalled out of the settings header, which clips and stacks its contents.
   return createPortal(

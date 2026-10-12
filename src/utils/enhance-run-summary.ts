@@ -1,11 +1,11 @@
 import type { TFunction } from "i18next";
-import type { UprezRunSummary } from "@/types/playlist.types";
+import type { EnhanceRunSummary } from "@/types/playlist.types";
 
-const KEY = "components.uprez_run_summary";
+const KEY = "components.enhance_run_summary";
 
-export const formatUprezRunSummary = (
+export const formatEnhanceRunSummary = (
   t: TFunction,
-  result: UprezRunSummary,
+  result: EnhanceRunSummary,
   mode: "preview" | "started" = "started",
   inProgress = false,
 ): string => {

@@ -91,12 +91,6 @@ type FlowStoreState = {
     createdAt: number,
   ) => void;
   restoreTransitionRun: (index: number, dreamUuid: string) => void;
-  setTransitionUprez: (index: number, uprezDreamUuid: string) => void;
-  updateTransitionUprezStatus: (
-    index: number,
-    status: "queue" | "processing" | "processed" | "failed",
-    progress?: number,
-  ) => void;
   recomputeTransitions: () => void;
   reconcileStaleTransitions: () => void;
 
@@ -481,18 +475,10 @@ export const useFlowStore = create<FlowStoreState>()((set, get) => ({
       };
       if (existing === -1) history.push(entry);
       else history[existing] = { ...history[existing], ...entry };
-      const replacesDream = prev.dreamUuid !== dreamUuid;
       transitions[index] = {
         ...prev,
         dreamUuid,
         history: history.slice(-MAX_TRANSITION_HISTORY),
-        // The uprez was derived from the dream being replaced; carrying it
-        // over would attach an upscale of one take to a different one.
-        ...(replacesDream && {
-          uprezDreamUuid: undefined,
-          uprezStatus: undefined,
-          uprezProgress: undefined,
-        }),
       };
       return { transitions };
     }),
@@ -510,30 +496,6 @@ export const useFlowStore = create<FlowStoreState>()((set, get) => ({
         dreamUuid,
         status: "processed",
         progress: undefined,
-        // The uprez belonged to the run being replaced, not to this one.
-        uprezDreamUuid: undefined,
-        uprezStatus: undefined,
-        uprezProgress: undefined,
-      };
-      return { transitions };
-    }),
-
-  setTransitionUprez: (index, uprezDreamUuid) =>
-    set((s) => {
-      const transitions = [...s.transitions];
-      if (!transitions[index]) return s;
-      transitions[index] = { ...transitions[index], uprezDreamUuid };
-      return { transitions };
-    }),
-
-  updateTransitionUprezStatus: (index, status, progress) =>
-    set((s) => {
-      const transitions = [...s.transitions];
-      if (!transitions[index]) return s;
-      transitions[index] = {
-        ...transitions[index],
-        uprezStatus: status,
-        uprezProgress: progress,
       };
       return { transitions };
     }),
@@ -559,21 +521,8 @@ export const useFlowStore = create<FlowStoreState>()((set, get) => ({
       transitions: s.transitions.map((t) => {
         const dreamStale =
           (t.status === "processing" || t.status === "queue") && !t.dreamUuid;
-        const uprezStale =
-          (t.uprezStatus === "processing" || t.uprezStatus === "queue") &&
-          !t.uprezDreamUuid;
-        if (!dreamStale && !uprezStale) return t;
-        return {
-          ...t,
-          ...(dreamStale && {
-            status: "failed" as const,
-            progress: undefined,
-          }),
-          ...(uprezStale && {
-            uprezStatus: "failed" as const,
-            uprezProgress: undefined,
-          }),
-        };
+        if (!dreamStale) return t;
+        return { ...t, status: "failed" as const, progress: undefined };
       }),
     })),
 

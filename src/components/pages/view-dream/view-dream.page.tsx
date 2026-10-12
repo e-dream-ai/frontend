@@ -131,7 +131,11 @@ const SectionID = "dream";
 
 const FALLBACK_ERROR_MESSAGE = "An error occurred while processing this dream.";
 
-const PREVIEW_FRAME_ALGORITHMS = new Set(["deforum", "uprez", "nvidia-uprez"]);
+const PREVIEW_FRAME_ALGORITHMS = new Set([
+  "deforum",
+  "enhance",
+  "nvidia-uprez",
+]);
 
 const formatDreamError = (error?: string | null): string => {
   if (!error) {

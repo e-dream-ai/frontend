@@ -31,9 +31,7 @@ export const useDiscardStudioClip = () =>
 const useDiscardStudioClipsWhere = () =>
   useCallback((matches: (job: StudioJob) => boolean) => {
     const store = useStudioStore.getState();
-    const discarded = store.jobs
-      .filter((j) => j.jobType !== "uprez" && matches(j))
-      .map((j) => j.dreamUuid);
+    const discarded = store.jobs.filter(matches).map((j) => j.dreamUuid);
     if (discarded.length === 0) return;
     store.archiveJobs(discarded);
   }, []);

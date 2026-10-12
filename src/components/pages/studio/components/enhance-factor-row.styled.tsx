@@ -1,14 +1,14 @@
 import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 
-export const UprezParamRow = styled.div`
+export const EnhanceParamRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 `;
 
-export const UprezParamLabel = styled.span`
+export const EnhanceParamLabel = styled.span`
   font-size: 13px;
   color: ${FLOW.textDim};
   font-family: ${FLOW.fontFamily};
