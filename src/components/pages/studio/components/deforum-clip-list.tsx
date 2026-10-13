@@ -2,7 +2,9 @@ import { useState, type MouseEvent } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useDeforumStore } from "@/stores/deforum.store";
 import type { DeforumClip, DeforumRenderKind } from "@/types/deforum.types";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useDreamPreviewFrame } from "@/api/dream/query/useDreamPreviewFrame";
+import { useScrollEdges } from "../hooks/useScrollEdges";
 import {
   isRenderBehind,
   latestRender,
@@ -18,10 +20,12 @@ import {
   ClipMeta,
   ClipName,
   ClipStrip,
+  ClipStripViewport,
   ClipThumb,
   SmallButton,
   StatusPill,
   StripActions,
+  StripArrow,
   type PillTone,
 } from "./deforum-app.styled";
 
@@ -100,6 +104,7 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
   const store = useDeforumStore.getState;
   const selected = new Set(selectedIds);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
+  const strip = useScrollEdges<HTMLDivElement>();
 
   const handleClick = (e: MouseEvent, id: string) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey) store().toggleClipSelection(id);
@@ -112,54 +117,79 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
   return (
     <>
       <ClipListLabel id="deforum-dreams-label">Dreams</ClipListLabel>
-      <ClipStrip
-        role="listbox"
-        aria-multiselectable
-        aria-labelledby="deforum-dreams-label"
-      >
-        {clips.map((clip) => {
-          const shown = latestRender(clip)?.render;
-          const firstPrompt = clip.settings.prompts.find((p) => p.text.trim());
-          return (
-            <ClipCardFrame key={clip.id}>
-              <ClipCard
-                role="option"
-                aria-selected={selected.has(clip.id)}
-                $selected={selected.has(clip.id)}
-                onClick={(e) => handleClick(e, clip.id)}
-                title="Click to edit • ⌘/Shift-click to edit several together"
-              >
-                <ClipThumbnail
-                  clip={clip}
-                  poster={shown ? posters.get(shown.dreamUuid) : undefined}
-                  placeholder={
-                    shown
-                      ? ""
-                      : firstPrompt?.text.slice(0, 80) || "No prompt yet"
-                  }
-                />
-                <ClipName>{clip.name}</ClipName>
-                <ClipMeta>
-                  <span>{clip.settings.maxFrames} frames</span>
-                  <span>{clip.settings.prompts.length} prompts</span>
-                </ClipMeta>
-                <ClipMeta>
-                  <RenderPill clip={clip} kind="test" />
-                  <RenderPill clip={clip} kind="final" />
-                </ClipMeta>
-              </ClipCard>
-              <ClipDeleteButton
-                aria-label={`Remove ${clip.name}`}
-                title="Remove this dream"
-                onClick={() => store().removeClips([clip.id])}
-              >
-                ✕
-              </ClipDeleteButton>
-            </ClipCardFrame>
-          );
-        })}
-        <AddClipCard onClick={() => store().addClip()}>+ Dream</AddClipCard>
-      </ClipStrip>
+      <ClipStripViewport $left={strip.edges.left} $right={strip.edges.right}>
+        {strip.edges.left && (
+          <StripArrow
+            $side="left"
+            data-edit-lock-allow
+            aria-label="Scroll to earlier dreams"
+            onClick={() => strip.page(-1)}
+          >
+            <ChevronLeft size={18} strokeWidth={2.4} />
+          </StripArrow>
+        )}
+        <ClipStrip
+          ref={strip.ref}
+          role="listbox"
+          aria-multiselectable
+          aria-labelledby="deforum-dreams-label"
+        >
+          {clips.map((clip) => {
+            const shown = latestRender(clip)?.render;
+            const firstPrompt = clip.settings.prompts.find((p) =>
+              p.text.trim(),
+            );
+            return (
+              <ClipCardFrame key={clip.id}>
+                <ClipCard
+                  role="option"
+                  aria-selected={selected.has(clip.id)}
+                  $selected={selected.has(clip.id)}
+                  onClick={(e) => handleClick(e, clip.id)}
+                  title="Click to edit • ⌘/Shift-click to edit several together"
+                >
+                  <ClipThumbnail
+                    clip={clip}
+                    poster={shown ? posters.get(shown.dreamUuid) : undefined}
+                    placeholder={
+                      shown
+                        ? ""
+                        : firstPrompt?.text.slice(0, 80) || "No prompt yet"
+                    }
+                  />
+                  <ClipName>{clip.name}</ClipName>
+                  <ClipMeta>
+                    <span>{clip.settings.maxFrames} frames</span>
+                    <span>{clip.settings.prompts.length} prompts</span>
+                  </ClipMeta>
+                  <ClipMeta>
+                    <RenderPill clip={clip} kind="test" />
+                    <RenderPill clip={clip} kind="final" />
+                  </ClipMeta>
+                </ClipCard>
+                <ClipDeleteButton
+                  aria-label={`Remove ${clip.name}`}
+                  title="Remove this dream"
+                  onClick={() => store().removeClips([clip.id])}
+                >
+                  ✕
+                </ClipDeleteButton>
+              </ClipCardFrame>
+            );
+          })}
+          <AddClipCard onClick={() => store().addClip()}>+ Dream</AddClipCard>
+        </ClipStrip>
+        {strip.edges.right && (
+          <StripArrow
+            $side="right"
+            data-edit-lock-allow
+            aria-label="Scroll to later dreams"
+            onClick={() => strip.page(1)}
+          >
+            <ChevronRight size={18} strokeWidth={2.4} />
+          </StripArrow>
+        )}
+      </ClipStripViewport>
 
       {clips.length > 0 && (
         <StripActions>

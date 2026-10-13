@@ -53,11 +53,71 @@ export const ClipListLabel = styled(PreviewLabel)`
   }
 `;
 
+/**
+ * Holds the scrolling strip, fading whichever edge has more dreams past it
+ * and putting an arrow there, since scrollbars stay hidden on macOS.
+ */
+export const ClipStripViewport = styled.div<{
+  $left: boolean;
+  $right: boolean;
+}>`
+  position: relative;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 56px;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+    z-index: 1;
+  }
+
+  &::before {
+    left: 0;
+    background: linear-gradient(to right, ${FLOW.bgCard}, transparent);
+    opacity: ${(p) => (p.$left ? 1 : 0)};
+  }
+
+  &::after {
+    right: 0;
+    background: linear-gradient(to left, ${FLOW.bgCard}, transparent);
+    opacity: ${(p) => (p.$right ? 1 : 0)};
+  }
+`;
+
+export const StripArrow = styled.button<{ $side: "left" | "right" }>`
+  position: absolute;
+  top: 50%;
+  ${(p) => (p.$side === "left" ? "left: 8px" : "right: 8px")};
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: ${FLOW.bgElevated};
+  border: 1px solid ${FLOW.borderHover};
+  border-radius: 50%;
+  color: ${FLOW.text};
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+
+  &:hover {
+    border-color: ${FLOW.accent};
+    color: ${FLOW.accent};
+  }
+`;
+
 export const ClipStrip = styled.div`
   display: flex;
-  flex-wrap: wrap;
   gap: 12px;
   padding: 14px ${FLOW.inset} 20px;
+  overflow-x: auto;
   align-items: stretch;
 
   @media (max-width: 480px) {
