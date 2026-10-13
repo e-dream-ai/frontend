@@ -50,7 +50,8 @@ export const Logo = styled.img`
 export const Title = styled.h1`
   font-size: 1.125rem;
   font-weight: 600;
-  color: ${FLOW.text};
+  /* The main app header title's color, so Studio reads as part of it. */
+  color: ${(p) => p.theme.textAccentColor};
   font-family: ${FLOW.fontFamily};
   margin: 0;
 `;

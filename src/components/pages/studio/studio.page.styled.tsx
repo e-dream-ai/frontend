@@ -91,9 +91,16 @@ export const BackButton = styled(Link)`
 export const StudioTitle = styled.h1`
   font-size: 1.125rem;
   font-weight: 600;
-  color: ${FLOW.text};
+  /* The main app header title's color, so Studio reads as part of it. */
+  color: ${(p) => p.theme.textAccentColor};
   font-family: ${FLOW.fontFamily};
   white-space: nowrap;
+`;
+
+/** "Studio" goes back to the playlists, as the back button does. */
+export const StudioTitleLink = styled(Link)`
+  color: inherit;
+  text-decoration: none;
 `;
 
 export const EditorBadge = styled.span<{ $mode: StudioMode }>`
