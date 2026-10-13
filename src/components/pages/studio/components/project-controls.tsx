@@ -1,5 +1,5 @@
 import React from "react";
-import { Search, X } from "lucide-react";
+import { Archive, Search, X } from "lucide-react";
 import type { StudioMode } from "@/types/flow.types";
 import { STUDIO_MODES, STUDIO_MODE_LABELS } from "../constants/studio-modes";
 import {
@@ -17,6 +17,8 @@ import {
 type Props = {
   editorFilter?: StudioMode;
   onEditorFilterChange: (mode?: StudioMode) => void;
+  archived: boolean;
+  onArchivedChange: (archived: boolean) => void;
   search: string;
   onSearchChange: (value: string) => void;
 };
@@ -24,6 +26,8 @@ type Props = {
 export const ProjectControls: React.FC<Props> = ({
   editorFilter,
   onEditorFilterChange,
+  archived,
+  onArchivedChange,
   search,
   onSearchChange,
 }) => (
@@ -50,6 +54,18 @@ export const ProjectControls: React.FC<Props> = ({
           {STUDIO_MODE_LABELS[mode]}
         </FilterButton>
       ))}
+    </FilterToggle>
+
+    <FilterToggle>
+      <FilterButton
+        type="button"
+        $active={archived}
+        aria-pressed={archived}
+        onClick={() => onArchivedChange(!archived)}
+      >
+        <Archive size={14} strokeWidth={2.2} />
+        Archived
+      </FilterButton>
     </FilterToggle>
 
     <ControlsSpacer />
