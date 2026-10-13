@@ -72,9 +72,10 @@ export const useEditorProjectPlaylist = ({
 
   const createAndSave = useCallback(
     async (name: string) => {
-      const trimmed = name.trim() || fallbackName || adapter.defaultName();
-
       setStatus("saving");
+      const trimmed =
+        name.trim() || fallbackName || (await adapter.defaultName());
+
       let next;
 
       try {

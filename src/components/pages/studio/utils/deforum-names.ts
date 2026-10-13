@@ -8,7 +8,7 @@ const FALLBACK = "Animation";
  * so do the words of their names, which is what trigger words like
  * `ral-trichom` are made of; backtick weight expressions go too.
  */
-const promptWords = (text: string) => {
+export const promptWords = (text: string) => {
   const loraWords = new Set(
     [...text.matchAll(/<lora:([^:>]+)[^>]*>/gi)].flatMap((m) => words(m[1])),
   );
