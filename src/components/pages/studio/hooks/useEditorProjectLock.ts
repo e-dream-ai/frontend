@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useReducer } from "react";
+import { useCallback, useEffect, useReducer, useRef } from "react";
 import Bugsnag from "@bugsnag/js";
 import useSocket from "@/hooks/useSocket";
 import {
@@ -25,7 +25,6 @@ type LockState = {
 };
 
 type LockAction =
-  | { type: "idle" }
   | { type: "claiming" }
   | { type: "held" }
   | { type: "blocked"; lockedAt: string | null };
@@ -38,17 +37,15 @@ const INITIAL_STATE: LockState = {
 
 const lockReducer = (state: LockState, action: LockAction): LockState => {
   switch (action.type) {
-    case "idle":
-      return INITIAL_STATE;
     case "claiming":
-      return { ...state, status: "claiming" };
+      return { ...INITIAL_STATE, status: "claiming" };
     case "held":
       return { status: "held", lockedAt: null, interrupted: false };
     case "blocked":
       return {
         status: "blocked",
         lockedAt: action.lockedAt,
-        interrupted: state.status === "held",
+        interrupted: state.interrupted || state.status === "held",
       };
   }
 };
@@ -56,6 +53,11 @@ const lockReducer = (state: LockState, action: LockAction): LockState => {
 export const useEditorProjectLock = (projectUuid?: string) => {
   const { socket } = useSocket();
   const [lock, dispatch] = useReducer(lockReducer, INITIAL_STATE);
+  const interruptedRef = useRef(lock.interrupted);
+
+  useEffect(() => {
+    interruptedRef.current = lock.interrupted;
+  });
 
   const claim = useCallback(async (uuid: string, force = false) => {
     try {
@@ -96,7 +98,9 @@ export const useEditorProjectLock = (projectUuid?: string) => {
       if (state.uuid !== projectUuid) return;
 
       if (!state.lockedBy) {
-        void claim(projectUuid);
+        if (!interruptedRef.current && document.visibilityState === "visible") {
+          void claim(projectUuid);
+        }
         return;
       }
 
@@ -120,22 +124,25 @@ export const useEditorProjectLock = (projectUuid?: string) => {
   }, [socket, projectUuid, claim]);
 
   useEffect(() => {
-    if (!projectUuid) {
-      dispatch({ type: "idle" });
-      return;
-    }
+    if (!projectUuid) return;
 
     dispatch({ type: "claiming" });
     void claim(projectUuid);
-    const timer = setInterval(() => void claim(projectUuid), LOCK_HEARTBEAT_MS);
-
-    return () => clearInterval(timer);
   }, [projectUuid, claim]);
+
+  const held = lock.status === "held";
+
+  useEffect(() => {
+    if (!projectUuid || !held) return;
+
+    const timer = setInterval(() => void claim(projectUuid), LOCK_HEARTBEAT_MS);
+    return () => clearInterval(timer);
+  }, [projectUuid, held, claim]);
 
   const takeOver = useCallback(() => {
     if (!projectUuid) return;
     void claim(projectUuid, true);
   }, [projectUuid, claim]);
 
-  return { ...lock, takeOver };
+  return { ...(projectUuid ? lock : INITIAL_STATE), takeOver };
 };
