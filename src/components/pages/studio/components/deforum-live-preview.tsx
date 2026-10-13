@@ -15,6 +15,7 @@ import {
   LivePlaceholder,
   LivePreviewBox,
 } from "./deforum-app.styled";
+import { PreviewLabel } from "./segment-preview.styled";
 
 interface DeforumLivePreviewProps {
   clip: DeforumClip;
@@ -53,6 +54,7 @@ export function DeforumLivePreview({
 
   return (
     <LivePreviewBox>
+      <PreviewLabel>Preview</PreviewLabel>
       {frame ? (
         <LiveFrame
           src={frame.src}

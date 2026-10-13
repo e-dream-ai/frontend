@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { DeforumSettings } from "@/types/deforum.types";
-import { selectDeforumProject, useDeforumStore } from "./deforum.store";
 import {
+  DEFORUM_HISTORY_MAX_BYTES,
+  selectDeforumProject,
+  useDeforumStore,
+} from "./deforum.store";
+import {
+  deforumPlaylistDreams,
   isRenderBehind,
   resolveDeforumTargets,
 } from "../components/pages/studio/utils/deforum-targets";
@@ -158,5 +163,97 @@ describe("resolveDeforumTargets", () => {
         (c) => c.id,
       ),
     ).toEqual([a.id]);
+  });
+
+  it("moves removed clips to History and puts them back where they were", () => {
+    store().addClip();
+    store().addClip();
+    store().addClip();
+    const [a, b, c] = store().clips;
+    store().recordRender(b.id, "final", {
+      dreamUuid: "fb",
+      status: "processed",
+      createdAt: 1,
+      settings: b.settings,
+    });
+
+    store().removeClips([b.id]);
+    expect(store().clips.map((x) => x.id)).toEqual([a.id, c.id]);
+    expect(store().removedClips.map((r) => r.clip.id)).toEqual([b.id]);
+    expect(deforumPlaylistDreams(store().clips)).toEqual([]);
+
+    store().restoreClip(b.id);
+    expect(store().clips.map((x) => x.id)).toEqual([a.id, b.id, c.id]);
+    expect(store().removedClips).toEqual([]);
+    expect(store().selectedIds).toEqual([b.id]);
+    expect(deforumPlaylistDreams(store().clips)).toEqual(["fb"]);
+  });
+
+  it("restores several removed together in History order", () => {
+    store().addClip();
+    store().addClip();
+    store().addClip();
+    const ids = store().clips.map((x) => x.id);
+    store().removeClips([ids[0], ids[2]]);
+    for (const r of [...store().removedClips]) store().restoreClip(r.clip.id);
+    expect(store().clips.map((x) => x.id)).toEqual(ids);
+  });
+
+  it("keeps History through a save and reload", () => {
+    store().addClip();
+    store().addClip();
+    const gone = store().clips[0];
+    store().removeClips([gone.id]);
+    const saved = JSON.parse(JSON.stringify(selectDeforumProject(store())));
+    store().resetDeforum();
+    store().restoreDeforum(saved);
+    expect(store().removedClips.map((r) => r.clip.id)).toEqual([gone.id]);
+  });
+
+  it("follows a render that finishes after its clip is removed", () => {
+    store().addClip();
+    const clip = store().clips[0];
+    store().recordRender(clip.id, "test", {
+      dreamUuid: "t1",
+      createdAt: 1,
+      settings: clip.settings,
+    });
+    store().removeClips([clip.id]);
+    store().updateRenderStatus("t1", "processed");
+    expect(store().removedClips[0].clip.test).toMatchObject({
+      status: "processed",
+    });
+  });
+
+  it("drops the oldest History entries past its size budget", () => {
+    for (let i = 0; i < 10; i++) store().addClip();
+    store().setClipSettings(
+      store().clips.map((c) => c.id),
+      { prompts: [{ id: "p", frame: 0, text: "x".repeat(20_000) }] },
+    );
+    const ids = store().clips.map((c) => c.id);
+    for (const id of ids) store().removeClips([id]);
+
+    const { removedClips } = store();
+    const bytes = new TextEncoder().encode(JSON.stringify(removedClips)).length;
+    expect(removedClips.length).toBeGreaterThan(0);
+    expect(removedClips.length).toBeLessThan(ids.length);
+    expect(bytes).toBeLessThanOrEqual(DEFORUM_HISTORY_MAX_BYTES);
+    expect(removedClips[0].clip.id).toBe(ids[ids.length - 1]);
+  });
+
+  it("records a render submitted just before its clip was removed", () => {
+    store().addClip();
+    const clip = store().clips[0];
+    store().removeClips([clip.id]);
+    store().recordRender(clip.id, "test", {
+      dreamUuid: "t1",
+      createdAt: 1,
+      settings: clip.settings,
+    });
+    expect(store().removedClips[0].clip.test).toMatchObject({
+      dreamUuid: "t1",
+      status: "queue",
+    });
   });
 });

@@ -117,7 +117,7 @@ export function DeforumPromptList({
               </PromptFrame>
               <PromptText
                 aria-label={`Prompt at frame ${prompt.frame}`}
-                placeholder="What the animation becomes from this frame on…"
+                placeholder="What the dream becomes from this frame on…"
                 value={prompt.text}
                 onChange={(e) =>
                   setPrompts(

@@ -5,6 +5,7 @@ export type EditorProjectListFilters = {
   playlistUuid?: string;
   dreamUuid?: string;
   search?: string;
+  archived?: boolean;
   take?: number;
   skip?: number;
 };

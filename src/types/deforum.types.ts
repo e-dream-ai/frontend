@@ -67,3 +67,11 @@ export interface DeforumClip {
   test?: DeforumRender;
   final?: DeforumRender;
 }
+
+/** A clip taken out of the list, kept in History so it can be put back. */
+export interface RemovedDeforumClip {
+  clip: DeforumClip;
+  /** Where it sat in the list, so it goes back to the same place. */
+  index: number;
+  removedAt: number;
+}

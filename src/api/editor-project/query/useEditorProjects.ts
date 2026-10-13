@@ -9,7 +9,7 @@ import { EditorProjectSummary } from "@/types/editor-project.types";
 
 export const EDITOR_PROJECT_LIST_STALE_TIME = 30_000;
 
-type EditorProjectsResponse = {
+export type EditorProjectsResponse = {
   projects: EditorProjectSummary[];
   count: number;
 };
@@ -25,6 +25,9 @@ const buildQueryString = (filters: EditorProjectListFilters) => {
   if (filters.playlistUuid) params.set("playlistUuid", filters.playlistUuid);
   if (filters.dreamUuid) params.set("dreamUuid", filters.dreamUuid);
   if (filters.search) params.set("search", filters.search);
+  if (filters.archived !== undefined) {
+    params.set("archived", String(filters.archived));
+  }
   if (filters.take !== undefined) params.set("take", String(filters.take));
   if (filters.skip !== undefined) params.set("skip", String(filters.skip));
   const query = params.toString();

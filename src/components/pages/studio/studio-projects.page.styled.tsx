@@ -1,4 +1,4 @@
-import styled, { keyframes } from "styled-components";
+import styled, { css, keyframes } from "styled-components";
 import { Link } from "react-router-dom";
 import { FLOW, flowFadeSlideUp } from "@/constants/flow-theme.constants";
 import type { StudioMode } from "@/types/flow.types";
@@ -50,7 +50,8 @@ export const Logo = styled.img`
 export const Title = styled.h1`
   font-size: 1.125rem;
   font-weight: 600;
-  color: ${FLOW.text};
+  /* The main app header title's color, so Studio reads as part of it. */
+  color: ${(p) => p.theme.textAccentColor};
   font-family: ${FLOW.fontFamily};
   margin: 0;
 `;
@@ -69,6 +70,9 @@ export const FilterToggle = styled.div`
 `;
 
 export const FilterButton = styled.button<{ $active: boolean }>`
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   padding: 6px 16px;
   border-radius: 6px;
   font-size: 13px;
@@ -239,7 +243,7 @@ export const Card = styled.li`
   }
 `;
 
-export const CardLink = styled(Link)`
+const cardTarget = css`
   display: flex;
   flex-direction: column;
   color: inherit;
@@ -249,6 +253,21 @@ export const CardLink = styled(Link)`
     outline: 2px solid ${FLOW.accent};
     outline-offset: -2px;
   }
+`;
+
+export const CardLink = styled(Link)`
+  ${cardTarget}
+`;
+
+export const CardButton = styled.button`
+  ${cardTarget}
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
 `;
 
 export const Thumb = styled.div`
@@ -323,7 +342,7 @@ export const CardMeta = styled.span`
   color: ${FLOW.textMuted};
 `;
 
-export const DeleteButton = styled.button`
+export const ArchiveButton = styled.button`
   position: absolute;
   top: 8px;
   right: 8px;
@@ -348,19 +367,14 @@ export const DeleteButton = styled.button`
     opacity: 1;
   }
 
-  &:hover:not(:disabled) {
-    color: ${FLOW.error};
-    border-color: ${FLOW.errorDim};
+  &:hover {
+    color: ${FLOW.text};
+    border-color: ${FLOW.borderHover};
   }
 
   &:focus-visible {
     outline: 2px solid ${FLOW.accent};
     outline-offset: 1px;
-  }
-
-  &:disabled {
-    opacity: 0.4;
-    cursor: default;
   }
 
   @media (hover: none) {

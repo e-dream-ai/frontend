@@ -2,7 +2,9 @@ import { useState, type MouseEvent } from "react";
 import { useShallow } from "zustand/react/shallow";
 import { useDeforumStore } from "@/stores/deforum.store";
 import type { DeforumClip, DeforumRenderKind } from "@/types/deforum.types";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useDreamPreviewFrame } from "@/api/dream/query/useDreamPreviewFrame";
+import { useScrollEdges } from "../hooks/useScrollEdges";
 import {
   isRenderBehind,
   latestRender,
@@ -11,14 +13,20 @@ import {
 import { ForceSettingsDialog } from "./force-settings-dialog";
 import {
   AddClipCard,
+  AddClipFrame,
   ClipCard,
+  ClipCardFrame,
+  ClipListLabel,
+  ClipDeleteButton,
   ClipMeta,
   ClipName,
   ClipStrip,
+  ClipStripViewport,
   ClipThumb,
   SmallButton,
   StatusPill,
   StripActions,
+  StripArrow,
   type PillTone,
 } from "./deforum-app.styled";
 
@@ -97,6 +105,7 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
   const store = useDeforumStore.getState;
   const selected = new Set(selectedIds);
   const [confirmingRemove, setConfirmingRemove] = useState(false);
+  const strip = useScrollEdges<HTMLDivElement>();
 
   const handleClick = (e: MouseEvent, id: string) => {
     if (e.metaKey || e.ctrlKey || e.shiftKey) store().toggleClipSelection(id);
@@ -108,40 +117,80 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
 
   return (
     <>
-      <ClipStrip role="listbox" aria-multiselectable aria-label="Animations">
-        {clips.map((clip) => {
-          const shown = latestRender(clip)?.render;
-          const firstPrompt = clip.settings.prompts.find((p) => p.text.trim());
-          return (
-            <ClipCard
-              key={clip.id}
-              role="option"
-              aria-selected={selected.has(clip.id)}
-              $selected={selected.has(clip.id)}
-              onClick={(e) => handleClick(e, clip.id)}
-              title="Click to edit • ⌘/Shift-click to edit several together"
-            >
-              <ClipThumbnail
-                clip={clip}
-                poster={shown ? posters.get(shown.dreamUuid) : undefined}
-                placeholder={
-                  shown ? "" : firstPrompt?.text.slice(0, 80) || "No prompt yet"
-                }
-              />
-              <ClipName>{clip.name}</ClipName>
-              <ClipMeta>
-                <span>{clip.settings.maxFrames} frames</span>
-                <span>{clip.settings.prompts.length} prompts</span>
-              </ClipMeta>
-              <ClipMeta>
-                <RenderPill clip={clip} kind="test" />
-                <RenderPill clip={clip} kind="final" />
-              </ClipMeta>
-            </ClipCard>
-          );
-        })}
-        <AddClipCard onClick={() => store().addClip()}>+ Animation</AddClipCard>
-      </ClipStrip>
+      <ClipListLabel id="deforum-dreams-label">Dreams</ClipListLabel>
+      <ClipStripViewport $left={strip.edges.left} $right={strip.edges.right}>
+        {strip.edges.left && (
+          <StripArrow
+            $side="left"
+            data-edit-lock-allow
+            aria-label="Scroll to earlier dreams"
+            onClick={() => strip.page(-1)}
+          >
+            <ChevronLeft size={18} strokeWidth={2.4} />
+          </StripArrow>
+        )}
+        <ClipStrip
+          ref={strip.ref}
+          role="list"
+          aria-labelledby="deforum-dreams-label"
+        >
+          {clips.map((clip) => {
+            const shown = latestRender(clip)?.render;
+            const firstPrompt = clip.settings.prompts.find((p) =>
+              p.text.trim(),
+            );
+            return (
+              <ClipCardFrame key={clip.id} role="listitem">
+                <ClipCard
+                  aria-pressed={selected.has(clip.id)}
+                  $selected={selected.has(clip.id)}
+                  onClick={(e) => handleClick(e, clip.id)}
+                  title="Click to edit • ⌘/Shift-click to edit several together"
+                >
+                  <ClipThumbnail
+                    clip={clip}
+                    poster={shown ? posters.get(shown.dreamUuid) : undefined}
+                    placeholder={
+                      shown
+                        ? ""
+                        : firstPrompt?.text.slice(0, 80) || "No prompt yet"
+                    }
+                  />
+                  <ClipName>{clip.name}</ClipName>
+                  <ClipMeta>
+                    <span>{clip.settings.maxFrames} frames</span>
+                    <span>{clip.settings.prompts.length} prompts</span>
+                  </ClipMeta>
+                  <ClipMeta>
+                    <RenderPill clip={clip} kind="test" />
+                    <RenderPill clip={clip} kind="final" />
+                  </ClipMeta>
+                </ClipCard>
+                <ClipDeleteButton
+                  aria-label={`Remove ${clip.name}`}
+                  title="Remove this dream"
+                  onClick={() => store().removeClips([clip.id])}
+                >
+                  ✕
+                </ClipDeleteButton>
+              </ClipCardFrame>
+            );
+          })}
+          <AddClipFrame role="listitem">
+            <AddClipCard onClick={() => store().addClip()}>+ Dream</AddClipCard>
+          </AddClipFrame>
+        </ClipStrip>
+        {strip.edges.right && (
+          <StripArrow
+            $side="right"
+            data-edit-lock-allow
+            aria-label="Scroll to later dreams"
+            onClick={() => strip.page(1)}
+          >
+            <ChevronRight size={18} strokeWidth={2.4} />
+          </StripArrow>
+        )}
+      </ClipStripViewport>
 
       {clips.length > 0 && (
         <StripActions>
@@ -183,7 +232,7 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
 
       {confirmingRemove && (
         <ForceSettingsDialog
-          title={`Remove ${selectedIds.length} animation${
+          title={`Remove ${selectedIds.length} dream${
             selectedIds.length === 1 ? "" : "s"
           }?`}
           body="Their final renders leave the playlist."

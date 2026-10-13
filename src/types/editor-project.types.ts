@@ -25,6 +25,7 @@ export type EditorProjectSummary = {
   playlist?: EditorProjectPlaylistRef | null;
   owner: EditorProjectOwner | null;
   canEdit: boolean;
+  archivedAt: string | null;
   created_at: string;
   updated_at: string;
 };

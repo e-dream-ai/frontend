@@ -1,23 +1,60 @@
 import { useFlowStore } from "@/stores/flow.store";
 import { useStudioStore } from "@/stores/studio.store";
 import { useDeforumStore } from "@/stores/deforum.store";
+import { fetchDream } from "@/api/dream/query/useDream";
 import { deforumPlaylistDreams } from "./deforum-targets";
+import { imageOriginFromDreamPrompt } from "./image-prompt";
+import {
+  firstActionPrompt,
+  firstDeforumPrompt,
+  firstFlowPrompt,
+  nameFromPrompt,
+} from "./project-names";
 import type { StudioMode } from "@/types/flow.types";
 
 export type EditorSaveAdapter = {
   pendingDreamUuids: () => string[];
   link: (playlistUuid: string) => void;
-  defaultName: () => string;
+  /**
+   * The name a save gives a playlist left unnamed: from the prompt of the
+   * project's first generation where there is one, else the editor and date.
+   */
+  defaultName: () => string | Promise<string>;
 };
 
 const timestampedName = (prefix: string) =>
   `${prefix} ${new Date().toISOString().slice(0, 10)}`;
 
+/**
+ * The prompt an image was generated from, read from its dream; undefined
+ * for an upload, or when the dream can't be fetched.
+ */
+const dreamImagePrompt = async (dreamUuid?: string) => {
+  if (!dreamUuid) return undefined;
+  try {
+    const origin = imageOriginFromDreamPrompt(
+      (await fetchDream(dreamUuid, { staleTime: Infinity }))?.prompt,
+    );
+    return origin.kind === "generated" ? origin.prompt : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
 const flowSaveAdapter: EditorSaveAdapter = {
   pendingDreamUuids: () => [],
   link: (playlistUuid) =>
     useFlowStore.getState().linkSavedPlaylist(playlistUuid, []),
-  defaultName: () => timestampedName("Flow"),
+  defaultName: async () => {
+    const { referenceFrames, transitions } = useFlowStore.getState();
+    const framePrompts = await Promise.all(
+      referenceFrames.map((frame) => dreamImagePrompt(frame.dreamUuid)),
+    );
+    return (
+      nameFromPrompt(firstFlowPrompt(framePrompts, transitions)) ||
+      timestampedName("Flow")
+    );
+  },
 };
 
 // useActionPlaylistSync fills the playlist once it is linked.
@@ -25,7 +62,25 @@ const actionSaveAdapter: EditorSaveAdapter = {
   pendingDreamUuids: () => [],
   link: (playlistUuid) =>
     useStudioStore.getState().setOutputPlaylistId(playlistUuid),
-  defaultName: () => timestampedName("Action"),
+  defaultName: async () => {
+    const { images, actions, jobs } = useStudioStore.getState();
+    // Images added from the library, or from before images kept their
+    // prompt, have it only on their dream.
+    const firstStored = images.findIndex((image) => image.prompt?.trim());
+    const resolved = await Promise.all(
+      (firstStored === -1 ? images : images.slice(0, firstStored)).map(
+        async (image) =>
+          image.prompt
+            ? image
+            : { ...image, prompt: await dreamImagePrompt(image.uuid) },
+      ),
+    );
+    const withPrompts = [...resolved, ...images.slice(resolved.length)];
+    return (
+      nameFromPrompt(firstActionPrompt(withPrompts, actions, jobs)) ||
+      timestampedName("Action")
+    );
+  },
 };
 
 const enhanceSaveAdapter: EditorSaveAdapter = {
@@ -45,7 +100,9 @@ const deforumSaveAdapter: EditorSaveAdapter = {
         playlistUuid,
         deforumPlaylistDreams(useDeforumStore.getState().clips),
       ),
-  defaultName: () => timestampedName("Deforum"),
+  defaultName: () =>
+    nameFromPrompt(firstDeforumPrompt(useDeforumStore.getState().clips)) ||
+    timestampedName("Deforum"),
 };
 
 export const SAVE_ADAPTERS: Record<StudioMode, EditorSaveAdapter> = {
