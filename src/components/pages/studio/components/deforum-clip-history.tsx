@@ -3,6 +3,7 @@ import { useDeforumStore } from "@/stores/deforum.store";
 import type { DeforumClip } from "@/types/deforum.types";
 import { useDeforumLiveFrame } from "../hooks/useDeforumLiveFrame";
 import { useDreamSegments } from "../hooks/useDreamSegments";
+import { useHasBeenVisible } from "../hooks/useHasBeenVisible";
 import { latestRender, pendingRender } from "../utils/deforum-targets";
 import { formatRunTime } from "../utils/transition-history.util";
 import { HISTORY_THUMB, sizedImageUrl } from "../utils/sized-image";
@@ -58,8 +59,12 @@ export function DeforumClipHistory() {
     () => removedClips.map((r) => latestRender(r.clip)?.render.dreamUuid ?? ""),
     [removedClips],
   );
+  const section = useHasBeenVisible<HTMLDivElement>();
   const segments = useDreamSegments(
-    useMemo(() => shownUuids.filter(Boolean), [shownUuids]),
+    useMemo(
+      () => (section.visible ? shownUuids.filter(Boolean) : []),
+      [section.visible, shownUuids],
+    ),
   );
   const segmentFor = (uuid: string) =>
     uuid ? segments.find((s) => s.key === uuid) : undefined;
@@ -68,7 +73,7 @@ export function DeforumClipHistory() {
   const open = removedClips.find((r) => r.clip.id === openId);
 
   return (
-    <HistorySection>
+    <HistorySection ref={section.ref}>
       <SectionTitle>History</SectionTitle>
       {removedClips.length === 0 ? (
         <HistoryEmpty>Removed dreams show up here</HistoryEmpty>

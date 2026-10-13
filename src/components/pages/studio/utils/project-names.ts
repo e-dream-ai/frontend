@@ -69,8 +69,14 @@ export const firstActionPrompt = (
 ): string | undefined => {
   const imagePrompt = images.find((i) => i.prompt?.trim())?.prompt;
   if (imagePrompt) return imagePrompt;
-  const earliest = [...jobs].sort(
-    (a, b) => (a.startedAt ?? Infinity) - (b.startedAt ?? Infinity),
-  )[0];
+  let earliest: StudioJob | undefined;
+  for (const job of jobs) {
+    if (
+      !earliest ||
+      (job.startedAt ?? Infinity) < (earliest.startedAt ?? Infinity)
+    ) {
+      earliest = job;
+    }
+  }
   return actions.find((a) => a.id === earliest?.actionId)?.prompt;
 };

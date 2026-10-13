@@ -13,6 +13,7 @@ import {
 import { ForceSettingsDialog } from "./force-settings-dialog";
 import {
   AddClipCard,
+  AddClipFrame,
   ClipCard,
   ClipCardFrame,
   ClipListLabel,
@@ -130,8 +131,7 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
         )}
         <ClipStrip
           ref={strip.ref}
-          role="listbox"
-          aria-multiselectable
+          role="list"
           aria-labelledby="deforum-dreams-label"
         >
           {clips.map((clip) => {
@@ -140,10 +140,9 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
               p.text.trim(),
             );
             return (
-              <ClipCardFrame key={clip.id}>
+              <ClipCardFrame key={clip.id} role="listitem">
                 <ClipCard
-                  role="option"
-                  aria-selected={selected.has(clip.id)}
+                  aria-pressed={selected.has(clip.id)}
                   $selected={selected.has(clip.id)}
                   onClick={(e) => handleClick(e, clip.id)}
                   title="Click to edit • ⌘/Shift-click to edit several together"
@@ -177,7 +176,9 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
               </ClipCardFrame>
             );
           })}
-          <AddClipCard onClick={() => store().addClip()}>+ Dream</AddClipCard>
+          <AddClipFrame role="listitem">
+            <AddClipCard onClick={() => store().addClip()}>+ Dream</AddClipCard>
+          </AddClipFrame>
         </ClipStrip>
         {strip.edges.right && (
           <StripArrow

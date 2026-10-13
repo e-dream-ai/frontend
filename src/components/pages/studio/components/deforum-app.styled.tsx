@@ -242,8 +242,13 @@ export const StatusPill = styled.span<{ $tone: PillTone }>`
   white-space: nowrap;
 `;
 
-export const AddClipCard = styled.button`
+export const AddClipFrame = styled.div`
   flex: 0 0 120px;
+  display: flex;
+`;
+
+export const AddClipCard = styled.button`
+  flex: 1;
   min-height: 120px;
   border: 1px dashed ${FLOW.borderHover};
   border-radius: ${FLOW.radius};

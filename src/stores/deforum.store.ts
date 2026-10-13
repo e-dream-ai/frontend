@@ -50,6 +50,21 @@ const completeClip = (clip: DeforumClip): DeforumClip => ({
 /** The most removed clips History keeps; the oldest drop off past this. */
 export const DEFORUM_HISTORY_LIMIT = 100;
 
+export const DEFORUM_HISTORY_MAX_BYTES = 128 * 1024;
+
+const encoder = new TextEncoder();
+
+const capHistory = (entries: readonly RemovedDeforumClip[]) => {
+  const kept: RemovedDeforumClip[] = [];
+  let bytes = 0;
+  for (const entry of entries.slice(0, DEFORUM_HISTORY_LIMIT)) {
+    bytes += encoder.encode(JSON.stringify(entry)).length;
+    if (kept.length > 0 && bytes > DEFORUM_HISTORY_MAX_BYTES) break;
+    kept.push(entry);
+  }
+  return kept;
+};
+
 type DeforumStoreState = {
   clips: DeforumClip[];
   /** Clips taken out of the list, newest first. */
@@ -228,10 +243,7 @@ export const useDeforumStore = create<DeforumStoreState>()((set) => ({
       if (removed.length === 0) return s;
       return {
         clips: withClipNames(s.clips.filter((c) => !drop.has(c.id))),
-        removedClips: [...removed, ...s.removedClips].slice(
-          0,
-          DEFORUM_HISTORY_LIMIT,
-        ),
+        removedClips: capHistory([...removed, ...s.removedClips]),
         selectedIds: s.selectedIds.filter((id) => !drop.has(id)),
       };
     }),

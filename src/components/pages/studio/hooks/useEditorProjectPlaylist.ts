@@ -73,12 +73,11 @@ export const useEditorProjectPlaylist = ({
   const createAndSave = useCallback(
     async (name: string) => {
       setStatus("saving");
-      const trimmed =
-        name.trim() || fallbackName || (await adapter.defaultName());
-
+      let trimmed = name.trim() || fallbackName;
       let next;
 
       try {
+        if (!trimmed) trimmed = await adapter.defaultName();
         const created = await createPlaylist.mutateAsync({ name: trimmed });
         next = created.data?.playlist;
         if (!next) throw new Error("No playlist in create response");
@@ -94,7 +93,11 @@ export const useEditorProjectPlaylist = ({
         setPendingName("");
       } catch (error) {
         Bugsnag.notify(error as Error);
-        toast.error(`Could not save "${trimmed}". Try again.`);
+        toast.error(
+          trimmed
+            ? `Could not save "${trimmed}". Try again.`
+            : "Could not save. Try again.",
+        );
         setStatus("idle");
         return;
       }

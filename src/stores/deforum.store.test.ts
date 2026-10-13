@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import type { DeforumSettings } from "@/types/deforum.types";
-import { selectDeforumProject, useDeforumStore } from "./deforum.store";
+import {
+  DEFORUM_HISTORY_MAX_BYTES,
+  selectDeforumProject,
+  useDeforumStore,
+} from "./deforum.store";
 import {
   deforumPlaylistDreams,
   isRenderBehind,
@@ -219,6 +223,23 @@ describe("resolveDeforumTargets", () => {
     expect(store().removedClips[0].clip.test).toMatchObject({
       status: "processed",
     });
+  });
+
+  it("drops the oldest History entries past its size budget", () => {
+    for (let i = 0; i < 10; i++) store().addClip();
+    store().setClipSettings(
+      store().clips.map((c) => c.id),
+      { prompts: [{ id: "p", frame: 0, text: "x".repeat(20_000) }] },
+    );
+    const ids = store().clips.map((c) => c.id);
+    for (const id of ids) store().removeClips([id]);
+
+    const { removedClips } = store();
+    const bytes = new TextEncoder().encode(JSON.stringify(removedClips)).length;
+    expect(removedClips.length).toBeGreaterThan(0);
+    expect(removedClips.length).toBeLessThan(ids.length);
+    expect(bytes).toBeLessThanOrEqual(DEFORUM_HISTORY_MAX_BYTES);
+    expect(removedClips[0].clip.id).toBe(ids[ids.length - 1]);
   });
 
   it("records a render submitted just before its clip was removed", () => {

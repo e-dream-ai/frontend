@@ -33,7 +33,7 @@ const dreamImagePrompt = async (dreamUuid?: string) => {
   if (!dreamUuid) return undefined;
   try {
     const origin = imageOriginFromDreamPrompt(
-      (await fetchDream(dreamUuid))?.prompt,
+      (await fetchDream(dreamUuid, { staleTime: Infinity }))?.prompt,
     );
     return origin.kind === "generated" ? origin.prompt : undefined;
   } catch {
@@ -66,13 +66,16 @@ const actionSaveAdapter: EditorSaveAdapter = {
     const { images, actions, jobs } = useStudioStore.getState();
     // Images added from the library, or from before images kept their
     // prompt, have it only on their dream.
-    const withPrompts = await Promise.all(
-      images.map(async (image) =>
-        image.prompt
-          ? image
-          : { ...image, prompt: await dreamImagePrompt(image.uuid) },
+    const firstStored = images.findIndex((image) => image.prompt?.trim());
+    const resolved = await Promise.all(
+      (firstStored === -1 ? images : images.slice(0, firstStored)).map(
+        async (image) =>
+          image.prompt
+            ? image
+            : { ...image, prompt: await dreamImagePrompt(image.uuid) },
       ),
     );
+    const withPrompts = [...resolved, ...images.slice(resolved.length)];
     return (
       nameFromPrompt(firstActionPrompt(withPrompts, actions, jobs)) ||
       timestampedName("Action")
