@@ -9,33 +9,33 @@ import {
 import type {
   InterpolationFactor,
   UpscaleFactor,
-} from "../constants/uprez-factor-options";
-import { buildUprezPlaylistPrompt } from "../utils/uprez-playlist-prompt";
+} from "../constants/enhance-factor-options";
+import { buildEnhancePlaylistPrompt } from "../utils/enhance-playlist-prompt";
 
-export const CREATE_UPREZ_PLAYLIST_MUTATION_KEY = "createUprezPlaylist";
+export const CREATE_ENHANCE_PLAYLIST_MUTATION_KEY = "createEnhancePlaylist";
 
-export type CreateUprezPlaylistArgs = {
+export type CreateEnhancePlaylistArgs = {
   name: string;
   sourcePlaylistUuid: string;
   upscaleFactor: UpscaleFactor;
   interpolationFactor: InterpolationFactor;
 };
 
-export type CreatedUprezPlaylist = {
+export type CreatedEnhancePlaylist = {
   playlist: PlaylistSummary;
   runError: Error | null;
 };
 
 /** A run failure preserves the created playlist so it can be started again. */
-export const useCreateUprezPlaylist = () => {
+export const useCreateEnhancePlaylist = () => {
   const addPlaylistToCache = useAddPlaylistToCache();
 
-  return useMutation<CreatedUprezPlaylist, Error, CreateUprezPlaylistArgs>({
-    mutationKey: [CREATE_UPREZ_PLAYLIST_MUTATION_KEY],
+  return useMutation<CreatedEnhancePlaylist, Error, CreateEnhancePlaylistArgs>({
+    mutationKey: [CREATE_ENHANCE_PLAYLIST_MUTATION_KEY],
     mutationFn: async ({ name, ...factors }) => {
       const created = await createPlaylistRequest({
         name,
-        prompt: buildUprezPlaylistPrompt(factors),
+        prompt: buildEnhancePlaylistPrompt(factors),
       });
 
       const playlist = created.data?.playlist;
@@ -48,7 +48,7 @@ export const useCreateUprezPlaylist = () => {
         runError =
           err instanceof Error
             ? err
-            : new Error("Failed to start the uprez playlist");
+            : new Error("Failed to start the enhance playlist");
         Bugsnag.notify(runError);
       }
 

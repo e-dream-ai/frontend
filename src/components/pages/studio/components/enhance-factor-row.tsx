@@ -5,13 +5,13 @@ import {
   UPSCALE_FACTOR_OPTIONS,
   type UpscaleFactor,
   type InterpolationFactor,
-} from "../constants/uprez-factor-options";
+} from "../constants/enhance-factor-options";
 import {
   FactorToggle,
   FactorToggleGroup,
-  UprezParamLabel,
-  UprezParamRow,
-} from "./uprez-factor-row.styled";
+  EnhanceParamLabel,
+  EnhanceParamRow,
+} from "./enhance-factor-row.styled";
 
 type Factor = UpscaleFactor | InterpolationFactor;
 
@@ -33,8 +33,8 @@ function FactorRow<T extends Factor>({
   const labelId = useId();
 
   return (
-    <UprezParamRow>
-      <UprezParamLabel id={labelId}>{label}</UprezParamLabel>
+    <EnhanceParamRow>
+      <EnhanceParamLabel id={labelId}>{label}</EnhanceParamLabel>
       <FactorToggleGroup role="group" aria-labelledby={labelId}>
         {options.map((factor) => {
           const disabled = factor === disabledFactor;
@@ -53,16 +53,16 @@ function FactorRow<T extends Factor>({
           );
         })}
       </FactorToggleGroup>
-    </UprezParamRow>
+    </EnhanceParamRow>
   );
 }
 
 /**
  * The upscale + interpolation pair, with the no-op rule (1x on both) enforced
- * by greying out the second 1x. Shared so the Uprez app and the flow's
+ * by greying out the second 1x. Shared so the Enhance app and the flow's
  * save-to-playlist modal can't drift on the options or that rule.
  */
-export const UprezFactorFields: React.FC<{
+export const EnhanceFactorFields: React.FC<{
   upscaleFactor: UpscaleFactor;
   interpolationFactor: InterpolationFactor;
   onUpscaleChange: (factor: UpscaleFactor) => void;

@@ -29,16 +29,17 @@ export const ControlButton = styled.button`
   gap: 0.5rem;
   min-height: 2.75rem;
   padding: 0.5rem 0.75rem;
-  border: 1px solid ${(props) => props.theme.textSecondaryColor};
+  border: 1px solid ${(props) => props.theme.inputTextColorSecondary};
   border-radius: 5px;
   background: transparent;
-  color: ${(props) => props.theme.textPrimaryColor};
+  color: ${(props) => props.theme.textSecondaryColor};
   font: inherit;
   cursor: pointer;
 
   &:hover,
   &[aria-pressed="true"] {
     background: ${(props) => props.theme.colorBackgroundSecondary};
+    color: ${(props) => props.theme.inputTextColorPrimary};
   }
 
   &:focus-visible {

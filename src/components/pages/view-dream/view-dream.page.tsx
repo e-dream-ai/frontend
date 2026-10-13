@@ -71,6 +71,7 @@ import {
   ErrorTextArea,
 } from "./view-dream.styled";
 import { isAdmin } from "@/utils/user.util";
+import usePermission from "@/hooks/usePermission";
 import { useUploadDreamVideo } from "@/api/dream/hooks/useUploadDreamVideo";
 import useSocket from "@/hooks/useSocket";
 import { emitPlayDream } from "@/utils/socket.util";
@@ -89,7 +90,7 @@ import { VoteType } from "@/types/vote.types";
 import { FilmstripGallery } from "@/components/shared/filmstrip-gallery/filmstrip-gallery";
 import { PlaylistCheckboxMenu } from "@/components/shared/playlist-checkbox-menu/playlist-checkbox-menu";
 import { OpenInStudio } from "@/components/shared/open-in-studio";
-import { useEditorProjectForDream } from "@/api/editor-project/query/useEditorProjectForDream";
+import { useEditorProjectByDream } from "@/api/editor-project/query/useEditorProjects";
 import { NotFound } from "@/components/shared/not-found/not-found";
 import {
   formatDreamForm,
@@ -130,7 +131,11 @@ const SectionID = "dream";
 
 const FALLBACK_ERROR_MESSAGE = "An error occurred while processing this dream.";
 
-const PREVIEW_FRAME_ALGORITHMS = new Set(["deforum", "uprez", "nvidia-uprez"]);
+const PREVIEW_FRAME_ALGORITHMS = new Set([
+  "deforum",
+  "enhance",
+  "nvidia-uprez",
+]);
 
 const formatDreamError = (error?: string | null): string => {
   if (!error) {
@@ -432,9 +437,17 @@ const ViewDreamPage: React.FC = () => {
   const showEditButton = !editMode;
   const showSaveAndCancelButtons = editMode && !isDreamProcessingRaw;
 
-  const studioProject = useEditorProjectForDream(dream, isOwner);
+  const canOpenStudio = usePermission({
+    permission: DREAM_PERMISSIONS.CAN_CREATE_DREAM,
+  });
+  const { project: studioProject } = useEditorProjectByDream(
+    dream?.uuid,
+    (isOwner || canOpenStudio) && Boolean(dream?.playlistItems?.length),
+  );
 
-  const showRemixButton = isCreator && !isOwner && hasPrompt;
+  // Owners remix too: a copy to tweak and rerun, leaving the original intact.
+  // Admins can create dreams as well (the backend allows both roles).
+  const showRemixButton = (isCreator || isUserAdmin) && hasPrompt;
   // Handlers
   const handleMutateVideoDream = async (data: UpdateDreamFormValues) => {
     if (isImageDream) {
@@ -890,11 +903,16 @@ const ViewDreamPage: React.FC = () => {
   };
 
   /**
-   * Setting api values to form
+   * Setting api values to form. While editing, only the first load of a dream
+   * fills the form: an unprocessed dream is re-fetched every few seconds, and
+   * resetting on each of those would silently throw away the user's edits.
    */
+  const formDreamUuidRef = useRef<string | undefined>(undefined);
   useEffect(() => {
+    if (editMode && formDreamUuidRef.current === dream?.uuid) return;
+    formDreamUuidRef.current = dream?.uuid;
     resetRemoteDreamForm();
-  }, [resetRemoteDreamForm]);
+  }, [resetRemoteDreamForm, editMode, dream?.uuid]);
 
   if (!uuid) return <Navigate to={ROUTES.ROOT} replace />;
 
@@ -1259,6 +1277,7 @@ const ViewDreamPage: React.FC = () => {
                       {showRemixButton && (
                         <Button
                           type="button"
+                          ml="2"
                           after={<FontAwesomeIcon icon={faCopy} />}
                           isLoading={remixDreamMutation.isLoading}
                           onClick={() => openModal("remix")}

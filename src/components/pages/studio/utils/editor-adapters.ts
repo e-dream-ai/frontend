@@ -1,7 +1,12 @@
 import { selectFlowProject, useFlowStore } from "@/stores/flow.store";
 import { selectStudioProject, useStudioStore } from "@/stores/studio.store";
-import { selectUprezProject, useUprezStore } from "@/stores/uprez.store";
-import type { UprezFormState } from "@/stores/uprez.store";
+import { selectEnhanceProject, useEnhanceStore } from "@/stores/enhance.store";
+import type { EnhanceFormState } from "@/stores/enhance.store";
+import {
+  selectDeforumProject,
+  useDeforumStore,
+  type DeforumProjectState,
+} from "@/stores/deforum.store";
 import type { StudioMode } from "@/types/flow.types";
 import type { EditorProjectState } from "@/types/editor-project.types";
 import {
@@ -15,6 +20,7 @@ import {
 
 export type EditorAdapter = {
   read: () => EditorProjectState;
+  forCopy: (name: string) => EditorProjectState;
   write: (state: EditorProjectState) => void;
   reset: () => void;
   subscribe: (listener: () => void) => () => void;
@@ -22,7 +28,13 @@ export type EditorAdapter = {
   thumbnailDreamUuid: () => string | null;
 };
 
+const unlinkedPlaylist = (): EditorProjectState => ({
+  savedPlaylistUuid: null,
+  syncedPlaylistDreamUuids: [],
+});
+
 const flowAdapter: EditorAdapter = {
+  forCopy: unlinkedPlaylist,
   read: () =>
     toPersistedFlowState(
       selectFlowProject(useFlowStore.getState()),
@@ -56,6 +68,7 @@ const flowAdapter: EditorAdapter = {
 };
 
 const actionAdapter: EditorAdapter = {
+  forCopy: () => ({ outputPlaylistId: null }),
   read: () =>
     toPersistedActionState(
       selectStudioProject(useStudioStore.getState()),
@@ -86,19 +99,42 @@ const actionAdapter: EditorAdapter = {
   },
 };
 
-const uprezAdapter: EditorAdapter = {
+const enhanceAdapter: EditorAdapter = {
+  forCopy: (name) => ({ nameOverride: name }),
   read: () =>
-    selectUprezProject(useUprezStore.getState()) as EditorProjectState,
+    selectEnhanceProject(useEnhanceStore.getState()) as EditorProjectState,
   write: (state) =>
-    useUprezStore.getState().restoreUprez(state as Partial<UprezFormState>),
-  reset: () => useUprezStore.getState().resetUprez(),
-  subscribe: (listener) => useUprezStore.subscribe(listener),
+    useEnhanceStore
+      .getState()
+      .restoreEnhance(state as Partial<EnhanceFormState>),
+  reset: () => useEnhanceStore.getState().resetEnhance(),
+  subscribe: (listener) => useEnhanceStore.subscribe(listener),
   thumbnailDreamUuid: () => null,
-  isEmpty: () => !useUprezStore.getState().sourcePlaylist,
+  isEmpty: () => !useEnhanceStore.getState().sourcePlaylist,
+};
+
+const deforumAdapter: EditorAdapter = {
+  forCopy: unlinkedPlaylist,
+  read: () =>
+    selectDeforumProject(useDeforumStore.getState()) as EditorProjectState,
+  write: (state) =>
+    useDeforumStore
+      .getState()
+      .restoreDeforum(state as Partial<DeforumProjectState>),
+  reset: () => useDeforumStore.getState().resetDeforum(),
+  subscribe: (listener) => useDeforumStore.subscribe(listener),
+  thumbnailDreamUuid: () => {
+    const clip = useDeforumStore
+      .getState()
+      .clips.find((c) => c.final?.status === "processed");
+    return clip?.final?.dreamUuid ?? null;
+  },
+  isEmpty: () => useDeforumStore.getState().clips.length === 0,
 };
 
 export const EDITOR_ADAPTERS: Record<StudioMode, EditorAdapter> = {
   flow: flowAdapter,
   action: actionAdapter,
-  uprez: uprezAdapter,
+  enhance: enhanceAdapter,
+  deforum: deforumAdapter,
 };

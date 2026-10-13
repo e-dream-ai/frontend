@@ -16,7 +16,7 @@ export interface PlaylistSummary {
   thumbnail?: string | null;
   /**
    * Raw playlist prompt. Carried so callers can tell a plain playlist from a
-   * derived uprez one (`parseUprezPlaylistPrompt`) without a second fetch.
+   * derived enhance one (`parseEnhancePlaylistPrompt`) without a second fetch.
    */
   prompt?: string | null;
 }

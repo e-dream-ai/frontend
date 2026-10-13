@@ -319,6 +319,7 @@
       "upload_file": "Upload file(s)",
       "add_dreams_to_playlist": "Add dreams to this playlist",
       "filmstrips": "Filmstrips",
+      "grid": "Grid",
       "add_keyframes_to_playlist": "Add keyframes to this playlist",
       "play_playlist": "Play this playlist",
       "delete_playlist_tooltip": "Delete playlist",
@@ -389,6 +390,7 @@
       "upvote": "Liked",
       "downvote": "Disliked",
       "hidden": "Hidden",
+      "orphans": "Orphan",
       "empty_feed": "No items to show",
       "empty_users": "No users to show"
     },
@@ -749,11 +751,12 @@
       "count_failed": "{{count}} failed",
       "count_idle": "{{count}} not started"
     },
-    "uprez_run_summary": {
+    "enhance_run_summary": {
       "up_to_date_preview": "Everything is up to date at these settings.",
       "up_to_date_started": "Everything was already up to date.",
+      "in_progress": "Already rendering at these settings.",
       "summary_preview": "Running will {{actions, list}}.",
-      "summary_started": "Uprez run started: {{actions, list}}.",
+      "summary_started": "Enhance run started: {{actions, list}}.",
       "render_one": "render {{count}} dream",
       "render_other": "render {{count}} dreams",
       "reuse_one": "reuse {{count}} earlier render",

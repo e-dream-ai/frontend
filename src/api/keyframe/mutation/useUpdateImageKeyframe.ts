@@ -3,6 +3,7 @@ import { useCompleteKeyframeImageMultipartUpload } from "./useCompleteKeyframeIm
 import { useInitKeyframeImageMultipartUpload } from "./useInitKeyframeImageMultipartUpload";
 import { useUploadMultipartFile } from "@/api/dream/hooks/useUploadMultipartFile";
 import { getFileExtension } from "@/utils/file-uploader.util";
+import { encodeImageForUpload } from "@/utils/image-encode/image-encode";
 
 export const useUpdateImageKeyframe = () => {
   const cancelTokenSource = axios.CancelToken.source();
@@ -25,7 +26,8 @@ export const useUpdateImageKeyframe = () => {
     },
   );
 
-  const updateImageKeyframe = async (keyframeUUID: string, file: File) => {
+  const updateImageKeyframe = async (keyframeUUID: string, image: File) => {
+    const file = await encodeImageForUpload(image, "dream");
     const extension = getFileExtension(file);
 
     const initResponse = await initKeyframeImageMutation.mutateAsync({

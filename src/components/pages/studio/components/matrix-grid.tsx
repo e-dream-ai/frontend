@@ -124,6 +124,7 @@ const MatrixCell = memo(function MatrixCell({
       $band={actionNumber % 2 === 0}
       onMouseEnter={() => onHover(imageUuid, actionId)}
       role={playable ? "button" : undefined}
+      data-edit-lock-allow={playable || undefined}
       title={playable ? "Play in preview" : undefined}
       tabIndex={playable ? 0 : undefined}
       onClick={activate}
@@ -230,6 +231,7 @@ const ColumnHeader = memo(function ColumnHeader({
     <GridHeader $band={number % 2 === 0} $lit={lit}>
       <GridHeaderButton
         type="button"
+        data-edit-lock-allow
         aria-label={`Action ${number}: ${action.prompt}`}
         onClick={() => onOpen(action.id)}
       >
@@ -253,6 +255,7 @@ const RowHeader = memo(function RowHeader({
     <GridRowHeader $lit={lit}>
       <RowHeaderInner
         type="button"
+        data-edit-lock-allow
         aria-label={image.name}
         onClick={() => onOpen(image.uuid)}
       >

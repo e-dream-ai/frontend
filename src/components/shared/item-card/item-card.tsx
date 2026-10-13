@@ -103,6 +103,8 @@ type ItemCardProps = {
   deleteDisabled?: boolean;
   showPlayButton?: boolean;
   showStatusBadge?: boolean;
+  /** Just the thumbnail and its overlays: no avatar, title or owner. */
+  hideMetadata?: boolean;
   inline?: boolean;
   droppable?: boolean;
   showOrderNumber?: boolean;
@@ -166,6 +168,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
   inline = false,
   showPlayButton = false,
   showStatusBadge = false,
+  hideMetadata = false,
   showOrderNumber = false,
   indexNumber,
   dndMode = DND_MODES.CROSS_WINDOW,
@@ -283,7 +286,8 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       event?.dataTransfer?.setData(DND_METADATA.UUID, uuid!);
       event?.dataTransfer?.setData(DND_METADATA.ITEM_ID, String(itemId));
       event?.dataTransfer?.setData(DND_METADATA.ORDER, String(order));
-      event.dataTransfer?.setDragImage(tooltipRef.current as HTMLElement, 0, 0);
+      const dragImage = tooltipRef.current ?? cardRef.current;
+      if (dragImage) event.dataTransfer?.setDragImage(dragImage, 0, 0);
       return false;
     },
     [draggable, itemId, uuid, type, order, dndMode, setDragging],
@@ -529,7 +533,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       <Row
         style={{ position: "relative" }}
         m={0}
-        mb={3}
+        mb={hideMetadata ? 0 : 3}
         mr={inline ? [0, 4, 4, 4] : 0}
         flex={["auto", 0, 0, 0]}
       >
@@ -607,6 +611,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
       item,
       type,
       inline,
+      hideMetadata,
       showPlayButton,
       statusBadge,
       t,
@@ -727,30 +732,36 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
                 justifyContent="center"
               >
                 {!inline && thumbnailAndPlayButton}
-                <Row mb={0}>
-                  <Column mr="3">
-                    <Avatar size="sm" url={avatarUrl} />
-                  </Column>
-                  <Column justifyContent="center">
-                    {/* card title */}
-                    <ItemTitleText ref={tooltipRef} className="itemCard__title">
-                      {type === "playlist" || type === "virtual-playlist" ? (
-                        <FontAwesomeIcon icon={faListUl} />
-                      ) : type === "dream" &&
-                        (item as Dream)?.mediaType === DreamMediaType.IMAGE ? (
-                        <FontAwesomeIcon icon={faImage} />
-                      ) : (
-                        <FontAwesomeIcon icon={faFilm} />
-                      )}{" "}
-                      {name || t("components.item_card.unnamed")}
-                    </ItemTitleText>
+                {!hideMetadata && (
+                  <Row mb={0}>
+                    <Column mr="3">
+                      <Avatar size="sm" url={avatarUrl} />
+                    </Column>
+                    <Column justifyContent="center">
+                      {/* card title */}
+                      <ItemTitleText
+                        ref={tooltipRef}
+                        className="itemCard__title"
+                      >
+                        {type === "playlist" || type === "virtual-playlist" ? (
+                          <FontAwesomeIcon icon={faListUl} />
+                        ) : type === "dream" &&
+                          (item as Dream)?.mediaType ===
+                            DreamMediaType.IMAGE ? (
+                          <FontAwesomeIcon icon={faImage} />
+                        ) : (
+                          <FontAwesomeIcon icon={faFilm} />
+                        )}{" "}
+                        {name || t("components.item_card.unnamed")}
+                      </ItemTitleText>
 
-                    {/* user name */}
-                    <UsernameText color={theme.textPrimaryColor} mt="2">
-                      {getUserName(displayedOwner ?? user)}
-                    </UsernameText>
-                  </Column>
-                </Row>
+                      {/* user name */}
+                      <UsernameText color={theme.textPrimaryColor} mt="2">
+                        {getUserName(displayedOwner ?? user)}
+                      </UsernameText>
+                    </Column>
+                  </Row>
+                )}
               </Column>
               {showReorderControls && (
                 <ReorderActionsWrap>

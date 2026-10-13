@@ -1,10 +1,12 @@
 import { PlaylistProgress } from "@/components/shared/dream-progress/playlist-progress";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { Button, ItemCardList, Row } from "@/components/shared";
-import { UprezPlaylistControls } from "./components/uprez-playlist-controls";
+import { EnhancePlaylistControls } from "./components/enhance-playlist-controls";
+import { PlaylistBrowseList } from "./components/playlist-browse-list";
 import { OpenInStudio } from "@/components/shared/open-in-studio";
 import { StudioBadge } from "@/components/shared/studio-badge";
 import { useEditorProjectByPlaylist } from "@/api/editor-project/query/useEditorProjects";
+import usePermission from "@/hooks/usePermission";
 import Container from "@/components/shared/container/container";
 import { Column } from "@/components/shared/row/row";
 import { Section } from "@/components/shared/section/section";
@@ -29,7 +31,10 @@ import Restricted from "@/components/shared/restricted/restricted";
 import { Spinner } from "@/components/shared/spinner/spinner";
 import Text from "@/components/shared/text/text";
 import { ThumbnailInput } from "@/components/shared/thumbnail-input/thumbnail-input";
-import { PLAYLIST_PERMISSIONS } from "@/constants/permissions.constants";
+import {
+  DREAM_PERMISSIONS,
+  PLAYLIST_PERMISSIONS,
+} from "@/constants/permissions.constants";
 import { ROUTES } from "@/constants/routes.constants";
 import useAuth from "@/hooks/useAuth";
 import { HandleChangeFile } from "@/types/media.types";
@@ -68,9 +73,7 @@ import { formatPlaylistForm } from "@/utils/playlist.util";
 import { AnchorLink } from "@/components/shared";
 import { faClock, faListOl } from "@fortawesome/free-solid-svg-icons";
 import { TOOLTIP_DELAY_MS } from "@/constants/toast.constants";
-import InfiniteScroll from "react-infinite-scroll-component";
 import { Loader } from "@/components/shared/loader/loader";
-import { useTheme } from "styled-components";
 import styled from "styled-components";
 import { Avatar } from "@/components/shared/avatar/avatar";
 import { useImage } from "@/hooks/useImage";
@@ -107,11 +110,17 @@ const FilmstripRow = styled.div`
 /**
  * Playlist tabs handling
  */
-type PlaylistTabs = "items" | "filmstrips" | "keyframes" | "appears_in";
+type PlaylistTabs =
+  | "items"
+  | "filmstrips"
+  | "grid"
+  | "keyframes"
+  | "appears_in";
 
 const PLAYLIST_TABS: Record<Uppercase<PlaylistTabs>, PlaylistTabs> = {
   ITEMS: "items",
   FILMSTRIPS: "filmstrips",
+  GRID: "grid",
   KEYFRAMES: "keyframes",
   APPEARS_IN: "appears_in",
 } as const;
@@ -119,6 +128,7 @@ const PLAYLIST_TABS: Record<Uppercase<PlaylistTabs>, PlaylistTabs> = {
 const PLAYLIST_TAB_LABELS: Record<Uppercase<PlaylistTabs>, string> = {
   ITEMS: "page.view_playlist.items",
   FILMSTRIPS: "page.view_playlist.filmstrips",
+  GRID: "page.view_playlist.grid",
   KEYFRAMES: "page.view_playlist.keyframes",
   APPEARS_IN: "page.view_playlist.playlists",
 };
@@ -180,7 +190,6 @@ const ViewPlaylistContent = () => {
   const { t } = useTranslation();
   const { user } = useAuth();
   const location = useLocation();
-  const theme = useTheme();
 
   const [radioGroupState, setRadioGroupState] = useState<PlaylistTabs>(
     PLAYLIST_TABS.ITEMS,
@@ -242,8 +251,11 @@ const ViewPlaylistContent = () => {
     isFetchingNextPlaylistItemsPage,
     isFetchingNextPlaylistKeyframesPage,
   } = usePlaylistState();
+  const canOpenStudio = usePermission({
+    permission: DREAM_PERMISSIONS.CAN_CREATE_DREAM,
+  });
   const { project: studioProject, isInitialLoading: isStudioLoading } =
-    useEditorProjectByPlaylist(playlist?.uuid, isOwner);
+    useEditorProjectByPlaylist(playlist?.uuid, isOwner || canOpenStudio);
   const isStudioBacked = isStudioLoading || Boolean(studioProject);
   const canReorderItems =
     allowedEditPlaylist &&
@@ -262,9 +274,17 @@ const ViewPlaylistContent = () => {
   const emptyMessage = search
     ? t("page.view_playlist.no_search_results")
     : t("page.view_playlist.empty_playlist");
+  const isBrowseReady = !isBrowseLoading && !isBrowseError;
+  const itemsBrowseProps = {
+    dataLength: items.length,
+    hasMore: hasNextPlaylistItemsPage ?? false,
+    isFetchingMore: isFetchingNextPlaylistItemsPage,
+    onLoadMore: fetchNextPlaylistItemsPage,
+    emptyMessage,
+  };
 
   const playlistReferences = playlist?.playlistItems ?? [];
-  const isUprezRunning =
+  const isEnhanceRunning =
     Boolean(playlist?.progress?.remaining) ||
     items.some(
       (item) =>
@@ -740,11 +760,11 @@ const ViewPlaylistContent = () => {
                   ) : (
                     <>
                       <OpenInStudio project={studioProject} />
-                      <UprezPlaylistControls
+                      <EnhancePlaylistControls
                         playlist={playlist}
                         isOwner={isOwner}
                         isUserAdmin={isUserAdmin}
-                        isRunning={isUprezRunning}
+                        isRunning={isEnhanceRunning}
                       />
                       <Restricted
                         to={PLAYLIST_PERMISSIONS.CAN_EDIT_PLAYLIST}
@@ -1037,6 +1057,7 @@ const ViewPlaylistContent = () => {
                     [
                       PLAYLIST_TABS.ITEMS,
                       PLAYLIST_TABS.FILMSTRIPS,
+                      PLAYLIST_TABS.GRID,
                       PLAYLIST_TABS.KEYFRAMES,
                       PLAYLIST_TABS.APPEARS_IN,
                     ] as PlaylistTabs[]
@@ -1110,136 +1131,88 @@ const ViewPlaylistContent = () => {
               {radioGroupState !== "appears_in" && isBrowseLoading ? (
                 <Loader />
               ) : null}
-              {radioGroupState === "items" &&
-              !isBrowseLoading &&
-              !isBrowseError ? (
-                <Row style={{ display: "block" }}>
-                  {items.length ? (
-                    <InfiniteScroll
-                      key={browseKey}
-                      dataLength={items.length}
-                      next={() => {
-                        if (!isFetchingNextPlaylistItemsPage)
-                          fetchNextPlaylistItemsPage();
-                      }}
-                      hasMore={hasNextPlaylistItemsPage ?? false}
-                      loader={<Loader />}
-                      endMessage={
-                        <Row justifyContent="center" mt="2rem">
-                          <Text color={theme.textPrimaryColor}>
-                            {t("components.infinite_scroll.end_message")}
-                          </Text>
-                        </Row>
-                      }
-                    >
-                      <ItemCardList>
-                        {items.map(renderPlaylistItemCard)}
-                      </ItemCardList>
-                    </InfiniteScroll>
-                  ) : (
-                    <Text mb={4}>{emptyMessage}</Text>
-                  )}
-                </Row>
+              {radioGroupState === "items" && isBrowseReady ? (
+                <PlaylistBrowseList key={browseKey} {...itemsBrowseProps}>
+                  <ItemCardList>
+                    {items.map(renderPlaylistItemCard)}
+                  </ItemCardList>
+                </PlaylistBrowseList>
               ) : null}
-              {radioGroupState === "keyframes" &&
-              !isBrowseLoading &&
-              !isBrowseError ? (
-                <Row style={{ display: "block" }}>
-                  {playlistKeyframes.length ? (
-                    <InfiniteScroll
-                      key={browseKey}
-                      dataLength={playlistKeyframes.length}
-                      next={() => {
-                        if (!isFetchingNextPlaylistKeyframesPage)
-                          fetchNextPlaylistKeyframesPage();
-                      }}
-                      hasMore={hasNextPlaylistKeyframesPage ?? false}
-                      loader={<Loader />}
-                      endMessage={
-                        <Row justifyContent="center" mt="2rem">
-                          <Text color={theme.textPrimaryColor}>
-                            {t("components.infinite_scroll.end_message")}
-                          </Text>
-                        </Row>
-                      }
-                    >
-                      <ItemCardList>
-                        {playlistKeyframes.map((keyframe) => (
-                          <ItemCard
-                            key={keyframe.id}
-                            draggable={
-                              allowedEditPlaylist &&
-                              order === "asc" &&
-                              !searchValue.trim() &&
-                              !search
-                            }
-                            itemId={keyframe.id}
-                            dndMode="local"
-                            size="sm"
-                            type="keyframe"
-                            item={keyframe.keyframe}
-                            order={keyframe.order}
-                            deleteDisabled={!allowedEditPlaylist}
-                            showOrderNumber
-                            indexNumber={keyframe.order + 1}
-                            inline
-                            onDelete={handleDeleteKeyframe(keyframe.id)}
-                          />
-                        ))}
-                      </ItemCardList>
-                    </InfiniteScroll>
-                  ) : (
-                    <Text mb={4}>{emptyMessage}</Text>
-                  )}
-                </Row>
-              ) : null}
-              {radioGroupState === "filmstrips" &&
-                !isBrowseLoading &&
-                !isBrowseError && (
-                  <Row style={{ display: "block" }}>
-                    {items.length ? (
-                      <InfiniteScroll
-                        key={browseKey}
-                        dataLength={items.length}
-                        next={() => {
-                          if (!isFetchingNextPlaylistItemsPage)
-                            fetchNextPlaylistItemsPage();
-                        }}
-                        hasMore={hasNextPlaylistItemsPage ?? false}
-                        loader={<Loader />}
-                        endMessage={
-                          !isPlaylistLoading && (
-                            <Row justifyContent="center" mt="2rem">
-                              <Text color={theme.textPrimaryColor}>
-                                {t("components.infinite_scroll.end_message")}
-                              </Text>
-                            </Row>
-                          )
+              {radioGroupState === "keyframes" && isBrowseReady ? (
+                <PlaylistBrowseList
+                  key={browseKey}
+                  dataLength={playlistKeyframes.length}
+                  hasMore={hasNextPlaylistKeyframesPage ?? false}
+                  isFetchingMore={isFetchingNextPlaylistKeyframesPage}
+                  onLoadMore={fetchNextPlaylistKeyframesPage}
+                  emptyMessage={emptyMessage}
+                >
+                  <ItemCardList>
+                    {playlistKeyframes.map((keyframe) => (
+                      <ItemCard
+                        key={keyframe.id}
+                        draggable={
+                          allowedEditPlaylist &&
+                          order === "asc" &&
+                          !searchValue.trim() &&
+                          !search
                         }
-                      >
-                        <FilmstripScrollContainer>
-                          <FilmstripRows>
-                            {items
-                              .filter(
-                                (item) =>
-                                  item.type === "dream" && item.dreamItem,
-                              )
-                              .map((item) => (
-                                <FilmstripRow key={item.id}>
-                                  <FilmstripGallery
-                                    dream={item.dreamItem}
-                                    frameWidth={180}
-                                  />
-                                </FilmstripRow>
-                              ))}
-                          </FilmstripRows>
-                        </FilmstripScrollContainer>
-                      </InfiniteScroll>
-                    ) : (
-                      <Text mb={4}>{emptyMessage}</Text>
-                    )}
-                  </Row>
-                )}
+                        itemId={keyframe.id}
+                        dndMode="local"
+                        size="sm"
+                        type="keyframe"
+                        item={keyframe.keyframe}
+                        order={keyframe.order}
+                        deleteDisabled={!allowedEditPlaylist}
+                        showOrderNumber
+                        indexNumber={keyframe.order + 1}
+                        inline
+                        onDelete={handleDeleteKeyframe(keyframe.id)}
+                      />
+                    ))}
+                  </ItemCardList>
+                </PlaylistBrowseList>
+              ) : null}
+              {radioGroupState === "filmstrips" && isBrowseReady && (
+                <PlaylistBrowseList key={browseKey} {...itemsBrowseProps}>
+                  <FilmstripScrollContainer>
+                    <FilmstripRows>
+                      {items
+                        .filter(
+                          (item) => item.type === "dream" && item.dreamItem,
+                        )
+                        .map((item) => (
+                          <FilmstripRow key={item.id}>
+                            <FilmstripGallery
+                              dream={item.dreamItem}
+                              frameWidth={180}
+                            />
+                          </FilmstripRow>
+                        ))}
+                    </FilmstripRows>
+                  </FilmstripScrollContainer>
+                </PlaylistBrowseList>
+              )}
+              {radioGroupState === "grid" && isBrowseReady && (
+                <PlaylistBrowseList key={browseKey} {...itemsBrowseProps}>
+                  <ItemCardList grid columns={3}>
+                    {items.map((item) => (
+                      <ItemCard
+                        key={item.id}
+                        showPlayButton
+                        hideMetadata
+                        size="lg"
+                        type={item.type}
+                        item={
+                          item.type === "dream"
+                            ? item.dreamItem
+                            : item.playlistItem
+                        }
+                      />
+                    ))}
+                  </ItemCardList>
+                </PlaylistBrowseList>
+              )}
               {radioGroupState === "appears_in" && (
                 <Row flex="auto">
                   <ItemCardList>

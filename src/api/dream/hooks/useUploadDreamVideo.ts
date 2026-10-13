@@ -32,6 +32,7 @@ import { UseMutationResult } from "@tanstack/react-query";
 import { ApiResponse } from "@/types/api.types";
 import { TFunction } from "i18next";
 import { CreateDreamFormValues } from "@/schemas/dream.schema";
+import { encodeImageForUpload } from "@/utils/image-encode/image-encode";
 
 export type AsyncMutationProps = {
   file?: File;
@@ -756,7 +757,7 @@ export const useUploadDreamVideo = ({
    * @returns A promise resolving to the updated dream object on successful upload or `undefined` on failure.
    */
   const mutateAsync: AsyncMutation = async ({
-    file,
+    file: selectedFile,
     dream,
     nsfw,
     ccbyLicense,
@@ -764,7 +765,7 @@ export const useUploadDreamVideo = ({
     sourceUrl,
     hidden,
   } = {}) => {
-    if (!file) {
+    if (!selectedFile) {
       toast.error(t("page.create.error_uploading_dream"));
       return undefined;
     }
@@ -780,6 +781,7 @@ export const useUploadDreamVideo = ({
     });
 
     try {
+      const file = await encodeImageForUpload(selectedFile, "dream");
       const totalNumberOfParts = calculateTotalParts(file.size);
       dispatch({ type: "SET_TOTAL_PARTS", payload: totalNumberOfParts });
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useId, useRef, useState } from "react";
+import React, { useId, useRef, useState } from "react";
 import { ChevronDown, Plus } from "lucide-react";
 import { buildStudioEditorPath } from "@/constants/routes.constants";
 import {
@@ -6,6 +6,7 @@ import {
   STUDIO_MODE_DESCRIPTIONS,
   STUDIO_MODE_LABELS,
 } from "../constants/studio-modes";
+import { useDismiss } from "../hooks/useDismiss";
 import {
   Anchor,
   Item,
@@ -22,28 +23,12 @@ export const NewProjectMenu: React.FC = () => {
   const anchorRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLButtonElement>(null);
 
-  const close = useCallback((returnFocus = false) => {
-    setOpen(false);
-    if (returnFocus) triggerRef.current?.focus();
-  }, []);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onPointerDown = (event: PointerEvent) => {
-      if (!anchorRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") close(true);
-    };
-
-    document.addEventListener("pointerdown", onPointerDown);
-    document.addEventListener("keydown", onKeyDown);
-    return () => {
-      document.removeEventListener("pointerdown", onPointerDown);
-      document.removeEventListener("keydown", onKeyDown);
-    };
-  }, [open, close]);
+  useDismiss({
+    open,
+    onOpenChange: setOpen,
+    containerRef: anchorRef,
+    triggerRef,
+  });
 
   return (
     <Anchor ref={anchorRef}>
@@ -66,7 +51,7 @@ export const NewProjectMenu: React.FC = () => {
               <Item
                 $mode={mode}
                 to={buildStudioEditorPath(mode)}
-                onClick={() => close()}
+                onClick={() => setOpen(false)}
               >
                 <ItemName>{STUDIO_MODE_LABELS[mode]}</ItemName>
                 <ItemHint>{STUDIO_MODE_DESCRIPTIONS[mode]}</ItemHint>

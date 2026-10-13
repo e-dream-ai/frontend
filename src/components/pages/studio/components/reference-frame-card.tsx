@@ -7,6 +7,7 @@ import type { FlowReferenceFrame } from "@/types/flow.types";
 import { useFlowStore } from "@/stores/flow.store";
 import { aspectRatioOf } from "../utils/frame-aspect";
 import { useReferenceFrameImage } from "../hooks/useReferenceFrameImage";
+import { useStudioEditLock } from "../hooks/useStudioEditLock";
 import {
   CardWrapper,
   CardImage,
@@ -43,6 +44,7 @@ export const ReferenceFrameCard: React.FC<Props> = ({
 
   const { src: imgSrc, onError: handleImgError } =
     useReferenceFrameImage(frame);
+  const { locked } = useStudioEditLock();
 
   const {
     attributes,
@@ -55,7 +57,7 @@ export const ReferenceFrameCard: React.FC<Props> = ({
     id: frame.id,
     // Dragging a card mid-upload would re-key React and abort the visual
     // continuity of the preview, so lock it until the upload settles.
-    disabled: isLoop || isBusy,
+    disabled: isLoop || isBusy || locked,
   });
 
   const style = {
@@ -112,6 +114,7 @@ export const ReferenceFrameCard: React.FC<Props> = ({
           src={imgSrc}
           alt={frame.name}
           $uploading={isUploading}
+          data-edit-lock-allow={isClickable || undefined}
           onClick={isClickable ? handleOpen : undefined}
           style={isClickable ? { cursor: "pointer" } : undefined}
           onLoad={handleImgLoad}

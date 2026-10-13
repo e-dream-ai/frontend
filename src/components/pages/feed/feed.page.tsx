@@ -72,6 +72,9 @@ export const FeedPage: React.FC = () => {
     return undefined;
   }, [radioGroupState]);
 
+  // Only use virtual playlists when showing all items (not filtered)
+  const showVirtualPlaylists = radioGroupState === FEED_FILTERS.ALL;
+
   const {
     data: feedData,
     isLoading: isFeedLoading,
@@ -85,6 +88,7 @@ export const FeedPage: React.FC = () => {
         ? "dream"
         : (radioGroupState as FeedItemFilterType),
     mediaType,
+    showVirtualPlaylists,
   });
 
   // Extract feed items and virtual playlists from the grouped feed response
@@ -95,14 +99,11 @@ export const FeedPage: React.FC = () => {
       feedData?.pages.flatMap((page) => page.data?.virtualPlaylists ?? []) ??
       [];
 
-    // Only use virtual playlists when showing all items (not filtered)
-    const shouldUseVirtualPlaylists = radioGroupState === FEED_FILTERS.ALL;
-
     return {
       feedItems: allFeedItems,
-      virtualPlaylists: shouldUseVirtualPlaylists ? allVirtualPlaylists : [],
+      virtualPlaylists: showVirtualPlaylists ? allVirtualPlaylists : [],
     };
-  }, [feedData, radioGroupState]);
+  }, [feedData, showVirtualPlaylists]);
 
   const feedDataLength = feedItems.length + virtualPlaylists.length;
   const feedPagesLength = feedData?.pages.length ?? 0;

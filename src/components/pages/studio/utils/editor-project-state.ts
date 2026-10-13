@@ -12,7 +12,7 @@ export const EDITOR_STATE_SCHEMA_VERSION = 1;
 
 export type PersistedFlowState = Record<string, unknown> & {
   referenceFrames: PersistedReferenceFrame[];
-  transitions: Record<string, PersistedTransition>;
+  transitions: Record<string, StoredTransition>;
 };
 
 export type RestoredFlowState = Record<string, unknown> & {
@@ -72,6 +72,12 @@ export type PersistedTransition = Omit<
   (typeof VOLATILE_TRANSITION_KEYS)[number]
 >;
 
+type StoredTransition = PersistedTransition & {
+  uprezDreamUuid?: unknown;
+  uprezStatus?: unknown;
+  uprezProgress?: unknown;
+};
+
 type PersistedImage = Omit<StudioImage, (typeof VOLATILE_IMAGE_KEYS)[number]>;
 
 type PersistedJob = Omit<StudioJob, (typeof VOLATILE_JOB_KEYS)[number]>;
@@ -86,6 +92,18 @@ const stripImage = (image: StudioImage): PersistedImage =>
   omit(image, VOLATILE_IMAGE_KEYS);
 
 const stripJob = (job: StudioJob): PersistedJob => omit(job, VOLATILE_JOB_KEYS);
+
+// Flow and Action once queued an upscale of their own clips; that lives in
+// Enhance now. Projects saved back then still carry it, so loading drops it.
+const DROPPED_TRANSITION_KEYS = [
+  "uprezDreamUuid",
+  "uprezStatus",
+  "uprezProgress",
+] as const satisfies readonly (keyof StoredTransition)[];
+
+const withoutDroppedJobs = <T extends { jobType: string }>(
+  jobs: readonly T[] = [],
+): T[] => jobs.filter((job) => job.jobType !== "uprez");
 
 export const toPersistedFlowState = (
   state: FlowStateInput,
@@ -117,7 +135,7 @@ export const fromPersistedFlowState = (
     const stored = transitions[transitionKey(fromFrameId, toFrameId)];
 
     if (stored) {
-      ordered.push({ ...stored });
+      ordered.push(omit(stored, DROPPED_TRANSITION_KEYS));
       continue;
     }
 
@@ -199,6 +217,8 @@ export const fromPersistedActionState = (
     excludedCombos = [],
     images = [],
     removedImages = [],
+    jobs,
+    historyJobs,
     activeTab,
     ...rest
   } = persisted;
@@ -208,6 +228,10 @@ export const fromPersistedActionState = (
     ...rest,
     ...(tab ? { activeTab: tab } : {}),
     excludedCombos: new Set(excludedCombos),
+    jobs: withoutDroppedJobs(jobs),
+    ...(historyJobs && {
+      historyJobs: withoutDroppedJobs(historyJobs),
+    }),
     images: images.map((image) => ({ ...image, url: "" })),
     removedImages: removedImages.map((removed) => ({
       ...removed,

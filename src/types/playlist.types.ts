@@ -54,19 +54,34 @@ export type Playlist = {
   hidden?: boolean;
   totalDurationSeconds?: number;
   totalDurationFormatted?: string;
+  totalFrames?: number;
   totalDreamCount?: number;
+  /** Null when no dream in the playlist has a known resolution. */
+  media?: PlaylistMediaSummary | null;
   progress?: PlaylistProgress;
   prompt?: string | null;
 };
 
-export type UprezPlaylistPrompt = {
-  infinidream_algorithm: "uprez_playlist";
+/** Resolution and fps across a playlist's processed videos. */
+export type PlaylistMediaSummary = {
+  /** Largest resolution by pixel count. */
+  width: number;
+  height: number;
+  minShortSide: number;
+  /** Highest fps, or null when no dream reports one. */
+  fps: number | null;
+  mixedResolution: boolean;
+  mixedFps: boolean;
+};
+
+export type EnhancePlaylistPrompt = {
+  infinidream_algorithm: "enhance_playlist";
   source_playlist_uuid: string;
   dream_algorithm?: string;
   params?: Record<string, unknown>;
 };
 
-export type UprezRunSummary = {
+export type EnhanceRunSummary = {
   created: number;
   requeued: number;
   kept: number;
@@ -78,21 +93,21 @@ export type UprezRunSummary = {
   hasWork: boolean;
 };
 
-export type RunPlaylistResult = UprezRunSummary & {
+export type RunPlaylistResult = EnhanceRunSummary & {
   linked: number;
 };
 
-export const parseUprezPlaylistPrompt = (
+export const parseEnhancePlaylistPrompt = (
   prompt?: string | null,
-): UprezPlaylistPrompt | null => {
+): EnhancePlaylistPrompt | null => {
   if (!prompt) return null;
   try {
     const parsed = typeof prompt === "string" ? JSON.parse(prompt) : prompt;
     if (
-      parsed?.infinidream_algorithm === "uprez_playlist" &&
+      parsed?.infinidream_algorithm === "enhance_playlist" &&
       typeof parsed?.source_playlist_uuid === "string"
     ) {
-      return parsed as UprezPlaylistPrompt;
+      return parsed as EnhancePlaylistPrompt;
     }
     return null;
   } catch {

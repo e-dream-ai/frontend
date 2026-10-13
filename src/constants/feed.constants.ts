@@ -7,6 +7,7 @@ export const FEED_FILTERS: Record<Uppercase<FeedItemType>, FeedItemType> = {
   PLAYLIST: "playlist",
   STILLS: "stills",
   HIDDEN: "hidden",
+  ORPHANS: "orphans",
   USER: "user",
   CREATOR: "creator",
   ADMIN: "admin",
@@ -18,6 +19,7 @@ export const FEED_FILTERS_NAMES = {
   PLAYLIST: "page.feed.playlist",
   STILLS: "page.feed.stills",
   HIDDEN: "page.feed.hidden",
+  ORPHANS: "page.feed.orphans",
   USER: "page.feed.user",
   CREATOR: "page.feed.creator",
   ADMIN: "page.feed.admin",
@@ -57,6 +59,10 @@ export const getFeedFilterData: (
     {
       key: t(FEED_FILTERS_NAMES.STILLS),
       value: FEED_FILTERS.STILLS.toString(),
+    },
+    {
+      key: t(FEED_FILTERS_NAMES.ORPHANS),
+      value: FEED_FILTERS.ORPHANS.toString(),
     },
     {
       key: t(FEED_FILTERS_NAMES.CREATOR),

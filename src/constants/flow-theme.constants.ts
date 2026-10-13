@@ -30,6 +30,9 @@ export const FLOW = {
   accentDim: "rgba(212, 168, 83, 0.15)",
   accentGlow: "rgba(212, 168, 83, 0.08)",
 
+  // Deforum's editor color (coral).
+  coral: "#ff7f5c",
+
   // Selection (blue). Deliberately not `processing`: a selected transition and
   // a rendering one have to stay tellable apart at a glance.
   selected: "#6ea8fe",

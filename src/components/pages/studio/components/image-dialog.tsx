@@ -1,3 +1,4 @@
+import { useStudioEditLock } from "../hooks/useStudioEditLock";
 import type { StudioImage } from "@/types/studio.types";
 import { PresignedImage } from "@/components/shared/presigned-image";
 import { useLightboxA11y } from "../hooks/useLightboxA11y";
@@ -52,6 +53,7 @@ export const ImageDialog: React.FC<Props> = ({
 }) => {
   const overlayRef = useLightboxA11y<HTMLDivElement>(onClose);
   const { loading, generated, settings, remix } = useImageOrigin(image.uuid);
+  const { locked } = useStudioEditLock();
 
   const generateMore = () => {
     remix();
@@ -98,17 +100,23 @@ export const ImageDialog: React.FC<Props> = ({
           ) : (
             <ActionPromptText>Uploaded image, no prompt.</ActionPromptText>
           )}
-          <ActionMeta>{meta.join(" · ")}</ActionMeta>
+          <ActionMeta>{meta.join(" • ")}</ActionMeta>
         </ActionDialogBody>
         <Footer>
-          <FooterButtons>
-            <CancelBtn onClick={onCheckRow}>Check all</CancelBtn>
-            <CancelBtn onClick={onUncheckRow}>Uncheck all</CancelBtn>
-            <DeleteBtn onClick={onDelete}>Remove</DeleteBtn>
-          </FooterButtons>
+          {locked ? (
+            <span />
+          ) : (
+            <FooterButtons>
+              <CancelBtn onClick={onCheckRow}>Check all</CancelBtn>
+              <CancelBtn onClick={onUncheckRow}>Uncheck all</CancelBtn>
+              <DeleteBtn onClick={onDelete}>Remove</DeleteBtn>
+            </FooterButtons>
+          )}
           <FooterButtons>
             <CancelBtn onClick={onClose}>Close</CancelBtn>
-            {generated && <AddBtn onClick={generateMore}>Remix</AddBtn>}
+            {generated && !locked && (
+              <AddBtn onClick={generateMore}>Remix</AddBtn>
+            )}
           </FooterButtons>
         </Footer>
       </ActionDialogPanel>

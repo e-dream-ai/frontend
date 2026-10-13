@@ -2,7 +2,8 @@ import { lazy } from "react";
 import type { StudioMode } from "@/types/flow.types";
 
 const importFlowBuilder = () => import("./flow-builder");
-const importUprezApp = () => import("./uprez-app");
+const importEnhanceApp = () => import("./enhance-app");
+const importDeforumApp = () => import("./deforum-app");
 const importImagesTab = () => import("./images-tab");
 const importActionsTab = () => import("./actions-tab");
 const importGenerateTab = () => import("./generate-tab");
@@ -10,8 +11,11 @@ const importGenerateTab = () => import("./generate-tab");
 export const FlowBuilder = lazy(() =>
   importFlowBuilder().then((m) => ({ default: m.FlowBuilder })),
 );
-export const UprezApp = lazy(() =>
-  importUprezApp().then((m) => ({ default: m.UprezApp })),
+export const EnhanceApp = lazy(() =>
+  importEnhanceApp().then((m) => ({ default: m.EnhanceApp })),
+);
+export const DeforumApp = lazy(() =>
+  importDeforumApp().then((m) => ({ default: m.DeforumApp })),
 );
 export const ImagesTab = lazy(() =>
   importImagesTab().then((m) => ({ default: m.ImagesTab })),
@@ -26,7 +30,8 @@ export const GenerateTab = lazy(() =>
 const EDITOR_IMPORTS: Record<StudioMode, () => Promise<unknown>> = {
   flow: importFlowBuilder,
   action: importImagesTab,
-  uprez: importUprezApp,
+  enhance: importEnhanceApp,
+  deforum: importDeforumApp,
 };
 
 export const preloadEditor = (mode: StudioMode) => {

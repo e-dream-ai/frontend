@@ -529,20 +529,6 @@ describe("Phase 1: transitions", () => {
         "dream-xyz",
       );
     });
-
-    it("stores uprez dream UUID and updates uprez status", () => {
-      const store = useFlowStore.getState();
-      store.addReferenceFrame(makeKf("a"));
-      store.addReferenceFrame(makeKf("b"));
-      store.recomputeTransitions();
-      store.setTransitionUprez(0, "uprez-789");
-      store.updateTransitionUprezStatus(0, "processing", 30);
-
-      const t = useFlowStore.getState().transitions[0];
-      expect(t.uprezDreamUuid).toBe("uprez-789");
-      expect(t.uprezStatus).toBe("processing");
-      expect(t.uprezProgress).toBe(30);
-    });
   });
 
   describe("global settings", () => {
@@ -858,18 +844,6 @@ describe("transition run history", () => {
     const history = store().transitions[0].history;
     expect(history).toHaveLength(1);
     expect(history?.[0].createdAt).toBe(3000);
-  });
-
-  it("drops the uprez when a new run replaces the dream", () => {
-    seedTransitions(1);
-    store().recordTransitionRun(0, "dream-a", RUN_SETTINGS, 1000);
-    store().setTransitionUprez(0, "uprez-a");
-    store().updateTransitionUprezStatus(0, "processed");
-
-    store().recordTransitionRun(0, "dream-b", RUN_SETTINGS, 2000);
-    const t = store().transitions[0];
-    expect(t.uprezDreamUuid).toBeUndefined();
-    expect(t.uprezStatus).toBeUndefined();
   });
 
   it("restores a completed take with the settings it ran under", () => {

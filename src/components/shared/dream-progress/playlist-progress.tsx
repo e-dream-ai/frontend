@@ -97,7 +97,7 @@ export function PlaylistProgress({
           .map(([status, count]) =>
             t(`components.dream_progress.count_${status}`, { count }),
           )
-          .join(" · ")}
+          .join(" • ")}
       </span>
     </PlaylistSummary>
   );

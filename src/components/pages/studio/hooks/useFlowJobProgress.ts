@@ -39,14 +39,10 @@ export function useFlowJobProgress() {
   }, []);
 
   const { pendingEntries, pendingUuids } = useMemo(() => {
-    const entries: Array<{ uuid: string; index: number; isUprez: boolean }> =
-      [];
+    const entries: Array<{ uuid: string; index: number }> = [];
     transitions.forEach((t, i) => {
       if (t.dreamUuid && isPendingStatus(t.status)) {
-        entries.push({ uuid: t.dreamUuid, index: i, isUprez: false });
-      }
-      if (t.uprezDreamUuid && isPendingStatus(t.uprezStatus)) {
-        entries.push({ uuid: t.uprezDreamUuid, index: i, isUprez: true });
+        entries.push({ uuid: t.dreamUuid, index: i });
       }
     });
     const uuids = entries.map((e) => e.uuid);
@@ -54,20 +50,12 @@ export function useFlowJobProgress() {
   }, [transitions]);
 
   const applyStatus = useCallback(
-    (
-      uuid: string,
-      isUprez: boolean,
-      rawStatus?: string,
-      progress?: number,
-      stage?: string,
-    ) => {
+    (uuid: string, rawStatus?: string, progress?: number, stage?: string) => {
       const { transitions: current } = useFlowStore.getState();
-      const idx = findTransitionIndexByDream(current, uuid, isUprez);
+      const idx = findTransitionIndexByDream(current, uuid);
       if (idx === -1) return;
 
-      const currentStatus = isUprez
-        ? current[idx].uprezStatus
-        : current[idx].status;
+      const currentStatus = current[idx].status;
       const mappedStatus = mapSocketStatus(rawStatus, stage);
 
       const currentTracked =
@@ -79,12 +67,7 @@ export function useFlowJobProgress() {
         : currentTracked;
       if (!nextStatus) return;
 
-      const store = useFlowStore.getState();
-      if (isUprez) {
-        store.updateTransitionUprezStatus(idx, nextStatus, progress);
-      } else {
-        store.updateTransitionStatus(idx, nextStatus, progress);
-      }
+      useFlowStore.getState().updateTransitionStatus(idx, nextStatus, progress);
       if (nextStatus === "failed" || nextStatus === "processed") {
         void queryClient.invalidateQueries([USER_QUERY_KEY]);
       }
@@ -104,16 +87,8 @@ export function useFlowJobProgress() {
       const uuid = data.dreamUuid || data.dream_uuid;
       if (!uuid) return;
 
-      const transition = useFlowStore
-        .getState()
-        .transitions.find(
-          (entry) => entry.dreamUuid === uuid || entry.uprezDreamUuid === uuid,
-        );
-      if (!transition) return;
-
       const nextStatus = applyStatus(
         uuid,
-        transition.uprezDreamUuid === uuid,
         data.status,
         data.progress ?? undefined,
         data.stage,
@@ -159,7 +134,6 @@ export function useFlowJobProgress() {
         }
         applyStatus(
           entry.uuid,
-          entry.isUprez,
           status,
           dream.jobProgress?.progress ?? undefined,
           stage,

@@ -172,6 +172,7 @@ export const ImagesTab: React.FC = () => {
                 {img.status === "processed" ? (
                   <ThumbnailButton
                     type="button"
+                    data-edit-lock-allow
                     aria-label={`Preview ${img.name}`}
                     onClick={() => setExpandedImageUuid(img.uuid)}
                   >

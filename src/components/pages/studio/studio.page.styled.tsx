@@ -168,7 +168,7 @@ export const StudioFrame = styled.div<{ $dragOver?: boolean }>`
   `}
 `;
 
-export const UprezFrame = styled(StudioFrame)`
+export const EnhanceFrame = styled(StudioFrame)`
   width: 100%;
   max-width: 560px;
   margin-inline: auto;

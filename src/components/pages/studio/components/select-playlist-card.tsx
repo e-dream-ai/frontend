@@ -1,6 +1,6 @@
 import { memo } from "react";
 import { Check } from "lucide-react";
-import { parseUprezPlaylistPrompt } from "@/types/playlist.types";
+import { parseEnhancePlaylistPrompt } from "@/types/playlist.types";
 import { generateCloudflareImageURL } from "@/utils/image-handler";
 import type { PlaylistSummary } from "../hooks/useUserPlaylists";
 import {
@@ -45,8 +45,8 @@ export const SelectPlaylistCard = memo(function SelectPlaylistCard({
         ) : (
           <TilePlaceholder>No art</TilePlaceholder>
         )}
-        {parseUprezPlaylistPrompt(playlist.prompt) && (
-          <TileBadge>uprez</TileBadge>
+        {parseEnhancePlaylistPrompt(playlist.prompt) && (
+          <TileBadge>enhance</TileBadge>
         )}
         {isSelected && (
           <TileCheck aria-hidden="true">

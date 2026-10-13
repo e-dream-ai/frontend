@@ -4,5 +4,6 @@ import type { StudioMode } from "@/types/flow.types";
 export const EDITOR_BADGE: Record<StudioMode, string> = {
   flow: FLOW.accent,
   action: FLOW.processing,
-  uprez: FLOW.success,
+  enhance: FLOW.success,
+  deforum: FLOW.coral,
 };

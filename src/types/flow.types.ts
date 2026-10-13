@@ -1,6 +1,6 @@
 import type { VideoModel, LoRAConfig } from "@/types/studio.types";
 
-export type StudioMode = "flow" | "action" | "uprez";
+export type StudioMode = "flow" | "action" | "enhance" | "deforum";
 
 export interface FlowReferenceFrame {
   id: string; // local UUID for drag/drop identity
@@ -86,9 +86,4 @@ export interface FlowTransition {
   // Every generation run at this position, oldest first. The entry matching
   // `dreamUuid` is the one currently in the flow; the rest are restorable.
   history?: TransitionHistoryEntry[];
-
-  // Uprez state (undefined = not started)
-  uprezDreamUuid?: string;
-  uprezStatus?: "queue" | "processing" | "processed" | "failed";
-  uprezProgress?: number;
 }

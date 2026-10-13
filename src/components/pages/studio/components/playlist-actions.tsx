@@ -19,6 +19,7 @@ type Props = {
   canSave: boolean;
   saving: boolean;
   onSave: () => void;
+  children?: React.ReactNode;
 };
 
 export const PlaylistActions: React.FC<Props> = ({
@@ -26,6 +27,7 @@ export const PlaylistActions: React.FC<Props> = ({
   canSave,
   saving,
   onSave,
+  children,
 }) => {
   const { socket } = useSocket();
   const hasPlaybackClient = usePlaybackClient();
@@ -36,6 +38,7 @@ export const PlaylistActions: React.FC<Props> = ({
 
   return (
     <Group>
+      {children}
       {canSave ? (
         <SaveButton type="button" onClick={onSave} disabled={saving}>
           {saving ? "Saving..." : "Save"}

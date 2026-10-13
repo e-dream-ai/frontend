@@ -4,16 +4,27 @@ import { ContentType, getRequestHeaders } from "@/constants/auth.constants";
 import { PAGINATION } from "@/constants/pagination.constants";
 import useAuth from "@/hooks/useAuth";
 import { ApiResponse } from "@/types/api.types";
-import { FeedItemFilterType, RequestFeedItemType } from "@/types/feed.types";
+import {
+  FeedItemFilterType,
+  FeedOrphansFilter,
+  RequestFeedItemType,
+} from "@/types/feed.types";
 import { axiosClient } from "@/client/axios.client";
 import {
   dedupeGroupedFeedPages,
   getGroupedFeedNextPageParam,
   GroupedFeedResponse,
-  isEmptyGroupedFeedPage,
+  shouldAutoFetchGroupedFeed,
 } from "@/helpers/groupedFeed.helpers";
 
 export const GROUPED_FEED_QUERY_KEY = "getGroupedFeed";
+
+const ORPHANS_BY_FILTER: Partial<
+  Record<FeedItemFilterType, FeedOrphansFilter>
+> = {
+  all: "hide",
+  orphans: "only",
+};
 
 type QueryFunctionParams = {
   take: number;
@@ -23,6 +34,7 @@ type QueryFunctionParams = {
   type?: FeedItemFilterType;
   onlyHidden?: boolean;
   mediaType?: "image" | "video";
+  orphans?: FeedOrphansFilter;
 };
 
 const getGroupedFeed = ({
@@ -33,6 +45,7 @@ const getGroupedFeed = ({
   type,
   onlyHidden,
   mediaType,
+  orphans,
 }: QueryFunctionParams) => {
   return async () =>
     axiosClient
@@ -45,6 +58,7 @@ const getGroupedFeed = ({
           type,
           onlyHidden,
           mediaType,
+          orphans,
         },
         headers: getRequestHeaders({
           contentType: ContentType.json,
@@ -59,6 +73,7 @@ type HookParams = {
   search?: string;
   type?: FeedItemFilterType;
   mediaType?: "image" | "video";
+  showVirtualPlaylists: boolean;
 };
 
 export function isRequestFeedItemType(
@@ -72,6 +87,7 @@ export const useGroupedFeed = ({
   userUUID,
   type,
   mediaType,
+  showVirtualPlaylists,
 }: HookParams) => {
   const { user } = useAuth();
   // Increase take size for grouped feed to reduce API calls due to deduplication
@@ -79,6 +95,8 @@ export const useGroupedFeed = ({
 
   // Don't send onlyHidden if is not needed
   const onlyHidden = type === "hidden" ? true : undefined;
+  // Dreams no playlist kept (#788) only show under their own filter
+  const orphans = type ? ORPHANS_BY_FILTER[type] : undefined;
   const feedItemType: FeedItemFilterType | undefined = isRequestFeedItemType(
     type,
   )
@@ -97,6 +115,7 @@ export const useGroupedFeed = ({
         type: feedItemType,
         onlyHidden,
         mediaType,
+        orphans,
       })();
     },
     {
@@ -109,15 +128,20 @@ export const useGroupedFeed = ({
     },
   );
 
-  const { data, hasNextPage, isFetching, fetchNextPage } = queryResult;
-  const lastPage = data?.pages[data.pages.length - 1];
-  const isLastPageEmpty = Boolean(lastPage) && isEmptyGroupedFeedPage(lastPage);
+  const { data, hasNextPage, isFetching, isError, fetchNextPage } = queryResult;
+  const needsMore = shouldAutoFetchGroupedFeed(
+    data,
+    showVirtualPlaylists,
+    PAGINATION.TAKE,
+  );
 
+  // Keep loading while the list is too short to scroll or the last page added
+  // no cards; stop on error so a failing page isn't retried in a loop
   useEffect(() => {
-    if (isLastPageEmpty && hasNextPage && !isFetching) {
+    if (needsMore && hasNextPage && !isFetching && !isError) {
       fetchNextPage();
     }
-  }, [isLastPageEmpty, hasNextPage, isFetching, fetchNextPage]);
+  }, [needsMore, hasNextPage, isFetching, isError, fetchNextPage]);
 
   return queryResult;
 };

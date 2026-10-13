@@ -5,6 +5,7 @@ import { DreamFileType, DreamMediaType } from "@/types/dream.types";
 import type { CompletedPart } from "@/schemas/multipart-upload";
 import { MY_DREAMS_QUERY_KEY } from "@/api/dream/query/useMyDreams";
 import { DREAMS_QUERY_KEY } from "@/api/dream/query/useDreams";
+import { encodeImageForUpload } from "@/utils/image-encode/image-encode";
 
 export const UPLOAD_IMAGE_DREAM_MUTATION_KEY = "uploadImageDream";
 
@@ -25,18 +26,31 @@ export type UploadImageDreamResult = {
   name: string;
 };
 
+const uploadPart = async (url: string, body: Blob, partNumber: number) => {
+  const response = await fetch(url, { method: "PUT", body });
+  if (!response.ok) {
+    throw new Error(`Chunk ${partNumber} upload failed: ${response.status}`);
+  }
+  return {
+    ETag: response.headers.get("ETag")?.replace(/^"|"$/g, "") ?? "",
+    PartNumber: partNumber,
+  };
+};
+
 const uploadImageDream = async ({
-  file,
+  file: image,
   onProgress,
   onUploadComplete,
 }: UploadImageDreamVars): Promise<UploadImageDreamResult> => {
   const report = (n: number) => onProgress?.(Math.max(0, Math.min(100, n)));
   const headers = getRequestHeaders({ contentType: ContentType.json });
-  const extension = (file.name.split(".").pop() ?? "jpg").toLowerCase();
-  const name = file.name.replace(/\.[^.]+$/, "");
-  const partCount = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
+  const name = image.name.replace(/\.[^.]+$/, "");
 
   report(1);
+
+  const file = await encodeImageForUpload(image, "dream");
+  const extension = (file.name.split(".").pop() ?? "jpg").toLowerCase();
+  const partCount = Math.max(1, Math.ceil(file.size / CHUNK_SIZE));
 
   const createRes = await axiosClient.post(
     "/v1/dream/create-multipart-upload",
@@ -52,23 +66,16 @@ const uploadImageDream = async ({
   const dreamUuid: string = dream.uuid;
   report(W_CREATE);
 
-  const parts: CompletedPart[] = [];
-  for (let i = 0; i < partCount; i++) {
-    const start = i * CHUNK_SIZE;
-    const end = Math.min(start + CHUNK_SIZE, file.size);
-    const uploadRes = await fetch(urls[i], {
-      method: "PUT",
-      body: file.slice(start, end),
-    });
-    if (!uploadRes.ok) {
-      throw new Error(`Chunk ${i + 1} upload failed: ${uploadRes.status}`);
-    }
-    parts.push({
-      ETag: uploadRes.headers.get("ETag")?.replace(/^"|"$/g, "") ?? "",
-      PartNumber: i + 1,
-    });
-    report(W_CREATE + ((i + 1) / partCount) * W_CHUNKS);
-  }
+  let uploadedBytes = 0;
+  const parts: CompletedPart[] = await Promise.all(
+    Array.from({ length: partCount }, async (_, index) => {
+      const chunk = file.slice(index * CHUNK_SIZE, (index + 1) * CHUNK_SIZE);
+      const part = await uploadPart(urls[index], chunk, index + 1);
+      uploadedBytes += chunk.size;
+      report(W_CREATE + (uploadedBytes / file.size) * W_CHUNKS);
+      return part;
+    }),
+  );
 
   await axiosClient.post(
     `/v1/dream/${dreamUuid}/complete-multipart-upload`,

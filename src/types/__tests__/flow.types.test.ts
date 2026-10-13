@@ -32,9 +32,6 @@ describe("FlowTransition type", () => {
       dreamUuid: "dream-123",
       status: "processing",
       progress: 45,
-      uprezDreamUuid: "uprez-456",
-      uprezStatus: "queue",
-      uprezProgress: 0,
     };
     expect(t.progress).toBe(45);
     expect(t.settings.duration).toBe(8);

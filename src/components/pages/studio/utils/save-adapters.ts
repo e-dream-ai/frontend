@@ -1,5 +1,7 @@
 import { useFlowStore } from "@/stores/flow.store";
 import { useStudioStore } from "@/stores/studio.store";
+import { useDeforumStore } from "@/stores/deforum.store";
+import { deforumPlaylistDreams } from "./deforum-targets";
 import type { StudioMode } from "@/types/flow.types";
 
 export type EditorSaveAdapter = {
@@ -18,25 +20,37 @@ const flowSaveAdapter: EditorSaveAdapter = {
   defaultName: () => timestampedName("Flow"),
 };
 
+// useActionPlaylistSync fills the playlist once it is linked.
 const actionSaveAdapter: EditorSaveAdapter = {
-  pendingDreamUuids: () =>
-    useStudioStore
-      .getState()
-      .jobs.filter((job) => job.status === "processed")
-      .map((job) => job.dreamUuid),
+  pendingDreamUuids: () => [],
   link: (playlistUuid) =>
     useStudioStore.getState().setOutputPlaylistId(playlistUuid),
   defaultName: () => timestampedName("Action"),
 };
 
-const uprezSaveAdapter: EditorSaveAdapter = {
+const enhanceSaveAdapter: EditorSaveAdapter = {
   pendingDreamUuids: () => [],
   link: () => {},
-  defaultName: () => timestampedName("Uprez"),
+  defaultName: () => timestampedName("Enhance"),
+};
+
+const deforumSaveAdapter: EditorSaveAdapter = {
+  pendingDreamUuids: () =>
+    deforumPlaylistDreams(useDeforumStore.getState().clips),
+  // The dreams were just pushed by the save, so they start out synced.
+  link: (playlistUuid) =>
+    useDeforumStore
+      .getState()
+      .linkSavedPlaylist(
+        playlistUuid,
+        deforumPlaylistDreams(useDeforumStore.getState().clips),
+      ),
+  defaultName: () => timestampedName("Deforum"),
 };
 
 export const SAVE_ADAPTERS: Record<StudioMode, EditorSaveAdapter> = {
   flow: flowSaveAdapter,
   action: actionSaveAdapter,
-  uprez: uprezSaveAdapter,
+  enhance: enhanceSaveAdapter,
+  deforum: deforumSaveAdapter,
 };
