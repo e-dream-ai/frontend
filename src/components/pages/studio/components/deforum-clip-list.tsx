@@ -12,6 +12,8 @@ import { ForceSettingsDialog } from "./force-settings-dialog";
 import {
   AddClipCard,
   ClipCard,
+  ClipCardFrame,
+  ClipDeleteButton,
   ClipMeta,
   ClipName,
   ClipStrip,
@@ -113,31 +115,41 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
           const shown = latestRender(clip)?.render;
           const firstPrompt = clip.settings.prompts.find((p) => p.text.trim());
           return (
-            <ClipCard
-              key={clip.id}
-              role="option"
-              aria-selected={selected.has(clip.id)}
-              $selected={selected.has(clip.id)}
-              onClick={(e) => handleClick(e, clip.id)}
-              title="Click to edit • ⌘/Shift-click to edit several together"
-            >
-              <ClipThumbnail
-                clip={clip}
-                poster={shown ? posters.get(shown.dreamUuid) : undefined}
-                placeholder={
-                  shown ? "" : firstPrompt?.text.slice(0, 80) || "No prompt yet"
-                }
-              />
-              <ClipName>{clip.name}</ClipName>
-              <ClipMeta>
-                <span>{clip.settings.maxFrames} frames</span>
-                <span>{clip.settings.prompts.length} prompts</span>
-              </ClipMeta>
-              <ClipMeta>
-                <RenderPill clip={clip} kind="test" />
-                <RenderPill clip={clip} kind="final" />
-              </ClipMeta>
-            </ClipCard>
+            <ClipCardFrame key={clip.id}>
+              <ClipCard
+                role="option"
+                aria-selected={selected.has(clip.id)}
+                $selected={selected.has(clip.id)}
+                onClick={(e) => handleClick(e, clip.id)}
+                title="Click to edit • ⌘/Shift-click to edit several together"
+              >
+                <ClipThumbnail
+                  clip={clip}
+                  poster={shown ? posters.get(shown.dreamUuid) : undefined}
+                  placeholder={
+                    shown
+                      ? ""
+                      : firstPrompt?.text.slice(0, 80) || "No prompt yet"
+                  }
+                />
+                <ClipName>{clip.name}</ClipName>
+                <ClipMeta>
+                  <span>{clip.settings.maxFrames} frames</span>
+                  <span>{clip.settings.prompts.length} prompts</span>
+                </ClipMeta>
+                <ClipMeta>
+                  <RenderPill clip={clip} kind="test" />
+                  <RenderPill clip={clip} kind="final" />
+                </ClipMeta>
+              </ClipCard>
+              <ClipDeleteButton
+                aria-label={`Remove ${clip.name}`}
+                title="Remove this animation"
+                onClick={() => store().removeClips([clip.id])}
+              >
+                ✕
+              </ClipDeleteButton>
+            </ClipCardFrame>
           );
         })}
         <AddClipCard onClick={() => store().addClip()}>+ Animation</AddClipCard>

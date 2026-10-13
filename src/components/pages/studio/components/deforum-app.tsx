@@ -11,6 +11,7 @@ import { renderFrames } from "../utils/deforum-params";
 import { latestRender, liveRender } from "../utils/deforum-targets";
 import { DeforumLivePreview } from "./deforum-live-preview";
 import { DeforumClipList } from "./deforum-clip-list";
+import { DeforumClipHistory } from "./deforum-clip-history";
 import { DeforumSettingsPanel } from "./deforum-settings-panel";
 import { SegmentPreview } from "./segment-preview";
 import { EditLock } from "./edit-lock";
@@ -22,8 +23,12 @@ export function DeforumApp() {
   useDeforumPlaylistSync(!locked);
   const { generate, isGenerating } = useDeforumGeneration();
 
-  const { clips, selectedIds } = useDeforumStore(
-    useShallow((s) => ({ clips: s.clips, selectedIds: s.selectedIds })),
+  const { clips, selectedIds, hasHistory } = useDeforumStore(
+    useShallow((s) => ({
+      clips: s.clips,
+      selectedIds: s.selectedIds,
+      hasHistory: s.removedClips.length > 0,
+    })),
   );
 
   // Each clip's newest finished render, test or final, in clip order.
@@ -94,6 +99,7 @@ export function DeforumApp() {
             </SmallButton>
           </EditLock>
         </EmptyState>
+        {hasHistory && <DeforumClipHistory />}
       </StudioFrame>
     );
   }
@@ -125,6 +131,7 @@ export function DeforumApp() {
         caption={caption}
         divider="top"
       />
+      <DeforumClipHistory />
     </StudioFrame>
   );
 }

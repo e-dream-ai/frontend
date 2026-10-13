@@ -7,6 +7,7 @@ import type {
   DeforumRenderKind,
   DeforumRenderStatus,
   DeforumSettings,
+  RemovedDeforumClip,
 } from "@/types/deforum.types";
 import {
   DEFAULT_DEFORUM_SETTINGS,
@@ -39,8 +40,20 @@ const completeSettings = (settings: DeforumSettings): DeforumSettings => {
 const completeRender = (render?: DeforumRender): DeforumRender | undefined =>
   render && { ...render, settings: completeSettings(render.settings) };
 
+const completeClip = (clip: DeforumClip): DeforumClip => ({
+  ...clip,
+  settings: completeSettings(clip.settings),
+  test: completeRender(clip.test),
+  final: completeRender(clip.final),
+});
+
+/** The most removed clips History keeps; the oldest drop off past this. */
+export const DEFORUM_HISTORY_LIMIT = 100;
+
 type DeforumStoreState = {
   clips: DeforumClip[];
+  /** Clips taken out of the list, newest first. */
+  removedClips: RemovedDeforumClip[];
   /** Clip ids; the last one is the primary the panel names and shows. */
   selectedIds: string[];
   savedPlaylistUuid: string | null;
@@ -49,7 +62,10 @@ type DeforumStoreState = {
   /** Add a clip seeded from the primary selection (or the last clip). */
   addClip: () => void;
   duplicateClips: (ids: readonly string[]) => void;
+  /** Move clips to History. */
   removeClips: (ids: readonly string[]) => void;
+  /** Put a clip from History back where it was, and select it. */
+  restoreClip: (id: string) => void;
   moveClip: (id: string, delta: number) => void;
 
   /** Write settings fields onto every given clip. The only settings write. */
@@ -82,11 +98,12 @@ type DeforumStoreState = {
 
 export type DeforumProjectState = Pick<
   DeforumStoreState,
-  "clips" | "savedPlaylistUuid" | "syncedPlaylistDreamUuids"
+  "clips" | "removedClips" | "savedPlaylistUuid" | "syncedPlaylistDreamUuids"
 >;
 
 const DEFAULTS = {
   clips: [] as DeforumClip[],
+  removedClips: [] as RemovedDeforumClip[],
   selectedIds: [] as string[],
   savedPlaylistUuid: null as string | null,
   syncedPlaylistDreamUuids: [] as string[],
@@ -95,13 +112,19 @@ const DEFAULTS = {
 const stripProgress = (render?: DeforumRender): DeforumRender | undefined =>
   render && { ...render, progress: undefined };
 
+const stripClipProgress = (clip: DeforumClip): DeforumClip => ({
+  ...clip,
+  test: stripProgress(clip.test),
+  final: stripProgress(clip.final),
+});
+
 export const selectDeforumProject = (
   state: DeforumStoreState,
 ): DeforumProjectState => ({
-  clips: state.clips.map((clip) => ({
-    ...clip,
-    test: stripProgress(clip.test),
-    final: stripProgress(clip.final),
+  clips: state.clips.map(stripClipProgress),
+  removedClips: state.removedClips.map((r) => ({
+    ...r,
+    clip: stripClipProgress(r.clip),
   })),
   savedPlaylistUuid: state.savedPlaylistUuid,
   syncedPlaylistDreamUuids: state.syncedPlaylistDreamUuids,
@@ -123,6 +146,24 @@ const mapRenders = (
     return { ...clip, test, final };
   });
   return changed ? next : clips;
+};
+
+/**
+ * Apply `update` to every removed clip it changes. Renders keep running after
+ * their clip is removed, and History shows them once they finish.
+ */
+const mapRemoved = (
+  removed: RemovedDeforumClip[],
+  update: (clip: DeforumClip) => DeforumClip,
+): RemovedDeforumClip[] => {
+  let changed = false;
+  const next = removed.map((r) => {
+    const clip = update(r.clip);
+    if (clip === r.clip) return r;
+    changed = true;
+    return { ...r, clip };
+  });
+  return changed ? next : removed;
 };
 
 export const useDeforumStore = create<DeforumStoreState>()((set) => ({
@@ -176,9 +217,35 @@ export const useDeforumStore = create<DeforumStoreState>()((set) => ({
   removeClips: (ids) =>
     set((s) => {
       const drop = new Set(ids);
+      const removedAt = Date.now();
+      // Newest first; of several removed together, the last in the list
+      // first, so putting them back in History order restores the list.
+      const removed = s.clips
+        .flatMap((clip, index) =>
+          drop.has(clip.id) ? [{ clip, index, removedAt }] : [],
+        )
+        .reverse();
+      if (removed.length === 0) return s;
       return {
         clips: withClipNames(s.clips.filter((c) => !drop.has(c.id))),
+        removedClips: [...removed, ...s.removedClips].slice(
+          0,
+          DEFORUM_HISTORY_LIMIT,
+        ),
         selectedIds: s.selectedIds.filter((id) => !drop.has(id)),
+      };
+    }),
+
+  restoreClip: (id) =>
+    set((s) => {
+      const entry = s.removedClips.find((r) => r.clip.id === id);
+      if (!entry) return s;
+      const clips = [...s.clips];
+      clips.splice(Math.min(entry.index, clips.length), 0, entry.clip);
+      return {
+        clips: withClipNames(clips),
+        removedClips: s.removedClips.filter((r) => r !== entry),
+        selectedIds: [id],
       };
     }),
 
@@ -236,22 +303,32 @@ export const useDeforumStore = create<DeforumStoreState>()((set) => ({
   selectAllClips: () => set((s) => ({ selectedIds: s.clips.map((c) => c.id) })),
 
   recordRender: (id, kind, render) =>
-    set((s) => ({
-      clips: s.clips.map((clip) =>
+    set((s) => {
+      // The clip may have been removed while its render was being submitted.
+      const record = (clip: DeforumClip): DeforumClip =>
         clip.id === id
           ? { ...clip, [kind]: { status: "queue", ...render } }
-          : clip,
-      ),
-    })),
+          : clip;
+      return {
+        clips: s.clips.map(record),
+        removedClips: mapRemoved(s.removedClips, record),
+      };
+    }),
 
   updateRenderStatus: (dreamUuid, status, progress) =>
     set((s) => {
-      const clips = mapRenders(s.clips, dreamUuid, (render) =>
+      const update = (render: DeforumRender) =>
         render.status === status && render.progress === progress
           ? render
-          : { ...render, status, progress },
+          : { ...render, status, progress };
+      const clips = mapRenders(s.clips, dreamUuid, update);
+      const removedClips = mapRemoved(
+        s.removedClips,
+        (clip) => mapRenders([clip], dreamUuid, update)[0],
       );
-      return clips === s.clips ? s : { clips };
+      return clips === s.clips && removedClips === s.removedClips
+        ? s
+        : { clips, removedClips };
     }),
 
   linkSavedPlaylist: (uuid, syncedDreamUuids) =>
@@ -269,14 +346,11 @@ export const useDeforumStore = create<DeforumStoreState>()((set) => ({
       ...state,
       // Fill fields added since the project was saved, so every clip's
       // settings stay complete.
-      clips: withClipNames(
-        (state.clips ?? []).map((clip) => ({
-          ...clip,
-          settings: completeSettings(clip.settings),
-          test: completeRender(clip.test),
-          final: completeRender(clip.final),
-        })),
-      ),
+      clips: withClipNames((state.clips ?? []).map(completeClip)),
+      removedClips: (state.removedClips ?? []).map((r) => ({
+        ...r,
+        clip: completeClip(r.clip),
+      })),
       selectedIds: [],
     }),
 

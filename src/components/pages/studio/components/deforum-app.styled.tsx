@@ -17,8 +17,51 @@ export const ClipStrip = styled.div`
   }
 `;
 
-export const ClipCard = styled.button<{ $selected: boolean }>`
+/** Positions the delete button over the card without nesting it inside. */
+export const ClipCardFrame = styled.div`
+  position: relative;
   flex: 0 0 200px;
+  display: flex;
+`;
+
+export const ClipDeleteButton = styled.button`
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: ${FLOW.bgElevated};
+  border: 1px solid ${FLOW.border};
+  border-radius: 50%;
+  color: ${FLOW.textDim};
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+  transition:
+    opacity 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+
+  ${ClipCardFrame}:hover &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: ${FLOW.error};
+    border-color: ${FLOW.error};
+    background: ${FLOW.errorDim};
+  }
+`;
+
+export const ClipCard = styled.button<{ $selected: boolean }>`
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -491,4 +534,13 @@ export const LiveCaption = styled.div`
   font-size: 12px;
   color: ${FLOW.textDim};
   text-align: center;
+`;
+
+export const HistorySection = styled.div`
+  padding: 24px ${FLOW.inset};
+  border-top: 1px solid ${FLOW.border};
+
+  @media (max-width: 480px) {
+    padding: 20px ${FLOW.insetNarrow};
+  }
 `;

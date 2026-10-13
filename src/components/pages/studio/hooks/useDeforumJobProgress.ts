@@ -24,7 +24,8 @@ import {
 const RECONCILE_POLL_MS = 30_000;
 
 const findRenderStatus = (dreamUuid: string) => {
-  for (const clip of useDeforumStore.getState().clips) {
+  const { clips, removedClips } = useDeforumStore.getState();
+  for (const clip of [...clips, ...removedClips.map((r) => r.clip)]) {
     for (const render of [clip.test, clip.final]) {
       if (render?.dreamUuid === dreamUuid) return render.status;
     }
@@ -32,19 +33,23 @@ const findRenderStatus = (dreamUuid: string) => {
   return null;
 };
 
-/** Follows every in-flight deforum render — test and final — to completion. */
+/**
+ * Follows every in-flight deforum render — test and final — to completion,
+ * including those of clips removed to History while they rendered.
+ */
 export function useDeforumJobProgress() {
   const { socket } = useSocket();
   const clips = useDeforumStore((s) => s.clips);
+  const removedClips = useDeforumStore((s) => s.removedClips);
 
   const pendingUuids = useMemo(
     () =>
-      clips.flatMap((clip) =>
+      [...clips, ...removedClips.map((r) => r.clip)].flatMap((clip) =>
         [clip.test, clip.final].flatMap((r) =>
           r && isPendingStatus(r.status) ? [r.dreamUuid] : [],
         ),
       ),
-    [clips],
+    [clips, removedClips],
   );
 
   const toasted = useRef(new Set<string>());
