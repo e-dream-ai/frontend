@@ -15,7 +15,13 @@ import { DeforumClipHistory } from "./deforum-clip-history";
 import { DeforumSettingsPanel } from "./deforum-settings-panel";
 import { SegmentPreview } from "./segment-preview";
 import { EditLock } from "./edit-lock";
-import { EmptyState, SmallButton } from "./deforum-app.styled";
+import {
+  DeforumTop,
+  EmptyState,
+  PreviewColumn,
+  PreviewEmpty,
+  SmallButton,
+} from "./deforum-app.styled";
 
 export function DeforumApp() {
   const { locked } = useStudioEditLock();
@@ -82,20 +88,22 @@ export function DeforumApp() {
         )} of ${playing.render.settings.maxFrames} frames`
     : undefined;
 
-  const live = liveRender(clips, primaryId);
+  // The preview plays finished renders; a render in progress shows on its
+  // card. Only before anything has finished does the preview follow one.
+  const live = shown.length === 0 ? liveRender(clips, primaryId) : undefined;
 
   if (clips.length === 0) {
     return (
       <StudioFrame>
         <EmptyState>
           <p>
-            Each animation is a deforum render: a list of prompts keyed to
-            frames, plus global parameters. Test renders squeeze the whole
-            timeline into 50 frames; final renders go into the playlist.
+            Each dream is a deforum render: a list of prompts keyed to frames,
+            plus global parameters. Test renders squeeze the whole timeline into
+            50 frames; final renders go into the playlist.
           </p>
           <EditLock>
             <SmallButton onClick={() => useDeforumStore.getState().addClip()}>
-              + New animation
+              + New dream
             </SmallButton>
           </EditLock>
         </EmptyState>
@@ -106,31 +114,45 @@ export function DeforumApp() {
 
   return (
     <StudioFrame>
+      <DeforumTop>
+        <PreviewColumn>
+          {live ? (
+            <DeforumLivePreview
+              key={live.render.dreamUuid}
+              clip={live.clip}
+              kind={live.kind}
+              render={live.render}
+            />
+          ) : (
+            <SegmentPreview
+              segments={segments}
+              index={index}
+              onIndexChange={(next) =>
+                setCurrentUuid(segments[next]?.key ?? null)
+              }
+              lightboxOpen={lightboxOpen}
+              onLightboxOpenChange={setLightboxOpen}
+              label="Preview"
+              caption={caption}
+              divider="top"
+            />
+          )}
+          {!live && segments.length === 0 && (
+            <PreviewEmpty>Renders play here once they finish.</PreviewEmpty>
+          )}
+        </PreviewColumn>
+        <EditLock>
+          <div>
+            <DeforumClipList posters={posters} />
+          </div>
+        </EditLock>
+      </DeforumTop>
       <EditLock>
-        <DeforumClipList posters={posters} />
         <DeforumSettingsPanel
           onGenerate={(kind) => void generate(kind)}
           isGenerating={isGenerating}
         />
       </EditLock>
-      {live && (
-        <DeforumLivePreview
-          key={live.render.dreamUuid}
-          clip={live.clip}
-          kind={live.kind}
-          render={live.render}
-        />
-      )}
-      <SegmentPreview
-        segments={segments}
-        index={index}
-        onIndexChange={(next) => setCurrentUuid(segments[next]?.key ?? null)}
-        lightboxOpen={lightboxOpen}
-        onLightboxOpenChange={setLightboxOpen}
-        label="Preview"
-        caption={caption}
-        divider="top"
-      />
       <DeforumClipHistory />
     </StudioFrame>
   );

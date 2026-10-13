@@ -71,7 +71,7 @@ export function DeforumClipHistory() {
     <HistorySection>
       <SectionTitle>History</SectionTitle>
       {removedClips.length === 0 ? (
-        <HistoryEmpty>Removed animations show up here</HistoryEmpty>
+        <HistoryEmpty>Removed dreams show up here</HistoryEmpty>
       ) : (
         <ClipHistoryGrid role="list">
           {removedClips.map((removed, i) => {

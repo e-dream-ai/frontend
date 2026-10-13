@@ -4,23 +4,71 @@ import {
   PanelContainer,
   PanelSubtitle,
 } from "./transition-settings-panel.styled";
+import { PreviewLabel } from "./segment-preview.styled";
+
+/**
+ * The preview in a column on the left, a third of the width, with the
+ * animations beside it. Stacked, preview first, once there is no room.
+ */
+export const DeforumTop = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: start;
+
+  @media (max-width: 768px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`;
+
+export const PreviewColumn = styled.div`
+  border-right: 1px solid ${FLOW.border};
+  align-self: stretch;
+
+  /* The column's own edge separates it; the first block needs no rule. */
+  & > :first-child {
+    border-top: none;
+  }
+
+  @media (max-width: 768px) {
+    border-right: none;
+    border-bottom: 1px solid ${FLOW.border};
+  }
+`;
+
+export const PreviewEmpty = styled.div`
+  padding: 48px ${FLOW.inset};
+  text-align: center;
+  color: ${FLOW.textMuted};
+  font-family: ${FLOW.fontFamily};
+  font-size: 13px;
+`;
+
+/** Titles the dream list as "Preview" titles the column beside it. */
+export const ClipListLabel = styled(PreviewLabel)`
+  display: block;
+  padding: 24px ${FLOW.inset} 0;
+
+  @media (max-width: 480px) {
+    padding: 20px ${FLOW.insetNarrow} 0;
+  }
+`;
 
 export const ClipStrip = styled.div`
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
-  padding: 20px ${FLOW.inset};
-  overflow-x: auto;
+  padding: 14px ${FLOW.inset} 20px;
   align-items: stretch;
 
   @media (max-width: 480px) {
-    padding: 16px ${FLOW.insetNarrow};
+    padding: 14px ${FLOW.insetNarrow} 16px;
   }
 `;
 
 /** Positions the delete button over the card without nesting it inside. */
 export const ClipCardFrame = styled.div`
   position: relative;
-  flex: 0 0 200px;
+  flex: 0 0 180px;
   display: flex;
 `;
 
@@ -55,7 +103,6 @@ export const ClipDeleteButton = styled.button`
   &:hover {
     color: ${FLOW.error};
     border-color: ${FLOW.error};
-    background: ${FLOW.errorDim};
   }
 `;
 
@@ -137,6 +184,7 @@ export const StatusPill = styled.span<{ $tone: PillTone }>`
 
 export const AddClipCard = styled.button`
   flex: 0 0 120px;
+  min-height: 120px;
   border: 1px dashed ${FLOW.borderHover};
   border-radius: ${FLOW.radius};
   background: transparent;
@@ -493,12 +541,12 @@ export const EmptyState = styled.div`
 `;
 
 export const LivePreviewBox = styled.div`
-  padding: 20px ${FLOW.inset};
+  padding: 24px ${FLOW.inset};
   border-top: 1px solid ${FLOW.border};
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
 
   @media (max-width: 480px) {
     padding: 16px ${FLOW.insetNarrow};

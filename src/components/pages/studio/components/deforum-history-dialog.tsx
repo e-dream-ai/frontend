@@ -60,7 +60,7 @@ export function DeforumHistoryDialog({
       <HistoryClipPanel
         role="dialog"
         aria-modal="true"
-        aria-label="Animation from history"
+        aria-label="Dream from history"
         onClick={(e) => e.stopPropagation()}
       >
         <Header>

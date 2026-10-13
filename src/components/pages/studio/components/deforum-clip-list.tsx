@@ -13,6 +13,7 @@ import {
   AddClipCard,
   ClipCard,
   ClipCardFrame,
+  ClipListLabel,
   ClipDeleteButton,
   ClipMeta,
   ClipName,
@@ -110,7 +111,12 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
 
   return (
     <>
-      <ClipStrip role="listbox" aria-multiselectable aria-label="Animations">
+      <ClipListLabel id="deforum-dreams-label">Dreams</ClipListLabel>
+      <ClipStrip
+        role="listbox"
+        aria-multiselectable
+        aria-labelledby="deforum-dreams-label"
+      >
         {clips.map((clip) => {
           const shown = latestRender(clip)?.render;
           const firstPrompt = clip.settings.prompts.find((p) => p.text.trim());
@@ -144,7 +150,7 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
               </ClipCard>
               <ClipDeleteButton
                 aria-label={`Remove ${clip.name}`}
-                title="Remove this animation"
+                title="Remove this dream"
                 onClick={() => store().removeClips([clip.id])}
               >
                 ✕
@@ -152,7 +158,7 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
             </ClipCardFrame>
           );
         })}
-        <AddClipCard onClick={() => store().addClip()}>+ Animation</AddClipCard>
+        <AddClipCard onClick={() => store().addClip()}>+ Dream</AddClipCard>
       </ClipStrip>
 
       {clips.length > 0 && (
@@ -195,7 +201,7 @@ export function DeforumClipList({ posters }: DeforumClipListProps) {
 
       {confirmingRemove && (
         <ForceSettingsDialog
-          title={`Remove ${selectedIds.length} animation${
+          title={`Remove ${selectedIds.length} dream${
             selectedIds.length === 1 ? "" : "s"
           }?`}
           body="Their final renders leave the playlist."

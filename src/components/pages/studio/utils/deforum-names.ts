@@ -1,7 +1,7 @@
 import type { DeforumClip } from "@/types/deforum.types";
 import { take, words } from "./action-headings";
 
-const FALLBACK = "Animation";
+const FALLBACK = "Dream";
 
 /**
  * A deforum prompt's meaningful words. LoRA tags (`<lora:name:0.5>`) go, and
