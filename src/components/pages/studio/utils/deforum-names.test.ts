@@ -45,8 +45,8 @@ describe("deforumClipNames", () => {
 
   it("falls back when a clip has no prompt text yet", () => {
     expect(deforumClipNames([clip(""), clip("")])).toEqual([
-      "Animation",
-      "Animation 2",
+      "Dream",
+      "Dream 2",
     ]);
   });
 });

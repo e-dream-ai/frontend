@@ -129,7 +129,10 @@ const deforumAdapter: EditorAdapter = {
       .clips.find((c) => c.final?.status === "processed");
     return clip?.final?.dreamUuid ?? null;
   },
-  isEmpty: () => useDeforumStore.getState().clips.length === 0,
+  isEmpty: () => {
+    const { clips, removedClips } = useDeforumStore.getState();
+    return clips.length === 0 && removedClips.length === 0;
+  },
 };
 
 export const EDITOR_ADAPTERS: Record<StudioMode, EditorAdapter> = {

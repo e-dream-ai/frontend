@@ -53,6 +53,7 @@ import {
   StudioContainer,
   StudioHeader,
   StudioTitle,
+  StudioTitleLink,
   TitleGroup,
   Logo,
   LogoLink,
@@ -209,7 +210,11 @@ const StudioEditor: React.FC<{ mode: StudioMode }> = ({ mode }) => {
           <LogoLink to={ROUTES.ROOT} aria-label="Go to home">
             <Logo src="/images/edream-logo-512x512.png" alt="e-dream" />
           </LogoLink>
-          <StudioTitle>Studio</StudioTitle>
+          <StudioTitle>
+            <StudioTitleLink to={ROUTES.STUDIO} title="Back to playlists">
+              Studio
+            </StudioTitleLink>
+          </StudioTitle>
           <EditorBadge $mode={mode}>{STUDIO_MODE_LABELS[mode]}</EditorBadge>
         </TitleGroup>
         {missing ? null : (

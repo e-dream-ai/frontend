@@ -30,11 +30,15 @@ export const getDreamResponse = async (uuid: string, signal?: AbortSignal) => {
 export const getDream = async (uuid: string, signal?: AbortSignal) =>
   (await getDreamResponse(uuid, signal)).data?.dream;
 
-export const fetchDream = async (uuid?: string) => {
+export const fetchDream = async (
+  uuid?: string,
+  { staleTime }: { staleTime?: number } = {},
+) => {
   if (!uuid) return;
   const response = await queryClient.fetchQuery({
     queryKey: [DREAM_QUERY_KEY, uuid],
     queryFn: ({ signal }) => getDreamResponse(uuid, signal),
+    staleTime,
   });
   return response.data?.dream;
 };

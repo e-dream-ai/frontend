@@ -4,21 +4,171 @@ import {
   PanelContainer,
   PanelSubtitle,
 } from "./transition-settings-panel.styled";
+import { PreviewLabel } from "./segment-preview.styled";
+
+/**
+ * The preview in a column on the left, a third of the width, with the
+ * animations beside it. Stacked, preview first, once there is no room.
+ */
+export const DeforumTop = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  align-items: start;
+
+  @media (max-width: 768px) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`;
+
+export const PreviewColumn = styled.div`
+  border-right: 1px solid ${FLOW.border};
+  align-self: stretch;
+
+  /* The column's own edge separates it; the first block needs no rule. */
+  & > :first-child {
+    border-top: none;
+  }
+
+  @media (max-width: 768px) {
+    border-right: none;
+    border-bottom: 1px solid ${FLOW.border};
+  }
+`;
+
+export const PreviewEmpty = styled.div`
+  padding: 48px ${FLOW.inset};
+  text-align: center;
+  color: ${FLOW.textMuted};
+  font-family: ${FLOW.fontFamily};
+  font-size: 13px;
+`;
+
+/** Titles the dream list as "Preview" titles the column beside it. */
+export const ClipListLabel = styled(PreviewLabel)`
+  display: block;
+  padding: 24px ${FLOW.inset} 0;
+
+  @media (max-width: 480px) {
+    padding: 20px ${FLOW.insetNarrow} 0;
+  }
+`;
+
+/**
+ * Holds the scrolling strip, fading whichever edge has more dreams past it
+ * and putting an arrow there, since scrollbars stay hidden on macOS.
+ */
+export const ClipStripViewport = styled.div<{
+  $left: boolean;
+  $right: boolean;
+}>`
+  position: relative;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 56px;
+    pointer-events: none;
+    transition: opacity 0.18s ease;
+    z-index: 1;
+  }
+
+  &::before {
+    left: 0;
+    background: linear-gradient(to right, ${FLOW.bgCard}, transparent);
+    opacity: ${(p) => (p.$left ? 1 : 0)};
+  }
+
+  &::after {
+    right: 0;
+    background: linear-gradient(to left, ${FLOW.bgCard}, transparent);
+    opacity: ${(p) => (p.$right ? 1 : 0)};
+  }
+`;
+
+export const StripArrow = styled.button<{ $side: "left" | "right" }>`
+  position: absolute;
+  top: 50%;
+  ${(p) => (p.$side === "left" ? "left: 8px" : "right: 8px")};
+  transform: translateY(-50%);
+  z-index: 2;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: ${FLOW.bgElevated};
+  border: 1px solid ${FLOW.borderHover};
+  border-radius: 50%;
+  color: ${FLOW.text};
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+
+  &:hover {
+    border-color: ${FLOW.accent};
+    color: ${FLOW.accent};
+  }
+`;
 
 export const ClipStrip = styled.div`
   display: flex;
   gap: 12px;
-  padding: 20px ${FLOW.inset};
+  padding: 14px ${FLOW.inset} 20px;
   overflow-x: auto;
   align-items: stretch;
 
   @media (max-width: 480px) {
-    padding: 16px ${FLOW.insetNarrow};
+    padding: 14px ${FLOW.insetNarrow} 16px;
+  }
+`;
+
+/** Positions the delete button over the card without nesting it inside. */
+export const ClipCardFrame = styled.div`
+  position: relative;
+  flex: 0 0 180px;
+  display: flex;
+`;
+
+export const ClipDeleteButton = styled.button`
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 22px;
+  height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: ${FLOW.bgElevated};
+  border: 1px solid ${FLOW.border};
+  border-radius: 50%;
+  color: ${FLOW.textDim};
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.6;
+  transition:
+    opacity 0.18s ease,
+    color 0.18s ease,
+    border-color 0.18s ease;
+
+  ${ClipCardFrame}:hover &,
+  &:focus-visible {
+    opacity: 1;
+  }
+
+  &:hover {
+    color: ${FLOW.error};
+    border-color: ${FLOW.error};
   }
 `;
 
 export const ClipCard = styled.button<{ $selected: boolean }>`
-  flex: 0 0 200px;
+  flex: 1;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -92,8 +242,14 @@ export const StatusPill = styled.span<{ $tone: PillTone }>`
   white-space: nowrap;
 `;
 
-export const AddClipCard = styled.button`
+export const AddClipFrame = styled.div`
   flex: 0 0 120px;
+  display: flex;
+`;
+
+export const AddClipCard = styled.button`
+  flex: 1;
+  min-height: 120px;
   border: 1px dashed ${FLOW.borderHover};
   border-radius: ${FLOW.radius};
   background: transparent;
@@ -450,12 +606,12 @@ export const EmptyState = styled.div`
 `;
 
 export const LivePreviewBox = styled.div`
-  padding: 20px ${FLOW.inset};
+  padding: 24px ${FLOW.inset};
   border-top: 1px solid ${FLOW.border};
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 14px;
 
   @media (max-width: 480px) {
     padding: 16px ${FLOW.insetNarrow};
@@ -491,4 +647,13 @@ export const LiveCaption = styled.div`
   font-size: 12px;
   color: ${FLOW.textDim};
   text-align: center;
+`;
+
+export const HistorySection = styled.div`
+  padding: 24px ${FLOW.inset};
+  border-top: 1px solid ${FLOW.border};
+
+  @media (max-width: 480px) {
+    padding: 20px ${FLOW.insetNarrow};
+  }
 `;

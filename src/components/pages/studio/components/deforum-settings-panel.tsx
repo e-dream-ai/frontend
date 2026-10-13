@@ -120,19 +120,19 @@ export function DeforumSettingsPanel({
     <>
       {needsPrompt && (
         <ValidationHint>
-          Every animation needs at least one prompt to render.
+          Every dream needs at least one prompt to render.
         </ValidationHint>
       )}
       {startsLater && (
         <ValidationHint>
-          The first prompt is empty, so the next one starts the animation.
+          The first prompt is empty, so the next one starts the dream.
         </ValidationHint>
       )}
       {!hasSelection && (
         <ScopeHint>
-          Nothing selected &mdash; Test and Render cover every animation whose
-          video is behind its settings. Select one to edit it, or several to
-          change them together.
+          Nothing selected &mdash; Test and Render cover every dream whose video
+          is behind its settings. Select one to edit it, or several to change
+          them together.
         </ScopeHint>
       )}
     </>
@@ -181,8 +181,8 @@ export function DeforumSettingsPanel({
 
       {pendingEdit && (
         <ForceSettingsDialog
-          title="Give these animations the same value?"
-          body="The selected animations don't agree on this setting. OK sets it on all of them; Cancel leaves them as they are."
+          title="Give these dreams the same value?"
+          body="The selected dreams don't agree on this setting. OK sets it on all of them; Cancel leaves them as they are."
           onConfirm={() => {
             pendingEdit();
             setPendingEdit(null);

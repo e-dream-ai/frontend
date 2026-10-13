@@ -1,14 +1,14 @@
 import type { DeforumClip } from "@/types/deforum.types";
 import { take, words } from "./action-headings";
 
-const FALLBACK = "Animation";
+const FALLBACK = "Dream";
 
 /**
  * A deforum prompt's meaningful words. LoRA tags (`<lora:name:0.5>`) go, and
  * so do the words of their names, which is what trigger words like
  * `ral-trichom` are made of; backtick weight expressions go too.
  */
-const promptWords = (text: string) => {
+export const promptWords = (text: string) => {
   const loraWords = new Set(
     [...text.matchAll(/<lora:([^:>]+)[^>]*>/gi)].flatMap((m) => words(m[1])),
   );
