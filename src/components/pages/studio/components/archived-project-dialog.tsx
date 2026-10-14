@@ -86,6 +86,9 @@ export const ArchivedProjectDialog: React.FC<Props> = ({
         <Footer>
           <span />
           <FooterButtons>
+            <CancelBtn type="button" onClick={onClose}>
+              Cancel
+            </CancelBtn>
             <CancelBtn type="button" onClick={onUnarchive}>
               Unarchive
             </CancelBtn>
