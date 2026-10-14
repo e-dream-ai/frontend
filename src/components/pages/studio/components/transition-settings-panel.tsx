@@ -584,6 +584,24 @@ export function TransitionSettingsPanel({
             Advanced settings
           </AdvancedSummary>
           <ExpandedSection>
+            {/*
+              With nothing inherited there is no "clear the override" to
+              offer, so this writes the built-in default outright — still a
+              way back to a known state, just an explicit one.
+            */}
+            <ResetLink
+              onClick={() => {
+                const store = useFlowStore.getState();
+                store.setTransitionSettings(store.selectedTransitionIndices, {
+                  ...DEFAULT_TRANSITION_SETTINGS,
+                });
+              }}
+            >
+              {selectionCount > 1
+                ? `Reset ${selectionCount} transitions to default settings`
+                : "Reset to default settings"}
+            </ResetLink>
+
             <FieldGroup>
               <FieldLabel>
                 Prompt
@@ -672,24 +690,6 @@ export function TransitionSettingsPanel({
                 />
               )}
             </ParamFields>
-
-            {/*
-              With nothing inherited there is no "clear the override" to
-              offer, so this writes the built-in default outright — still a
-              way back to a known state, just an explicit one.
-            */}
-            <ResetLink
-              onClick={() => {
-                const store = useFlowStore.getState();
-                store.setTransitionSettings(store.selectedTransitionIndices, {
-                  ...DEFAULT_TRANSITION_SETTINGS,
-                });
-              }}
-            >
-              {selectionCount > 1
-                ? `Reset ${selectionCount} transitions to default settings`
-                : "Reset to default settings"}
-            </ResetLink>
           </ExpandedSection>
         </PanelAdvancedDetails>
       )}
