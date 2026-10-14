@@ -257,7 +257,7 @@ export const PanelAdvancedDetails = styled(AdvancedDetails)`
 `;
 
 export const ResetLink = styled.button`
-  align-self: flex-start;
+  margin-left: 12px;
   background: none;
   border: none;
   color: ${FLOW.textMuted};
