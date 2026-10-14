@@ -128,10 +128,15 @@ export const fromPersistedFlowState = (
 ): RestoredFlowState => {
   const { referenceFrames = [], transitions = {}, ...rest } = persisted;
 
+  // A looped flow has one more transition, from the last frame back to the
+  // first. Same rule as the store's buildFramesWithLoop.
+  const frameIds = referenceFrames.map((frame) => frame.id);
+  if (rest.loop === true && frameIds.length >= 2) frameIds.push(frameIds[0]);
+
   const ordered: FlowTransition[] = [];
-  for (let i = 0; i < referenceFrames.length - 1; i += 1) {
-    const fromFrameId = referenceFrames[i].id;
-    const toFrameId = referenceFrames[i + 1].id;
+  for (let i = 0; i < frameIds.length - 1; i += 1) {
+    const fromFrameId = frameIds[i];
+    const toFrameId = frameIds[i + 1];
     const stored = transitions[transitionKey(fromFrameId, toFrameId)];
 
     if (stored) {
