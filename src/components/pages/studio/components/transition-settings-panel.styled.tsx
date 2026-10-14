@@ -262,7 +262,7 @@ export const ResetLink = styled.button`
   border: none;
   color: ${FLOW.textMuted};
   font-family: ${FLOW.fontFamily};
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
   padding: 0;
   text-decoration: underline;

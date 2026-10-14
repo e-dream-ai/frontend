@@ -445,7 +445,7 @@ export function TransitionSettingsPanel({
             </PanelSubtitle>
           )}
           {/*
-            Sits on the header line rather than inside Advanced settings: it
+            Sits on the header line rather than inside Customize: it
             resets every setting, the model and duration above included. With
             nothing inherited there is no "clear the override" to offer, so
             this writes the built-in default outright.
@@ -470,7 +470,7 @@ export function TransitionSettingsPanel({
         </HeaderActions>
       </PanelHeader>
 
-      {/* Always shown; the rest sits under Advanced settings below */}
+      {/* Always shown; the rest sits under Customize below */}
       <FieldRow>
         {isPerTransition && modelOptions.length > 0 && (
           <FieldGroup>
@@ -600,9 +600,7 @@ export function TransitionSettingsPanel({
             useFlowStore.getState().setSettingsExpanded(e.currentTarget.open)
           }
         >
-          <AdvancedSummary data-edit-lock-allow>
-            Advanced settings
-          </AdvancedSummary>
+          <AdvancedSummary data-edit-lock-allow>Customize</AdvancedSummary>
           <ExpandedSection>
             <FieldGroup>
               <FieldLabel>
