@@ -3,6 +3,8 @@ import { Archive, Search, X } from "lucide-react";
 import type { StudioMode } from "@/types/flow.types";
 import { STUDIO_MODES, STUDIO_MODE_LABELS } from "../constants/studio-modes";
 import {
+  ArchivedButton,
+  ArchivedToggle,
   Controls,
   ControlsSpacer,
   FilterButton,
@@ -56,8 +58,8 @@ export const ProjectControls: React.FC<Props> = ({
       ))}
     </FilterToggle>
 
-    <FilterToggle>
-      <FilterButton
+    <ArchivedToggle $active={archived}>
+      <ArchivedButton
         type="button"
         $active={archived}
         aria-pressed={archived}
@@ -65,8 +67,8 @@ export const ProjectControls: React.FC<Props> = ({
       >
         <Archive size={14} strokeWidth={2.2} />
         Archived
-      </FilterButton>
-    </FilterToggle>
+      </ArchivedButton>
+    </ArchivedToggle>
 
     <ControlsSpacer />
 
