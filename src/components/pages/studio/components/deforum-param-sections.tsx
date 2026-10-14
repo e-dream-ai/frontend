@@ -18,10 +18,10 @@ import {
   FieldRow,
   PromptTextarea,
   Select,
-} from "./transition-settings-panel.styled";
-import {
   AdvancedDetails,
   AdvancedSummary,
+} from "./transition-settings-panel.styled";
+import {
   MotionRow,
   ParamGrid,
   ScheduleInput,

@@ -210,27 +210,59 @@ export const OpenDreamLink = styled(Link)`
   }
 `;
 
-export const ToggleLink = styled.button`
-  background: none;
-  border: none;
-  color: ${FLOW.textDim};
-  font-family: ${FLOW.fontFamily};
-  font-size: 12px;
-  cursor: pointer;
-  padding: 0;
-  margin-top: 8px;
+/** Fold-out for settings most runs leave at their defaults. */
+export const AdvancedDetails = styled.details`
+  &[open] > summary {
+    margin-bottom: 12px;
+  }
 
-  &:hover {
-    color: ${FLOW.text};
+  &[open] > summary::before {
+    transform: rotate(90deg);
   }
 `;
 
+/** The fold-out's heading, styled as a section title with a disclosure arrow. */
+export const AdvancedSummary = styled.summary`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: ${FLOW.fontFamily};
+  font-size: 13px;
+  font-weight: 600;
+  color: ${FLOW.text};
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+
+  &::-webkit-details-marker {
+    display: none;
+  }
+
+  &::before {
+    content: "▸";
+    color: ${FLOW.textMuted};
+    transition: transform 0.15s ease;
+  }
+
+  &:hover {
+    color: ${FLOW.accent};
+  }
+`;
+
+/** The flow panel's fold-out, set off from the hints and notices above it. */
+export const PanelAdvancedDetails = styled(AdvancedDetails)`
+  margin-top: 16px;
+`;
+
 export const ResetLink = styled.button`
+  margin-left: 12px;
   background: none;
   border: none;
   color: ${FLOW.textMuted};
   font-family: ${FLOW.fontFamily};
-  font-size: 11px;
+  font-size: 12px;
   cursor: pointer;
   padding: 0;
   text-decoration: underline;
@@ -244,7 +276,6 @@ export const ExpandedSection = styled.div`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  margin-top: 12px;
   padding-top: 12px;
   border-top: 1px solid ${FLOW.border};
 `;

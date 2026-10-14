@@ -524,47 +524,6 @@ export const ParamGrid = styled.div`
   gap: 12px;
 `;
 
-/** Fold-out for parameters most animations leave at their defaults. */
-export const AdvancedDetails = styled.details`
-  &[open] > summary {
-    margin-bottom: 12px;
-  }
-
-  &[open] > summary::before {
-    transform: rotate(90deg);
-  }
-`;
-
-/** The fold-out's heading, styled as a section title with a disclosure arrow. */
-export const AdvancedSummary = styled.summary`
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-family: ${FLOW.fontFamily};
-  font-size: 13px;
-  font-weight: 600;
-  color: ${FLOW.text};
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  cursor: pointer;
-  list-style: none;
-  user-select: none;
-
-  &::-webkit-details-marker {
-    display: none;
-  }
-
-  &::before {
-    content: "▸";
-    color: ${FLOW.textMuted};
-    transition: transform 0.15s ease;
-  }
-
-  &:hover {
-    color: ${FLOW.accent};
-  }
-`;
-
 export const MotionRow = styled.div`
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
