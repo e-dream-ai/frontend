@@ -174,7 +174,15 @@ export const CreatePlaylist: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Column>
-        <Text marginY={3}>{t("page.create.playlist_instructions")}</Text>
+        <Text marginY={3}>
+          {/* Only creators can upload dreams here (frontend#616). */}
+          <Restricted
+            to={DREAM_PERMISSIONS.CAN_CREATE_DREAM}
+            fallback={t("page.create.playlist_instructions_noncreator")}
+          >
+            {t("page.create.playlist_instructions")}
+          </Restricted>
+        </Text>
         <Input
           placeholder={t("page.create.playlist_name")}
           type="text"
