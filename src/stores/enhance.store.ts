@@ -69,8 +69,11 @@ export const useEnhanceStore = create<EnhanceStoreState>()((set) => ({
           ? enhancePlaylistName(snapshot.sourcePlaylist.name)
           : null),
       upscaleFactor: snapshot.upscaleFactor ?? ENHANCE_DEFAULTS.upscaleFactor,
-      // Always the default rather than the saved value (frontend#782).
-      interpolationFactor: ENHANCE_DEFAULTS.interpolationFactor,
+      // A reopened project keeps the factor it was saved with. New projects
+      // start from ENHANCE_DEFAULTS via resetEnhance, so nothing carries over
+      // between projects (frontend#782).
+      interpolationFactor:
+        snapshot.interpolationFactor ?? ENHANCE_DEFAULTS.interpolationFactor,
     }),
   resetEnhance: () => set({ ...ENHANCE_DEFAULTS }),
 }));
