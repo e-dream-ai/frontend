@@ -8,7 +8,7 @@ import {
   faDiscord,
   faFacebookF,
   faGithub,
-  faThreads,
+  faPatreon,
   faTwitter,
 } from "@fortawesome/free-brands-svg-icons";
 import { faCircle } from "@fortawesome/free-solid-svg-icons";
@@ -18,13 +18,13 @@ const FooterIcons: React.FC = () => (
   <>
     <Anchor
       type="secondary"
-      href="https://www.threads.com/@infinidream_ai"
+      href="https://www.patreon.com/c/Infinidream"
       target="_blank"
     >
       <span className="fa-stack fa-lg --fa-li-margin">
         <FontAwesomeIcon icon={faCircle} className="fa-2x" />
         <FontAwesomeIcon
-          icon={faThreads}
+          icon={faPatreon}
           className="fa-stack-1x fa-inverse reverse"
         />
       </span>
