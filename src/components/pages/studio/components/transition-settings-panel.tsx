@@ -61,7 +61,8 @@ import {
   PromptTextarea,
   GenerateButton,
   OpenDreamLink,
-  ToggleLink,
+  AdvancedSummary,
+  PanelAdvancedDetails,
   ResetLink,
   ExpandedSection,
   ParamFields,
@@ -443,13 +444,33 @@ export function TransitionSettingsPanel({
               {extraCount > 0 && ` and ${extraCount} more`}
             </PanelSubtitle>
           )}
+          {/*
+            Sits on the header line rather than inside Customize: it
+            resets every setting, the model and duration above included. With
+            nothing inherited there is no "clear the override" to offer, so
+            this writes the built-in default outright.
+          */}
+          {isPerTransition && (
+            <ResetLink
+              onClick={() => {
+                const store = useFlowStore.getState();
+                store.setTransitionSettings(store.selectedTransitionIndices, {
+                  ...DEFAULT_TRANSITION_SETTINGS,
+                });
+              }}
+            >
+              {selectionCount > 1
+                ? `Reset ${selectionCount} transitions to default settings`
+                : "Reset to default settings"}
+            </ResetLink>
+          )}
         </PanelHeaderMain>
         <HeaderActions>
           <TransitionHistory />
         </HeaderActions>
       </PanelHeader>
 
-      {/* Collapsed view */}
+      {/* Always shown; the rest sits under Customize below */}
       <FieldRow>
         {isPerTransition && modelOptions.length > 0 && (
           <FieldGroup>
@@ -567,23 +588,19 @@ export function TransitionSettingsPanel({
         resetIn={resetIn}
       />
 
-      {/* Expand/collapse toggle */}
-      {!isPerTransition ? null : !settingsExpanded ? (
-        <ToggleLink
-          data-edit-lock-allow
-          onClick={() => useFlowStore.getState().setSettingsExpanded(true)}
+      {/*
+        Open state lives in the store so it holds as the selection moves from
+        one transition to the next. The summary stays clickable on a locked
+        project: reading the settings is not editing them.
+      */}
+      {isPerTransition && (
+        <PanelAdvancedDetails
+          open={settingsExpanded}
+          onToggle={(e) =>
+            useFlowStore.getState().setSettingsExpanded(e.currentTarget.open)
+          }
         >
-          &#9662; Customize
-        </ToggleLink>
-      ) : (
-        <>
-          <ToggleLink
-            data-edit-lock-allow
-            onClick={() => useFlowStore.getState().setSettingsExpanded(false)}
-          >
-            &#9652; Collapse
-          </ToggleLink>
-
+          <AdvancedSummary data-edit-lock-allow>Customize</AdvancedSummary>
           <ExpandedSection>
             <FieldGroup>
               <FieldLabel>
@@ -674,27 +691,7 @@ export function TransitionSettingsPanel({
               )}
             </ParamFields>
           </ExpandedSection>
-        </>
-      )}
-
-      {/*
-        With nothing inherited there is no "clear the override" to offer, so
-        this writes the built-in default outright — still a way back to a known
-        state, just an explicit one.
-      */}
-      {isPerTransition && (
-        <ResetLink
-          onClick={() => {
-            const store = useFlowStore.getState();
-            store.setTransitionSettings(store.selectedTransitionIndices, {
-              ...DEFAULT_TRANSITION_SETTINGS,
-            });
-          }}
-        >
-          {selectionCount > 1
-            ? `Reset ${selectionCount} transitions to default settings`
-            : "Reset to default settings"}
-        </ResetLink>
+        </PanelAdvancedDetails>
       )}
 
       {pendingEdit && (

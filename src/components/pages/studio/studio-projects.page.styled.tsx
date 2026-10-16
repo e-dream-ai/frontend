@@ -98,6 +98,25 @@ export const FilterButton = styled.button<{ $active: boolean }>`
   }
 `;
 
+/**
+ * The Archived switch. Unlike the editor filter, where one segment is always
+ * lit, this is an on/off mode that swaps the whole list, so its on state uses
+ * the accent rather than the segment's barely-lighter fill.
+ */
+export const ArchivedToggle = styled(FilterToggle)<{ $active: boolean }>`
+  border-color: ${(p) => (p.$active ? FLOW.accent : FLOW.border)};
+  transition: border-color 0.2s;
+`;
+
+export const ArchivedButton = styled(FilterButton)`
+  color: ${(p) => (p.$active ? FLOW.accent : FLOW.textMuted)};
+  background: ${(p) => (p.$active ? FLOW.accentDim : "transparent")};
+
+  &:hover {
+    color: ${(p) => (p.$active ? FLOW.accent : FLOW.text)};
+  }
+`;
+
 export const Body = styled.main`
   flex: 1;
   min-height: 0;
