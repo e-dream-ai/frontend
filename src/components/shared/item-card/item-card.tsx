@@ -72,7 +72,11 @@ import {
   shouldVirtualPlaylistDisplayDots,
 } from "@/utils/virtual-playlist.util";
 import { ItemCardImage } from "./item-card-image";
-import { DreamStatusBadgeTone, getDreamStatusBadge } from "@/utils/dream.util";
+import {
+  DreamStatusBadgeTone,
+  getDreamStatusBadge,
+  isDreamPlayable,
+} from "@/utils/dream.util";
 import { ConfirmModal } from "@/components/modals/confirm.modal";
 import { AnchorLink } from "@/components/shared";
 import PlaylistPlay from "@/icons/playlist-play";
@@ -553,11 +557,7 @@ const ItemCardComponent: React.FC<ItemCardProps> = ({
 
         {showPlayButton &&
           !statusBadge &&
-          !(
-            type === "dream" &&
-            ((item as Dream)?.status === DreamStatusType.QUEUE ||
-              (item as Dream)?.status === DreamStatusType.PROCESSING)
-          ) && (
+          (type !== "dream" || isDreamPlayable(item as Dream)) && (
             <Row
               justifyContent="flex-end"
               style={{ position: "absolute", top: 0, right: 0 }}

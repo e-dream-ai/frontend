@@ -2,6 +2,7 @@ import type { JobStage } from "@/types/job-progress.types";
 import { ApiResponse } from "@/types/api.types";
 import {
   Dream,
+  DreamMediaType,
   DreamProcessingPhase,
   DreamStatusType,
 } from "@/types/dream.types";
@@ -77,6 +78,17 @@ export const getDreamStatusBadge = (dream?: Dream): DreamStatusBadge | null => {
       return null;
   }
 };
+
+/**
+ * Whether a dream card should offer a play button. Dreams still rendering
+ * have nothing to play yet, and a still image has nothing to play at all
+ * (frontend#624).
+ */
+export const isDreamPlayable = (dream?: Dream): boolean =>
+  !!dream &&
+  dream.status !== DreamStatusType.QUEUE &&
+  dream.status !== DreamStatusType.PROCESSING &&
+  dream.mediaType !== DreamMediaType.IMAGE;
 
 export const serializeDreamPrompt = (
   prompt?: string | Record<string, unknown> | null,
