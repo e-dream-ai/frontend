@@ -63,9 +63,16 @@ export const UpdatePlaylistSchema = yup
       .integer(),
     loops: yup.number().typeError("Loops must be an integer").integer().min(0),
     // Empty input means "auto": null, and the client picks the fade.
+    // Accept "2,5" too: decimal keyboards in some locales only offer a comma.
     transitionTime: yup
       .number()
-      .transform((value, original) => (original === "" ? null : value))
+      .transform((value, original) =>
+        typeof original !== "string"
+          ? value
+          : original.trim() === ""
+            ? null
+            : Number(original.replace(",", ".")),
+      )
       .nullable()
       .typeError("Fade must be a number of seconds")
       .min(0)
