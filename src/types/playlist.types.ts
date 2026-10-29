@@ -50,6 +50,7 @@ export type Playlist = {
   itemCount?: number;
   featureRank?: number;
   loops?: number;
+  transitionTime?: number | null;
   nsfw?: boolean;
   hidden?: boolean;
   totalDurationSeconds?: number;
