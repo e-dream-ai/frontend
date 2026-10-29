@@ -1035,9 +1035,8 @@ const ViewPlaylistContent = () => {
                         disabled={!editMode}
                         placeholder={t("page.view_playlist.transition_time")}
                         emptyText={t("page.view_playlist.transition_time_auto")}
-                        type="number"
-                        step="0.1"
-                        min="0"
+                        type="text"
+                        inputMode="decimal"
                         before={<FontAwesomeIcon icon={faStopwatch} />}
                         {...formMethods.register("transitionTime")}
                       />
