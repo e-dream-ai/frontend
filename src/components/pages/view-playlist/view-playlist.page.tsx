@@ -48,6 +48,7 @@ import {
   faPencil,
   faRankingStar,
   faRepeat,
+  faStopwatch,
   faSave,
   faShield,
   faTrash,
@@ -1024,6 +1025,20 @@ const ViewPlaylistContent = () => {
                         type="number"
                         before={<FontAwesomeIcon icon={faRepeat} />}
                         {...formMethods.register("loops")}
+                      />
+                    </Column>
+                    <Column
+                      flex={["1 1 33.33%", "1 1 33.33%", "1 1 33.33%"]}
+                      pr={[1, 1, 1]}
+                    >
+                      <FormInput
+                        disabled={!editMode}
+                        placeholder={t("page.view_playlist.transition_time")}
+                        emptyText={t("page.view_playlist.transition_time_auto")}
+                        type="text"
+                        inputMode="decimal"
+                        before={<FontAwesomeIcon icon={faStopwatch} />}
+                        {...formMethods.register("transitionTime")}
                       />
                     </Column>
                     <Column

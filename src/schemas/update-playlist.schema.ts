@@ -6,6 +6,7 @@ export type UpdatePlaylistFormValues = {
   prompt?: Record<string, unknown> | null;
   featureRank?: number;
   loops?: number;
+  transitionTime?: number | null;
   user?: string;
   displayedOwner: {
     label?: string;
@@ -42,6 +43,7 @@ export type UpdatePlaylistRequestValues = {
     prompt?: Record<string, unknown> | string;
     featureRank?: number;
     loops?: number;
+    transitionTime?: number | null;
     displayedOwner?: number;
     nsfw?: boolean;
     hidden?: boolean;
@@ -60,6 +62,14 @@ export const UpdatePlaylistSchema = yup
       .typeError("Activity level must be a integer")
       .integer(),
     loops: yup.number().typeError("Loops must be an integer").integer().min(0),
+    // Empty input means "auto": null, and the client picks the fade.
+    transitionTime: yup
+      .number()
+      .transform((value, original) => (original === "" ? null : value))
+      .nullable()
+      .typeError("Fade must be a number of seconds")
+      .min(0)
+      .max(60),
     user: yup.string(),
     displayedOwner: yup.object({
       label: yup.string(),

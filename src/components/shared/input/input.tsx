@@ -23,6 +23,8 @@ export type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
   outlined?: boolean;
   tooltipPlace?: PlacesType;
   hideTooltip?: boolean;
+  /** Shown read-only when the value is empty, instead of "-". */
+  emptyText?: string;
   onClickAfter?: () => void;
 };
 
@@ -44,6 +46,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
       placeholder,
       tooltipPlace = "right",
       hideTooltip,
+      emptyText,
       ...props
     },
     ref,
@@ -65,7 +68,9 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
           {before && <InputBefore>{before}</InputBefore>}
           {disabled ? (
             <DisabledInput>
-              {internalLinkTo ? (
+              {emptyText && (value === "" || value == null) ? (
+                emptyText
+              ) : internalLinkTo ? (
                 <AnchorLink type="secondary" to={internalLinkTo}>
                   {value}
                 </AnchorLink>

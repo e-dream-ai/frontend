@@ -299,6 +299,8 @@
       "video": "Video",
       "feature_rank": "Feature Rank",
       "loops": "Loops",
+      "transition_time": "Fade seconds (blank = auto)",
+      "transition_time_auto": "auto",
       "thumbnail": "Thumbnail",
       "nsfw": "Content Rating",
       "visibility": "Visibility",
