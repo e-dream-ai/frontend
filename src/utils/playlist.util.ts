@@ -151,6 +151,7 @@ export const formatPlaylistForm = ({
       },
   featureRank: playlist?.featureRank,
   loops: playlist?.loops ?? 0,
+  transitionTime: playlist?.transitionTime ?? null,
   nsfw: filterNsfwOption(playlist?.nsfw, t),
   hidden: filterHiddenOption(playlist?.hidden, t),
   created_at: moment(playlist?.created_at).format(FORMAT),
@@ -168,6 +169,8 @@ export const formatPlaylistRequest = (
     prompt: serializeDreamPrompt(data.prompt),
     featureRank: data?.featureRank,
     loops: data?.loops,
+    // Send null explicitly so clearing the field resets it to auto.
+    transitionTime: data?.transitionTime ?? null,
     displayedOwner: data?.displayedOwner?.value,
     nsfw: data?.nsfw.value === NSFW.TRUE,
     // If user is admin, add allowed extra fields
