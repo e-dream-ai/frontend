@@ -1,10 +1,10 @@
 import styled, { keyframes } from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 import {
+  EnhanceFactorGrid,
   FactorToggle,
   FactorToggleGroup,
   EnhanceParamLabel,
-  EnhanceParamRow,
 } from "./enhance-factor-row.styled";
 
 const spin = keyframes`
@@ -191,10 +191,6 @@ export const LinkButton = styled.button`
 `;
 
 export const FactorFields = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-
   ${FactorToggleGroup} {
     flex-shrink: 0;
   }
@@ -205,10 +201,9 @@ export const FactorFields = styled.div`
   }
 
   @media (max-width: 480px) {
-    gap: 10px;
-
-    ${EnhanceParamRow} {
-      gap: 8px;
+    ${EnhanceFactorGrid} {
+      column-gap: 8px;
+      row-gap: 10px;
     }
 
     ${EnhanceParamLabel} {
@@ -224,10 +219,9 @@ export const FactorFields = styled.div`
   }
 
   @media (max-width: 360px) {
-    ${EnhanceParamRow} {
-      align-items: flex-start;
-      flex-direction: column;
-      gap: 6px;
+    ${EnhanceFactorGrid} {
+      grid-template-columns: 1fr;
+      row-gap: 6px;
     }
   }
 `;

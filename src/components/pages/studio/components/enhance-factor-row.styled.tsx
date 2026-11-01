@@ -1,11 +1,22 @@
 import styled from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 
-export const EnhanceParamRow = styled.div`
-  display: flex;
+/**
+ * Labels in one column, toggle groups in the other. The groups share the
+ * second column's left edge, so equal factors (1x, 2x, 4x) line up across
+ * rows while each group stays as long as its own options.
+ */
+export const EnhanceFactorGrid = styled.div`
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  column-gap: 12px;
+  row-gap: 14px;
+`;
+
+/** Lays its label and group straight into `EnhanceFactorGrid`'s columns. */
+export const EnhanceParamRow = styled.div`
+  display: contents;
 `;
 
 export const EnhanceParamLabel = styled.span`
@@ -16,6 +27,7 @@ export const EnhanceParamLabel = styled.span`
 
 export const FactorToggleGroup = styled.div`
   display: flex;
+  justify-self: start;
   background: ${FLOW.bgInput};
   border: 1px solid ${FLOW.border};
   border-radius: 6px;
