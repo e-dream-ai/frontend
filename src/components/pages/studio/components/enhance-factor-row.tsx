@@ -7,6 +7,7 @@ import {
   type InterpolationFactor,
 } from "../constants/enhance-factor-options";
 import {
+  EnhanceFactorGrid,
   FactorToggle,
   FactorToggleGroup,
   EnhanceParamLabel,
@@ -73,7 +74,7 @@ export const EnhanceFactorFields: React.FC<{
   onUpscaleChange,
   onInterpolationChange,
 }) => (
-  <>
+  <EnhanceFactorGrid>
     <FactorRow
       label="Upscale factor"
       options={UPSCALE_FACTOR_OPTIONS}
@@ -90,5 +91,5 @@ export const EnhanceFactorFields: React.FC<{
       disabledFactor={upscaleFactor === 1 ? 1 : undefined}
       disabledHint={NO_OP_HINT}
     />
-  </>
+  </EnhanceFactorGrid>
 );
