@@ -106,6 +106,10 @@ export interface ImageGenParams {
   seedCount: number;
   size: string;
   negativePrompt: string;
+  /** Krea: fal rewrites the prompt with an LLM before generating. */
+  promptExpansion?: boolean;
+  /** Krea Style: strength of the style reference, 0-4 (fal's default is 1). */
+  styleScale?: number;
 }
 
 export const createComboKey = (

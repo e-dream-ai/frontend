@@ -35,6 +35,32 @@ describe("imageOriginFromDreamPrompt", () => {
     );
   });
 
+  it("reads Krea prompt expansion and style scale back", () => {
+    const origin = imageOriginFromDreamPrompt({
+      infinidream_algorithm: "krea-2-turbo-style",
+      prompt: "a cat",
+      source_dream_uuid: "ref-uuid",
+      enable_prompt_expansion: true,
+      style_scale: 2.5,
+    });
+    expect(origin).toMatchObject({
+      promptExpansion: true,
+      styleScale: 2.5,
+    });
+  });
+
+  it("leaves Krea options unset for older frames", () => {
+    const origin = imageOriginFromDreamPrompt({
+      infinidream_algorithm: "krea-2-turbo",
+      prompt: "a cat",
+      style_scale: "2",
+    });
+    expect(origin).toMatchObject({
+      promptExpansion: undefined,
+      styleScale: undefined,
+    });
+  });
+
   it("gives no model for an algorithm the studio does not generate with", () => {
     const origin = imageOriginFromDreamPrompt({
       infinidream_algorithm: "something-else",
