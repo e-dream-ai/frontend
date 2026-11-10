@@ -13,7 +13,14 @@ import {
   IMAGE_COUNT_OPTIONS,
   clampSizeToAllowed,
 } from "../constants/size-options";
-import { buildImageAlgoParams } from "../utils/build-image-algo-params";
+import {
+  KREA_STYLE_SCALE_DEFAULT,
+  KREA_STYLE_SCALE_OPTIONS,
+} from "../constants/krea-options";
+import {
+  buildImageAlgoParams,
+  isKreaModel,
+} from "../utils/build-image-algo-params";
 import { imageNames } from "../utils/image-names";
 import { resolveNegativePromptSupport } from "../utils/negative-prompt-support";
 import { SizeSelect } from "./size-select";
@@ -72,6 +79,9 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
   const styleReference = useStudioStore((s) => s.styleReference);
   const setStyleReference = useStudioStore((s) => s.setStyleReference);
   const requiresStyleReference = imageGenParams.model === "krea-2-turbo-style";
+  const isKrea = isKreaModel(imageGenParams.model);
+  const promptExpansion = imageGenParams.promptExpansion ?? false;
+  const styleScale = imageGenParams.styleScale ?? KREA_STYLE_SCALE_DEFAULT;
   const prefetchStylePresets = usePrefetchStylePresets();
 
   const { data: modelsData } = useModels({ mediaType: "image" });
@@ -135,6 +145,8 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
           negativePrompt: negativePromptEnabled
             ? imageGenParams.negativePrompt
             : undefined,
+          promptExpansion,
+          styleScale: requiresStyleReference ? styleScale : undefined,
         });
 
         return axiosClient
@@ -174,6 +186,8 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
     guardOverBudget,
     imageGenParams,
     negativePromptEnabled,
+    promptExpansion,
+    styleScale,
     addImage,
     onCreated,
     onClose,
@@ -270,6 +284,58 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
               value={styleReference}
               onChange={setStyleReference}
             />
+          ) : null}
+          {isKrea ? (
+            <>
+              <FieldRow style={{ marginTop: 14 }}>
+                <FieldGroup>
+                  <FieldLabel htmlFor="reference-frame-prompt-expansion">
+                    Expand prompt
+                  </FieldLabel>
+                  <Select
+                    id="reference-frame-prompt-expansion"
+                    value={promptExpansion ? "on" : "off"}
+                    aria-describedby="reference-frame-prompt-expansion-hint"
+                    onChange={(e) =>
+                      setImageGenParams({
+                        promptExpansion: e.target.value === "on",
+                      })
+                    }
+                  >
+                    <option value="off">Off</option>
+                    <option value="on">On</option>
+                  </Select>
+                </FieldGroup>
+                {requiresStyleReference ? (
+                  <FieldGroup>
+                    <FieldLabel htmlFor="reference-frame-style-scale">
+                      Style strength
+                    </FieldLabel>
+                    <Select
+                      id="reference-frame-style-scale"
+                      value={styleScale}
+                      onChange={(e) =>
+                        setImageGenParams({
+                          styleScale: Number(e.target.value),
+                        })
+                      }
+                    >
+                      {KREA_STYLE_SCALE_OPTIONS.map((n) => (
+                        <option key={n} value={n}>
+                          {n === KREA_STYLE_SCALE_DEFAULT
+                            ? `${n} (default)`
+                            : n}
+                        </option>
+                      ))}
+                    </Select>
+                  </FieldGroup>
+                ) : null}
+              </FieldRow>
+              <FieldHint id="reference-frame-prompt-expansion-hint">
+                Expand prompt: an AI rewrites your prompt into a more detailed
+                one before the image is made.
+              </FieldHint>
+            </>
           ) : null}
           <FieldLabel
             htmlFor="reference-frame-negative-prompt"
