@@ -15,7 +15,7 @@ import {
 } from "../constants/size-options";
 import {
   KREA_STYLE_SCALE_DEFAULT,
-  KREA_STYLE_SCALE_OPTIONS,
+  styleScaleOptions,
 } from "../constants/krea-options";
 import {
   buildImageAlgoParams,
@@ -146,7 +146,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
             ? imageGenParams.negativePrompt
             : undefined,
           promptExpansion,
-          styleScale: requiresStyleReference ? styleScale : undefined,
+          styleScale,
         });
 
         return axiosClient
@@ -320,7 +320,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
                         })
                       }
                     >
-                      {KREA_STYLE_SCALE_OPTIONS.map((n) => (
+                      {styleScaleOptions(styleScale).map((n) => (
                         <option key={n} value={n}>
                           {n === KREA_STYLE_SCALE_DEFAULT
                             ? `${n} (default)`

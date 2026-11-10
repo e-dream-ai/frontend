@@ -11,7 +11,7 @@ interface BuildImageAlgoParamsInput {
   styleScale?: number;
 }
 
-export const isKreaModel = (model: string) =>
+export const isKreaModel = (model: ImageModel) =>
   model === "krea-2-turbo" || model === "krea-2-turbo-style";
 
 /**

@@ -96,8 +96,6 @@ const DEFAULT_IMAGE_GEN_PARAMS: ImageGenParams = {
   seedCount: 8,
   size: "1280*720",
   negativePrompt: "",
-  promptExpansion: false,
-  styleScale: 1,
 };
 const DEFAULT_VIDEO_GEN_PARAMS: VideoGenParams = {
   model: "ltx-i2v",
