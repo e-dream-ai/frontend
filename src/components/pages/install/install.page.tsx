@@ -20,7 +20,7 @@ import styled from "styled-components";
 
 const SECTION_ID = "install";
 const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
-const MAC_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.zip`;
+const MAC_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.dmg`;
 const WINDOWS_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-windows-${APP_VERSION}-setup.exe`;
 const LINUX_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}-x86_64.AppImage`;
 
@@ -83,9 +83,9 @@ const InstallSection = () => {
               <em>Requirements:</em> macOS 12.4+, x86 or Apple Silicon.
             </p>
             <p>
-              Unzip, and drag it to your Applications folder. Run it, sign-in by
-              entering your email, then enter the code emailed to you, and close
-              the settings.
+              Open the disk image, and drag the app to your Applications folder.
+              Run it, sign-in by entering your email, then enter the code
+              emailed to you, and close the settings.
             </p>
           </Text>
         </Row>
