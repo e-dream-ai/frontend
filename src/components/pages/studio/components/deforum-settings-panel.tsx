@@ -3,7 +3,10 @@ import { useShallow } from "zustand/react/shallow";
 import { useDeforumStore } from "@/stores/deforum.store";
 import { ROUTES } from "@/constants/routes.constants";
 import type { DeforumRenderKind, DeforumSettings } from "@/types/deforum.types";
-import { DEFORUM_TEST_FRAMES } from "../constants/deforum-options";
+import {
+  DEFORUM_MAX_FRAMES,
+  DEFORUM_TEST_FRAMES,
+} from "../constants/deforum-options";
 import { hasPrompt, resolveDeforumTargets } from "../utils/deforum-targets";
 import { ForceSettingsDialog } from "./force-settings-dialog";
 import { DeforumPromptList } from "./deforum-prompt-list";
@@ -159,9 +162,8 @@ export function DeforumSettingsPanel({
               id="deforum-frames"
               value={settings.maxFrames}
               min={1}
-              // Five digits is plenty: room for up to 99999 frames.
-              max={99_999}
-              style={{ width: "calc(5ch + 24px)" }}
+              max={DEFORUM_MAX_FRAMES}
+              style={{ width: "calc(4ch + 24px)" }}
               onCommit={(maxFrames) => edit({ maxFrames })}
             />
           </FramesField>
