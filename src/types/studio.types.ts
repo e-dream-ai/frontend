@@ -94,6 +94,7 @@ export const STUDIO_IMAGE_MODELS = [
   "flux-schnell",
   "krea-2-turbo",
   "krea-2-turbo-style",
+  "krea-2-large",
 ] as const;
 
 export type ImageModel = (typeof STUDIO_IMAGE_MODELS)[number];
@@ -110,6 +111,8 @@ export interface ImageGenParams {
   promptExpansion?: boolean;
   /** Krea Style: strength of the style reference, 0-4 (fal's default is 1). */
   styleScale?: number;
+  /** Krea 2 Large: how loosely the prompt is read (raw, low, medium, high). */
+  creativity?: string;
 }
 
 export const createComboKey = (

@@ -112,6 +112,36 @@ describe("buildImageAlgoParams", () => {
     ).not.toHaveProperty("style_scale");
   });
 
+  it("sends creativity for Krea Large only, without a negative prompt", () => {
+    expect(
+      buildImageAlgoParams({
+        ...base,
+        model: "krea-2-large",
+        creativity: "high",
+        negativePrompt: "blur",
+        promptExpansion: true,
+        styleScale: 2,
+        sourceDreamUuid: "old-reference",
+      }),
+    ).toEqual({
+      infinidream_algorithm: "krea-2-large",
+      prompt: "a crystal cave",
+      size: "1280*720",
+      seed: 42,
+      creativity: "high",
+    });
+    expect(
+      buildImageAlgoParams({ ...base, model: "krea-2-large" }),
+    ).not.toHaveProperty("creativity");
+    expect(
+      buildImageAlgoParams({
+        ...base,
+        model: "krea-2-turbo",
+        creativity: "high",
+      }),
+    ).not.toHaveProperty("creativity");
+  });
+
   it.each([undefined, "", "   "])(
     "rejects Krea Style without a reference (%s)",
     (sourceDreamUuid) => {

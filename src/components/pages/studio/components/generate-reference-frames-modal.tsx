@@ -95,6 +95,15 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
   const modelConstraints = useModelConstraints({ mediaType: "image" });
   const sizeOptions =
     modelConstraints.get(imageGenParams.model)?.imageSizes ?? [];
+  // Shown for a model whose catalog entry lists creativity levels (Krea 2 Large).
+  const creativityConstraint = modelConstraints.get(imageGenParams.model)
+    ?.creativity;
+  const creativity =
+    creativityConstraint &&
+    imageGenParams.creativity &&
+    creativityConstraint.options.includes(imageGenParams.creativity)
+      ? imageGenParams.creativity
+      : creativityConstraint?.default;
   const selectedModel = modelOptions.find(
     (model) => model.id === imageGenParams.model,
   );
@@ -147,6 +156,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
             : undefined,
           promptExpansion,
           styleScale,
+          creativity,
         });
 
         return axiosClient
@@ -188,6 +198,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
     negativePromptEnabled,
     promptExpansion,
     styleScale,
+    creativity,
     addImage,
     onCreated,
     onClose,
@@ -334,6 +345,37 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
               <FieldHint id="reference-frame-prompt-expansion-hint">
                 Expand prompt: an AI rewrites your prompt into a more detailed
                 one before the image is made.
+              </FieldHint>
+            </>
+          ) : null}
+          {creativityConstraint && creativity ? (
+            <>
+              <FieldRow style={{ marginTop: 14 }}>
+                <FieldGroup>
+                  <FieldLabel htmlFor="reference-frame-creativity">
+                    Creativity
+                  </FieldLabel>
+                  <Select
+                    id="reference-frame-creativity"
+                    value={creativity}
+                    aria-describedby="reference-frame-creativity-hint"
+                    onChange={(e) =>
+                      setImageGenParams({ creativity: e.target.value })
+                    }
+                  >
+                    {creativityConstraint.options.map((option) => (
+                      <option key={option} value={option}>
+                        {option === creativityConstraint.default
+                          ? `${option} (default)`
+                          : option}
+                      </option>
+                    ))}
+                  </Select>
+                </FieldGroup>
+              </FieldRow>
+              <FieldHint id="reference-frame-creativity-hint">
+                Creativity: lower stays close to your prompt, higher takes more
+                liberties with style and mood.
               </FieldHint>
             </>
           ) : null}

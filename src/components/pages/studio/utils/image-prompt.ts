@@ -14,6 +14,7 @@ export type ImageOrigin =
       styleReferenceUuid?: string;
       promptExpansion?: boolean;
       styleScale?: number;
+      creativity?: string;
     }
   /** No prompt at all: an uploaded file. */
   | { kind: "uploaded" };
@@ -30,6 +31,7 @@ export const imageSettings = (
     origin.seed !== undefined ? `seed ${origin.seed}` : undefined,
     origin.styleScale !== undefined ? `style ${origin.styleScale}` : undefined,
     origin.promptExpansion ? "expanded prompt" : undefined,
+    origin.creativity ? `creativity ${origin.creativity}` : undefined,
   ].filter((setting): setting is string => Boolean(setting));
 
 const asString = (value: unknown) =>
@@ -77,5 +79,6 @@ export const imageOriginFromDreamPrompt = (prompt: unknown): ImageOrigin => {
       typeof p.style_scale === "number" && Number.isFinite(p.style_scale)
         ? p.style_scale
         : undefined,
+    creativity: asString(p.creativity),
   };
 };
