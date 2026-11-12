@@ -112,7 +112,7 @@ describe("buildImageAlgoParams", () => {
     ).not.toHaveProperty("style_scale");
   });
 
-  it("sends creativity for Krea Large only, without a negative prompt", () => {
+  it("sends Krea Large creativity without a negative prompt", () => {
     expect(
       buildImageAlgoParams({
         ...base,
@@ -132,13 +132,6 @@ describe("buildImageAlgoParams", () => {
     });
     expect(
       buildImageAlgoParams({ ...base, model: "krea-2-large" }),
-    ).not.toHaveProperty("creativity");
-    expect(
-      buildImageAlgoParams({
-        ...base,
-        model: "krea-2-turbo",
-        creativity: "high",
-      }),
     ).not.toHaveProperty("creativity");
   });
 

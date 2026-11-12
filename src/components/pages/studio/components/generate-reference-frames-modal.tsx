@@ -19,12 +19,13 @@ import {
 } from "../constants/krea-options";
 import {
   buildImageAlgoParams,
-  isKreaModel,
+  isKreaTurboModel,
 } from "../utils/build-image-algo-params";
 import { imageNames } from "../utils/image-names";
 import { resolveNegativePromptSupport } from "../utils/negative-prompt-support";
 import { SizeSelect } from "./size-select";
 import { StyleReferenceField } from "./style-reference-field";
+import { CreativityField } from "./creativity-field";
 import { PromptHistoryModal } from "./prompt-history-modal";
 import { StylePresetsModal } from "./style-presets-modal";
 import { PromptToolButton, PromptTools } from "./prompt-library.styled";
@@ -79,7 +80,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
   const styleReference = useStudioStore((s) => s.styleReference);
   const setStyleReference = useStudioStore((s) => s.setStyleReference);
   const requiresStyleReference = imageGenParams.model === "krea-2-turbo-style";
-  const isKrea = isKreaModel(imageGenParams.model);
+  const isKreaTurbo = isKreaTurboModel(imageGenParams.model);
   const promptExpansion = imageGenParams.promptExpansion ?? false;
   const styleScale = imageGenParams.styleScale ?? KREA_STYLE_SCALE_DEFAULT;
   const prefetchStylePresets = usePrefetchStylePresets();
@@ -93,15 +94,12 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
     [modelsData?.data?.models],
   );
   const modelConstraints = useModelConstraints({ mediaType: "image" });
-  const sizeOptions =
-    modelConstraints.get(imageGenParams.model)?.imageSizes ?? [];
-  // Shown for a model whose catalog entry lists creativity levels (Krea 2 Large).
-  const creativityConstraint = modelConstraints.get(imageGenParams.model)
-    ?.creativity;
+  const constraints = modelConstraints.get(imageGenParams.model);
+  const sizeOptions = constraints?.imageSizes ?? [];
+  const creativityConstraint = constraints?.creativity;
   const creativity =
-    creativityConstraint &&
     imageGenParams.creativity &&
-    creativityConstraint.options.includes(imageGenParams.creativity)
+    creativityConstraint?.options.includes(imageGenParams.creativity)
       ? imageGenParams.creativity
       : creativityConstraint?.default;
   const selectedModel = modelOptions.find(
@@ -296,7 +294,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
               onChange={setStyleReference}
             />
           ) : null}
-          {isKrea ? (
+          {isKreaTurbo ? (
             <>
               <FieldRow style={{ marginTop: 14 }}>
                 <FieldGroup>
@@ -349,35 +347,11 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
             </>
           ) : null}
           {creativityConstraint && creativity ? (
-            <>
-              <FieldRow style={{ marginTop: 14 }}>
-                <FieldGroup>
-                  <FieldLabel htmlFor="reference-frame-creativity">
-                    Creativity
-                  </FieldLabel>
-                  <Select
-                    id="reference-frame-creativity"
-                    value={creativity}
-                    aria-describedby="reference-frame-creativity-hint"
-                    onChange={(e) =>
-                      setImageGenParams({ creativity: e.target.value })
-                    }
-                  >
-                    {creativityConstraint.options.map((option) => (
-                      <option key={option} value={option}>
-                        {option === creativityConstraint.default
-                          ? `${option} (default)`
-                          : option}
-                      </option>
-                    ))}
-                  </Select>
-                </FieldGroup>
-              </FieldRow>
-              <FieldHint id="reference-frame-creativity-hint">
-                Creativity: lower stays close to your prompt, higher takes more
-                liberties with style and mood.
-              </FieldHint>
-            </>
+            <CreativityField
+              constraint={creativityConstraint}
+              value={creativity}
+              onChange={(value) => setImageGenParams({ creativity: value })}
+            />
           ) : null}
           <FieldLabel
             htmlFor="reference-frame-negative-prompt"
