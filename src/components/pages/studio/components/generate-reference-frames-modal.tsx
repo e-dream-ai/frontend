@@ -19,12 +19,13 @@ import {
 } from "../constants/krea-options";
 import {
   buildImageAlgoParams,
-  isKreaModel,
+  isKreaTurboModel,
 } from "../utils/build-image-algo-params";
 import { imageNames } from "../utils/image-names";
 import { resolveNegativePromptSupport } from "../utils/negative-prompt-support";
 import { SizeSelect } from "./size-select";
 import { StyleReferenceField } from "./style-reference-field";
+import { CreativityField } from "./creativity-field";
 import { PromptHistoryModal } from "./prompt-history-modal";
 import { StylePresetsModal } from "./style-presets-modal";
 import { PromptToolButton, PromptTools } from "./prompt-library.styled";
@@ -79,7 +80,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
   const styleReference = useStudioStore((s) => s.styleReference);
   const setStyleReference = useStudioStore((s) => s.setStyleReference);
   const requiresStyleReference = imageGenParams.model === "krea-2-turbo-style";
-  const isKrea = isKreaModel(imageGenParams.model);
+  const isKreaTurbo = isKreaTurboModel(imageGenParams.model);
   const promptExpansion = imageGenParams.promptExpansion ?? false;
   const styleScale = imageGenParams.styleScale ?? KREA_STYLE_SCALE_DEFAULT;
   const prefetchStylePresets = usePrefetchStylePresets();
@@ -93,8 +94,14 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
     [modelsData?.data?.models],
   );
   const modelConstraints = useModelConstraints({ mediaType: "image" });
-  const sizeOptions =
-    modelConstraints.get(imageGenParams.model)?.imageSizes ?? [];
+  const constraints = modelConstraints.get(imageGenParams.model);
+  const sizeOptions = constraints?.imageSizes ?? [];
+  const creativityConstraint = constraints?.creativity;
+  const creativity =
+    imageGenParams.creativity &&
+    creativityConstraint?.options.includes(imageGenParams.creativity)
+      ? imageGenParams.creativity
+      : creativityConstraint?.default;
   const selectedModel = modelOptions.find(
     (model) => model.id === imageGenParams.model,
   );
@@ -147,6 +154,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
             : undefined,
           promptExpansion,
           styleScale,
+          creativity,
         });
 
         return axiosClient
@@ -188,6 +196,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
     negativePromptEnabled,
     promptExpansion,
     styleScale,
+    creativity,
     addImage,
     onCreated,
     onClose,
@@ -285,7 +294,7 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
               onChange={setStyleReference}
             />
           ) : null}
-          {isKrea ? (
+          {isKreaTurbo ? (
             <>
               <FieldRow style={{ marginTop: 14 }}>
                 <FieldGroup>
@@ -336,6 +345,13 @@ export const GenerateReferenceFramesModal: React.FC<Props> = ({
                 one before the image is made.
               </FieldHint>
             </>
+          ) : null}
+          {creativityConstraint && creativity ? (
+            <CreativityField
+              constraint={creativityConstraint}
+              value={creativity}
+              onChange={(value) => setImageGenParams({ creativity: value })}
+            />
           ) : null}
           <FieldLabel
             htmlFor="reference-frame-negative-prompt"
