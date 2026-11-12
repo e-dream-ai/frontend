@@ -3,6 +3,8 @@ import type { DeforumSettings } from "@/types/deforum.types";
 /** A test render squeezes the whole timeline into this many frames. */
 export const DEFORUM_TEST_FRAMES = 50;
 
+export const DEFORUM_MAX_FRAMES = 3000;
+
 export const DEFORUM_SIZES = [
   { label: "16:9 — 1344×768", width: 1344, height: 768 },
   { label: "16:9 — 1024×576", width: 1024, height: 576 },

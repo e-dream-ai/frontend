@@ -7,12 +7,18 @@ interface BuildImageAlgoParamsInput {
   seed: number;
   negativePrompt?: string;
   sourceDreamUuid?: string;
+  promptExpansion?: boolean;
+  styleScale?: number;
 }
+
+export const isKreaModel = (model: ImageModel) =>
+  model === "krea-2-turbo" || model === "krea-2-turbo-style";
 
 /**
  * Build the `algoParams` payload for a still-image generation dream. Shared by
  * the batch Images tab and the flow "Generate Reference Frames" modal so both send an
  * identical shape. Krea Style requires a reference; text-only models never send it.
+ * Krea models take prompt expansion (sent only when on) and, for Style, a style scale.
  */
 export const buildImageAlgoParams = ({
   model,
@@ -21,6 +27,8 @@ export const buildImageAlgoParams = ({
   seed,
   negativePrompt,
   sourceDreamUuid,
+  promptExpansion,
+  styleScale,
 }: BuildImageAlgoParamsInput): Record<string, unknown> => {
   const params: Record<string, unknown> = {
     infinidream_algorithm: model,
@@ -33,8 +41,10 @@ export const buildImageAlgoParams = ({
     if (!reference)
       throw new Error("Choose a style reference image before generating.");
     params.source_dream_uuid = reference;
+    if (styleScale !== undefined) params.style_scale = styleScale;
   }
-  if (model === "krea-2-turbo" || model === "krea-2-turbo-style") {
+  if (isKreaModel(model)) {
+    if (promptExpansion) params.enable_prompt_expansion = true;
     return params;
   }
   const trimmedNegative = negativePrompt?.trim();

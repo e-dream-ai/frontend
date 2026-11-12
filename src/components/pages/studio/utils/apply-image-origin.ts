@@ -11,6 +11,8 @@ export const applyImageOrigin = (generated: GeneratedImageOrigin) => {
     model: generated.model,
     ...(generated.size ? { size: generated.size } : {}),
     negativePrompt: generated.negativePrompt ?? "",
+    promptExpansion: generated.promptExpansion,
+    styleScale: generated.styleScale,
   });
   const reference = generated.styleReferenceUuid;
   if (reference) {

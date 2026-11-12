@@ -76,6 +76,42 @@ describe("buildImageAlgoParams", () => {
     });
   });
 
+  it("sends prompt expansion for Krea only when it is on", () => {
+    const krea = { ...base, model: "krea-2-turbo" as const };
+    expect(
+      buildImageAlgoParams({ ...krea, promptExpansion: true }),
+    ).toHaveProperty("enable_prompt_expansion", true);
+    expect(
+      buildImageAlgoParams({ ...krea, promptExpansion: false }),
+    ).not.toHaveProperty("enable_prompt_expansion");
+    expect(
+      buildImageAlgoParams({ ...base, promptExpansion: true }),
+    ).not.toHaveProperty("enable_prompt_expansion");
+  });
+
+  it("sends style scale for Krea Style only", () => {
+    expect(
+      buildImageAlgoParams({
+        ...base,
+        model: "krea-2-turbo-style",
+        sourceDreamUuid: "reference-uuid",
+        styleScale: 2.5,
+        promptExpansion: true,
+      }),
+    ).toEqual({
+      infinidream_algorithm: "krea-2-turbo-style",
+      prompt: "a crystal cave",
+      size: "1280*720",
+      seed: 42,
+      source_dream_uuid: "reference-uuid",
+      style_scale: 2.5,
+      enable_prompt_expansion: true,
+    });
+    expect(
+      buildImageAlgoParams({ ...base, model: "krea-2-turbo", styleScale: 2 }),
+    ).not.toHaveProperty("style_scale");
+  });
+
   it.each([undefined, "", "   "])(
     "rejects Krea Style without a reference (%s)",
     (sourceDreamUuid) => {
