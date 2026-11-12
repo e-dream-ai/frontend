@@ -38,4 +38,25 @@ describe("applyImageOrigin", () => {
     expect(promptExpansion).toBeUndefined();
     expect(styleScale).toBeUndefined();
   });
+
+  it("restores a Krea Large frame's creativity and clears it otherwise", () => {
+    applyImageOrigin({
+      kind: "generated",
+      prompt: "a cat",
+      algorithm: "krea-2-large",
+      model: "krea-2-large",
+      creativity: "low",
+    });
+    expect(useStudioStore.getState().imageGenParams).toMatchObject({
+      model: "krea-2-large",
+      creativity: "low",
+    });
+    applyImageOrigin({
+      kind: "generated",
+      prompt: "a cat",
+      algorithm: "krea-2-large",
+      model: "krea-2-large",
+    });
+    expect(useStudioStore.getState().imageGenParams.creativity).toBeUndefined();
+  });
 });

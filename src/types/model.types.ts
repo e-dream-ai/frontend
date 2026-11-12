@@ -7,17 +7,25 @@ export interface GuidanceConstraint {
   readonly default: number;
 }
 
+/** A named choice the provider takes from a fixed list, like Krea's creativity. */
+export interface OptionConstraint {
+  readonly options: readonly string[];
+  readonly default: string;
+}
+
 export interface ModelConstraints {
   durationsSec?: number[];
   imageSizes?: string[];
   supportsSteps?: boolean;
   supportsNegativePrompt?: boolean;
   guidance?: GuidanceConstraint;
+  creativity?: OptionConstraint;
 }
 
 export type ModelPricing =
   | { kind: "perMegapixel"; usdPerMegapixel: number }
-  | { kind: "perSecond"; usdPerSecond: number; baseUsd?: number };
+  | { kind: "perSecond"; usdPerSecond: number; baseUsd?: number }
+  | { kind: "perImage"; usdPerImage: number };
 
 export interface ModelCatalogEntry {
   id: string;
