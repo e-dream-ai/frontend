@@ -49,6 +49,9 @@ export const ImageDetails: React.FC<Props> = ({
               ? generated.prompt
               : "Uploaded image, no prompt."}
         </DetailsPrompt>
+        {generated?.actualPrompt && (
+          <DetailsMeta>Expanded: {generated.actualPrompt}</DetailsMeta>
+        )}
         {generated?.negativePrompt && (
           <DetailsMeta>Negative: {generated.negativePrompt}</DetailsMeta>
         )}

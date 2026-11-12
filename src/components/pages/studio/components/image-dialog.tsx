@@ -93,6 +93,9 @@ export const ImageDialog: React.FC<Props> = ({
           ) : generated ? (
             <>
               <ActionPromptText>{generated.prompt}</ActionPromptText>
+              {generated.actualPrompt && (
+                <ActionMeta>Expanded: {generated.actualPrompt}</ActionMeta>
+              )}
               {generated.negativePrompt && (
                 <ActionMeta>Negative: {generated.negativePrompt}</ActionMeta>
               )}

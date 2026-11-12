@@ -58,6 +58,20 @@ describe("imageOriginFromDreamPrompt", () => {
     expect(origin).toMatchObject({ model: "krea-2-large", creativity: "raw" });
   });
 
+  it("reads the prompt Krea actually used after expansion", () => {
+    const origin = imageOriginFromDreamPrompt({
+      infinidream_algorithm: "krea-2-turbo",
+      prompt: "a cat",
+      enable_prompt_expansion: true,
+      actual_prompt: "a sleek tabby cat at dusk",
+    });
+    expect(origin).toMatchObject({
+      prompt: "a cat",
+      promptExpansion: true,
+      actualPrompt: "a sleek tabby cat at dusk",
+    });
+  });
+
   it("leaves Krea options unset for older frames", () => {
     const origin = imageOriginFromDreamPrompt({
       infinidream_algorithm: "krea-2-turbo",

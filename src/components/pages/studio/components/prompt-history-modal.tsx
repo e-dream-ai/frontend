@@ -81,6 +81,9 @@ const PromptHistoryDetails: React.FC<DetailsProps> = ({
           {settings ? <DetailsMeta>{settings}</DetailsMeta> : null}
         </DetailsTitleLine>
         <DetailsPrompt>{entry.origin.prompt}</DetailsPrompt>
+        {entry.origin.actualPrompt ? (
+          <DetailsMeta>Expanded: {entry.origin.actualPrompt}</DetailsMeta>
+        ) : null}
         {entry.origin.negativePrompt ? (
           <DetailsMeta>Negative: {entry.origin.negativePrompt}</DetailsMeta>
         ) : null}

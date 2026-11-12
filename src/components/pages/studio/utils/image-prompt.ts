@@ -15,6 +15,8 @@ export type ImageOrigin =
       promptExpansion?: boolean;
       styleScale?: number;
       creativity?: string;
+      /** The prompt Krea generated from after prompt expansion rewrote it. */
+      actualPrompt?: string;
     }
   /** No prompt at all: an uploaded file. */
   | { kind: "uploaded" };
@@ -80,5 +82,6 @@ export const imageOriginFromDreamPrompt = (prompt: unknown): ImageOrigin => {
         ? p.style_scale
         : undefined,
     creativity: asString(p.creativity),
+    actualPrompt: asString(p.actual_prompt),
   };
 };
