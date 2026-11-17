@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import { FLOW } from "@/constants/flow-theme.constants";
 import { AddBtn } from "./select-modal.styled";
 import { DeleteBtn } from "./action-dialog.styled";
@@ -44,21 +44,29 @@ export const DetailsName = styled.span`
 `;
 
 // Long prompts scroll rather than push the image off the screen.
-export const DetailsPrompt = styled.p`
-  margin: 0;
+const scrollingPrompt = css`
   max-height: 4.5em;
   overflow-y: auto;
-  font-size: 13px;
   line-height: 1.5;
-  color: ${FLOW.text};
   white-space: pre-wrap;
   user-select: text;
+`;
+
+export const DetailsPrompt = styled.p`
+  margin: 0;
+  font-size: 13px;
+  color: ${FLOW.text};
+  ${scrollingPrompt}
 `;
 
 export const DetailsMeta = styled.p`
   margin: 0;
   font-size: 11px;
   color: ${FLOW.textDim};
+`;
+
+export const DetailsExpandedPrompt = styled(DetailsMeta)`
+  ${scrollingPrompt}
 `;
 
 export const DetailsButtons = styled.div`

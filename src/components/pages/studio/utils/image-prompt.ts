@@ -15,6 +15,8 @@ export type ImageOrigin =
       promptExpansion?: boolean;
       styleScale?: number;
       creativity?: string;
+      /** The prompt Krea generated from after prompt expansion rewrote it. */
+      actualPrompt?: string;
     }
   /** No prompt at all: an uploaded file. */
   | { kind: "uploaded" };
@@ -59,6 +61,11 @@ export const imageOriginFromDreamPrompt = (prompt: unknown): ImageOrigin => {
   if (!text) return { kind: "uploaded" };
 
   const algorithm = String(p.infinidream_algorithm ?? "");
+  const promptExpansion =
+    typeof p.enable_prompt_expansion === "boolean"
+      ? p.enable_prompt_expansion
+      : undefined;
+  const actualPrompt = asString(p.actual_prompt);
   return {
     kind: "generated",
     prompt: text,
@@ -71,14 +78,13 @@ export const imageOriginFromDreamPrompt = (prompt: unknown): ImageOrigin => {
         ? p.seed
         : undefined,
     styleReferenceUuid: asString(p.source_dream_uuid),
-    promptExpansion:
-      typeof p.enable_prompt_expansion === "boolean"
-        ? p.enable_prompt_expansion
-        : undefined,
+    promptExpansion,
     styleScale:
       typeof p.style_scale === "number" && Number.isFinite(p.style_scale)
         ? p.style_scale
         : undefined,
     creativity: asString(p.creativity),
+    actualPrompt:
+      promptExpansion && actualPrompt !== text ? actualPrompt : undefined,
   };
 };
