@@ -22,6 +22,7 @@ import {
   Details,
   DetailsButton,
   DetailsButtons,
+  DetailsExpandedPrompt,
   DetailsMeta,
   DetailsName,
   DetailsPrompt,
@@ -82,7 +83,9 @@ const PromptHistoryDetails: React.FC<DetailsProps> = ({
         </DetailsTitleLine>
         <DetailsPrompt>{entry.origin.prompt}</DetailsPrompt>
         {entry.origin.actualPrompt ? (
-          <DetailsMeta>Expanded: {entry.origin.actualPrompt}</DetailsMeta>
+          <DetailsExpandedPrompt>
+            Expanded: {entry.origin.actualPrompt}
+          </DetailsExpandedPrompt>
         ) : null}
         {entry.origin.negativePrompt ? (
           <DetailsMeta>Negative: {entry.origin.negativePrompt}</DetailsMeta>

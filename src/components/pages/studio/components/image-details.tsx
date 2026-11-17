@@ -4,6 +4,7 @@ import {
   Details,
   DetailsPrompt,
   DetailsMeta,
+  DetailsExpandedPrompt,
   DetailsButtons,
   DetailsButton,
   DetailsDeleteButton,
@@ -50,7 +51,9 @@ export const ImageDetails: React.FC<Props> = ({
               : "Uploaded image, no prompt."}
         </DetailsPrompt>
         {generated?.actualPrompt && (
-          <DetailsMeta>Expanded: {generated.actualPrompt}</DetailsMeta>
+          <DetailsExpandedPrompt>
+            Expanded: {generated.actualPrompt}
+          </DetailsExpandedPrompt>
         )}
         {generated?.negativePrompt && (
           <DetailsMeta>Negative: {generated.negativePrompt}</DetailsMeta>
