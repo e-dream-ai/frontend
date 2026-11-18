@@ -23,6 +23,7 @@ const DISPLAY_APP_VERSION = `v${APP_VERSION}`;
 const MAC_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.dmg`;
 const WINDOWS_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.exe`;
 const LINUX_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}-x86_64.AppImage`;
+const RELEASE_NOTES_URL = `https://github.com/e-dream-ai/client/releases/tag/${APP_VERSION}`;
 
 const ResponsiveDownloadButton = styled(Button)`
   max-width: 100%;
@@ -176,10 +177,7 @@ const InstallSection = () => {
         <Text>
           <p>
             Current release: {DISPLAY_APP_VERSION}. See the{" "}
-            <Anchor
-              target="_blank"
-              href="https://github.com/e-dream-ai/client/releases/latest"
-            >
+            <Anchor target="_blank" href={RELEASE_NOTES_URL}>
               release notes
             </Anchor>{" "}
             and{" "}
