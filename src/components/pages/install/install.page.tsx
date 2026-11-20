@@ -26,7 +26,7 @@ const MAC_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${AP
 const WINDOWS_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.exe`;
 const LINUX_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}-x86_64.AppImage`;
 const RELEASE_NOTES_URL = `https://github.com/e-dream-ai/client/releases/tag/${APP_VERSION}`;
-const CLIENT_REPO_URL = "https://github.com/e-dream-ai/client";
+const LINUX_BUILD_URL = "https://github.com/e-dream-ai/client#build-on-linux";
 const HOMEBREW_URL = "https://brew.sh/";
 const PWA_INFO_URL = "https://en.wikipedia.org/wiki/Progressive_web_app";
 const BREW_COMMAND = "brew install --cask e-dream-ai/tap/infinidream";
@@ -264,7 +264,7 @@ const InstallSection = () => {
             </p>
             <p>
               Or build and run from{" "}
-              <Anchor target="_blank" href={CLIENT_REPO_URL}>
+              <Anchor target="_blank" href={LINUX_BUILD_URL}>
                 source
               </Anchor>
               .
