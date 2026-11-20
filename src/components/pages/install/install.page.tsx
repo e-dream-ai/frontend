@@ -170,8 +170,8 @@ const InstallSection = () => {
               <em>Requirements:</em> macOS 12.4+, x86 or Apple Silicon.
             </p>
             <p>
-              Open the disk image, and drag the app to your Applications folder.
-              Then run it.
+              Open the disk image, and drag the app to your Applications folder,
+              then run it.
             </p>
             <p>
               Or install with{" "}
