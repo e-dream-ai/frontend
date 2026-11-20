@@ -26,6 +26,7 @@ const MAC_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${AP
 const WINDOWS_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.exe`;
 const LINUX_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}-x86_64.AppImage`;
 const RELEASE_NOTES_URL = `https://github.com/e-dream-ai/client/releases/tag/${APP_VERSION}`;
+const CLIENT_REPO_URL = "https://github.com/e-dream-ai/client";
 const HOMEBREW_URL = "https://brew.sh/";
 const PWA_INFO_URL = "https://en.wikipedia.org/wiki/Progressive_web_app";
 const BREW_COMMAND = "brew install --cask e-dream-ai/tap/infinidream";
@@ -170,8 +171,7 @@ const InstallSection = () => {
             </p>
             <p>
               Open the disk image, and drag the app to your Applications folder.
-              Run it, sign-in by entering your email, then enter the code
-              emailed to you, and close the settings.
+              Then run it.
             </p>
             <p>
               Or install with{" "}
@@ -229,10 +229,7 @@ const InstallSection = () => {
             <p>
               <em>Requirements:</em> Windows 10 or later (x64).
             </p>
-            <p>
-              Run the installer, sign-in by entering your email, then enter the
-              code emailed to you.
-            </p>
+            <p>Run the installer.</p>
           </Text>
         </Row>
       </PlatformCard>
@@ -263,8 +260,14 @@ const InstallSection = () => {
               <Anchor target="_blank" href="https://appimage.org/">
                 AppImage
               </Anchor>{" "}
-              executable (<code>chmod +x</code>) and run it. Sign-in by entering
-              your email, then enter the code emailed to you.
+              executable (<code>chmod +x</code>) and run it.
+            </p>
+            <p>
+              Or build and run from{" "}
+              <Anchor target="_blank" href={CLIENT_REPO_URL}>
+                source
+              </Anchor>
+              .
             </p>
           </Text>
         </Row>
@@ -285,8 +288,9 @@ const InstallSection = () => {
         <Row justifyContent="space-between" separator />
         <Text>
           <p>
-            Each time you sign-in, a fresh code is required. Never reuse the
-            codes emailed to you.
+            When the app starts, sign-in by entering your email, then enter the
+            code emailed to you, and close the settings. Each time you sign-in,
+            a fresh code is required. Never reuse the codes emailed to you.
           </p>
         </Text>
         <Text>
