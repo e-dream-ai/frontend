@@ -283,7 +283,6 @@ const InstallSection = () => {
       <h2>{t("page.install.title")}</h2>
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
-        {orderedCards}
         <Text>
           <p>
             Each time you sign-in, a fresh code is required. Never reuse the
@@ -306,6 +305,7 @@ const InstallSection = () => {
             .
           </p>
         </Text>
+        {orderedCards}
       </Section>
     </>
   );
