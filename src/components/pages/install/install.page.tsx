@@ -13,8 +13,10 @@ import {
   faLinux,
   faWindows,
 } from "@fortawesome/free-brands-svg-icons";
+import { faCheck } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import CopyToClipboard from "react-copy-to-clipboard";
 import { useTranslation } from "react-i18next";
 import styled from "styled-components";
 
@@ -24,6 +26,74 @@ const MAC_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${AP
 const WINDOWS_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}.exe`;
 const LINUX_APP_URL = `https://github.com/e-dream-ai/client/releases/download/${APP_VERSION}/infinidream-${APP_VERSION}-x86_64.AppImage`;
 const RELEASE_NOTES_URL = `https://github.com/e-dream-ai/client/releases/tag/${APP_VERSION}`;
+const CLIENT_REPO_URL = "https://github.com/e-dream-ai/client";
+const HOMEBREW_URL = "https://brew.sh/";
+const PWA_INFO_URL = "https://en.wikipedia.org/wiki/Progressive_web_app";
+const BREW_COMMAND = "brew install --cask e-dream-ai/tap/infinidream";
+
+// The brew command goes on its own indented line, with a copy button that
+// drops below it when the card is too narrow. A span, since it sits in a <p>.
+const CommandLine = styled.span`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em 1em;
+  margin-top: 0.5em;
+  padding-left: 1.5em;
+
+  & > code {
+    /* Basis 0 sizes the line by the command's wrapped width, so the button
+       stays beside it unless even that doesn't fit. */
+    flex: 1 1 0;
+    min-width: min-content;
+  }
+`;
+
+// Icon-only copy button: two overlapping rectangles, a checkmark once copied.
+const CopyButton = styled.button`
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2em;
+  height: 2em;
+  padding: 0;
+  border: none;
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  font-size: 1em;
+  cursor: pointer;
+  opacity: 0.7;
+
+  &:hover,
+  &:focus-visible {
+    opacity: 1;
+    background: rgba(255, 255, 255, 0.1);
+  }
+`;
+
+const CopyIcon = () => (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 16 16"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="1.5"
+    aria-hidden="true"
+  >
+    <rect x="5.25" y="5.25" width="9" height="9" rx="1.5" />
+    <path d="M10.75 5.25V3.25a1.5 1.5 0 0 0-1.5-1.5h-6a1.5 1.5 0 0 0-1.5 1.5v6a1.5 1.5 0 0 0 1.5 1.5h2" />
+  </svg>
+);
+
+// Browsers may break after a hyphen, so keep the tap name whole; a narrow
+// card then wraps at a space.
+
+const NoWrap = styled.span`
+  white-space: nowrap;
+`;
 
 const ResponsiveDownloadButton = styled(Button)`
   max-width: 100%;
@@ -37,6 +107,13 @@ const ResponsiveDownloadButton = styled(Button)`
 
 const PlatformCard = styled(Card)`
   position: relative;
+
+  /* Let the card's padding alone set the space below the text, matching the
+     space above the button: drop the last Row's and last paragraph's margins. */
+  & > :last-child,
+  & > :last-child p:last-child {
+    margin-bottom: 0;
+  }
 `;
 
 const PlatformIcon = styled.div`
@@ -51,6 +128,15 @@ const PlatformIcon = styled.div`
 const InstallSection = () => {
   const { t } = useTranslation();
   const { isMacOS, isLinux } = useUserAgent();
+
+  const [copiedBrewCommand, setCopiedBrewCommand] = useState(false);
+  useEffect(() => {
+    if (!copiedBrewCommand) return;
+    const timer = setTimeout(() => setCopiedBrewCommand(false), 1500);
+    return () => clearTimeout(timer);
+  }, [copiedBrewCommand]);
+
+  const handleCopyBrewCommand = () => setCopiedBrewCommand(true);
 
   const handleDownloadMac = () => {
     window.open(MAC_APP_URL, "_blank");
@@ -84,9 +170,39 @@ const InstallSection = () => {
               <em>Requirements:</em> macOS 12.4+, x86 or Apple Silicon.
             </p>
             <p>
-              Open the disk image, and drag the app to your Applications folder.
-              Run it, sign-in by entering your email, then enter the code
-              emailed to you, and close the settings.
+              Open the disk image, and drag the app to your Applications folder,
+              then run it.
+            </p>
+            <p>
+              Or install with{" "}
+              <Anchor target="_blank" href={HOMEBREW_URL}>
+                Homebrew
+              </Anchor>
+              :
+              <CommandLine>
+                <code>
+                  brew install --cask{" "}
+                  <NoWrap>e-dream-ai/tap/infinidream</NoWrap>
+                </code>
+                <CopyToClipboard
+                  text={BREW_COMMAND}
+                  onCopy={handleCopyBrewCommand}
+                >
+                  <CopyButton
+                    type="button"
+                    title={copiedBrewCommand ? "Copied" : "Copy to clipboard"}
+                    aria-label={
+                      copiedBrewCommand ? "Copied" : "Copy command to clipboard"
+                    }
+                  >
+                    {copiedBrewCommand ? (
+                      <FontAwesomeIcon icon={faCheck} />
+                    ) : (
+                      <CopyIcon />
+                    )}
+                  </CopyButton>
+                </CopyToClipboard>
+              </CommandLine>
             </p>
           </Text>
         </Row>
@@ -113,10 +229,7 @@ const InstallSection = () => {
             <p>
               <em>Requirements:</em> Windows 10 or later (x64).
             </p>
-            <p>
-              Run the installer, sign-in by entering your email, then enter the
-              code emailed to you.
-            </p>
+            <p>Run the installer.</p>
           </Text>
         </Row>
       </PlatformCard>
@@ -147,8 +260,14 @@ const InstallSection = () => {
               <Anchor target="_blank" href="https://appimage.org/">
                 AppImage
               </Anchor>{" "}
-              executable (<code>chmod +x</code>) and run it. Sign-in by entering
-              your email, then enter the code emailed to you.
+              executable (<code>chmod +x</code>) and run it.
+            </p>
+            <p>
+              Or build and run from{" "}
+              <Anchor target="_blank" href={CLIENT_REPO_URL}>
+                source
+              </Anchor>
+              .
             </p>
           </Text>
         </Row>
@@ -167,11 +286,11 @@ const InstallSection = () => {
       <h2>{t("page.install.title")}</h2>
       <Section id={SECTION_ID}>
         <Row justifyContent="space-between" separator />
-        {orderedCards}
         <Text>
           <p>
-            Each time you sign-in, a fresh code is required. Never reuse the
-            codes emailed to you.
+            When the app starts, sign-in by entering your email, then enter the
+            code emailed to you, and close the settings. Each time you sign-in,
+            a fresh code is required. Never reuse the codes emailed to you.
           </p>
         </Text>
         <Text>
@@ -190,6 +309,7 @@ const InstallSection = () => {
             .
           </p>
         </Text>
+        {orderedCards}
       </Section>
     </>
   );
@@ -308,8 +428,11 @@ const RemoteControlSection = () => {
         <Text>
           <p>
             The remote control feature works from any web browser where you sign
-            in, not just a mobile device. The remote control is a PWA
-            (Progressive Web App) that can be installed without the app store.
+            in, not just a mobile device. The remote control is a PWA (
+            <Anchor target="_blank" href={PWA_INFO_URL}>
+              Progressive Web App
+            </Anchor>
+            ) that can be installed without the app store.
           </p>
         </Text>
       </Section>
