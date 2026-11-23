@@ -1,4 +1,5 @@
-import { getDream } from "@/api/dream/query/useDream";
+import { DREAM_QUERY_KEY, getDreamResponse } from "@/api/dream/query/useDream";
+import queryClient from "@/api/query-client";
 import { DreamStatusType, type Dream } from "@/types/dream.types";
 
 const POLL_INTERVAL_MS = 2000;
@@ -44,10 +45,18 @@ export const resolveDreamMedia = async (
   for (;;) {
     if (signal?.aborted) throw new DreamMediaAborted();
 
-    const dream = await getDream(uuid, signal).catch(() => undefined);
+    const response = await getDreamResponse(uuid, signal).catch(
+      () => undefined,
+    );
+    const dream = response?.data?.dream;
 
     if (signal?.aborted) throw new DreamMediaAborted();
-    if (dreamMediaUrl(dream)) return dream;
+    if (dreamMediaUrl(dream)) {
+      // The worker saves the image and any prompt change (Krea's expanded
+      // prompt) in one update: refresh the cached dream so open panels show it.
+      queryClient.setQueryData([DREAM_QUERY_KEY, uuid], response);
+      return dream;
+    }
     if (dream?.status === DreamStatusType.FAILED) return undefined;
     if (Date.now() >= deadline) return undefined;
 
